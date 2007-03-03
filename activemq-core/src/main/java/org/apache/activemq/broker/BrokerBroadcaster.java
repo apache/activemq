@@ -43,11 +43,11 @@ public class BrokerBroadcaster extends BrokerFilter{
         super(next);
     }
 
-    public void acknowledge(ConnectionContext context,MessageAck ack) throws Exception{
-        next.acknowledge(context,ack);
+    public void acknowledge(ConsumerBrokerExchange consumerExchange,MessageAck ack) throws Exception{
+        next.acknowledge(consumerExchange,ack);
         Broker brokers[]=getListeners();
         for(int i=0;i<brokers.length;i++){
-            brokers[i].acknowledge(context,ack);
+            brokers[i].acknowledge(consumerExchange,ack);
         }
     }
 
@@ -134,11 +134,11 @@ public class BrokerBroadcaster extends BrokerFilter{
         }
     }
 
-    public void send(ConnectionContext context,Message messageSend) throws Exception{
-        next.send(context,messageSend);
+    public void send(ProducerBrokerExchange producerExchange,Message messageSend) throws Exception{
+        next.send(producerExchange,messageSend);
         Broker brokers[]=getListeners();
         for(int i=0;i<brokers.length;i++){
-            brokers[i].send(context,messageSend);
+            brokers[i].send(producerExchange,messageSend);
         }
     }
 

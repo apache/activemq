@@ -19,6 +19,8 @@ package org.apache.activemq.broker.util;
 
 import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.ConsumerBrokerExchange;
+import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.commons.logging.Log;
@@ -37,18 +39,18 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     private Log sendLog = LogFactory.getLog(LoggingBrokerPlugin.class.getName()+".Send");
     private Log ackLog = LogFactory.getLog(LoggingBrokerPlugin.class.getName()+".Ack");
 
-    public void send(ConnectionContext context, Message messageSend) throws Exception {
+    public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
         if (sendLog.isInfoEnabled()) {
             sendLog.info("Sending: " + messageSend);
         }
-        super.send(context, messageSend);
+        super.send(producerExchange, messageSend);
     }
 
-    public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
+    public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
         if (ackLog.isInfoEnabled()) {
             ackLog.info("Acknowledge: " + ack);
         }
-        super.acknowledge(context, ack);
+        super.acknowledge(consumerExchange, ack);
     }
 
     // Properties

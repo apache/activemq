@@ -17,8 +17,10 @@ package org.apache.activemq.broker.ft;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.activemq.broker.Connection;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.InsertableMutableBrokerFilter;
 import org.apache.activemq.broker.MutableBrokerFilter;
+import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionControl;
@@ -298,13 +300,13 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * @throws Exception
      * 
      */
-    public void send(ConnectionContext context,Message message) throws Exception{
+    public void send(ProducerBrokerExchange producerExchange,Message message) throws Exception{
         /**
          * A message can be dispatched before the super.send() method returns so - here the order is switched to avoid
          * problems on the slave with receiving acks for messages not received yey
          */
         sendToSlave(message);
-        super.send(context,message);
+        super.send(producerExchange,message);
     }
 
     /**
@@ -313,9 +315,9 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * @throws Exception
      * 
      */
-    public void acknowledge(ConnectionContext context,MessageAck ack) throws Exception{
+    public void acknowledge(ConsumerBrokerExchange consumerExchange,MessageAck ack) throws Exception{
         sendToSlave(ack);
-        super.acknowledge(context,ack);
+        super.acknowledge(consumerExchange,ack);
     }
 
     public boolean isFaultTolerantConfiguration(){

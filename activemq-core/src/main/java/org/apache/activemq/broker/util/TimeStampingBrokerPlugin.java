@@ -19,6 +19,7 @@ package org.apache.activemq.broker.util;
 
 import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.command.Message;
 
 
@@ -37,11 +38,11 @@ import org.apache.activemq.command.Message;
  * @version $Revision$
  */
 public class TimeStampingBrokerPlugin  extends BrokerPluginSupport {
-	public void send(ConnectionContext context, Message message) throws Exception {
+	public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
         if (message.getTimestamp() > 0 && (message.getBrokerPath() == null || message.getBrokerPath().length == 0)) { 
             //timestamp not been disabled and has not passed through a network
             message.setTimestamp(System.currentTimeMillis());
         }
-		super.send(context, message);
+		super.send(producerExchange, message);
 	}
 }

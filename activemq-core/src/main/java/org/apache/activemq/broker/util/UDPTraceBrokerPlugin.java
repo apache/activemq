@@ -30,6 +30,8 @@ import java.net.UnknownHostException;
 
 import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.ConsumerBrokerExchange;
+import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
@@ -127,14 +129,14 @@ public class UDPTraceBrokerPlugin extends BrokerPluginSupport {
  		}
 	}
 	
-    public void send(ConnectionContext context, Message messageSend) throws Exception {
+    public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
     	trace(messageSend);
-        super.send(context, messageSend);
+        super.send(producerExchange, messageSend);
     }
 
-    public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
+    public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
     	trace(ack);
-        super.acknowledge(context, ack);
+        super.acknowledge(consumerExchange, ack);
     }
   
 	public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {

@@ -78,16 +78,20 @@ public class TransactionBroker extends BrokerFilter {
             context.setInRecoveryMode(true);
             context.setTransactions(new ConcurrentHashMap());
             context.setProducerFlowControl(false);
-            
+            final ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
+            producerExchange.setMutable(true);
+            producerExchange.setConnectionContext(context);
+            final ConsumerBrokerExchange consumerExchange = new ConsumerBrokerExchange();
+            consumerExchange.setConnectionContext(context);
             transactionStore.recover(new TransactionRecoveryListener() {
                 public void recover(XATransactionId xid, Message[] addedMessages, MessageAck[] aks) {
                     try {
                         beginTransaction(context, xid);
                         for (int i = 0; i < addedMessages.length; i++) {
-                            send(context, addedMessages[i]);
+                            send(producerExchange, addedMessages[i]);
                         }
                         for (int i = 0; i < aks.length; i++) {
-                            acknowledge(context, aks[i]);                    
+                            acknowledge(consumerExchange, aks[i]);                    
                         }
                         prepareTransaction(context, xid);
                     } catch (Throwable e) {
@@ -168,9 +172,10 @@ public class TransactionBroker extends BrokerFilter {
         transaction.rollback();
     }
     
-    public void acknowledge(ConnectionContext context, MessageAck ack) throws Exception {
+    public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
         // This method may be invoked recursively.  
         // Track original tx so that it can be restored.
+        final ConnectionContext context = consumerExchange.getConnectionContext();
         Transaction originalTx = context.getTransaction();
         Transaction transaction=null;
         if( ack.isInTransaction() ) {
@@ -178,15 +183,16 @@ public class TransactionBroker extends BrokerFilter {
         }
         context.setTransaction(transaction);
         try {
-            next.acknowledge(context, ack);
+            next.acknowledge(consumerExchange, ack);
         } finally {
             context.setTransaction(originalTx);
         }
     }
     
-    public void send(ConnectionContext context, Message message) throws Exception {
+    public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
         // This method may be invoked recursively.  
         // Track original tx so that it can be restored.
+        final ConnectionContext context = producerExchange.getConnectionContext();
         Transaction originalTx = context.getTransaction();
         Transaction transaction=null;
         if( message.getTransactionId()!=null ) {
@@ -194,7 +200,7 @@ public class TransactionBroker extends BrokerFilter {
         }
         context.setTransaction(transaction);
         try {
-            next.send(context, message);
+            next.send(producerExchange, message);
         } finally {
             context.setTransaction(originalTx);
         }

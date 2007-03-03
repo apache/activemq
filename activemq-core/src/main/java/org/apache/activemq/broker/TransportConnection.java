@@ -17,6 +17,7 @@ package org.apache.activemq.broker;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -110,9 +111,11 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
     private boolean pendingStop;
     private long timeStamp=0;
     private AtomicBoolean stopped=new AtomicBoolean(false);
-    protected final AtomicBoolean disposed=new AtomicBoolean(false);
+    private final AtomicBoolean disposed=new AtomicBoolean(false);
     private CountDownLatch stopLatch=new CountDownLatch(1);
-    protected final AtomicBoolean asyncException=new AtomicBoolean(false);
+    private final AtomicBoolean asyncException=new AtomicBoolean(false);
+    private final Map<ProducerId,ProducerBrokerExchange>producerExchanges = new HashMap<ProducerId,ProducerBrokerExchange>();
+    private final Map<ConsumerId,ConsumerBrokerExchange>consumerExchanges = new HashMap<ConsumerId,ConsumerBrokerExchange>();
 
     static class ConnectionState extends org.apache.activemq.state.ConnectionState{
 
@@ -427,33 +430,24 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
 
     public Response processMessage(Message messageSend) throws Exception{
         ProducerId producerId=messageSend.getProducerId();
-        ConnectionState state=lookupConnectionState(producerId);
-        ConnectionContext context=state.getContext();
-        // If the message originates from this client connection,
-        // then, finde the associated producer state so we can do some dup detection.
-        ProducerState producerState=null;
-        if(messageSend.getMessageId().getProducerId().equals(messageSend.getProducerId())){
-            SessionState ss=state.getSessionState(producerId.getParentId());
-            if(ss==null)
-                throw new IllegalStateException("Cannot send from a session that had not been registered: "
-                        +producerId.getParentId());
-            producerState=ss.getProducerState(producerId);
-        }
-        if(producerState==null){
-            broker.send(context,messageSend);
-        }else{
-            // Avoid Dups.
+        ProducerBrokerExchange producerExchange=getProducerBrokerExchange(producerId);
+        ProducerState producerState=producerExchange.getProducerState();
+        if(producerState!=null){
             long seq=messageSend.getMessageId().getProducerSequenceId();
             if(seq>producerState.getLastSequenceId()){
                 producerState.setLastSequenceId(seq);
-                broker.send(context,messageSend);
+                broker.send(producerExchange,messageSend);
             }
+        }else{
+            // producer not local to this broker
+            broker.send(producerExchange,messageSend);
         }
         return null;
     }
 
     public Response processMessageAck(MessageAck ack) throws Exception{
-        broker.acknowledge(lookupConnectionState(ack.getConsumerId()).getContext(),ack);
+        ConsumerBrokerExchange consumerExchange = getConsumerBrokerExchange(ack.getConsumerId());
+        broker.acknowledge(consumerExchange,ack);
         return null;
     }
 
@@ -515,6 +509,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
         ProducerState ps=ss.removeProducer(id);
         if(ps==null)
             throw new IllegalStateException("Cannot remove a producer that had not been registered: "+id);
+        removeProducerBrokerExchange(id);
         broker.removeProducer(cs.getContext(),ps.getInfo());
         return null;
     }
@@ -551,6 +546,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
         if(consumerState==null)
             throw new IllegalStateException("Cannot remove a consumer that had not been registered: "+id);
         broker.removeConsumer(cs.getContext(),consumerState.getInfo());
+        removeConsumerBrokerExchange(id);
         return null;
     }
 
@@ -980,5 +976,54 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
 
     public String getRemoteAddress(){
         return transport.getRemoteAddress();
+    }
+    
+    private ProducerBrokerExchange getProducerBrokerExchange(ProducerId id){
+        ProducerBrokerExchange result=producerExchanges.get(id);
+        if(result==null){
+            synchronized(producerExchanges){
+                result=new ProducerBrokerExchange();
+                ConnectionState state=lookupConnectionState(id);
+                ConnectionContext context=state.getContext();
+                result.setConnectionContext(context);
+                SessionState ss=state.getSessionState(id.getParentId());
+                if(ss!=null){
+                    result.setProducerState(ss.getProducerState(id));
+                    ProducerState producerState=ss.getProducerState(id);
+                    if(producerState!=null&&producerState.getInfo()!=null){
+                        ProducerInfo info=producerState.getInfo();
+                        result.setMutable(info.getDestination()==null);
+                    }
+                }
+                producerExchanges.put(id,result);
+            }
+        }
+        return result;
+    }
+    
+    private void removeProducerBrokerExchange(ProducerId id) {
+        synchronized(producerExchanges) {
+            producerExchanges.remove(id);
+        }
+    }
+    
+    private ConsumerBrokerExchange getConsumerBrokerExchange(ConsumerId id) {
+        ConsumerBrokerExchange result = consumerExchanges.get(id);
+        if (result == null) {
+            synchronized(consumerExchanges) {
+                result = new ConsumerBrokerExchange();
+                ConnectionState state = lookupConnectionState(id);
+                ConnectionContext context = state.getContext();
+                result.setConnectionContext(context);
+                consumerExchanges.put(id,result);
+            }
+        }
+        return result;
+    }
+    
+    private void removeConsumerBrokerExchange(ConsumerId id) {
+        synchronized(consumerExchanges) {
+            consumerExchanges.remove(id);
+        }
     }
 }
