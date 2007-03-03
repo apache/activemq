@@ -992,7 +992,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
                     ProducerState producerState=ss.getProducerState(id);
                     if(producerState!=null&&producerState.getInfo()!=null){
                         ProducerInfo info=producerState.getInfo();
-                        result.setMutable(info.getDestination()==null);
+                        result.setMutable(info.getDestination()==null||info.getDestination().isComposite());
                     }
                 }
                 producerExchanges.put(id,result);
