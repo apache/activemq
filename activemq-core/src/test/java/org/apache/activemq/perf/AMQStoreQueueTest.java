@@ -31,7 +31,7 @@ public class AMQStoreQueueTest extends SimpleQueueTest{
         
     	File dataFileDir = new File("target/test-amq-data/perfTest/amq");
     	
-        AMQPersistenceAdapter adaptor = new AMQPersistenceAdapter();
+        AMQPersistenceAdapter adaptor = new AMQPersistenceAdapter("localhost");
         adaptor.setDirectory(dataFileDir);
         
         answer.setPersistenceAdapter(adaptor);

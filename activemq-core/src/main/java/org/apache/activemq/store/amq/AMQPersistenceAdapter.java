@@ -107,14 +107,25 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener 
 	private Runnable periodicCleanupTask;
 	private boolean deleteAllMessages;
     private boolean syncOnWrite;
-	private File directory = new File(IOHelper.getDefaultDataDirectory() + "/amq");
+    private String brokerName;
+	private File directory;
+   
 
+     public AMQPersistenceAdapter() {
+            this("localhost");
+        }
+    public AMQPersistenceAdapter(String brokerName) {
+        this.brokerName = brokerName;
+        this.directory=new File(IOHelper.getDefaultDataDirectory(),brokerName + "-amqstore");
+    }
 
     
     public synchronized void start() throws Exception {
         if( !started.compareAndSet(false, true) )
             return;
-        this.usageManager.addUsageListener(this);
+        if (this.usageManager!=null) {
+            this.usageManager.addUsageListener(this);
+        }
 
         if( asyncDataManager == null ) {
         	asyncDataManager = createAsyncDataManager();
