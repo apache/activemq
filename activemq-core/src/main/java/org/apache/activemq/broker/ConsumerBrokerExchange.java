@@ -29,6 +29,7 @@ public class ConsumerBrokerExchange{
     private Destination regionDestination;
     private Region region;
     private Subscription subscription;
+    private boolean wildcard;
 
     /**
      * @return the connectionContext
@@ -84,5 +85,19 @@ public class ConsumerBrokerExchange{
      */
     public void setSubscription(Subscription subscription){
         this.subscription=subscription;
+    }
+
+    /**
+     * @return the wildcard
+     */
+    public boolean isWildcard(){
+        return this.wildcard;
+    }
+
+    /**
+     * @param wildcard the wildcard to set
+     */
+    public void setWildcard(boolean wildcard){
+        this.wildcard=wildcard;
     }
 }
