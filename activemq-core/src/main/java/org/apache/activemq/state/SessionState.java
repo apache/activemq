@@ -81,6 +81,10 @@ public class SessionState {
         return consumers.values();
     }
     
+    public ConsumerState getConsumerState(ConsumerId consumerId) {
+        return (ConsumerState)consumers.get(consumerId);
+    }
+    
     private void checkShutdown() {
 		if( shutdown.get() )
 			throw new IllegalStateException("Disposed");

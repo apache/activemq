@@ -396,7 +396,7 @@ public class RegionBroker implements Broker {
     }
 
     public void acknowledge(ConsumerBrokerExchange consumerExchange,MessageAck ack) throws Exception{
-        if(consumerExchange.getRegion()==null){
+        if(consumerExchange.isWildcard() || consumerExchange.getRegion()==null){
             ActiveMQDestination destination=ack.getDestination();
             Region region=null;
             switch(destination.getDestinationType()){

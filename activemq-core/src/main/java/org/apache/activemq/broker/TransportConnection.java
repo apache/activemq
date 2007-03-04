@@ -1007,14 +1007,26 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
         }
     }
     
-    private ConsumerBrokerExchange getConsumerBrokerExchange(ConsumerId id) {
-        ConsumerBrokerExchange result = consumerExchanges.get(id);
-        if (result == null) {
-            synchronized(consumerExchanges) {
-                result = new ConsumerBrokerExchange();
-                ConnectionState state = lookupConnectionState(id);
-                ConnectionContext context = state.getContext();
+    private ConsumerBrokerExchange getConsumerBrokerExchange(ConsumerId id){
+        ConsumerBrokerExchange result=consumerExchanges.get(id);
+        if(result==null){
+            synchronized(consumerExchanges){
+                result=new ConsumerBrokerExchange();
+                ConnectionState state=lookupConnectionState(id);
+                ConnectionContext context=state.getContext();
                 result.setConnectionContext(context);
+                SessionState ss=state.getSessionState(id.getParentId());
+                if(ss!=null){
+                    ConsumerState cs=ss.getConsumerState(id);
+                    if(cs!=null){
+                        ConsumerInfo info=cs.getInfo();
+                        if(info!=null){
+                            if(info.getDestination()!=null&&info.getDestination().isPattern()){
+                                result.setWildcard(true);
+                            }
+                        }
+                    }
+                }
                 consumerExchanges.put(id,result);
             }
         }
