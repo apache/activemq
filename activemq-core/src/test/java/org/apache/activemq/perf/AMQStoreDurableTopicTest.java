@@ -17,7 +17,6 @@ package org.apache.activemq.perf;
 import java.io.File;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.amq.AMQPersistenceAdapter;
-import org.apache.activemq.store.quick.QuickPersistenceAdapter;
 
 /**
  * @version $Revision: 1.3 $
@@ -27,10 +26,10 @@ public class AMQStoreDurableTopicTest extends SimpleDurableTopicTest{
    
     protected void configureBroker(BrokerService answer) throws Exception{
         File dataFileDir=new File("target/test-amq-data/perfTest/amqdb");
-        AMQPersistenceAdapter adaptor = new AMQPersistenceAdapter();
+        AMQPersistenceAdapter adaptor = new AMQPersistenceAdapter("localhost");
         adaptor.setDirectory(dataFileDir);
         answer.setPersistenceAdapter(adaptor);
-        answer.addConnector(bindAddress);
         answer.setDeleteAllMessagesOnStartup(true);
+        answer.addConnector(bindAddress);
     }
 }

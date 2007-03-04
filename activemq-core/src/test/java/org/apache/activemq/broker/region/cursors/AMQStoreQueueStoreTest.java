@@ -35,7 +35,7 @@ public class AMQStoreQueueStoreTest extends CursorQueueStoreTest{
     
 
     protected void configureBroker(BrokerService answer) throws Exception{
-        PersistenceAdapter adaptor = new AMQPersistenceAdapter();
+        PersistenceAdapter adaptor = new AMQPersistenceAdapter("localhost");
         answer.setPersistenceAdapter(adaptor);
         PolicyEntry policy = new PolicyEntry();
         policy.setPendingQueuePolicy(new StorePendingQueueMessageStoragePolicy());
