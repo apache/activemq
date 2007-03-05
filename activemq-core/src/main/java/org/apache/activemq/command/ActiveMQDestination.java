@@ -47,7 +47,7 @@ abstract public class ActiveMQDestination extends JNDIBaseStorable implements Da
     private static final long serialVersionUID = -3885260014960795889L;
 
     public static final String PATH_SEPERATOR = ".";
-    public static final String COMPOSITE_SEPERATOR = ",";
+    public static final char COMPOSITE_SEPERATOR = ',';
     
     public static final byte QUEUE_TYPE = 0x01; 
     public static final byte TOPIC_TYPE = 0x02; 
@@ -198,48 +198,54 @@ abstract public class ActiveMQDestination extends JNDIBaseStorable implements Da
         return physicalName;
     }
 
-    public void setPhysicalName(String physicalName) {
-
-        // Strip off any options
-        int p = physicalName.indexOf("?");
-        if( p >= 0 ) {
-            String optstring = physicalName.substring(p+1);
-            physicalName = physicalName.substring(0, p);
-            try {
-                options = URISupport.parseQuery(optstring);
-            } catch (URISyntaxException e) {
-                throw new IllegalArgumentException("Invalid destination name: "+physicalName+", it's options are not encoded properly: "+e);
+    public void setPhysicalName(String physicalName){
+        final int len=physicalName.length();
+        int p=-1;//options offset
+        boolean composite=false;
+        for(int i=0;i<len;i++){
+            char c=physicalName.charAt(i);
+            if(c=='?'){
+                p=i;
+                break;
+            }
+            if(c==COMPOSITE_SEPERATOR){
+                // won't be wild card
+                isPattern=false;
+                composite=true;
+            }else if(!composite&&(c=='*'||c=='.')){
+                isPattern=true;
             }
         }
-        
-        this.physicalName = physicalName;
+        // Strip off any options
+        if(p>=0){
+            String optstring=physicalName.substring(p+1);
+            physicalName=physicalName.substring(0,p);
+            try{
+                options=URISupport.parseQuery(optstring);
+            }catch(URISyntaxException e){
+                throw new IllegalArgumentException("Invalid destination name: "+physicalName
+                        +", it's options are not encoded properly: "+e);
+            }
+        }
+        this.physicalName=physicalName;
         this.destinationPaths=null;
         this.hashValue=0;
-        this.isPattern = false;
-        
-        // Check to see if it is a composite.
-        ArrayList l = new ArrayList();
-        StringTokenizer iter = new StringTokenizer(physicalName, COMPOSITE_SEPERATOR);
-        while (iter.hasMoreTokens()) {
-            String name = iter.nextToken().trim();
-            if( name.length() == 0 )
-                continue;
-            l.add(name);
-        }
-        
-        if( l.size()>1 ) {
-            compositeDestinations = new ActiveMQDestination[l.size()];
-            int counter=0;
-            for (Iterator iterator = l.iterator(); iterator.hasNext();) {
-                compositeDestinations[counter++] =createDestination((String) iterator.next());
+        if(composite){
+            // Check to see if it is a composite.
+            ArrayList<String> l=new ArrayList<String>();
+            StringTokenizer iter=new StringTokenizer(physicalName,""+COMPOSITE_SEPERATOR);
+            while(iter.hasMoreTokens()){
+                String name=iter.nextToken().trim();
+                if(name.length()==0)
+                    continue;
+                l.add(name);
             }
-        } else {            
-            compositeDestinations=null;
-            // If this is a pattern destination.
-            if( !isTemporary() && (
-                    physicalName.indexOf("*")>=0 ||
-                    physicalName.indexOf("<")>=0 ) ) {
-                isPattern = true;
+            if(l.size()>1){
+                compositeDestinations=new ActiveMQDestination[l.size()];
+                int counter=0;
+                for (String dest:l) {
+                    compositeDestinations[counter++]=createDestination(dest);
+                }
             }
         }
     }
