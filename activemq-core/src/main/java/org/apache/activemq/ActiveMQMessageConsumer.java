@@ -940,5 +940,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 		}
     	return false;
 	}
+	
+	public boolean isInUse(ActiveMQTempDestination destination) {
+		return info.getDestination().equals(destination);
+	}  	
 
 }

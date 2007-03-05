@@ -18,7 +18,11 @@
 package org.apache.activemq.broker.region;
 
 import javax.jms.InvalidSelectorException;
+import javax.jms.JMSException;
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQTempDestination;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -31,8 +35,26 @@ public class TempQueueRegion extends AbstractRegion {
 
     public TempQueueRegion(RegionBroker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
         super(broker,destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
-        setAutoCreateDestinations(false);
+        // We should allow the following to be configurable via a Destination Policy 
+        // setAutoCreateDestinations(false);
     }
+    
+    protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
+        final ActiveMQTempDestination tempDest = (ActiveMQTempDestination) destination;
+        return new Queue(destination, memoryManager, null, destinationStatistics, taskRunnerFactory, null) {
+            
+            public void addSubscription(ConnectionContext context,Subscription sub) throws Exception {
+
+                // Only consumers on the same connection can consume from 
+                // the temporary destination
+                if( !context.isNetworkConnection() && !tempDest.getConnectionId().equals( sub.getConsumerInfo().getConsumerId().getConnectionId() ) ) {
+                    throw new JMSException("Cannot subscribe to remote temporary destination: "+tempDest);
+                }
+                super.addSubscription(context, sub);
+            };
+            
+        };
+    }    
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
         if( info.isBrowser() ) {
@@ -44,6 +66,17 @@ public class TempQueueRegion extends AbstractRegion {
     
     public String toString() {
         return "TempQueueRegion: destinations="+destinations.size()+", subscriptions="+subscriptions.size()+", memory="+memoryManager.getPercentUsage()+"%";
+    }
+    
+    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
+    	
+    	// Force a timeout value so that we don't get an error that 
+    	// there is still an active sub.  Temp destination may be removed   
+    	// while a network sub is still active which is valid.
+    	if( timeout == 0 ) 
+    		timeout = 1;
+    	
+    	super.removeDestination(context, destination, timeout);
     }
     
 }
