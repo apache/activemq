@@ -44,8 +44,8 @@ public class TopicSubscription extends AbstractSubscription{
     private static final AtomicLong cursorNameCounter=new AtomicLong(0);
     protected PendingMessageCursor matched;
     final protected UsageManager usageManager;
-    protected AtomicLong dispatched=new AtomicLong();
-    protected AtomicLong delivered=new AtomicLong();
+    protected AtomicLong dispatchedCounter=new AtomicLong();
+    protected AtomicLong prefetchExtension=new AtomicLong();
     private int maximumPendingMessages=-1;
     private MessageEvictionStrategy messageEvictionStrategy=new OldestMessageEvictionStrategy();
     private int discarded=0;
@@ -136,7 +136,7 @@ public class TopicSubscription extends AbstractSubscription{
                 MessageReference node=matched.next();
                 if(node.isExpired()){
                     matched.remove();
-                    dispatched.incrementAndGet();
+                    dispatchedCounter.incrementAndGet();
                     node.decrementReferenceCount();
                     break;
                 }
@@ -154,7 +154,7 @@ public class TopicSubscription extends AbstractSubscription{
                     MessageReference node=matched.next();
                     if(node.getMessageId().equals(mdn.getMessageId())){
                         matched.remove();
-                        dispatched.incrementAndGet();
+                        dispatchedCounter.incrementAndGet();
                         node.decrementReferenceCount();
                         break;
                     }
@@ -170,7 +170,7 @@ public class TopicSubscription extends AbstractSubscription{
         boolean wasFull=isFull();
         if(ack.isStandardAck()||ack.isPoisonAck()){
             if(context.isInTransaction()){
-                delivered.addAndGet(ack.getMessageCount());
+            	prefetchExtension.addAndGet(ack.getMessageCount());
                 context.getTransaction().addSynchronization(new Synchronization(){
 
                     public void afterCommit() throws Exception{
@@ -180,8 +180,7 @@ public class TopicSubscription extends AbstractSubscription{
                             }
                         }
                         dequeueCounter.addAndGet(ack.getMessageCount());
-                        dispatched.addAndGet(-ack.getMessageCount());
-                        delivered.set(Math.max(0,delivered.get()-ack.getMessageCount()));
+                        prefetchExtension.addAndGet(ack.getMessageCount());
                     }
                 });
             }else{
@@ -189,8 +188,7 @@ public class TopicSubscription extends AbstractSubscription{
                     destination.getDestinationStatistics().getDequeues().add(ack.getMessageCount());
                 }
                 dequeueCounter.addAndGet(ack.getMessageCount());
-                dispatched.addAndGet(-ack.getMessageCount());
-                delivered.set(Math.max(0,delivered.get()-ack.getMessageCount()));
+                prefetchExtension.addAndGet(ack.getMessageCount());
             }
             if(wasFull&&!isFull()){
                 dispatchMatched();
@@ -198,7 +196,7 @@ public class TopicSubscription extends AbstractSubscription{
             return;
         }else if(ack.isDeliveredAck()){
             // Message was delivered but not acknowledged: update pre-fetch counters.
-            delivered.addAndGet(ack.getMessageCount());
+        	prefetchExtension.addAndGet(ack.getMessageCount());
             if(wasFull&&!isFull()){
                 dispatchMatched();
             }
@@ -217,7 +215,7 @@ public class TopicSubscription extends AbstractSubscription{
     }
 
     public int getDispatchedQueueSize(){
-        return (int)(dispatched.get()-delivered.get());
+    	return (int)(dispatchedCounter.get()-dequeueCounter.get());
     }
 
     public int getMaximumPendingMessages(){
@@ -225,7 +223,7 @@ public class TopicSubscription extends AbstractSubscription{
     }
 
     public long getDispatchedCounter(){
-        return dispatched.get();
+    	return dispatchedCounter.get();
     }
 
     public long getEnqueueCounter(){
@@ -277,21 +275,21 @@ public class TopicSubscription extends AbstractSubscription{
     // Implementation methods
     // -------------------------------------------------------------------------
     private boolean isFull(){
-        return dispatched.get()-delivered.get()>=info.getPrefetchSize();
+    	return getDispatchedQueueSize()-prefetchExtension.get()>=info.getPrefetchSize();
     }
 
     /**
      * @return true when 60% or more room is left for dispatching messages
      */
     public boolean isLowWaterMark(){
-        return (dispatched.get()-delivered.get())<=(info.getPrefetchSize()*.4);
+    	return (getDispatchedQueueSize()-prefetchExtension.get()) <= (info.getPrefetchSize() *.4);
     }
 
     /**
      * @return true when 10% or less room is left for dispatching messages
      */
     public boolean isHighWaterMark(){
-        return (dispatched.get()-delivered.get())>=(info.getPrefetchSize()*.9);
+    	return (getDispatchedQueueSize()-prefetchExtension.get()) >= (info.getPrefetchSize() *.9);
     }
 
     /**
@@ -386,7 +384,7 @@ public class TopicSubscription extends AbstractSubscription{
         md.setMessage(message);
         md.setConsumerId(info.getConsumerId());
         md.setDestination(node.getRegionDestination().getActiveMQDestination());
-        dispatched.incrementAndGet();
+        dispatchedCounter.incrementAndGet();
         // Keep track if this subscription is receiving messages from a single destination.
         if(singleDestination){
             if(destination==null){
@@ -429,6 +427,8 @@ public class TopicSubscription extends AbstractSubscription{
         }
     }
 
-    
+    public int getPrefetchSize() {
+        return (int) (info.getPrefetchSize() + prefetchExtension.get());
+    }    
     
 }

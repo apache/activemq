@@ -453,7 +453,6 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         if(node.getRegionDestination()!=null){
             if(node!=QueueMessageReference.NULL_MESSAGE){
                 node.getRegionDestination().getDestinationStatistics().getDispatched().increment();
-                context.getConnection().getStatistics().onMessageDequeue(message);
             }
             try{
                 dispatchMatched();

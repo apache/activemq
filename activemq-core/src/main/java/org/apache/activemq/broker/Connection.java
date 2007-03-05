@@ -105,5 +105,7 @@ public interface Connection extends Service {
 	public String getRemoteAddress();
 
 	public void serviceExceptionAsync(IOException e);
+	
+	public String getConnectionId();
 
 }
