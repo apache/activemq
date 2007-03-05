@@ -54,7 +54,7 @@ public class ConnectionContext {
     private boolean producerFlowControl=true;
     private MessageAuthorizationPolicy messageAuthorizationPolicy;
     private AtomicInteger referenceCounter = new AtomicInteger();
-    
+    private boolean networkConnection;
     private final MessageEvaluationContext messageEvaluationContext = new MessageEvaluationContext();
     
     public ConnectionContext() {
@@ -246,4 +246,11 @@ public class ConnectionContext {
 		return referenceCounter.decrementAndGet();
 	}
 
+	public synchronized boolean isNetworkConnection() {
+		return networkConnection;
+	}
+
+	public synchronized void setNetworkConnection(boolean networkConnection) {
+		this.networkConnection = networkConnection;
+	}	
 }
