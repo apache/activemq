@@ -431,7 +431,10 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
     public Response processMessage(Message messageSend) throws Exception{
         ProducerId producerId=messageSend.getProducerId();
         ProducerBrokerExchange producerExchange=getProducerBrokerExchange(producerId);
-        ProducerState producerState=producerExchange.getProducerState();
+        ProducerState producerState = null;
+        if(messageSend.getMessageId().getProducerId().equals(messageSend.getProducerId())){
+            producerState=producerExchange.getProducerState();
+        }
         if(producerState!=null){
             long seq=messageSend.getMessageId().getProducerSequenceId();
             if(seq>producerState.getLastSequenceId()){
