@@ -108,7 +108,7 @@ public class NetworkTestSupport extends BrokerTestSupport {
     
     protected BrokerService createRemoteBroker(PersistenceAdapter persistenceAdapter) throws Exception {
         BrokerService answer = new BrokerService();
-        broker.setBrokerName("remote");
+        answer.setBrokerName("remote");
         answer.setUseJmx(false);
         answer.setPersistenceAdapter(persistenceAdapter);
         return answer;
