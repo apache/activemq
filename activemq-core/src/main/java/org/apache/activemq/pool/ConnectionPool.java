@@ -51,6 +51,7 @@ public class ConnectionPool {
     private ObjectPoolFactory poolFactory;
 	private long lastUsed = System.currentTimeMillis();
 	private boolean hasFailed;
+	private boolean hasExpired;
 	private int idleTimeout = 30*1000;
 
     public ConnectionPool(ActiveMQConnection connection, ObjectPoolFactory poolFactory, TransactionManager transactionManager) {
@@ -123,25 +124,30 @@ public class ConnectionPool {
 
     synchronized public void close() {
     	if( connection!=null ) {
-	        Iterator i = cache.values().iterator();
-	        while (i.hasNext()) {
-	            SessionPool pool = (SessionPool) i.next();
-	            i.remove();
-	            try {
-	                pool.close();
-	            } catch (Exception e) {
-	            }
-	        }
-            try {
-            	connection.close();
-            } catch (Exception e) {
-            }
-	        connection = null;
+    		try {
+		        Iterator i = cache.values().iterator();
+		        while (i.hasNext()) {
+		            SessionPool pool = (SessionPool) i.next();
+		            i.remove();
+		            try {
+		                pool.close();
+		            } catch (Exception e) {
+		            }
+		        }
+    		} finally {
+                try {
+                	connection.close();
+                } catch (Exception e) {
+                } finally {
+        	        connection = null;
+                }
+    		}
     	}
     }
 
     synchronized public void incrementReferenceCount() {
 		referenceCount++;
+		lastUsed = System.currentTimeMillis();
 	}
 
 	synchronized public void decrementReferenceCount() {
@@ -156,10 +162,17 @@ public class ConnectionPool {
 	 * @return true if this connection has expired.
 	 */
 	synchronized public boolean expiredCheck() {
-		if( connection == null )
+		if( connection == null ) {
 			return true;
-        long t = System.currentTimeMillis();
-		if( hasFailed || idleTimeout> 0 && t > lastUsed+idleTimeout ) {
+		}
+		if( hasExpired ) {
+			if( referenceCount == 0 ) {
+				close();
+			}
+			return true;
+		}
+		if( hasFailed || ( idleTimeout>0 && System.currentTimeMillis() > lastUsed+idleTimeout) ) {
+			hasExpired=true;
 			if( referenceCount == 0 ) {
 				close();
 			}
