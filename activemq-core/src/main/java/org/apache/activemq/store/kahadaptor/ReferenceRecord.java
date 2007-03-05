@@ -60,4 +60,8 @@ public class ReferenceRecord{
     public void setMessageId(String messageId){
         this.messageId=messageId;
     }
+    
+    public String toString() {
+        return "ReferenceRecord(id=" + messageId + ",data=" + data +")";
+    }
 }
