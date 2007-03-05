@@ -116,6 +116,24 @@ public class UsageManager  implements Service{
             }
         }
     }
+
+    /**
+     * @throws InterruptedException
+     * 
+     * @param timeout
+     */    
+    public boolean waitForSpace(long timeout) throws InterruptedException {
+        if(parent!=null) {
+            if( !parent.waitForSpace(timeout) )
+            	return false;
+        }
+        synchronized (usageMutex) {
+            if( percentUsage >= 100 ) {
+                usageMutex.wait(timeout);
+            }
+            return percentUsage < 100;
+        }
+    }    
     
     /**
      * Increases the usage by the value amount.  
