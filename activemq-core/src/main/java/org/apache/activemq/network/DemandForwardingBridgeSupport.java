@@ -358,6 +358,8 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
                 	
                 	lastConnectSucceeded.set(true);
                 	serviceRemoteBrokerInfo(command);
+                	// Let the local broker know the remote broker's ID.
+                	localBroker.oneway(command);
                     
                 }else if(command.getClass() == ConnectionError.class ) {
                 	ConnectionError ce = (ConnectionError) command;

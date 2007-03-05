@@ -1831,6 +1831,14 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         }
     }
 
-    
+	public boolean isInUse(ActiveMQTempDestination destination) {
+        for(Iterator iter=consumers.iterator();iter.hasNext();){
+            ActiveMQMessageConsumer c=(ActiveMQMessageConsumer) iter.next();
+            if( c.isInUse(destination) ) {
+            	return true;
+            }
+        }
+        return false;
+	}    
 
 }

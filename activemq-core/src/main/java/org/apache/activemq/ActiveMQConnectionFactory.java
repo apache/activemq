@@ -88,6 +88,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private boolean nestedMapAndListEnabled = true;
     JMSStatsImpl factoryStats = new JMSStatsImpl();
     private boolean alwaysSyncSend;
+    private boolean useSyncSend=false;
+    private boolean watchTopicAdvisories=true;
 
     static protected final Executor DEFAULT_CONNECTION_EXECUTOR = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
             public Thread newThread(Runnable run) {
@@ -260,7 +262,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             connection.setRedeliveryPolicy(getRedeliveryPolicy());
             connection.setTransformer(getTransformer());
             connection.setBlobTransferPolicy(getBlobTransferPolicy().copy());
-
+            connection.setWatchTopicAdvisories(watchTopicAdvisories);
+            
             transport.start();
 
             if( clientID !=null )
@@ -431,6 +434,18 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         this.useAsyncSend = useAsyncSend;
     }
     
+	public void setUseSyncSend(boolean forceSyncSend) {
+		this.useSyncSend = forceSyncSend;
+	}
+
+	public synchronized boolean isWatchTopicAdvisories() {
+		return watchTopicAdvisories;
+	}
+
+	public synchronized void setWatchTopicAdvisories(boolean watchTopicAdvisories) {
+		this.watchTopicAdvisories = watchTopicAdvisories;
+	}    
+    
     /**
      * @return true if always sync send messages
      */
@@ -564,7 +579,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("useAsyncSend", Boolean.toString(isUseAsyncSend()));
         props.setProperty("useCompression", Boolean.toString(isUseCompression()));
         props.setProperty("useRetroactiveConsumer", Boolean.toString(isUseRetroactiveConsumer()));
-
+        props.setProperty("watchTopicAdvisories", Boolean.toString(isWatchTopicAdvisories()));
+        
         if (getUserName() != null) {
             props.setProperty("userName", getUserName());
         }
