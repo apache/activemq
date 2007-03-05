@@ -111,7 +111,8 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
     private boolean starting;
     private boolean pendingStop;
     private long timeStamp=0;
-    private AtomicBoolean stopped=new AtomicBoolean(false);
+    private final AtomicBoolean stopped = new AtomicBoolean(false);
+	private final AtomicBoolean transportDisposed = new AtomicBoolean();
     private final AtomicBoolean disposed=new AtomicBoolean(false);
     private CountDownLatch stopLatch=new CountDownLatch(1);
     private final AtomicBoolean asyncException=new AtomicBoolean(false);
@@ -846,8 +847,24 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
             transport.stop();
             active=false;
             if(disposed.compareAndSet(false,true)){
-                taskRunner.wakeup();
-                dispatchStoppedLatch.await();
+
+                // Let all the connection contexts know we are shutting down
+                // so that in progress operations can notice and unblock.
+                 ArrayList l=new ArrayList(localConnectionStates.values());
+                 for(Iterator iter=l.iterator();iter.hasNext();){
+                     ConnectionState cs=(ConnectionState) iter.next();
+                     cs.getContext().getStopping().set(true);
+                 }            	
+            	
+ 		        if( taskRunner!=null ) {
+                    taskRunner.wakeup();
+                    // Give it a change to stop gracefully.
+                    dispatchStoppedLatch.await(5, TimeUnit.SECONDS);
+                    disposeTransport();
+		            taskRunner.shutdown();
+                } else {
+                    disposeTransport();
+                }
 
 		        if( taskRunner!=null )
 		            taskRunner.shutdown();
@@ -868,7 +885,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
                 // Remove all logical connection associated with this connection
                 // from the broker.
                 if(!broker.isStopped()){
-                    ArrayList l=new ArrayList(localConnectionStates.keySet());
+                	l=new ArrayList(localConnectionStates.keySet());
                     for(Iterator iter=l.iterator();iter.hasNext();){
                         ConnectionId connectionId=(ConnectionId)iter.next();
                         try{
@@ -884,7 +901,6 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
                 }
                 stopLatch.countDown();
             }
-            log.debug("Stopped connection: "+transport.getRemoteAddress());
         }
     }
 
@@ -1122,4 +1138,16 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
             consumerExchanges.remove(id);
         }
     }
+    
+	protected void disposeTransport() {
+    	if( transportDisposed.compareAndSet(false, true) ) {
+        try {
+			transport.stop();
+			active = false;
+			log.debug("Stopped connection: "+transport.getRemoteAddress());
+		} catch (Exception e) {
+			log.debug("Could not stop transport: "+e,e);
+		}
+    	}
+	}    
 }

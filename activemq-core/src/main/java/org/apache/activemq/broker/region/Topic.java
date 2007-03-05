@@ -247,6 +247,10 @@ public class Topic implements Destination {
             if (usageManager.isSendFailIfNoSpace() && usageManager.isFull()) {
                 throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
             } else {
+                while( !usageManager.waitForSpace(1000) ) {
+                    if( context.getStopping().get() )
+                        throw new IOException("Connection closed, send aborted.");
+                }            	
                 usageManager.waitForSpace();
                 
                 // The usage manager could have delayed us by the time

@@ -329,7 +329,10 @@ public class Queue implements Destination, Task {
             if(usageManager.isSendFailIfNoSpace()&&usageManager.isFull()){
                 throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
             }else{
-                usageManager.waitForSpace();
+                while( !usageManager.waitForSpace(1000) ) {
+                    if( context.getStopping().get() )
+                        throw new IOException("Connection closed, send aborted.");
+                }
                 // The usage manager could have delayed us by the time
                 // we unblock the message could have expired..
                 if(message.isExpired()){
