@@ -102,4 +102,8 @@ public class ConnectionView implements ConnectionViewMBean {
 		return connection.getRemoteAddress();
 	}
 
+	public String getConnectionId() {
+		return connection.getConnectionId();
+	}	
+
 }

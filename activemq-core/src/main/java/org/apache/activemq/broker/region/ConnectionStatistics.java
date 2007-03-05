@@ -18,8 +18,7 @@
 
 package org.apache.activemq.broker.region;
 
-import org.apache.activemq.command.Command;
-import org.apache.activemq.command.Message;
+
 import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.management.StatsImpl;
 
@@ -73,16 +72,5 @@ public class ConnectionStatistics extends StatsImpl {
         }
     }
 
-    /**
-     * Updates the statistics as a command is dispatched into the connection
-     */
-    public void onCommand(Command command) {
-        if (command.isMessageDispatch()) {
-            enqueues.increment();
-        }
-    }
 
-    public void onMessageDequeue(Message message) {
-        dequeues.increment();
-    }
 }

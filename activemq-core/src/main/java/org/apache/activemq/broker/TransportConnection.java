@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ft.MasterBroker;
 import org.apache.activemq.broker.region.ConnectionStatistics;
@@ -97,7 +98,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
     // Used to do async dispatch.. this should perhaps be pushed down into the transport layer..
     protected final List dispatchQueue=Collections.synchronizedList(new LinkedList());
     protected final TaskRunner taskRunner;
-    protected IOException transportException;
+    protected final AtomicReference transportException = new AtomicReference();
     private boolean inServiceException=false;
     private ConnectionStatistics statistics=new ConnectionStatistics();
     private boolean manageable;
@@ -116,6 +117,8 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
     private final AtomicBoolean asyncException=new AtomicBoolean(false);
     private final Map<ProducerId,ProducerBrokerExchange>producerExchanges = new HashMap<ProducerId,ProducerBrokerExchange>();
     private final Map<ConsumerId,ConsumerBrokerExchange>consumerExchanges = new HashMap<ConsumerId,ConsumerBrokerExchange>();
+    private CountDownLatch dispatchStoppedLatch = new CountDownLatch(1);
+    protected AtomicBoolean dispatchStopped=new AtomicBoolean(false);
 
     static class ConnectionState extends org.apache.activemq.state.ConnectionState{
 
@@ -166,7 +169,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
                 Command command=(Command)o;
                 Response response=service(command);
                 if(response!=null){
-                    dispatch(response);
+                	dispatchSync(response);
                 }
             }
 
@@ -186,7 +189,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
 
     public void serviceTransportException(IOException e){
         if(!disposed.get()){
-            transportException=e;
+        	transportException.set(e);
             if(transportLog.isDebugEnabled())
                 transportLog.debug("Transport failed: "+e,e);
             ServiceSupport.dispose(this);
@@ -683,47 +686,96 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
     }
 
     public void dispatchSync(Command message){
-        processDispatch(message);
-    }
-
-    public void dispatchAsync(Command message){
-        if(taskRunner==null){
-            dispatchSync(message);
-        }else{
-            dispatchQueue.add(message);
-            try{
-                taskRunner.wakeup();
-            }catch(InterruptedException e){
-                Thread.currentThread().interrupt();
-            }
+        getStatistics().getEnqueues().increment();
+        try {
+            processDispatch(message);
+        } catch (IOException e) {
+            serviceExceptionAsync(e);
         }
     }
 
-    protected void processDispatch(Command command){
-        if(command.isMessageDispatch()){
-            MessageDispatch md=(MessageDispatch)command;
-            Runnable sub=(Runnable)md.getConsumer();
-            broker.processDispatch(md);
-            try{
-                dispatch(command);
-            }finally{
+    public void dispatchAsync(Command message){
+        if( !disposed.get() ) {
+            getStatistics().getEnqueues().increment();
+            if( taskRunner==null ) {
+                dispatchSync( message );
+            } else {
+                dispatchQueue.add(message);
+                try {
+                    taskRunner.wakeup();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        } else {
+            if(message.isMessageDispatch()) {
+                MessageDispatch md=(MessageDispatch) message;
+                Runnable sub=(Runnable) md.getConsumer();
+                broker.processDispatch(md);
+                if(sub!=null){
+                    sub.run();
+                }
+             }
+        }
+    }
+
+    protected void processDispatch(Command command) throws IOException {
+        try {
+            if( !disposed.get() ) {
+                 dispatch(command);
+            }
+       } finally {
+
+            if(command.isMessageDispatch()){
+                MessageDispatch md=(MessageDispatch) command;
+                Runnable sub=(Runnable) md.getConsumer();
+                broker.processDispatch(md);
                 if(sub!=null){
                     sub.run();
                 }
             }
-        }else{
-            dispatch(command);
+
+            getStatistics().getDequeues().increment();
         }
-    }
+     }   
+
+
 
     public boolean iterate(){
-        if(dispatchQueue.isEmpty()||broker.isStopped()){
-            return false;
-        }else{
-            Command command=(Command)dispatchQueue.remove(0);
-            processDispatch(command);
-            return true;
-        }
+        try {
+            if( disposed.get() ) {
+                 if( dispatchStopped.compareAndSet(false, true)) {                                                             
+                     if( transportException.get()==null ) {
+                         try {
+                             dispatch(new ShutdownInfo());
+                         } catch (Throwable ignore) {
+                         }
+                     }
+                     dispatchStoppedLatch.countDown();
+                 }
+                 return false;                           
+             } 
+
+             if( !dispatchStopped.get() )  {
+
+                 if( dispatchQueue.isEmpty() ) {
+                     return false;
+                 } else {
+                     Command command = (Command) dispatchQueue.remove(0);
+                     processDispatch( command );
+                     return true;
+                 }
+             } else {
+                 return false;
+             }
+
+         } catch (IOException e) {
+             if( dispatchStopped.compareAndSet(false, true)) {                                                                     
+                 dispatchStoppedLatch.countDown();
+             }
+             serviceExceptionAsync(e);
+             return false;                           
+         }
     }
 
     /**
@@ -792,11 +844,24 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
             transport.stop();
             active=false;
             if(disposed.compareAndSet(false,true)){
-                if(taskRunner!=null)
-                    taskRunner.shutdown();
-                // Clear out the dispatch queue to release any memory that
-                // is being held on to.
-                dispatchQueue.clear();
+                taskRunner.wakeup();
+                dispatchStoppedLatch.await();
+
+		        if( taskRunner!=null )
+		            taskRunner.shutdown();
+		        
+                // Run the MessageDispatch callbacks so that message references get cleaned up.
+                for (Iterator iter = dispatchQueue.iterator(); iter.hasNext();) {
+                    Command command = (Command) iter.next();
+                    if(command.isMessageDispatch()) {
+                        MessageDispatch md=(MessageDispatch) command;
+                        Runnable sub=(Runnable) md.getConsumer();
+                        broker.processDispatch(md);
+                        if(sub!=null){
+                            sub.run();
+                        }
+                    }
+                } 
                 //
                 // Remove all logical connection associated with this connection
                 // from the broker.
@@ -965,13 +1030,10 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
         return null;
     }
 
-    protected void dispatch(Command command){
+    protected void dispatch(Command command) throws IOException{
         try{
             setMarkedCandidate(true);
             transport.oneway(command);
-            getStatistics().onCommand(command);
-        }catch(IOException e){
-            serviceExceptionAsync(e);
         }finally{
             setMarkedCandidate(false);
         }
@@ -980,6 +1042,17 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
     public String getRemoteAddress(){
         return transport.getRemoteAddress();
     }
+    
+    public String getConnectionId() {
+        Iterator iterator = localConnectionStates.values().iterator();
+        ConnectionState object = (ConnectionState) iterator.next();
+        if( object == null ) {
+            return null;
+        }
+        if( object.getInfo().getClientId() !=null )
+            return object.getInfo().getClientId();
+        return object.getInfo().getConnectionId().toString();
+    }    
     
     private ProducerBrokerExchange getProducerBrokerExchange(ProducerId id){
         ProducerBrokerExchange result=producerExchanges.get(id);
