@@ -325,7 +325,7 @@ public class Queue implements Destination, Task {
             }
             return;
         }
-        if(context.isProducerFlowControl()){
+        if (context.isProducerFlowControl() && !context.isNetworkConnection()) {
             if(usageManager.isSendFailIfNoSpace()&&usageManager.isFull()){
                 throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
             }else{
