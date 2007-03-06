@@ -107,7 +107,7 @@ abstract public class DurableSubscriptionTestSupport extends TestSupport {
     abstract protected PersistenceAdapter createPersistenceAdapter() throws Exception;
     
     
-    public void testUnsubscribeSubscription() throws Exception {
+    public void XtestUnsubscribeSubscription() throws Exception {
         session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("TestTopic");
         consumer = session.createDurableSubscriber(topic, "sub1");
@@ -140,7 +140,7 @@ abstract public class DurableSubscriptionTestSupport extends TestSupport {
         assertTextMessageEquals("Msg:3", consumer.receive(5000));      
     }
     
-    public void testInactiveDurableSubscriptionTwoConnections() throws Exception {
+    public void XtestInactiveDurableSubscriptionTwoConnections() throws Exception {
         session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("TestTopic");
         consumer = session.createDurableSubscriber(topic, "sub1");
@@ -171,7 +171,7 @@ abstract public class DurableSubscriptionTestSupport extends TestSupport {
         assertTextMessageEquals("Msg:2", consumer.receive(5000));      
     }    
     
-    public void testInactiveDurableSubscriptionBrokerRestart() throws Exception {
+    public void XtestInactiveDurableSubscriptionBrokerRestart() throws Exception {
         session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("TestTopic");
         consumer = session.createDurableSubscriber(topic, "sub1");
@@ -238,7 +238,7 @@ abstract public class DurableSubscriptionTestSupport extends TestSupport {
         assertNull(consumer.receive(5000));      
     }    
     
-    public void testInactiveDurableSubscriptionOneConnection() throws Exception {
+    public void XtestInactiveDurableSubscriptionOneConnection() throws Exception {
         session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("TestTopic");
         consumer = session.createDurableSubscriber(topic, "sub1");
@@ -263,7 +263,7 @@ abstract public class DurableSubscriptionTestSupport extends TestSupport {
         assertTextMessageEquals("Msg:2", consumer.receive(5000));      
     }
     
-    public void xtestSelectorChange() throws Exception {
+    public void XtestSelectorChange() throws Exception {
         session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("TestTopic");
         consumer = session.createDurableSubscriber(topic, "sub1", "color='red'", false);
@@ -299,7 +299,7 @@ abstract public class DurableSubscriptionTestSupport extends TestSupport {
     }
     
     
-    public void testDurableSubWorksInNewSession() throws JMSException {
+    public void XtestDurableSubWorksInNewSession() throws JMSException {
 
         // Create the consumer.
         connection.start();
@@ -327,7 +327,7 @@ abstract public class DurableSubscriptionTestSupport extends TestSupport {
     }
     
     
-    public void testDurableSubWorksInNewConnection() throws Exception {
+    public void XtestDurableSubWorksInNewConnection() throws Exception {
 
         // Create the consumer.
         connection.start();

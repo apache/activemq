@@ -18,27 +18,26 @@
 package org.apache.activemq.broker.store;
 
 import junit.framework.Test;
-
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.xbean.BrokerFactoryBean;
-import org.springframework.core.io.ClassPathResource;
+import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 
 /**
  * 
  * @version $Revision$
  */
-public class QuickStoreLoadTester extends LoadTester  {
+public class AMQStoreLoadTester extends LoadTester  {
 
     protected BrokerService createBroker() throws Exception {
-        BrokerFactoryBean brokerFactory=new BrokerFactoryBean(new ClassPathResource("org/apache/activemq/broker/store/quickbroker.xml"));
-        brokerFactory.afterPropertiesSet();
-        BrokerService broker =  brokerFactory.getBroker();
+        BrokerService broker = new BrokerService();
+        AMQPersistenceAdapter adaptor = new AMQPersistenceAdapter();
+        broker.setPersistenceAdapter(adaptor);
+        broker.addConnector("tcp://localhost:0");
         broker.setDeleteAllMessagesOnStartup(true);
         return broker;
     }
     
     public static Test suite() {
-        return suite(QuickStoreLoadTester.class);
+        return suite(AMQStoreLoadTester.class);
     }
     
     public static void main(String[] args) {

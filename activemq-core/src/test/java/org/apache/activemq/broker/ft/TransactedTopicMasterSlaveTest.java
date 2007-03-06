@@ -39,7 +39,7 @@ public class TransactedTopicMasterSlaveTest extends JmsTopicTransactionTest{
         // this will create the main (or master broker)
         broker=createBroker();
         broker.start();
-        KahaPersistenceAdapter adaptor=new KahaPersistenceAdapter(new File("target/test-amq-data/slave"));
+        KahaPersistenceAdapter adaptor=new KahaPersistenceAdapter();
         slave = new BrokerService();
         slave.setBrokerName("slave");
         slave.setPersistenceAdapter(adaptor);
@@ -66,7 +66,7 @@ public class TransactedTopicMasterSlaveTest extends JmsTopicTransactionTest{
     protected BrokerService createBroker() throws Exception,URISyntaxException{
         BrokerService broker=new BrokerService();
         broker.setBrokerName("master");
-        KahaPersistenceAdapter adaptor=new KahaPersistenceAdapter(new File("target/test-amq-data/master"));
+        KahaPersistenceAdapter adaptor=new KahaPersistenceAdapter();
         broker.setPersistenceAdapter(adaptor);
         broker.addConnector("tcp://localhost:62001");
         broker.setDeleteAllMessagesOnStartup(true);

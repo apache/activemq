@@ -20,8 +20,8 @@ package org.apache.activemq.usecases;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.activemq.store.DefaultPersistenceAdapterFactory;
 import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.journal.JournalPersistenceAdapterFactory;
 
 /**
  * @version $Revision: 1.1.1.1 $
@@ -30,7 +30,7 @@ public class JDBCDurableSubscriptionTest extends DurableSubscriptionTestSupport 
 
     protected PersistenceAdapter createPersistenceAdapter() throws IOException {
         File dataDir = new File("target/test-data/durableJDBC");
-        DefaultPersistenceAdapterFactory factory = new DefaultPersistenceAdapterFactory();
+        JournalPersistenceAdapterFactory factory = new JournalPersistenceAdapterFactory();
         factory.setDataDirectoryFile(dataDir);
         factory.setUseJournal(false);
         return factory.createPersistenceAdapter();
