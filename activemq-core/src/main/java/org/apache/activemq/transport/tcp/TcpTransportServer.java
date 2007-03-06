@@ -91,8 +91,16 @@ public class TcpTransportServer extends TransportServerThreadSupport {
 			setConnectURI(new URI(bind.getScheme(), bind.getUserInfo(), resolveHostName(bind.getHost()), serverSocket.getLocalPort(), bind.getPath(),
 					bind.getQuery(), bind.getFragment()));
 		} catch (URISyntaxException e) {
-			throw IOExceptionSupport.create(e);
-		}
+
+            // it could be that the host name contains invalid characters such as _ on unix platforms
+            // so lets try use the IP address instead
+            try {
+                setConnectURI(new URI(bind.getScheme(), bind.getUserInfo(), addr.getHostAddress(), serverSocket.getLocalPort(), bind.getPath(),
+                        bind.getQuery(), bind.getFragment()));
+            } catch (URISyntaxException e2) {
+                throw IOExceptionSupport.create(e2);
+            }
+        }
     }
     
     /**
