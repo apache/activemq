@@ -24,7 +24,7 @@ import org.apache.activemq.util.IOHelper;
 /**
  * An implementation of {@link PersistenceAdapterFactory}
  * 
- * @org.apache.xbean.XBean
+ * @org.apache.xbean.XBean element="amqPersistenceAdapterFactory"
  * 
  * @version $Revision: 1.17 $
  */
@@ -45,6 +45,7 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory{
         result.setDirectory(getDataDirectory());
         result.setTaskRunnerFactory(getTaskRunnerFactory());
         result.setBrokerName(getBrokerName());
+        result.setReferenceStoreAdapter(getReferenceStoreAdapter());
         return result;
     }
     
