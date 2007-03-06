@@ -56,6 +56,7 @@ public class SlowConsumerTest extends TestCase {
         final BrokerService broker = new BrokerService();
         broker.setPersistent(true);
         broker.setUseJmx(true);
+        broker.setDeleteAllMessagesOnStartup(true);
 
         broker.addConnector("tcp://localhost:61616").setName("Default");
         broker.start();
