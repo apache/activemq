@@ -17,6 +17,7 @@
  */
 package org.apache.activemq.store.jpa;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
@@ -243,5 +244,14 @@ public class JPAPersistenceAdapter implements PersistenceAdapter {
 	public void setWireFormat(WireFormat wireFormat) {
 		this.wireFormat = wireFormat;
 	}
+
+    public void checkpoint(boolean sync) throws IOException{        
+    }
+
+    public void setBrokerName(String brokerName){        
+    }
+
+    public void setDirectory(File dir){        
+    }
 
 }
