@@ -17,6 +17,7 @@ package org.apache.activemq.store.amq;
 import java.io.File;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.PersistenceAdapterFactory;
+import org.apache.activemq.store.ReferenceStoreAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.util.IOHelper;
 
@@ -33,6 +34,7 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory{
     private File dataDirectory;
     private int journalThreadPriority = Thread.MAX_PRIORITY;
     private String brokerName="localhost";
+    private ReferenceStoreAdapter referenceStoreAdapter;
     
     /**
      * @return a AMQPersistenceAdapter
@@ -110,5 +112,21 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory{
      */
     public void setBrokerName(String brokerName){
         this.brokerName=brokerName;
+    }
+
+    
+    /**
+     * @return the referenceStoreAdapter
+     */
+    public ReferenceStoreAdapter getReferenceStoreAdapter(){
+        return this.referenceStoreAdapter;
+    }
+
+    
+    /**
+     * @param referenceStoreAdapter the referenceStoreAdapter to set
+     */
+    public void setReferenceStoreAdapter(ReferenceStoreAdapter referenceStoreAdapter){
+        this.referenceStoreAdapter=referenceStoreAdapter;
     }
 }

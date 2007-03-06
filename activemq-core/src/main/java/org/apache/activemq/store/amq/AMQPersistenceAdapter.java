@@ -646,4 +646,12 @@ public class AMQPersistenceAdapter implements PersistenceAdapter,UsageListener{
     public void setSyncOnWrite(boolean syncOnWrite){
         this.syncOnWrite=syncOnWrite;
     }
+
+    
+    /**
+     * @param referenceStoreAdapter the referenceStoreAdapter to set
+     */
+    public void setReferenceStoreAdapter(ReferenceStoreAdapter referenceStoreAdapter){
+        this.referenceStoreAdapter=referenceStoreAdapter;
+    }
 }
