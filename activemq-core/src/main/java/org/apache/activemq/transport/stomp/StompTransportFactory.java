@@ -21,6 +21,7 @@ import java.util.Map;
 
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.tcp.TcpTransportFactory;
+import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 
 /**
@@ -36,6 +37,7 @@ public class StompTransportFactory extends TcpTransportFactory {
 
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
     	transport = new StompTransportFilter(transport, new LegacyFrameTranslator());
+    	IntrospectionSupport.setProperties(transport, options);
     	return super.compositeConfigure(transport, format, options);
     }
 }

@@ -25,6 +25,8 @@ import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * The StompTransportFilter normally sits on top of a TcpTransport
@@ -36,7 +38,7 @@ import org.apache.activemq.util.IOExceptionSupport;
  * @author <a href="http://hiramchirino.com">chirino</a>
  */
 public class StompTransportFilter extends TransportFilter {
-
+	static final private Log log = LogFactory.getLog(StompTransportFilter.class);
     private final ProtocolConverter protocolConverter;
 
     private final Object sendToActiveMQMutex = new Object();
@@ -44,6 +46,8 @@ public class StompTransportFilter extends TransportFilter {
 
     private final FrameTranslator frameTranslator;
 
+    private boolean trace;
+    
     public StompTransportFilter(Transport next, FrameTranslator translator) {
 		super(next);
         this.frameTranslator = translator;
@@ -61,6 +65,9 @@ public class StompTransportFilter extends TransportFilter {
 
 	public void onCommand(Object command) {
         try {
+    		if( trace ) {
+    			log.trace("Received: \n"+command);
+    		}
         	protocolConverter.onStompCommad((StompFrame) command);
 		} catch (IOException e) {
 			onException(e);
@@ -76,6 +83,9 @@ public class StompTransportFilter extends TransportFilter {
 	}
 
 	public void sendToStomp(StompFrame command) throws IOException {
+		if( trace ) {
+			log.trace("Sending: \n"+command);
+		}
 		synchronized(sendToStompMutex) {
 			next.oneway(command);
 		}
@@ -85,4 +95,12 @@ public class StompTransportFilter extends TransportFilter {
     {
         return frameTranslator;
     }
+
+	public boolean isTrace() {
+		return trace;
+	}
+
+	public void setTrace(boolean trace) {
+		this.trace = trace;
+	}
 }
