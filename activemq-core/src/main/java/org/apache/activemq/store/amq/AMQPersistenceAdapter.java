@@ -66,7 +66,7 @@ import org.apache.commons.logging.LogFactory;
  * An implementation of {@link PersistenceAdapter} designed for use with a {@link Journal} and then check pointing
  * asynchronously on a timeout with some other long term persistent storage.
  * 
- * @org.apache.xbean.XBean
+ * @org.apache.xbean.XBean element="amqPersistenceAdapter"
  * 
  * @version $Revision: 1.17 $
  */
