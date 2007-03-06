@@ -158,4 +158,13 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
     public String toString(){
         return "MemoryPersistenceAdapter";
     }
+
+    public void setBrokerName(String brokerName){        
+    }
+
+    public void setDirectory(File dir){        
+    }
+
+    public void checkpoint(boolean sync) throws IOException{        
+    }
 }

@@ -54,14 +54,20 @@ import org.apache.activemq.kaha.StoreEntry;
         return listContainer.isEmpty();
     }
     
-    public void add(ConsumerMessageRef ref) {
-        listContainer.add(ref);
+    public StoreEntry add(ConsumerMessageRef ref) {
+        return listContainer.placeLast(ref);
     }
     
-    public ConsumerMessageRef remove() {
-        ConsumerMessageRef result =  (ConsumerMessageRef)listContainer.removeFirst();
-        if (listContainer.isEmpty()) {
-            reset();
+    public ConsumerMessageRef remove(){
+        ConsumerMessageRef result=null;
+        if(!listContainer.isEmpty()){
+            StoreEntry entry=listContainer.getFirst();
+            if(entry!=null){
+                result=(ConsumerMessageRef)listContainer.removeFirst();
+                if(listContainer.isEmpty()||(batchEntry!=null&&batchEntry.equals(entry))){
+                    reset();
+                }
+            }
         }
         return result;
     }

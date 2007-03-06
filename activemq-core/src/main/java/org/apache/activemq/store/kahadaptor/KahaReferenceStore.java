@@ -77,7 +77,9 @@ public class KahaReferenceStore implements ReferenceStore{
             entry=messageContainer.getFirst();
         }else{
             entry=messageContainer.refresh(entry);
+            if (entry != null) {
             entry=messageContainer.getNext(entry);
+            }
         }
         if(entry!=null){
             int count=0;
@@ -120,11 +122,14 @@ public class KahaReferenceStore implements ReferenceStore{
     }
 
     public synchronized void removeMessage(MessageId msgId) throws IOException{
-        ReferenceRecord rr=messageContainer.remove(msgId);
-        if(rr!=null){
-            removeInterest(rr);
-            if(messageContainer.isEmpty()){
-                resetBatching();
+        StoreEntry entry=messageContainer.getEntry(msgId);
+        if(entry!=null){
+            ReferenceRecord rr=messageContainer.remove(msgId);
+            if(rr!=null){
+                removeInterest(rr);
+                if(messageContainer.isEmpty()||(batchEntry!=null&&batchEntry.equals(entry))){
+                    resetBatching();
+                }
             }
         }
     }

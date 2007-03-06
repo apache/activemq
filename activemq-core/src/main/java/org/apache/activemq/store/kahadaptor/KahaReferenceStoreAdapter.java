@@ -17,10 +17,8 @@
  */
 package org.apache.activemq.store.kahadaptor;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -29,7 +27,6 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.MessageId;
-import org.apache.activemq.kaha.ContainerId;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.MessageIdMarshaller;
@@ -39,7 +36,6 @@ import org.apache.activemq.store.ReferenceStore;
 import org.apache.activemq.store.ReferenceStoreAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TopicReferenceStore;
-import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -51,10 +47,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
 	private Map<Integer,AtomicInteger>recordReferences = new HashMap<Integer,AtomicInteger>();
     private boolean storeValid;
 
-	public KahaReferenceStoreAdapter(File dir) throws IOException {
-		super(dir);
-	}
-
+	
     public synchronized MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException{
     	throw new RuntimeException("Use createQueueReferenceStore instead");
     }
@@ -164,10 +157,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
         }		
 	}
     
-    public void sync() throws IOException {
-        getStore().force();
-    }
-    
+        
     protected MapContainer<MessageId,ReferenceRecord> getMapReferenceContainer(Object id,String containerName) throws IOException{
         Store store=getStore();
         MapContainer<MessageId, ReferenceRecord> container=store.getMapContainer(id,containerName);

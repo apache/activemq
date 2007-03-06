@@ -24,6 +24,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.memory.UsageManager;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Set;
 
@@ -38,22 +39,30 @@ public interface PersistenceAdapter extends Service {
      * Returns a set of all the {@link org.apache.activemq.command.ActiveMQDestination}
      * objects that the persistence store is aware exist.
      *
-     * @return
+     * @return active destinations
      */
     public Set<ActiveMQDestination> getDestinations();
 
     /**
      * Factory method to create a new queue message store with the given destination name
+     * @param destination
+     * @return the message store
+     * @throws IOException 
      */
     public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException;
 
     /**
      * Factory method to create a new topic message store with the given destination name
+     * @param destination 
+     * @return the topic message store
+     * @throws IOException 
      */
     public TopicMessageStore createTopicMessageStore(ActiveMQTopic destination) throws IOException;
 
     /**
      * Factory method to create a new persistent prepared transaction store for XA recovery
+     * @return transaction store
+     * @throws IOException 
      */
     public TransactionStore createTransactionStore() throws IOException;
 
@@ -66,27 +75,33 @@ public interface PersistenceAdapter extends Service {
      * real high performance its usually faster to perform many writes within the same
      * transaction to minimize latency caused by disk synchronization. This is especially
      * true when using tools like Berkeley Db or embedded JDBC servers.
+     * @param context 
+     * @throws IOException 
      */
     public void beginTransaction(ConnectionContext context) throws IOException;
 
 
     /**
      * Commit a persistence transaction
+     * @param context 
+     * @throws IOException 
      *
-     * @see PersistenceAdapter#beginTransaction()
+     * @see PersistenceAdapter#beginTransaction(ConnectionContext context)
      */
     public void commitTransaction(ConnectionContext context) throws IOException;
 
     /**
      * Rollback a persistence transaction
+     * @param context 
+     * @throws IOException 
      *
-     * @see PersistenceAdapter#beginTransaction()
+     * @see PersistenceAdapter#beginTransaction(ConnectionContext context)
      */
     public void rollbackTransaction(ConnectionContext context) throws IOException;
     
     /**
      * 
-     * @return
+     * @return last broker sequence
      * @throws IOException
      */
     public long getLastMessageBrokerSequenceId() throws IOException;
@@ -102,4 +117,24 @@ public interface PersistenceAdapter extends Service {
      * @param usageManager The UsageManager that is controlling the broker's memory usage.
      */
     public void setUsageManager(UsageManager usageManager);
+    
+    /**
+     * Set the name of the broker using the adapter
+     * @param brokerName
+     */
+    public void setBrokerName(String brokerName);
+    
+    /**
+     * Set the directory where any data files should be created
+     * @param dir
+     */
+    public void setDirectory(File dir);
+    
+    /**
+     * checkpoint any
+     * @param sync 
+     * @throws IOException 
+     *
+     */
+    public void checkpoint(boolean sync) throws IOException;
 }
