@@ -18,13 +18,11 @@
 package org.apache.activemq.broker.store;
 
 import java.util.Properties;
-
 import junit.framework.Test;
-
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.XARecoveryBrokerTest;
+import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.activemq.store.jpa.JPAReferenceStoreAdapter;
-import org.apache.activemq.store.quick.QuickPersistenceAdapter;
 
 /**
  * Used to verify that recovery works correctly against 
@@ -44,7 +42,7 @@ public class QuickJPAStoreXARecoveryBrokerTest extends XARecoveryBrokerTest {
     protected BrokerService createBroker() throws Exception {
         BrokerService service = new BrokerService();
         service.setDeleteAllMessagesOnStartup(true);
-        QuickPersistenceAdapter pa = new QuickPersistenceAdapter();
+        AMQPersistenceAdapter pa = new AMQPersistenceAdapter();
         
         JPAReferenceStoreAdapter rfa = new JPAReferenceStoreAdapter();
         Properties props = new Properties();
@@ -61,7 +59,7 @@ public class QuickJPAStoreXARecoveryBrokerTest extends XARecoveryBrokerTest {
     
     protected BrokerService createRestartedBroker() throws Exception {
         BrokerService service = new BrokerService();
-        QuickPersistenceAdapter pa = new QuickPersistenceAdapter();
+        AMQPersistenceAdapter pa = new AMQPersistenceAdapter();
         
         JPAReferenceStoreAdapter rfa = new JPAReferenceStoreAdapter();
         Properties props = new Properties();

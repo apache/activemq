@@ -29,7 +29,7 @@
     </transportConnectors>
 
     <persistenceAdapter>
-      <quickPersistenceAdapter directory="${basedir}/target/activemq-data/quick-broker.db" referenceStoreAdapter="#jpa"/> 
+      <amqPersistenceAdapter referenceStoreAdapter="#jpa"/> 
     </persistenceAdapter>
   </broker>
   
