@@ -212,7 +212,7 @@ abstract public class ActiveMQDestination extends JNDIBaseStorable implements Da
                 // won't be wild card
                 isPattern=false;
                 composite=true;
-            }else if(!composite&&(c=='*'||c=='.')){
+            }else if(!composite&&(c=='*'||c=='>')){
                 isPattern=true;
             }
         }
