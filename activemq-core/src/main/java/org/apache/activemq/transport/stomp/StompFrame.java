@@ -17,8 +17,10 @@
  */
 package org.apache.activemq.transport.stomp;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.activemq.command.Command;
@@ -147,4 +149,26 @@ public class StompFrame implements Command {
 		return false;
 	}
 
+	public String toString() {
+		StringBuffer buffer = new StringBuffer();
+		buffer.append(getAction());
+		buffer.append("\n");
+		Map headers = getHeaders();
+		for (Iterator iter = headers.entrySet().iterator(); iter.hasNext();) {
+			Map.Entry entry = (Map.Entry) iter.next();
+			buffer.append(entry.getKey());
+			buffer.append(":");
+			buffer.append(entry.getValue());
+			buffer.append("\n");
+		}
+		buffer.append("\n");
+		if( getContent()!=null ) {
+			try {
+				buffer.append(new String(getContent()));
+			} catch (Throwable e) {
+				buffer.append(Arrays.toString(getContent()));
+			}
+		}
+		return buffer.toString();
+	}
 }

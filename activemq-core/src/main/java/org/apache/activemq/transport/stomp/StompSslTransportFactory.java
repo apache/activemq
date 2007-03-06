@@ -17,12 +17,12 @@
  */
 package org.apache.activemq.transport.stomp;
 
-import org.apache.activemq.transport.tcp.TcpTransportFactory;
-import org.apache.activemq.transport.tcp.SslTransportFactory;
-import org.apache.activemq.transport.Transport;
-import org.apache.activemq.wireformat.WireFormat;
-
 import java.util.Map;
+
+import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.tcp.SslTransportFactory;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * A <a href="http://stomp.codehaus.org/">STOMP</a> over SSL transport factory
@@ -37,6 +37,7 @@ public class StompSslTransportFactory extends SslTransportFactory {
 
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
     	transport = new StompTransportFilter(transport, new LegacyFrameTranslator());
+    	IntrospectionSupport.setProperties(transport, options);
     	return super.compositeConfigure(transport, format, options);
     }
 }
