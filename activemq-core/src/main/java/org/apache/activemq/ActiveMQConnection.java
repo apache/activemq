@@ -1447,6 +1447,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     public BlobTransferPolicy getBlobTransferPolicy() {
+        if (blobTransferPolicy == null) {
+            blobTransferPolicy = createBlobTransferPolicy();
+        }
         return blobTransferPolicy;
     }
 
@@ -1981,5 +1984,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     
     public String toString() {
         return "ActiveMQConnection {id="+info.getConnectionId()+",clientId="+info.getClientId()+",started="+started.get()+"}";
-    }    
+    }
+
+    protected BlobTransferPolicy createBlobTransferPolicy() {
+        return new BlobTransferPolicy();
+    }
 }
