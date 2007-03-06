@@ -17,22 +17,13 @@
  */
 package org.apache.activemq.perf;
 
-import java.io.File;
-import javax.jms.BytesMessage;
 import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
-import javax.jms.Topic;
-import junit.framework.TestCase;
-
-import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 /**
  * @version $Revision: 1.3 $
  */
@@ -56,7 +47,7 @@ public class QueueConnectionMemoryTest extends SimpleQueueTest{
     }
     
     protected void configureBroker(BrokerService answer) throws Exception{
-        KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter(new File("target/test-amq-data/perfTest"));
+        KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter();
         answer.setPersistenceAdapter(adaptor);
         answer.addConnector(bindAddress);
         answer.setDeleteAllMessagesOnStartup(true);

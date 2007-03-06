@@ -31,7 +31,7 @@ public class AMQStoreCursorDurableTest extends CursorDurableTest{
     
 
     protected void configureBroker(BrokerService answer) throws Exception{
-        AMQPersistenceAdapter adaptor = new AMQPersistenceAdapter("localhost");
+        AMQPersistenceAdapter adaptor = new AMQPersistenceAdapter();
         answer.setPersistenceAdapter(adaptor);
         answer.setDeleteAllMessagesOnStartup(true);
         answer.addConnector(bindAddress);

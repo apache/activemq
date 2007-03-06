@@ -382,6 +382,8 @@ public class RegionBroker implements Broker {
         message.getMessageId().setBrokerSequenceId(si);
         if (producerExchange.isMutable() || producerExchange.getRegion()==null) {
             ActiveMQDestination destination = message.getDestination();
+            //ensure the destination is registered with the RegionBroker
+            addDestination(producerExchange.getConnectionContext(),destination);
             Region region = null;
             switch(destination.getDestinationType()) {
             case ActiveMQDestination.QUEUE_TYPE:

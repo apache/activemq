@@ -29,9 +29,6 @@
       <masterConnector remoteURI= "tcp://localhost:62001" userName="James" password="Cheese"/>
     </services>
 
-    <persistenceAdapter>
-      <kahaPersistenceAdapter dir = "${basedir}/target/activemq-data/slave"/>
-    </persistenceAdapter>
   </broker>
   <!-- END SNIPPET: example -->
 

@@ -29,7 +29,7 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.store.DefaultPersistenceAdapterFactory;
+import org.apache.activemq.store.journal.JournalPersistenceAdapterFactory;
 import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
 /**
  * @version $Revision: 454471 $
@@ -56,7 +56,7 @@ public class InactiveQueueTest extends TestCase{
         
         //broker.setPersistenceAdapter(new KahaPersistenceAdapter(new File ("TEST_STUFD")));
         /*
-        DefaultPersistenceAdapterFactory factory = new DefaultPersistenceAdapterFactory();
+        JournalPersistenceAdapterFactory factory = new JournalPersistenceAdapterFactory();
         factory.setDataDirectoryFile(broker.getDataDirectory());
         factory.setTaskRunnerFactory(broker.getTaskRunnerFactory());
         factory.setUseJournal(false);

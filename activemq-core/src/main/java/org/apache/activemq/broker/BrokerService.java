@@ -71,10 +71,11 @@ import org.apache.activemq.network.jms.JmsConnector;
 import org.apache.activemq.proxy.ProxyConnector;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
 import org.apache.activemq.security.SecurityContext;
-import org.apache.activemq.store.DefaultPersistenceAdapterFactory;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.PersistenceAdapterFactory;
+import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
 import org.apache.activemq.store.jdbc.DataSourceSupport;
+import org.apache.activemq.store.journal.JournalPersistenceAdapterFactory;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.TransportFactory;
@@ -1332,6 +1333,7 @@ public class BrokerService implements Service, Serializable {
         // we must start the persistence adaptor before we can create the region
         // broker
         getPersistenceAdapter().setUsageManager(getProducerUsageManager());
+        getPersistenceAdapter().setBrokerName(getBrokerName());
         if(this.deleteAllMessagesOnStartup){
             getPersistenceAdapter().deleteAllMessages();
         }
@@ -1410,10 +1412,11 @@ public class BrokerService implements Service, Serializable {
         }
     }
 
-    protected DefaultPersistenceAdapterFactory createPersistenceFactory() {
-        DefaultPersistenceAdapterFactory factory = new DefaultPersistenceAdapterFactory();
-        factory.setDataDirectoryFile(getDataDirectory());
+    protected AMQPersistenceAdapterFactory createPersistenceFactory() {
+        AMQPersistenceAdapterFactory factory = new AMQPersistenceAdapterFactory();
+        factory.setDataDirectory(getDataDirectory());
         factory.setTaskRunnerFactory(getPersistenceTaskRunnerFactory());
+        factory.setBrokerName(getBrokerName());
         return factory;
     }
 

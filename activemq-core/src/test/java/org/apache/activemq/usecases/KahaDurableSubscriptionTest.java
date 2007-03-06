@@ -26,7 +26,8 @@ public class KahaDurableSubscriptionTest extends DurableSubscriptionTestSupport{
 
     protected PersistenceAdapter createPersistenceAdapter() throws IOException{
         File dataDir=new File("target/test-data/durableKaha");
-        KahaPersistenceAdapter adaptor=new KahaPersistenceAdapter(dataDir);
+        KahaPersistenceAdapter adaptor=new KahaPersistenceAdapter();
+        adaptor.setDirectory(dataDir);
         return adaptor;
     }
 }

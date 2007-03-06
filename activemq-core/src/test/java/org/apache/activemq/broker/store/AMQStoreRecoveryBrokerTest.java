@@ -18,39 +18,49 @@
 package org.apache.activemq.broker.store;
 
 import junit.framework.Test;
-
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.XARecoveryBrokerTest;
-import org.apache.activemq.store.quick.QuickPersistenceAdapter;
+import org.apache.activemq.broker.RecoveryBrokerTest;
+import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 
 /**
  * Used to verify that recovery works correctly against 
  * 
  * @version $Revision$
  */
-public class QuickStoreXARecoveryBrokerTest extends XARecoveryBrokerTest {
-
-    public static Test suite() {
-        return suite(QuickStoreXARecoveryBrokerTest.class);
-    }
-    
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
-    }
+public class AMQStoreRecoveryBrokerTest extends RecoveryBrokerTest {
 
     protected BrokerService createBroker() throws Exception {
         BrokerService service = new BrokerService();
         service.setDeleteAllMessagesOnStartup(true);
-        QuickPersistenceAdapter pa = new QuickPersistenceAdapter();
+        AMQPersistenceAdapter pa = new AMQPersistenceAdapter();
         service.setPersistenceAdapter(pa);
         return service;
     }
     
     protected BrokerService createRestartedBroker() throws Exception {
         BrokerService service = new BrokerService();
-        QuickPersistenceAdapter pa = new QuickPersistenceAdapter();
+        AMQPersistenceAdapter pa = new AMQPersistenceAdapter();
         service.setPersistenceAdapter(pa);
         return service;
     }
+    
+    public static Test suite() {
+        return suite(AMQStoreRecoveryBrokerTest.class);
+    }
+    
+    public static void main(String[] args) {
+        junit.textui.TestRunner.run(suite());
+    }
+
+    
+//    @Override
+//    public void testTopicDurableConsumerHoldsPersistentMessageAfterRestart() throws Exception {
+//    	// TODO: this test is currently failing in base class.. overriden to avoid failure
+//    }
+//    
+//    @Override
+//    public void testQueuePersistentCommitedAcksNotLostOnRestart() throws Exception {
+//    	// TODO: this test is currently failing in base class.. overriden to avoid failure
+//    }
     
 }

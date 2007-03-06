@@ -35,7 +35,7 @@ protected void configureBroker(BrokerService answer) throws Exception{
         File journalDir = new File(dataFileDir, "journal").getCanonicalFile();
         JournalImpl journal = new JournalImpl(journalDir, 3, 1024*1024*20);
         
-        KahaPersistenceAdapter kahaAdaptor = new KahaPersistenceAdapter(new File(dataFileDir, "kaha"));
+        KahaPersistenceAdapter kahaAdaptor = new KahaPersistenceAdapter();
         JournalPersistenceAdapter journalAdaptor = new JournalPersistenceAdapter(journal, kahaAdaptor, answer.getTaskRunnerFactory());
         journalAdaptor.setMaxCheckpointWorkers(1);
         

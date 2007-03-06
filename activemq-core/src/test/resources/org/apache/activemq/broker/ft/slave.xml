@@ -23,11 +23,7 @@
       <transportConnector uri="tcp://localhost:62002"/>
     </transportConnectors>
     
-    <persistenceAdapter>
-      <kahaPersistenceAdapter dir = "${basedir}/target/activemq-data/slave"/>
-    </persistenceAdapter>
-
-   
+       
   </broker>
 
 </beans>
