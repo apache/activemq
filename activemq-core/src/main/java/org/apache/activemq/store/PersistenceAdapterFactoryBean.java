@@ -17,6 +17,7 @@
  */
 package org.apache.activemq.store;
 
+import org.apache.activemq.store.journal.JournalPersistenceAdapterFactory;
 import org.springframework.beans.factory.FactoryBean;
 
 /**
@@ -26,7 +27,7 @@ import org.springframework.beans.factory.FactoryBean;
  * 
  * @version $Revision: 1.1 $
  */
-public class PersistenceAdapterFactoryBean extends DefaultPersistenceAdapterFactory implements FactoryBean {
+public class PersistenceAdapterFactoryBean extends JournalPersistenceAdapterFactory implements FactoryBean {
 
     private PersistenceAdapter persistenceAdaptor;
 

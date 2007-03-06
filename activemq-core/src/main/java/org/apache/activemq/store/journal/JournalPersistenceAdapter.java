@@ -17,6 +17,7 @@
  */
 package org.apache.activemq.store.journal;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -313,6 +314,10 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
             Thread.currentThread().interrupt();
             log.warn("Request to start checkpoint failed: " + e, e);
         }
+    }
+    
+    public void checkpoint(boolean sync) {
+        checkpoint(sync,sync);
     }
         
     /**
@@ -666,8 +671,15 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     	return new ByteSequence(sequence.getData(), sequence.getOffset(), sequence.getLength());
     }
     
+    public void setBrokerName(String brokerName){
+        longTermPersistence.setBrokerName(brokerName);
+    }
+    
     public String toString(){
         return "JournalPersistenceAdapator(" + longTermPersistence + ")";
+    }
+
+    public void setDirectory(File dir){        
     }
 
 }

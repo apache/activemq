@@ -43,6 +43,7 @@ import org.apache.commons.logging.LogFactory;
 
 import javax.sql.DataSource;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collections;
@@ -483,7 +484,16 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         return new DefaultDatabaseLocker(getDataSource(), getStatements());
     }
     
+    public void setBrokerName(String brokerName){
+    }
+    
     public String toString(){
         return "JDBCPersistenceAdaptor("+super.toString()+")";
+    }
+
+    public void setDirectory(File dir){        
+    }
+
+    public void checkpoint(boolean sync) throws IOException{        
     }
 }

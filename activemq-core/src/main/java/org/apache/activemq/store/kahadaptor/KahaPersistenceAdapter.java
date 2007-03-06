@@ -41,9 +41,9 @@ import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionStore;
+import org.apache.activemq.util.IOHelper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 
 /**
  * @org.apache.xbean.XBean
@@ -51,28 +51,20 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.4 $
  */
 public class KahaPersistenceAdapter implements PersistenceAdapter{
-    private static final int STORE_LOCKED_WAIT_DELAY = 10*1000;
+
+    private static final int STORE_LOCKED_WAIT_DELAY=10*1000;
     private static final Log log=LogFactory.getLog(KahaPersistenceAdapter.class);
     static final String PREPARED_TRANSACTIONS_NAME="PreparedTransactions";
     KahaTransactionStore transactionStore;
-    ConcurrentHashMap<ActiveMQTopic, TopicMessageStore> topics=new ConcurrentHashMap<ActiveMQTopic, TopicMessageStore>();
-    ConcurrentHashMap<ActiveMQQueue, MessageStore> queues=new ConcurrentHashMap<ActiveMQQueue, MessageStore>();
-    ConcurrentHashMap<ActiveMQDestination, MessageStore> messageStores=new ConcurrentHashMap<ActiveMQDestination, MessageStore>();
+    ConcurrentHashMap<ActiveMQTopic,TopicMessageStore> topics=new ConcurrentHashMap<ActiveMQTopic,TopicMessageStore>();
+    ConcurrentHashMap<ActiveMQQueue,MessageStore> queues=new ConcurrentHashMap<ActiveMQQueue,MessageStore>();
+    ConcurrentHashMap<ActiveMQDestination,MessageStore> messageStores=new ConcurrentHashMap<ActiveMQDestination,MessageStore>();
     protected OpenWireFormat wireFormat=new OpenWireFormat();
     private long maxDataFileLength=32*1024*1024;
-    
-   
-    private File dir;
+    private File directory;
+    private String brokerName;
     private Store theStore;
-
-    public KahaPersistenceAdapter(File dir) throws IOException{
-        if(!dir.exists()){
-            dir.mkdirs();
-        }
-        this.dir=dir;
-        wireFormat.setCacheEnabled(false);
-        wireFormat.setTightEncodingEnabled(true);
-    }
+    private boolean initialized;
 
     public Set<ActiveMQDestination> getDestinations(){
         Set<ActiveMQDestination> rc=new HashSet<ActiveMQDestination>();
@@ -81,7 +73,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
             for(Iterator i=store.getMapContainerIds().iterator();i.hasNext();){
                 Object obj=i.next();
                 if(obj instanceof ActiveMQDestination){
-                    rc.add((ActiveMQDestination) obj);
+                    rc.add((ActiveMQDestination)obj);
                 }
             }
         }catch(IOException e){
@@ -127,25 +119,25 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
     }
 
     public TransactionStore createTransactionStore() throws IOException{
-       
         if(transactionStore==null){
-            while (true) {
-                try {
-            Store store=getStore();
-            MapContainer container=store.getMapContainer(PREPARED_TRANSACTIONS_NAME,"transactions");
-            container.setKeyMarshaller(new CommandMarshaller(wireFormat));
-            container.setValueMarshaller(new TransactionMarshaller(wireFormat));
-            container.load();
-            transactionStore=new KahaTransactionStore(this,container);
-            break;
-                }catch(StoreLockedExcpetion e) {
-                    log.info("Store is locked... waiting "+(STORE_LOCKED_WAIT_DELAY/1000)+" seconds for the Store to be unlocked.");
+            while(true){
+                try{
+                    Store store=getStore();
+                    MapContainer container=store.getMapContainer(PREPARED_TRANSACTIONS_NAME,"transactions");
+                    container.setKeyMarshaller(new CommandMarshaller(wireFormat));
+                    container.setValueMarshaller(new TransactionMarshaller(wireFormat));
+                    container.load();
+                    transactionStore=new KahaTransactionStore(this,container);
+                    break;
+                }catch(StoreLockedExcpetion e){
+                    log.info("Store is locked... waiting "+(STORE_LOCKED_WAIT_DELAY/1000)
+                            +" seconds for the Store to be unlocked.");
                     try{
                         Thread.sleep(STORE_LOCKED_WAIT_DELAY);
                     }catch(InterruptedException e1){
                     }
                 }
-        }
+            }
         }
         return transactionStore;
     }
@@ -163,6 +155,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
     }
 
     public void start() throws Exception{
+        initialize();
     }
 
     public void stop() throws Exception{
@@ -182,37 +175,37 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
             }else{
                 theStore.delete();
             }
-        }else {
+        }else{
             StoreFactory.delete(getStoreName());
         }
     }
 
     protected MapContainer<MessageId,Message> getMapContainer(Object id,String containerName) throws IOException{
         Store store=getStore();
-        MapContainer<MessageId, Message> container=store.getMapContainer(id,containerName);
+        MapContainer<MessageId,Message> container=store.getMapContainer(id,containerName);
         container.setKeyMarshaller(new MessageIdMarshaller());
-        container.setValueMarshaller(new MessageMarshaller(wireFormat));        
+        container.setValueMarshaller(new MessageMarshaller(wireFormat));
         container.load();
         return container;
     }
-    
+
     protected MapContainer<String,Object> getSubsMapContainer(Object id,String containerName) throws IOException{
         Store store=getStore();
-        MapContainer<String, Object> container=store.getMapContainer(id,containerName);
+        MapContainer<String,Object> container=store.getMapContainer(id,containerName);
         container.setKeyMarshaller(Store.StringMarshaller);
-        container.setValueMarshaller(createMessageMarshaller());        
+        container.setValueMarshaller(createMessageMarshaller());
         container.load();
         return container;
     }
 
-    protected Marshaller<Object> createMessageMarshaller() {
-		return new CommandMarshaller(wireFormat);
-	}
+    protected Marshaller<Object> createMessageMarshaller(){
+        return new CommandMarshaller(wireFormat);
+    }
 
-	protected ListContainer getListContainer(Object id,String containerName) throws IOException{
+    protected ListContainer getListContainer(Object id,String containerName) throws IOException{
         Store store=getStore();
         ListContainer container=store.getListContainer(id,containerName);
-        container.setMarshaller(createMessageMarshaller());        
+        container.setMarshaller(createMessageMarshaller());
         container.load();
         return container;
     }
@@ -239,8 +232,6 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
         this.maxDataFileLength=maxDataFileLength;
     }
 
-      
-
     protected synchronized Store getStore() throws IOException{
         if(theStore==null){
             theStore=StoreFactory.open(getStoreName(),"rw");
@@ -248,13 +239,50 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
         }
         return theStore;
     }
-    
+
     private String getStoreName(){
-        String name=dir.getAbsolutePath()+File.separator+"kaha.db";
-        return name;
+        initialize();
+        return directory.getAbsolutePath();
+    }
+
+    public String toString(){
+        return "KahaPersistenceAdapter("+getStoreName()+")";
+    }
+
+    public void setBrokerName(String brokerName){
+        this.brokerName=brokerName;
     }
     
-    public String toString(){
-        return "KahaPersistenceAdapter(" + getStoreName() +")";
+    public String getBrokerName(){
+        return brokerName;
     }
+
+    public File getDirectory(){
+        return this.directory;
+    }
+
+    public void setDirectory(File directory){
+        this.directory=directory;
+    }
+  
+    public void checkpoint(boolean sync) throws IOException{
+        if(sync){
+            getStore().force();
+        }
+    }
+
+    private void initialize(){
+        if(!initialized){
+            initialized=true;
+            if(this.directory==null){
+                this.directory=new File(IOHelper.getDefaultDataDirectory());
+                this.directory=new File(this.directory,brokerName+"-kahastore");
+            }         
+            this.directory.mkdirs();
+            wireFormat.setCacheEnabled(false);
+            wireFormat.setTightEncodingEnabled(true);
+        }
+    }
+
+   
 }

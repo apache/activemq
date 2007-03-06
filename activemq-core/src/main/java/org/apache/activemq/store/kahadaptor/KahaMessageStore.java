@@ -74,10 +74,15 @@ public class KahaMessageStore implements MessageStore{
         removeMessage(ack.getLastMessageId());
     }
 
+    
+    
     public synchronized void removeMessage(MessageId msgId) throws IOException{
-        messageContainer.remove(msgId);
-        if(messageContainer.isEmpty()){
-            resetBatching();
+        StoreEntry entry=messageContainer.getEntry(msgId);
+        if(entry!=null){
+            messageContainer.remove(entry);
+            if(messageContainer.isEmpty()||(batchEntry!=null&&batchEntry.equals(entry))){
+                resetBatching();
+            }
         }
     }
 

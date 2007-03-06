@@ -17,7 +17,6 @@ package org.apache.activemq.store.kahadaptor;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -85,7 +84,8 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
                 ConsumerMessageRef ref=new ConsumerMessageRef();
                 ref.setAckEntry(ackEntry);
                 ref.setMessageEntry(messageEntry);
-                container.add(ref);
+                StoreEntry listEntry = container.add(ref);
+                
             }
         }
     }
@@ -118,8 +118,8 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
 
     public synchronized void acknowledge(ConnectionContext context,String clientId,String subscriptionName,
             MessageId messageId) throws IOException{
-        String subcriberId=getSubscriptionKey(clientId,subscriptionName);
-        TopicSubContainer container=(TopicSubContainer)subscriberMessages.get(subcriberId);
+        String key=getSubscriptionKey(clientId,subscriptionName);
+        TopicSubContainer container=(TopicSubContainer)subscriberMessages.get(key);
         if(container!=null){
             ConsumerMessageRef ref=container.remove();
             if(container.isEmpty()){
@@ -140,6 +140,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
                             removeInterest(rr);
                         }
                     }else{
+                       
                         ackContainer.update(ref.getAckEntry(),tsa);
                     }
                 }
@@ -163,13 +164,15 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         // add the subscriber
         ListContainer container=addSubscriberMessageContainer(key);
         if(retroactive){
-            for(StoreEntry entry=ackContainer.getFirst();entry!=null;){
+            /*
+            for(StoreEntry entry=ackContainer.getFirst();entry!=null;entry=ackContainer.getNext(entry)){
                 TopicSubAck tsa=(TopicSubAck)ackContainer.get(entry);
                 ConsumerMessageRef ref=new ConsumerMessageRef();
                 ref.setAckEntry(entry);
                 ref.setMessageEntry(tsa.getMessageEntry());
                 container.add(ref);
             }
+            */
         }
     }
 
@@ -186,7 +189,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
     public int getMessageCount(String clientId,String subscriberName) throws IOException{
         String key=getSubscriptionKey(clientId,subscriberName);
         TopicSubContainer container=(TopicSubContainer)subscriberMessages.get(key);
-        return container.size();
+        return  container != null ? container.size() : 0;
     }
 
     public SubscriptionInfo lookupSubscription(String clientId,String subscriptionName) throws IOException{
@@ -226,6 +229,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
 
     public void recoverSubscription(String clientId,String subscriptionName,MessageRecoveryListener listener)
             throws Exception{
+        
         String key=getSubscriptionKey(clientId,subscriptionName);
         TopicSubContainer container=(TopicSubContainer)subscriberMessages.get(key);
         if(container!=null){

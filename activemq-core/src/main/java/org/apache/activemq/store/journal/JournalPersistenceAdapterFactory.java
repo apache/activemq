@@ -15,22 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.store;
+package org.apache.activemq.store.journal;
 
 import java.io.File;
 import java.io.IOException;
-
 import org.apache.activeio.journal.Journal;
 import org.apache.activeio.journal.active.JournalImpl;
 import org.apache.activeio.journal.active.JournalLockedException;
+import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.PersistenceAdapterFactory;
+import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.activemq.store.jdbc.DataSourceSupport;
 import org.apache.activemq.store.jdbc.JDBCAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.jdbc.Statements;
-import org.apache.activemq.store.journal.JournalPersistenceAdapter;
-import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
-import org.apache.activemq.util.IOHelper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -39,11 +38,11 @@ import org.apache.commons.logging.LogFactory;
  *
  * @version $Revision: 1.4 $
  */
-public class DefaultPersistenceAdapterFactory extends DataSourceSupport implements PersistenceAdapterFactory {
+public class JournalPersistenceAdapterFactory extends DataSourceSupport implements PersistenceAdapterFactory {
     
     private static final int JOURNAL_LOCKED_WAIT_DELAY = 10*1000;
 
-    private static final Log log = LogFactory.getLog(DefaultPersistenceAdapterFactory.class);
+    private static final Log log = LogFactory.getLog(JournalPersistenceAdapterFactory.class);
     
     private int journalLogFileSize = 1024*1024*20;
     private int journalLogFiles = 2;
@@ -62,15 +61,8 @@ public class DefaultPersistenceAdapterFactory extends DataSourceSupport implemen
         if( !useJournal ) {
             return jdbcPersistenceAdapter;
         }
+        return new JournalPersistenceAdapter(getJournal(), jdbcPersistenceAdapter, getTaskRunnerFactory());
         
-        // Setup the Journal
-//        if( useQuickJournal ) {
-//            return new QuickJournalPersistenceAdapter(getJournal(), jdbcPersistenceAdapter, getTaskRunnerFactory());
-//        }  else {
-            KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter(new File(IOHelper.getDefaultStoreDirectory())); 
-            return new JournalPersistenceAdapter(getJournal(), jdbcPersistenceAdapter, getTaskRunnerFactory());
-            //return new JournalPersistenceAdapter(getJournal(), adaptor, getTaskRunnerFactory());
-//        }
     }
 
     public int getJournalLogFiles() {
