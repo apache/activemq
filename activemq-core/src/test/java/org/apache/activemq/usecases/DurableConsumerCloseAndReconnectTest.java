@@ -28,6 +28,7 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.jms.TextMessage;
 import javax.jms.Topic;
 
 /**
@@ -41,14 +42,15 @@ public class DurableConsumerCloseAndReconnectTest extends TestSupport {
     private MessageConsumer consumer;
     private MessageProducer producer;
     private Destination destination;
-
+    private int messageCount=0;
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
-        return new ActiveMQConnectionFactory("vm://localhost?broker.persistent=true");
+        return new ActiveMQConnectionFactory("vm://localhost?broker.deleteAllMessagesOnStartup=false");
     }
 
     public void testCreateDurableConsumerCloseThenReconnect() throws Exception {
         // force the server to stay up across both connection tests
         Connection dummyConnection = createConnection();
+        dummyConnection.start();
 
         consumeMessagesDeliveredWhileConsumerClosed();
 
@@ -56,6 +58,11 @@ public class DurableConsumerCloseAndReconnectTest extends TestSupport {
 
         // now lets try again without one connection open
         consumeMessagesDeliveredWhileConsumerClosed();
+        //now delete the db
+        ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory("vm://localhost?broker.deleteAllMessagesOnStartup=true");
+        dummyConnection = fac.createConnection();
+        dummyConnection.start();
+        dummyConnection.close();
     }
 
     protected void consumeMessagesDeliveredWhileConsumerClosed() throws Exception {
@@ -80,7 +87,7 @@ public class DurableConsumerCloseAndReconnectTest extends TestSupport {
         message = consumer.receive(RECEIVE_TIMEOUT);
         assertTrue("Should have received a message!", message != null);
         message.acknowledge();
-
+       
         closeConsumer();
 
         log.info("Now lets create the consumer again and because we didn't ack, we should get it again");
@@ -98,7 +105,7 @@ public class DurableConsumerCloseAndReconnectTest extends TestSupport {
         message = consumer.receive(RECEIVE_TIMEOUT);
         assertTrue("Should have received a message!", message != null);
         message.acknowledge();
-
+       
         closeConsumer();
     }
 
@@ -111,9 +118,9 @@ public class DurableConsumerCloseAndReconnectTest extends TestSupport {
 
         producer = session.createProducer(destination);
         producer.setDeliveryMode(DeliveryMode.PERSISTENT);
-
-        producer.send(session.createTextMessage("This is a test"));
-
+        TextMessage msg = session.createTextMessage("This is a test: " + messageCount++);
+        producer.send(msg);
+      
         producer.close();
         producer = null;
         closeSession();
