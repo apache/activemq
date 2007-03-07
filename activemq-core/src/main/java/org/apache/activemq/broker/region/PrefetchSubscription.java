@@ -429,7 +429,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                 prefetchExtension=Math.max(0,prefetchExtension-1);
             }
             if(info.isDispatchAsync()){
-                md.setConsumer(new Runnable(){
+                md.setTransmitCallback(new Runnable(){
 
                     public void run(){
                         // Since the message gets queued up in async dispatch, we don't want to
