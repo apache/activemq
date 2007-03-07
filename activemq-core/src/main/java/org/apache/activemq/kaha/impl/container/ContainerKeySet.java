@@ -113,4 +113,15 @@ public class ContainerKeySet extends ContainerCollectionSupport implements Set{
     public void clear(){
       container.clear();
     }
+    
+    public String toString() {
+        String result ="ContainerKeySet[";
+        IndexItem item = container.getInternalList().getRoot();
+        while ((item = container.getInternalList().getNextEntry(item)) != null) {
+            result += container.getKey(item);
+            result += ",";
+        }
+        result +="]";
+        return result;
+    }
 }
