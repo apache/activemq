@@ -37,6 +37,7 @@ public abstract class TransportServerThreadSupport extends TransportServerSuppor
     private boolean daemon = true;
     private boolean joinOnStop = true;
     private Thread runner;
+    private long stackSize=0;//should be a multiple of 128k
 
     public TransportServerThreadSupport() {
     }
@@ -70,7 +71,7 @@ public abstract class TransportServerThreadSupport extends TransportServerSuppor
 
     protected void doStart() throws Exception {
         log.info("Listening for connections at: " + getConnectURI());
-        runner = new Thread(this, "ActiveMQ Transport Server: "+toString());
+        runner = new Thread(null,this, "ActiveMQ Transport Server: "+toString(),stackSize);
         runner.setDaemon(daemon);
         runner.setPriority(ThreadPriorities.BROKER_MANAGEMENT);
         runner.start();
@@ -81,5 +82,21 @@ public abstract class TransportServerThreadSupport extends TransportServerSuppor
             runner.join();
             runner = null;
         }
+    }
+
+    
+    /**
+     * @return the stackSize
+     */
+    public long getStackSize(){
+        return this.stackSize;
+    }
+
+    
+    /**
+     * @param stackSize the stackSize to set
+     */
+    public void setStackSize(long stackSize){
+        this.stackSize=stackSize;
     }
 }

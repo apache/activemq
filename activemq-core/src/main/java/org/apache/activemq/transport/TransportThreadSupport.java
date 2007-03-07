@@ -29,6 +29,7 @@ public abstract class TransportThreadSupport extends TransportSupport implements
 
     private boolean daemon = false;
     private Thread runner;
+    private long stackSize=0;//should be a multiple of 128k
 
     public boolean isDaemon() {
         return daemon;
@@ -39,8 +40,24 @@ public abstract class TransportThreadSupport extends TransportSupport implements
     }
 
     protected void doStart() throws Exception {
-        runner = new Thread(this, "ActiveMQ Transport: "+toString());
+        runner = new Thread(null,this, "ActiveMQ Transport: "+toString(),stackSize);
         runner.setDaemon(daemon);
         runner.start();
+    }
+
+    
+    /**
+     * @return the stackSize
+     */
+    public long getStackSize(){
+        return this.stackSize;
+    }
+
+    
+    /**
+     * @param stackSize the stackSize to set
+     */
+    public void setStackSize(long stackSize){
+        this.stackSize=stackSize;
     }
 }
