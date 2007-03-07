@@ -26,15 +26,29 @@ import org.apache.activemq.transport.discovery.DiscoveryAgentFactory;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class MulticastDiscoveryAgentFactory extends DiscoveryAgentFactory {
 
+    private static final Log log = LogFactory.getLog(MulticastDiscoveryAgentFactory.class);
+    
     protected DiscoveryAgent doCreateDiscoveryAgent(URI uri) throws IOException {
         try {
             
             Map options = URISupport.parseParamters(uri);
             MulticastDiscoveryAgent rc = new MulticastDiscoveryAgent();
             rc.setGroup(uri.getHost());
+
+            if ("default".equals(uri.getHost())) {
+                log.info("Using default discovery uri " + uri);
+
+            } else {
+                // only set the discovery URI if a non-default multicast IP/port endpoint is being used.
+                log.info("Setting discovery uri to " + uri);
+                rc.setDiscoveryURI(uri);
+            }
+            
             IntrospectionSupport.setProperties(rc, options);
             return rc;
             
