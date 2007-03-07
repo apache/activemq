@@ -54,7 +54,6 @@ import org.apache.activemq.broker.region.DestinationFactory;
 import org.apache.activemq.broker.region.DestinationFactoryImpl;
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.RegionBroker;
-import org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
@@ -74,8 +73,6 @@ import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.PersistenceAdapterFactory;
 import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
-import org.apache.activemq.store.jdbc.DataSourceSupport;
-import org.apache.activemq.store.journal.JournalPersistenceAdapterFactory;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.TransportFactory;
@@ -158,7 +155,7 @@ public class BrokerService implements Service, Serializable {
     private int persistenceThreadPriority = Thread.MAX_PRIORITY;
     private boolean useLocalHostBrokerName = false;
     private CountDownLatch stoppedLatch = new CountDownLatch(1);
-
+    
     /**
      * Adds a new transport connector for the given bind address
      *
