@@ -349,7 +349,7 @@ public class TopicSubscription extends AbstractSubscription{
         }
                 
         if(info.isDispatchAsync()){
-            md.setConsumer(new Runnable(){
+            md.setTransmitCallback(new Runnable(){
                 public void run(){
                     node.getRegionDestination().getDestinationStatistics().getDispatched().increment();	
                     node.decrementReferenceCount();

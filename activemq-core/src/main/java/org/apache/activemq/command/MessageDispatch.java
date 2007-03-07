@@ -36,6 +36,7 @@ public class MessageDispatch extends BaseCommand {
 
     transient protected long deliverySequenceId;
     transient protected Object consumer;
+    transient protected Runnable transmitCallback;
     
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
@@ -103,5 +104,13 @@ public class MessageDispatch extends BaseCommand {
     public Response visit(CommandVisitor visitor) throws Exception {
         return null;
     }
+
+	public Runnable getTransmitCallback() {
+		return transmitCallback;
+	}
+
+	public void setTransmitCallback(Runnable transmitCallback) {
+		this.transmitCallback = transmitCallback;
+	}
     
 }

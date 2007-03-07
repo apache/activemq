@@ -392,7 +392,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
             }
             
             if(info.isDispatchAsync()){
-                md.setConsumer(new Runnable(){
+                md.setTransmitCallback(new Runnable(){
                     public void run(){
                         // Since the message gets queued up in async dispatch, we don't want to
                         // decrease the reference count until it gets put on the wire.
