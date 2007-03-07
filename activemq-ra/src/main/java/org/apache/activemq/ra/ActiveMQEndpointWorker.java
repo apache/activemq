@@ -46,6 +46,10 @@ import org.apache.commons.logging.LogFactory;
 public class ActiveMQEndpointWorker {
 
     private static final Log log = LogFactory.getLog(ActiveMQEndpointWorker.class);
+
+    /**
+     * 
+     */
     public static final Method ON_MESSAGE_METHOD;
 
     private static final long INITIAL_RECONNECT_DELAY = 1000; // 1 second.
@@ -61,7 +65,7 @@ public class ActiveMQEndpointWorker {
         }
     }
 
-    protected ActiveMQResourceAdapter adapter;
+    protected MessageResourceAdapter adapter;
     protected ActiveMQEndpointActivationKey endpointActivationKey;
     protected MessageEndpointFactory endpointFactory;
     protected WorkManager workManager;
@@ -88,6 +92,7 @@ public class ActiveMQEndpointWorker {
             }
         }
         catch (JMSException e) {
+        	//
         }
     }
 
@@ -101,6 +106,7 @@ public class ActiveMQEndpointWorker {
             }
         }
         catch (JMSException e) {
+        	//
         }
     }
 
@@ -114,10 +120,14 @@ public class ActiveMQEndpointWorker {
             }
         }
         catch (JMSException e) {
+        	//
         }
     }
 
-    public ActiveMQEndpointWorker(final ActiveMQResourceAdapter adapter, ActiveMQEndpointActivationKey key) throws ResourceException {
+    /**
+     * 
+     */
+    public ActiveMQEndpointWorker(final MessageResourceAdapter adapter, ActiveMQEndpointActivationKey key) throws ResourceException {
         this.endpointActivationKey = key;
         this.adapter = adapter;
         this.endpointFactory = endpointActivationKey.getMessageEndpointFactory();
@@ -132,6 +142,7 @@ public class ActiveMQEndpointWorker {
         connectWork = new Work() {
 
             public void release() {
+            	//
             }
 
             synchronized public void run() {
@@ -140,7 +151,7 @@ public class ActiveMQEndpointWorker {
                 if( connection!=null )
                     return;
                 
-                ActiveMQActivationSpec activationSpec = endpointActivationKey.getActivationSpec();
+                MessageActivationSpec activationSpec = endpointActivationKey.getActivationSpec();
                 try {
                     connection = adapter.makeConnection(activationSpec);
                     connection.start();
@@ -176,7 +187,7 @@ public class ActiveMQEndpointWorker {
             }
         };
 
-        ActiveMQActivationSpec activationSpec = endpointActivationKey.getActivationSpec();
+        MessageActivationSpec activationSpec = endpointActivationKey.getActivationSpec();
         if ("javax.jms.Queue".equals(activationSpec.getDestinationType())) {
             dest = new ActiveMQQueue(activationSpec.getDestination());
         } else if ("javax.jms.Topic".equals(activationSpec.getDestinationType())) {
@@ -187,6 +198,9 @@ public class ActiveMQEndpointWorker {
 
     }
 
+    /**
+     * 
+     */
     synchronized public void start() throws WorkException, ResourceException {
         if (running)
             return;
@@ -257,7 +271,9 @@ public class ActiveMQEndpointWorker {
                     this.reconnectDelay=MAX_RECONNECT_DELAY;
             }
             connect();
-        } catch(InterruptedException e) {}
+        } catch(InterruptedException e) {
+        	//
+        }
     }
 
     protected void registerThreadSession(Session session) {

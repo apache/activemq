@@ -42,12 +42,18 @@ public class ActiveMQManagedConnectionFactory implements ManagedConnectionFactor
 
     private static final long serialVersionUID = 6196921962230582875L;
 
-    private ActiveMQResourceAdapter adapter;
+    private MessageResourceAdapter adapter;
     private PrintWriter logWriter;
     private ActiveMQConnectionRequestInfo info = new ActiveMQConnectionRequestInfo();
 
+    /**
+     * @see javax.resource.spi.ResourceAdapterAssociation#setResourceAdapter(javax.resource.spi.ResourceAdapter)
+     */
     public void setResourceAdapter(ResourceAdapter adapter) throws ResourceException {
-        this.adapter = (ActiveMQResourceAdapter) adapter;
+        if (!(adapter instanceof MessageResourceAdapter)) {
+            throw new ResourceException("ResourceAdapter is not of type: " + MessageResourceAdapter.class.getName());
+        }
+        this.adapter = (MessageResourceAdapter) adapter;
         ActiveMQConnectionRequestInfo baseInfo = this.adapter.getInfo().copy();
         if (info.getClientid() == null)
             info.setClientid(baseInfo.getClientid());
@@ -61,6 +67,10 @@ public class ActiveMQManagedConnectionFactory implements ManagedConnectionFactor
             info.setUserName(baseInfo.getUserName());
     }
     
+    /**
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
     public boolean equals(Object object) {
         if( object == null || object.getClass()!=ActiveMQManagedConnectionFactory.class ) {
             return false;
@@ -68,11 +78,18 @@ public class ActiveMQManagedConnectionFactory implements ManagedConnectionFactor
         return ((ActiveMQManagedConnectionFactory)object).info.equals(info);
     }
     
+    /**
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
     public int hashCode() {
         return info.hashCode();
     }
     
 
+    /**
+     * @see javax.resource.spi.ResourceAdapterAssociation#getResourceAdapter()
+     */
     public ResourceAdapter getResourceAdapter() {
         return adapter;
     }
@@ -155,117 +172,204 @@ public class ActiveMQManagedConnectionFactory implements ManagedConnectionFactor
     //
     // /////////////////////////////////////////////////////////////////////////
 
+    /**
+     * 
+     */
     public String getClientid() {
         return info.getClientid();
     }
 
+    /**
+     * 
+     */
     public String getPassword() {
         return info.getPassword();
     }
 
+    /**
+     * 
+     */
     public String getUserName() {
         return info.getUserName();
     }
 
+    /**
+     * 
+     */
     public void setClientid(String clientid) {
         info.setClientid(clientid);
     }
 
+    /**
+     * 
+     */
     public void setPassword(String password) {
         info.setPassword(password);
     }
 
+    /**
+     * 
+     */
     public void setUserName(String userid) {
         info.setUserName(userid);
     }
 
+    /**
+     * 
+     */
+    /**
+     * 
+     */
     public Boolean getUseInboundSession() {
         return info.getUseInboundSession();
     }
 
+    /**
+     * 
+     */
     public void setUseInboundSession(Boolean useInboundSession) {
         info.setUseInboundSession(useInboundSession);
     }
 
+    /**
+     * 
+     */
     public boolean isUseInboundSessionEnabled() {
         return info.isUseInboundSessionEnabled();
     }
 
     // Redelivery policy configuration
+    /**
+     * 
+     */
     public Long getInitialRedeliveryDelay() {
         return info.getInitialRedeliveryDelay();
     }
 
+    /**
+     * 
+     */
     public Integer getMaximumRedeliveries() {
         return info.getMaximumRedeliveries();
     }
 
+    /**
+     * 
+     */
     public Short getRedeliveryBackOffMultiplier() {
         return info.getRedeliveryBackOffMultiplier();
     }
 
+    /**
+     * 
+     */
     public Boolean getRedeliveryUseExponentialBackOff() {
         return info.getRedeliveryUseExponentialBackOff();
     }
 
+    /**
+     * 
+     */
     public void setInitialRedeliveryDelay(Long value) {
         info.setInitialRedeliveryDelay(value);
     }
 
+    /**
+     * 
+     */
     public void setMaximumRedeliveries(Integer value) {
         info.setMaximumRedeliveries(value);
     }
 
+    /**
+     * 
+     */
     public void setRedeliveryBackOffMultiplier(Short value) {
         info.setRedeliveryBackOffMultiplier(value);
     }
 
+    /**
+     * 
+     */
     public void setRedeliveryUseExponentialBackOff(Boolean value) {
         info.setRedeliveryUseExponentialBackOff(value);
     }
 
 
     // Prefetch policy configuration
+    /**
+     * 
+     */
     public Integer getDurableTopicPrefetch() {
         return info.getDurableTopicPrefetch();
     }
 
+    /**
+     * 
+     */
     public Integer getInputStreamPrefetch() {
         return info.getInputStreamPrefetch();
     }
 
+    /**
+     * 
+     */
     public Integer getQueueBrowserPrefetch() {
         return info.getQueueBrowserPrefetch();
     }
 
+    /**
+     * 
+     */
     public Integer getQueuePrefetch() {
         return info.getQueuePrefetch();
     }
 
+    /**
+     * 
+     */
     public Integer getTopicPrefetch() {
         return info.getTopicPrefetch();
     }
 
+    /**
+     * 
+     */
     public void setAllPrefetchValues(Integer i) {
         info.setAllPrefetchValues(i);
     }
 
+    /**
+     * 
+     */
     public void setDurableTopicPrefetch(Integer durableTopicPrefetch) {
         info.setDurableTopicPrefetch(durableTopicPrefetch);
     }
 
+    /**
+     * 
+     */
     public void setInputStreamPrefetch(Integer inputStreamPrefetch) {
         info.setInputStreamPrefetch(inputStreamPrefetch);
     }
 
+    /**
+     * 
+     */
     public void setQueueBrowserPrefetch(Integer queueBrowserPrefetch) {
         info.setQueueBrowserPrefetch(queueBrowserPrefetch);
     }
 
+    /**
+     * 
+     */
     public void setQueuePrefetch(Integer queuePrefetch) {
         info.setQueuePrefetch(queuePrefetch);
     }
 
+    /**
+     * @param topicPrefetch
+     */
     public void setTopicPrefetch(Integer topicPrefetch) {
         info.setTopicPrefetch(topicPrefetch);
     }

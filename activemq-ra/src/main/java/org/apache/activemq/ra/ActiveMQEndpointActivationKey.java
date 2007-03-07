@@ -22,12 +22,12 @@ import javax.resource.spi.endpoint.MessageEndpointFactory;
 
 public class ActiveMQEndpointActivationKey {
     final private MessageEndpointFactory messageEndpointFactory;
-    final private ActiveMQActivationSpec activationSpec;
+    final private MessageActivationSpec activationSpec;
 
     /**
      * @return Returns the activationSpec.
      */
-    public ActiveMQActivationSpec getActivationSpec() {
+    public MessageActivationSpec getActivationSpec() {
         return activationSpec;
     }
 
@@ -49,7 +49,7 @@ public class ActiveMQEndpointActivationKey {
      * @param messageEndpointFactory
      * @param activationSpec
      */
-    public ActiveMQEndpointActivationKey(MessageEndpointFactory messageEndpointFactory, ActiveMQActivationSpec activationSpec) {
+    public ActiveMQEndpointActivationKey(MessageEndpointFactory messageEndpointFactory, MessageActivationSpec activationSpec) {
         this.messageEndpointFactory = messageEndpointFactory;
         this.activationSpec = activationSpec;
     }

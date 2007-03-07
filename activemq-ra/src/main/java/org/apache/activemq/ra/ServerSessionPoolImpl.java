@@ -17,9 +17,7 @@
  */
 package org.apache.activemq.ra;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.jms.JMSException;
@@ -58,7 +56,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
     }
 
     private ServerSessionImpl createServerSessionImpl() throws JMSException {
-        ActiveMQActivationSpec activationSpec = activeMQAsfEndpointWorker.endpointActivationKey.getActivationSpec();
+        MessageActivationSpec activationSpec = activeMQAsfEndpointWorker.endpointActivationKey.getActivationSpec();
         int acknowledge = (activeMQAsfEndpointWorker.transacted) ? Session.SESSION_TRANSACTED : activationSpec.getAcknowledgeModeForSession();
         final ActiveMQSession session = (ActiveMQSession) activeMQAsfEndpointWorker.connection.createSession(activeMQAsfEndpointWorker.transacted,acknowledge);            
         MessageEndpoint endpoint;
@@ -130,7 +128,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
     }
 
     /**
-     * @param message
+     * @param messageDispatch the message to dispatch
      * @throws JMSException
      */
     private void dispatchToSession(MessageDispatch messageDispatch) throws JMSException {
