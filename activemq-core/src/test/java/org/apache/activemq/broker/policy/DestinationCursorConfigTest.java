@@ -16,11 +16,10 @@
  */
 package org.apache.activemq.broker.policy;
 
-import javax.jms.Destination;
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.broker.region.policy.PendingQueueMessageStoragePolicy;
+import org.apache.activemq.broker.region.policy.PendingSubscriberMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.VMPendingQueueMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.VMPendingSubscriberMessageStoragePolicy;
@@ -29,13 +28,23 @@ import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.springframework.core.io.ClassPathResource;
 
 /**
- *
  * @version $Revision: 2765 $
  */
 public class DestinationCursorConfigTest extends TestSupport {
+    protected BrokerService broker;
 
+    @Override
+    protected void setUp() throws Exception {
+        broker = createBroker();
+        super.setUp();  
+    }
 
-   
+    @Override
+    protected void tearDown() throws Exception {
+        broker.stop();
+        super.tearDown();    
+    }
+
     protected BrokerService createBroker() throws Exception {
         BrokerFactoryBean factory = new BrokerFactoryBean(new ClassPathResource("org/apache/activemq/broker/policy/cursor.xml"));
         factory.afterPropertiesSet();
@@ -43,20 +52,21 @@ public class DestinationCursorConfigTest extends TestSupport {
         return answer;
     }
 
-    public void testConfiguration() throws Exception{
-        BrokerService broker = createBroker();
-        super.topic=false;
-        ActiveMQDestination destination = (ActiveMQDestination)createDestination("org.apache.foo");
-        PolicyEntry entry=broker.getDestinationPolicy().getEntryFor(destination);
+    public void testQueueConfiguration() throws Exception {
+        super.topic = false;
+        ActiveMQDestination destination = (ActiveMQDestination) createDestination("org.apache.foo");
+        PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
         PendingQueueMessageStoragePolicy policy = entry.getPendingQueuePolicy();
         assertNotNull(policy);
-        assert(policy instanceof VMPendingQueueMessageStoragePolicy);
-        
-        super.topic=true;
-        destination = (ActiveMQDestination)createDestination("org.apache.foo");
-        entry=broker.getDestinationPolicy().getEntryFor(destination);
+        assertTrue("Policy is: " + policy, policy instanceof VMPendingQueueMessageStoragePolicy);
+    }
+
+    public void testTopicConfiguration() throws Exception {
+        super.topic = true;
+        ActiveMQDestination destination = (ActiveMQDestination) createDestination("org.apache.foo");
+        PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
+        PendingSubscriberMessageStoragePolicy policy = entry.getPendingSubscriberPolicy();
         assertNotNull(policy);
-        assert(policy instanceof VMPendingSubscriberMessageStoragePolicy);
-        
+        assertTrue("subscriberPolicy is: " + policy, policy instanceof VMPendingSubscriberMessageStoragePolicy);
     }
 }
