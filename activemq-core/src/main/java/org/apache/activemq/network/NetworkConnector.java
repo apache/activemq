@@ -42,7 +42,6 @@ public abstract class NetworkConnector extends ServiceSupport {
     private String brokerName = "localhost";
 
     private Set durableDestinations;
-    protected boolean failover = false;
     private List excludedDestinations = new CopyOnWriteArrayList();
     private List dynamicallyIncludedDestinations = new CopyOnWriteArrayList();
     private List staticallyIncludedDestinations = new CopyOnWriteArrayList();

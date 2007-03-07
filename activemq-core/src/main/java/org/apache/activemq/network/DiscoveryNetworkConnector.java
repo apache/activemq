@@ -83,16 +83,6 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 return;
 
             URI connectUri = uri;
-            if (failover) {
-                try {
-                    connectUri = new URI("failover:(" + connectUri+")?maxReconnectDelay=1000");
-                }
-                catch (URISyntaxException e) {
-                    log.warn("Could not create failover URI: " + connectUri);
-                    return;
-                }
-            }
-
             log.info("Establishing network connection between from " + localURI + " to " + connectUri);
 
             Transport remoteTransport;
@@ -166,14 +156,6 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             this.discoveryAgent.setDiscoveryListener(this);
             this.discoveryAgent.setBrokerName(getBrokerName());
         }
-    }
-
-    public boolean isFailover() {
-        return failover;
-    }
-
-    public void setFailover(boolean reliable) {
-        this.failover = reliable;
     }
 
     protected void doStart() throws Exception {
