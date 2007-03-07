@@ -32,6 +32,7 @@ public class ProducerInfo extends BaseCommand {
     protected ActiveMQDestination destination;
     protected BrokerId[] brokerPath;
     protected boolean dispatchAsync;
+    protected int windowSize;
     
     public ProducerInfo() {
     }
@@ -115,6 +116,21 @@ public class ProducerInfo extends BaseCommand {
 
 	public void setDispatchAsync(boolean dispatchAsync) {
 		this.dispatchAsync = dispatchAsync;
+	}
+
+    /**
+     * Used to configure the producer window size.  A producer will
+     * send up to the configured window size worth of payload data to
+     * the broker before waiting for an Ack that allows him to send more.
+     * 
+     * @openwire:property version=3
+     */
+	public int getWindowSize() {
+		return windowSize;
+	}
+
+	public void setWindowSize(int windowSize) {
+		this.windowSize = windowSize;
 	}
 
 }
