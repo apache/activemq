@@ -17,22 +17,18 @@
  */
 package org.apache.activemq.transport.discovery.multicast;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.Map;
-
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryAgentFactory;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.Map;
 
 public class MulticastDiscoveryAgentFactory extends DiscoveryAgentFactory {
 
-    private static final Log log = LogFactory.getLog(MulticastDiscoveryAgentFactory.class);
-    
     protected DiscoveryAgent doCreateDiscoveryAgent(URI uri) throws IOException {
         try {
             
@@ -40,15 +36,8 @@ public class MulticastDiscoveryAgentFactory extends DiscoveryAgentFactory {
             MulticastDiscoveryAgent rc = new MulticastDiscoveryAgent();
             rc.setGroup(uri.getHost());
 
-            if ("default".equals(uri.getHost())) {
-                log.info("Using default discovery uri " + uri);
-
-            } else {
-                // only set the discovery URI if a non-default multicast IP/port endpoint is being used.
-                log.info("Setting discovery uri to " + uri);
-                rc.setDiscoveryURI(uri);
-            }
-            
+            // allow the discoveryURI to be set via a query argument on the URI
+            // ?discoveryURI=someURI
             IntrospectionSupport.setProperties(rc, options);
             return rc;
             
