@@ -25,6 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ft.MasterBroker;
 import org.apache.activemq.broker.region.ConnectionStatistics;
@@ -789,7 +790,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         } else {
             if(message.isMessageDispatch()) {
                 MessageDispatch md=(MessageDispatch) message;
-                Runnable sub=(Runnable) md.getConsumer();
+                Runnable sub=md.getTransmitCallback();
                 broker.processDispatch(md);
                 if(sub!=null){
                     sub.run();
@@ -807,10 +808,10 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
 
             if(command.isMessageDispatch()){
                 MessageDispatch md=(MessageDispatch) command;
+                Runnable sub=md.getTransmitCallback();
                 broker.processDispatch(md);
                 Object consumer = md.getConsumer();
-                if (consumer instanceof Runnable) {
-                    Runnable sub=(Runnable) consumer;
+                if(sub!=null){
                     sub.run();
                 }
             }
@@ -947,7 +948,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
                     Command command = (Command) iter.next();
                     if(command.isMessageDispatch()) {
                         MessageDispatch md=(MessageDispatch) command;
-                        Runnable sub=(Runnable) md.getConsumer();
+                        Runnable sub=md.getTransmitCallback();
                         broker.processDispatch(md);
                         if(sub!=null){
                             sub.run();
