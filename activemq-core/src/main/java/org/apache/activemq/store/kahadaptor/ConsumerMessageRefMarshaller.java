@@ -20,6 +20,7 @@ package org.apache.activemq.store.kahadaptor;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.impl.index.IndexItem;
 
@@ -39,12 +40,14 @@ public class ConsumerMessageRefMarshaller implements Marshaller{
      */
     public void writePayload(Object object,DataOutput dataOut) throws IOException{
        ConsumerMessageRef ref = (ConsumerMessageRef) object;
+       dataOut.writeUTF(ref.getMessageId().toString());
        IndexItem item = (IndexItem)ref.getMessageEntry();
        dataOut.writeLong(item.getOffset());
        item.write(dataOut);
        item = (IndexItem)ref.getAckEntry();
        dataOut.writeLong(item.getOffset());
        item.write(dataOut);
+       
        
     }
 
@@ -56,6 +59,7 @@ public class ConsumerMessageRefMarshaller implements Marshaller{
      */
     public Object readPayload(DataInput dataIn) throws IOException{
         ConsumerMessageRef ref = new ConsumerMessageRef();
+        ref.setMessageId(new MessageId(dataIn.readUTF()));
         IndexItem item = new IndexItem();
         item.setOffset(dataIn.readLong());
         item.read(dataIn);

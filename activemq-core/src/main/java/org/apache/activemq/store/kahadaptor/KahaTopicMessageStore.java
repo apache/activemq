@@ -58,7 +58,8 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
     public synchronized void addMessage(ConnectionContext context,Message message) throws IOException{
         int subscriberCount=subscriberMessages.size();
         if(subscriberCount>0){
-            StoreEntry messageEntry=messageContainer.place(message.getMessageId(),message);
+            MessageId id = message.getMessageId();
+            StoreEntry messageEntry=messageContainer.place(id,message);
             TopicSubAck tsa=new TopicSubAck();
             tsa.setCount(subscriberCount);
             tsa.setMessageEntry(messageEntry);
@@ -68,6 +69,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
                 ConsumerMessageRef ref=new ConsumerMessageRef();
                 ref.setAckEntry(ackEntry);
                 ref.setMessageEntry(messageEntry);
+                ref.setMessageId(id);
                 container.add(ref);
             }
         }
@@ -78,7 +80,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
         String subcriberId=getSubscriptionKey(clientId,subscriptionName);
         TopicSubContainer container=(TopicSubContainer)subscriberMessages.get(subcriberId);
         if(container!=null){
-            ConsumerMessageRef ref=container.remove();
+            ConsumerMessageRef ref=container.remove(messageId);
             if(container.isEmpty()){
                 container.reset();
             }
