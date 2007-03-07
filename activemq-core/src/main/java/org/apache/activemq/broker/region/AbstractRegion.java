@@ -97,33 +97,25 @@ abstract public class AbstractRegion implements Region {
         destinations.clear();
     }
     
-    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
+    public Destination addDestination(ConnectionContext context,ActiveMQDestination destination) throws Exception{
         log.debug("Adding destination: "+destination);
-        
-        synchronized (destinationsMutex) {
-            Destination dest = (Destination) destinations.get(destination);
-            if (dest != null) {
-                log.warn("Attempt to add destination which is already created: " + destination);
-            }
-            else {
-                dest = createDestination(context, destination);
-
+        synchronized(destinationsMutex){
+            Destination dest=(Destination)destinations.get(destination);
+            if(dest==null){
+                dest=createDestination(context,destination);
                 // intercept if there is a valid interceptor defined
-                DestinationInterceptor destinationInterceptor = broker.getDestinationInterceptor();
-                if (destinationInterceptor != null) {
-                    dest = destinationInterceptor.intercept(dest);
+                DestinationInterceptor destinationInterceptor=broker.getDestinationInterceptor();
+                if(destinationInterceptor!=null){
+                    dest=destinationInterceptor.intercept(dest);
                 }
-                
                 dest.start();
-
-                destinations.put(destination, dest);
-                destinationMap.put(destination, dest);
-
+                destinations.put(destination,dest);
+                destinationMap.put(destination,dest);
                 // Add all consumers that are interested in the destination.
-                for (Iterator iter = subscriptions.values().iterator(); iter.hasNext();) {
-                    Subscription sub = (Subscription) iter.next();
-                    if (sub.matches(destination)) {
-                        dest.addSubscription(context, sub);
+                for(Iterator iter=subscriptions.values().iterator();iter.hasNext();){
+                    Subscription sub=(Subscription)iter.next();
+                    if(sub.matches(destination)){
+                        dest.addSubscription(context,sub);
                     }
                 }
             }
