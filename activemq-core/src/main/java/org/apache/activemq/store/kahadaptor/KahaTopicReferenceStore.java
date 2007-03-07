@@ -68,30 +68,29 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         listener.recoverMessageReference(new MessageId(record.getMessageId()));
     }
 
-    public void addMessageReference(ConnectionContext context,MessageId messageId,ReferenceData data)
-            throws IOException{
-        ReferenceRecord record=new ReferenceRecord(messageId.toString(),data);
-        int subscriberCount=subscriberMessages.size();
+    public void addMessageReference(final ConnectionContext context,final MessageId messageId,final ReferenceData data){
+        final ReferenceRecord record=new ReferenceRecord(messageId.toString(),data);
+        final int subscriberCount=subscriberMessages.size();
         if(subscriberCount>0){
-            StoreEntry messageEntry=messageContainer.place(messageId,record);
+            final StoreEntry messageEntry=messageContainer.place(messageId,record);
             addInterest(record);
-            TopicSubAck tsa=new TopicSubAck();
+            final TopicSubAck tsa=new TopicSubAck();
             tsa.setCount(subscriberCount);
             tsa.setMessageEntry(messageEntry);
-            StoreEntry ackEntry=ackContainer.placeLast(tsa);
-            for(Iterator i=subscriberMessages.values().iterator();i.hasNext();){
-                TopicSubContainer container=(TopicSubContainer)i.next();
-                ConsumerMessageRef ref=new ConsumerMessageRef();
+            final StoreEntry ackEntry=ackContainer.placeLast(tsa);
+            for(final Iterator i=subscriberMessages.values().iterator();i.hasNext();){
+                final TopicSubContainer container=(TopicSubContainer)i.next();
+                final ConsumerMessageRef ref=new ConsumerMessageRef();
                 ref.setAckEntry(ackEntry);
                 ref.setMessageEntry(messageEntry);
-                StoreEntry listEntry = container.add(ref);
-                
+                ref.setMessageId(messageId);
+                container.add(ref);
             }
         }
     }
 
-    public ReferenceData getMessageReference(MessageId identity) throws IOException{
-        ReferenceRecord result=messageContainer.get(identity);
+    public ReferenceData getMessageReference(final MessageId identity) throws IOException{
+        final ReferenceRecord result=messageContainer.get(identity);
         if(result==null)
             return null;
         return result.getData();
@@ -119,12 +118,10 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
     public synchronized void acknowledge(ConnectionContext context,String clientId,String subscriptionName,
             MessageId messageId) throws IOException{
         String key=getSubscriptionKey(clientId,subscriptionName);
+        
         TopicSubContainer container=(TopicSubContainer)subscriberMessages.get(key);
         if(container!=null){
-            ConsumerMessageRef ref=container.remove();
-            if(container.isEmpty()){
-                container.reset();
-            }
+            ConsumerMessageRef ref=container.remove(messageId);
             if(ref!=null){
                 TopicSubAck tsa=(TopicSubAck)ackContainer.get(ref.getAckEntry());
                 if(tsa!=null){

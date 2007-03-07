@@ -14,6 +14,7 @@
 
 package org.apache.activemq.store.kahadaptor;
 
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.kaha.StoreEntry;
 
 /**
@@ -23,6 +24,7 @@ import org.apache.activemq.kaha.StoreEntry;
  */
 public class ConsumerMessageRef{
 
+    private MessageId messageId;
     private StoreEntry messageEntry;
     private StoreEntry ackEntry;
     
@@ -52,6 +54,22 @@ public class ConsumerMessageRef{
      */
     public void setMessageEntry(StoreEntry messageEntry){
         this.messageEntry=messageEntry;
+    }
+
+    
+    /**
+     * @return the messageId
+     */
+    public MessageId getMessageId(){
+        return this.messageId;
+    }
+
+    
+    /**
+     * @param messageId the messageId to set
+     */
+    public void setMessageId(MessageId messageId){
+        this.messageId=messageId;
     }
 
        

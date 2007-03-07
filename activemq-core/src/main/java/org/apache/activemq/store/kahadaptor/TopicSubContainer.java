@@ -15,6 +15,7 @@
 package org.apache.activemq.store.kahadaptor;
 
 import java.util.Iterator;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.StoreEntry;
 
@@ -58,14 +59,17 @@ import org.apache.activemq.kaha.StoreEntry;
         return listContainer.placeLast(ref);
     }
     
-    public ConsumerMessageRef remove(){
+    public ConsumerMessageRef remove(MessageId id){
         ConsumerMessageRef result=null;
         if(!listContainer.isEmpty()){
-            StoreEntry entry=listContainer.getFirst();
-            if(entry!=null){
-                result=(ConsumerMessageRef)listContainer.removeFirst();
-                if(listContainer.isEmpty()||(batchEntry!=null&&batchEntry.equals(entry))){
-                    reset();
+            for(StoreEntry entry=listContainer.getFirst();entry!=null;entry=listContainer.getNext(entry)){
+                ConsumerMessageRef ref=(ConsumerMessageRef)listContainer.get(entry);
+                if(ref!=null&&ref.getMessageId().equals(id)){
+                    listContainer.remove(entry);
+                    result=ref;
+                    if(listContainer.isEmpty()||batchEntry.equals(entry)){
+                        reset();
+                    }
                 }
             }
         }
