@@ -82,6 +82,7 @@ public class MarshallerFactory {
         add(new MessagePullMarshaller());
         add(new NetworkBridgeFilterMarshaller());
         add(new PartialCommandMarshaller());
+        add(new ProducerAckMarshaller());
         add(new ProducerIdMarshaller());
         add(new ProducerInfoMarshaller());
         add(new RemoveInfoMarshaller());

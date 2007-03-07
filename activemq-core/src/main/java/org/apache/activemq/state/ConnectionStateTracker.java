@@ -33,6 +33,7 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessagePull;
+import org.apache.activemq.command.ProducerAck;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
@@ -480,6 +481,10 @@ public class ConnectionStateTracker implements CommandVisitor {
         return null;
     }
 
+    public Response processProducerAck(ProducerAck ack) throws Exception {
+		return null;
+	}
+
     public boolean isRestoreConsumers() {
         return restoreConsumers;
     }
@@ -519,5 +524,6 @@ public class ConnectionStateTracker implements CommandVisitor {
 	public void setRestoreTransaction(boolean restoreTransaction) {
 		this.restoreTransaction = restoreTransaction;
 	}
+
 
 }

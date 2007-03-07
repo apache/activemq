@@ -51,6 +51,7 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessagePull;
+import org.apache.activemq.command.ProducerAck;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
@@ -685,6 +686,12 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
         return null;
     }
 
+    
+    public Response processProducerAck(ProducerAck ack) throws Exception {
+		// A broker should not get ProducerAck messages.
+		return null;
+	}    
+
     public Connector getConnector(){
         return connector;
     }
@@ -1150,5 +1157,6 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
 			log.debug("Could not stop transport: "+e,e);
 		}
     	}
-	}    
+	}
+
 }
