@@ -731,9 +731,10 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
 
             if(command.isMessageDispatch()){
                 MessageDispatch md=(MessageDispatch) command;
-                Runnable sub=(Runnable) md.getConsumer();
                 broker.processDispatch(md);
-                if(sub!=null){
+                Object consumer = md.getConsumer();
+                if (consumer instanceof Runnable) {
+                    Runnable sub=(Runnable) consumer;
                     sub.run();
                 }
             }
