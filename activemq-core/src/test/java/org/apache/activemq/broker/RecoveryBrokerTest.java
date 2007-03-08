@@ -152,7 +152,7 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
         connection1.send(createMessage(producerInfo1, destination, DeliveryMode.PERSISTENT));
         connection1.send(createMessage(producerInfo1, destination, DeliveryMode.PERSISTENT));
         connection1.send(createMessage(producerInfo1, destination, DeliveryMode.PERSISTENT));
-        
+        connection1.request(closeConnectionInfo(connectionInfo1));
         // Restart the broker.
         restartBroker();
         
@@ -193,6 +193,7 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
         Message message = createMessage(producerInfo, destination);
         message.setPersistent(true);
         connection.send(message);
+        connection.request(closeConnectionInfo(connectionInfo));
         
         // restart the broker.
         restartBroker();
@@ -270,7 +271,7 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
         
         // Commit
         connection.send(createCommitTransaction1Phase(connectionInfo, txid));
-
+        connection.request(closeConnectionInfo(connectionInfo));
         // restart the broker.
         restartBroker();
         
@@ -326,7 +327,7 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
         }        
         // Commit
         connection.send(createCommitTransaction1Phase(connectionInfo, txid));
-        
+        connection.request(closeConnectionInfo(connectionInfo));
         // restart the broker.
         restartBroker();
         
