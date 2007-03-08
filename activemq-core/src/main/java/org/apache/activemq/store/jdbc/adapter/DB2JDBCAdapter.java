@@ -17,22 +17,28 @@
  */
 package org.apache.activemq.store.jdbc.adapter;
 
+import org.apache.activemq.store.jdbc.Statements;
+
 import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- *
- * @org.apache.xbean.XBean element="db2JDBCAdapter"
- *
  * @version $Revision: 1.2 $
+ * @org.apache.xbean.XBean element="db2JDBCAdapter"
  */
 public class DB2JDBCAdapter extends DefaultJDBCAdapter {
-
     public DB2JDBCAdapter() {
-        batchStatments=false;
+        batchStatments = false;
     }
-    
+
+    public void setStatements(Statements statements) {
+        String lockCreateStatement = "LOCK TABLE " + statements.getFullLockTableName() + " IN EXCLUSIVE MODE";
+        statements.setLockCreateStatement(lockCreateStatement);
+
+        super.setStatements(statements);
+    }
+
     protected byte[] getBinaryData(ResultSet rs, int index) throws SQLException {
         // Get as a BLOB
         Blob aBlob = rs.getBlob(index);
