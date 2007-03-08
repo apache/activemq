@@ -118,12 +118,10 @@ public class DemandForwardingBridgeTest extends NetworkTestSupport {
         connection2.send(consumerInfo);
         
         // Send the message to the local boker.
-        connection1.send(createMessage(producerInfo, destination, deliveryMode));
-        
+        connection1.request(createMessage(producerInfo, destination, deliveryMode));
         // Make sure the message was delivered via the remote.
         Message m = receiveMessage(connection2);
-        assertNotNull(m);
-    }
+     }
 
     protected void setUp() throws Exception {
         super.setUp();
