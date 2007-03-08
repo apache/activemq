@@ -54,9 +54,6 @@ public interface Broker extends Region, Service {
 
     /**
      * Get the id of the broker
-     * @param context
-     * @param info 
-     * @param client
      */
     public BrokerId getBrokerId();
 
@@ -67,9 +64,6 @@ public interface Broker extends Region, Service {
     
     /**
      * A remote Broker connects
-     * @param contection
-     * @param info 
-     * @param client
      */
     public void addBroker(Connection connection, BrokerInfo info);
     
@@ -83,9 +77,6 @@ public interface Broker extends Region, Service {
 
     /**
      * A client is establishing a connection with the broker.
-     * @param context
-     * @param info 
-     * @param client
      * @throws Exception TODO
      */
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception;
@@ -94,7 +85,6 @@ public interface Broker extends Region, Service {
      * A client is disconnecting from the broker.
      * @param context the environment the operation is being executed under.
      * @param info 
-     * @param client
      * @param error null if the client requested the disconnect or the error that caused the client to disconnect.
      * @throws Exception TODO
      */
@@ -144,14 +134,13 @@ public interface Broker extends Region, Service {
     
     /**
      * Gets a list of all the prepared xa transactions.
-     * @param client
      * @throws Exception TODO
      */
     public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Exception;
 
     /**
      * Starts a transaction.
-     * @param client
+     * @param context
      * @param xid
      * @throws Exception TODO
      */
@@ -159,7 +148,7 @@ public interface Broker extends Region, Service {
 
     /**
      * Prepares a transaction. Only valid for xa transactions.
-     * @param client
+     * @param context
      * @param xid
      * @return
      * @throws Exception TODO
@@ -168,7 +157,7 @@ public interface Broker extends Region, Service {
 
     /**
      * Rollsback a transaction.
-     * @param client
+     * @param context
      * @param xid
      * @throws Exception TODO
      */
@@ -177,7 +166,7 @@ public interface Broker extends Region, Service {
 
     /**
      * Commits a transaction.
-     * @param client
+     * @param context
      * @param xid
      * @param onePhase
      * @throws Exception TODO
@@ -186,10 +175,6 @@ public interface Broker extends Region, Service {
 
     /**
      * Forgets a transaction.
-     * @param client
-     * @param xid
-     * @param onePhase
-     * @throws Exception TODO
      */
     public void forgetTransaction(ConnectionContext context, TransactionId transactionId) throws Exception;
     
