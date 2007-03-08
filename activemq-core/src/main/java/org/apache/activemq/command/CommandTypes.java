@@ -23,6 +23,9 @@ package org.apache.activemq.command;
  * @version $Revision: 1.21 $
  */
 public interface CommandTypes {
+	
+	// What is the latest version of the openwire protocol
+    byte  PROTOCOL_VERSION                  = 3;
 
     // A marshaling layer can use this type to specify a null object.
     byte  NULL                              = 0;

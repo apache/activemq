@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.activemq.Service;
@@ -34,6 +35,7 @@ import org.apache.activemq.broker.region.ConnectionStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.CommandTypes;
 import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.command.ConnectionError;
 import org.apache.activemq.command.ConnectionId;
@@ -123,6 +125,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
     private CountDownLatch dispatchStoppedLatch = new CountDownLatch(1);
     protected AtomicBoolean dispatchStopped=new AtomicBoolean(false);
     private boolean networkConnection;
+    private AtomicInteger protocolVersion=new AtomicInteger(CommandTypes.PROTOCOL_VERSION);
     
     static class ConnectionState extends org.apache.activemq.state.ConnectionState{
 
@@ -326,6 +329,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
 
     public Response processWireFormat(WireFormatInfo info) throws Exception{
         wireFormatInfo=info;
+    	protocolVersion.set(info.getVersion());
         return null;
     }
 
@@ -1157,6 +1161,10 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
 			log.debug("Could not stop transport: "+e,e);
 		}
     	}
+	}
+	
+	public int getProtocolVersion() {
+		return protocolVersion.get();
 	}
 
 }
