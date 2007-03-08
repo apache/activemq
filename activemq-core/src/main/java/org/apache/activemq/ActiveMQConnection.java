@@ -25,6 +25,15 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionConsumer;
@@ -45,6 +54,7 @@ import javax.jms.TopicConnection;
 import javax.jms.TopicSession;
 import javax.jms.XAConnection;
 
+import org.apache.activemq.blob.BlobTransferPolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTempDestination;
@@ -52,6 +62,7 @@ import org.apache.activemq.command.ActiveMQTempQueue;
 import org.apache.activemq.command.ActiveMQTempTopic;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.CommandTypes;
 import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.command.ConnectionError;
 import org.apache.activemq.command.ConnectionId;
@@ -70,6 +81,7 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.ShutdownInfo;
+import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.management.JMSConnectionStatsImpl;
 import org.apache.activemq.management.JMSStatsImpl;
 import org.apache.activemq.management.StatsCapable;
@@ -82,18 +94,8 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.util.ServiceSupport;
-import org.apache.activemq.blob.BlobTransferPolicy;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class ActiveMQConnection implements Connection, TopicConnection, QueueConnection, StatsCapable, Closeable,  StreamConnection, TransportListener {
@@ -166,7 +168,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private final CountDownLatch brokerInfoReceived = new CountDownLatch(1);
     private BrokerInfo brokerInfo;
     private IOException firstFailureError;
-
+    
+    // Assume that protocol is the latest.  Change to the actual protocol
+    // version when a WireFormatInfo is received.
+    private AtomicInteger protocolVersion=new AtomicInteger(CommandTypes.PROTOCOL_VERSION);
 
     /**
      * Construct an <code>ActiveMQConnection</code>
@@ -1562,6 +1567,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 onConnectionControl((ConnectionControl) command);
             }else if (command instanceof ConsumerControl){
                 onConsumerControl((ConsumerControl) command);
+            }else if ( command.isWireFormatInfo() ) {
+            	onWireFormatInfo((WireFormatInfo)command);
             }
         }
         for (Iterator iter = transportListeners.iterator(); iter.hasNext();) {
@@ -1570,7 +1577,12 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         }
     }
 
-    /**
+    protected void onWireFormatInfo(WireFormatInfo info) {
+    	protocolVersion.set(info.getVersion());
+	}
+
+
+	/**
      * Used for handling async exceptions
      * 
      * @param error
@@ -1989,4 +2001,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     protected BlobTransferPolicy createBlobTransferPolicy() {
         return new BlobTransferPolicy();
     }
+
+
+	public int getProtocolVersion() {
+		return protocolVersion.get();
+	}
 }

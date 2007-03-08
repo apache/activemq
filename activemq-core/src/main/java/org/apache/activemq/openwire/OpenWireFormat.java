@@ -17,18 +17,23 @@
  */
 package org.apache.activemq.openwire;
 
-import org.apache.activemq.command.CommandTypes;
-import org.apache.activemq.command.DataStructure;
-import org.apache.activemq.command.MarshallAware;
-import org.apache.activemq.command.WireFormatInfo;
-import org.apache.activemq.util.*;
-import org.apache.activemq.wireformat.WireFormat;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+
+import org.apache.activemq.command.CommandTypes;
+import org.apache.activemq.command.DataStructure;
+import org.apache.activemq.command.MarshallAware;
+import org.apache.activemq.command.WireFormatInfo;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.ByteSequenceData;
+import org.apache.activemq.util.ClassLoading;
+import org.apache.activemq.util.DataByteArrayInputStream;
+import org.apache.activemq.util.DataByteArrayOutputStream;
+import org.apache.activemq.util.IdGenerator;
+import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * 
@@ -36,7 +41,7 @@ import java.util.HashMap;
  */
 final public class OpenWireFormat implements WireFormat {
 
-    public static final int DEFAULT_VERSION = 3;
+    public static final int DEFAULT_VERSION = CommandTypes.PROTOCOL_VERSION;
 
     static final byte NULL_TYPE = CommandTypes.NULL;
     private static final int MARSHAL_CACHE_SIZE = Short.MAX_VALUE/2;
@@ -561,15 +566,28 @@ final public class OpenWireFormat implements WireFormat {
 			throw new IllegalStateException("Wireformat cannot not be renegotiated.");
 		
 		this.setVersion(min(preferedWireFormatInfo.getVersion(), info.getVersion()) );
+		info.setVersion(this.getVersion());
+		
 		this.stackTraceEnabled = info.isStackTraceEnabled() && preferedWireFormatInfo.isStackTraceEnabled();
+		info.setStackTraceEnabled(this.stackTraceEnabled);
+		
 		this.tcpNoDelayEnabled = info.isTcpNoDelayEnabled() && preferedWireFormatInfo.isTcpNoDelayEnabled();
+		info.setTcpNoDelayEnabled(this.tcpNoDelayEnabled);
+		
 		this.cacheEnabled = info.isCacheEnabled() && preferedWireFormatInfo.isCacheEnabled();
+		info.setCacheEnabled(this.cacheEnabled);
+		
 		this.tightEncodingEnabled = info.isTightEncodingEnabled() && preferedWireFormatInfo.isTightEncodingEnabled();
+		info.setTightEncodingEnabled(this.tightEncodingEnabled);
+		
 		this.sizePrefixDisabled = info.isSizePrefixDisabled() && preferedWireFormatInfo.isSizePrefixDisabled();
+		info.setSizePrefixDisabled(this.sizePrefixDisabled);
 		
 		if( cacheEnabled ) {
 			
 			int size = Math.min(preferedWireFormatInfo.getCacheSize(), info.getCacheSize());
+			info.setCacheSize(size);
+			
 			if( size == 0 ) {
 				size = MARSHAL_CACHE_SIZE;
 			}
