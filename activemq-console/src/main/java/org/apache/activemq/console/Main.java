@@ -71,20 +71,27 @@ public class Main {
         // ${activemq.home}/lib/*
         // ${activemq.base}/lib/optional/* (only if activemq.base != activemq.home)
         // ${activemq.home}/lib/optional/*
+        // ${activemq.base}/lib/web/* (only if activemq.base != activemq.home)
+        // ${activemq.home}/lib/web/*
         //
         if(useDefExt && app.canUseExtdir()) {
 
             boolean baseIsHome = app.getActiveMQBase().equals(app.getActiveMQHome());
 
-            if(!baseIsHome) {
-                app.addExtensionDirectory(new File(app.getActiveMQBase(), "lib"));
-            }
-            app.addExtensionDirectory(new File(app.getActiveMQHome(), "lib"));
+            File baseLibDir = new File(app.getActiveMQBase(), "lib");
+            File homeLibDir = new File(app.getActiveMQHome(), "lib");
 
             if(!baseIsHome) {
-                app.addExtensionDirectory(new File(new File(app.getActiveMQBase(), "lib"), "optional"));
+                app.addExtensionDirectory(baseLibDir);
             }
-            app.addExtensionDirectory(new File(new File(app.getActiveMQHome(), "lib"), "optional"));
+            app.addExtensionDirectory(homeLibDir);
+
+            if(!baseIsHome) {
+                app.addExtensionDirectory(new File(baseLibDir, "optional"));
+                app.addExtensionDirectory(new File(baseLibDir, "web"));
+            }
+            app.addExtensionDirectory(new File(homeLibDir, "optional"));
+            app.addExtensionDirectory(new File(homeLibDir, "web"));
 
         }
 
