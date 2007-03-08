@@ -236,6 +236,12 @@
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-web-console</artifactId>
+        <version>${activemq-version}</version>
+        <type>war</type>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-gbean-management</artifactId>
         <version>${activemq-version}</version>
       </dependency>
@@ -751,6 +757,27 @@
         <version>${jxta-version}</version>
       </dependency>
 
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-jcl</artifactId>
+        <version>1.0-rc5</version>
+      </dependency>
+      <dependency>
+        <groupId>opensymphony</groupId>
+        <artifactId>sitemesh</artifactId>
+        <version>2.2.1</version>
+      </dependency>
+      <dependency>
+        <groupId>javax.servlet</groupId>
+        <artifactId>jstl</artifactId>
+        <version>1.0</version>
+      </dependency>
+      <dependency>
+        <groupId>taglibs</groupId>
+        <artifactId>standard</artifactId>
+        <version>1.1.2</version>
+      </dependency>
+        
     </dependencies>
   </dependencyManagement>
   <!--
