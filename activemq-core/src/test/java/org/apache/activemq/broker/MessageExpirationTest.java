@@ -100,7 +100,7 @@ public class MessageExpirationTest extends BrokerTestSupport {
         destination = createDestinationInfo(connection2, connectionInfo2, destinationType);
         ConsumerInfo consumerInfo2 = createConsumerInfo(sessionInfo2, destination);
         consumerInfo2.setPrefetchSize(1);
-        connection2.send(consumerInfo2);
+        connection2.request(consumerInfo2);
         
         // Reduce the limit so that only 1 message can flow through the broker at a time.
         broker.getMemoryManager().setLimit(1);
