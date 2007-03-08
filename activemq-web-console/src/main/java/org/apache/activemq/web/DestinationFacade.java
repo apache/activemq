@@ -99,12 +99,8 @@ public class DestinationFacade  {
     }
 
     protected ActiveMQDestination createDestination() {
-        if (isQueue()) {
-            return new ActiveMQQueue(getValidDestination());
-        }
-        else {
-            return new ActiveMQTopic(getValidDestination());
-        }
+        byte destinationType = isQueue() ? ActiveMQDestination.QUEUE_TYPE : ActiveMQDestination.TOPIC_TYPE;
+        return ActiveMQDestination.createDestination(getValidDestination(), destinationType);
     }
 
     protected String getValidDestination() {
@@ -126,5 +122,7 @@ public class DestinationFacade  {
         return new ModelAndView("redirect:" + (isQueue() ? "queues.jsp" : "topics.jsp"));
     }
 
-
+    protected String getPhysicalDestinationName() {
+        return createDestination().getPhysicalName();
+    }
 }

@@ -52,7 +52,7 @@
 <td>${row.JMSTimestamp}</td>
 <td>${row.JMSType}</td>
 <td>
-    <a href="deleteDestination.action?JMSDestination=${row.JMSDestination}">Delete</a>
+    <a href="deleteMessage.action?JMSDestination=${row.JMSDestination}&messageId=${row.JMSMessageID}">Delete</a>
 </td>
 </tr>
 </jms:forEachMessage>

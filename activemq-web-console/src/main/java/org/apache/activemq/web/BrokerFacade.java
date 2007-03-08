@@ -18,6 +18,8 @@
 package org.apache.activemq.web;
 
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
+import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
 
 import java.util.Collection;
@@ -43,4 +45,8 @@ public interface BrokerFacade {
      * @throws Exception
      */
     void purgeQueue(ActiveMQDestination destination) throws Exception;
+
+    QueueViewMBean getQueue(String name) throws Exception;
+
+    TopicViewMBean getTopic(String name) throws Exception;
 }

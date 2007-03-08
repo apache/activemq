@@ -32,7 +32,8 @@
   <bean name="/deleteSubscriber.action" class="org.apache.activemq.web.controller.DeleteSubscriber" autowire="constructor"  singleton="false"/>
   <bean name="/sendMessage.action" class="org.apache.activemq.web.controller.SendMessage" autowire="constructor"  singleton="false"/>
   <bean name="/purgeDestination.action" class="org.apache.activemq.web.controller.PurgeDestination" autowire="constructor"  singleton="false"/>
-  
+  <bean name="/deleteMessage.action" class="org.apache.activemq.web.controller.DeleteMessage" autowire="constructor"  singleton="false"/>
+
   <!--
     - This bean resolves specific types of exception to corresponding error views.
     - The default behaviour of DispatcherServlet is to propagate all exceptions to the
