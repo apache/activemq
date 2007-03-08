@@ -265,18 +265,20 @@ public final class AsyncDataManager {
 		return (DataFile) dataFile.getNext();
 	}
 
-    public synchronized void close() throws IOException{
-    	if( !started ) {
-    		return;
-    	}
-    	Scheduler.cancel(cleanupTask);
-    	accessorPool.close();
-    	storeState(false);
-    	appender.close();
+    public void close() throws IOException{
+        synchronized(this){
+            if(!started){
+                return;
+            }
+            Scheduler.cancel(cleanupTask);
+            accessorPool.close();
+        }
+        storeState(false);
+        appender.close();
         fileMap.clear();
-    	controlFile.unlock();
-    	controlFile.dispose();
-    	started=false;
+        controlFile.unlock();
+        controlFile.dispose();
+        started=false;
     }
 
 	private synchronized void cleanup() {
