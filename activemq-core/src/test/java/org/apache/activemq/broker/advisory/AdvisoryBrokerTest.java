@@ -116,7 +116,7 @@ public class AdvisoryBrokerTest extends BrokerTestSupport {
         assertEquals(((ConsumerInfo)m1.getDataStructure()).getConsumerId(), consumerInfo2.getConsumerId());
 
         // Close the second connection.
-        connection2.send(closeConnectionInfo(connectionInfo2));
+        connection2.request(closeConnectionInfo(connectionInfo2));
         connection2.stop();
 
         // We should get an advisory of the consumer closing
@@ -213,7 +213,7 @@ public class AdvisoryBrokerTest extends BrokerTestSupport {
         assertEquals(((ProducerInfo)m1.getDataStructure()).getProducerId(), producerInfo2.getProducerId());
 
         // Close the second connection.
-        connection2.send(closeConnectionInfo(connectionInfo2));
+        connection2.request(closeConnectionInfo(connectionInfo2));
         connection2.stop();
 
         // We should get an advisory of the producer closing
@@ -261,7 +261,7 @@ public class AdvisoryBrokerTest extends BrokerTestSupport {
         assertEquals(((ProducerInfo)m1.getDataStructure()).getProducerId(), producerInfo2.getProducerId());
 
         // Close the second connection.
-        connection2.send(closeConnectionInfo(connectionInfo2));
+        connection2.request(closeConnectionInfo(connectionInfo2));
         connection2.stop();
 
         // We should get an advisory of the producer closing
