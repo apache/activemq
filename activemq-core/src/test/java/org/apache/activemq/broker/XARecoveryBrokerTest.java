@@ -190,7 +190,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
             connection.send(ack);
         }        
         // Commit
-        connection.send(createCommitTransaction1Phase(connectionInfo, txid));
+        connection.request(createCommitTransaction1Phase(connectionInfo, txid));
         
         // restart the broker.
         restartBroker();
