@@ -77,7 +77,7 @@ class PooledTaskRunner implements TaskRunner {
      * shut down the task
      * @throws InterruptedException 
      */
-    public void shutdown() throws InterruptedException{
+    public void shutdown(long timeout) throws InterruptedException{
         synchronized(runable){
             shutdown=true;
             //the check on the thread is done
@@ -85,13 +85,17 @@ class PooledTaskRunner implements TaskRunner {
             //shutDown() being called, which would wait forever
             //waiting for iterating to finish
             if(runningThread!=Thread.currentThread()){
-                while(iterating==true){
-                    runable.wait();
+                if(iterating==true){
+                    runable.wait(timeout);
                 }
             }
         }
     }        
     
+    
+    public void shutdown() throws InterruptedException {
+        shutdown(0);
+    }
     private void runTask() {
         
         synchronized (runable) {
