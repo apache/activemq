@@ -50,6 +50,9 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         prefetchCount = 1;
         messageSize   = 1024; // 1 Kb
 
+        // this is gonna be a bit slow what with the low prefetch so bump up the wait time
+        allMessagesList.setMaximumDuration(allMessagesList.getMaximumDuration() * 20);
+        
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * producerCount);
