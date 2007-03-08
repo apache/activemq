@@ -33,6 +33,8 @@ public class MessagePull extends BaseCommand {
     protected ConsumerId consumerId;
     protected ActiveMQDestination destination;
     protected long timeout;
+    private MessageId messageId;
+    private String correlationId;
 
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
@@ -83,4 +85,32 @@ public class MessagePull extends BaseCommand {
         this.timeout = timeout;
     }
 
+    /**
+     * An optional correlation ID which could be used by a broker to decide which messages are pulled
+     * on demand from a queue for a consumer
+     *
+     * @openwire:property version=3
+     */
+    public String getCorrelationId() {
+        return correlationId;
+    }
+
+    public void setCorrelationId(String correlationId) {
+        this.correlationId = correlationId;
+    }
+
+
+    /**
+     * An optional message ID which could be used by a broker to decide which messages are pulled
+     * on demand from a queue for a consumer
+     *
+     * @openwire:property version=3
+     */
+    public MessageId getMessageId() {
+        return messageId;
+    }
+
+    public void setMessageId(MessageId messageId) {
+        this.messageId = messageId;
+    }
 }
