@@ -73,6 +73,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
         // Since prepared but not committed.. they should not get delivered.
         assertNoMessagesLeft(connection);
+        connection.request(closeConnectionInfo(connectionInfo));
 
         // restart the broker.
         restartBroker();
@@ -134,7 +135,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         
         // Commit
         connection.send(createCommitTransaction1Phase(connectionInfo, txid));
-
+        connection.request(closeConnectionInfo(connectionInfo));
         // restart the broker.
         restartBroker();
         
