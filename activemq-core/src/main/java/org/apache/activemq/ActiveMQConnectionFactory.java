@@ -17,6 +17,24 @@
  */
 package org.apache.activemq;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadFactory;
+
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.JMSException;
+import javax.jms.QueueConnection;
+import javax.jms.QueueConnectionFactory;
+import javax.jms.TopicConnection;
+import javax.jms.TopicConnectionFactory;
+import javax.naming.Context;
+
+import org.apache.activemq.blob.BlobTransferPolicy;
 import org.apache.activemq.jndi.JNDIBaseStorable;
 import org.apache.activemq.management.JMSStatsImpl;
 import org.apache.activemq.management.StatsCapable;
@@ -28,23 +46,6 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.util.URISupport.CompositeData;
-import org.apache.activemq.blob.BlobTransferPolicy;
-
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSException;
-import javax.jms.QueueConnection;
-import javax.jms.QueueConnectionFactory;
-import javax.jms.TopicConnection;
-import javax.jms.TopicConnectionFactory;
-import javax.naming.Context;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
 
 /**
  * A ConnectionFactory is an an Administered object, and is used for creating
@@ -60,6 +61,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public static final String DEFAULT_BROKER_URL = "tcp://localhost:61616";
     public static final String DEFAULT_USER = null;
     public static final String DEFAULT_PASSWORD = null;
+    public static final int DEFAULT_PRODUCER_WINDOW_SIZE = 0;
 
     private IdGenerator clientIdGenerator;
     private String clientIDPrefix;
@@ -90,6 +92,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private boolean alwaysSyncSend;
     private boolean useSyncSend=false;
     private boolean watchTopicAdvisories=true;
+    private int producerWindowSize=DEFAULT_PRODUCER_WINDOW_SIZE;
 
     static protected final Executor DEFAULT_CONNECTION_EXECUTOR = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
             public Thread newThread(Runnable run) {
@@ -263,7 +266,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             connection.setTransformer(getTransformer());
             connection.setBlobTransferPolicy(getBlobTransferPolicy().copy());
             connection.setWatchTopicAdvisories(watchTopicAdvisories);
-            
+            connection.setProducerWindowSize(producerWindowSize);
             transport.start();
 
             if( clientID !=null )
@@ -590,7 +593,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("optimizeAcknowledge", Boolean.toString(isOptimizeAcknowledge()));
         props.setProperty("statsEnabled",Boolean.toString(isStatsEnabled()));
         props.setProperty("alwaysSyncSend",Boolean.toString(isAlwaysSyncSend()));
-
+        props.setProperty("producerWindowSize", Integer.toString(producerWindowSize));
     }
 
     public boolean isUseCompression() {
@@ -749,4 +752,12 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public void setStatsEnabled(boolean statsEnabled){
         this.factoryStats.setEnabled(statsEnabled);
     }
+
+	synchronized public int getProducerWindowSize() {
+		return producerWindowSize;
+	}
+
+	synchronized public void setProducerWindowSize(int producerWindowSize) {
+		this.producerWindowSize = producerWindowSize;
+	}
 }
