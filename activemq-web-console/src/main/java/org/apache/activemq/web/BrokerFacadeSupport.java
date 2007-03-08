@@ -22,6 +22,7 @@ import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.broker.jmx.DestinationViewMBean;
 
 import javax.management.MBeanServer;
 import javax.management.MBeanServerInvocationHandler;
@@ -30,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Iterator;
 
 /**
  * A useful base class for an implementation of {@link BrokerFacade}
@@ -64,6 +66,25 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         }
         ObjectName[] queues = broker.getDurableTopicSubscribers();
         return getManagedObjects(queues, DurableSubscriptionViewMBean.class);
+    }
+
+    public QueueViewMBean getQueue(String name) throws Exception {
+        return (QueueViewMBean) getDestinationByName(getQueues(), name);
+    }
+
+    public TopicViewMBean getTopic(String name) throws Exception {
+        return (TopicViewMBean) getDestinationByName(getTopics(), name);
+    }
+
+    protected DestinationViewMBean getDestinationByName(Collection collection, String name) {
+        Iterator iter = collection.iterator();
+        while (iter.hasNext()) {
+            DestinationViewMBean destinationViewMBean = (DestinationViewMBean) iter.next();
+            if (name.equals(destinationViewMBean.getName())) {
+                return destinationViewMBean;
+            }
+        }
+        return null;
     }
 
     protected Collection getManagedObjects(ObjectName[] names, Class type) {
