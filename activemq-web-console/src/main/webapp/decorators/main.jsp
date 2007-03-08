@@ -21,9 +21,9 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 	<title><decorator:title default="ActiveMQ Console" /></title>
     <style type="text/css" media="screen">
-        @import url(<c:url value="/styles/site.css"/>);
-        @import url(<c:url value="/styles/type-settings.css.css"/>);
         @import url(<c:url value="/styles/sorttable.css"/>);
+        @import url(<c:url value="/styles/type-settings.css"/>);
+        @import url(<c:url value="/styles/site.css"/>);
     </style>
     <c:if test="${!disableJavaScript}">
 	    <script type='text/javascript' src='<c:url value="/js/common.js"/>'/>
@@ -85,9 +85,8 @@
                         <tbody>
                             <tr>
                                 <td valign="top" width="100%" style="overflow:hidden;">
-                                    <div class="wiki-content">
+                                    <div class="body-content">
                                         <decorator:body/>
-
                                     </div>
                                 </td>
                                 <td valign="top">
