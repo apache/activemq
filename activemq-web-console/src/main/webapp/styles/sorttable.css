@@ -15,7 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-table {
+
+table.sortable {
   margin: 0px;
   padding: 0px;
   border-collapse: collapse;
@@ -27,7 +28,7 @@ table {
   border-collapse: collapse;
 }
 
-th {
+th {                              
   padding: 0.5em;
   text-align: left;
   border: 1px solid black;
