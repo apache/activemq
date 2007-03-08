@@ -151,7 +151,6 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-jcl</artifactId>
-      <version>1.0-rc5</version>
       <!--
         <scope>optional</scope>
       -->
@@ -162,19 +161,16 @@
     <dependency>
       <groupId>opensymphony</groupId>
       <artifactId>sitemesh</artifactId>
-      <version>2.2.1</version>
     </dependency>
 
     <!-- JSTL support -->
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>jstl</artifactId>
-      <version>1.0</version>
     </dependency>
     <dependency>
       <groupId>taglibs</groupId>
       <artifactId>standard</artifactId>
-      <version>1.1.2</version>
     </dependency>
 
 
