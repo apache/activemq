@@ -1478,6 +1478,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     protected void addProducer(ActiveMQMessageProducer producer) throws JMSException {
         this.producers.add(producer);
+        this.connection.addProducer(producer.getProducerInfo().getProducerId(), producer);
     }
 
     /**
@@ -1488,6 +1489,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws JMSException
      */
     protected void removeProducer(ActiveMQMessageProducer producer) {
+        this.connection.removeProducer(producer.getProducerInfo().getProducerId());
         this.producers.remove(producer);
     }
 
@@ -1546,7 +1548,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *            message expiration.
      * @throws JMSException
      */
-    protected void send(ActiveMQMessageProducer producer,
+    protected int send(ActiveMQMessageProducer producer,
 	        ActiveMQDestination destination,Message message,int deliveryMode,
 	        int priority,long timeToLive) throws JMSException{
 		checkClosed();
@@ -1599,6 +1601,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             }else{
                 this.connection.syncSendPacket(msg);
             }
+
+			// Since we defer lots of the marshaling till we hit the wire, this might not 
+			// provide and accurate size.  We may change over to doing more aggressive marshaling,
+			// to get more accurate sizes.. this is more important once users start using producer window
+			// flow control.
+			return msg.getSize();
 		}
 	}
 

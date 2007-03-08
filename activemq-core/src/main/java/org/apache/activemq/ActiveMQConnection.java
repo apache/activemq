@@ -76,6 +76,7 @@ import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.ProducerAck;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
@@ -156,6 +157,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     // Maps ConsumerIds to ActiveMQConsumer objects
     private final ConcurrentHashMap dispatchers = new ConcurrentHashMap();
+    private final ConcurrentHashMap<ProducerId, ActiveMQMessageProducer> producers = new ConcurrentHashMap<ProducerId, ActiveMQMessageProducer>();
     private final LongSequenceGenerator sessionIdGenerator = new LongSequenceGenerator();
     private final SessionId connectionSessionId;
     private final LongSequenceGenerator consumerIdGenerator = new LongSequenceGenerator();
@@ -168,6 +170,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private final CountDownLatch brokerInfoReceived = new CountDownLatch(1);
     private BrokerInfo brokerInfo;
     private IOException firstFailureError;
+    private int producerWindowSize=ActiveMQConnectionFactory.DEFAULT_PRODUCER_WINDOW_SIZE;
     
     // Assume that protocol is the latest.  Change to the actual protocol
     // version when a WireFormatInfo is received.
@@ -1515,6 +1518,14 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     Transport getTransport() {
         return transport;
     }
+    
+	public void addProducer(ProducerId producerId, ActiveMQMessageProducer producer) {
+		producers.put(producerId, producer);		
+	}
+	public void removeProducer(ProducerId producerId) {
+		producers.remove(producerId);		
+	}
+
 
     public void addDispatcher(ConsumerId consumerId, ActiveMQDispatcher dispatcher) {
         dispatchers.put(consumerId, dispatcher); 
@@ -1546,6 +1557,12 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                     }
                     dispatcher.dispatch(md);
                 }
+            } else if (command.getDataStructureType() == ProducerAck.DATA_STRUCTURE_TYPE ) {
+            	ProducerAck pa = (ProducerAck) command;
+            	ActiveMQMessageProducer producer = producers.get(pa.getProducerId());
+            	if( producer!=null ) {
+            		producer.onProducerAck(pa);
+            	}
             } else if ( command.isBrokerInfo() ) {
                 this.brokerInfo = (BrokerInfo)command;
                 brokerInfoReceived.countDown();
@@ -2006,4 +2023,16 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 	public int getProtocolVersion() {
 		return protocolVersion.get();
 	}
+
+
+	public int getProducerWindowSize() {
+		return producerWindowSize;
+	}
+
+
+	public void setProducerWindowSize(int producerWindowSize) {
+		this.producerWindowSize = producerWindowSize;
+	}
+
+
 }

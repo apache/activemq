@@ -27,12 +27,16 @@ import javax.jms.MessageFormatException;
 import javax.jms.MessageProducer;
 
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ProducerAck;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.management.JMSProducerStatsImpl;
 import org.apache.activemq.management.StatsCapable;
 import org.apache.activemq.management.StatsImpl;
+import org.apache.activemq.memory.UsageManager;
+import org.apache.activemq.util.IntrospectionSupport;
 
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -83,12 +87,25 @@ public class ActiveMQMessageProducer implements MessageProducer, StatsCapable, C
     private long defaultTimeToLive;
     private long startTime;
     private MessageTransformer transformer;
+    private UsageManager producerWindow;
 
     protected ActiveMQMessageProducer(ActiveMQSession session, ProducerId producerId, ActiveMQDestination destination)
             throws JMSException {
         this.session = session;
         this.info = new ProducerInfo(producerId);
+        this.info.setWindowSize(session.connection.getProducerWindowSize());        
+        if (destination!=null && destination.getOptions() != null) {
+            HashMap options = new HashMap(destination.getOptions());
+            IntrospectionSupport.setProperties(this.info, options, "producer.");
+        }
         this.info.setDestination(destination);
+        
+        // Enable producer window flow control if protocol > 3 and the window size > 0
+        if( session.connection.getProtocolVersion()>=3 && this.info.getWindowSize()>0 ) {
+        	producerWindow = new UsageManager("Producer Window: "+producerId);
+        	producerWindow.setLimit(this.info.getWindowSize());
+        }
+        
         this.disableMessageID = false;
         this.disableMessageTimestamp = session.connection.isDisableTimeStampsByDefault();
         this.defaultDeliveryMode = Message.DEFAULT_DELIVERY_MODE;
@@ -470,7 +487,21 @@ public class ActiveMQMessageProducer implements MessageProducer, StatsCapable, C
                 message = transformedMessage;
             }
         }
-        this.session.send(this, dest, message, deliveryMode, priority, timeToLive);
+        
+        if( producerWindow!=null ) {
+        	try {
+				producerWindow.waitForSpace();
+			} catch (InterruptedException e) {
+				throw new JMSException("Send aborted due to thread interrupt.");
+			}
+        }
+        
+        int size = this.session.send(this, dest, message, deliveryMode, priority, timeToLive);
+
+        if( producerWindow!=null ) {
+			producerWindow.increaseUsage(size);
+        }
+        
         stats.onMessage();            
     }
 
@@ -524,5 +555,11 @@ public class ActiveMQMessageProducer implements MessageProducer, StatsCapable, C
     public String toString() {
         return "ActiveMQMessageProducer { value=" +info.getProducerId()+" }";
     }
+
+	public void onProducerAck(ProducerAck pa) {
+		if( this.producerWindow!=null ) {
+			this.producerWindow.decreaseUsage(pa.getSize());
+		}
+	}
 
 }
