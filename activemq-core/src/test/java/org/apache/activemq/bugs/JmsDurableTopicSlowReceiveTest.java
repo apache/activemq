@@ -69,7 +69,7 @@ public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest{
     }
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception{
-        ActiveMQConnectionFactory result=new ActiveMQConnectionFactory("vm://localhost");
+        ActiveMQConnectionFactory result=new ActiveMQConnectionFactory("vm://localhost?async=false");
         Properties props=new Properties();
         props.put("prefetchPolicy.durableTopicPrefetch","5");
         props.put("prefetchPolicy.optimizeDurableTopicPrefetch","5");
@@ -85,9 +85,6 @@ public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest{
     }
 
     protected void configureBroker(BrokerService answer) throws Exception{
-        // KahaPersistenceAdapter adapter=new KahaPersistenceAdapter(new File("activemq-data/durableTest"));
-        // JDBCPersistenceAdapter adapter = new JDBCPersistenceAdapter();
-        // answer.setPersistenceAdapter(adapter);
         answer.setDeleteAllMessagesOnStartup(true);
     }
 
@@ -104,7 +101,7 @@ public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest{
         session2=connection2.createSession(false,Session.AUTO_ACKNOWLEDGE);
         consumerDestination2=session2.createTopic(getConsumerSubject()+"2");
         consumer2=consumeSession2.createDurableSubscriber((Topic)consumerDestination2,getName());
-        Thread.sleep(1000);
+      
         consumer2.close();
         connection2.close();
         new Thread(new Runnable(){
