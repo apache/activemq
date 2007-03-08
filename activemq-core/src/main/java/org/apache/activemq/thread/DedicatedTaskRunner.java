@@ -58,9 +58,10 @@ class DedicatedTaskRunner implements TaskRunner {
 
     /**
      * shut down the task
+     * @param timeout 
      * @throws InterruptedException 
      */
-    public void shutdown() throws InterruptedException{
+    public void shutdown(long timeout) throws InterruptedException{
         synchronized(mutex){
             shutdown=true;
             pending=true;
@@ -68,10 +69,18 @@ class DedicatedTaskRunner implements TaskRunner {
 
             // Wait till the thread stops.
             if(!threadTerminated){
-                mutex.wait();
+                mutex.wait(timeout);
             }
         }
-    }        
+    }      
+    
+    /**
+     * shut down the task
+     * @throws InterruptedException 
+     */
+    public void shutdown() throws InterruptedException{
+        shutdown(0);
+    }
     
     private void runTask() {
         
