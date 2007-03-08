@@ -347,7 +347,7 @@ public class BrokerTest extends BrokerTestSupport {
         // Ack the last message.
         connection1.send(createAck(consumerInfo1, m, 2, MessageAck.STANDARD_ACK_TYPE));
         // Close the connection.
-        connection1.send(closeConnectionInfo(connectionInfo1));
+        connection1.request(closeConnectionInfo(connectionInfo1));
         connection1.stop();
         
         // Setup a second connection 
@@ -1293,7 +1293,7 @@ public class BrokerTest extends BrokerTestSupport {
 
         ConsumerInfo consumerInfo1 = createConsumerInfo(sessionInfo1, destination);
         consumerInfo1.setPrefetchSize(1);
-        connection1.send(consumerInfo1);
+        connection1.request(consumerInfo1);
         
         // Send the messages
         connection1.send(createMessage(producerInfo, destination, deliveryMode));
@@ -1310,7 +1310,7 @@ public class BrokerTest extends BrokerTestSupport {
         consumerInfo2.setBrowser(true);
         connection2.send(connectionInfo2);
         connection2.send(sessionInfo2);
-        connection2.send(consumerInfo2);
+        connection2.request(consumerInfo2);
 
         for( int i=0; i < 4; i++ ) {
             Message m1 = receiveMessage(connection1);
