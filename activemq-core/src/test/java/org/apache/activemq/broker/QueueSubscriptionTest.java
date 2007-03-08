@@ -47,12 +47,9 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         consumerCount = 2;
         producerCount = 1;
         messageCount  = 1000;
-        prefetchCount = 1;
         messageSize   = 1024; // 1 Kb
+        configurePrefetchOfOne();
 
-        // this is gonna be a bit slow what with the low prefetch so bump up the wait time
-        allMessagesList.setMaximumDuration(allMessagesList.getMaximumDuration() * 20);
-        
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * producerCount);
@@ -74,8 +71,8 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         consumerCount = 2;
         producerCount = 1;
         messageCount  = 10;
-        prefetchCount = 1;
         messageSize   = 1024 * 1024 * 1; // 2 MB
+        configurePrefetchOfOne();
 
         doMultipleClientsTest();
 
@@ -128,6 +125,13 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * producerCount);
+    }
+
+    protected void configurePrefetchOfOne() {
+        prefetchCount = 1;
+
+        // this is gonna be a bit slow what with the low prefetch so bump up the wait time
+        allMessagesList.setMaximumDuration(allMessagesList.getMaximumDuration() * 20);
     }
 
     public void doMultipleClientsTest() throws Exception {

@@ -185,11 +185,12 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
     }
 
     protected ActiveMQDestination createDestination() throws JMSException {
+        String name =  "." + getClass().getName() + "." + getName();
         if (topic) {
-            destination = new ActiveMQTopic("Topic");
+            destination = new ActiveMQTopic("Topic" + name);
             return (ActiveMQDestination)destination;
         } else {
-            destination = new ActiveMQQueue("Queue");
+            destination = new ActiveMQQueue("Queue" + name);
             return (ActiveMQDestination)destination;
         }
     }

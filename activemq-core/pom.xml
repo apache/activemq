@@ -214,11 +214,11 @@
             <exclude>**/MultipleTestsWithSpringXBeanFactoryBeanTest.*</exclude>
 
             <!--  these seem to fail only in m2 -->
-            <exclude>**/TransactedTopicMasterSlaveTest.*</exclude>
+            <!--<exclude>**/TransactedTopicMasterSlaveTest.*</exclude>-->
 
             <!-- Kaha in flux - removing tests -->
-            <exclude>**/KahaXARecoveryBrokerTest.*</exclude>
-            <exclude>**/KahaRecoveryBrokerTest.*</exclude>
+            <!--<exclude>**/KahaXARecoveryBrokerTest.*</exclude>-->
+            <!--<exclude>**/KahaRecoveryBrokerTest.*</exclude>-->
 
             <!-- Multicast and UDP based tests fail on GBuild -->
             <exclude>**/PeerTransportTest.*</exclude>
@@ -238,10 +238,6 @@
             <exclude>**/UdpSendReceiveWithTwoConnectionsTest.*</exclude>
             <exclude>**/UdpSendReceiveWithTwoConnectionsAndLargeMessagesTest.*</exclude>
 
-            <!-- http://issues.apache.org/activemq/browse/AMQ-724  -->
-            <exclude>**/StompSubscriptionRemoveTest.*</exclude>
-
-
             <!-- m2 tests failing since move from assembly  -->
             <exclude>**/TwoBrokerMessageNotSentToRemoteWhenNoConsumerTest.*</exclude>
             <exclude>**/TwoBrokerQueueClientsReconnectTest.*</exclude>
@@ -257,20 +253,18 @@
 
             <!-- This test only works on machines which have ssh propertly configured -->
             <exclude>**/SSHTunnelNetworkReconnectTest.*</exclude>
-            
+            <!-- TODO need to get the JUnit test configured to create SSL sockets nicely via system properties -->
+            <exclude>**/StompSslTest.*</exclude>
+
             <!--  see  http://issues.apache.org/activemq/browse/AMQ-826 -->
             <!--  have not yet figured out the way to configure ApacheDS via Spring  -->
             <exclude>**/LDAPAuthorizationMapTest.*</exclude>
-
-            <!-- TODO need to get the JUnit test configured to create SSL sockets nicely via system properties -->
-            <exclude>**/StompSslTest.*</exclude>
 
             <!-- http://issues.apache.org/activemq/browse/AMQ-1027 -->
             <exclude>**/FailoverConsumerTest.*</exclude>
 
             <!-- The NIO implemenation is not working properly on OS X.. -->
             <exclude>**/nio/**</exclude>
-
           </excludes>
         </configuration>
       </plugin>
