@@ -43,7 +43,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
     
     public void testPreparedTransactionRecoveredOnRestart() throws Exception {
         
-        ActiveMQDestination destination = new ActiveMQQueue("TEST");
+        ActiveMQDestination destination = createDestination();
         
         // Setup the producer and send the message.  
         StubConnection connection = createConnection();
@@ -111,7 +111,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
     public void testQueuePersistentCommitedMessagesNotLostOnRestart() throws Exception {
         
-        ActiveMQDestination destination = new ActiveMQQueue("TEST");
+        ActiveMQDestination destination = createDestination();
         
         // Setup the producer and send the message.  
         StubConnection connection = createConnection();
@@ -158,7 +158,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
     
     public void testQueuePersistentCommitedAcksNotLostOnRestart() throws Exception {
         
-        ActiveMQDestination destination = new ActiveMQQueue("TEST");
+        ActiveMQDestination destination = createDestination();
         
         // Setup the producer and send the message.  
         StubConnection connection = createConnection();
@@ -205,13 +205,15 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         connection.send(consumerInfo);
 
         // No messages should be delivered.
+        assertNoMessagesLeft(connection);
+
         Message m = receiveMessage(connection);
-        assertNull(m);        
+        assertNull(m);
     }
-    
+
     public void testQueuePersistentUncommittedAcksLostOnRestart() throws Exception {
         
-        ActiveMQDestination destination = new ActiveMQQueue("TEST");
+        ActiveMQDestination destination = createDestination();
         
         // Setup the producer and send the message.  
         StubConnection connection = createConnection();
@@ -273,4 +275,8 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         junit.textui.TestRunner.run(suite());
     }
 
+    protected ActiveMQDestination createDestination() {
+        return new ActiveMQQueue(getClass().getName() + "." + getName());
+    }
+    
 }
