@@ -99,8 +99,7 @@
 
                                                 <ul class="alternate" type="square">
                                                     <li><a href="http://activemq.apache.org/"
-                                                           title="The most popular and powerful open source Message Broker">ActiveMQ
-                                                        Site</a></li>
+                                                           title="The most popular and powerful open source Message Broker">Documentation</a></li>
                                                     <li><a href="http://activemq.apache.org/faq.html">FAQ</a></li>
                                                     <li><a href="http://activemq.apache.org/download.html">Downloads</a>
                                                     </li>
