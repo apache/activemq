@@ -17,7 +17,7 @@
  */
 package org.apache.activemq.broker.region.virtual;
 
-import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFilter;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -41,7 +41,7 @@ public class VirtualTopicInterceptor extends DestinationFilter {
         this.postfix = postfix;
     }
 
-    public void send(ConnectionContext context, Message message) throws Exception {
+    public void send(ProducerBrokerExchange context, Message message) throws Exception {
         ActiveMQDestination queueConsumers = getQueueConsumersWildcard(message.getDestination());
         send(context, message, queueConsumers);
     }
