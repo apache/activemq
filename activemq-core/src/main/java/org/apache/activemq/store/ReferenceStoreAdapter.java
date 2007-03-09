@@ -41,5 +41,11 @@ public interface ReferenceStoreAdapter extends PersistenceAdapter {
     public TopicReferenceStore createTopicReferenceStore(ActiveMQTopic destination) throws IOException;
 
 	public Set<Integer> getReferenceFileIdsInUse() throws IOException;
+    
+    /**
+     * If the store isn't valid, it can be recoverd at start-up
+     * @return true if the reference store is in a consistent state
+     */
+    public boolean isStoreValid();
 
 }
