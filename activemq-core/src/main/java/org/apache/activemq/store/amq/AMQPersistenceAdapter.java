@@ -25,6 +25,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.activeio.journal.Journal;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.BrokerServiceAware;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -70,7 +72,7 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.17 $
  */
-public class AMQPersistenceAdapter implements PersistenceAdapter,UsageListener{
+public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener, BrokerServiceAware {
 
     private static final Log log=LogFactory.getLog(AMQPersistenceAdapter.class);
     private final ConcurrentHashMap<ActiveMQQueue,AMQMessageStore> queues=new ConcurrentHashMap<ActiveMQQueue,AMQMessageStore>();
@@ -94,6 +96,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter,UsageListener{
     private boolean syncOnWrite;
     private String brokerName="";
     private File directory;
+    private BrokerService brokerService;
 
     public String getBrokerName(){
         return this.brokerName;
@@ -106,14 +109,29 @@ public class AMQPersistenceAdapter implements PersistenceAdapter,UsageListener{
         }
     }
 
+    public BrokerService getBrokerService() {
+        return brokerService;
+    }
+
+    public void setBrokerService(BrokerService brokerService) {
+        this.brokerService = brokerService;
+    }
+
     public synchronized void start() throws Exception{
         if(!started.compareAndSet(false,true))
             return;
-        if(this.directory==null){
-            this.directory=new File(IOHelper.getDefaultDataDirectory(),brokerName);
+        if(this.directory==null) {
+            if (brokerService != null) {
+                this.directory = brokerService.getBrokerDataDirectory();
+            }
+            else {
+                this.directory=new File(IOHelper.getDefaultDataDirectory(),brokerName);
+                this.directory=new File(directory,"amqstore");
+            }
         }
-        this.directory=new File(directory,"amqstore");
+        log.info("AMQStore starting using directory: " + directory);
         this.directory.mkdirs();
+
         if(this.usageManager!=null){
             this.usageManager.addUsageListener(this);
         }
@@ -123,7 +141,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter,UsageListener{
         if(referenceStoreAdapter==null){
             referenceStoreAdapter=createReferenceStoreAdapter();
         }
-        referenceStoreAdapter.setDirectory(new File(directory,"kaha-reference-store"));
+        referenceStoreAdapter.setDirectory(new File(directory,"kr-store"));
         referenceStoreAdapter.setBrokerName(getBrokerName());
         referenceStoreAdapter.setUsageManager(usageManager);
         if(taskRunnerFactory==null){
