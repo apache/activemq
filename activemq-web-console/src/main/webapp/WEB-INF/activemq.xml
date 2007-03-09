@@ -20,12 +20,6 @@
 
   <broker useJmx="true" xmlns="http://activemq.org/config/1.0">
 
-    <!--  Use the following to set the broker memory limit (in bytes)
-  	<memoryManager>  
-	  	<usageManager id="memory-manager" limit="1048576"/>
-  	</memoryManager>
-  	-->
-
     <!-- In ActiveMQ 4, you can setup destination policies -->
     <destinationPolicy>
       <policyMap>
@@ -45,14 +39,6 @@
     </destinationPolicy>
 
 
-    <persistenceAdapter>
-      <journaledJDBC journalLogFiles="5" dataDirectory="activemq-data"/>
-      <!-- To use a different datasource, use th following syntax : -->
-      <!-- 
-      <journaledJDBC journalLogFiles="5" dataDirectory="activemq-data" dataSource="#postgres-ds"/>
-       -->
-    </persistenceAdapter>
-
     <transportConnectors>
       <transportConnector name="openwire" uri="tcp://localhost:61616" discoveryUri="multicast://default"/>
       <transportConnector name="stomp" uri="stomp://localhost:61613"/>
@@ -71,42 +57,6 @@
 
   <!-- lets create a command agent to respond to admin commands over JMS or XMPP on the ActiveMQ.Agent topic -->
   <commandAgent xmlns="http://activemq.org/config/1.0"/>
-
- 
-  <!--  This xbean configuration file supports all the standard spring xml configuration options -->
-
-  <!-- Postgres DataSource Sample Setup -->
-  <!-- 
-  <bean id="postgres-ds" class="org.postgresql.ds.PGPoolingDataSource">
-    <property name="serverName" value="localhost"/>
-    <property name="databaseName" value="activemq"/>
-    <property name="portNumber" value="0"/>
-    <property name="user" value="activemq"/>
-    <property name="password" value="activemq"/>
-    <property name="dataSourceName" value="postgres"/>
-    <property name="initialConnections" value="1"/>
-    <property name="maxConnections" value="10"/>
-  </bean>
-  -->
-
-  <!-- MySql DataSource Sample Setup -->
-  <!-- 
-  <bean id="mysql-ds" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
-    <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
-    <property name="url" value="jdbc:mysql://localhost/activemq?relaxAutoCommit=true"/>
-    <property name="username" value="activemq"/>
-    <property name="password" value="activemq"/>
-    <property name="poolPreparedStatements" value="true"/>
-  </bean>
-  -->
-
-  <!-- Embedded Derby DataSource Sample Setup -->
-  <!-- 
-  <bean id="derby-ds" class="org.apache.derby.jdbc.EmbeddedDataSource">
-    <property name="databaseName" value="derbydb"/>
-    <property name="createDatabase" value="create"/>
-  </bean>
-  -->
 
 </beans>
         <!-- END SNIPPET: xbean -->
