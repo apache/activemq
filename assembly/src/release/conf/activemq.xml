@@ -20,9 +20,59 @@
   <!-- Allows us to use system properties as variables in this configuration file -->
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
   
-  <broker brokerName="localhost" useJmx="true" xmlns="http://activemq.org/config/1.0">
+  <broker xmlns="http://activemq.org/config/1.0" brokerName="localhost" dataDirectory="${activemq.base}/data">
   
-    <!--  Use the following to set the broker memory limit 
+    <!-- Destination specific policies using destination names or wildcards -->
+    <destinationPolicy>
+      <policyMap>
+        <policyEntries>
+
+          <policyEntry topic="FOO.>">
+            <dispatchPolicy>
+              <strictOrderDispatchPolicy/>
+            </dispatchPolicy>
+            <subscriptionRecoveryPolicy>
+              <lastImageSubscriptionRecoveryPolicy/>
+            </subscriptionRecoveryPolicy>
+          </policyEntry>
+
+        </policyEntries>
+      </policyMap>
+    </destinationPolicy>
+
+
+    <!-- The transport connectors ActiveMQ will listen to -->
+    <transportConnectors>
+       <transportConnector name="openwire" uri="tcp://localhost:61616" discoveryUri="multicast://default"/>
+       <transportConnector name="ssl"     uri="ssl://localhost:61617"/>
+       <transportConnector name="stomp"   uri="stomp://localhost:61613"/>
+    </transportConnectors>
+
+    <!-- The store and forward broker networks ActiveMQ will listen to -->
+    <networkConnectors>
+      <!-- by default just auto discover the other brokers -->
+      <networkConnector name="default-nc" uri="multicast://default"/>
+      <!--
+      <networkConnector name="host1 and host2" uri="static://(tcp://host1:61616,tcp://host2:61616)" failover="true"/>
+      -->
+    </networkConnectors>
+
+
+    <!-- Use the following if you wish to configure the journal with JDBC -->
+    <!--
+    <persistenceAdapter>
+        <journaledJDBC journalLogFiles="5" dataDirectory="${activemq.base}/activemq-data"  dataSource="#postgres-ds"/>
+    </persistenceAdapter>
+    -->
+
+    <!-- Or if you want to use pure JDBC without a journal -->
+    <!--
+    <persistenceAdapter>
+        <jdbcPersistenceAdapter dataSource="#postgres-ds"/>
+    </persistenceAdapter>
+    -->
+
+    <!--  Use the following to set the broker memory limit
     <memoryManager>  
         <usageManager id="memory-manager" limit="20 MB"/>
     </memoryManager>
@@ -34,50 +84,25 @@
     </managementContext>
     -->
 
-    <!-- In ActiveMQ 4, you can setup destination policies -->  
-    <destinationPolicy>
-      <policyMap><policyEntries>
-        
-          <policyEntry topic="FOO.>">
-            <dispatchPolicy>
-              <strictOrderDispatchPolicy />
-            </dispatchPolicy>
-            <subscriptionRecoveryPolicy>
-              <lastImageSubscriptionRecoveryPolicy />
-            </subscriptionRecoveryPolicy>
-          </policyEntry>
-
-      </policyEntries></policyMap>
-    </destinationPolicy>
-  
-  
-    <persistenceAdapter>
-        <journaledJDBC journalLogFiles="5" dataDirectory="${activemq.base}/activemq-data"/>
-      <!-- To use a different datasource, use the following syntax : -->
-      <!-- 
-      <journaledJDBC journalLogFiles="5" dataDirectory="../activemq-data" dataSource="#postgres-ds"/>
-       -->
-    </persistenceAdapter>
-  
-    <transportConnectors>
-       <transportConnector name="openwire" uri="tcp://localhost:61616" discoveryUri="multicast://default"/>
-       <transportConnector name="ssl"     uri="ssl://localhost:61617"/>
-       <transportConnector name="stomp"   uri="stomp://localhost:61613"/>
-    </transportConnectors>
-    
-    <networkConnectors>
-      <!-- by default just auto discover the other brokers -->
-      <networkConnector name="default-nc" uri="multicast://default"/>
-      <!--
-      <networkConnector name="host1 and host2" uri="static://(tcp://host1:61616,tcp://host2:61616)" failover="true"/>
-      -->
-    </networkConnectors>
-    
   </broker>
 
   <!-- lets create a command agent to respond to message based admin commands on the ActiveMQ.Agent topic -->
   <commandAgent xmlns="http://activemq.org/config/1.0"/>
 
+
+  <!-- An embedded servlet engine for serving up the Admin console -->
+  <jetty xmlns="http://mortbay.com/schemas/jetty/1.0">
+    <connectors>
+      <nioConnector port="8161" />
+    </connectors>
+
+    <handlers>
+      <webAppContext contextPath="/admin" resourceBase="webapps" parentLoaderPriority="false" />
+    </handlers>
+  </jetty>
+
+
+  
   <!--  This xbean configuration file supports all the standard spring xml configuration options -->
   
   <!-- Postgres DataSource Sample Setup -->
