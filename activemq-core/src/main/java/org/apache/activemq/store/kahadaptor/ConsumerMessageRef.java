@@ -71,6 +71,10 @@ public class ConsumerMessageRef{
     public void setMessageId(MessageId messageId){
         this.messageId=messageId;
     }
+    
+    public String toString() {
+        return "ConsumerMessageRef[" + messageId +"]";
+    }
 
        
 }
