@@ -550,11 +550,16 @@ public class BrokerService implements Service, Serializable {
 
     public File getDataDirectory() {
         if (dataDirectory == null) {
-            dataDirectory = new File(new File(IOHelper.getDefaultDataDirectory()), getBrokerName()
-                    .replaceAll("[^a-zA-Z0-9\\.\\_\\-]", "_"));
+            dataDirectory = new File(IOHelper.getDefaultDataDirectory());
         }
         return dataDirectory;
     }
+
+    public File getBrokerDataDirectory() {
+        String brokerDir = getBrokerName().replaceAll("[^a-zA-Z0-9\\.\\_\\-]", "_");
+        return new File(getDataDirectory(), brokerDir);
+    }
+
 
     /**
      * Sets the directory in which the data files will be stored by default for
@@ -572,7 +577,7 @@ public class BrokerService implements Service, Serializable {
      */
     public File getTmpDataDirectory(){
         if (tmpDataDirectory == null) {
-            tmpDataDirectory = new File(getDataDirectory(), "tmp_storage");
+            tmpDataDirectory = new File(getBrokerDataDirectory(), "tmp_storage");
         }
         return tmpDataDirectory;
     }
@@ -1411,7 +1416,7 @@ public class BrokerService implements Service, Serializable {
 
     protected AMQPersistenceAdapterFactory createPersistenceFactory() {
         AMQPersistenceAdapterFactory factory = new AMQPersistenceAdapterFactory();
-        factory.setDataDirectory(getDataDirectory());
+        factory.setDataDirectory(getBrokerDataDirectory());
         factory.setTaskRunnerFactory(getPersistenceTaskRunnerFactory());
         factory.setBrokerName(getBrokerName());
         return factory;
