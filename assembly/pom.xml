@@ -51,6 +51,10 @@
     <dependency>
       <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-core</artifactId>
       <type>test-jar</type>
     </dependency>
     <dependency>
@@ -80,6 +84,11 @@
     <dependency>
       <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-web-demo</artifactId>
+      <type>war</type>
+    </dependency>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-web-console</artifactId>
       <type>war</type>
     </dependency>
     <dependency>
@@ -178,6 +187,10 @@
       <artifactId>jetty-util</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.mortbay.jetty</groupId>
+      <artifactId>jetty-xbean</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.derby</groupId>
       <artifactId>derby</artifactId>
       <optional>true</optional>
@@ -187,7 +200,31 @@
       <artifactId>derbynet</artifactId>
       <optional>true</optional>
     </dependency>
-    
+
+    <!-- copied dependencies from activemq-web-console -->
+    <!-- enable commons-logging when inside jetty6:run -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-jcl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>opensymphony</groupId>
+      <artifactId>sitemesh</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>jstl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>taglibs</groupId>
+      <artifactId>standard</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mortbay.jetty</groupId>
+      <artifactId>jsp-2.1</artifactId>
+    </dependency>
+                           
+
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
