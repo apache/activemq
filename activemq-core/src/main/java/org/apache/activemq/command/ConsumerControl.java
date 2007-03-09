@@ -41,16 +41,9 @@ public class ConsumerControl extends BaseCommand {
     }
 
     
-
-   
-
     public Response visit(CommandVisitor visitor) throws Exception {
-    return null;
+    	return visitor.processConsumerControl(this);
     }
-
-
-
-
 
     /**
      * @openwire:property version=1

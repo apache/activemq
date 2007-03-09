@@ -102,7 +102,7 @@ public class MessageDispatch extends BaseCommand {
     }
 
     public Response visit(CommandVisitor visitor) throws Exception {
-        return null;
+        return visitor.processMessageDispatch(this);
     }
 
 	public Runnable getTransmitCallback() {

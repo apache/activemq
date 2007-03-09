@@ -38,7 +38,7 @@ public class ConnectionControl extends BaseCommand{
     }
 
     public Response visit(CommandVisitor visitor) throws Exception{
-        return null;
+        return visitor.processConnectionControl(this);
     }
 
     /**
