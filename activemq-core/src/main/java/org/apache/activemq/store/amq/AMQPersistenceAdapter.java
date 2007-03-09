@@ -157,7 +157,14 @@ public class AMQPersistenceAdapter implements PersistenceAdapter,UsageListener{
             }
         },"ActiveMQ Journal Checkpoint Worker");
         createTransactionStore();
-        recover();
+        if(referenceStoreAdapter.isStoreValid()==false){
+            log.warn("The ReferenceStore is not valid - recovering ...");
+            recover();
+            log.info("Finished recovering the ReferenceStore");
+        }else {
+            Location location=writeTraceMessage("RECOVERED "+new Date(),true);
+            asyncDataManager.setMark(location,true);
+        }
         // Do a checkpoint periodically.
         periodicCheckpointTask=new Runnable(){
 
