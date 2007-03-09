@@ -236,8 +236,9 @@ public class Topic implements Destination {
     
 
 
-    public void send(final ConnectionContext context, final Message message) throws Exception {
-
+    public void send(final ProducerBrokerExchange producerExchange, final Message message) throws Exception {
+    	final ConnectionContext context = producerExchange.getConnectionContext();
+    	
     	// There is delay between the client sending it and it arriving at the
     	// destination.. it may have expired.
     	if( message.isExpired() ) {

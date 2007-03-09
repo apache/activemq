@@ -21,6 +21,7 @@ import java.io.IOException;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -36,7 +37,7 @@ public interface Destination extends Service {
     void addSubscription(ConnectionContext context, Subscription sub) throws Exception;
     void removeSubscription(ConnectionContext context, Subscription sub) throws Exception;
     
-    void send(ConnectionContext context, Message messageSend) throws Exception;
+    void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception;
     boolean lock(MessageReference node, LockOwner lockOwner);
     void acknowledge(ConnectionContext context, Subscription sub, final MessageAck ack, final MessageReference node) throws IOException;
     

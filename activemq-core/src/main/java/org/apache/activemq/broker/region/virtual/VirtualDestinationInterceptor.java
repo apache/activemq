@@ -16,17 +16,17 @@
  */
 package org.apache.activemq.broker.region.virtual;
 
-import org.apache.activemq.broker.ConnectionContext;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFilter;
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.filter.DestinationMap;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Implements <a
@@ -77,7 +77,7 @@ public class VirtualDestinationInterceptor implements DestinationInterceptor {
 
     protected Destination createCompositeDestination(Destination destination, final List destinations) {
         return new DestinationFilter(destination) {
-            public void send(ConnectionContext context, Message messageSend) throws Exception {
+            public void send(ProducerBrokerExchange context, Message messageSend) throws Exception {
                 for (Iterator iter = destinations.iterator(); iter.hasNext();) {
                     Destination destination = (Destination) iter.next();
                     destination.send(context, messageSend);

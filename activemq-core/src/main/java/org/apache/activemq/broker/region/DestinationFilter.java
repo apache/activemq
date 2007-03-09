@@ -19,6 +19,7 @@ package org.apache.activemq.broker.region;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -89,7 +90,7 @@ public class DestinationFilter implements Destination {
         next.removeSubscription(context, sub);
     }
 
-    public void send(ConnectionContext context, Message messageSend) throws Exception {
+    public void send(ProducerBrokerExchange context, Message messageSend) throws Exception {
         next.send(context, messageSend);
     }
 
@@ -104,8 +105,8 @@ public class DestinationFilter implements Destination {
     /**
      * Sends a message to the given destination which may be a wildcard
      */
-    protected void send(ConnectionContext context, Message message, ActiveMQDestination destination) throws Exception {
-        Broker broker = context.getBroker();
+    protected void send(ProducerBrokerExchange context, Message message, ActiveMQDestination destination) throws Exception {
+        Broker broker = context.getConnectionContext().getBroker();
         Set destinations = broker.getDestinations(destination);
 
         for (Iterator iter = destinations.iterator(); iter.hasNext();) {
