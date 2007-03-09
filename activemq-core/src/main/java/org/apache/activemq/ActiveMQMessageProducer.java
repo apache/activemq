@@ -17,6 +17,9 @@
  */
 package org.apache.activemq;
 
+import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicLong;
+
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.IllegalStateException;
@@ -35,9 +38,6 @@ import org.apache.activemq.management.StatsCapable;
 import org.apache.activemq.management.StatsImpl;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.util.IntrospectionSupport;
-
-import java.util.HashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * A client uses a <CODE>MessageProducer</CODE> object to send messages to a
@@ -496,11 +496,7 @@ public class ActiveMQMessageProducer implements MessageProducer, StatsCapable, C
 			}
         }
         
-        int size = this.session.send(this, dest, message, deliveryMode, priority, timeToLive);
-
-        if( producerWindow!=null ) {
-			producerWindow.increaseUsage(size);
-        }
+        this.session.send(this, dest, message, deliveryMode, priority, timeToLive, producerWindow);
         
         stats.onMessage();            
     }

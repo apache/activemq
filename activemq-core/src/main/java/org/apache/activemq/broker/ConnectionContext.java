@@ -58,6 +58,7 @@ public class ConnectionContext {
     private boolean networkConnection;
     private final AtomicBoolean stopping = new AtomicBoolean();
     private final MessageEvaluationContext messageEvaluationContext = new MessageEvaluationContext();
+	private boolean dontSendReponse;
     
     public ConnectionContext() {
     }
@@ -258,6 +259,14 @@ public class ConnectionContext {
 	
 	public AtomicBoolean getStopping() {
 		return stopping;
+	}
+
+	public void setDontSendReponse(boolean b) {
+		this.dontSendReponse=b;		
+	}
+
+	public boolean isDontSendReponse() {
+		return dontSendReponse;
 	}	
 	
 }

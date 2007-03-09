@@ -38,6 +38,11 @@ public class ProducerAck extends BaseCommand {
     public ProducerAck() {
     }
     
+    public ProducerAck(ProducerId producerId, int size) {
+    	this.producerId = producerId;
+    	this.size = size;
+    }
+    
     public void copy(ProducerAck copy) {
         super.copy(copy);
         copy.producerId = producerId;

@@ -42,9 +42,12 @@ import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerId;
+import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.ProducerAck;
+import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.kaha.Store;
@@ -78,7 +81,6 @@ public class Queue implements Destination, Task {
     private final DestinationStatistics destinationStatistics = new DestinationStatistics();
     private  PendingMessageCursor messages;
     private final LinkedList pagedInMessages = new LinkedList();
-
     private LockOwner exclusiveOwner;
     private MessageGroupMap messageGroupOwners;
 
@@ -95,7 +97,7 @@ public class Queue implements Destination, Task {
     private final Object doDispatchMutex = new Object();
     private TaskRunner taskRunner;
     private boolean started = false;
-
+    
     public Queue(ActiveMQDestination destination, final UsageManager memoryManager, MessageStore store, DestinationStatistics parentStats,
             TaskRunnerFactory taskFactory, Store tmpStore) throws Exception {
         this.destination = destination;
@@ -318,6 +320,23 @@ public class Queue implements Destination, Task {
         }
 
     }
+    
+    private final LinkedList<Runnable> messagesWaitingForSpace = new LinkedList<Runnable>();
+    private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
+    	public void run() {
+    		
+    		// We may need to do this in async thread since this is run for within a synchronization
+    		// that the UsageManager is holding.
+    		
+    		synchronized( messagesWaitingForSpace ) {
+	    		while( !usageManager.isFull() && !messagesWaitingForSpace.isEmpty()) {
+	    			Runnable op = messagesWaitingForSpace.removeFirst();
+	    			op.run();
+	    		}
+    		}
+    		
+    	};
+    };
 
     public void send(final ProducerBrokerExchange producerExchange,final Message message) throws Exception {
     	final ConnectionContext context = producerExchange.getConnectionContext(); 
@@ -327,27 +346,88 @@ public class Queue implements Destination, Task {
             if (log.isDebugEnabled()) {
                 log.debug("Expired message: " + message);
             }
+            if( producerExchange.getProducerState().getInfo().getWindowSize() > 0 || !message.isResponseRequired() ) {
+        		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
+				context.getConnection().dispatchAsync(ack);	    	            	        		
+            }
             return;
         }
-        if (context.isProducerFlowControl() && !context.isNetworkConnection()) {
-            if(usageManager.isSendFailIfNoSpace()&&usageManager.isFull()){
-                throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
-            }else{
-                while( !usageManager.waitForSpace(1000) ) {
-                    if( context.getStopping().get() )
-                        throw new IOException("Connection closed, send aborted.");
-                }
-                // The usage manager could have delayed us by the time
-                // we unblock the message could have expired..
-                if(message.isExpired()){
-                    if (log.isDebugEnabled()) {
-                        log.debug("Expired message: " + message);
-                    }
-                    return;
-                }
-            }
+        if ( context.isProducerFlowControl() ) {
+        	if( usageManager.isFull() ) {
+	            if(usageManager.isSendFailIfNoSpace()){
+	                throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
+	            }else{
+	            	
+	            	// We can avoid blocking due to low usage if the producer is sending a sync message or
+	            	// if it is using a producer window
+	            	if( producerExchange.getProducerState().getInfo().getWindowSize() > 0 || message.isResponseRequired() ) {
+	            		synchronized( messagesWaitingForSpace ) {
+		            		messagesWaitingForSpace.add(new Runnable() {
+	            				public void run() {
+	    	            	        try {							
+	    	            	        	doMessageSend(producerExchange, message);
+	    	            	        	if( message.isResponseRequired() ) {
+		    				                Response response = new Response();
+		    				                response.setCorrelationId(message.getCommandId());
+		    								context.getConnection().dispatchAsync(response);
+	    	            	        	} else {
+	    	            	        		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
+		    								context.getConnection().dispatchAsync(ack);	    	            	        		
+	    	            	        	}
+	    							} catch (Exception e) {
+	    	            	        	if( message.isResponseRequired() ) {
+		    				                ExceptionResponse response = new ExceptionResponse(e);
+		    				                response.setCorrelationId(message.getCommandId());
+		    								context.getConnection().dispatchAsync(response);	    								
+	    	            	        	} else {
+	    	            	        		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
+		    								context.getConnection().dispatchAsync(ack);	    	            	        		
+	    	            	        	}
+	    							}
+	            				}
+	            			});
+		            		
+		            		// If the user manager is not full, then the task will not get called..
+			            	if( !usageManager.notifyCallbackWhenNotFull(sendMessagesWaitingForSpaceTask) ) {
+			            		// so call it directly here.
+			            		sendMessagesWaitingForSpaceTask.run();
+			            	}
+			            	
+		            		context.setDontSendReponse(true);
+		            		return;
+	            		}
+	            		
+	            	} else {
+	            		
+	            		// Producer flow control cannot be used, so we have do the flow control at the broker 
+	            		// by blocking this thread until there is space available.	            		
+		                while( !usageManager.waitForSpace(1000) ) {
+		                    if( context.getStopping().get() )
+		                        throw new IOException("Connection closed, send aborted.");
+		                }
+		                
+		                // The usage manager could have delayed us by the time
+		                // we unblock the message could have expired..
+		                if(message.isExpired()){
+		                    if (log.isDebugEnabled()) {
+		                        log.debug("Expired message: " + message);
+		                    }
+		                    if( producerExchange.getProducerState().getInfo().getWindowSize() > 0 || !message.isResponseRequired() ) {
+		                		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
+		        				context.getConnection().dispatchAsync(ack);	    	            	        		
+		                    }
+		                    return;
+		                }
+	            	}
+	            }
+        	}
         }
-        message.setRegionDestination(this);
+        doMessageSend(producerExchange, message);
+    }
+
+	private void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
+		final ConnectionContext context = producerExchange.getConnectionContext();
+		message.setRegionDestination(this);
         if(store!=null&&message.isPersistent()){
             store.addMessage(context,message);
         }
@@ -361,11 +441,15 @@ public class Queue implements Destination, Task {
                         messages.addMessageLast(message);
                     }
                     // It could take while before we receive the commit
-                    // operration.. by that time the message could have expired..
+                    // op, by that time the message could have expired..
                     if(message.isExpired()){
                         // TODO: remove message from store.
                         if (log.isDebugEnabled()) {
                             log.debug("Expired message: " + message);
+                        }
+                        if( producerExchange.getProducerState().getInfo().getWindowSize() > 0 || !message.isResponseRequired() ) {
+                    		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
+            				context.getConnection().dispatchAsync(ack);	    	            	        		
                         }
                         return;
                     }
@@ -379,9 +463,7 @@ public class Queue implements Destination, Task {
             sendMessage(context,message);
             
         }
-    }
-       
-    
+	}    
 
     public void dispose(ConnectionContext context) throws IOException {
         if (store != null) {

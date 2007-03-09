@@ -18,13 +18,13 @@
 package org.apache.activemq.memory;
 
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.activemq.Service;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.util.concurrent.CopyOnWriteArrayList;
 
 
 /**
@@ -60,6 +60,7 @@ public class UsageManager  implements Service{
     private String name = "";
     private float usagePortion = 1.0f;
     private List<UsageManager> children = new CopyOnWriteArrayList<UsageManager>();
+    private final LinkedList<Runnable> callbacks = new LinkedList<Runnable>();
 
     public UsageManager() {
         this(null,"default");
@@ -292,6 +293,11 @@ public class UsageManager  implements Service{
         if(oldPercentUsage>=100&&newPercentUsage<100){
             synchronized(usageMutex){
                 usageMutex.notifyAll();
+                for (Iterator iter = callbacks.iterator(); iter.hasNext();) {
+					Runnable callback = (Runnable) iter.next();
+					callback.run();
+				}
+                callbacks.clear();
             }
         }
         // Let the listeners know
@@ -331,4 +337,37 @@ public class UsageManager  implements Service{
     private void removeChild(UsageManager child){
         children.remove(child);
     }
+    
+    /**
+     * @param callback
+     * @return true if the UsageManager was full.  The callback will only be called if this method returns true.
+     */
+    public boolean notifyCallbackWhenNotFull( final Runnable callback ) {
+        
+    	if(parent!=null) {
+    		Runnable r = new Runnable(){
+				public void run() {
+			        synchronized (usageMutex) {
+			            if( percentUsage >= 100 ) {
+			            	callbacks.add(callback);
+			            } else {
+			            	callback.run();
+			            }
+			        }
+				}
+            };
+    		if( parent.notifyCallbackWhenNotFull(r) ) {
+    			return true;
+    		}
+    	}
+        synchronized (usageMutex) {
+            if( percentUsage >= 100 ) {
+            	callbacks.add(callback);
+            	return true;
+            } else {
+            	return false;
+            }
+        }
+    }
+
 }
