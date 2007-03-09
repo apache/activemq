@@ -55,6 +55,7 @@ public abstract class NetworkConnector extends ServiceSupport {
     private String userName;
     private String password;
     private boolean bridgeTempDestinations=true;
+    private boolean duplex = false;
     
     protected ConnectionFilter connectionFilter;
 
@@ -246,6 +247,7 @@ public abstract class NetworkConnector extends ServiceSupport {
         result.setPrefetchSize(prefetchSize);
         result.setDispatchAsync(dispatchAsync);
         result.setDecreaseNetworkConsumerPriority(isDecreaseNetworkConsumerPriority());
+        result.setDuplex(isDuplex());
 
         List destsList = getDynamicallyIncludedDestinations();
         ActiveMQDestination dests[] = (ActiveMQDestination[]) destsList.toArray(new ActiveMQDestination[destsList.size()]);
@@ -333,4 +335,20 @@ public abstract class NetworkConnector extends ServiceSupport {
 	public void setBridgeTempDestinations(boolean bridgeTempDestinations) {
 		this.bridgeTempDestinations = bridgeTempDestinations;
 	}
+
+    
+    /**
+     * @return the duplex
+     */
+    public boolean isDuplex(){
+        return this.duplex;
+    }
+
+    
+    /**
+     * @param duplex the duplex to set
+     */
+    public void setDuplex(boolean duplex){
+        this.duplex=duplex;
+    }
 }
