@@ -108,6 +108,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
     protected int networkTTL = 1;
     protected final AtomicBoolean remoteInterupted = new AtomicBoolean(false);
     protected final AtomicBoolean lastConnectSucceeded = new AtomicBoolean(false);
+    protected boolean duplex = false;
 
     
     public DemandForwardingBridgeSupport(final Transport localBroker, final Transport remoteBroker) {
@@ -269,6 +270,8 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
 
                 BrokerInfo brokerInfo=new BrokerInfo();
                 brokerInfo.setBrokerName(localBrokerName);
+                brokerInfo.setNetworkConnection(true);
+                brokerInfo.setDuplexConnection(isDuplex());
                 remoteBroker.oneway(brokerInfo);
 
                 SessionInfo remoteSessionInfo=new SessionInfo(remoteConnectionInfo,1);
@@ -898,5 +901,13 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
 	public void setBridgeTempDestinations(boolean bridgeTempDestinations) {
 		this.bridgeTempDestinations = bridgeTempDestinations;
 	}
+
+    public boolean isDuplex(){
+        return this.duplex;
+    }
+
+    public void setDuplex(boolean duplex){
+        this.duplex=duplex;
+    }
 
 }
