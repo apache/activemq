@@ -124,6 +124,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
     private final Map<ConsumerId,ConsumerBrokerExchange>consumerExchanges = new HashMap<ConsumerId,ConsumerBrokerExchange>();
     private CountDownLatch dispatchStoppedLatch = new CountDownLatch(1);
     protected AtomicBoolean dispatchStopped=new AtomicBoolean(false);
+    private ConnectionContext context;
     private boolean networkConnection;
     private AtomicInteger protocolVersion=new AtomicInteger(CommandTypes.PROTOCOL_VERSION);
     
@@ -284,6 +285,16 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
             }
             response.setCorrelationId(commandId);
         }
+        
+        // The context may have been flagged so that the response is not sent.
+        if( context!=null ) {
+        	if( context.isDontSendReponse() ) {
+        		context.setDontSendReponse(false);
+        		response=null;
+        	}
+            context=null;
+        }
+        
         return response;
     }
 
@@ -344,7 +355,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
 
     synchronized public Response processBeginTransaction(TransactionInfo info) throws Exception{
         ConnectionState cs=(ConnectionState)localConnectionStates.get(info.getConnectionId());
-        ConnectionContext context=null;
+        context=null;
         if(cs!=null){
             context=cs.getContext();
         }
@@ -365,7 +376,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
 
     synchronized public Response processPrepareTransaction(TransactionInfo info) throws Exception{
         ConnectionState cs=(ConnectionState)localConnectionStates.get(info.getConnectionId());
-        ConnectionContext context=null;
+        context=null;
         if(cs!=null){
             context=cs.getContext();
         }
@@ -388,7 +399,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
 
     synchronized public Response processCommitTransactionOnePhase(TransactionInfo info) throws Exception{
         ConnectionState cs=(ConnectionState)localConnectionStates.get(info.getConnectionId());
-        ConnectionContext context=null;
+        context=null;
         if(cs!=null){
             context=cs.getContext();
         }
@@ -399,7 +410,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
 
     synchronized public Response processCommitTransactionTwoPhase(TransactionInfo info) throws Exception{
         ConnectionState cs=(ConnectionState)localConnectionStates.get(info.getConnectionId());
-        ConnectionContext context=null;
+        context=null;
         if(cs!=null){
             context=cs.getContext();
         }
@@ -410,7 +421,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
 
     synchronized public Response processRollbackTransaction(TransactionInfo info) throws Exception{
         ConnectionState cs=(ConnectionState)localConnectionStates.get(info.getConnectionId());
-        ConnectionContext context=null;
+        context=null;
         if(cs!=null){
             context=cs.getContext();
         }
@@ -421,7 +432,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
 
     synchronized public Response processForgetTransaction(TransactionInfo info) throws Exception{
         ConnectionState cs=(ConnectionState)localConnectionStates.get(info.getConnectionId());
-        ConnectionContext context=null;
+        context=null;
         if(cs!=null){
             context=cs.getContext();
         }
@@ -431,7 +442,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
 
     synchronized public Response processRecoverTransactions(TransactionInfo info) throws Exception{
         ConnectionState cs=(ConnectionState)localConnectionStates.get(info.getConnectionId());
-        ConnectionContext context=null;
+        context=null;
         if(cs!=null){
             context=cs.getContext();
         }
@@ -626,7 +637,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
         log.debug("Setting up new connection: "+this);
         // Setup the context.
         String clientId=info.getClientId();
-        ConnectionContext context=new ConnectionContext();
+        context=new ConnectionContext();
         context.setConnection(this);
         context.setBroker(broker);
         context.setConnector(connector);
@@ -1096,7 +1107,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
             synchronized(producerExchanges){
                 result=new ProducerBrokerExchange();
                 ConnectionState state=lookupConnectionState(id);
-                ConnectionContext context=state.getContext();
+                context=state.getContext();
                 result.setConnectionContext(context);
                 SessionState ss=state.getSessionState(id.getParentId());
                 if(ss!=null){
@@ -1125,7 +1136,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
             synchronized(consumerExchanges){
                 result=new ConsumerBrokerExchange();
                 ConnectionState state=lookupConnectionState(id);
-                ConnectionContext context=state.getContext();
+                context=state.getContext();
                 result.setConnectionContext(context);
                 SessionState ss=state.getSessionState(id.getParentId());
                 if(ss!=null){
