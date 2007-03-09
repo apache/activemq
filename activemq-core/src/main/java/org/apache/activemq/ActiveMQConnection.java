@@ -87,6 +87,7 @@ import org.apache.activemq.management.JMSConnectionStatsImpl;
 import org.apache.activemq.management.JMSStatsImpl;
 import org.apache.activemq.management.StatsCapable;
 import org.apache.activemq.management.StatsImpl;
+import org.apache.activemq.state.CommandVisitorAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
@@ -1540,53 +1541,81 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public void onCommand(final Object o) {
     	final Command command = (Command) o;
         if (!closed.get() && command != null) {
-            if (command.isMessageDispatch()) {
-                MessageDispatch md = (MessageDispatch) command;
-                ActiveMQDispatcher dispatcher = (ActiveMQDispatcher) dispatchers.get(md.getConsumerId());
-                if (dispatcher != null) {
-                    // Copy in case a embedded broker is dispatching via vm://
-                    // md.getMessage() == null to signal end of queue browse.
-                    Message msg = md.getMessage();
-                    if( msg!=null ) {
-                        msg = msg.copy();
-                        msg.setReadOnlyBody(true);
-                        msg.setReadOnlyProperties(true);
-                        msg.setRedeliveryCounter(md.getRedeliveryCounter());
-                        msg.setConnection(this);
-                        md.setMessage( msg );
-                    }
-                    dispatcher.dispatch(md);
-                }
-            } else if (command.getDataStructureType() == ProducerAck.DATA_STRUCTURE_TYPE ) {
-            	ProducerAck pa = (ProducerAck) command;
-            	ActiveMQMessageProducer producer = producers.get(pa.getProducerId());
-            	if( producer!=null ) {
-            		producer.onProducerAck(pa);
-            	}
-            } else if ( command.isBrokerInfo() ) {
-                this.brokerInfo = (BrokerInfo)command;
-                brokerInfoReceived.countDown();
-                this.optimizeAcknowledge &= !this.brokerInfo.isFaultTolerantConfiguration();
-                getBlobTransferPolicy().setBrokerUploadUrl(brokerInfo.getBrokerUploadUrl());
-            }
-            else if (command instanceof ControlCommand) {
-                onControlCommand((ControlCommand) command);
-            }
-            else if (command.getDataStructureType() == ConnectionError.DATA_STRUCTURE_TYPE) {
-                asyncConnectionThread.execute(new Runnable(){
-                    public void run() {
-                        onAsyncException(((ConnectionError)command).getException());
-                    }
-                });
-                new Thread("Async error worker") {
-                }.start();
-            }else if (command instanceof ConnectionControl){
-                onConnectionControl((ConnectionControl) command);
-            }else if (command instanceof ConsumerControl){
-                onConsumerControl((ConsumerControl) command);
-            }else if ( command.isWireFormatInfo() ) {
-            	onWireFormatInfo((WireFormatInfo)command);
-            }
+        	try {
+				command.visit(new CommandVisitorAdapter(){
+					@Override
+					public Response processMessageDispatch(MessageDispatch md) throws Exception {
+		                ActiveMQDispatcher dispatcher = (ActiveMQDispatcher) dispatchers.get(md.getConsumerId());
+		                if (dispatcher != null) {
+		                    // Copy in case a embedded broker is dispatching via vm://
+		                    // md.getMessage() == null to signal end of queue browse.
+		                    Message msg = md.getMessage();
+		                    if( msg!=null ) {
+		                        msg = msg.copy();
+		                        msg.setReadOnlyBody(true);
+		                        msg.setReadOnlyProperties(true);
+		                        msg.setRedeliveryCounter(md.getRedeliveryCounter());
+		                        msg.setConnection(ActiveMQConnection.this);
+		                        md.setMessage( msg );
+		                    }
+		                    dispatcher.dispatch(md);
+		                }
+		                return null;
+					}
+					
+					@Override
+					public Response processProducerAck(ProducerAck pa) throws Exception {
+		            	ActiveMQMessageProducer producer = producers.get(pa.getProducerId());
+		            	if( producer!=null ) {
+		            		producer.onProducerAck(pa);
+		            	}
+		            	return null;
+					}
+					
+					@Override
+					public Response processBrokerInfo(BrokerInfo info) throws Exception {
+		                brokerInfoReceived.countDown();
+		                optimizeAcknowledge &= !brokerInfo.isFaultTolerantConfiguration();
+		                getBlobTransferPolicy().setBrokerUploadUrl(info.getBrokerUploadUrl());
+		                return null;
+					}
+					
+					@Override
+					public Response processConnectionError(final ConnectionError error) throws Exception {
+		                asyncConnectionThread.execute(new Runnable(){
+		                    public void run() {
+		                        onAsyncException(error.getException());
+		                    }
+		                });
+		                new Thread("Async error worker") {
+		                }.start();
+		                return null;
+					}
+					@Override
+					public Response processControlCommand(ControlCommand command) throws Exception {
+		                onControlCommand(command);
+		                return null;
+					}
+					@Override
+					public Response processConnectionControl(ConnectionControl control) throws Exception {
+		                onConnectionControl((ConnectionControl) command);
+		                return null;
+					}
+					@Override
+					public Response processConsumerControl(ConsumerControl control) throws Exception {
+		                onConsumerControl((ConsumerControl) command);
+		                return null;
+					}
+					@Override
+					public Response processWireFormat(WireFormatInfo info) throws Exception {
+		                onConsumerControl((ConsumerControl) command);
+		                return null;
+					}
+				});
+			} catch (Exception e) {
+				onAsyncException(e);
+			}
+			
         }
         for (Iterator iter = transportListeners.iterator(); iter.hasNext();) {
             TransportListener listener = (TransportListener) iter.next();

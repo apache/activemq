@@ -40,8 +40,10 @@ import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.command.ConnectionError;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.ControlCommand;
 import org.apache.activemq.command.DataArrayResponse;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.ExceptionResponse;
@@ -1176,6 +1178,28 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
 	
 	public int getProtocolVersion() {
 		return protocolVersion.get();
+	}
+
+	public Response processControlCommand(ControlCommand command) throws Exception {
+	    if (command.equals("shutdown"))
+	        System.exit(0);
+        return null;
+	}
+
+	public Response processMessageDispatch(MessageDispatch dispatch) throws Exception {
+		return null;
+	}
+
+	public Response processConnectionControl(ConnectionControl control) throws Exception {
+		return null;
+	}
+
+	public Response processConnectionError(ConnectionError error) throws Exception {
+		return null;
+	}
+
+	public Response processConsumerControl(ConsumerControl control) throws Exception {
+		return null;
 	}
 
 }

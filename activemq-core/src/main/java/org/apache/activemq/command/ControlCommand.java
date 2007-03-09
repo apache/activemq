@@ -48,8 +48,6 @@ public class ControlCommand extends BaseCommand {
     }
 
     public Response visit(CommandVisitor visitor) throws Exception {
-    if (command.equals("shutdown"))
-        System.exit(0);
-        return null;
+        return visitor.processControlCommand(this);
     }
 }

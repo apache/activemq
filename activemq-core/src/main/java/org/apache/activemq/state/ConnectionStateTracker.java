@@ -19,34 +19,24 @@ package org.apache.activemq.state;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DestinationInfo;
-import org.apache.activemq.command.FlushCommand;
-import org.apache.activemq.command.KeepAliveInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.command.MessageDispatchNotification;
-import org.apache.activemq.command.MessagePull;
-import org.apache.activemq.command.ProducerAck;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
-import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.SessionInfo;
-import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.command.TransactionInfo;
-import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.IOExceptionSupport;
-
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Tracks the state of a connection so a newly established transport can 
@@ -54,7 +44,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 
  * @version $Revision$
  */
-public class ConnectionStateTracker implements CommandVisitor {
+public class ConnectionStateTracker extends CommandVisitorAdapter {
 
 	private final static Tracked TRACKED_RESPONSE_MARKER = new Tracked(null);
     
@@ -311,9 +301,6 @@ public class ConnectionStateTracker implements CommandVisitor {
         return TRACKED_RESPONSE_MARKER;
     }
 
-    public Response processRemoveSubscription(RemoveSubscriptionInfo info) throws Exception {
-        return null;
-    }
     
     public Response processMessage(Message send) throws Exception{
         if(trackTransactions&&send!=null&&send.getTransactionId()!=null){
@@ -448,43 +435,6 @@ public class ConnectionStateTracker implements CommandVisitor {
         return null;
     }
     
-    public Response processRecoverTransactions(TransactionInfo info) {
-        return null;
-    }
-    public Response processForgetTransaction(TransactionInfo info) throws Exception {
-        return null;
-    }
-
-    
-    public Response processWireFormat(WireFormatInfo info) throws Exception {
-        return null;
-    }
-    public Response processKeepAlive(KeepAliveInfo info) throws Exception {
-        return null;
-    }
-    public Response processShutdown(ShutdownInfo info) throws Exception {
-        return null;
-    }
-    public Response processBrokerInfo(BrokerInfo info) throws Exception {
-        return null;
-    }
-
-    public Response processFlush(FlushCommand command) throws Exception {
-        return null;
-    }
-    
-    public Response processMessageDispatchNotification(MessageDispatchNotification notification) throws Exception{
-        return null;
-    }
-    
-    public Response processMessagePull(MessagePull pull) throws Exception {
-        return null;
-    }
-
-    public Response processProducerAck(ProducerAck ack) throws Exception {
-		return null;
-	}
-
     public boolean isRestoreConsumers() {
         return restoreConsumers;
     }
@@ -524,6 +474,5 @@ public class ConnectionStateTracker implements CommandVisitor {
 	public void setRestoreTransaction(boolean restoreTransaction) {
 		this.restoreTransaction = restoreTransaction;
 	}
-
 
 }
