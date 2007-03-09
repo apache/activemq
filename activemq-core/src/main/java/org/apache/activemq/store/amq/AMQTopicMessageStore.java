@@ -163,19 +163,21 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
             this.ackedLastAckLocations=new HashMap<SubscriptionKey,MessageId>();
         }
         Location location=super.doAsyncWrite();
-        transactionTemplate.run(new Callback(){
 
-            public void execute() throws Exception{
-                // Checkpoint the acknowledged messages.
-                Iterator<SubscriptionKey> iterator=cpAckedLastAckLocations.keySet().iterator();
-                while(iterator.hasNext()){
-                    SubscriptionKey subscriptionKey=iterator.next();
-                    MessageId identity=cpAckedLastAckLocations.get(subscriptionKey);
-                    topicReferenceStore.acknowledge(transactionTemplate.getContext(),subscriptionKey.clientId,
-                            subscriptionKey.subscriptionName,identity);
+        if (cpAckedLastAckLocations != null) {
+            transactionTemplate.run(new Callback() {
+                public void execute() throws Exception {
+                    // Checkpoint the acknowledged messages.
+                    Iterator<SubscriptionKey> iterator = cpAckedLastAckLocations.keySet().iterator();
+                    while (iterator.hasNext()) {
+                        SubscriptionKey subscriptionKey = iterator.next();
+                        MessageId identity = cpAckedLastAckLocations.get(subscriptionKey);
+                        topicReferenceStore.acknowledge(transactionTemplate.getContext(), subscriptionKey.clientId,
+                                subscriptionKey.subscriptionName, identity);
+                    }
                 }
-            }
-        });
+            });
+        }
         return location;
     }
 
