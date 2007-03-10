@@ -1609,7 +1609,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 					}
 					@Override
 					public Response processWireFormat(WireFormatInfo info) throws Exception {
-		                onConsumerControl((ConsumerControl) command);
+		                onWireFormatInfo((WireFormatInfo) command);
 		                return null;
 					}
 				});
