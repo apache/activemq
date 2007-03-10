@@ -1574,6 +1574,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 					
 					@Override
 					public Response processBrokerInfo(BrokerInfo info) throws Exception {
+                        brokerInfo=info;
 		                brokerInfoReceived.countDown();
 		                optimizeAcknowledge &= !brokerInfo.isFaultTolerantConfiguration();
 		                getBlobTransferPolicy().setBrokerUploadUrl(info.getBrokerUploadUrl());
