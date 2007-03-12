@@ -102,7 +102,7 @@ public class Queue implements Destination, Task {
             TaskRunnerFactory taskFactory, Store tmpStore) throws Exception {
         this.destination = destination;
         this.usageManager = new UsageManager(memoryManager,destination.toString());
-        this.usageManager.setLimit(Long.MAX_VALUE);
+        this.usageManager.setUsagePortion(1.0f);
         this.store = store;
         if(destination.isTemporary()){
             this.messages=new VMPendingMessageCursor();
