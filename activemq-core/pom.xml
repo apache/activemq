@@ -265,6 +265,9 @@
 
             <!-- The NIO implemenation is not working properly on OS X.. -->
             <exclude>**/nio/**</exclude>
+
+            <exclude>**/AMQDeadlockTest3.*</exclude>
+            <exclude>**/ProducerFlowControlTest.*</exclude>
           </excludes>
         </configuration>
       </plugin>

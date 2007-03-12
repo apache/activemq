@@ -194,7 +194,8 @@ public class UsageManager  implements Service{
     }
 
     /**
-     * Sets the memory limit in bytes.
+     * Sets the memory limit in bytes.  Setting the limit in bytes will set the usagePortion to 0 since 
+     * the UsageManager is not going to be portion based off the parent.
      * 
      * When set using XBean, you can use values such as: "20 mb", "1024 kb", or "1 gb"
      * 
@@ -204,17 +205,49 @@ public class UsageManager  implements Service{
         if(percentUsageMinDelta < 0 ) {
             throw new IllegalArgumentException("percentUsageMinDelta must be greater or equal to 0");
         }
+        synchronized(usageMutex){
+            this.limit=limit;
+            this.usagePortion=0;
+        }
+        onLimitChange();
+    }
+    
+	private void onLimitChange() {
+		
+		// We may need to calculate the limit
+		if( usagePortion > 0 && parent!=null ) {
+	        synchronized(usageMutex){
+	        	limit = (long)(parent.getLimit()*usagePortion);
+	        }
+		}
+		
+		// Reset the percent currently being used.
         int percentUsage;
         synchronized(usageMutex){
-            this.limit=parent!=null?(long)(parent.limit*usagePortion):limit;
             percentUsage=caclPercentUsage();
         }
         setPercentUsage(percentUsage);
+        
+        // Let the children know that the limit has changed.  They may need to set
+        // their limits based on ours.
         for (UsageManager child:children) {
-            child.setLimit(limit);
+            child.onLimitChange();
         }
-    }
-    
+	}
+
+	public float getUsagePortion() {
+        synchronized(usageMutex){
+        	return usagePortion;
+        }
+	}
+
+	public void setUsagePortion(float usagePortion) {
+        synchronized(usageMutex){
+        	this.usagePortion = usagePortion;
+        }
+        onLimitChange();
+	}
+
     /*
     * Sets the minimum number of percentage points the usage has to change before a UsageListener
     * event is fired by the manager.
@@ -369,5 +402,6 @@ public class UsageManager  implements Service{
             }
         }
     }
+
 
 }
