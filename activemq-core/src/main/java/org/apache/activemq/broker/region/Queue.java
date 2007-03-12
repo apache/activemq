@@ -431,6 +431,7 @@ public class Queue implements Destination, Task {
         if(store!=null&&message.isPersistent()){
             store.addMessage(context,message);
         }
+        message.incrementReferenceCount();
         if(context.isInTransaction()){
             context.getTransaction().addSynchronization(new Synchronization(){
 
