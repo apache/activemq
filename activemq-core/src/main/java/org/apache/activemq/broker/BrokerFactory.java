@@ -30,7 +30,7 @@ import org.apache.activemq.util.IOExceptionSupport;
  */
 public class BrokerFactory {
 
-    static final private FactoryFinder brokerFactoryHandlerFinder = new FactoryFinder("META-INF/services/org/apache/activemq/broker/");    
+    static final private FactoryFinder brokerFactoryHandlerFinder = new FactoryFinder("META-INF/services/org/apache/activemq/broker/");
 
     public interface BrokerFactoryHandler {
         public BrokerService createBroker(URI brokerURI) throws Exception;
@@ -57,5 +57,16 @@ public class BrokerFactory {
         BrokerService broker = handler.createBroker(brokerURI);
         return broker;
     }
+
+
+    /**
+     * Creates a broker from a URI configuration
+     * @param brokerURI
+     * @throws Exception
+     */
+    public static BrokerService createBroker(String brokerURI) throws Exception {
+        return createBroker(new URI(brokerURI));
+    }
+
 
 }
