@@ -42,8 +42,8 @@ public class ConduitBridge extends DemandForwardingBridge{
      * @param localBroker
      * @param remoteBroker
      */
-    public ConduitBridge(Transport localBroker,Transport remoteBroker){
-        super(localBroker,remoteBroker);
+    public ConduitBridge(NetworkBridgeConfiguration configuration,Transport localBroker,Transport remoteBroker){
+        super(configuration,localBroker,remoteBroker);
     }
     
     protected DemandSubscription createDemandSubscription(ConsumerInfo info) throws IOException{

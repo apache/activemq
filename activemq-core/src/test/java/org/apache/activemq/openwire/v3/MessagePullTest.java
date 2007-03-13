@@ -54,5 +54,7 @@ public class MessagePullTest extends BaseCommandTestSupport {
         info.setConsumerId(createConsumerId("ConsumerId:1"));
         info.setDestination(createActiveMQDestination("Destination:2"));
         info.setTimeout(1);
+        info.setCorrelationId("CorrelationId:3");
+        info.setMessageId(createMessageId("MessageId:4"));
     }
 }

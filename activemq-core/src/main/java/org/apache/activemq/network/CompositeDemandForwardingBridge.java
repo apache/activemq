@@ -41,8 +41,8 @@ public class CompositeDemandForwardingBridge extends DemandForwardingBridgeSuppo
     protected final BrokerId remoteBrokerPath[] = new BrokerId[] { null };
     protected Object brokerInfoMutex = new Object();
 
-    public CompositeDemandForwardingBridge(Transport localBroker, Transport remoteBroker) {
-        super(localBroker, remoteBroker);
+    public CompositeDemandForwardingBridge(NetworkBridgeConfiguration configuration,Transport localBroker, Transport remoteBroker) {
+        super(configuration,localBroker, remoteBroker);
         remoteBrokerName = remoteBroker.toString();
     	remoteBrokerNameKnownLatch.countDown();
     }
@@ -102,7 +102,7 @@ public class CompositeDemandForwardingBridge extends DemandForwardingBridgeSuppo
     }
 
     protected NetworkBridgeFilter createNetworkBridgeFilter(ConsumerInfo info) throws IOException {
-        return new NetworkBridgeFilter(getFromBrokerId(info), networkTTL);
+        return new NetworkBridgeFilter(getFromBrokerId(info), configuration.getNetworkTTL());
     }
     
     protected BrokerId[] getRemoteBrokerPath(){

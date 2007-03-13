@@ -60,7 +60,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
     public void onServiceAdd(DiscoveryEvent event) {
     	
     	// Ignore events once we start stopping.
-    	if( isStopped() || isStopping() )
+    	if( serviceSupport.isStopped() || serviceSupport.isStopping() )
     		return;
     	
         String url = event.getServiceName();
@@ -106,7 +106,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 return;
             }
 
-            Bridge bridge = createBridge(localTransport, remoteTransport, event);
+            NetworkBridge bridge = createBridge(localTransport, remoteTransport, event);
             bridges.put(uri, bridge);
             try {
                 bridge.start();
@@ -138,7 +138,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 return;
             }
 
-            Bridge bridge = (Bridge) bridges.remove(uri);
+            NetworkBridge bridge = (NetworkBridge) bridges.remove(uri);
             if (bridge == null)
                 return;
 
@@ -158,17 +158,17 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
         }
     }
 
-    protected void doStart() throws Exception {
+    protected void handleStart() throws Exception {
         if (discoveryAgent == null) {
             throw new IllegalStateException("You must configure the 'discoveryAgent' property");
         }
         this.discoveryAgent.start();
-        super.doStart();
+        super.handleStart();
     }
 
-    protected void doStop(ServiceStopper stopper) throws Exception {
+    protected void handleStop(ServiceStopper stopper) throws Exception {
         for (Iterator i = bridges.values().iterator(); i.hasNext();) {
-            Bridge bridge = (Bridge) i.next();
+            NetworkBridge bridge = (NetworkBridge) i.next();
             try {
                 bridge.stop();
             }
@@ -183,96 +183,31 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             stopper.onException(this, e);
         }
 
-        super.doStop(stopper);
+        super.handleStop(stopper);
     }
 
-    protected Bridge createBridge(Transport localTransport, Transport remoteTransport, final DiscoveryEvent event) {
-        DemandForwardingBridge result = null;
-        if (conduitSubscriptions) {
-            if (dynamicOnly) {
-                result = new ConduitBridge(localTransport, remoteTransport) {
-                	protected void serviceLocalException(Throwable error) {
-                		try {
-                			super.serviceLocalException(error);
-                		} finally {
-                			fireServiceFailed();
-                		}
-                	}
-                	protected void serviceRemoteException(Throwable error) {
-                		try {
-                    		super.serviceRemoteException(error);
-                		} finally {
-                			fireServiceFailed();
-                		}
-                	}
-                	public void fireServiceFailed() {
-                		if( !isStopped() ) {
-                            try {
-                                discoveryAgent.serviceFailed(event);
-                            } catch (IOException e) {
-                            }
-                		}
-                	}
-                };
+    protected NetworkBridge createBridge(Transport localTransport, Transport remoteTransport, final DiscoveryEvent event) {
+        NetworkBridgeFailedListener listener = new NetworkBridgeFailedListener() {
+
+            public void bridgeFailed(){
+                if( !serviceSupport.isStopped() ) {
+                    try {
+                        discoveryAgent.serviceFailed(event);
+                    } catch (IOException e) {
+                    }
+                }
+                
             }
-            else {
-                result = new DurableConduitBridge(localTransport, remoteTransport) {
-                	protected void serviceLocalException(Throwable error) {
-                		try {
-                			super.serviceLocalException(error);
-                		} finally {
-                			fireServiceFailed();
-                		}
-                	}
-                	protected void serviceRemoteException(Throwable error) {
-                		try {
-                    		super.serviceRemoteException(error);
-                		} finally {
-                			fireServiceFailed();
-                		}
-                	}
-                	public void fireServiceFailed() {
-                		if( !isStopped() ) {
-                            try {
-                                discoveryAgent.serviceFailed(event);
-                            } catch (IOException e) {
-                            }
-                		}
-                	}
-                };
-            }
-        }
-        else {
-            result = new DemandForwardingBridge(localTransport, remoteTransport) {            	
-            	protected void serviceLocalException(Throwable error) {
-            		try {
-            			super.serviceLocalException(error);
-            		} finally {
-            			fireServiceFailed();
-            		}
-            	}
-            	protected void serviceRemoteException(Throwable error) {
-            		try {
-                		super.serviceRemoteException(error);
-            		} finally {
-            			fireServiceFailed();
-            		}
-            	}
-            	public void fireServiceFailed() {
-            		if( !isStopped() ) {
-                        try {
-                            discoveryAgent.serviceFailed(event);
-                        } catch (IOException e) {
-                        }
-            		}
-            	}
-            };
-        }
+            
+        };
+        DemandForwardingBridge result = NetworkBridgeFactory.createBridge(this,localTransport,remoteTransport,listener);
         return configureBridge(result);
     }
 
     protected String createName() {
         return discoveryAgent.toString();
     }
+
+   
 
 }

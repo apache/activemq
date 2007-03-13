@@ -40,8 +40,8 @@ public class DemandForwardingBridge extends DemandForwardingBridgeSupport {
     protected Object brokerInfoMutex = new Object();
     protected BrokerId remoteBrokerId;
 
-    public DemandForwardingBridge(Transport localBroker,Transport remoteBroker){
-        super(localBroker, remoteBroker);
+    public DemandForwardingBridge(NetworkBridgeConfiguration configuration,Transport localBroker,Transport remoteBroker){
+        super(configuration,localBroker, remoteBroker);
     }
 
     protected void serviceRemoteBrokerInfo(Command command) throws IOException {
@@ -80,7 +80,7 @@ public class DemandForwardingBridge extends DemandForwardingBridgeSupport {
     }
     
     protected NetworkBridgeFilter createNetworkBridgeFilter(ConsumerInfo info) throws IOException {
-        return new NetworkBridgeFilter(remoteBrokerPath[0], networkTTL);
+        return new NetworkBridgeFilter(remoteBrokerPath[0], configuration.getNetworkTTL());
     }
     
     protected BrokerId[] getRemoteBrokerPath(){

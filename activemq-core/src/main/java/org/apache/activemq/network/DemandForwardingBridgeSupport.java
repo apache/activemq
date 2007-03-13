@@ -53,13 +53,16 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.IdGenerator;
+import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
+import org.apache.activemq.util.MarshallingSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.security.GeneralSecurityException;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -69,7 +72,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * 
  * @version $Revision$
  */
-public abstract class DemandForwardingBridgeSupport implements Bridge {
+public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
     protected static final Log log = LogFactory.getLog(DemandForwardingBridge.class);
     protected final Transport localBroker;
     protected final Transport remoteBroker;
@@ -79,15 +82,8 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
     protected ConnectionInfo remoteConnectionInfo;
     protected SessionInfo localSessionInfo;
     protected ProducerInfo producerInfo;
-    protected String localBrokerName = "Unknown";
     protected String remoteBrokerName = "Unknown";
     protected String localClientId;
-    protected String userName;
-    protected String password;
-    protected int prefetchSize = 1000;
-    protected boolean dispatchAsync;
-    protected String destinationFilter = ">";
-    protected boolean bridgeTempDestinations = true;
     protected String name = "bridge";
     protected ConsumerInfo demandConsumerInfo;
     protected int demandConsumerDispatched;
@@ -104,14 +100,14 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
     protected final BrokerId localBrokerPath[] = new BrokerId[] { null };
     protected CountDownLatch startedLatch = new CountDownLatch(2);
     protected CountDownLatch remoteBrokerNameKnownLatch = new CountDownLatch(1);
-    protected boolean decreaseNetworkConsumerPriority;
-    protected int networkTTL = 1;
     protected final AtomicBoolean remoteInterupted = new AtomicBoolean(false);
     protected final AtomicBoolean lastConnectSucceeded = new AtomicBoolean(false);
-    protected boolean duplex = false;
+    protected NetworkBridgeConfiguration configuration;
+    private NetworkBridgeFailedListener bridgeFailedListener;
 
     
-    public DemandForwardingBridgeSupport(final Transport localBroker, final Transport remoteBroker) {
+    public DemandForwardingBridgeSupport(NetworkBridgeConfiguration configuration, Transport localBroker, Transport remoteBroker) {
+        this.configuration=configuration;
         this.localBroker = localBroker;
         this.remoteBroker = remoteBroker;
     }
@@ -236,8 +232,8 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
 	            localConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
 	            localClientId="NC_"+remoteBrokerName+"_inbound"+name;
 	            localConnectionInfo.setClientId(localClientId);
-	            localConnectionInfo.setUserName(userName);
-	            localConnectionInfo.setPassword(password);
+	            localConnectionInfo.setUserName(configuration.getUserName());
+	            localConnectionInfo.setPassword(configuration.getPassword());
 	            localBroker.oneway(localConnectionInfo);
 	
 	            localSessionInfo=new SessionInfo(localConnectionInfo,1);
@@ -263,15 +259,20 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
             	
                 remoteConnectionInfo=new ConnectionInfo();
                 remoteConnectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
-                remoteConnectionInfo.setClientId("NC_"+localBrokerName+"_outbound"+name);
-                remoteConnectionInfo.setUserName(userName);
-                remoteConnectionInfo.setPassword(password);
+                remoteConnectionInfo.setClientId("NC_"+configuration.getLocalBrokerName()+"_outbound"+name);
+                remoteConnectionInfo.setUserName(configuration.getUserName());
+                remoteConnectionInfo.setPassword(configuration.getPassword());
                 remoteBroker.oneway(remoteConnectionInfo);
 
                 BrokerInfo brokerInfo=new BrokerInfo();
-                brokerInfo.setBrokerName(localBrokerName);
+                brokerInfo.setBrokerName(configuration.getLocalBrokerName());
                 brokerInfo.setNetworkConnection(true);
-                brokerInfo.setDuplexConnection(isDuplex());
+                brokerInfo.setDuplexConnection(configuration.isDuplex());
+                //set our properties
+                Properties props = new Properties();
+                IntrospectionSupport.getProperties(this,props,null); 
+                String str = MarshallingSupport.propertiesToString(props);
+                brokerInfo.setNetworkProperties(str);
                 remoteBroker.oneway(brokerInfo);
 
                 SessionInfo remoteSessionInfo=new SessionInfo(remoteConnectionInfo,1);
@@ -283,13 +284,13 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
 
                 // Listen to consumer advisory messages on the remote broker to determine demand.
                 demandConsumerInfo=new ConsumerInfo(remoteSessionInfo,1);
-                demandConsumerInfo.setDispatchAsync(dispatchAsync);
-                String advisoryTopic = AdvisorySupport.CONSUMER_ADVISORY_TOPIC_PREFIX+destinationFilter;
-                if( bridgeTempDestinations ) {
+                demandConsumerInfo.setDispatchAsync(configuration.isDispatchAsync());
+                String advisoryTopic = AdvisorySupport.CONSUMER_ADVISORY_TOPIC_PREFIX+configuration.getDestinationFilter();
+                if( configuration.isBridgeTempDestinations() ) {
                 	advisoryTopic += ","+AdvisorySupport.TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC;
                 }
                 demandConsumerInfo.setDestination(new ActiveMQTopic(advisoryTopic));
-                demandConsumerInfo.setPrefetchSize(prefetchSize);
+                demandConsumerInfo.setPrefetchSize(configuration.getPrefetchSize());
                 remoteBroker.oneway(demandConsumerInfo);                
                 startedLatch.countDown();
                 
@@ -302,7 +303,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
     }
 
     public void stop() throws Exception{
-        log.debug(" stopping "+localBrokerName+" bridge to "+remoteBrokerName+" is disposed already ? "+disposed);
+        log.debug(" stopping "+configuration.getLocalBrokerName()+" bridge to "+remoteBrokerName+" is disposed already ? "+disposed);
         boolean wasDisposedAlready=disposed;
         if(!disposed){
             try{
@@ -320,13 +321,13 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
             }
         }
         if(wasDisposedAlready){
-            log.debug(localBrokerName+" bridge to "+remoteBrokerName+" stopped");
+            log.debug(configuration.getLocalBrokerName()+" bridge to "+remoteBrokerName+" stopped");
         }else{
-            log.info(localBrokerName+" bridge to "+remoteBrokerName+" stopped");
+            log.info(configuration.getLocalBrokerName()+" bridge to "+remoteBrokerName+" stopped");
         }
     }
     
-    protected void serviceRemoteException(Throwable error){
+    public void serviceRemoteException(Throwable error){
         if(!disposed){
             if(error instanceof SecurityException||error instanceof GeneralSecurityException){
                 log.error("Network connection between "+localBroker+" and "+remoteBroker
@@ -342,6 +343,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
                     ServiceSupport.dispose(DemandForwardingBridgeSupport.this);
                 }
             }.start();
+            fireBridgeFailed();
         }
     }
 
@@ -384,25 +386,26 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
     }
 
     private void serviceRemoteConsumerAdvisory(DataStructure data) throws IOException {
+        final int networkTTL = configuration.getNetworkTTL();
         if(data.getClass()==ConsumerInfo.class){
             // Create a new local subscription
             ConsumerInfo info=(ConsumerInfo) data;
             BrokerId[] path=info.getBrokerPath();
             if((path!=null&&path.length>= networkTTL)){
                 if(log.isDebugEnabled())
-                    log.debug(localBrokerName + " Ignoring Subscription " + info + " restricted to " + networkTTL + " network hops only");
+                    log.debug(configuration.getLocalBrokerName() + " Ignoring Subscription " + info + " restricted to " + networkTTL + " network hops only");
                 return;
             }
             if(contains(info.getBrokerPath(),localBrokerPath[0])){
                 // Ignore this consumer as it's a consumer we locally sent to the broker.
                 if(log.isDebugEnabled())
-                    log.debug(localBrokerName  + " Ignoring sub " + info + " already routed through this broker once");
+                    log.debug(configuration.getLocalBrokerName()  + " Ignoring sub " + info + " already routed through this broker once");
                 return;
             }
             if (!isPermissableDestination(info.getDestination())){
                 //ignore if not in the permited or in the excluded list
                 if(log.isDebugEnabled())
-                    log.debug(localBrokerName  + " Ignoring sub " + info + " destination " + info.getDestination() + " is not permiited");
+                    log.debug(configuration.getLocalBrokerName()  + " Ignoring sub " + info + " destination " + info.getDestination() + " is not permiited");
                 return;
             }
             // Update the packet to show where it came from.
@@ -412,10 +415,10 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
             if (sub != null){
                 addSubscription(sub);
                 if(log.isDebugEnabled())
-                    log.debug(localBrokerName + " Forwarding sub on "+localBroker+" from "+remoteBrokerName+" :  "+info);
+                    log.debug(configuration.getLocalBrokerName() + " Forwarding sub on "+localBroker+" from "+remoteBrokerName+" :  "+info);
             }else {
                 if(log.isDebugEnabled())
-                    log.debug(localBrokerName  + " Ignoring sub " + info + " already subscribed to matching destination");
+                    log.debug(configuration.getLocalBrokerName()  + " Ignoring sub " + info + " already subscribed to matching destination");
             }
         }
         else if (data.getClass()==DestinationInfo.class){
@@ -454,7 +457,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
         }
     }
 
-    protected void serviceLocalException(Throwable error) {
+    public void serviceLocalException(Throwable error) {
     	if( !disposed ) {
 	        log.info("Network connection between "+localBroker+" and "+remoteBroker+" shutdown due to a local error: "+error);
 	        log.debug("The local Exception was:"+error,error);
@@ -463,6 +466,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
 	                ServiceSupport.dispose(DemandForwardingBridgeSupport.this);
 	        	}
 	        }.start();
+            fireBridgeFailed();
     	}
     }
 
@@ -507,7 +511,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
                     if(sub!=null){
                         Message message= configureMessage(md);
                         if(trace)
-                            log.trace("bridging "+localBrokerName+" -> "+remoteBrokerName+": "+message);
+                            log.trace("bridging "+configuration.getLocalBrokerName()+" -> "+remoteBrokerName+": "+message);
                         
                         
                         
@@ -547,7 +551,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
                 }else if(command.isBrokerInfo()){
                     serviceLocalBrokerInfo(command);
                 }else if(command.isShutdownInfo()){
-                    log.info(localBrokerName+" Shutting down");
+                    log.info(configuration.getLocalBrokerName()+" Shutting down");
                     // Don't shut down the whole connector if the remote side was interrupted.
                     // the local transport is just shutting down temporarily until the remote side
                     // is restored.
@@ -569,34 +573,6 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
                 serviceLocalException(e);
             }
         }
-    }
-
-    /**
-     * @return prefetch size
-     */
-    public int getPrefetchSize() {
-        return prefetchSize;
-    }
-
-    /**
-     * @param prefetchSize
-     */
-    public void setPrefetchSize(int prefetchSize) {
-        this.prefetchSize=prefetchSize;
-    }
-
-    /**
-     * @return true if dispatch async
-     */
-    public boolean isDispatchAsync() {
-        return dispatchAsync;
-    }
-
-    /**
-     * @param dispatchAsync
-     */
-    public void setDispatchAsync(boolean dispatchAsync) {
-        this.dispatchAsync=dispatchAsync;
     }
 
     /**
@@ -656,21 +632,6 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
     }
 
     /**
-     * @return Returns the localBrokerName.
-     */
-    public String getLocalBrokerName() {
-        return localBrokerName;
-    }
-
-    /**
-     * @param localBrokerName
-     *            The localBrokerName to set.
-     */
-    public void setLocalBrokerName(String localBrokerName) {
-        this.localBrokerName=localBrokerName;
-    }
-
-    /**
      * @return Returns the localBroker.
      */
     public Transport getLocalBroker() {
@@ -696,34 +657,6 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
      */
     public void setName(String name) {
         this.name=name;
-    }
-
-    /**
-     * @return Returns the decreaseNetworkConsumerPriority.
-     */
-    public boolean isDecreaseNetworkConsumerPriority() {
-        return decreaseNetworkConsumerPriority;
-    }
-
-    /**
-     * @param decreaseNetworkConsumerPriority The decreaseNetworkConsumerPriority to set.
-     */
-    public void setDecreaseNetworkConsumerPriority(boolean decreaseNetworkConsumerPriority) {
-        this.decreaseNetworkConsumerPriority=decreaseNetworkConsumerPriority;
-    }
-
-    /**
-     * @return Returns the networkTTL.
-     */
-    public int getNetworkTTL() {
-        return networkTTL;
-    }
-
-    /**
-     * @param networkTTL The networkTTL to set.
-     */
-    public void setNetworkTTL(int networkTTL) {
-        this.networkTTL=networkTTL;
     }
   
     public static boolean contains(BrokerId[] brokerPath, BrokerId brokerId) {
@@ -757,7 +690,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
     protected boolean isPermissableDestination(ActiveMQDestination destination) {
     	
     	// Are we not bridging temp destinations?
-    	if( destination.isTemporary() && !bridgeTempDestinations )
+    	if( destination.isTemporary() && !configuration.isBridgeTempDestinations() )
     		return false;
     	
         DestinationFilter filter=DestinationFilter.parseFilter(destination);
@@ -814,7 +747,7 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
         result.getLocalInfo().setConsumerId(new ConsumerId(localSessionInfo.getSessionId(),consumerIdGenerator
                         .getNextSequenceId()));
         
-        if( decreaseNetworkConsumerPriority ) {
+        if( configuration.isDecreaseNetworkConsumerPriority() ) {
             byte priority=ConsumerInfo.NETWORK_CONSUMER_PRIORITY;
             if(priority>Byte.MIN_VALUE&&info.getBrokerPath()!=null&&info.getBrokerPath().length>1){
                 // The longer the path to the consumer, the less it's consumer priority.
@@ -840,8 +773,8 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
     }
 
     protected void configureDemandSubscription(ConsumerInfo info, DemandSubscription sub) throws IOException {
-        sub.getLocalInfo().setDispatchAsync(dispatchAsync);
-        sub.getLocalInfo().setPrefetchSize(prefetchSize);
+        sub.getLocalInfo().setDispatchAsync(configuration.isDispatchAsync());
+        sub.getLocalInfo().setPrefetchSize(configuration.getPrefetchSize());
         subscriptionMapByLocalId.put(sub.getLocalInfo().getConsumerId(),sub);
         subscriptionMapByRemoteId.put(sub.getRemoteInfo().getConsumerId(),sub);
     
@@ -877,37 +810,16 @@ public abstract class DemandForwardingBridgeSupport implements Bridge {
     protected abstract void serviceRemoteBrokerInfo(Command command) throws IOException;
     
     protected abstract BrokerId[] getRemoteBrokerPath();
-
-	public String getPassword() {
-		return password;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
-	}
-
-	public String getUserName() {
-		return userName;
-	}
-
-	public void setUserName(String userName) {
-		this.userName = userName;
-	}
-
-	public boolean isBridgeTempDestinations() {
-		return bridgeTempDestinations;
-	}
-
-	public void setBridgeTempDestinations(boolean bridgeTempDestinations) {
-		this.bridgeTempDestinations = bridgeTempDestinations;
-	}
-
-    public boolean isDuplex(){
-        return this.duplex;
-    }
-
-    public void setDuplex(boolean duplex){
-        this.duplex=duplex;
-    }
+    
+    public void setNetworkBridgeFailedListener(NetworkBridgeFailedListener listener){
+        this.bridgeFailedListener=listener;  
+      }
+      
+      private void fireBridgeFailed() {
+          NetworkBridgeFailedListener l = this.bridgeFailedListener;
+          if (l!=null) {
+              l.bridgeFailed();
+          }
+      }
 
 }

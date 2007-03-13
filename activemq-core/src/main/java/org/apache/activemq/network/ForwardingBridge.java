@@ -19,6 +19,7 @@ package org.apache.activemq.network;
 
 import java.io.IOException;
 
+import org.apache.activemq.Service;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.BrokerId;
@@ -52,7 +53,7 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision$
  */
-public class ForwardingBridge implements Bridge {
+public class ForwardingBridge  implements Service{
     
     static final private Log log = LogFactory.getLog(ForwardingBridge.class);
 
@@ -76,6 +77,7 @@ public class ForwardingBridge implements Bridge {
     
     BrokerId localBrokerId;
     BrokerId remoteBrokerId;
+    private NetworkBridgeFailedListener bridgeFailedListener;
 
     public ForwardingBridge(Transport localBroker, Transport remoteBroker) {
         this.localBroker = localBroker;
@@ -179,7 +181,7 @@ public class ForwardingBridge implements Bridge {
         }
     }
     
-    protected void serviceRemoteException(IOException error) {
+    public void serviceRemoteException(Throwable error) {
         log.info("Unexpected remote exception: "+error);
         log.debug("Exception trace: ", error);
     }
@@ -206,9 +208,10 @@ public class ForwardingBridge implements Bridge {
         }
     }
 
-    protected void serviceLocalException(Throwable error) {
+    public void serviceLocalException(Throwable error) {
         log.info("Unexpected local exception: "+error);
         log.debug("Exception trace: ", error);
+        fireBridgeFailed();
     }    
     protected void serviceLocalCommand(Command command) {
         try {
@@ -318,5 +321,17 @@ public class ForwardingBridge implements Bridge {
     }
     public void setDestinationFilter(String destinationFilter) {
         this.destinationFilter = destinationFilter;
+    }
+
+   
+    public void setNetworkBridgeFailedListener(NetworkBridgeFailedListener listener){
+      this.bridgeFailedListener=listener;  
+    }
+    
+    private void fireBridgeFailed() {
+        NetworkBridgeFailedListener l = this.bridgeFailedListener;
+        if (l!=null) {
+            l.bridgeFailed();
+        }
     }
 }

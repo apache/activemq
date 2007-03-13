@@ -69,6 +69,7 @@ import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.network.DemandForwardingBridge;
 import org.apache.activemq.network.NetworkBridgeConfiguration;
+import org.apache.activemq.network.NetworkBridgeFactory;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
 import org.apache.activemq.state.CommandVisitor;
 import org.apache.activemq.state.ConsumerState;
@@ -80,6 +81,7 @@ import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.MarshallingSupport;
 import org.apache.activemq.util.ServiceSupport;
@@ -871,6 +873,9 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
                 if(masterBroker!=null){
                     masterBroker.stop();
                 }
+                if (duplexBridge != null) {
+                    duplexBridge.stop();
+                }
                 // If the transport has not failed yet,
                 // notify the peer that we are doing a normal shutdown.
                 if(transportException==null){
@@ -1081,9 +1086,10 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
                 NetworkBridgeConfiguration config = new NetworkBridgeConfiguration();
                 IntrospectionSupport.setProperties(config,props,null);
                 config.setLocalBrokerName(broker.getBrokerName());
-                
-               
-            }catch(IOException e){
+                Transport localTransport = TransportFactory.connect(broker.getVmConnectorURI());
+                localTransport.start();
+                duplexBridge = NetworkBridgeFactory.createBridge(config,localTransport,transport);
+            }catch(Exception e){
                log.error("Creating duplex network bridge",e);
             }
         }

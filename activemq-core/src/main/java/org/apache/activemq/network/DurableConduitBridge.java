@@ -37,12 +37,13 @@ public class DurableConduitBridge extends ConduitBridge{
 
     /**
      * Constructor
+     * @param configuration 
      * 
      * @param localBroker
      * @param remoteBroker
      */
-    public DurableConduitBridge(Transport localBroker,Transport remoteBroker){
-        super(localBroker,remoteBroker);
+    public DurableConduitBridge(NetworkBridgeConfiguration configuration,Transport localBroker,Transport remoteBroker){
+        super(configuration,localBroker,remoteBroker);
     }
 
     /**
@@ -92,7 +93,7 @@ public class DurableConduitBridge extends ConduitBridge{
     }
     
     protected String getSubscriberName(ActiveMQDestination dest){
-        String subscriberName = getLocalBrokerName()+"_"+dest.getPhysicalName();
+        String subscriberName = configuration.getLocalBrokerName()+"_"+dest.getPhysicalName();
         return subscriberName;
     }
 

@@ -69,6 +69,8 @@ public class MessagePullMarshaller extends BaseCommandMarshaller {
         info.setConsumerId((org.apache.activemq.command.ConsumerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setDestination((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setTimeout(tightUnmarshalLong(wireFormat, dataIn, bs));
+        info.setCorrelationId(tightUnmarshalString(dataIn, bs));
+        info.setMessageId((org.apache.activemq.command.MessageId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
 
     }
 
@@ -84,6 +86,8 @@ public class MessagePullMarshaller extends BaseCommandMarshaller {
         rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConsumerId(), bs);
         rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
         rc+=tightMarshalLong1(wireFormat, info.getTimeout(), bs);
+        rc += tightMarshalString1(info.getCorrelationId(), bs);
+        rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getMessageId(), bs);
 
         return rc + 0;
     }
@@ -102,6 +106,8 @@ public class MessagePullMarshaller extends BaseCommandMarshaller {
         tightMarshalCachedObject2(wireFormat, (DataStructure)info.getConsumerId(), dataOut, bs);
         tightMarshalCachedObject2(wireFormat, (DataStructure)info.getDestination(), dataOut, bs);
         tightMarshalLong2(wireFormat, info.getTimeout(), dataOut, bs);
+        tightMarshalString2(info.getCorrelationId(), dataOut, bs);
+        tightMarshalNestedObject2(wireFormat, (DataStructure)info.getMessageId(), dataOut, bs);
 
     }
 
@@ -119,6 +125,8 @@ public class MessagePullMarshaller extends BaseCommandMarshaller {
         info.setConsumerId((org.apache.activemq.command.ConsumerId) looseUnmarsalCachedObject(wireFormat, dataIn));
         info.setDestination((org.apache.activemq.command.ActiveMQDestination) looseUnmarsalCachedObject(wireFormat, dataIn));
         info.setTimeout(looseUnmarshalLong(wireFormat, dataIn));
+        info.setCorrelationId(looseUnmarshalString(dataIn));
+        info.setMessageId((org.apache.activemq.command.MessageId) looseUnmarsalNestedObject(wireFormat, dataIn));
 
     }
 
@@ -134,6 +142,8 @@ public class MessagePullMarshaller extends BaseCommandMarshaller {
         looseMarshalCachedObject(wireFormat, (DataStructure)info.getConsumerId(), dataOut);
         looseMarshalCachedObject(wireFormat, (DataStructure)info.getDestination(), dataOut);
         looseMarshalLong(wireFormat, info.getTimeout(), dataOut);
+        looseMarshalString(info.getCorrelationId(), dataOut);
+        looseMarshalNestedObject(wireFormat, (DataStructure)info.getMessageId(), dataOut);
 
     }
 }
