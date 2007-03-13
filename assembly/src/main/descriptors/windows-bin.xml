@@ -102,24 +102,42 @@
         <include>run.jar</include>
       </includes>
     </fileSet>
+
+    <!-- lets copy the portions of the web app we need - as we can't exclude stuff from the WAR -->
+    <fileSet>
+      <directory>../activemq-web-console/src/main/webapp</directory>
+      <outputDirectory>/webapps/admin</outputDirectory>
+      <excludes>
+        <exclude>**/activemq.xml</exclude>
+        <exclude>**/applicationContext.xml</exclude>
+      </excludes>
+    </fileSet>
+    <fileSet>
+      <directory>../activemq-web-console/target/classes</directory>
+      <outputDirectory>/webapps/admin/WEB-INF/classes</outputDirectory>
+      <includes>
+        <include>**/*.class</include>
+      </includes>
+    </fileSet>
   </fileSets>
+
   <dependencySets>
     <dependencySet>
       <outputDirectory>/lib</outputDirectory>
       <unpack>false</unpack>
       <scope>runtime</scope>
       <includes>
-         <include>backport-util-concurrent:backport-util-concurrent</include>
-         <include>commons-logging:commons-logging</include>
-         <include>geronimo-jms_1.1_spec:geronimo-jms_1.1_spec</include>
-         <include>${pom.groupId}:activemq-core</include>
-         <include>${pom.groupId}:activeio-core</include>
-         <include>${pom.groupId}:activemq-console</include>         
-         <include>${pom.groupId}:activemq-jaas</include>
-         <include>mx4j:mx4j</include>         
-         <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.0_spec</include>
-         <include>org.apache.geronimo.specs:geronimo-jms_1.1_spec</include>
-         <include>${pom.groupId}:activemq-web</include>
+        <include>backport-util-concurrent:backport-util-concurrent</include>
+        <include>commons-logging:commons-logging</include>
+        <include>geronimo-jms_1.1_spec:geronimo-jms_1.1_spec</include>
+        <include>${pom.groupId}:activemq-core</include>
+        <include>${pom.groupId}:activeio-core</include>
+        <include>${pom.groupId}:activemq-console</include>
+        <include>${pom.groupId}:activemq-jaas</include>
+        <include>mx4j:mx4j</include>
+        <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.0_spec</include>
+        <include>org.apache.geronimo.specs:geronimo-jms_1.1_spec</include>
+        <include>${pom.groupId}:activemq-web</include>
       </includes>
     </dependencySet>
     <dependencySet>
@@ -127,29 +145,29 @@
       <unpack>false</unpack>
       <scope>runtime</scope>
       <includes>
-         <include>${pom.groupId}:activemq-rar</include>
-         <include>${pom.groupId}:activemq-optional</include>
-         <include>${pom.groupId}:activemq-xmpp</include>
-         <include>${pom.groupId}:activecluster</include>
-         <include>commons-beanutils:commons-beanutils</include>
-         <include>commons-collections:commons-collections</include>
-         <include>commons-httpclient:commons-httpclient</include>
-         <include>commons-dbcp:commons-dbcp</include>
-         <include>commons-pool:commons-pool</include>
-         <include>org.mortbay.jetty:jetty</include>
-         <include>org.mortbay.jetty:jetty-util</include>
-         <include>org.mortbay.jetty:servlet-api-2.5</include>
-         <include>log4j:log4j</include>
-         <include>mx4j:mx4j-remote</include>
-         <include>mx4j:mx4j-tools</include>
-         <include>org.apache.derby:derby</include>
-         <include>org.apache.geronimo.specs:geronimo-j2ee-jacc_1.0_spec</include>
-         <include>org.apache.geronimo.specs:geronimo-j2ee-connector_1.5_spec</include>
-         <include>org.apache.xbean:xbean-spring</include>
-         <include>org.springframework:spring</include>
-         <include>xstream:xstream</include>
-         <include>xmlpull:xmlpull</include>
-         <include>activemq:jmdns</include>
+        <include>${pom.groupId}:activemq-rar</include>
+        <include>${pom.groupId}:activemq-optional</include>
+        <include>${pom.groupId}:activemq-xmpp</include>
+        <include>${pom.groupId}:activecluster</include>
+        <include>commons-beanutils:commons-beanutils</include>
+        <include>commons-collections:commons-collections</include>
+        <include>commons-httpclient:commons-httpclient</include>
+        <include>commons-dbcp:commons-dbcp</include>
+        <include>commons-pool:commons-pool</include>
+        <include>org.mortbay.jetty:jetty</include>
+        <include>org.mortbay.jetty:jetty-util</include>
+        <include>org.mortbay.jetty:servlet-api-2.5</include>
+        <include>log4j:log4j</include>
+        <include>mx4j:mx4j-remote</include>
+        <include>mx4j:mx4j-tools</include>
+        <include>org.apache.derby:derby</include>
+        <include>org.apache.geronimo.specs:geronimo-j2ee-jacc_1.0_spec</include>
+        <include>org.apache.geronimo.specs:geronimo-j2ee-connector_1.5_spec</include>
+        <include>org.apache.xbean:xbean-spring</include>
+        <include>org.springframework:spring</include>
+        <include>xstream:xstream</include>
+        <include>xmlpull:xmlpull</include>
+        <include>activemq:jmdns</include>
       </includes>
     </dependencySet>
     <dependencySet>
@@ -157,23 +175,27 @@
       <unpack>false</unpack>
       <scope>runtime</scope>
       <includes>
-         <include>org.mortbay.jetty:jetty</include>
-         <include>org.mortbay.jetty:jetty-util</include>
-         <include>org.mortbay.jetty:jetty-xbean</include>
-         <include>org.mortbay.jetty:servlet-api-2.5</include>
+        <include>org.mortbay.jetty:jetty</include>
+        <include>org.mortbay.jetty:jetty-util</include>
+        <include>org.mortbay.jetty:jetty-xbean</include>
+        <include>org.mortbay.jetty:servlet-api-2.5</include>
         <include>org.slf4j:slf4j-jcl</include>
 
         <!-- JSP support -->
-         <include>org.mortbay.jetty:jsp-2.1</include>
-         <include>org.mortbay.jetty:jsp-api-2.1</include>
-         <include>org.eclipse.jdt:core</include>
-         <include>ant:ant</include>
+        <include>org.mortbay.jetty:jsp-2.1</include>
+        <include>org.mortbay.jetty:jsp-api-2.1</include>
+        <include>org.eclipse.jdt:core</include>
+        <include>ant:ant</include>
 
-         <!-- JSTL and other web stuff -->
-         <include>opensymphony:sitemesh</include>
-         <include>javax.servlet:jstl</include>
-         <include>taglibs:standard</include>
+        <!-- JSTL and other web stuff -->
+        <include>opensymphony:sitemesh</include>
+        <include>javax.servlet:jstl</include>
+        <include>taglibs:standard</include>
+
+        <!-- Atom/RSS support -->
+        <include>rome:rome</include>
+        <include>jdom:jdom</include>
       </includes>
     </dependencySet>
-  </dependencySets>  
+  </dependencySets>
 </assembly>
