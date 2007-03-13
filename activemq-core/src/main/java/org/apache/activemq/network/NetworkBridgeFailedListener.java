@@ -17,14 +17,18 @@
  */
 package org.apache.activemq.network;
 
-import org.apache.activemq.Service;
 
 
 /**
- * Represents a network bridge interface
+ *called when a bridge fails
  * 
  * @version $Revision: 1.1 $
  */
-public interface Bridge extends Service {
-
+public interface NetworkBridgeFailedListener{
+    
+    /**
+     * called when the transport fails
+     *
+     */
+    public void bridgeFailed();
 }

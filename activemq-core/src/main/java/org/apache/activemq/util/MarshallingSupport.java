@@ -22,12 +22,15 @@ import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.StringWriter;
 import java.io.UTFDataFormatException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * 
@@ -367,6 +370,25 @@ public class MarshallingSupport {
         } else {
             return null;
         }
+    }
+    
+    public static String propertiesToString(Properties props) throws IOException{
+        String result="";
+        if(props!=null){
+            DataByteArrayOutputStream dataOut=new DataByteArrayOutputStream();
+            props.store(dataOut,"");
+            result=new String(dataOut.getData(),0,dataOut.size());
+        }
+        return result;
+    }
+    
+    public static Properties stringToProperties(String str) throws IOException {
+        Properties result = new Properties();
+        if (str != null && str.length() > 0 ) {
+            DataByteArrayInputStream dataIn = new DataByteArrayInputStream(str.getBytes());
+            result.load(dataIn);
+        }
+        return result;
     }
 
 

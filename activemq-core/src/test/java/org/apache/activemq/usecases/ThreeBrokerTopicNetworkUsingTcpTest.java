@@ -20,6 +20,7 @@ package org.apache.activemq.usecases;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.network.DemandForwardingBridge;
+import org.apache.activemq.network.NetworkBridgeConfiguration;
 import org.apache.activemq.transport.TransportFactory;
 
 import java.util.List;
@@ -43,9 +44,10 @@ public class ThreeBrokerTopicNetworkUsingTcpTest extends ThreeBrokerTopicNetwork
 
             // Ensure that we are connecting using tcp
             if (remoteURI.toString().startsWith("tcp:") && localURI.toString().startsWith("tcp:")) {
-                DemandForwardingBridge bridge = new DemandForwardingBridge(TransportFactory.connect(localURI),
+                NetworkBridgeConfiguration config = new NetworkBridgeConfiguration();
+                config.setLocalBrokerName(localBroker.getBrokerName());
+                DemandForwardingBridge bridge = new DemandForwardingBridge(config,TransportFactory.connect(localURI),
                                                                            TransportFactory.connect(remoteURI));
-                bridge.setLocalBrokerName(localBroker.getBrokerName());
                 bridges.add(bridge);
 
                 bridge.start();

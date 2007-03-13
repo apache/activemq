@@ -94,7 +94,7 @@ public class MulticastNetworkConnector extends NetworkConnector {
     // Implementation methods
     // -------------------------------------------------------------------------
 
-    protected void doStart() throws Exception {
+    protected void handleStart() throws Exception {
         if (remoteTransport == null) {
             if (remoteURI == null) {
                 throw new IllegalArgumentException("You must specify the remoteURI property");
@@ -114,11 +114,11 @@ public class MulticastNetworkConnector extends NetworkConnector {
         remoteTransport.start();
         localTransport.start();
 
-        super.doStart();
+        super.handleStart();
     }
 
-    protected void doStop(ServiceStopper stopper) throws Exception {
-        super.doStop(stopper);
+    protected void handleStop(ServiceStopper stopper) throws Exception {
+        super.handleStop(stopper);
         if (bridge != null) {
             try {
                 bridge.stop();
@@ -150,7 +150,7 @@ public class MulticastNetworkConnector extends NetworkConnector {
     }
 
     protected DemandForwardingBridgeSupport createBridge(Transport local, Transport remote) {
-        return new CompositeDemandForwardingBridge(local, remote);
+        return new CompositeDemandForwardingBridge(this,local, remote);
     }
 
 }

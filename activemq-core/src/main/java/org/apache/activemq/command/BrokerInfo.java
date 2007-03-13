@@ -39,6 +39,7 @@ public class BrokerInfo extends BaseCommand{
     String brokerName;
     long connectionId;
     String brokerUploadUrl;
+    String networkProperties;
 
 
     public boolean isBrokerInfo(){
@@ -199,4 +200,21 @@ public class BrokerInfo extends BaseCommand{
     public void setBrokerUploadUrl(String brokerUploadUrl) {
         this.brokerUploadUrl = brokerUploadUrl;
     }
+
+    
+    /**
+     *  @openwire:property version=3 cache=false
+     * @return the networkProperties
+     */
+    public String getNetworkProperties(){
+        return this.networkProperties;
+    }
+
+    
+    /**
+     * @param networkProperties the networkProperties to set
+     */
+    public void setNetworkProperties(String networkProperties){
+        this.networkProperties=networkProperties;
+    }    
 }
