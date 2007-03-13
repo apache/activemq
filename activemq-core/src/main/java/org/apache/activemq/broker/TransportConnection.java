@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -66,6 +67,8 @@ import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.command.WireFormatInfo;
+import org.apache.activemq.network.DemandForwardingBridge;
+import org.apache.activemq.network.NetworkBridgeConfiguration;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
 import org.apache.activemq.state.CommandVisitor;
 import org.apache.activemq.state.ConsumerState;
@@ -77,6 +80,8 @@ import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.MarshallingSupport;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -129,6 +134,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
     private ConnectionContext context;
     private boolean networkConnection;
     private AtomicInteger protocolVersion=new AtomicInteger(CommandTypes.PROTOCOL_VERSION);
+    private DemandForwardingBridge duplexBridge = null;
     
     static class ConnectionState extends org.apache.activemq.state.ConnectionState{
 
@@ -464,6 +470,10 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
             if(seq>producerState.getLastSequenceId()){
                 producerState.setLastSequenceId(seq);
                 broker.send(producerExchange,messageSend);
+            }else {
+                if (log.isDebugEnabled()) {
+                    log.debug("Discarding duplicate: " + messageSend);
+                }
             }
         }else{
             // producer not local to this broker
@@ -1063,6 +1073,19 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
             masterBroker=new MasterBroker(parent,transport);
             masterBroker.startProcessing();
             log.info("Slave Broker "+info.getBrokerName()+" is attached");
+        }else if (info.isNetworkConnection() && info.isDuplexConnection()) {
+            //so this TransportConnection is the rear end of a network bridge
+            //We have been requested to create a two way pipe ...
+            try{
+                Properties props = MarshallingSupport.stringToProperties(info.getNetworkProperties());
+                NetworkBridgeConfiguration config = new NetworkBridgeConfiguration();
+                IntrospectionSupport.setProperties(config,props,null);
+                config.setLocalBrokerName(broker.getBrokerName());
+                
+               
+            }catch(IOException e){
+               log.error("Creating duplex network bridge",e);
+            }
         }
         // We only expect to get one broker info command per connection
         if(this.brokerInfo!=null){

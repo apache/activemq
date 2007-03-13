@@ -17,6 +17,7 @@
  */
 package org.apache.activemq.broker;
 
+import java.net.URI;
 import java.util.Set;
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.region.Destination;
@@ -239,6 +240,14 @@ public interface Broker extends Region, Service {
      * @param adminConnectionContext 
      */
     public abstract void setAdminConnectionContext(ConnectionContext adminConnectionContext);
-        
+      
+    /**
+     * @return the temp data store
+     */
     public Store getTempDataStore();
+    
+    /**
+     * @return the URI that can be used to connect to the local Broker
+     */
+    public URI getVmConnectorURI();
 }

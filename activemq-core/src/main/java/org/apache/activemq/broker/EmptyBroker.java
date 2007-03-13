@@ -38,6 +38,7 @@ import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.kaha.Store;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -234,6 +235,10 @@ public class EmptyBroker implements Broker {
     
     
     public Store getTempDataStore() {
+        return null;
+    }
+    
+    public URI getVmConnectorURI(){
         return null;
     }
 

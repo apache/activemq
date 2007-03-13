@@ -17,6 +17,7 @@
  */
 package org.apache.activemq.broker;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -233,6 +234,10 @@ public class ErrorBroker implements Broker {
     }
         
     public Store getTempDataStore() {
+        throw new BrokerStoppedException(this.message);
+    }
+    
+    public URI getVmConnectorURI(){
         throw new BrokerStoppedException(this.message);
     }
 
