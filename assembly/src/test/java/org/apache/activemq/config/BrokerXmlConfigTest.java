@@ -17,35 +17,50 @@
  */
 package org.apache.activemq.config;
 
+import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
+import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.BrokerService;
 
-import java.net.URI;
+import javax.jms.Connection;
+import javax.jms.JMSException;
 
 /**
  * @version $Revision: 1.2 $
  */
-public class BrokerXmlConfigTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
-    protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
-        // START SNIPPET: bean
+public class BrokerXmlConfigTest extends TestCase {
+    private BrokerService broker;
 
-        // configure the connection factory using
-        // normal Java Bean property methods
-        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory();
-
-        // configure the embedded broker using an XML config file
-        // which is either a URL or a resource on the classpath
-
-        // TODO ...
-
-        //connectionFactory.setBrokerXmlConfig("file:src/sample-conf/default.xml");
-
-        // you only need to configure the broker URL if you wish to change the
-        // default connection mechanism, which in this test case we do
-        connectionFactory.setBrokerURL("vm://localhost");
-
-        // END SNIPPET: bean
-        return connectionFactory;
+    public void testStartBrokerUsingXmlConfig() throws Exception {
+        Connection connection = null;
+        try {
+            ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory();
+            connection = connectionFactory.createConnection();
+            connection.start();
+            connection.close();
+            connection = null;
+        }
+        catch (Exception e) {
+            if (connection != null) {
+                try {
+                    connection.close();
+                }
+                catch (JMSException e1) {
+                    // ignore exception as we're throwing one anyway
+                }
+            }
+            throw e;
+        }
     }
 
+    protected void setUp() throws Exception {
+        System.setProperty("activemq.base", "target");
+        broker = BrokerFactory.createBroker("file:src/release/conf/activemq.xml");
+    }
+
+    protected void tearDown() throws Exception {
+        if (broker != null) {
+            broker.stop();
+        }
+    }
 }
