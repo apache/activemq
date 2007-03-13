@@ -18,6 +18,7 @@
 package org.apache.activemq.broker;
 
 import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * 
@@ -39,7 +40,20 @@ public class BrokerRegistry {
             return (BrokerService)brokers.get(brokerName);
         }
     }
-    
+
+    /**
+     * Returns the first registered broker found
+     */
+    public BrokerService findFirst() {
+        synchronized(mutex) {
+            Iterator iter = brokers.values().iterator();
+            while (iter.hasNext()) {
+            return (BrokerService) iter.next();
+            }
+            return null;
+        }
+    }
+
     public void bind(String brokerName, BrokerService broker) {
         synchronized(mutex) {
             brokers.put(brokerName, broker);
