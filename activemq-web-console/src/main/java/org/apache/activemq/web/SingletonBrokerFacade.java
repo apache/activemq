@@ -31,6 +31,11 @@ public class SingletonBrokerFacade extends LocalBrokerFacade {
     }
 
     protected static BrokerService findSingletonBroker() {
-        return BrokerRegistry.getInstance().findFirst();
+        BrokerService broker = BrokerRegistry.getInstance().findFirst();
+        if (broker == null) {
+            throw new IllegalArgumentException("No BrokerService is registered with the BrokerRegistry." +
+                    " Are you sure there is a configured broker in the same ClassLoader?");
+        }
+        return broker;
     }
 }
