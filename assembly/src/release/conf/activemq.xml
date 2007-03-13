@@ -99,6 +99,7 @@
 
     <handlers>
       <webAppContext contextPath="/admin" resourceBase="webapps/admin" parentLoaderPriority="false" />
+      <webAppContext contextPath="/demo" resourceBase="webapps/demo" parentLoaderPriority="false" />
     </handlers>
   </jetty>
 
