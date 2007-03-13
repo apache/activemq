@@ -38,6 +38,7 @@ import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.kaha.Store;
 
+import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 
@@ -238,5 +239,8 @@ public class BrokerFilter implements Broker {
         return next.getTempDataStore();
     }
     
+    public URI getVmConnectorURI(){
+        return next.getVmConnectorURI();
+    }
     
 }

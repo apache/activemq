@@ -18,6 +18,7 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -607,5 +608,9 @@ public class RegionBroker implements Broker {
 
     public Store getTempDataStore() {
         return brokerService.getTempDataStore();
+    }
+    
+    public URI getVmConnectorURI(){
+        return brokerService.getVmConnectorURI();
     }
 }
