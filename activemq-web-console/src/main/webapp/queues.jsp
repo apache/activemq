@@ -34,10 +34,6 @@
 
 <h2>Queues</h2>
 
-<p>
-<a href="queueGraph.jsp">Queue Graph</a>
-<a href="xml/queues.jsp">Queue XML</a>
-</p>
 <table id="queues" class="sortable autostripe">
 <thead>
 <tr>
