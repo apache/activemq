@@ -119,6 +119,17 @@
         <include>**/*.class</include>
       </includes>
     </fileSet>
+
+
+    <!-- the web demo -->
+    <fileSet>
+      <directory>../activemq-web-demo/src/main/webapp</directory>
+      <outputDirectory>/webapps/demo</outputDirectory>
+      <excludes>
+        <exclude>**/activemq.xml</exclude>
+        <exclude>**/applicationContext.xml</exclude>
+      </excludes>
+    </fileSet>
   </fileSets>
 
   <dependencySets>

@@ -99,7 +99,7 @@
       </includes>
     </fileSet>
 
-    <!-- lets copy the portions of the web app we need - as we can't exclude stuff from the WAR -->
+    <!-- lets copy the portions of the admin web app we need - as we can't exclude stuff from the WAR -->
     <fileSet>
       <directory>../activemq-web-console/src/main/webapp</directory>
       <outputDirectory>/webapps/admin</outputDirectory>
@@ -115,6 +115,17 @@
         <include>**/*.class</include>
       </includes>
     </fileSet>
+
+    <!-- the web demo -->
+    <fileSet>
+      <directory>../activemq-web-demo/src/main/webapp</directory>
+      <outputDirectory>/webapps/demo</outputDirectory>
+      <excludes>
+        <exclude>**/activemq.xml</exclude>
+        <exclude>**/applicationContext.xml</exclude>
+      </excludes>
+    </fileSet>
+
   </fileSets>
   <dependencySets>
     <dependencySet>
