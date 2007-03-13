@@ -96,7 +96,6 @@ public class AMQMessageStore implements MessageStore{
      */
     public void addMessage(ConnectionContext context,final Message message) throws IOException{
         final MessageId id=message.getMessageId();
-        
         final Location location=peristenceAdapter.writeCommand(message,message.isResponseRequired());
         if(!context.isInTransaction()){
             if(debug)
@@ -341,8 +340,7 @@ public class AMQMessageStore implements MessageStore{
                     try{
                         referenceStore.removeMessage(transactionTemplate.getContext(),ack);
                     }catch(Throwable e){
-                        e.printStackTrace();
-                        log.debug("Message could not be removed from long term store: "+e.getMessage(),e);
+                        log.warn("Message could not be removed from long term store: "+e.getMessage(),e);
                     }
                 }
             }
@@ -407,6 +405,7 @@ public class AMQMessageStore implements MessageStore{
     }
 
     public void stop() throws Exception{
+        flush();
         asyncWriteTask.shutdown();
         referenceStore.stop();
     }

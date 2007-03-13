@@ -201,6 +201,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     }
 
     public void stop() throws Exception{
+      
         if(!started.compareAndSet(true,false))
             return;
         this.usageManager.removeUsageListener(this);
@@ -236,10 +237,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 
     /**
      * When we checkpoint we move all the journalled data to long term storage.
-     * 
-     * @param stopping
-     * 
-     * @param b
+     * @param sync    
      */
     public void checkpoint(boolean sync){
         try{
@@ -268,7 +266,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     /**
      * This does the actual checkpoint.
      * 
-     * @return
+     * @return true if successful
      */
     public boolean doCheckpoint(){
         CountDownLatch latch=null;
