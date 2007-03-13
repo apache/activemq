@@ -98,7 +98,7 @@
     </connectors>
 
     <handlers>
-      <webAppContext contextPath="/admin" resourceBase="webapps" parentLoaderPriority="false" />
+      <webAppContext contextPath="/admin" resourceBase="webapps/admin" parentLoaderPriority="false" />
     </handlers>
   </jetty>
 

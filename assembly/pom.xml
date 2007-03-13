@@ -282,17 +282,6 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <forkMode>pertest</forkMode>
-          <excludes>
-            <!-- These tests run too slow to execute as part of the unit tests -->
-            <exclude implementation="java.lang.String">**/DefaultStoreBrokerTest.*</exclude>
-            <exclude implementation="java.lang.String">**/ActiveIOTransportBrokerTest.*</exclude>
-            <!-- These tests fails -->
-            <exclude implementation="java.lang.String">**/SpringTest.*</exclude>
-            <exclude implementation="java.lang.String">**/*QuickJournalRecoveryBrokerTest.*</exclude>
-          </excludes>
-          <includes>
-            <include implementation="java.lang.String">**/*RetroactiveConsumerTestWithDestinationBasedBufferTest.*</include>
-          </includes>
         </configuration>
       </plugin>
       <plugin>
