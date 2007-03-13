@@ -23,6 +23,7 @@ import java.net.URI;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerFactory.BrokerFactoryHandler;
 import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
 import org.apache.xbean.spring.context.ClassPathXmlApplicationContext;
 import org.apache.xbean.spring.context.impl.URIEditor;
 
@@ -38,7 +39,7 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
     public BrokerService createBroker(URI config) throws Exception {
 
         String uri = config.getSchemeSpecificPart();
-        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext(uri);
+        ApplicationContext context = createApplicationContext(uri);
 
         BrokerService broker = null;
         try {
@@ -67,4 +68,7 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
         return broker;
     }
 
+    protected ApplicationContext createApplicationContext(String uri) {
+        return new ClassPathXmlApplicationContext(uri);
+    }
 }
