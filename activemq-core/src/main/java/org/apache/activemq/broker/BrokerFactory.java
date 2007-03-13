@@ -25,6 +25,8 @@ import org.apache.activemq.util.IOExceptionSupport;
 
 /**
  * A helper class to create a fully configured broker service using a URI.
+ * The list of currently supported URI syntaxes is described
+ * <a href="http://activemq.apache.org/how-do-i-embed-a-broker-inside-a-connection.html">here</a>
  * 
  * @version $Revision$
  */
