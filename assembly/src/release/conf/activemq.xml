@@ -98,8 +98,8 @@
     </connectors>
 
     <handlers>
-      <webAppContext contextPath="/admin" resourceBase="webapps/admin" parentLoaderPriority="false" />
-      <webAppContext contextPath="/demo" resourceBase="webapps/demo" parentLoaderPriority="false" />
+      <webAppContext contextPath="/admin" resourceBase="webapps/admin" logUrlOnStart="true" />
+      <webAppContext contextPath="/demo" resourceBase="webapps/demo" logUrlOnStart="true" />
     </handlers>
   </jetty>
 
