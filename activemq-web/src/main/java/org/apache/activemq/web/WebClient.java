@@ -235,7 +235,8 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
         if (factory == null) {
             String brokerURL = servletContext.getInitParameter(brokerUrlInitParam);
 
-            servletContext.log("Value of: " + brokerUrlInitParam + " is: " + brokerURL);
+
+            log.debug("Value of: " + brokerUrlInitParam + " is: " + brokerURL);
 
             if (brokerURL == null) {
                 brokerURL = "vm://localhost";
