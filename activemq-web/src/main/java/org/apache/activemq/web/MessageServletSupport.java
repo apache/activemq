@@ -21,6 +21,8 @@ package org.apache.activemq.web;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -49,6 +51,8 @@ import java.util.Map;
  */
 public abstract class MessageServletSupport extends HttpServlet {
 
+    private static final transient Log log = LogFactory.getLog(MessageServletSupport.class);
+
     private boolean defaultTopicFlag = true;
     private Destination defaultDestination;
     private String destinationParameter = "destination";
@@ -69,7 +73,9 @@ public abstract class MessageServletSupport extends HttpServlet {
             defaultTopicFlag = asBoolean(name);
         }
 
-        log("Defaulting to use topics: " + defaultTopicFlag);
+        if (log.isDebugEnabled()) {
+            log.debug("Defaulting to use topics: " + defaultTopicFlag);
+        }
 
         name = servletConfig.getInitParameter("destination");
         if (name != null) {
@@ -137,10 +143,10 @@ public abstract class MessageServletSupport extends HttpServlet {
                         value = array[0];
                     }
                     else {
-                        log("Can't use property: " + name + " which is of type: " + value.getClass().getName() + " value");
+                        log.warn("Can't use property: " + name + " which is of type: " + value.getClass().getName() + " value");
                         value = null;
                         for (int i = 0, size = array.length; i < size; i++) {
-                            log("value[" + i + "] = " + array[i]);
+                            log.debug("value[" + i + "] = " + array[i]);
                         }
                     }
                 }
