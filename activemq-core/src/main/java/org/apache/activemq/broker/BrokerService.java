@@ -623,7 +623,7 @@ public class BrokerService implements Service, Serializable {
     public UsageManager getMemoryManager() {
         if (usageManager == null) {
             usageManager = new UsageManager("Main");
-            usageManager.setLimit(1024 * 1024 * 20); // Default to 20 Meg
+            usageManager.setLimit(1024 * 1024 * 64); // Default to 64 Meg
             // limit
         }
         return usageManager;
