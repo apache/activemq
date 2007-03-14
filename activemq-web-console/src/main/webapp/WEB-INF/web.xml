@@ -23,7 +23,7 @@
          version="2.4">
 
     <description>
-      ActiveMQ Console
+      Apache ActiveMQ Web Console
     </description>
     <display-name>ActiveMQ Console</display-name>
 

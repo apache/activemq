@@ -21,9 +21,9 @@
 
 <web-app>
 
-    <display-name>ActiveMQ Message Broker Web Application</display-name>
+    <display-name>ActiveMQ Web Demos</display-name>
     <description>
-    Provides a REST API to the ActiveMQ Message Broker
+    Apache ActiveMQ Web Demos
     </description>
 
     <!-- context config -->
