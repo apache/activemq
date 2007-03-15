@@ -17,15 +17,22 @@
  */
 package org.apache.activemq.xbean;
 
-import java.beans.PropertyEditorManager;
-import java.net.URI;
-
-import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerFactoryHandler;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.xbean.spring.context.ResourceXmlApplicationContext;
+import org.apache.xbean.spring.context.impl.URIEditor;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
-import org.apache.xbean.spring.context.ClassPathXmlApplicationContext;
-import org.apache.xbean.spring.context.impl.URIEditor;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.util.ResourceUtils;
+
+import java.beans.PropertyEditorManager;
+import java.io.File;
+import java.net.URI;
+import java.net.MalformedURLException;
 
 /**
  * @version $Revision$
@@ -68,7 +75,19 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
         return broker;
     }
 
-    protected ApplicationContext createApplicationContext(String uri) {
-        return new ClassPathXmlApplicationContext(uri);
+    protected ApplicationContext createApplicationContext(String uri) throws MalformedURLException {
+        System.out.println("####Êattempting to figure out the type of resource: " + uri);
+        Resource resource;
+        File file = new File(uri);
+        if (file.exists()) {
+            resource = new FileSystemResource(uri);
+        }
+        else if (ResourceUtils.isUrl(uri)) {
+            resource = new UrlResource(uri);
+        }
+        else {
+            resource = new ClassPathResource(uri);
+        }
+        return new ResourceXmlApplicationContext(resource);
     }
 }
