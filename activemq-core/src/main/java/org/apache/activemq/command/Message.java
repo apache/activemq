@@ -79,8 +79,6 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
     private transient short referenceCount;
     private transient ActiveMQConnection connection;
     private transient org.apache.activemq.broker.region.Destination regionDestination;
-    private transient WireFormat cachedWireFormat;
-    private transient ByteSequence cachedWireFormatData;
 
     private BrokerId [] brokerPath;
     protected boolean droppable = false;
@@ -124,8 +122,6 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
         copy.arrival = arrival;
         copy.connection = connection;
         copy.regionDestination = regionDestination;
-        copy.cachedWireFormat = cachedWireFormat;
-        copy.cachedWireFormatData = cachedWireFormatData;
         //copying the broker path breaks networks - if a consumer re-uses a consumed
         //message and forwards it on
         //copy.brokerPath = brokerPath;
@@ -544,36 +540,6 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
     public boolean isMarshallAware() {
         return true;
     }
-
-    synchronized public ByteSequence getCachedMarshalledForm(WireFormat wireFormat) {
-        if( cachedWireFormat == null || !cachedWireFormat.equals(wireFormat) ) {
-            return null;
-        }
-        return cachedWireFormatData;
-    }
-    
-    synchronized public void evictMarshlledForm() {
-        cachedWireFormat = null;
-        cachedWireFormatData = null;
-    }
-
-    synchronized public void setCachedMarshalledForm(WireFormat wireFormat, ByteSequence data) {
-        cachedWireFormat = wireFormat;
-        cachedWireFormatData = data;
-
-        int sizeChange=0;
-        synchronized (this) {
-            if( referenceCount > 0 ) {
-                sizeChange = getSize();
-                this.size=0;
-                sizeChange -= getSize();
-            }
-        }
-        
-        if( sizeChange!=0 && regionDestination!=null )
-            regionDestination.getUsageManager().decreaseUsage(sizeChange);
-        
-    }
         
     public int incrementReferenceCount() {
         int rc;
@@ -586,6 +552,7 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
         if( rc==1 && regionDestination!=null )
             regionDestination.getUsageManager().increaseUsage(size);
         
+//        System.out.println(" + "+getDestination()+" :::: "+getMessageId()+" "+rc);
         return rc;
     }
     
@@ -599,6 +566,8 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
         
         if( rc==0 && regionDestination!=null )
             regionDestination.getUsageManager().decreaseUsage(size);
+
+//        System.out.println(" - "+getDestination()+" :::: "+getMessageId()+" "+rc);
         
         return rc;
     }
@@ -610,10 +579,6 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
                 size += marshalledProperties.getLength();
             if( content!=null )
                 size += content.getLength();
-            if( cachedWireFormatData !=null )
-                size += cachedWireFormatData.getLength() + 12;
-            else 
-                size *= 2; // Estimate what the cached data will add.   
         }
         return size;
     }

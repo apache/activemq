@@ -480,7 +480,6 @@ public class Topic implements Destination {
                     ActiveMQTopic advisoryTopic = AdvisorySupport.getNoTopicConsumersAdvisoryTopic(destination);
                     message.setDestination(advisoryTopic);
                     message.setTransactionId(null);
-                    message.evictMarshlledForm();
 
                     // Disable flow control for this since since we don't want to block.
                     boolean originalFlowControl = context.isProducerFlowControl();

@@ -130,9 +130,9 @@ final public class OpenWireFormat implements WireFormat {
         }
         
         ByteSequence sequence=null;
-        if( ma!=null ) {
-            sequence = ma.getCachedMarshalledForm(this);
-        }
+//        if( ma!=null ) {
+//             sequence = ma.getCachedMarshalledForm(this);
+//        }
         
         if( sequence == null ) {
             
@@ -185,9 +185,9 @@ final public class OpenWireFormat implements WireFormat {
                 sequence = bytesOut.toByteSequence();
             }
             
-            if( ma!=null ) {
-                ma.setCachedMarshalledForm(this, sequence);
-            }
+//            if( ma!=null ) {
+//                ma.setCachedMarshalledForm(this, sequence);
+//            }
         }
         return sequence;
     }
@@ -204,9 +204,9 @@ final public class OpenWireFormat implements WireFormat {
         }
         
         Object command = doUnmarshal(bytesIn);
-        if( !cacheEnabled && ((DataStructure)command).isMarshallAware() ) {
-            ((MarshallAware) command).setCachedMarshalledForm(this, sequence);
-        }
+//        if( !cacheEnabled && ((DataStructure)command).isMarshallAware() ) {
+//            ((MarshallAware) command).setCachedMarshalledForm(this, sequence);
+//        }
         return command;
     }
     
@@ -367,7 +367,8 @@ final public class OpenWireFormat implements WireFormat {
 
         if( o.isMarshallAware() ) {
             MarshallAware ma = (MarshallAware) o;
-            ByteSequence sequence=ma.getCachedMarshalledForm(this);
+            ByteSequence sequence=null; 
+//            sequence=ma.getCachedMarshalledForm(this);
             bs.writeBoolean(sequence!=null);
             if( sequence!=null ) {
                 return 1 + sequence.getLength();           
@@ -389,10 +390,12 @@ final public class OpenWireFormat implements WireFormat {
         ds.writeByte(type);
 
         if( o.isMarshallAware() && bs.readBoolean() ) {
-                        
-            MarshallAware ma = (MarshallAware) o;
-            ByteSequence sequence=ma.getCachedMarshalledForm(this);
-            ds.write(sequence.getData(), sequence.getOffset(), sequence.getLength());
+
+        	// We should not be doing any caching
+        	throw new IOException("Corrupted stream");
+//            MarshallAware ma = (MarshallAware) o;
+//            ByteSequence sequence=ma.getCachedMarshalledForm(this);
+//            ds.write(sequence.getData(), sequence.getOffset(), sequence.getLength());
             
         } else {
             

@@ -223,7 +223,6 @@ public class ForwardingBridge  implements Service{
                 if( message.getOriginalTransactionId()==null )
                     message.setOriginalTransactionId(message.getTransactionId());
                 message.setTransactionId(null);
-                message.evictMarshlledForm();
 
                 
                 if( !message.isResponseRequired() ) {

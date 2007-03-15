@@ -91,7 +91,6 @@ public class CompositeDestinationBroker extends BrokerFilter {
                 }
                 message.setOriginalDestination(destination);
                 message.setDestination(destinations[i]);
-                message.evictMarshlledForm();
                 next.send(producerExchange, message);
             }
         } else {
