@@ -1151,6 +1151,8 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
                 }
                 producerExchanges.put(id,result);
             }
+        } else {
+        	context = result.getConnectionContext();
         }
         return result;
     }

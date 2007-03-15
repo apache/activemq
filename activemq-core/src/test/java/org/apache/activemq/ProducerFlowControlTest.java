@@ -17,6 +17,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.broker.region.policy.VMPendingQueueMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.VMPendingSubscriberMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.transport.tcp.TcpTransport;
@@ -31,21 +32,19 @@ public class ProducerFlowControlTest extends JmsTestSupport {
 
     public void test2ndPubisherWithSyncSendConnectionThatIsBlocked() throws Exception {
         ActiveMQConnectionFactory factory = (ActiveMQConnectionFactory) createConnectionFactory();
-        factory.setUseSyncSend(true);
+        factory.setAlwaysSyncSend(true);
         connection = (ActiveMQConnection) factory.createConnection();
         connections.add(connection);
     	connection.start();
 
-    	// Test sending to Queue A
-    	// 1st send should not block.
-    	fillQueue(queueA);
-    	
     	Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
     	MessageConsumer consumer = session.createConsumer(queueB);
 
-    	// Test sending to Queue B it should block. 
-    	// Since even though  the it's queue limits have not been reached, the connection
-    	// is blocked.
+    	// Test sending to Queue A
+    	// 1st send should not block.  But the rest will.
+    	fillQueue(queueA);
+
+    	// Test sending to Queue B it should not block. 
     	CountDownLatch pubishDoneToQeueuB = asyncSendTo(queueB, "Message 1");
     	assertTrue( pubishDoneToQeueuB.await(2, TimeUnit.SECONDS) );
     	
@@ -55,6 +54,32 @@ public class ProducerFlowControlTest extends JmsTestSupport {
     	
     	pubishDoneToQeueuB = asyncSendTo(queueB, "Message 2");
     	assertTrue( pubishDoneToQeueuB.await(2, TimeUnit.SECONDS) );
+    	
+    	msg = (TextMessage) consumer.receive();
+    	assertEquals("Message 2", msg.getText());
+    	msg.acknowledge();
+    }
+
+    public void testSimpleSendReceive() throws Exception {
+        ActiveMQConnectionFactory factory = (ActiveMQConnectionFactory) createConnectionFactory();
+        factory.setAlwaysSyncSend(true);
+        connection = (ActiveMQConnection) factory.createConnection();
+        connections.add(connection);
+    	connection.start();
+
+    	Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+    	MessageConsumer consumer = session.createConsumer(queueA);
+
+    	// Test sending to Queue B it should not block. 
+    	CountDownLatch pubishDoneToQeueuA = asyncSendTo(queueA, "Message 1");
+    	assertTrue( pubishDoneToQeueuA.await(2, TimeUnit.SECONDS) );
+    	
+    	TextMessage msg = (TextMessage) consumer.receive();
+    	assertEquals("Message 1", msg.getText());
+    	msg.acknowledge();
+    	
+    	pubishDoneToQeueuA = asyncSendTo(queueA, "Message 2");
+    	assertTrue( pubishDoneToQeueuA.await(2, TimeUnit.SECONDS) );
     	
     	msg = (TextMessage) consumer.receive();
     	assertEquals("Message 2", msg.getText());
@@ -143,6 +168,7 @@ public class ProducerFlowControlTest extends JmsTestSupport {
         PolicyEntry policy = new PolicyEntry();
         policy.setMemoryLimit(1);
         policy.setPendingSubscriberPolicy(new VMPendingSubscriberMessageStoragePolicy());
+        policy.setPendingQueuePolicy(new VMPendingQueueMessageStoragePolicy());
         policyMap.setDefaultEntry(policy);        
         service.setDestinationPolicy(policyMap);
         

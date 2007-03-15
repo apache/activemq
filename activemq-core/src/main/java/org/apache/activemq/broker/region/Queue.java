@@ -431,38 +431,41 @@ public class Queue implements Destination, Task {
         if(store!=null&&message.isPersistent()){
             store.addMessage(context,message);
         }
-        message.incrementReferenceCount();
+        
         if(context.isInTransaction()){
+        	// If this is a transacted message.. increase the usage now so that a big TX does not blow up
+        	// our memory.  This increment is decremented once the tx finishes..
+            message.incrementReferenceCount();
             context.getTransaction().addSynchronization(new Synchronization(){
-
                 public void afterCommit() throws Exception{
-                    //even though the message could be expired - it won't be from the store
-                    //and it's important to keep the store/cursor in step
-                    synchronized(messages){
-                        messages.addMessageLast(message);
-                    }
-                    // It could take while before we receive the commit
-                    // op, by that time the message could have expired..
-                    if(message.isExpired()){
-                        // TODO: remove message from store.
-                        if (log.isDebugEnabled()) {
-                            log.debug("Expired message: " + message);
-                        }
-                        if( producerExchange.getProducerState().getInfo().getWindowSize() > 0 || !message.isResponseRequired() ) {
-                    		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
-            				context.getConnection().dispatchAsync(ack);	    	            	        		
-                        }
-                        return;
-                    }
-                    sendMessage(context,message);
+                	try { 
+                        // It could take while before we receive the commit
+                        // op, by that time the message could have expired..
+	                    if(message.isExpired()){
+	                        // TODO: remove message from store.
+	                        if (log.isDebugEnabled()) {
+	                            log.debug("Expired message: " + message);
+	                        }
+	                        if( producerExchange.getProducerState().getInfo().getWindowSize() > 0 || !message.isResponseRequired() ) {
+	                    		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
+	            				context.getConnection().dispatchAsync(ack);	    	            	        		
+	                        }
+	                        return;
+	                    }
+	                    sendMessage(context,message);
+                	} finally {
+                        message.decrementReferenceCount();
+                	}
+                }
+                
+                @Override
+                public void afterRollback() throws Exception {
+                    message.decrementReferenceCount();
                 }
             });
         }else{
-            synchronized(messages){
-                messages.addMessageLast(message);
-            }
-            sendMessage(context,message);
-            
+        	// Add to the pending list, this takes care of incrementing the usage manager.
+            sendMessage(context,message);            
         }
 	}    
 
@@ -982,8 +985,9 @@ public class Queue implements Destination, Task {
     
       
     private void sendMessage(final ConnectionContext context,Message msg) throws Exception{
-        
-        
+        synchronized(messages){
+            messages.addMessageLast(msg);
+        }
         destinationStatistics.getEnqueues().increment();
         destinationStatistics.getMessages().increment();
         pageInMessages(false);
