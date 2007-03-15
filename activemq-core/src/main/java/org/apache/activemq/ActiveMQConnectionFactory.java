@@ -90,7 +90,6 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private boolean nestedMapAndListEnabled = true;
     JMSStatsImpl factoryStats = new JMSStatsImpl();
     private boolean alwaysSyncSend;
-    private boolean useSyncSend=false;
     private boolean watchTopicAdvisories=true;
     private int producerWindowSize=DEFAULT_PRODUCER_WINDOW_SIZE;
 
@@ -259,6 +258,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             connection.setObjectMessageSerializationDefered(isObjectMessageSerializationDefered());
             connection.setDispatchAsync(isDispatchAsync());
             connection.setUseAsyncSend(isUseAsyncSend());
+            connection.setAlwaysSyncSend(isAlwaysSyncSend());
             connection.setAlwaysSessionAsync(isAlwaysSessionAsync());
             connection.setOptimizeAcknowledge(isOptimizeAcknowledge());
             connection.setUseRetroactiveConsumer(isUseRetroactiveConsumer());
@@ -437,10 +437,6 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         this.useAsyncSend = useAsyncSend;
     }
     
-	public void setUseSyncSend(boolean forceSyncSend) {
-		this.useSyncSend = forceSyncSend;
-	}
-
 	public synchronized boolean isWatchTopicAdvisories() {
 		return watchTopicAdvisories;
 	}

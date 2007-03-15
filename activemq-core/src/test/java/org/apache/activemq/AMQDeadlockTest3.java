@@ -285,7 +285,7 @@ public class AMQDeadlockTest3 extends TestCase {
 		acf.setUseCompression(false);
 		acf.setOptimizeAcknowledge(false);
 		acf.setOptimizedMessageDispatch(true);
-		acf.setUseSyncSend(true);
+		acf.setAlwaysSyncSend(true);
 		return acf;
 	}
 

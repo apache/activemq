@@ -267,7 +267,6 @@
             <exclude>**/nio/**</exclude>
 
             <exclude>**/AMQDeadlockTest3.*</exclude>
-            <exclude>**/ProducerFlowControlTest.*</exclude>
           </excludes>
         </configuration>
       </plugin>
