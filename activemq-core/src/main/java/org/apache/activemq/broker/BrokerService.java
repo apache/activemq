@@ -155,7 +155,22 @@ public class BrokerService implements Service, Serializable {
     private int persistenceThreadPriority = Thread.MAX_PRIORITY;
     private boolean useLocalHostBrokerName = false;
     private CountDownLatch stoppedLatch = new CountDownLatch(1);
-    
+
+    static{
+        String localHostName = "localhost";
+        try{
+            localHostName=java.net.InetAddress.getLocalHost().getHostName();
+        }catch(UnknownHostException e){
+            log.error("Failed to resolve localhost");
+        }
+        LOCAL_HOST_NAME = localHostName;
+    }
+
+    @Override
+    public String toString() {
+        return "BrokerService[" + getBrokerName() + "]";
+    }
+
     /**
      * Adds a new transport connector for the given bind address
      *
@@ -1654,16 +1669,6 @@ public class BrokerService implements Service, Serializable {
             }
         }
     }    
-    
-    static{
-        String localHostName = "localhost";
-        try{
-            localHostName=java.net.InetAddress.getLocalHost().getHostName();
-        }catch(UnknownHostException e){
-            log.error("Failed to resolve localhost");
-        }
-        LOCAL_HOST_NAME = localHostName;
-    }
 
     
    

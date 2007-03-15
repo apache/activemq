@@ -17,7 +17,7 @@
  */
 package org.apache.activemq.broker;
 
-import org.apache.activemq.broker.BrokerFactory.BrokerFactoryHandler;
+import org.apache.activemq.broker.BrokerFactoryHandler;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.util.URISupport.CompositeData;
@@ -55,9 +55,6 @@ public class DefaultBrokerFactory implements BrokerFactoryHandler {
                 brokerService.addConnector(components[i]);
             }
         }
-        
-        // TODO we want folks to be able to add other connectors and start the broker afterwards
-        //brokerService.start();
         return brokerService;
     }
 

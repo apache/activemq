@@ -21,7 +21,7 @@ import java.beans.PropertyEditorManager;
 import java.net.URI;
 
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.BrokerFactory.BrokerFactoryHandler;
+import org.apache.activemq.broker.BrokerFactoryHandler;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.apache.xbean.spring.context.ClassPathXmlApplicationContext;

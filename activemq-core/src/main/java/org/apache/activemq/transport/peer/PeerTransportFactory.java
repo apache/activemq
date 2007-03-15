@@ -25,7 +25,7 @@ import java.util.Map;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.broker.BrokerFactory.BrokerFactoryHandler;
+import org.apache.activemq.broker.BrokerFactoryHandler;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportServer;
