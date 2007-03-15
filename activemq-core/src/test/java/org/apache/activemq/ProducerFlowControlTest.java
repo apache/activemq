@@ -30,6 +30,36 @@ public class ProducerFlowControlTest extends JmsTestSupport {
 	private TransportConnector connector;
 	private ActiveMQConnection connection;
 
+    public void test2ndPubisherWithProducerWindowSendConnectionThatIsBlocked() throws Exception {
+        ActiveMQConnectionFactory factory = (ActiveMQConnectionFactory) createConnectionFactory();
+        factory.setProducerWindowSize(1024*64);
+        connection = (ActiveMQConnection) factory.createConnection();
+        connections.add(connection);
+    	connection.start();
+
+    	Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+    	MessageConsumer consumer = session.createConsumer(queueB);
+
+    	// Test sending to Queue A
+    	// 1 few sends should not block until the producer window is used up. 
+    	fillQueue(queueA);
+
+    	// Test sending to Queue B it should not block since the connection should not be blocked.
+    	CountDownLatch pubishDoneToQeueuB = asyncSendTo(queueB, "Message 1");
+    	assertTrue( pubishDoneToQeueuB.await(2, TimeUnit.SECONDS) );
+    	
+    	TextMessage msg = (TextMessage) consumer.receive();
+    	assertEquals("Message 1", msg.getText());
+    	msg.acknowledge();
+    	
+    	pubishDoneToQeueuB = asyncSendTo(queueB, "Message 2");
+    	assertTrue( pubishDoneToQeueuB.await(2, TimeUnit.SECONDS) );
+    	
+    	msg = (TextMessage) consumer.receive();
+    	assertEquals("Message 2", msg.getText());
+    	msg.acknowledge();
+    }
+
     public void test2ndPubisherWithSyncSendConnectionThatIsBlocked() throws Exception {
         ActiveMQConnectionFactory factory = (ActiveMQConnectionFactory) createConnectionFactory();
         factory.setAlwaysSyncSend(true);

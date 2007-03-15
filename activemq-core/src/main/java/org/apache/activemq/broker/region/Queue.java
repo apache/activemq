@@ -364,24 +364,28 @@ public class Queue implements Destination, Task {
 	            		synchronized( messagesWaitingForSpace ) {
 		            		messagesWaitingForSpace.add(new Runnable() {
 	            				public void run() {
+	            					
+	            					// While waiting for space to free up... the message may have expired.
+	            			        if(message.isExpired()){
+	            			            if (log.isDebugEnabled()) {
+	            			                log.debug("Expired message: " + message);
+	            			            }
+	            			            
+	            			            if( !message.isResponseRequired() ) {
+	            			        		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
+	            							context.getConnection().dispatchAsync(ack);	    	            	        		
+	            			            }
+	            			            return;
+	            			        }
+	            					
+	            					
 	    	            	        try {							
 	    	            	        	doMessageSend(producerExchange, message);
-	    	            	        	if( message.isResponseRequired() ) {
-		    				                Response response = new Response();
-		    				                response.setCorrelationId(message.getCommandId());
-		    								context.getConnection().dispatchAsync(response);
-	    	            	        	} else {
-	    	            	        		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
-		    								context.getConnection().dispatchAsync(ack);	    	            	        		
-	    	            	        	}
 	    							} catch (Exception e) {
 	    	            	        	if( message.isResponseRequired() ) {
 		    				                ExceptionResponse response = new ExceptionResponse(e);
 		    				                response.setCorrelationId(message.getCommandId());
 		    								context.getConnection().dispatchAsync(response);	    								
-	    	            	        	} else {
-	    	            	        		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
-		    								context.getConnection().dispatchAsync(ack);	    	            	        		
 	    	            	        	}
 	    							}
 	            				}
@@ -391,8 +395,7 @@ public class Queue implements Destination, Task {
 			            	if( !usageManager.notifyCallbackWhenNotFull(sendMessagesWaitingForSpaceTask) ) {
 			            		// so call it directly here.
 			            		sendMessagesWaitingForSpaceTask.run();
-			            	}
-			            	
+			            	}			            	
 		            		context.setDontSendReponse(true);
 		            		return;
 	            		}
@@ -412,10 +415,6 @@ public class Queue implements Destination, Task {
 		                    if (log.isDebugEnabled()) {
 		                        log.debug("Expired message: " + message);
 		                    }
-		                    if( producerExchange.getProducerState().getInfo().getWindowSize() > 0 || !message.isResponseRequired() ) {
-		                		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
-		        				context.getConnection().dispatchAsync(ack);	    	            	        		
-		                    }
 		                    return;
 		                }
 	            	}
@@ -431,7 +430,10 @@ public class Queue implements Destination, Task {
         if(store!=null&&message.isPersistent()){
             store.addMessage(context,message);
         }
-        
+        if( producerExchange.getProducerState().getInfo().getWindowSize() > 0 || !message.isResponseRequired() ) {
+    		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
+			context.getConnection().dispatchAsync(ack);	    	            	        		
+        }
         if(context.isInTransaction()){
         	// If this is a transacted message.. increase the usage now so that a big TX does not blow up
         	// our memory.  This increment is decremented once the tx finishes..
@@ -445,10 +447,6 @@ public class Queue implements Destination, Task {
 	                        // TODO: remove message from store.
 	                        if (log.isDebugEnabled()) {
 	                            log.debug("Expired message: " + message);
-	                        }
-	                        if( producerExchange.getProducerState().getInfo().getWindowSize() > 0 || !message.isResponseRequired() ) {
-	                    		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
-	            				context.getConnection().dispatchAsync(ack);	    	            	        		
 	                        }
 	                        return;
 	                    }
