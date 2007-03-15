@@ -19,7 +19,6 @@ package org.apache.activemq.command;
 
 import java.io.IOException;
 
-import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.wireformat.WireFormat;
 
 public interface MarshallAware {
@@ -30,6 +29,4 @@ public interface MarshallAware {
     public void beforeUnmarshall(WireFormat wireFormat) throws IOException;
     public void afterUnmarshall(WireFormat wireFormat) throws IOException;
     
-    public void setCachedMarshalledForm(WireFormat wireFormat, ByteSequence data);
-    public ByteSequence getCachedMarshalledForm(WireFormat wireFormat);
 }

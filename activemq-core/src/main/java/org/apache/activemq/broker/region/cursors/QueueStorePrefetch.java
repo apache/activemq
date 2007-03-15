@@ -88,16 +88,10 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements
     }
     
     public synchronized void addMessageLast(MessageReference node) throws Exception{
-        if(node!=null){
-            node.decrementReferenceCount();
-        }
         size++;
     }
     
     public void addMessageFirst(MessageReference node) throws Exception{
-        if(node!=null){
-            node.decrementReferenceCount();
-        }
         size++;
     }
     
@@ -124,6 +118,7 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements
 
     public synchronized MessageReference next(){
         Message result = batchList.removeFirst();
+        result.decrementReferenceCount();
         result.setRegionDestination(regionDestination);
         return result;
     }
@@ -137,10 +132,7 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements
 
     public void recoverMessage(Message message) throws Exception{
         message.setRegionDestination(regionDestination);
-        // only increment if count is zero (could have been cached)
-        if(message.getReferenceCount()==0){
-            message.incrementReferenceCount();
-        }
+        message.incrementReferenceCount();
         batchList.addLast(message);
     }
 

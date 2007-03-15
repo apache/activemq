@@ -496,7 +496,6 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
         if(message.getOriginalTransactionId()==null)
             message.setOriginalTransactionId(message.getTransactionId());
         message.setTransactionId(null);
-        message.evictMarshlledForm();
         return message;
     }
 
