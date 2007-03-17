@@ -352,73 +352,70 @@ public class Queue implements Destination, Task {
             }
             return;
         }
-        if ( context.isProducerFlowControl() ) {
-        	if( usageManager.isFull() ) {
-	            if(usageManager.isSendFailIfNoSpace()){
-	                throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
-	            }else{
-	            	
-	            	// We can avoid blocking due to low usage if the producer is sending a sync message or
-	            	// if it is using a producer window
-	            	if( producerExchange.getProducerState().getInfo().getWindowSize() > 0 || message.isResponseRequired() ) {
-	            		synchronized( messagesWaitingForSpace ) {
-		            		messagesWaitingForSpace.add(new Runnable() {
-	            				public void run() {
-	            					
-	            					// While waiting for space to free up... the message may have expired.
-	            			        if(message.isExpired()){
-	            			            if (log.isDebugEnabled()) {
-	            			                log.debug("Expired message: " + message);
-	            			            }
-	            			            
-	            			            if( !message.isResponseRequired() ) {
-	            			        		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
-	            							context.getConnection().dispatchAsync(ack);	    	            	        		
-	            			            }
-	            			            return;
-	            			        }
-	            					
-	            					
-	    	            	        try {							
-	    	            	        	doMessageSend(producerExchange, message);
-	    							} catch (Exception e) {
-	    	            	        	if( message.isResponseRequired() ) {
-		    				                ExceptionResponse response = new ExceptionResponse(e);
-		    				                response.setCorrelationId(message.getCommandId());
-		    								context.getConnection().dispatchAsync(response);	    								
-	    	            	        	}
-	    							}
-	            				}
-	            			});
-		            		
-		            		// If the user manager is not full, then the task will not get called..
-			            	if( !usageManager.notifyCallbackWhenNotFull(sendMessagesWaitingForSpaceTask) ) {
-			            		// so call it directly here.
-			            		sendMessagesWaitingForSpaceTask.run();
-			            	}			            	
-		            		context.setDontSendReponse(true);
-		            		return;
-	            		}
-	            		
-	            	} else {
-	            		
-	            		// Producer flow control cannot be used, so we have do the flow control at the broker 
-	            		// by blocking this thread until there is space available.	            		
-		                while( !usageManager.waitForSpace(1000) ) {
-		                    if( context.getStopping().get() )
-		                        throw new IOException("Connection closed, send aborted.");
-		                }
-		                
-		                // The usage manager could have delayed us by the time
-		                // we unblock the message could have expired..
-		                if(message.isExpired()){
-		                    if (log.isDebugEnabled()) {
-		                        log.debug("Expired message: " + message);
-		                    }
-		                    return;
-		                }
-	            	}
-	            }
+        if ( context.isProducerFlowControl() && usageManager.isFull() ) {
+            if(usageManager.isSendFailIfNoSpace()){
+                throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
+            } 
+            	
+        	// We can avoid blocking due to low usage if the producer is sending a sync message or
+        	// if it is using a producer window
+        	if( producerExchange.getProducerState().getInfo().getWindowSize() > 0 || message.isResponseRequired() ) {
+        		synchronized( messagesWaitingForSpace ) {
+            		messagesWaitingForSpace.add(new Runnable() {
+        				public void run() {
+        					
+        					// While waiting for space to free up... the message may have expired.
+        			        if(message.isExpired()){
+        			            if (log.isDebugEnabled()) {
+        			                log.debug("Expired message: " + message);
+        			            }
+        			            
+        			            if( !message.isResponseRequired() ) {
+        			        		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
+        							context.getConnection().dispatchAsync(ack);	    	            	        		
+        			            }
+        			            return;
+        			        }
+        					
+        					
+	            	        try {							
+	            	        	doMessageSend(producerExchange, message);
+							} catch (Exception e) {
+	            	        	if( message.isResponseRequired() ) {
+    				                ExceptionResponse response = new ExceptionResponse(e);
+    				                response.setCorrelationId(message.getCommandId());
+    								context.getConnection().dispatchAsync(response);	    								
+	            	        	}
+							}
+        				}
+        			});
+            		
+            		// If the user manager is not full, then the task will not get called..
+	            	if( !usageManager.notifyCallbackWhenNotFull(sendMessagesWaitingForSpaceTask) ) {
+	            		// so call it directly here.
+	            		sendMessagesWaitingForSpaceTask.run();
+	            	}			            	
+            		context.setDontSendReponse(true);
+            		return;
+        		}
+        		
+        	} else {
+        		
+        		// Producer flow control cannot be used, so we have do the flow control at the broker 
+        		// by blocking this thread until there is space available.	            		
+                while( !usageManager.waitForSpace(1000) ) {
+                    if( context.getStopping().get() )
+                        throw new IOException("Connection closed, send aborted.");
+                }
+                
+                // The usage manager could have delayed us by the time
+                // we unblock the message could have expired..
+                if(message.isExpired()){
+                    if (log.isDebugEnabled()) {
+                        log.debug("Expired message: " + message);
+                    }
+                    return;
+                }
         	}
         }
         doMessageSend(producerExchange, message);
