@@ -58,7 +58,7 @@
     <jetty-version>6.1.2</jetty-version>
     <jetty-version>6.1.2rc2</jetty-version>
      -->
-    <jetty-version>6.1-SNAPSHOT</jetty-version>
+    <jetty-version>6.1.1</jetty-version>
 
     <jmock-version>1.0.1</jmock-version>
     <junit-version>3.8.1</junit-version>
