@@ -1048,12 +1048,14 @@ public class BrokerService implements Service, Serializable {
     /**
      * @return the tempDataStore
      */
-    public synchronized Store getTempDataStore() {
-        if (tempDataStore == null){
-            String name = getTmpDataDirectory().getPath();
-            try {
-            StoreFactory.delete(name);
-            tempDataStore = StoreFactory.open(name,"rw");
+    public synchronized Store getTempDataStore(){
+        if(tempDataStore==null){
+            String name=getTmpDataDirectory().getPath();
+            try{
+                log.info("About to delete any non-persistent messages that may have overflowed to disk ...");
+                StoreFactory.delete(name);
+                log.info("Successfully deleted temporary storage");
+                tempDataStore=StoreFactory.open(name,"rw");
             }catch(IOException e){
                 throw new RuntimeException(e);
             }
