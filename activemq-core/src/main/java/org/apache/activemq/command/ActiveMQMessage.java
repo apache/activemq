@@ -381,9 +381,16 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
             }
         });
     }
+    
+    public void setObjectProperty(String name, Object value) throws JMSException{
+        setObjectProperty(name,value,true);
+    }
 
-    public void setObjectProperty(String name, Object value) throws JMSException {
-        checkReadOnlyProperties();
+    public void setObjectProperty(String name, Object value, boolean checkReadOnly) throws JMSException {
+        
+        if (checkReadOnly) {
+            checkReadOnlyProperties();
+        }
         if (name == null || name.equals("")) {
             throw new IllegalArgumentException("Property name cannot be empty or null");
         }
@@ -535,7 +542,10 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     }
 
     public void setBooleanProperty(String name, boolean value) throws JMSException {
-        setObjectProperty(name, value ? Boolean.TRUE : Boolean.FALSE);
+        setBooleanProperty(name,value,true);
+    }
+    public void setBooleanProperty(String name, boolean value,boolean checkReadOnly) throws JMSException {
+        setObjectProperty(name, value ? Boolean.TRUE : Boolean.FALSE,checkReadOnly);
     }
 
     public void setByteProperty(String name, byte value) throws JMSException {
