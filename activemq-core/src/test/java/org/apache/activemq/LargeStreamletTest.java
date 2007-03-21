@@ -43,7 +43,7 @@ public final class LargeStreamletTest extends TestCase {
 
     private static final int BUFFER_SIZE = 1 * 1024;
 
-    private static final int MESSAGE_COUNT = 1024*1024;
+    private static final int MESSAGE_COUNT = 10*1024;
     
     private AtomicInteger totalRead = new AtomicInteger();
 
