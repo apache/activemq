@@ -100,7 +100,7 @@ public class BrokerService implements Service, Serializable {
     private static final Log log = LogFactory.getLog(BrokerService.class);
     private static final long serialVersionUID = 7353129142305630237L;
     public static final String DEFAULT_PORT = "61616";
-    public static final String DEFAULT_BROKER_NAME = "localhost";
+    static final String DEFAULT_BROKER_NAME = "localhost";
     public static final String LOCAL_HOST_NAME;
 
     private boolean useJmx = true;
