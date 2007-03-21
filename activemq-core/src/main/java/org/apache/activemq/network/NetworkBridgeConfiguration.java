@@ -29,7 +29,7 @@ public class NetworkBridgeConfiguration{
     private boolean bridgeTempDestinations=true;
     private int prefetchSize=1000;
     private int networkTTL=1;
-    private String localBrokerName="Unknow";
+    private String brokerName="localhost";
     private String userName;
     private String password;
     private String destinationFilter = ">";
@@ -128,18 +128,18 @@ public class NetworkBridgeConfiguration{
 
     
     /**
-     * @return the localBrokerName
+     * @return the brokerName
      */
-    public String getLocalBrokerName(){
-        return this.localBrokerName;
+    public String getBrokerName(){
+        return this.brokerName;
     }
 
     
     /**
-     * @param localBrokerName the localBrokerName to set
+     * @param brokerName the localBrokerName to set
      */
-    public void setLocalBrokerName(String localBrokerName){
-        this.localBrokerName=localBrokerName;
+    public void setBrokerName(String brokerName){
+        this.brokerName=brokerName;
     }
 
     

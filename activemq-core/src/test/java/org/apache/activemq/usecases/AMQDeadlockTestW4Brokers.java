@@ -217,8 +217,7 @@ public class AMQDeadlockTestW4Brokers extends TestCase {
 					"static:" + uri2 + "," + uri3 + "," + uri4));
 			nc.setBridgeTempDestinations(true);
 			nc.setBrokerName(brokerName);
-			nc.setName(brokerName + ".nc");
-			
+						
 			// When using queue limits set this to 1
 			nc.setPrefetchSize(1000);
 			nc.setNetworkTTL(1);

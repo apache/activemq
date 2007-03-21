@@ -93,7 +93,7 @@ public class DurableConduitBridge extends ConduitBridge{
     }
     
     protected String getSubscriberName(ActiveMQDestination dest){
-        String subscriberName = configuration.getLocalBrokerName()+"_"+dest.getPhysicalName();
+        String subscriberName = configuration.getBrokerName()+"_"+dest.getPhysicalName();
         return subscriberName;
     }
 

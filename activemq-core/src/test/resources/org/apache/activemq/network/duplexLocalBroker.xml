@@ -25,6 +25,7 @@
 
     <networkConnectors>
       <networkConnector uri="static:(tcp://localhost:61617)">
+         duplex = true
          dynamicOnly = false
          conduitSubscriptions = true
          decreaseNetworkConsumerPriority = false

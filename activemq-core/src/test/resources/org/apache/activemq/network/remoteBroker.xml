@@ -23,7 +23,7 @@
       <transportConnector uri="tcp://localhost:61617"/>
     </transportConnectors>
     <networkConnectors>
-      <networkConnector uri="static:failover:(tcp://localhost:61616)"/>
+      <networkConnector uri="static:(tcp://localhost:61616)" />
       </networkConnectors>
   </broker>
 

@@ -1084,11 +1084,14 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
             try{
                 Properties props = MarshallingSupport.stringToProperties(info.getNetworkProperties());
                 NetworkBridgeConfiguration config = new NetworkBridgeConfiguration();
-                IntrospectionSupport.setProperties(config,props,null);
-                config.setLocalBrokerName(broker.getBrokerName());
+                IntrospectionSupport.setProperties(config,props,"");
+                config.setBrokerName(broker.getBrokerName());
                 Transport localTransport = TransportFactory.connect(broker.getVmConnectorURI());
-                localTransport.start();
                 duplexBridge = NetworkBridgeFactory.createBridge(config,localTransport,transport);
+                //now turn duplex off this side
+                duplexBridge.setCreatedByDuplex(true);
+                duplexBridge.start();
+                log.info("Created Duplex Bridge back to " + info.getBrokerName());
             }catch(Exception e){
                log.error("Creating duplex network bridge",e);
             }
@@ -1096,6 +1099,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
         // We only expect to get one broker info command per connection
         if(this.brokerInfo!=null){
             log.warn("Unexpected extra broker info command received: "+info);
+            Thread.dumpStack();
         }
         this.brokerInfo=info;
         broker.addBroker(this,info);

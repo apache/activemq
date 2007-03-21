@@ -45,7 +45,7 @@ public class ThreeBrokerTopicNetworkUsingTcpTest extends ThreeBrokerTopicNetwork
             // Ensure that we are connecting using tcp
             if (remoteURI.toString().startsWith("tcp:") && localURI.toString().startsWith("tcp:")) {
                 NetworkBridgeConfiguration config = new NetworkBridgeConfiguration();
-                config.setLocalBrokerName(localBroker.getBrokerName());
+                config.setBrokerName(localBroker.getBrokerName());
                 DemandForwardingBridge bridge = new DemandForwardingBridge(config,TransportFactory.connect(localURI),
                                                                            TransportFactory.connect(remoteURI));
                 bridges.add(bridge);

@@ -123,7 +123,6 @@ public class AMQFailoverIssue extends TestCase{
             final NetworkConnector nc=new DiscoveryNetworkConnector(new URI("static:"+uri2));
             nc.setBridgeTempDestinations(true);
             nc.setBrokerName(brokerName);
-            nc.setName(brokerName+".nc");
             nc.setPrefetchSize(1);
             brokerService.addNetworkConnector(nc);
         }

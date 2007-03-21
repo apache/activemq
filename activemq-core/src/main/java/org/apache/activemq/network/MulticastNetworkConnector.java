@@ -145,7 +145,7 @@ public class MulticastNetworkConnector extends NetworkConnector {
         }
     }
 
-    protected String createName() {
+    public String getName() {
         return remoteTransport.toString();
     }
 
