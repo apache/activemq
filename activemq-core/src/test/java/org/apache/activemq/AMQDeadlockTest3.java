@@ -256,7 +256,6 @@ public class AMQDeadlockTest3 extends TestCase {
 			final NetworkConnector nc = new DiscoveryNetworkConnector(new URI("static:" + uri2));
 			nc.setBridgeTempDestinations(true);
 			nc.setBrokerName(brokerName);
-			nc.setName(brokerName + ".nc");
 			brokerService.addNetworkConnector(nc);
 		}
 

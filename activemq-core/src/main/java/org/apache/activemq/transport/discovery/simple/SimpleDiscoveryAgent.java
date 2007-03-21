@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class SimpleDiscoveryAgent implements DiscoveryAgent {
     
-    private long initialReconnectDelay = 1000*5;
+    private long initialReconnectDelay = 1000;
     private long maxReconnectDelay = 1000 * 30;
     private long backOffMultiplier = 2;
     private boolean useExponentialBackOff = false;

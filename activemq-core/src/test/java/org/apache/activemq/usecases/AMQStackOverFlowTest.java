@@ -145,7 +145,6 @@ public class AMQStackOverFlowTest extends TestCase {
 					"static:" + uri2));
 			nc.setBridgeTempDestinations(true);
 			nc.setBrokerName(brokerName);
-			nc.setName(brokerName + ".nc");
 			nc.setPrefetchSize(1);
 			brokerService.addNetworkConnector(nc);
 		}

@@ -84,7 +84,6 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
 
             URI connectUri = uri;
             log.info("Establishing network connection between from " + localURI + " to " + connectUri);
-
             Transport remoteTransport;
             try {
                 remoteTransport = TransportFactory.connect(connectUri);
@@ -204,7 +203,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
         return configureBridge(result);
     }
 
-    protected String createName() {
+    public String getName() {
         return discoveryAgent.toString();
     }
 

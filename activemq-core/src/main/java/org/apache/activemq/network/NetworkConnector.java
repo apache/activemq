@@ -14,7 +14,6 @@
 
 package org.apache.activemq.network;
 
-import static org.apache.activemq.network.NetworkConnector.log;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -36,12 +35,10 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
 
     protected static final Log log=LogFactory.getLog(NetworkConnector.class);
     protected URI localURI;
-    private String brokerName="localhost";
     private Set durableDestinations;
     private List excludedDestinations=new CopyOnWriteArrayList();
     private List dynamicallyIncludedDestinations=new CopyOnWriteArrayList();
     private List staticallyIncludedDestinations=new CopyOnWriteArrayList();
-    private String name="bridge";
     protected ConnectionFilter connectionFilter;
     protected ServiceSupport serviceSupport=new ServiceSupport(){
 
@@ -69,34 +66,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
         this.localURI=localURI;
     }
 
-    /**
-     * @return Returns the name.
-     */
-    public String getName(){
-        if(name==null){
-            name=createName();
-        }
-        return name;
-    }
-
-    /**
-     * @param name The name to set.
-     */
-    public void setName(String name){
-        this.name=name;
-    }
-
-    public String getBrokerName(){
-        return brokerName;
-    }
-
-    /**
-     * @param brokerName The brokerName to set.
-     */
-    public void setBrokerName(String brokerName){
-        this.brokerName=brokerName;
-    }
-
+    
     /**
      * @return Returns the durableDestinations.
      */
@@ -177,7 +147,6 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     // Implementation methods
     // -------------------------------------------------------------------------
     protected NetworkBridge configureBridge(DemandForwardingBridgeSupport result){
-        result.setName(getBrokerName());
         List destsList=getDynamicallyIncludedDestinations();
         ActiveMQDestination dests[]=(ActiveMQDestination[])destsList.toArray(new ActiveMQDestination[destsList.size()]);
         result.setDynamicallyIncludedDestinations(dests);
@@ -195,8 +164,6 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
         return result;
     }
 
-    protected abstract String createName();
-
     protected Transport createLocalTransport() throws Exception{
         return TransportFactory.connect(localURI);
     }
@@ -208,6 +175,8 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     public void stop() throws Exception{
         serviceSupport.stop();
     }
+    
+    public abstract String getName();
     
     protected void handleStart() throws Exception{
         if(localURI==null){

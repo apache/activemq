@@ -117,7 +117,7 @@ public class TwoBrokerMessageNotSentToRemoteWhenNoConsumerTest extends JmsMultip
             // Ensure that we are connecting using tcp
             if (remoteURI.toString().startsWith("tcp:") && localURI.toString().startsWith("tcp:")) {
                 NetworkBridgeConfiguration config = new NetworkBridgeConfiguration();
-                config.setLocalBrokerName(localBroker.getBrokerName());
+                config.setBrokerName(localBroker.getBrokerName());
                 DemandForwardingBridge bridge = new DemandForwardingBridge(config,TransportFactory.connect(localURI),
                                                                            TransportFactory.connect(remoteURI)) {
                     protected void serviceLocalCommand(Command command) {
