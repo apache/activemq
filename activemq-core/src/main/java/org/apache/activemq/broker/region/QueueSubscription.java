@@ -131,7 +131,7 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
         if (message instanceof ActiveMQMessage) {
             ActiveMQMessage activeMessage = (ActiveMQMessage) message;
             try {
-                activeMessage.setBooleanProperty("JMSXGroupFirstForConsumer", true);
+                activeMessage.setBooleanProperty("JMSXGroupFirstForConsumer", true, false);
             }
             catch (JMSException e) {
                 log.warn("Failed to set boolean header: " + e, e);
