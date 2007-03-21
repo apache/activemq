@@ -76,7 +76,7 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
     }
 
     protected ApplicationContext createApplicationContext(String uri) throws MalformedURLException {
-        System.out.println("####Êattempting to figure out the type of resource: " + uri);
+        System.out.println("Now attempting to figure out the type of resource: " + uri);
         Resource resource;
         File file = new File(uri);
         if (file.exists()) {
