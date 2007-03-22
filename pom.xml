@@ -55,6 +55,8 @@
     <jdom-version>1.0</jdom-version>
 
     <!-- replace with one of these when available
+		TODO - zap the jetty snapshot repo when we do this!!
+		
     <jetty-version>6.1.2</jetty-version>
     <jetty-version>6.1.2rc2</jetty-version>
      -->
@@ -143,6 +145,16 @@
         <enabled>false</enabled>
       </releases>
     </repository>
+
+		<!-- TODO REMOVE ME ASAP when 6.1.2rc goes out -->
+    <repository>
+      <id>codehaus.snapshots</id>
+      <name>Codehaus Snapshot Repository</name>
+      <url>http://snapshots.repository.codehaus.org/</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
   </repositories>
 
   <pluginRepositories>
@@ -158,6 +170,16 @@
       <releases>
         <enabled>false</enabled>
       </releases>
+    </pluginRepository>
+
+		<!-- TODO REMOVE ME ASAP when 6.1.2rc goes out -->
+    <pluginRepository>
+      <id>codehaus.snapshots</id>
+      <name>Codehaus Snapshot Repository</name>
+      <url>http://snapshots.repository.codehaus.org/</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
     </pluginRepository>
   </pluginRepositories>
 
