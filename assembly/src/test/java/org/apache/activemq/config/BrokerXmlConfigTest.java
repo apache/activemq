@@ -24,6 +24,7 @@ import org.apache.activemq.broker.BrokerService;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
+import java.io.File;
 
 /**
  * @version $Revision: 1.2 $
@@ -55,6 +56,7 @@ public class BrokerXmlConfigTest extends TestCase {
 
     protected void setUp() throws Exception {
         System.setProperty("activemq.base", "target");
+        new File("target/data").mkdirs();
         broker = BrokerFactory.createBroker("xbean:src/release/conf/activemq.xml");
     }
 

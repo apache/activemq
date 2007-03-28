@@ -111,7 +111,7 @@ public class BrokerService implements Service, Serializable {
     private boolean useLoggingForShutdownErrors = false;
     private boolean shutdownOnMasterFailure = false;
     private String brokerName = DEFAULT_BROKER_NAME;
-    private File dataDirectory;
+    private File dataDirectoryFile;
     private File tmpDataDirectory;
     private Broker broker;
     private BrokerView adminView;
@@ -563,16 +563,16 @@ public class BrokerService implements Service, Serializable {
         return persistenceFactory;
     }
 
-    public File getDataDirectory() {
-        if (dataDirectory == null) {
-            dataDirectory = new File(IOHelper.getDefaultDataDirectory());
+    public File getDataDirectoryFile() {
+        if (dataDirectoryFile == null) {
+            dataDirectoryFile = new File(IOHelper.getDefaultDataDirectory());
         }
-        return dataDirectory;
+        return dataDirectoryFile;
     }
 
     public File getBrokerDataDirectory() {
         String brokerDir = getBrokerName().replaceAll("[^a-zA-Z0-9\\.\\_\\-]", "_");
-        return new File(getDataDirectory(), brokerDir);
+        return new File(getDataDirectoryFile(), brokerDir);
     }
 
 
@@ -583,10 +583,21 @@ public class BrokerService implements Service, Serializable {
      * @param dataDirectory
      *            the directory to store data files
      */
-    public void setDataDirectory(File dataDirectory) {
-        this.dataDirectory = dataDirectory;
+    public void setDataDirectory(String dataDirectory) {
+        setDataDirectoryFile(new File(dataDirectory));
     }
     
+    /**
+     * Sets the directory in which the data files will be stored by default for
+     * the JDBC and Journal persistence adaptors.
+     *
+     * @param dataDirectoryFile
+     *            the directory to store data files
+     */
+    public void setDataDirectoryFile(File dataDirectoryFile) {
+        this.dataDirectoryFile = dataDirectoryFile;
+    }
+
     /**
      * @return the tmpDataDirectory
      */

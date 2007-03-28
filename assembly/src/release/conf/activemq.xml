@@ -98,8 +98,8 @@
     </connectors>
 
     <handlers>
-      <webAppContext contextPath="/admin" resourceBase="webapps/admin" logUrlOnStart="true" />
-      <webAppContext contextPath="/demo" resourceBase="webapps/demo" logUrlOnStart="true" />
+      <webAppContext contextPath="/admin" resourceBase="${activemq.base}/webapps/admin" logUrlOnStart="true" />
+      <webAppContext contextPath="/demo" resourceBase="${activemq.base}/webapps/demo" logUrlOnStart="true" />
     </handlers>
   </jetty>
 
