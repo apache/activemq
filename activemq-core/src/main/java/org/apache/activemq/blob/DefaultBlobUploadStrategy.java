@@ -16,17 +16,18 @@
  */
 package org.apache.activemq.blob;
 
-import org.apache.activemq.command.ActiveMQBlobMessage;
-
-import javax.jms.JMSException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
+
+import javax.jms.JMSException;
+
+import org.apache.activemq.command.ActiveMQBlobMessage;
 
 /**
  * A default implementation of {@link BlobUploadStrategy} which uses the URL class to upload
@@ -46,33 +47,51 @@ public class DefaultBlobUploadStrategy implements BlobUploadStrategy {
     public URL uploadStream(ActiveMQBlobMessage message, InputStream fis) throws JMSException, IOException {
         URL url = createUploadURL(message);
 
-        URLConnection connection = url.openConnection();
+        HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+        connection.setRequestMethod("PUT");
         connection.setDoOutput(true);
+        
+        // use chunked mode or otherwise URLConnection loads everything into memory
+        // (chunked mode not supported before JRE 1.5)
+        connection.setChunkedStreamingMode(transferPolicy.getBufferSize());
+        
         OutputStream os = connection.getOutputStream();
 
         byte[] buf = new byte[transferPolicy.getBufferSize()];
         for (int c = fis.read(buf); c != -1; c = fis.read(buf)) {
-            os.write(buf, 0, c);
+        	os.write(buf, 0, c);
+        	os.flush();
         }
         os.close();
         fis.close();
-
-        /*
-        // Read the response.
-        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-        String inputLine;
-        while ((inputLine = in.readLine()) != null) {
-            System.out.println(inputLine);
+        
+        if (!isSuccessfulCode(connection.getResponseCode())) {
+        	throw new IOException("PUT was not successful: "
+        			+ connection.getResponseCode() + " " + connection.getResponseMessage());
         }
-        in.close();
-        */
-
-        // TODO we now need to ensure that the return code is OK?
 
         return url;
     }
 
-    protected URL createUploadURL(ActiveMQBlobMessage message) throws JMSException, MalformedURLException {
+	public void deleteFile(ActiveMQBlobMessage message) throws IOException, JMSException {
+        URL url = createUploadURL(message);
+
+        HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+        connection.setRequestMethod("DELETE");
+        connection.connect();
+        connection.disconnect();
+
+        if (!isSuccessfulCode(connection.getResponseCode())) {
+        	throw new IOException("DELETE was not successful: "
+        			+ connection.getResponseCode() + " " + connection.getResponseMessage());
+        }
+	}
+	
+    private boolean isSuccessfulCode(int responseCode) {
+		return responseCode >= 200 && responseCode < 300; // 2xx => successful
+	}
+
+	protected URL createUploadURL(ActiveMQBlobMessage message) throws JMSException, MalformedURLException {
         return new URL(transferPolicy.getUploadUrl() + message.getMessageId().toString());
     }
 }
