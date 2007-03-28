@@ -91,8 +91,8 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     /**
      * @param excludedDestinations The excludedDestinations to set.
      */
-    public void setExcludedDestinations(List exludedDestinations){
-        this.excludedDestinations=exludedDestinations;
+    public void setExcludedDestinations(List excludedDestinations){
+        this.excludedDestinations=excludedDestinations;
     }
 
     public void addExcludedDestination(ActiveMQDestination destiantion){
