@@ -39,27 +39,37 @@ public interface DestinationViewMBean {
     public void resetStatistics();
 
     /**
+     * Returns the number of messages that have been sent to the destination.
+     *
      * @return The number of messages that have been sent to the destination.
      */
     public long getEnqueueCount();
     
     /**
+     * Returns the number of messages that have been delivered (potentially not acknowledged) to consumers.
+     *
      * @return The number of messages that have been delivered (potentially not acknowledged) to consumers.
      */
     public long getDispatchCount();
     
     /**
+     * Returns the number of messages that have been acknowledged from the destination.
+     *
      * @return The number of messages that have been acknowledged from the destination.
      */
     public long getDequeueCount();
 
     /**
-     * @return The number of consmers subscribed to messages from this destination.
+     * Returns the number of consumers subscribed this destination.
+     *
+     * @return The number of consumers subscribed this destination.
      */
     public long getConsumerCount();
 
     /**
-     * @return The number of messages being buffered by this destination
+     * Returns the number of messages in this destination which are yet to be consumed
+     *
+     * @return Returns the number of messages in this destination which are yet to be consumed
      */
     public long getQueueSize();
     
