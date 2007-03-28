@@ -56,7 +56,7 @@ public class BrokerXmlConfigTest extends TestCase {
 
     protected void setUp() throws Exception {
         System.setProperty("activemq.base", "target");
-        new File("target/data").mkdirs();
+        //new File("target/data").mkdirs();
         broker = BrokerFactory.createBroker("xbean:src/release/conf/activemq.xml");
     }
 
