@@ -33,6 +33,7 @@ public class NetworkBridgeConfiguration{
     private String userName;
     private String password;
     private String destinationFilter = ">";
+    private String name = "localhost";
 
     /**
      * @return the conduitSubscriptions
@@ -220,5 +221,19 @@ public class NetworkBridgeConfiguration{
      */
     public void setDestinationFilter(String destinationFilter){
         this.destinationFilter=destinationFilter;
+    }
+
+    /**
+     * @return the name
+     */
+    public String getName(){
+        return this.name;
+    }
+
+    /**
+     * @param name the name to set
+     */
+    public void setName(String name){
+        this.name=name;
     }
 }
