@@ -43,7 +43,7 @@ import org.apache.activemq.store.jdbc.Statements;
  *
  * @version $Revision: 1.2 $
  */
-public class OracleJDBCAdapter extends DefaultJDBCAdapter {
+public class OracleJDBCAdapter extends BlobJDBCAdapter {
 
     public void setStatements(Statements statements) {
         statements.setLongDataType("NUMBER");
