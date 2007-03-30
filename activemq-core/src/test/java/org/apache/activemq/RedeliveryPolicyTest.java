@@ -54,7 +54,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         
         connection.start();
         Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
-        ActiveMQQueue destination = new ActiveMQQueue("TEST");
+        ActiveMQQueue destination = new ActiveMQQueue(getName());
         MessageProducer producer = session.createProducer(destination);
         
         MessageConsumer consumer = session.createConsumer(destination);
@@ -79,7 +79,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         m = (TextMessage)consumer.receive(100);
         assertNull(m);
         
-        m = (TextMessage)consumer.receive(500);
+        m = (TextMessage)consumer.receive(700);
         assertNotNull(m);
         assertEquals("1st", m.getText());        
         session.rollback();
@@ -89,7 +89,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         assertNull(m);
         m = (TextMessage)consumer.receive(500);
         assertNull(m);
-        m = (TextMessage)consumer.receive(500);
+        m = (TextMessage)consumer.receive(700);
         assertNotNull(m);
         assertEquals("1st", m.getText());        
         
@@ -107,7 +107,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         
         connection.start();
         Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
-        ActiveMQQueue destination = new ActiveMQQueue("TEST");
+        ActiveMQQueue destination = new ActiveMQQueue(getName());
         MessageProducer producer = session.createProducer(destination);
         
         MessageConsumer consumer = session.createConsumer(destination);
@@ -131,7 +131,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         // Show subsequent re-delivery delay is incrementing.
         m = (TextMessage)consumer.receive(100);
         assertNull(m);
-        m = (TextMessage)consumer.receive(500);
+        m = (TextMessage)consumer.receive(700);
         assertNotNull(m);
         assertEquals("1st", m.getText());        
         session.rollback();
@@ -140,7 +140,7 @@ public class RedeliveryPolicyTest extends JmsTestSupport {
         // we are not using exponential backoff.
         m = (TextMessage)consumer.receive(100);
         assertNull(m);
-        m = (TextMessage)consumer.receive(500);
+        m = (TextMessage)consumer.receive(700);
         assertNotNull(m);
         assertEquals("1st", m.getText());        
         
