@@ -1309,6 +1309,9 @@ public class BrokerTest extends BrokerTestSupport {
         connection2.send(sessionInfo2);
         connection2.send(consumerInfo2);
 
+        // Wait a little for messages to get delivered.
+        Thread.sleep(1000);
+        
         for( int i=0; i < 4; i++ ) {
             Message m1 = receiveMessage(connection1);
             Message m2 = receiveMessage(connection2);
