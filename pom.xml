@@ -176,6 +176,7 @@
     <module>activemq-book</module>
     <module>activemq-core</module>
     <module>activemq-console</module>
+    <module>activemq-fileserver</module>
     <module>activemq-jaas</module>
     <module>activemq-jpa-store</module>
     <module>activemq-openwire-generator</module>
@@ -248,6 +249,11 @@
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-console</artifactId>
+        <version>${activemq-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-fileserver</artifactId>
         <version>${activemq-version}</version>
       </dependency>
       <dependency>
