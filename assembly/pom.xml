@@ -67,6 +67,10 @@
     </dependency>
     <dependency>
       <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-fileserver</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-optional</artifactId>
     </dependency>
     <dependency>

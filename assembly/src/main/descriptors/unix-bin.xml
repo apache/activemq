@@ -126,6 +126,12 @@
       </excludes>
     </fileSet>
 
+    <!-- the file server -->
+    <fileSet>
+      <directory>../activemq-fileserver/src/main/webapp</directory>
+      <outputDirectory>/webapps/fileserver</outputDirectory>
+    </fileSet>
+
   </fileSets>
   <dependencySets>
     <dependencySet>
