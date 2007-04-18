@@ -20,6 +20,8 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.state.ProducerState;
 
 public class BrokerSupport {
     
@@ -39,7 +41,10 @@ public class BrokerSupport {
         boolean originalFlowControl=context.isProducerFlowControl();
         try{
             context.setProducerFlowControl(false);
+            ProducerInfo info = new ProducerInfo();
+            ProducerState state = new ProducerState(info);
             ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
+            producerExchange.setProducerState(state);
             producerExchange.setMutable(true);
             producerExchange.setConnectionContext(context);
             context.getBroker().send(producerExchange,message);
