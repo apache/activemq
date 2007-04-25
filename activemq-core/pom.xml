@@ -172,6 +172,63 @@
   <build>
 
     <plugins>
+	
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <groups>
+            <group>
+              <title>JMS Client</title>
+              <packages>org.apache.activemq:org.apache.activemq.command</packages>
+            </group>
+            <group>
+              <title>JMS Client support classes for working with BLOBs and JNDI</title>
+              <packages>org.apache.activemq.blob:org.apache.activemq.jndi</packages>
+            </group>
+            <group>
+              <title>Spring support</title>
+              <packages>org.apache.activemq.spring:org.apache.activemq.xbean:org.apache.activemq.pool</packages>
+            </group>
+            <group>
+              <title>JMS Client Implementation classes</title>
+              <packages>org.apache.activemq.filter:org.apache.activemq.management:org.apache.activemq.selector:org.apache.activemq.thread</packages>
+            </group>
+            <group>
+              <title>Broker implementation</title>
+              <packages>org.apache.activemq.advisory:org.apache.activemq.broker:org.apache.activemq.broker.*:org.apache.activemq.state:org.apache.activemq.security:org.apache.activemq.transaction</packages>
+            </group>
+            <group>
+              <title>Broker Persistent Store</title>
+              <packages>org.apache.activemq.store:org.apache.activemq.store.*</packages>
+            </group>
+            <group>
+              <title>Kaha fast file based storage</title>
+              <packages>org.apache.activemq.kaha:org.apache.activemq.kaha.*</packages>
+            </group>
+            <group>
+              <title>Transports</title>
+              <packages>org.apache.activemq.transport:org.apache.activemq.transport.*</packages>
+            </group>
+            <group>
+              <title>Memory handling</title>
+              <packages>org.apache.activemq.memory:org.apache.activemq.memory.*</packages>
+            </group>
+            <group>
+              <title>Networks of Brokers</title>
+              <packages>org.apache.activemq.network:org.apache.activemq.network.*</packages>
+            </group>
+            <group>
+              <title>OpenWire support</title>
+              <packages>org.apache.activemq.openwire:org.apache.activemq.openwire.*</packages>
+            </group>
+            <group>
+              <title>Utility classes</title>
+              <packages>org.apache.activemq.util:org.apache.activemq.wireformat:org.apache.activemq.proxy</packages>
+            </group>
+          </groups>
+        </configuration>
+      </plugin>
 
       <!-- Configure which tests are included/excuded -->
       <plugin>
