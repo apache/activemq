@@ -56,10 +56,8 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
         while (true) {
             try {
                 log.info("Attempting to acquire the exclusive lock to become the Master broker");
-                boolean answer = statement.execute();
-                if (answer) {
-                    break;
-                }
+                statement.execute();
+				break;
             }
             catch (Exception e) {
                 if (stopping) { 
