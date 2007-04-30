@@ -169,14 +169,22 @@
     </dependency>
   </dependencies>
 
-  <build>
-
+	<reporting>
     <plugins>
-	
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
         <configuration>
+          <links>
+            <link>http://java.sun.com/j2se/1.5.0/docs/api/</link>
+            <link>http://java.sun.com/j2ee/1.4/docs/api/</link>
+            <link>http://jakarta.apache.org/commons/logging/apidocs/</link>
+            <link>http://junit.sourceforge.net/javadoc/</link>
+          </links>
+          <stylesheetfile>${basedir}/../etc/css/stylesheet.css</stylesheetfile>
+          <linksource>true</linksource>
+          <maxmemory>256m</maxmemory>
+          <source>1.5</source>
           <groups>
             <group>
               <title>JMS Client</title>
@@ -229,7 +237,11 @@
           </groups>
         </configuration>
       </plugin>
-
+		</plugins>
+	</reporting>
+	
+  <build>
+    <plugins>
       <!-- Configure which tests are included/excuded -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
