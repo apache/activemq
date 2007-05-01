@@ -52,8 +52,8 @@ public class Scheduler {
         ScheduledFuture ticket = (ScheduledFuture) clockTickets.remove(task);
         if( ticket!=null ) {
             ticket.cancel(false);
-            if (ticket instanceof RunnableScheduledFuture)
-            	clockDaemon.remove((RunnableScheduledFuture) ticket);            
+            if (ticket instanceof Runnable)
+            	clockDaemon.remove((Runnable) ticket);            
         }
     }
 
