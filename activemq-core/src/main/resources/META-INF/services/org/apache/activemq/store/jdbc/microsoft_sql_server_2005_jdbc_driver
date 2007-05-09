@@ -1,0 +1,1 @@
+class=org.apache.activemq.store.jdbc.adapter.TransactJDBCAdapter
