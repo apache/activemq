@@ -336,16 +336,18 @@ public class MessageListenerServlet extends MessageServletSupport {
                     continue;
 
                 // Look for any available messages
-                message = consumer.receiveNoWait();
-                while (message != null && messages < maximumMessages) {
+                while (messages < maximumMessages) {
+                    message = consumer.receiveNoWait();
+                    if (message == null) {
+                        break;
+                    }
+                    messages++;
                     String id = (String) consumerIdMap.get(consumer);
                     writer.print("<response id='");
                     writer.print(id);
                     writer.print("'>");
                     writeMessageResponse(writer, message);
                     writer.println("</response>");
-                    messages++;
-                    message = consumer.receiveNoWait();
                 }
             }
 
