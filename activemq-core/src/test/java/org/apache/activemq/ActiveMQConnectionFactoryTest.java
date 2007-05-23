@@ -26,6 +26,8 @@ import java.net.URISyntaxException;
 
 import javax.jms.Connection;
 import javax.jms.JMSException;
+import javax.jms.Session;
+import javax.jms.MessageConsumer;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerRegistry;
@@ -67,6 +69,19 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         assertTrue(cf.isUseAsyncSend());
         // the broker url have been adjusted.
         assertEquals("vm:(broker:()/localhost)", cf.getBrokerURL());
+    }
+
+    public void testUseURIToConfigureRedeliveryPolicy() throws URISyntaxException, JMSException {
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost?jms.redeliveryPolicy.maximumRedeliveries=2");
+        assertEquals("connection redeliveries", 2, cf.getRedeliveryPolicy().getMaximumRedeliveries());
+
+        ActiveMQConnection connection = (ActiveMQConnection) cf.createConnection();
+        assertEquals("connection redeliveries", 2, connection.getRedeliveryPolicy().getMaximumRedeliveries());
+        
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) session.createConsumer(session.createQueue("FOO.BAR"));
+        assertEquals("consumer redeliveries", 2, consumer.getRedeliveryPolicy().getMaximumRedeliveries());
+        connection.close();
     }
 
     public void testCreateVMConnectionWithEmbdeddBroker() throws URISyntaxException, JMSException {
