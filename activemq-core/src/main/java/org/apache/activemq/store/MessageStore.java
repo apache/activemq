@@ -97,9 +97,7 @@ public interface MessageStore extends Service{
 
     /**
      * A hint to the Store to reset any batching state for the Destination
-     * 
-     * @param nextToDispatch
-     * 
+     *
      */
     public void resetBatching();
 
