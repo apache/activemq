@@ -28,6 +28,8 @@ import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.util.JMSExceptionSupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A utility class used by the Session for dispatching messages asynchronously to consumers
@@ -36,11 +38,14 @@ import org.apache.activemq.util.JMSExceptionSupport;
  * @see javax.jms.Session
  */
 public class ActiveMQSessionExecutor implements Task {
-    
+    private static final transient Log log = LogFactory.getLog(ActiveMQSessionExecutor.class);
+
     private ActiveMQSession session;
     private MessageDispatchChannel messageQueue = new MessageDispatchChannel();
     private boolean dispatchedBySessionPool;
     private TaskRunner taskRunner;
+    private boolean startedOrWarnedThatNotStarted;
+    private long warnAboutUnstartedConnectionTime = 500L;
 
     ActiveMQSessionExecutor(ActiveMQSession session) {
         this.session = session;
@@ -53,6 +58,24 @@ public class ActiveMQSessionExecutor implements Task {
     
 
     void execute(MessageDispatch message) throws InterruptedException {
+        if (!startedOrWarnedThatNotStarted) {
+
+            ActiveMQConnection connection = session.connection;
+            long aboutUnstartedConnectionTimeout = connection.getWarnAboutUnstartedConnectionTimeout();
+            if (connection.isStarted() || aboutUnstartedConnectionTimeout < 0L) {
+                startedOrWarnedThatNotStarted = true;
+            }
+            else {
+                long elapsedTime = System.currentTimeMillis() - connection.getTimeCreated();
+
+                // lets only warn when a significant amount of time has passed just in case its normal operation
+                if (elapsedTime > aboutUnstartedConnectionTimeout) {
+                    log.warn("Received a message on a connection which is not yet started. Have you forgotten to call Connection.start()? Connection: " + connection + " Received: " + message);
+                    startedOrWarnedThatNotStarted = true;
+                }
+            }
+        }
+
         if (!session.isSessionAsyncDispatch() && !dispatchedBySessionPool){
             dispatch(message);
         }else {

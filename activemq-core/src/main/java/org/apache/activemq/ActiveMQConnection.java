@@ -140,7 +140,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private int closeTimeout = 15000;
     private boolean useSyncSend=false;
     private boolean watchTopicAdvisories=true;
-    
+    private long warnAboutUnstartedConnectionTimeout = 500L;
+
+
     private final Transport transport;
     private final IdGenerator clientIdGenerator;
     private final JMSStatsImpl factoryStats;
@@ -176,6 +178,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     // Assume that protocol is the latest.  Change to the actual protocol
     // version when a WireFormatInfo is received.
     private AtomicInteger protocolVersion=new AtomicInteger(CommandTypes.PROTOCOL_VERSION);
+    private long timeCreated;
 
     /**
      * Construct an <code>ActiveMQConnection</code>
@@ -207,6 +210,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
         this.stats = new JMSConnectionStatsImpl(sessions, this instanceof XAConnection);
         this.factoryStats.addConnection(this);
+        this.timeCreated = System.currentTimeMillis();
     }
 
 
@@ -1505,6 +1509,28 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         this.optimizeAcknowledge=optimizeAcknowledge;
     }
 
+    public long getWarnAboutUnstartedConnectionTimeout() {
+        return warnAboutUnstartedConnectionTimeout;
+    }
+
+    /**
+     * Enables the timemout from a session creation to when a warning is generated
+     * if the connection is not properly started via {@link #start()}. It is a very
+     * common gotcha to forget to
+     * <a href="http://activemq.apache.org/i-am-not-receiving-any-messages-what-is-wrong.html">start the connection</a>
+     * so this option makes the default case to create a warning if the user forgets.
+     * To disable the warning just set the value to < 0 (say -1).
+     */
+    public void setWarnAboutUnstartedConnectionTimeout(long warnAboutUnstartedConnectionTimeout) {
+        this.warnAboutUnstartedConnectionTimeout = warnAboutUnstartedConnectionTimeout;
+    }
+
+    /**
+     * Returns the time this connection was created
+     */
+    public long getTimeCreated() {
+        return timeCreated;
+    }
 
     private void waitForBrokerInfo() throws JMSException {
         try {
