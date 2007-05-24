@@ -16,13 +16,12 @@
  */
 package org.apache.activemq.web;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
+import java.util.LinkedList;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 import javax.jms.Session;
-import java.util.LinkedList;
 
 /**
  * A simple pool of JMS Session objects intended for use by Queue browsers.
@@ -31,58 +30,71 @@ import java.util.LinkedList;
  */
 public class SessionPool {
 
-    private ConnectionFactory connectionFactory;
-    private Connection connection;
-    private LinkedList sessions = new LinkedList();
+	private ConnectionFactory connectionFactory;
+	private Connection connection;
+	private LinkedList sessions = new LinkedList();
 
-    public Connection getConnection() throws JMSException {
-        if (connection == null) {
-            connection = getConnectionFactory().createConnection();
-            connection.start();
-        }
-        return connection;
-    }
+	public Connection getConnection() throws JMSException {
+		if (checkConnection())
+			return connection;
 
-    public void setConnection(Connection connection) {
-        this.connection = connection;
-    }
+		synchronized (this) {
+			connection = getConnectionFactory().createConnection();
+			connection.start();
+			return connection;
+		}
+	}
 
-    public ConnectionFactory getConnectionFactory() {
-        if (connectionFactory == null) {
-            // TODO support remote brokers too
-            connectionFactory = new ActiveMQConnectionFactory("vm://localhost");
-        }
-        return connectionFactory;
-    }
+	private boolean checkConnection() {
+		if (connection == null)
+			return false;
 
-    public void setConnectionFactory(ConnectionFactory connectionFactory) {
-        this.connectionFactory = connectionFactory;
-    }
+		try {
+			connection.getMetaData();
+			return true;
+		} catch (JMSException e) {
+			return false;
+		}
+	}
 
+	public void setConnection(Connection connection) {
+		this.connection = connection;
+	}
 
-    public Session borrowSession() throws JMSException {
-        Session answer = null;
-        synchronized (sessions) {
-            if (sessions.isEmpty()) {
-                answer = createSession();
-            }
-            else {
-                answer = (Session) sessions.removeLast();
-            }
-        }
-        return answer;
-    }
+	public ConnectionFactory getConnectionFactory() {
+		if (connectionFactory == null) {
+			throw new IllegalStateException(
+					"No ConnectionFactory has been set for the session pool");
+		}
+		return connectionFactory;
+	}
 
-    protected void returnSession(Session session) {
-        if (session != null) {
-            synchronized (sessions) {
-                sessions.add(session);
-            }
-        }
-    }
+	public void setConnectionFactory(ConnectionFactory connectionFactory) {
+		this.connectionFactory = connectionFactory;
+	}
 
-    protected Session createSession() throws JMSException {
-        return getConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
-    }
+	public Session borrowSession() throws JMSException {
+		Session answer = null;
+		synchronized (sessions) {
+			if (sessions.isEmpty()) {
+				answer = createSession();
+			} else {
+				answer = (Session) sessions.removeLast();
+			}
+		}
+		return answer;
+	}
+
+	public void returnSession(Session session) {
+		if (session != null) {
+			synchronized (sessions) {
+				sessions.add(session);
+			}
+		}
+	}
+
+	protected Session createSession() throws JMSException {
+		return getConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
+	}
 
 }

@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -44,9 +45,7 @@ import javax.servlet.http.HttpSessionBindingEvent;
 import javax.servlet.http.HttpSessionBindingListener;
 import javax.servlet.http.HttpSessionEvent;
 
-import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.MessageAvailableConsumer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -75,8 +74,8 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
     private static transient ConnectionFactory factory;
 
     private transient Map consumers = new HashMap();
-    private transient ActiveMQConnection connection;
-    private transient ActiveMQSession session;
+    private transient Connection connection;
+    private transient Session session;
     private transient MessageProducer producer;
     private int deliveryMode = DeliveryMode.NON_PERSISTENT;
 
@@ -221,15 +220,15 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
         return session;
     }
 
-    public ActiveMQConnection getConnection() throws JMSException {
+    public Connection getConnection() throws JMSException {
         if (connection == null) {
-            connection = (ActiveMQConnection) factory.createConnection();
+            connection = factory.createConnection();
             connection.start();
         }
         return connection;
     }
 
-    public static synchronized void initConnectionFactory(ServletContext servletContext) {
+    protected static synchronized void initConnectionFactory(ServletContext servletContext) {
         if (factory == null)
             factory = (ConnectionFactory) servletContext.getAttribute(connectionFactoryAttribute);
         if (factory == null) {
@@ -239,7 +238,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
             log.debug("Value of: " + brokerUrlInitParam + " is: " + brokerURL);
 
             if (brokerURL == null) {
-                brokerURL = "vm://localhost";
+            	throw new IllegalStateException("missing brokerURL (specified via "+brokerUrlInitParam+" init-Param");
             }
 
             ActiveMQConnectionFactory amqfactory = new ActiveMQConnectionFactory(brokerURL);
@@ -302,8 +301,8 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
         return new ArrayList(consumers.values());
     }
 
-    protected ActiveMQSession createSession() throws JMSException {
-        return (ActiveMQSession) getConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
+    protected Session createSession() throws JMSException {
+        return getConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
 
     public Semaphore getSemaphore() {

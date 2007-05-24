@@ -20,11 +20,23 @@
 
   <bean id="placeholderConfig" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" />
   
-  
-  <bean id="sessionPool" class="org.apache.activemq.web.SessionPool"/>
-  
   <!-- use the following bean for a local in-JVM broker -->
-  <bean id="brokerQuery" class="org.apache.activemq.web.SingletonBrokerFacade" autowire='constructor' singleton="false"/>
+  <bean id="brokerQuery" class="org.apache.activemq.web.LocalBrokerFacade" autowire='constructor' singleton="false"/>
+
+  <!-- use the following for a remote JMX based broker -->
+  <!--<bean id="brokerQuery" class="org.apache.activemq.web.JMXBrokerFacade" autowire='constructor' singleton="false"/>-->
+
+  <bean id="brokerService" class="org.apache.activemq.xbean.BrokerFactoryBean">
+    <property name="config" value="/WEB-INF/activemq.xml"/>
+  </bean>
+
+  <bean id="sessionPool" class="org.apache.activemq.web.SessionPool">
+  	<property name="connectionFactory" ref="connectionFactory"/>
+  </bean>
+
+  <bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory" depends-on="brokerService">
+    <property name="brokerURL" value="vm://localhost"/>
+  </bean>
 
   <bean id="queueBrowser" class="org.apache.activemq.web.QueueBrowseQuery" autowire='constructor' singleton="false"/>
   <bean id="messageQuery" class="org.apache.activemq.web.MessageQuery" autowire='constructor' singleton="false"/>

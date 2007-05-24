@@ -105,7 +105,7 @@
       <outputDirectory>/webapps/admin</outputDirectory>
       <excludes>
         <exclude>**/activemq.xml</exclude>
-        <exclude>**/applicationContext.xml</exclude>
+        <exclude>**/webconsole-embedded.xml</exclude>
       </excludes>
     </fileSet>
     <fileSet>
@@ -122,7 +122,7 @@
       <outputDirectory>/webapps/demo</outputDirectory>
       <excludes>
         <exclude>**/activemq.xml</exclude>
-        <exclude>**/applicationContext.xml</exclude>
+        <exclude>**/webconsole-embedded.xml</exclude>
       </excludes>
     </fileSet>
 
@@ -188,6 +188,7 @@
         <include>org.mortbay.jetty:jetty-util</include>
         <include>org.mortbay.jetty:jetty-xbean</include>
         <include>org.mortbay.jetty:servlet-api-2.5</include>
+        <include>org.slf4j:slf4j-api</include>
         <include>org.slf4j:slf4j-jcl</include>
 
         <!-- JSP support -->

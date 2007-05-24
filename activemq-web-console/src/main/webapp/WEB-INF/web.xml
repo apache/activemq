@@ -22,117 +22,141 @@
          http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
          version="2.4">
 
-    <description>
-      Apache ActiveMQ Web Console
-    </description>
-    <display-name>ActiveMQ Console</display-name>
+  <description>
+    Apache ActiveMQ Web Console
+  </description>
+  <display-name>ActiveMQ Console</display-name>
 
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <!--              Configuration of the SiteMesh Filter.                                                                 -->
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <filter>
-        <filter-name>sitemesh</filter-name>
-        <filter-class>com.opensymphony.module.sitemesh.filter.PageFilter</filter-class>
-    </filter>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--              Configuration of the SiteMesh Filter.                                                                 -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <filter>
+    <filter-name>sitemesh</filter-name>
+    <filter-class>com.opensymphony.module.sitemesh.filter.PageFilter</filter-class>
+  </filter>
 
-    <filter-mapping>
-        <filter-name>sitemesh</filter-name>
-        <url-pattern>/*</url-pattern>
-    </filter-mapping>
-    
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <!--              Expose Spring POJOs to JSP                   .                                                             -->
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <filter>
-        <filter-name>spring</filter-name>
-        <filter-class>org.apache.activemq.web.filter.ApplicationContextFilter</filter-class>
-    </filter>
+  <filter-mapping>
+    <filter-name>sitemesh</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
 
-    <filter-mapping>
-        <filter-name>spring</filter-name>
-        <url-pattern>/*</url-pattern>
-    </filter-mapping>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--              Expose Spring POJOs to JSP                   .                                                             -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <filter>
+    <filter-name>spring</filter-name>
+    <filter-class>org.apache.activemq.web.filter.ApplicationContextFilter</filter-class>
+  </filter>
 
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <!--              ActiveMQ servlets                                                                                                -->
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-        
-    <!-- the subscription REST servlet -->
-    <servlet>
-        <servlet-name>AjaxServlet</servlet-name>
-        <servlet-class>org.apache.activemq.web.AjaxServlet</servlet-class>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>AjaxServlet</servlet-name>
-        <url-pattern>/ajax/*</url-pattern>
-    </servlet-mapping>
+  <filter-mapping>
+    <filter-name>spring</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
 
-    <servlet>
-        <servlet-name>SendServlet</servlet-name>
-        <servlet-class>org.apache.activemq.web.MessageServlet</servlet-class>
-        <load-on-startup>1</load-on-startup>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>SendServlet</servlet-name>
-        <url-pattern>/send/*</url-pattern>
-    </servlet-mapping>
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--              ActiveMQ servlets                                                                                                -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 
-    <!-- the queue browse servlet -->
-    <servlet>
-        <servlet-name>QueueBrowseServlet</servlet-name>
-        <servlet-class>org.apache.activemq.web.QueueBrowseServlet</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>QueueBrowseServlet</servlet-name>
-        <url-pattern>/queueBrowse/*</url-pattern>
-    </servlet-mapping>
+  <!-- the subscription REST servlet -->
+  <servlet>
+    <servlet-name>AjaxServlet</servlet-name>
+    <servlet-class>org.apache.activemq.web.AjaxServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>AjaxServlet</servlet-name>
+    <url-pattern>/ajax/*</url-pattern>
+  </servlet-mapping>
 
-    <!-- track the session usage for web JMS clients -->
-    <filter>
-      <filter-name>session</filter-name>
-      <filter-class>org.apache.activemq.web.SessionFilter</filter-class>
-    </filter>
-    
-    <filter-mapping>
-      <filter-name>session</filter-name>
-      <url-pattern>/*</url-pattern>
-    </filter-mapping>
+  <servlet>
+    <servlet-name>SendServlet</servlet-name>
+    <servlet-class>org.apache.activemq.web.MessageServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>SendServlet</servlet-name>
+    <url-pattern>/send/*</url-pattern>
+  </servlet-mapping>
 
-    
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <!--              Spring listener.                   -->
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<listener>
-		  <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
-		</listener>
+  <!-- the queue browse servlet -->
+  <servlet>
+    <servlet-name>QueueBrowseServlet</servlet-name>
+    <servlet-class>org.apache.activemq.web.QueueBrowseServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>QueueBrowseServlet</servlet-name>
+    <url-pattern>/queueBrowse/*</url-pattern>
+  </servlet-mapping>
 
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <!--         Configuration of the Spring MVC dispatcher              -->
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-		<servlet>
-			<servlet-name>dispatcher</servlet-name>
-			<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
-			<load-on-startup>2</load-on-startup>
-		</servlet>
+  <!-- track the session usage for web JMS clients -->
+  <filter>
+    <filter-name>session</filter-name>
+    <filter-class>org.apache.activemq.web.SessionFilter</filter-class>
+  </filter>
 
-    <servlet-mapping>
-        <servlet-name>dispatcher</servlet-name>
-        <url-pattern>*.action</url-pattern>
-    </servlet-mapping>
+  <filter>
+    <filter-name>spring-rq</filter-name>
+    <filter-class>org.springframework.web.filter.RequestContextFilter</filter-class>
+  </filter>
 
-	  <welcome-file-list>
-			<welcome-file>index.html</welcome-file>
-			<welcome-file>index.jsp</welcome-file>
-		</welcome-file-list>
+  <filter-mapping>
+    <filter-name>session</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+  <filter-mapping>
+    <filter-name>spring-rq</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
 
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <!--         Factor out common headers in JSP pages            -->
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	  <jsp-config>
-	    <jsp-property-group>
-	       <url-pattern>*.jsp</url-pattern>
-	       <include-prelude>/WEB-INF/jspf/headertags.jspf</include-prelude>
-	     </jsp-property-group>
-   </jsp-config>
+
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--              Spring listener.                 						 -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <listener>
+    <listener-class>org.apache.activemq.web.WebConsoleStarter</listener-class>
+  </listener>
+
+
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--         Configuration of the Spring MVC dispatcher    		         -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <servlet>
+    <servlet-name>dispatcher</servlet-name>
+    <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+    <load-on-startup>2</load-on-startup>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>dispatcher</servlet-name>
+    <url-pattern>*.action</url-pattern>
+  </servlet-mapping>
+
+  <welcome-file-list>
+    <welcome-file>index.html</welcome-file>
+    <welcome-file>index.jsp</welcome-file>
+  </welcome-file-list>
+
+
+  <!-- JNDI Stuff
+<resource-ref>
+ <res-ref-name>jms/connectionFactory</res-ref-name>
+ <res-type>javax.jms.ConnectionFactory</res-type>
+ <res-auth>Container</res-auth>
+ </resource-ref>
+ <resource-ref>
+   <res-ref-name>jmx/url</res-ref-name>
+   <res-type>java.lang.String</res-type>
+ </resource-ref>
+  -->
+
+
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <!--         Factor out common headers in JSP pages            -->
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+  <jsp-config>
+    <jsp-property-group>
+      <url-pattern>*.jsp</url-pattern>
+      <include-prelude>/WEB-INF/jspf/headertags.jspf</include-prelude>
+    </jsp-property-group>
+  </jsp-config>
 </web-app>
