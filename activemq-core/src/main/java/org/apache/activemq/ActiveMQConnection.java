@@ -1514,7 +1514,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     /**
-     * Enables the timemout from a session creation to when a warning is generated
+     * Enables the timemout from a connection creation to when a warning is generated
      * if the connection is not properly started via {@link #start()}. It is a very
      * common gotcha to forget to
      * <a href="http://activemq.apache.org/i-am-not-receiving-any-messages-what-is-wrong.html">start the connection</a>
