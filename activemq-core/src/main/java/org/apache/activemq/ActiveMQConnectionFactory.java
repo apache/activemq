@@ -92,6 +92,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private boolean alwaysSyncSend;
     private boolean watchTopicAdvisories=true;
     private int producerWindowSize=DEFAULT_PRODUCER_WINDOW_SIZE;
+    private long warnAboutUnstartedConnectionTimeout = 500L;
 
     static protected final Executor DEFAULT_CONNECTION_EXECUTOR = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
             public Thread newThread(Runnable run) {
@@ -267,6 +268,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             connection.setBlobTransferPolicy(getBlobTransferPolicy().copy());
             connection.setWatchTopicAdvisories(watchTopicAdvisories);
             connection.setProducerWindowSize(producerWindowSize);
+            connection.setWarnAboutUnstartedConnectionTimeout(getWarnAboutUnstartedConnectionTimeout());
             transport.start();
 
             if( clientID !=null )
@@ -756,4 +758,21 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 	synchronized public void setProducerWindowSize(int producerWindowSize) {
 		this.producerWindowSize = producerWindowSize;
 	}
+
+
+    public long getWarnAboutUnstartedConnectionTimeout() {
+        return warnAboutUnstartedConnectionTimeout;
+    }
+
+    /**
+     * Enables the timemout from a connection creation to when a warning is generated
+     * if the connection is not properly started via {@link Connection#start()}. It is a very
+     * common gotcha to forget to
+     * <a href="http://activemq.apache.org/i-am-not-receiving-any-messages-what-is-wrong.html">start the connection</a>
+     * so this option makes the default case to create a warning if the user forgets.
+     * To disable the warning just set the value to < 0 (say -1).
+     */
+    public void setWarnAboutUnstartedConnectionTimeout(long warnAboutUnstartedConnectionTimeout) {
+        this.warnAboutUnstartedConnectionTimeout = warnAboutUnstartedConnectionTimeout;
+    }
 }
