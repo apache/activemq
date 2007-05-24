@@ -78,8 +78,6 @@ public class SendMessage extends DestinationFacade implements Controller {
             }
 
             client.send(dest, message, JMSPersistent, JMSPriority, JMSTimeToLive);
-
-            System.out.println("Sent message: " + message);
         }
     }
 

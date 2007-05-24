@@ -52,6 +52,20 @@
               <name>com.sun.management.jmxremote</name>
               <value></value>
             </systemProperty>
+<!--
+            <systemProperty>
+              <name>webconsole.type</name>
+              <value>properties</value>
+            </systemProperty>
+            <systemProperty>
+              <name>webconsole.jms.url</name>
+              <value>tcp://localhost:61616</value>
+            </systemProperty>
+            <systemProperty>
+              <name>webconsole.jmx.url</name>
+              <value>service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi</value>
+            </systemProperty>
+-->
           </systemProperties>
           <scanIntervalSeconds>10</scanIntervalSeconds>
         </configuration>

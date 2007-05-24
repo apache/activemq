@@ -16,10 +16,11 @@
  */
 package org.apache.activemq.web;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.util.FactoryFinder;
-import org.apache.activemq.util.IntrospectionSupport;
-import org.apache.activemq.web.view.MessageRenderer;
+import java.io.IOException;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -32,11 +33,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import java.io.IOException;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import org.apache.activemq.util.FactoryFinder;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.web.view.MessageRenderer;
 
 /**
  * Renders the contents of a queue using some kind of view. The URI is assumed
@@ -49,6 +48,8 @@ import java.util.Map;
  * 
  * @version $Revision: $
  */
+//TODO Why do we implement our own session pool?
+//TODO This doesn't work, since nobody will be setting the connection factory (because nobody is able to). Just use the WebClient?
 public class QueueBrowseServlet extends HttpServlet {
 
     private static FactoryFinder factoryFinder = new FactoryFinder("META-INF/services/org/apache/activemq/web/view/");
@@ -71,8 +72,7 @@ public class QueueBrowseServlet extends HttpServlet {
 
     public ConnectionFactory getConnectionFactory() {
         if (connectionFactory == null) {
-            // TODO support remote brokers too
-            connectionFactory = new ActiveMQConnectionFactory("vm://localhost");
+        	throw new IllegalStateException("missing ConnectionFactory in QueueBrowserServlet");
         }
         return connectionFactory;
     }
