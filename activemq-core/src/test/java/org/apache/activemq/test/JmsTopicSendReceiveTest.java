@@ -68,9 +68,13 @@ public class JmsTopicSendReceiveTest extends JmsSendReceiveTestSupport {
         log.info("Created  producer destination: " + producerDestination + " of type: " + producerDestination.getClass());
         consumer = createConsumer();
         consumer.setMessageListener(this);
-        connection.start();
+        startConnection();
 
         log.info("Created connection: " + connection);
+    }
+
+    protected void startConnection() throws JMSException {
+        connection.start();
     }
 
     protected void tearDown() throws Exception {
