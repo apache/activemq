@@ -259,7 +259,7 @@
           </systemProperties>
 
           <includes>
-            <include>**/*Test.*</include>
+            <include>**/SpringTest.*</include>
           </includes>
           <excludes>
 
