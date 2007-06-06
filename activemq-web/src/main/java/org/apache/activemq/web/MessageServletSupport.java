@@ -294,7 +294,7 @@ public abstract class MessageServletSupport extends HttpServlet {
         }
         else if (destinationName.startsWith("channel://"))
         {
-            is_topic=true;
+            is_topic=false;
             destinationName=destinationName.substring(10);
         }
         else 
