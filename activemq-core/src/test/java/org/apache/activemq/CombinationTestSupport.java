@@ -100,8 +100,9 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
             CombinationTestSupport[] combinations = getCombinations();
             for (int i = 0; i < combinations.length; i++) {
                 CombinationTestSupport test = combinations[i];
-                log.info("Running " + test.getName()); 
-                test.runBare();
+                if( getName()==null || getName().equals( test.getName()) ) {  
+                	test.runBare();
+                }
             }
         }
     }
@@ -128,7 +129,7 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
         } catch (Throwable e) {
         }
         
-        String name = getName();
+        String name = getName().split(" ")[0];        
         String comboSetupMethodName = "initCombosFor" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
         try {
             Method method = getClass().getMethod(comboSetupMethodName, null);
@@ -148,7 +149,7 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
                 ArrayList result = new ArrayList();
                 // Run the test case for each possible combination
                 for (Iterator iter = expandedOptions.iterator(); iter.hasNext();) {
-                    CombinationTestSupport combo = (CombinationTestSupport) TestSuite.createTest(getClass(), getName());
+                    CombinationTestSupport combo = (CombinationTestSupport) TestSuite.createTest(getClass(), name);
                     combo.combosEvaluated = true;
                     combo.setOptions((Map) iter.next());
                     result.add(combo);
