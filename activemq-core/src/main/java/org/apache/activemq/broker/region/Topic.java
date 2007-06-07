@@ -264,7 +264,7 @@ public class Topic implements Destination {
             if (log.isDebugEnabled()) {
                 log.debug("Expired message: " + message);
             }
-            if( producerExchange.getProducerState().getInfo().getWindowSize() > 0 || !message.isResponseRequired() ) {
+            if( ( !message.isResponseRequired() || producerExchange.getProducerState().getInfo().getWindowSize() > 0 ) && !context.isInRecoveryMode() ) {
         		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
 				context.getConnection().dispatchAsync(ack);	    	            	        		
             }
@@ -289,7 +289,7 @@ public class Topic implements Destination {
         			                log.debug("Expired message: " + message);
         			            }
         			            
-        			            if( !message.isResponseRequired() ) {
+        			            if( !message.isResponseRequired() && !context.isInRecoveryMode() ) {
         			        		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
         							context.getConnection().dispatchAsync(ack);	    	            	        		
         			            }
@@ -300,7 +300,7 @@ public class Topic implements Destination {
 	            	        try {							
 	            	        	doMessageSend(producerExchange, message);
 							} catch (Exception e) {
-	            	        	if( message.isResponseRequired() ) {
+	            	        	if( message.isResponseRequired() && !context.isInRecoveryMode() ) {
     				                ExceptionResponse response = new ExceptionResponse(e);
     				                response.setCorrelationId(message.getCommandId());
     								context.getConnection().dispatchAsync(response);	    								
