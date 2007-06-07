@@ -175,14 +175,26 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
             }
         },"ActiveMQ Journal Checkpoint Worker");
         createTransactionStore();
-        if(referenceStoreAdapter.isStoreValid()==false){
-            log.warn("The ReferenceStore is not valid - recovering ...");
-            recover();
-            log.info("Finished recovering the ReferenceStore");
-        }else {
-            Location location=writeTraceMessage("RECOVERED "+new Date(),true);
-            asyncDataManager.setMark(location,true);
-        }
+        
+//
+// The following was attempting to reduce startup times by avoiding the log 
+// file scanning that recovery performs.  The problem with it is that XA transactions
+// only live in transaction log and are not stored in the reference store, but they still
+// need to be recovered when the broker starts up.  Perhaps on a graceful shutdown we 
+// should record all the in flight XA transactions to a file to avoid having to scan 
+// the entire transaction log.  For now going to comment this bit out.        
+//        
+//        if(referenceStoreAdapter.isStoreValid()==false){
+//            log.warn("The ReferenceStore is not valid - recovering ...");
+//            recover();
+//            log.info("Finished recovering the ReferenceStore");
+//        }else {
+//            Location location=writeTraceMessage("RECOVERED "+new Date(),true);
+//            asyncDataManager.setMark(location,true);
+//        }
+        
+        recover();
+        
         // Do a checkpoint periodically.
         periodicCheckpointTask=new Runnable(){
 
