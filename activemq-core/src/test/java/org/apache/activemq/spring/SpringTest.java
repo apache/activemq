@@ -127,6 +127,9 @@ public class SpringTest extends TestCase {
     }
     
     /**
+     * Spring configured test case that tests the remotely deployed xsd
+     * http://people.apache.org/repository/org.apache.activemq/xsds/activemq-core-4.1-SNAPSHOT.xsd
+     * 
      * Broken: http://issues.apache.org/activemq/browse/AMQ-1002
      * Needs to be fixed.
      * 
@@ -134,6 +137,16 @@ public class SpringTest extends TestCase {
      */
     public void XtestSenderWithSpringXmlUsingSpring2NamespacesWithEmbeddedBrokerConfiguredViaXml() throws Exception {
         String config = "spring-embedded-xbean.xml";
+        assertSenderConfig(config);
+    }
+
+    /**
+     * Spring configured test case that tests the locally generated xsd
+     *
+     * @throws Exception
+     */
+    public void testSenderWithSpringXmlUsingSpring2NamespacesWithEmbeddedBrokerConfiguredViaXmlUsingLocalXsd() throws Exception {
+        String config = "spring-embedded-xbean-local.xml";
         assertSenderConfig(config);
     }
     
