@@ -16,13 +16,10 @@
  */
 package org.apache.activemq.store.jdbc;
 
-import org.apache.activemq.Service;
-import org.apache.activemq.broker.BrokerService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.sql.DataSource;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -30,16 +27,16 @@ import java.sql.SQLException;
 /**
  * Represents an exclusive lock on a database to avoid multiple brokers
  * running against the same logical database.
- * 
+ *
  * @version $Revision: $
  */
 public class DefaultDatabaseLocker implements DatabaseLocker {
     private static final Log log = LogFactory.getLog(DefaultDatabaseLocker.class);
-    
     private final DataSource dataSource;
     private final Statements statements;
     private long sleepTime = 1000;
     private Connection connection;
+    private PreparedStatement statement;
     private boolean stopping;
 
     public DefaultDatabaseLocker(DataSource dataSource, Statements statements) {
@@ -49,27 +46,47 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
 
     public void start() throws Exception {
         stopping = false;
-        connection = dataSource.getConnection();
-        connection.setAutoCommit(false);
-        
+
         log.info("Attempting to acquire the exclusive lock to become the Master broker");
-		String sql = statements.getLockCreateStatement();
-		PreparedStatement statement = connection.prepareStatement(sql);
+
         while (true) {
             try {
+                connection = dataSource.getConnection();
+                connection.setAutoCommit(false);
+                String sql = statements.getLockCreateStatement();
+                statement = connection.prepareStatement(sql);
                 statement.execute();
-				break;
+                break;
             }
             catch (Exception e) {
-                if (stopping) { 
-                    throw new Exception("Cannot start broker as being asked to shut down. Interupted attempt to acquire lock: " + e, e);
+                if (stopping) {
+                    throw new Exception("Cannot start broker as being asked to shut down. Interrupted attempt to acquire lock: " + e, e);
                 }
                 log.error("Failed to acquire lock: " + e, e);
+                if (null != statement) {
+                    try {
+                        statement.close();
+                    }
+                    catch (SQLException e1) {
+                        log.warn("Caught while closing statement: " + e1, e1);
+                    }
+                    statement = null;
+                }
+                if (null != connection) {
+                    try {
+                        connection.close();
+                    }
+                    catch (SQLException e1) {
+                        log.warn("Caught while closing connection: " + e1, e1);
+                    }
+                    connection = null;
+                }
             }
+
             log.debug("Sleeping for " + sleepTime + " milli(s) before trying again to get the lock...");
             Thread.sleep(sleepTime);
         }
-        
+
         log.info("Becoming the master on dataSource: " + dataSource);
     }
 
