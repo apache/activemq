@@ -82,6 +82,7 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
 
     private BrokerId [] brokerPath;
     protected boolean droppable = false;
+    private BrokerId [] cluster;
 
     abstract public Message copy();
     
@@ -610,5 +611,19 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
 	}
 	public void setDroppable(boolean droppable) {
 		this.droppable = droppable;
+	}
+
+    /**
+     * If a message is stored in multiple nodes on a cluster,
+     * all the cluster members will be listed here.  
+     * Otherwise, it will be null.
+     * 
+     * @openwire:property version=3 cache=true
+     */
+	public BrokerId[] getCluster() {
+		return cluster;
+	}
+	public void setCluster(BrokerId[] cluster) {
+		this.cluster = cluster;
 	}
 }

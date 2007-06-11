@@ -92,6 +92,18 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         info.setRecievedByDFBridge(bs.readBoolean());
         info.setDroppable(bs.readBoolean());
 
+        if (bs.readBoolean()) {
+            short size = dataIn.readShort();
+            org.apache.activemq.command.BrokerId value[] = new org.apache.activemq.command.BrokerId[size];
+            for( int i=0; i < size; i++ ) {
+                value[i] = (org.apache.activemq.command.BrokerId) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
+            }
+            info.setCluster(value);
+        }
+        else {
+            info.setCluster(null);
+        }
+
         info.afterUnmarshall(wireFormat);
 
     }
@@ -130,6 +142,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         rc += tightMarshalString1(info.getUserID(), bs);
         bs.writeBoolean(info.isRecievedByDFBridge());
         bs.writeBoolean(info.isDroppable());
+        rc += tightMarshalObjectArray1(wireFormat, info.getCluster(), bs);
 
         return rc + 9;
     }
@@ -171,6 +184,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         tightMarshalString2(info.getUserID(), dataOut, bs);
         bs.readBoolean();
         bs.readBoolean();
+        tightMarshalObjectArray2(wireFormat, info.getCluster(), dataOut, bs);
 
         info.afterMarshall(wireFormat);
 
@@ -228,6 +242,18 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         info.setRecievedByDFBridge(dataIn.readBoolean());
         info.setDroppable(dataIn.readBoolean());
 
+        if (dataIn.readBoolean()) {
+            short size = dataIn.readShort();
+            org.apache.activemq.command.BrokerId value[] = new org.apache.activemq.command.BrokerId[size];
+            for( int i=0; i < size; i++ ) {
+                value[i] = (org.apache.activemq.command.BrokerId) looseUnmarsalNestedObject(wireFormat,dataIn);
+            }
+            info.setCluster(value);
+        }
+        else {
+            info.setCluster(null);
+        }
+
         info.afterUnmarshall(wireFormat);
 
     }
@@ -269,6 +295,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         looseMarshalString(info.getUserID(), dataOut);
         dataOut.writeBoolean(info.isRecievedByDFBridge());
         dataOut.writeBoolean(info.isDroppable());
+        looseMarshalObjectArray(wireFormat, info.getCluster(), dataOut);
 
     }
 }

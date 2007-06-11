@@ -81,5 +81,12 @@ public abstract class MessageTestSupport extends BaseCommandTestSupport {
         info.setUserID("UserID:16");
         info.setRecievedByDFBridge(true);
         info.setDroppable(false);
+        {
+            BrokerId value[] = new BrokerId[2];
+            for( int i=0; i < 2; i++ ) {
+                value[i] = createBrokerId("Cluster:17");
+            }
+            info.setCluster(value);
+        }
     }
 }
