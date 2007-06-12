@@ -59,7 +59,9 @@ abstract public class ActiveMQDestination extends JNDIBaseStorable implements Da
     public static final String TOPIC_QUALIFIED_PREFIX = "topic://"; 
     public static final String TEMP_QUEUE_QUALIFED_PREFIX= "temp-queue://"; 
     public static final String TEMP_TOPIC_QUALIFED_PREFIX = "temp-topic://";
-            
+
+    public static final String TEMP_DESTINATION_NAME_PREFIX = "ID:";
+
     protected String physicalName;
     
     transient protected ActiveMQDestination[] compositeDestinations;
