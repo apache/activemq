@@ -24,10 +24,14 @@ import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * @version $Revision: 1.3 $
  */
 public class QueueConnectionMemoryTest extends SimpleQueueTest{
+    private static final transient Log log = LogFactory.getLog(QueueConnectionMemoryTest.class);
     
     protected void setUp() throws Exception{
     }
@@ -68,7 +72,7 @@ public class QueueConnectionMemoryTest extends SimpleQueueTest{
             Session s=connection.createSession(false,Session.AUTO_ACKNOWLEDGE);
             Destination dest = s.createTemporaryQueue();
             MessageConsumer consumer=s.createConsumer(dest);
-            System.out.println("Created connnection: " + i);
+            log.debug("Created connnection: " + i);
             Thread.sleep(1000);
         }
         

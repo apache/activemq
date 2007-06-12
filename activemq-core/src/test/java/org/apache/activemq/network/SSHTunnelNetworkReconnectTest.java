@@ -25,7 +25,8 @@ import java.util.Iterator;
 
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
-
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Test network reconnects over SSH tunnels.  This case can be especially tricky since the SSH tunnels
@@ -34,8 +35,9 @@ import org.apache.activemq.broker.BrokerService;
  * @author chirino
  */
 public class SSHTunnelNetworkReconnectTest extends NetworkReconnectTest {
+    private static final transient Log log = LogFactory.getLog(SSHTunnelNetworkReconnectTest.class);
 
-	ArrayList processes = new ArrayList();
+    ArrayList processes = new ArrayList();
 	
 	
 	protected BrokerService createFirstBroker() throws Exception {

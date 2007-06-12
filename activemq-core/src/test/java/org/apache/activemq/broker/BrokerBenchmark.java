@@ -29,6 +29,8 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -50,7 +52,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @version $Revision: 1.9 $
  */
 public class BrokerBenchmark extends BrokerTestSupport {
-    
+    private static final transient Log log = LogFactory.getLog(BrokerBenchmark.class);
+
     public int PRODUCE_COUNT=Integer.parseInt(System.getProperty("PRODUCE_COUNT","10000"));
     public ActiveMQDestination destination;
     public int PRODUCER_COUNT;
@@ -79,7 +82,7 @@ public class BrokerBenchmark extends BrokerTestSupport {
     
     public void testPerformance() throws Exception {
         
-        System.out.println("Running Benchmark for destination="+destination+", producers="+PRODUCER_COUNT+", consumers="+CONSUMER_COUNT+", deliveryMode="+deliveryMode);
+        log.info("Running Benchmark for destination="+destination+", producers="+PRODUCER_COUNT+", consumers="+CONSUMER_COUNT+", deliveryMode="+deliveryMode);
         final int CONSUME_COUNT = destination.isTopic() ? CONSUMER_COUNT*PRODUCE_COUNT : PRODUCE_COUNT;
 
         final Semaphore consumersStarted = new Semaphore(1-(CONSUMER_COUNT));         
@@ -138,7 +141,7 @@ public class BrokerBenchmark extends BrokerTestSupport {
                             if(msg!=null) {
                                 connection.send(createAck(consumerInfo, msg, counter, MessageAck.STANDARD_ACK_TYPE));
                             } else if ( receiveCounter.get() < CONSUME_COUNT )  {
-                                System.out.println("Consumer stall, waiting for message #"+receiveCounter.get()+1);
+                                log.info("Consumer stall, waiting for message #"+receiveCounter.get()+1);
                             }
                         }
                         
@@ -192,9 +195,9 @@ public class BrokerBenchmark extends BrokerTestSupport {
         consumersFinished.acquire();
         long end2 = System.currentTimeMillis();
         
-        System.out.println("Results for destination="+destination+", producers="+PRODUCER_COUNT+", consumers="+CONSUMER_COUNT+", deliveryMode="+deliveryMode);
-        System.out.println("Produced at messages/sec: "+ (PRODUCE_COUNT*1000.0/(end1-start)));
-        System.out.println("Consumed at messages/sec: "+ (CONSUME_COUNT*1000.0/(end2-start)));        
+        log.info("Results for destination="+destination+", producers="+PRODUCER_COUNT+", consumers="+CONSUMER_COUNT+", deliveryMode="+deliveryMode);
+        log.info("Produced at messages/sec: "+ (PRODUCE_COUNT*1000.0/(end1-start)));
+        log.info("Consumed at messages/sec: "+ (CONSUME_COUNT*1000.0/(end2-start)));        
         profilerPause("Benchmark done.  Stop profiler ");
     }
 

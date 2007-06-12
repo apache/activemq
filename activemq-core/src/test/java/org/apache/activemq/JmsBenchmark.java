@@ -40,6 +40,8 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -57,6 +59,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @version $Revision$
  */
 public class JmsBenchmark extends JmsTestSupport {
+    private static final transient Log log = LogFactory.getLog(JmsBenchmark.class);
 
     private static final long SAMPLE_DELAY = Integer.parseInt(System.getProperty("SAMPLE_DELAY", "" + 1000 * 5));
     private static final long SAMPLES = Integer.parseInt(System.getProperty("SAMPLES", "10"));
@@ -174,13 +177,13 @@ public class JmsBenchmark extends JmsTestSupport {
             }.start();
         }
 
-        System.out.println(getName() + ": Waiting for Producers and Consumers to startup.");
+        log.info(getName() + ": Waiting for Producers and Consumers to startup.");
         connectionsEstablished.acquire();
-        System.out.println("Producers and Consumers are now running.  Waiting for system to reach steady state: "
+        log.info("Producers and Consumers are now running.  Waiting for system to reach steady state: "
                 + (SAMPLE_DELAY / 1000.0f) + " seconds");
         Thread.sleep(1000 * 10);
 
-        System.out.println("Starting sample: "+SAMPLES+" each lasting "+ (SAMPLE_DURATION / 1000.0f) + " seconds");
+        log.info("Starting sample: "+SAMPLES+" each lasting "+ (SAMPLE_DURATION / 1000.0f) + " seconds");
 
 
         long now = System.currentTimeMillis();
@@ -196,11 +199,11 @@ public class JmsBenchmark extends JmsTestSupport {
             int r = receivedMessages.get();
             int p = producedMessages.get();
             
-            System.out.println("published: " + p + " msgs at "+ (p * 1000f / (end - start)) + " msgs/sec, "+
+            log.info("published: " + p + " msgs at "+ (p * 1000f / (end - start)) + " msgs/sec, "+
                     "consumed: " + r + " msgs at "+ (r * 1000f / (end - start)) + " msgs/sec");
         }
 
-        System.out.println("Sample done.");
+        log.info("Sample done.");
         sampleTimeDone.countDown();
 
         workerDone.acquire();

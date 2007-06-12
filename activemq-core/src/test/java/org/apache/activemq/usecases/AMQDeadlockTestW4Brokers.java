@@ -14,29 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.activemq.usecases;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.jms.BytesMessage;
-import javax.jms.ConnectionFactory;
-import javax.jms.DeliveryMode;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageListener;
-import javax.jms.Session;
-
-import junit.framework.Assert;
 import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
@@ -46,304 +26,303 @@ import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.pool.PooledConnectionFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
 import org.springframework.jms.listener.DefaultMessageListenerContainer;
 
+import javax.jms.BytesMessage;
+import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageListener;
+import javax.jms.Session;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class AMQDeadlockTestW4Brokers extends TestCase {
+    private static final transient Log log = LogFactory.getLog(AMQDeadlockTestW4Brokers.class);
+    private static final String BROKER_URL1 = "tcp://localhost:61616";
+    private static final String BROKER_URL2 = "tcp://localhost:61617";
+    private static final String BROKER_URL3 = "tcp://localhost:61618";
+    private static final String BROKER_URL4 = "tcp://localhost:61619";
+    private static final String URL1 = "tcp://localhost:61616?wireFormat.cacheEnabled=false&wireFormat.tightEncodingEnabled=false&wireFormat.maxInactivityDuration=30000&wireFormat.tcpNoDelayEnabled=false";
+    private static final String URL2 = "tcp://localhost:61617?wireFormat.cacheEnabled=false&wireFormat.tightEncodingEnabled=false&wireFormat.maxInactivityDuration=30000&wireFormat.tcpNoDelayEnabled=false";
+    private static final String URL3 = "tcp://localhost:61618?wireFormat.cacheEnabled=false&wireFormat.tightEncodingEnabled=false&wireFormat.maxInactivityDuration=30000&wireFormat.tcpNoDelayEnabled=false";
+    private static final String URL4 = "tcp://localhost:61619?wireFormat.cacheEnabled=false&wireFormat.tightEncodingEnabled=false&wireFormat.maxInactivityDuration=30000&wireFormat.tcpNoDelayEnabled=false";
+    private static final String QUEUE1_NAME = "test.queue.1";
+    private static final int MAX_CONSUMERS = 5;
+    private static final int NUM_MESSAGE_TO_SEND = 10000;
+    private static final CountDownLatch latch = new CountDownLatch(MAX_CONSUMERS * NUM_MESSAGE_TO_SEND);
 
-	private static final String BROKER_URL1 = "tcp://localhost:61616";
+    @Override
+    public void setUp() throws Exception {
 
-	private static final String BROKER_URL2 = "tcp://localhost:61617";
+    }
 
-	private static final String BROKER_URL3 = "tcp://localhost:61618";
+    @Override
+    public void tearDown() throws Exception {
 
-	private static final String BROKER_URL4 = "tcp://localhost:61619";
+    }
 
-	private static final String URL1 = "tcp://localhost:61616?wireFormat.cacheEnabled=false&wireFormat.tightEncodingEnabled=false&wireFormat.maxInactivityDuration=30000&wireFormat.tcpNoDelayEnabled=false";
+    public void test4BrokerWithOutLingo() throws Exception {
 
-	private static final String URL2 = "tcp://localhost:61617?wireFormat.cacheEnabled=false&wireFormat.tightEncodingEnabled=false&wireFormat.maxInactivityDuration=30000&wireFormat.tcpNoDelayEnabled=false";
+        BrokerService brokerService1 = null;
+        BrokerService brokerService2 = null;
+        BrokerService brokerService3 = null;
+        BrokerService brokerService4 = null;
+        ActiveMQConnectionFactory acf1 = null;
+        ActiveMQConnectionFactory acf2 = null;
+        PooledConnectionFactory pcf1 = null;
+        PooledConnectionFactory pcf2 = null;
+        ActiveMQConnectionFactory acf3 = null;
+        ActiveMQConnectionFactory acf4 = null;
+        PooledConnectionFactory pcf3 = null;
+        PooledConnectionFactory pcf4 = null;
+        DefaultMessageListenerContainer container1 = null;
 
-	private static final String URL3 = "tcp://localhost:61618?wireFormat.cacheEnabled=false&wireFormat.tightEncodingEnabled=false&wireFormat.maxInactivityDuration=30000&wireFormat.tcpNoDelayEnabled=false";
+        try {
 
-	private static final String URL4 = "tcp://localhost:61619?wireFormat.cacheEnabled=false&wireFormat.tightEncodingEnabled=false&wireFormat.maxInactivityDuration=30000&wireFormat.tcpNoDelayEnabled=false";
+            //Test with and without queue limits.
+            brokerService1 = createBrokerService("broker1", BROKER_URL1,
+                    BROKER_URL2, BROKER_URL3, BROKER_URL4, 0 /* 10000000 */);
+            brokerService1.start();
+            brokerService2 = createBrokerService("broker2", BROKER_URL2,
+                    BROKER_URL1, BROKER_URL3, BROKER_URL4, 0/* 40000000 */);
+            brokerService2.start();
+            brokerService3 = createBrokerService("broker3", BROKER_URL3,
+                    BROKER_URL2, BROKER_URL1, BROKER_URL4, 0/* 10000000 */);
+            brokerService3.start();
+            brokerService4 = createBrokerService("broker4", BROKER_URL4,
+                    BROKER_URL1, BROKER_URL3, BROKER_URL2, 0/* 10000000 */);
+            brokerService4.start();
 
-	private static final String QUEUE1_NAME = "test.queue.1";
+            final String failover1 = "failover:("
+                    + URL1
+                    + ")?initialReconnectDelay=10&maxReconnectDelay=30000&useExponentialBackOff=true&backOffMultiplier=2&maxReconnectAttempts=0&randomize=false";
+            final String failover2 = "failover:("
+                    + URL2
+                    + ")?initialReconnectDelay=10&maxReconnectDelay=30000&useExponentialBackOff=true&backOffMultiplier=2&maxReconnectAttempts=0&randomize=false";
 
-	private static final int MAX_CONSUMERS = 5;
+            final String failover3 = "failover:("
+                    + URL3
+                    + ")?initialReconnectDelay=10&maxReconnectDelay=30000&useExponentialBackOff=true&backOffMultiplier=2&maxReconnectAttempts=0&randomize=false";
 
-	private static final int NUM_MESSAGE_TO_SEND = 10000;
-    private static final CountDownLatch latch = new CountDownLatch(MAX_CONSUMERS*NUM_MESSAGE_TO_SEND);
+            final String failover4 = "failover:("
+                    + URL4
+                    + ")?initialReconnectDelay=10&maxReconnectDelay=30000&useExponentialBackOff=true&backOffMultiplier=2&maxReconnectAttempts=0&randomize=false";
 
-	@Override
-	public void setUp() throws Exception {
+            acf1 = createConnectionFactory(failover1);
+            acf2 = createConnectionFactory(failover2);
+            acf3 = createConnectionFactory(failover3);
+            acf4 = createConnectionFactory(failover4);
 
-	}
+            pcf1 = new PooledConnectionFactory(acf1);
+            pcf2 = new PooledConnectionFactory(acf2);
+            pcf3 = new PooledConnectionFactory(acf3);
+            pcf4 = new PooledConnectionFactory(acf4);
 
-	@Override
-	public void tearDown() throws Exception {
+            container1 = createDefaultMessageListenerContainer(acf2,
+                    new TestMessageListener1(0), QUEUE1_NAME);
+            container1.afterPropertiesSet();
 
-	}
+            final PooledProducerTask[] task = new PooledProducerTask[4];
+            task[0] = new PooledProducerTask(pcf1, QUEUE1_NAME, "producer1");
+            task[1] = new PooledProducerTask(pcf2, QUEUE1_NAME, "producer2");
+            task[2] = new PooledProducerTask(pcf3, QUEUE1_NAME, "producer3");
+            task[3] = new PooledProducerTask(pcf4, QUEUE1_NAME, "producer4");
 
-	public void test4BrokerWithOutLingo() throws Exception {
+            final ExecutorService executor = Executors.newCachedThreadPool();
 
-		BrokerService brokerService1 = null;
-		BrokerService brokerService2 = null;
-		BrokerService brokerService3 = null;
-		BrokerService brokerService4 = null;
-		ActiveMQConnectionFactory acf1 = null;
-		ActiveMQConnectionFactory acf2 = null;
-		PooledConnectionFactory pcf1 = null;
-		PooledConnectionFactory pcf2 = null;
-		ActiveMQConnectionFactory acf3 = null;
-		ActiveMQConnectionFactory acf4 = null;
-		PooledConnectionFactory pcf3 = null;
-		PooledConnectionFactory pcf4 = null;
-		DefaultMessageListenerContainer container1 = null;
+            for (int i = 0; i < 4; i++) {
+                executor.submit(task[i]);
+            }
 
-		try {
+            latch.await(15, TimeUnit.SECONDS);
+            assertTrue(latch.getCount() == MAX_CONSUMERS * NUM_MESSAGE_TO_SEND);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
 
-			//Test with and without queue limits. 
-			brokerService1 = createBrokerService("broker1", BROKER_URL1,
-					BROKER_URL2, BROKER_URL3, BROKER_URL4, 0 /* 10000000 */);
-			brokerService1.start();
-			brokerService2 = createBrokerService("broker2", BROKER_URL2,
-					BROKER_URL1, BROKER_URL3, BROKER_URL4, 0/* 40000000 */);
-			brokerService2.start();
-			brokerService3 = createBrokerService("broker3", BROKER_URL3,
-					BROKER_URL2, BROKER_URL1, BROKER_URL4, 0/* 10000000 */);
-			brokerService3.start();
-			brokerService4 = createBrokerService("broker4", BROKER_URL4,
-					BROKER_URL1, BROKER_URL3, BROKER_URL2, 0/* 10000000 */);
-			brokerService4.start();
+            container1.stop();
+            container1.destroy();
+            container1 = null;
 
-			final String failover1 = "failover:("
-					+ URL1
-					+ ")?initialReconnectDelay=10&maxReconnectDelay=30000&useExponentialBackOff=true&backOffMultiplier=2&maxReconnectAttempts=0&randomize=false";
-			final String failover2 = "failover:("
-					+ URL2
-					+ ")?initialReconnectDelay=10&maxReconnectDelay=30000&useExponentialBackOff=true&backOffMultiplier=2&maxReconnectAttempts=0&randomize=false";
+            brokerService1.stop();
+            brokerService1 = null;
+            brokerService2.stop();
+            brokerService2 = null;
+            brokerService3.stop();
+            brokerService3 = null;
+            brokerService4.stop();
+            brokerService4 = null;
+        }
+    }
 
-			final String failover3 = "failover:("
-					+ URL3
-					+ ")?initialReconnectDelay=10&maxReconnectDelay=30000&useExponentialBackOff=true&backOffMultiplier=2&maxReconnectAttempts=0&randomize=false";
+    private BrokerService createBrokerService(final String brokerName,
+            final String uri1, final String uri2, final String uri3,
+            final String uri4, final int queueLimit) throws Exception {
+        final BrokerService brokerService = new BrokerService();
 
-			final String failover4 = "failover:("
-					+ URL4
-					+ ")?initialReconnectDelay=10&maxReconnectDelay=30000&useExponentialBackOff=true&backOffMultiplier=2&maxReconnectAttempts=0&randomize=false";
+        brokerService.setBrokerName(brokerName);
+        brokerService.setPersistent(false);
+        brokerService.setUseJmx(true);
 
-			acf1 = createConnectionFactory(failover1);
-			acf2 = createConnectionFactory(failover2);
-			acf3 = createConnectionFactory(failover3);
-			acf4 = createConnectionFactory(failover4);
+        final UsageManager memoryManager = new UsageManager();
+        memoryManager.setLimit(100000000);
+        brokerService.setMemoryManager(memoryManager);
 
-			pcf1 = new PooledConnectionFactory(acf1);
-			pcf2 = new PooledConnectionFactory(acf2);
-			pcf3 = new PooledConnectionFactory(acf3);
-			pcf4 = new PooledConnectionFactory(acf4);
+        final ArrayList<PolicyEntry> policyEntries = new ArrayList<PolicyEntry>();
 
+        final PolicyEntry entry = new PolicyEntry();
+        entry.setQueue(">");
+        entry.setMemoryLimit(queueLimit);
+        policyEntries.add(entry);
 
-			container1 = createDefaultMessageListenerContainer(acf2,
-					new TestMessageListener1(0), QUEUE1_NAME);
-			container1.afterPropertiesSet();
+        final PolicyMap policyMap = new PolicyMap();
+        policyMap.setPolicyEntries(policyEntries);
+        brokerService.setDestinationPolicy(policyMap);
 
-			final PooledProducerTask[] task = new PooledProducerTask[4];
-			task[0] = new PooledProducerTask(pcf1, QUEUE1_NAME, "producer1");
-			task[1] = new PooledProducerTask(pcf2, QUEUE1_NAME, "producer2");
-			task[2] = new PooledProducerTask(pcf3, QUEUE1_NAME, "producer3");
-			task[3] = new PooledProducerTask(pcf4, QUEUE1_NAME, "producer4");
+        final TransportConnector tConnector = new TransportConnector();
+        tConnector.setUri(new URI(uri1));
+        tConnector.setBrokerName(brokerName);
+        tConnector.setName(brokerName + ".transportConnector");
+        brokerService.addConnector(tConnector);
 
-			final ExecutorService executor = Executors.newCachedThreadPool();
+        if (uri2 != null) {
+            final NetworkConnector nc = new DiscoveryNetworkConnector(new URI(
+                    "static:" + uri2 + "," + uri3 + "," + uri4));
+            nc.setBridgeTempDestinations(true);
+            nc.setBrokerName(brokerName);
 
-			for (int i = 0; i < 4; i++) {
-				executor.submit(task[i]);
-			}
+            // When using queue limits set this to 1
+            nc.setPrefetchSize(1000);
+            nc.setNetworkTTL(1);
+            brokerService.addNetworkConnector(nc);
+        }
 
-			latch.await(15,TimeUnit.SECONDS);
-            assertTrue(latch.getCount()==MAX_CONSUMERS*NUM_MESSAGE_TO_SEND);
+        return brokerService;
+    }
 
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
+    public DefaultMessageListenerContainer createDefaultMessageListenerContainer(
+            final ConnectionFactory acf, final MessageListener listener,
+            final String queue) {
+        final DefaultMessageListenerContainer container = new DefaultMessageListenerContainer();
+        container.setConnectionFactory(acf);
+        container.setDestinationName(queue);
+        container.setMessageListener(listener);
+        container.setSessionTransacted(false);
+        container.setSessionAcknowledgeMode(Session.AUTO_ACKNOWLEDGE);
+        container.setConcurrentConsumers(MAX_CONSUMERS);
+        return container;
+    }
 
-			container1.stop();
-			container1.destroy();
-			container1 = null;
+    public ActiveMQConnectionFactory createConnectionFactory(final String url) {
+        final ActiveMQConnectionFactory acf = new ActiveMQConnectionFactory(url);
+        acf.setCopyMessageOnSend(false);
+        acf.setUseAsyncSend(false);
+        acf.setDispatchAsync(true);
+        acf.setUseCompression(false);
+        acf.setOptimizeAcknowledge(false);
+        acf.setOptimizedMessageDispatch(true);
+        acf.setUseAsyncSend(false);
 
-			brokerService1.stop();
-			brokerService1 = null;
-			brokerService2.stop();
-			brokerService2 = null;
-			brokerService3.stop();
-			brokerService3 = null;
-			brokerService4.stop();
-			brokerService4 = null;
-		}
+        return acf;
+    }
 
-	}
+    private class TestMessageListener1 implements MessageListener {
+        private final long waitTime;
+        final AtomicInteger count = new AtomicInteger(0);
 
-	private BrokerService createBrokerService(final String brokerName,
-			final String uri1, final String uri2, final String uri3,
-			final String uri4, final int queueLimit) throws Exception {
-		final BrokerService brokerService = new BrokerService();
+        public TestMessageListener1(long waitTime) {
+            this.waitTime = waitTime;
+        }
 
-		brokerService.setBrokerName(brokerName);
-		brokerService.setPersistent(false);
-		brokerService.setUseJmx(true);
+        public void onMessage(Message msg) {
 
-		final UsageManager memoryManager = new UsageManager();
-		memoryManager.setLimit(100000000);
-		brokerService.setMemoryManager(memoryManager);
+            try {
+                /*log.info("Listener1 Consumed message "
+                            + msg.getIntProperty("count") + " from "
+                            + msg.getStringProperty("producerName"));*/
+                int value = count.incrementAndGet();
+                if (value % 1000 == 0) {
+                    log.info("Consumed message: " + value);
+                }
 
-		final ArrayList<PolicyEntry> policyEntries = new ArrayList<PolicyEntry>();
-
-		final PolicyEntry entry = new PolicyEntry();
-		entry.setQueue(">");
-		entry.setMemoryLimit(queueLimit);
-		policyEntries.add(entry);
-
-		final PolicyMap policyMap = new PolicyMap();
-		policyMap.setPolicyEntries(policyEntries);
-		brokerService.setDestinationPolicy(policyMap);
-
-		final TransportConnector tConnector = new TransportConnector();
-		tConnector.setUri(new URI(uri1));
-		tConnector.setBrokerName(brokerName);
-		tConnector.setName(brokerName + ".transportConnector");
-		brokerService.addConnector(tConnector);
-
-		if (uri2 != null) {
-			final NetworkConnector nc = new DiscoveryNetworkConnector(new URI(
-					"static:" + uri2 + "," + uri3 + "," + uri4));
-			nc.setBridgeTempDestinations(true);
-			nc.setBrokerName(brokerName);
-						
-			// When using queue limits set this to 1
-			nc.setPrefetchSize(1000);
-			nc.setNetworkTTL(1);
-			brokerService.addNetworkConnector(nc);
-		}
-
-		return brokerService;
-
-	}
-
-	public DefaultMessageListenerContainer createDefaultMessageListenerContainer(
-			final ConnectionFactory acf, final MessageListener listener,
-			final String queue) {
-		final DefaultMessageListenerContainer container = new DefaultMessageListenerContainer();
-		container.setConnectionFactory(acf);
-		container.setDestinationName(queue);
-		container.setMessageListener(listener);
-		container.setSessionTransacted(false);
-		container.setSessionAcknowledgeMode(Session.AUTO_ACKNOWLEDGE);
-		container.setConcurrentConsumers(MAX_CONSUMERS);
-		return container;
-	}
-
-	public ActiveMQConnectionFactory createConnectionFactory(final String url) {
-		final ActiveMQConnectionFactory acf = new ActiveMQConnectionFactory(url);
-		acf.setCopyMessageOnSend(false);
-		acf.setUseAsyncSend(false);
-		acf.setDispatchAsync(true);
-		acf.setUseCompression(false);
-		acf.setOptimizeAcknowledge(false);
-		acf.setOptimizedMessageDispatch(true);
-		acf.setUseAsyncSend(false);
-		
-		return acf;
-	}
-
-	private class TestMessageListener1 implements MessageListener {
-
-		private final long waitTime;
-
-		final AtomicInteger count = new AtomicInteger(0);
-		public TestMessageListener1(long waitTime) {
-			this.waitTime = waitTime;
-
-		}
-
-		public void onMessage(Message msg) {
-
-			try {
-				/*System.out.println("Listener1 Consumed message "
-						+ msg.getIntProperty("count") + " from "
-						+ msg.getStringProperty("producerName"));*/
-				int value = count.incrementAndGet();
-				if (value%1000==0){
-				System.out.println("Consumed message: " + value);
-				}
-             
-				Thread.sleep(waitTime);
+                Thread.sleep(waitTime);
                 latch.countDown();
-			/*} catch (JMSException e) {
-				e.printStackTrace();*/
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+                /*} catch (JMSException e) {
+                    e.printStackTrace();*/
+            }
+            catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
-		}
-	}
+    private class PooledProducerTask implements Runnable {
+        private final String queueName;
+        private final PooledConnectionFactory pcf;
+        private final String producerName;
 
-	private class PooledProducerTask implements Runnable {
+        public PooledProducerTask(final PooledConnectionFactory pcf,
+                final String queueName, final String producerName) {
+            this.pcf = pcf;
+            this.queueName = queueName;
+            this.producerName = producerName;
+        }
 
-		private final String queueName;
+        public void run() {
 
-		private final PooledConnectionFactory pcf;
+            try {
 
-		private final String producerName;
+                final JmsTemplate jmsTemplate = new JmsTemplate(pcf);
+                jmsTemplate.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+                jmsTemplate.setExplicitQosEnabled(true);
+                jmsTemplate.setMessageIdEnabled(false);
+                jmsTemplate.setMessageTimestampEnabled(false);
+                jmsTemplate.afterPropertiesSet();
 
-		public PooledProducerTask(final PooledConnectionFactory pcf,
-				final String queueName, final String producerName) {
-			this.pcf = pcf;
-			this.queueName = queueName;
-			this.producerName = producerName;
-		}
+                final byte[] bytes = new byte[2048];
+                final Random r = new Random();
+                r.nextBytes(bytes);
 
-		public void run() {
+                for (int i = 0; i < NUM_MESSAGE_TO_SEND; i++) {
+                    final int count = i;
+                    jmsTemplate.send(queueName, new MessageCreator() {
+                        public Message createMessage(Session session)
+                                throws JMSException {
 
-			try {
+                            final BytesMessage message = session
+                                    .createBytesMessage();
 
-				final JmsTemplate jmsTemplate = new JmsTemplate(pcf);
-				jmsTemplate.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-				jmsTemplate.setExplicitQosEnabled(true);
-				jmsTemplate.setMessageIdEnabled(false);
-				jmsTemplate.setMessageTimestampEnabled(false);
-				jmsTemplate.afterPropertiesSet();
+                            message.writeBytes(bytes);
+                            message.setIntProperty("count", count);
+                            message.setStringProperty("producerName",
+                                    producerName);
+                            return message;
+                        }
+                    });
 
-				final byte[] bytes = new byte[2048];
-				final Random r = new Random();
-				r.nextBytes(bytes);
+                    //	log.info("PooledProducer " + producerName + " sent message: " + count);
 
-				for (int i = 0; i < NUM_MESSAGE_TO_SEND; i++) {
-					final int count = i;
-					jmsTemplate.send(queueName, new MessageCreator() {
-
-						public Message createMessage(Session session)
-								throws JMSException {
-
-							final BytesMessage message = session
-									.createBytesMessage();
-
-							message.writeBytes(bytes);
-							message.setIntProperty("count", count);
-							message.setStringProperty("producerName",
-									producerName);
-							return message;
-						}
-					});
-
-				//	System.out.println("PooledProducer " + producerName + " sent message: " + count);
-
-					// Thread.sleep(1000);
-				}
-
-			} catch (final Throwable e) {
-				System.err.println("Producer 1 is exiting.");
-				e.printStackTrace();
-			}
-		}
-	}
-
+                    // Thread.sleep(1000);
+                }
+            }
+            catch (final Throwable e) {
+                System.err.println("Producer 1 is exiting.");
+                e.printStackTrace();
+            }
+        }
+    }
 }

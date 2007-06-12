@@ -20,6 +20,8 @@ package org.apache.activemq.transport.tcp;
 
 import junit.framework.TestCase;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -27,6 +29,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SslTransportFactoryTest extends TestCase {
+    private static final transient Log log = LogFactory.getLog(SslTransportFactoryTest.class);
+
     private SslTransportFactory factory;
     private boolean verbose;
 
@@ -113,11 +117,11 @@ public class SslTransportFactoryTest extends TestCase {
             }
 
             if (verbose) {
-                System.out.println();
-                System.out.println("Iteration: " + i);
-                System.out.println("Map settings: " + options);
+                log.info();
+                log.info("Iteration: " + i);
+                log.info("Map settings: " + options);
                 for (int x = 0; x < optionSettings.length; x++) {
-                    System.out.println("optionSetting[" + x + "] = " + optionSettings[x]);
+                    log.info("optionSetting[" + x + "] = " + optionSettings[x]);
                 }
             }
 
@@ -132,7 +136,7 @@ public class SslTransportFactoryTest extends TestCase {
             }
 
             if (socketStub.getWantClientAuthStatus() != optionSettings[2]) {
-                System.out.println("sheiite");
+                log.info("sheiite");
             }
 
             assertEquals("wantClientAuth was not properly set for iteration: " + i,

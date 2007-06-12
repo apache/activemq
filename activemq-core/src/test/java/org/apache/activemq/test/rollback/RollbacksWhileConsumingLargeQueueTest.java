@@ -26,6 +26,8 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.jms.core.MessageCreator;
 
 import java.util.concurrent.CountDownLatch;
@@ -38,7 +40,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class RollbacksWhileConsumingLargeQueueTest extends
 		EmbeddedBrokerTestSupport implements MessageListener {
 
-	protected int numberOfMessagesOnQueue = 6500;
+    private static final transient Log log = LogFactory.getLog(RollbacksWhileConsumingLargeQueueTest.class);
+
+    protected int numberOfMessagesOnQueue = 6500;
 	private Connection connection;
 	private AtomicInteger deliveryCounter = new AtomicInteger(0);
 	private AtomicInteger ackCounter = new AtomicInteger(0);
@@ -88,7 +92,7 @@ public class RollbacksWhileConsumingLargeQueueTest extends
 			}
 
 			if (latch.await(1, TimeUnit.SECONDS)) {
-				System.out.println("Received: " + deliveryCounter.get()
+				log.debug("Received: " + deliveryCounter.get()
 						+ "  message(s)");
 				return;
 			}

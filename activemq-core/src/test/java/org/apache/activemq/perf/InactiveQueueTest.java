@@ -31,10 +31,15 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.journal.JournalPersistenceAdapterFactory;
 import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * @version $Revision: 454471 $
  */
 public class InactiveQueueTest extends TestCase{
+    private static final transient Log log = LogFactory.getLog(InactiveQueueTest.class);
+
     private static final int MESSAGE_COUNT = 0;
     private static final String DEFAULT_PASSWORD="";
     private static final String USERNAME="testuser";
@@ -95,7 +100,7 @@ public class InactiveQueueTest extends TestCase{
             msg.setInt("key2",loop);
             publisher.send(msg,deliveryMode,deliveryPriority,Message.DEFAULT_TIME_TO_LIVE);
             if (loop%500==0){
-                System.out.println("Sent " + loop + " messages");
+                log.debug("Sent " + loop + " messages");
             }
         }
         Thread.sleep(1000000);

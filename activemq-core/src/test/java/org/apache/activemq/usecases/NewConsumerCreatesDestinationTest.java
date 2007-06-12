@@ -20,6 +20,8 @@ import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.EmbeddedBrokerAndConnectionTestSupport;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -32,6 +34,7 @@ import java.util.Set;
  * @version $Revision: $
  */
 public class NewConsumerCreatesDestinationTest extends EmbeddedBrokerAndConnectionTestSupport {
+    private static final transient Log log = LogFactory.getLog(NewConsumerCreatesDestinationTest.class);
 
     private ActiveMQQueue wildcard;
     
@@ -41,8 +44,8 @@ public class NewConsumerCreatesDestinationTest extends EmbeddedBrokerAndConnecti
         String wildcardText = "org.*" + getDestinationString().substring("org.apache".length());
         wildcard = new ActiveMQQueue(wildcardText);
 
-        System.out.println("Using wildcard: " + wildcard);
-        System.out.println("on destination: " + destination);
+        log.info("Using wildcard: " + wildcard);
+        log.info("on destination: " + destination);
         
         assertDestinationCreated(destination, false);
         assertDestinationCreated(wildcard, false);
