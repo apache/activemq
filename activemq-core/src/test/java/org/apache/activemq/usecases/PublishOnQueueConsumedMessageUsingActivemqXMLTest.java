@@ -17,27 +17,27 @@
  */
 package org.apache.activemq.usecases;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.xbean.BrokerFactoryBean;
-import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
 import java.io.File;
 
 /**
- *
  * Test Publish/Consume queue using the release activemq.xml configuration file
  *
  * @version $Revision: 1.2 $
  */
 public class PublishOnQueueConsumedMessageUsingActivemqXMLTest extends PublishOnTopicConsumedMessageTest {
+    private static final transient Log log = LogFactory.getLog(PublishOnQueueConsumedMessageUsingActivemqXMLTest.class);
     protected static final String JOURNAL_ROOT = "../data/";
     BrokerService broker;
 
-
-
-     /**
+    /**
      * Use the transportConnector uri configured on the activemq.xml
      *
      * @return ActiveMQConnectionFactory
@@ -47,47 +47,39 @@ public class PublishOnQueueConsumedMessageUsingActivemqXMLTest extends PublishOn
         return new ActiveMQConnectionFactory("tcp://localhost:61616");
     }
 
-
     /**
      * Sets up a test where the producer and consumer have their own connection.
      *
      * @see junit.framework.TestCase#setUp()
      */
     protected void setUp() throws Exception {
-        ;
         File journalFile = new File(JOURNAL_ROOT);
         recursiveDelete(journalFile);
         // Create broker from resource
-        System.out.print("Creating broker... ");
+        log.info("Creating broker... ");
         broker = createBroker("org/apache/activemq/usecases/activemq.xml");
         log.info("Success");
         super.setUp();
-
     }
-
-
-
-     /*
-     * Stops the Broker
-     * @see junit.framework.TestCase#tearDown()
-     */
-    protected void tearDown() throws Exception {
-         log.info("Closing Broker");
-            if (broker != null) {
-               broker.stop();
-            }
-         log.info("Broker closed...");
-
-
-    }
-
 
     /*
-     * clean up the journal
-     */
+    * Stops the Broker
+    * @see junit.framework.TestCase#tearDown()
+    */
+    protected void tearDown() throws Exception {
+        log.info("Closing Broker");
+        if (broker != null) {
+            broker.stop();
+        }
+        log.info("Broker closed...");
+    }
+
+    /*
+    * clean up the journal
+    */
 
     protected static void recursiveDelete(File file) {
-        if( file.isDirectory() ) {
+        if (file.isDirectory()) {
             File[] files = file.listFiles();
             for (int i = 0; i < files.length; i++) {
                 recursiveDelete(files[i]);
@@ -107,7 +99,6 @@ public class PublishOnQueueConsumedMessageUsingActivemqXMLTest extends PublishOn
         BrokerService broker = factory.getBroker();
 
         //assertTrue("Should have a broker!", broker != null);
-
 
         return broker;
     }

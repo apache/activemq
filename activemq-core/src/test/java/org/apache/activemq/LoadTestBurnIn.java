@@ -39,6 +39,8 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -51,13 +53,14 @@ import java.util.concurrent.TimeUnit;
  * @version $Revision$
  */
 public class LoadTestBurnIn extends JmsTestSupport {
+    private static final transient Log log = LogFactory.getLog(LoadTestBurnIn.class);
     
     public static Test suite() {
         return suite(LoadTestBurnIn.class);
     }
 
     protected void setUp() throws Exception {
-        System.out.println("Start: "+getName());
+        log.info("Start: "+getName());
         super.setUp();
     }
 
@@ -67,7 +70,7 @@ public class LoadTestBurnIn extends JmsTestSupport {
         } catch (Throwable e) {
             e.printStackTrace(System.out);
         } finally {
-            System.out.println("End: "+getName());
+            log.info("End: "+getName());
         }
     }
     

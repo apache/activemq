@@ -30,10 +30,15 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.journal.JournalPersistenceAdapterFactory;
 import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * @version $Revision$
  */
 public class InactiveDurableTopicTest extends TestCase{
+    private static final transient Log log = LogFactory.getLog(InactiveDurableTopicTest.class);
+
     private static final int MESSAGE_COUNT = 100000;
     private static final String DEFAULT_PASSWORD="";
     private static final String USERNAME="testuser";
@@ -125,7 +130,7 @@ public class InactiveDurableTopicTest extends TestCase{
                 msg.setInt("key2",loop);
                 publisher.send(msg,deliveryMode,deliveryPriority,Message.DEFAULT_TIME_TO_LIVE);
                 if (loop%500==0){
-                    System.out.println("Sent " + loop + " messages");
+                    log.debug("Sent " + loop + " messages");
                 }
             }
             this.assertEquals(loop,MESSAGE_COUNT);
@@ -159,7 +164,7 @@ public class InactiveDurableTopicTest extends TestCase{
             for(loop=0;loop<MESSAGE_COUNT;loop++){
                 Message msg = subscriber.receive();
                 if (loop%500==0){
-                    System.out.println("Received " + loop + " messages");
+                    log.debug("Received " + loop + " messages");
                 }
             }
             this.assertEquals(loop,MESSAGE_COUNT);

@@ -52,7 +52,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ReconnectTest extends TestCase {
     
     protected static final Log log = LogFactory.getLog(ReconnectTest.class);
-	public static final int MESSAGES_PER_ITTERATION = 10;
+
+    public static final int MESSAGES_PER_ITTERATION = 10;
 	public static final int WORKER_COUNT = 10;
 	private BrokerService bs;
 	private URI tcpUri;
@@ -158,20 +159,20 @@ public class ReconnectTest extends TestCase {
     	
     	for( int k=1; k < 5; k++ ) {
     		
-        	System.out.println("Test run: "+k);
+        	log.info("Test run: "+k);
     		
     		// Wait for at least one iteration to occur...
         	for (int i=0; i < WORKER_COUNT; i++) {
         		for( int j=0; workers[i].iterations.get() == 0 && j < 5; j++ ) {
         			workers[i].assertNoErrors();
-        			System.out.println("Waiting for worker "+i+" to finish an iteration.");
+        			log.info("Waiting for worker "+i+" to finish an iteration.");
         			Thread.sleep(1000);
         		}
         		assertTrue("Worker "+i+" never completed an interation.", workers[i].iterations.get()!=0);
     			workers[i].assertNoErrors();
         	}
     		
-        	System.out.println("Simulating transport error to cause reconnect.");
+        	log.info("Simulating transport error to cause reconnect.");
         	
         	// Simulate a transport failure.
         	for (int i=0; i < WORKER_COUNT; i++) {
@@ -180,12 +181,12 @@ public class ReconnectTest extends TestCase {
         	
     		// Wait for the connections to get interrupted...
         	while ( interruptedCount.get() < WORKER_COUNT ) {
-    			System.out.println("Waiting for connections to get interrupted.. at: "+interruptedCount.get());
+    			log.info("Waiting for connections to get interrupted.. at: "+interruptedCount.get());
     			Thread.sleep(1000);
         	}
 
         	// let things stablize..
-			System.out.println("Pausing before starting next iterations...");
+			log.info("Pausing before starting next iterations...");
         	Thread.sleep(1000);
 
         	// Reset the counters..

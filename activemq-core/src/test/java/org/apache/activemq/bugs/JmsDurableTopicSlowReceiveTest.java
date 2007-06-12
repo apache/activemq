@@ -30,14 +30,15 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
 import org.apache.activemq.test.JmsTopicSendReceiveTest;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision: 1.5 $
  */
 public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest{
+    private static final transient Log log = LogFactory.getLog(JmsDurableTopicSlowReceiveTest.class);
 
-    private static final org.apache.commons.logging.Log log=org.apache.commons.logging.LogFactory
-            .getLog(JmsDurableTopicSlowReceiveTest.class);
     protected Connection connection2;
     protected Session session2;
     protected Session consumeSession2;
@@ -125,7 +126,7 @@ public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest{
                             producer2.send(consumerDestination2,message);
                             Thread.sleep(50);
                             if(verbose){
-                                System.out.println("Sent("+loop+"): "+i);
+                                log.debug("Sent("+loop+"): "+i);
                             }
                             count++;
                         }
@@ -158,7 +159,7 @@ public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest{
                 if(msg==null)
                     break;
                 if(verbose) {
-                    System.out.println("Received("+loop+"): "+i + " count = " + msg.getIntProperty(countProperyName));
+                    log.debug("Received("+loop+"): "+i + " count = " + msg.getIntProperty(countProperyName));
                 }
                 assertNotNull(msg);
                 assertEquals(msg.getJMSType(),"test");

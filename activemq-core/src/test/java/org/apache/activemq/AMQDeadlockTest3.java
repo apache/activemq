@@ -28,14 +28,17 @@ import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.pool.PooledConnectionFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
 import org.springframework.jms.listener.DefaultMessageListenerContainer;
 
 
 public class AMQDeadlockTest3 extends TestCase {
+    private static final transient Log log = LogFactory.getLog(AMQDeadlockTest3.class);
 
-	private static final String URL1 = "tcp://localhost:61616";
+    private static final String URL1 = "tcp://localhost:61616";
 
 	private static final String URL2 = "tcp://localhost:61617";
 
@@ -300,7 +303,7 @@ public class AMQDeadlockTest3 extends TestCase {
 		public void onMessage(Message msg) {
 
 			try {
-				System.out.println("Listener1 Consumed message "+ msg.getIntProperty("count"));
+				log.info("Listener1 Consumed message "+ msg.getIntProperty("count"));
 
 				messageCount.incrementAndGet();
 				doneLatch.countDown();
@@ -363,7 +366,7 @@ public class AMQDeadlockTest3 extends TestCase {
 						}
 					});
 
-					System.out.println("PooledProducer sent message: "+ count.get());
+					log.info("PooledProducer sent message: "+ count.get());
 					// Thread.sleep(1000);
 				}
 
@@ -422,7 +425,7 @@ public class AMQDeadlockTest3 extends TestCase {
 						}
 					});
 
-					System.out.println("Non-PooledProducer sent message: " + count.get());
+					log.info("Non-PooledProducer sent message: " + count.get());
 
 					// Thread.sleep(1000);
 				}

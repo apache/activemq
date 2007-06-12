@@ -29,13 +29,16 @@ import javax.jms.MessageNotReadableException;
 import javax.jms.MessageNotWriteableException;
 
 import org.apache.activemq.command.ActiveMQMapMessage;
-
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import junit.framework.TestCase;
 
 /**
  * @version $Revision$
  */
 public class ActiveMQMapMessageTest extends TestCase {
+    private static final transient Log log = LogFactory.getLog(ActiveMQMapMessageTest.class);
+    
     private String name = "testName";
 
     public static void main(String[] args) {
@@ -251,7 +254,7 @@ public class ActiveMQMapMessageTest extends TestCase {
             msg.setObject("short", shortValue);
             msg.setObject("string", stringValue);
         } catch (MessageFormatException mfe) {
-            System.out.println("Caught: " + mfe);
+            log.warn("Caught: " + mfe);
             mfe.printStackTrace();
             fail("object formats should be correct");
         }
