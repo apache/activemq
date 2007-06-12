@@ -313,7 +313,7 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         for (i=0; i<msgCount; i++) {
             msg = consumer.receive(1000);
             if (msg == null) {
-                System.err.println("Consumer failed to receive exactly " + msgCount + " messages. Actual messages received is: " + i);
+                log.error("Consumer failed to receive exactly " + msgCount + " messages. Actual messages received is: " + i);
                 break;
             }
         }

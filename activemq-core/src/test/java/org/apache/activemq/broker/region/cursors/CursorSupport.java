@@ -39,8 +39,8 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.3 $
  */
 public abstract class CursorSupport extends TestCase{
-
     protected static final Log log=LogFactory.getLog(CursorSupport.class);
+
     protected static final int MESSAGE_COUNT=500;
     protected static final int PREFETCH_SIZE=50;
     protected BrokerService broker;
@@ -136,13 +136,13 @@ public abstract class CursorSupport extends TestCase{
             Message sent = (Message)senderList.get(i);
             Message consumed = (Message)consumerList.get(i);
             if (!sent.equals(consumed)) {
-               System.err.println("BAD MATCH AT POS " + i);
-               System.err.println(sent);
-               System.err.println(consumed);
+               log.error("BAD MATCH AT POS " + i);
+               log.error(sent);
+               log.error(consumed);
                /*
-               System.err.println("\n\n\n\n\n");
+               log.error("\n\n\n\n\n");
                for (int j = 0; j < consumerList.size(); j++) {
-                   System.err.println(consumerList.get(j));
+                   log.error(consumerList.get(j));
                }
                */
             }

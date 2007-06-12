@@ -173,7 +173,7 @@ public class TopicClusterTest extends TestCase implements MessageListener {
         }
         //sleep a little - to check we don't get too many messages
         Thread.sleep(2000);
-        System.err.println("GOT: " + receivedMessageCount.get());
+        log.info("GOT: " + receivedMessageCount.get());
         assertEquals("Expected message count not correct", expectedReceiveCount(), receivedMessageCount.get());
     }
 
