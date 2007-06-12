@@ -21,6 +21,8 @@ import org.apache.activemq.broker.BrokerFactoryHandler;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.xbean.spring.context.ResourceXmlApplicationContext;
 import org.apache.xbean.spring.context.impl.URIEditor;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.ClassPathResource;
@@ -38,6 +40,7 @@ import java.net.MalformedURLException;
  * @version $Revision$
  */
 public class XBeanBrokerFactory implements BrokerFactoryHandler {
+    private static final transient Log log = LogFactory.getLog(XBeanBrokerFactory.class);
 
     static {
         PropertyEditorManager.registerEditor(URI.class, URIEditor.class);
@@ -76,7 +79,8 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
     }
 
     protected ApplicationContext createApplicationContext(String uri) throws MalformedURLException {
-        System.out.println("Now attempting to figure out the type of resource: " + uri);
+        log.debug("Now attempting to figure out the type of resource: " + uri);
+        
         Resource resource;
         File file = new File(uri);
         if (file.exists()) {
