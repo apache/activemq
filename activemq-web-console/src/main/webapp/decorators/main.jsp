@@ -26,9 +26,9 @@
         @import url(<c:url value="/styles/site.css"/>);
     </style>
     <c:if test="${!disableJavaScript}">
-	    <script type='text/javascript' src='<c:url value="/js/common.js"/>'/>
-	    <script type='text/javascript' src='<c:url value="/js/css.js"/>'/>
-	    <script type='text/javascript' src='<c:url value="/js/standardista-table-sorting.js"/>'/>
+	    <script type='text/javascript' src='<c:url value="/js/common.js"/>'></script>
+	    <script type='text/javascript' src='<c:url value="/js/css.js"/>'></script>
+	    <script type='text/javascript' src='<c:url value="/js/standardista-table-sorting.js"/>'></script>
     </c:if>
 
 	<decorator:head />
