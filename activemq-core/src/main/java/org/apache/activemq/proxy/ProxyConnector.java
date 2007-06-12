@@ -143,7 +143,7 @@ public class ProxyConnector implements Service {
         // Add a transport filter so that can track the transport life cycle
         transport = new TransportFilter(transport) {
         	public void stop() throws Exception {
-        		System.out.println("Stopping proxy.");
+        		log.info("Stopping proxy.");
         		super.stop();
         		connections.remove(this);
         	}
