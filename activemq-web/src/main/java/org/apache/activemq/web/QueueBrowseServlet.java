@@ -36,6 +36,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.web.view.MessageRenderer;
+import org.apache.activemq.ActiveMQConnectionFactory;
 
 /**
  * Renders the contents of a queue using some kind of view. The URI is assumed
@@ -72,7 +73,13 @@ public class QueueBrowseServlet extends HttpServlet {
 
     public ConnectionFactory getConnectionFactory() {
         if (connectionFactory == null) {
-        	throw new IllegalStateException("missing ConnectionFactory in QueueBrowserServlet");
+            String uri = getServletContext().getInitParameter("org.apache.activemq.brokerURL");
+            if (uri != null) {
+                connectionFactory = new ActiveMQConnectionFactory(uri);
+            }
+            else {
+                throw new IllegalStateException("missing ConnectionFactory in QueueBrowserServlet");
+            }
         }
         return connectionFactory;
     }
