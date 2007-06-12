@@ -117,7 +117,7 @@ public class SslTransportFactoryTest extends TestCase {
             }
 
             if (verbose) {
-                log.info();
+                log.info("");
                 log.info("Iteration: " + i);
                 log.info("Map settings: " + options);
                 for (int x = 0; x < optionSettings.length; x++) {
