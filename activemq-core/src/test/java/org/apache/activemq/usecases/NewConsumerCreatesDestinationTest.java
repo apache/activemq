@@ -17,6 +17,7 @@
 package org.apache.activemq.usecases;
 
 import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.EmbeddedBrokerAndConnectionTestSupport;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 
@@ -30,13 +31,11 @@ import java.util.Set;
  * 
  * @version $Revision: $
  */
-public class NewConsumerCreatesDestinationTest extends EmbeddedBrokerTestSupport {
+public class NewConsumerCreatesDestinationTest extends EmbeddedBrokerAndConnectionTestSupport {
 
-    private Connection connection;
     private ActiveMQQueue wildcard;
     
     public void testNewConsumerCausesNewDestinationToBeAutoCreated() throws Exception {
-        connection = createConnection();
 
         // lets create a wildcard thats kinda like those used by Virtual Topics
         String wildcardText = "org.*" + getDestinationString().substring("org.apache".length());
@@ -53,13 +52,6 @@ public class NewConsumerCreatesDestinationTest extends EmbeddedBrokerTestSupport
 
         assertDestinationCreated(destination, true);
         assertDestinationCreated(wildcard, true);
-    }
-
-    protected void tearDown() throws Exception {
-        if (connection != null) {
-            connection.close();
-        }
-        super.tearDown();
     }
 
     protected void assertDestinationCreated(Destination destination, boolean expected) throws Exception {

@@ -18,6 +18,7 @@
 package org.apache.activemq.usecases;
 
 import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.EmbeddedBrokerAndConnectionTestSupport;
 
 import javax.jms.Connection;
 import javax.jms.Session;
@@ -31,7 +32,7 @@ import junit.textui.TestRunner;
  * 
  * @version $Revision: 1.1 $
  */
-public class CreateLotsOfTemporaryQueuesTest extends EmbeddedBrokerTestSupport {
+public class CreateLotsOfTemporaryQueuesTest extends EmbeddedBrokerAndConnectionTestSupport {
 
     private static int numberToCreate = 500;
     private static long sleep = 20;
@@ -49,8 +50,6 @@ public class CreateLotsOfTemporaryQueuesTest extends EmbeddedBrokerTestSupport {
     public void testCreateLotsOfTemporaryQueues() throws Exception {
         log.info("Creating " + numberToCreate + " temporary queue(s)");
 
-        Connection connection = createConnection();
-        connection.start();
         Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
         for (int i = 0; i < numberToCreate; i++) {
             if (i % 1000 == 0) {
@@ -61,7 +60,6 @@ public class CreateLotsOfTemporaryQueuesTest extends EmbeddedBrokerTestSupport {
             Thread.sleep(sleep );
         }
         log.info("Created " + numberToCreate + " temporary queue(s)");
-        connection.close();
     }
 
     public static void configure(String[] args) {
