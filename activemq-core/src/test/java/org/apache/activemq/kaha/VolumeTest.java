@@ -23,8 +23,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 public class VolumeTest extends TestCase{
-  
+    private static final transient Log log = LogFactory.getLog(VolumeTest.class);
+
     protected Store store;
     protected String name;
    
@@ -41,7 +45,7 @@ public class VolumeTest extends TestCase{
         for (int i =0; i< NUMBER; i++){
             container.add(data);
             if(i%100000==0){
-                System.err.println("persisted " + i);
+                log.error("persisted " + i);
             }
             
         }
@@ -51,7 +55,7 @@ public class VolumeTest extends TestCase{
             assertNotNull(i.next());
             count++;
             if (count%100000==0){
-                System.err.println("retrived  " + count);
+                log.error("retrived  " + count);
             }
         }
         assertEquals("Different retrieved to stored",NUMBER,count);

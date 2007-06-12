@@ -75,7 +75,7 @@ public abstract class AutoFailTestSupport extends TestCase {
                 } finally {
                     // Check if the test was able to tear down succesfully, which usually means, it has finished its run.
                     if (!isTestSuccess.get()) {
-                        System.err.println("Test case has exceeded the maximum allotted time to run of: " + getMaxTestTime() + " ms.");
+                        log.error("Test case has exceeded the maximum allotted time to run of: " + getMaxTestTime() + " ms.");
                         log.fatal("Test case has exceeded the maximum allotted time to run of: " + getMaxTestTime() + " ms.");
                         System.exit(EXIT_ERROR);
                     }

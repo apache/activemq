@@ -22,6 +22,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.JmsTopicSendReceiveWithTwoConnectionsTest;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.xbean.BrokerFactoryBean;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.ClassPathResource;
 
 /**
@@ -29,8 +31,7 @@ import org.springframework.core.io.ClassPathResource;
  *
  */
 public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsTest{
-
-   
+    private static final transient Log log = LogFactory.getLog(QueueMasterSlaveTest.class);
    
     protected BrokerService master;
     protected BrokerService slave;
@@ -81,7 +82,7 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
         if (++inflightMessageCount >= failureCount){
             inflightMessageCount = 0;
             Thread.sleep(1000);
-            System.err.println("MASTER STOPPED!@!!!!");
+            log.error("MASTER STOPPED!@!!!!");
             master.stop();
         }
     }

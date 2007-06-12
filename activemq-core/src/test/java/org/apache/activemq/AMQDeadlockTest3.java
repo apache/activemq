@@ -371,8 +371,7 @@ public class AMQDeadlockTest3 extends TestCase {
 				}
 
 			} catch (final Throwable e) {
-				System.err.println("Producer 1 is exiting.");
-				e.printStackTrace();
+				log.error("Producer 1 is exiting", e);
 			}
 		}
 	}
@@ -431,8 +430,7 @@ public class AMQDeadlockTest3 extends TestCase {
 				}
 
 			} catch (final Throwable e) {
-				System.err.println("Producer 1 is exiting.");
-				e.printStackTrace();
+				log.error("Producer 1 is exiting", e);
 			}
 		}
 	}

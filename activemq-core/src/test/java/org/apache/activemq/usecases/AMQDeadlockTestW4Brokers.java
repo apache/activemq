@@ -50,6 +50,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class AMQDeadlockTestW4Brokers extends TestCase {
     private static final transient Log log = LogFactory.getLog(AMQDeadlockTestW4Brokers.class);
+    
     private static final String BROKER_URL1 = "tcp://localhost:61616";
     private static final String BROKER_URL2 = "tcp://localhost:61617";
     private static final String BROKER_URL3 = "tcp://localhost:61618";
@@ -320,8 +321,7 @@ public class AMQDeadlockTestW4Brokers extends TestCase {
                 }
             }
             catch (final Throwable e) {
-                System.err.println("Producer 1 is exiting.");
-                e.printStackTrace();
+                log.error("Producer 1 is exiting", e);
             }
         }
     }

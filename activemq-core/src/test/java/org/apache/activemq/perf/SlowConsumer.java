@@ -17,29 +17,35 @@
  */
 package org.apache.activemq.perf;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
+
 /**
  * @version $Revision: 1.3 $
  */
-public class SlowConsumer extends PerfConsumer{
-    public SlowConsumer(ConnectionFactory fac,Destination dest,String consumerName)
-                    throws JMSException{
-        super(fac,dest,consumerName);
+public class SlowConsumer extends PerfConsumer {
+    private static final transient Log log = LogFactory.getLog(SlowConsumer.class);
+
+    public SlowConsumer(ConnectionFactory fac, Destination dest, String consumerName) throws JMSException {
+        super(fac, dest, consumerName);
     }
 
-    public SlowConsumer(ConnectionFactory fac,Destination dest) throws JMSException{
-        super(fac,dest,null);
+    public SlowConsumer(ConnectionFactory fac, Destination dest) throws JMSException {
+        super(fac, dest, null);
     }
 
-    public void onMessage(Message msg){
+    public void onMessage(Message msg) {
         super.onMessage(msg);
-        System.err.println("GOT A MSG " + msg);
-        try{
+        log.debug("GOT A MSG " + msg);
+        try {
             Thread.sleep(10000);
-        }catch(InterruptedException e){
+        }
+        catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
