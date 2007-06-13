@@ -1594,24 +1594,13 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 			// tell the Broker we are about to start a new transaction
 			doStartTransaction();
 			TransactionId txid=transactionContext.getTransactionId();
-			message.setJMSDestination(destination);
-			message.setJMSDeliveryMode(deliveryMode);
-			long expiration=0L;
-			if(!producer.getDisableMessageTimestamp()){
-				long timeStamp=System.currentTimeMillis();
-				message.setJMSTimestamp(timeStamp);
-				if(timeToLive>0){
-					expiration=timeToLive+timeStamp;
-				}
-			}
-			message.setJMSExpiration(expiration);
-			message.setJMSPriority(priority);
-			long sequenceNumber=producer.getMessageSequence();
-			message.setJMSRedelivered(false);
-			// transform to our own message format here
+            long sequenceNumber=producer.getMessageSequence();
+
+            // transform to our own message format here
 			ActiveMQMessage msg=ActiveMQMessageTransformation.transformMessage(
 			        message,connection);
-			// Set the message id.
+
+            // Set the message id.
 			if(msg==message){
 				msg.setMessageId(new MessageId(producer.getProducerInfo()
 				        .getProducerId(),sequenceNumber));
@@ -1620,7 +1609,22 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 				        .getProducerId(),sequenceNumber));
 				message.setJMSMessageID(msg.getMessageId().toString());
 			}
-			msg.setTransactionId(txid);
+
+            msg.setJMSDestination(destination);
+			msg.setJMSDeliveryMode(deliveryMode);
+			long expiration=0L;
+			if(!producer.getDisableMessageTimestamp()){
+				long timeStamp=System.currentTimeMillis();
+				msg.setJMSTimestamp(timeStamp);
+				if(timeToLive>0){
+					expiration=timeToLive+timeStamp;
+				}
+			}
+			msg.setJMSExpiration(expiration);
+			msg.setJMSPriority(priority);
+			msg.setJMSRedelivered(false);
+
+            msg.setTransactionId(txid);
             if(connection.isCopyMessageOnSend()){
                 msg=(ActiveMQMessage)msg.copy();
             }
