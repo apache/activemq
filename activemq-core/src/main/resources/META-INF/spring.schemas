@@ -1,6 +1,6 @@
 # resolve remote XSD documents to local classpath schema
 http\://activemq.apache.org/schema/activemq-core.xsd = activemq.xsd
-http\://activemq.apache.org/schema/activemq-core-4.1.xsd = activemq.xsd
+http\://activemq.apache.org/schema/activemq-core-4.1.2.xsd = activemq.xsd
 
 # attempt to resolve the namespace URI to a schema if no XSD is mentioned in the doc
 # TODO this is EXPERIMENTAL - it might not actually be used!
