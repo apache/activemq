@@ -27,14 +27,11 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 public class SpringProducer {
-    
     private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
             .getLog(SpringProducer.class);
-    
     private JmsTemplate template;
     private Destination destination;
     private int messageCount = 10;
-
 
     public void start() throws JMSException {
         for (int i = 0; i < messageCount; i++) {

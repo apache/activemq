@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.activemq.spring;
 
 import org.apache.commons.logging.Log;
@@ -33,7 +32,6 @@ import javax.jms.Session;
 
 public class SpringConsumer extends ConsumerBean implements MessageListener {
     private static final Log log = LogFactory.getLog(SpringConsumer.class);
-
     private JmsTemplate template;
     private String myId = "foo";
     private Destination destination;
@@ -68,14 +66,16 @@ public class SpringConsumer extends ConsumerBean implements MessageListener {
         }
     }
 
-
     public void stop() throws JMSException {
-		if( consumer!=null )
-			consumer.close();
-		if( session!=null )
-			session.close();
-		if( connection!=null )
-			connection.close();
+        if (consumer != null) {
+            consumer.close();
+        }
+        if (session != null) {
+            session.close();
+        }
+        if (connection != null) {
+            connection.close();
+        }
     }
 
     public void onMessage(Message message) {

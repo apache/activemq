@@ -17,17 +17,16 @@
  */
 package org.apache.activemq.spring;
 
+import junit.framework.Assert;
+
 import javax.jms.Message;
 import javax.jms.MessageListener;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.Assert;
-
 public class ConsumerBean extends Assert implements MessageListener {
     private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
             .getLog(ConsumerBean.class);
-
     private List messages = new ArrayList();
     private Object semaphore;
     private boolean verbose;
@@ -41,7 +40,7 @@ public class ConsumerBean extends Assert implements MessageListener {
 
     /**
      * Constructor, initialized semaphore object.
-     * 
+     *
      * @param semaphore
      */
     public ConsumerBean(Object semaphore) {
@@ -59,7 +58,7 @@ public class ConsumerBean extends Assert implements MessageListener {
 
     /**
      * Method implemented from MessageListener interface.
-     * 
+     *
      * @param message
      */
     public synchronized void onMessage(Message message) {
@@ -97,7 +96,7 @@ public class ConsumerBean extends Assert implements MessageListener {
 
     /**
      * Used to wait for a message to arrive given a particular message count.
-     * 
+     *
      * @param messageCount
      */
     public void waitForMessagesToArrive(int messageCount) {
@@ -142,7 +141,7 @@ public class ConsumerBean extends Assert implements MessageListener {
 
     /**
      * Identifies if the message is empty.
-     * 
+     *
      * @return
      */
     protected boolean hasReceivedMessage() {
@@ -151,7 +150,7 @@ public class ConsumerBean extends Assert implements MessageListener {
 
     /**
      * Identifies if the message count has reached the total size of message.
-     * 
+     *
      * @param messageCount
      * @return
      */
