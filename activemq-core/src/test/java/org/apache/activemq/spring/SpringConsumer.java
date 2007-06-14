@@ -70,12 +70,15 @@ public class SpringConsumer extends ConsumerBean implements MessageListener {
 
 
     public void stop() throws JMSException {
-		if( consumer!=null )
-			consumer.close();
-		if( session!=null )
-			session.close();
-		if( connection!=null )
-			connection.close();
+        if (consumer != null) {
+            consumer.close();
+        }
+        if (session != null) {
+            session.close();
+        }
+        if (connection != null) {
+            connection.close();
+        }
     }
 
     public void onMessage(Message message) {
