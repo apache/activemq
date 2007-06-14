@@ -15,27 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.activemq.spring;
 
-import java.util.Iterator;
-import java.util.List;
-
-import junit.framework.TestCase;
-
 import org.apache.activemq.broker.BrokerService;
-import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-public class SpringTest extends TestCase {
-    
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-            .getLog(SpringTest.class);
-
-    protected AbstractApplicationContext context;
-    protected SpringConsumer consumer;
-    protected SpringProducer producer;
-
+public class SpringTest extends SpringTestSupport {
     /**
      * Make sure that brokers are being pooled properly.
      *
@@ -146,62 +131,4 @@ public class SpringTest extends TestCase {
         String config = "spring-embedded-xbean-local.xml";
         assertSenderConfig(config);
     }
-    
-    /**
-     * assert method that is used by all the test method to send and receive messages
-     * based on each spring configuration.
-     *
-     * @param config
-     * @throws Exception
-     */
-    protected void assertSenderConfig(String config) throws Exception {
-        Thread.currentThread().setContextClassLoader(SpringTest.class.getClassLoader());
-        context = new ClassPathXmlApplicationContext(config);
-
-        consumer = (SpringConsumer) context.getBean("consumer");
-        assertTrue("Found a valid consumer", consumer != null);
-
-        consumer.start();
-        
-        // Wait a little to drain any left over messages.
-        Thread.sleep(1000);
-        consumer.flushMessages();
-
-        producer = (SpringProducer) context.getBean("producer");
-        assertTrue("Found a valid producer", producer != null);
-
-        producer.start();
-
-        // lets sleep a little to give the JMS time to dispatch stuff
-        consumer.waitForMessagesToArrive(producer.getMessageCount());
-
-        // now lets check that the consumer has received some messages
-        List messages = consumer.flushMessages();
-        log.info("Consumer has received messages....");
-        for (Iterator iter = messages.iterator(); iter.hasNext();) {
-            Object message = iter.next();
-            log.info("Received: " + message);
-        }
-
-        assertEquals("Message count", producer.getMessageCount(), messages.size());
-    }
-
-    /**
-     * Clean up method.
-     *
-     * @throws Exception
-     */
-    protected void tearDown() throws Exception {
-        if (consumer != null) {
-            consumer.stop();
-        }
-        if (producer != null) {
-            producer.stop();
-        }
-
-        if (context != null) {
-            context.destroy();
-        }
-    }
-
 }
