@@ -17,101 +17,122 @@ package org.apache.activemq.maven;
  * limitations under the License.
  */
 
-import org.apache.activemq.console.Main;
+import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.project.MavenProject;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
+import java.util.Properties;
 
 /**
- * Goal which starts activemq broker.
+ * Goal which starts an activemq broker.
  *
  * @goal run
  * @phase process-sources
  */
-public class BrokerMojo
-        extends AbstractMojo {
+public class BrokerMojo extends AbstractMojo {
     /**
-     * Location of the output directory. Defaults to target.
+	 * The maven project.
+	 *
+	 * @parameter expression="${project}"
+	 * @required
+	 * @readonly
+	 */
+	protected MavenProject project;
+
+    /**
+     * The broker configuration uri
      *
-     * @parameter expression="${project.build.directory}"
+     * The list of currently supported URI syntaxes is described
+     * <a href="http://activemq.apache.org/how-do-i-embed-a-broker-inside-a-connection.html">here</a>
+     *
+     * @parameter expression="${configUri}" default-value="broker:(tcp://localhost:61616)?useJmx=false&persistent=false"
      * @required
      */
-    private File outputDirectory;
+    private String configUri;
 
     /**
-     * Location of activemq xml config file.
+     * Indicates whether to fork the broker, useful for integration tests.
      *
-     * @parameter expression="${configFile}"
+     * @parameter expression="${fork}" default-value="false"
      */
-    private File configFile;
+    private boolean fork;
 
     /**
-     * Broker URL.
-     *
-     * @parameter expression="${url}" default-value="broker:(tcp://localhost:61616)?useJmx=false"
+     * System properties to add
+     * @parameter expression="${systemProperties}"
      */
-    private String url;
+    private Properties systemProperties;
 
-    public void execute()
-            throws MojoExecutionException {
+    public void execute() throws MojoExecutionException {
+        try {
+            setSystemProperties();
+            getLog().info("Loading broker configUri: " + configUri);
 
-        File out = outputDirectory;
-
-        // Create output directory if it doesn't exist.
-        if (!out.exists()) {
-            out.mkdirs();
-        }
-
-        String[] args = new String[2];
-        if (configFile != null) {
-            File config;
-            try {
-                config = copy(configFile);
-            } catch (IOException e) {
-                throw new MojoExecutionException(e.getMessage());
+            final BrokerService broker = BrokerFactory.createBroker(configUri);
+            if (fork) {
+                new Thread(new Runnable() {
+                    public void run() {
+                        try {
+                            broker.start();
+                            waitForShutdown(broker);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
+            } else {
+                broker.start();
+                waitForShutdown(broker);
             }
-
-            args[0] = "start";
-            args[1] = "xbean:" + (config.toURI()).toString();
-        } else {
-            args[0] = "start";
-            args[1] = url;
+        } catch (Exception e) {
+            throw new MojoExecutionException("Failed to start ActiveMQ Broker", e);
         }
-
-        Main.main(args);
     }
 
     /**
-     * Copy activemq configuration file to output directory.
-     *
-     * @param source
-     * @return
-     * @throws java.io.IOException
+     * Wait for a shutdown invocation elsewhere
+     * @throws Exception
      */
-    public File copy(File source) throws IOException {
-        FileChannel in = null, out = null;
-        File dest = new File(outputDirectory.getAbsolutePath() + File.separator + source.getName());
+    protected void waitForShutdown(BrokerService broker) throws Exception {
+        final boolean[] shutdown = new boolean[] {false};
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                synchronized(shutdown) {
+                    shutdown[0]=true;
+                    shutdown.notify();
+                }
+            }
+        });
 
-        try {
-            in = new FileInputStream(source).getChannel();
-            out = new FileOutputStream(dest).getChannel();
-
-            long size = in.size();
-            MappedByteBuffer buf = in.map(FileChannel.MapMode.READ_ONLY, 0, size);
-
-            out.write(buf);
-
-        } finally {
-            if (in != null) in.close();
-            if (out != null) out.close();
+        // Wait for any shutdown event
+        synchronized(shutdown) {
+            while( !shutdown[0] ) {
+                try {
+                    shutdown.wait();
+                } catch (InterruptedException e) {
+                }
+            }
         }
 
-        return dest;
+        // Stop broker
+        broker.stop();
+    }
+
+    /**
+     * Set system properties
+     */
+    protected void setSystemProperties() {
+        // Set the default properties
+        System.setProperty("activemq.base", project.getBuild().getDirectory() + "/");
+        System.setProperty("activemq.home", project.getBuild().getDirectory() + "/");
+        System.setProperty("org.apache.activemq.UseDedicatedTaskRunner", "true");
+        System.setProperty("org.apache.activemq.default.directory.prefix", project.getBuild().getDirectory() + "/");
+        System.setProperty("derby.system.home", project.getBuild().getDirectory() + "/");
+        System.setProperty("derby.storage.fileSyncTransactionLog", "true");
+
+        // Overwrite any custom properties
+        System.getProperties().putAll(systemProperties);
     }
 }
