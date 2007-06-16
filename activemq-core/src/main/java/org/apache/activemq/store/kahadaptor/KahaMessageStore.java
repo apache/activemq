@@ -66,8 +66,8 @@ public class KahaMessageStore implements MessageStore{
         return result;
     }
 
-    protected void recover(MessageRecoveryListener listener,Object msg) throws Exception{
-        listener.recoverMessage((Message)msg);
+    protected void recoverMessage(MessageRecoveryListener listener,Message msg) throws Exception{
+        listener.recoverMessage(msg);
     }
 
     public void removeMessage(ConnectionContext context,MessageAck ack) throws IOException{
@@ -89,7 +89,7 @@ public class KahaMessageStore implements MessageStore{
     public synchronized void recover(MessageRecoveryListener listener) throws Exception{
         for(StoreEntry entry=messageContainer.getFirst();entry!=null;entry=messageContainer.getNext(entry)){
             Message msg=(Message)messageContainer.getValue(entry);
-            recover(listener,msg);
+            recoverMessage(listener,msg);
         }
         listener.finished();
     }
@@ -158,9 +158,9 @@ public class KahaMessageStore implements MessageStore{
         if(entry!=null){
             int count=0;
             do{
-                Object msg=messageContainer.getValue(entry);
+                Message msg=messageContainer.getValue(entry);
                 if(msg!=null){
-                    recover(listener,msg);
+                    recoverMessage(listener,msg);
                     count++;
                 }
                 batchEntry=entry;

@@ -25,8 +25,9 @@ import java.util.Iterator;
  * @version $Revision: 1.10 $
  */
 public class TopicSubContainer {
-    private ListContainer listContainer;
-    private StoreEntry batchEntry;
+    private transient ListContainer listContainer;
+    private transient StoreEntry batchEntry;
+    private transient String lastBatchId;
 
     public TopicSubContainer(ListContainer container) {
         this.listContainer = container;
@@ -42,11 +43,13 @@ public class TopicSubContainer {
     /**
      * @param batchEntry the batchEntry to set
      */
-    public void setBatchEntry(StoreEntry batchEntry) {
+    public void setBatchEntry(String id,StoreEntry batchEntry) {
+        this.lastBatchId=id;
         this.batchEntry = batchEntry;
     }
 
     public void reset() {
+        lastBatchId=null;
         batchEntry = null;
     }
 
