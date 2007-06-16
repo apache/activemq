@@ -146,9 +146,9 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
         if(container!=null){
             for(Iterator i=container.iterator();i.hasNext();){
                 ConsumerMessageRef ref=(ConsumerMessageRef)i.next();
-                Object msg=messageContainer.get(ref.getMessageEntry());
+                Message msg=messageContainer.get(ref.getMessageEntry());
                 if(msg!=null){
-                	recover(listener, msg);
+                	recoverMessage(listener, msg);
                 }
             }
         }
@@ -173,12 +173,15 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
             if(entry!=null){
                 do{
                     ConsumerMessageRef consumerRef=container.get(entry);
-                    Object msg=messageContainer.getValue(consumerRef.getMessageEntry());
+                    Message msg=messageContainer.getValue(consumerRef.getMessageEntry());
                     if(msg!=null){
-                    	recover(listener, msg);
+                    	recoverMessage(listener, msg);
                         count++;
+                        container.setBatchEntry(msg.getMessageId().toString(),entry);
+                    }else {
+                        container.reset();
                     }
-                    container.setBatchEntry(entry);
+                    
                     entry=container.getNextEntry(entry);
                 }while(entry!=null&&count<maxReturned&&listener.hasSpace());
             }

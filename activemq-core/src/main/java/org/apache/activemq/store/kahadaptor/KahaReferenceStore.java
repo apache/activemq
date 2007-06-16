@@ -15,7 +15,6 @@
 package org.apache.activemq.store.kahadaptor;
 
 import java.io.IOException;
-import java.util.Set;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -33,6 +32,7 @@ public class KahaReferenceStore implements ReferenceStore{
     protected final MapContainer<MessageId,ReferenceRecord> messageContainer;
     protected KahaReferenceStoreAdapter adapter;
     private StoreEntry batchEntry=null;
+    private String lastBatchId=null;
 
     public KahaReferenceStore(KahaReferenceStoreAdapter adapter,MapContainer container,ActiveMQDestination destination) throws IOException{
         this.adapter = adapter;
@@ -58,15 +58,14 @@ public class KahaReferenceStore implements ReferenceStore{
         throw new RuntimeException("Use addMessageReference instead");
     }
 
-    protected void recover(MessageRecoveryListener listener,Object msg) throws Exception{
-        ReferenceRecord record=(ReferenceRecord)msg;
+    protected final void recoverReference(MessageRecoveryListener listener,ReferenceRecord record) throws Exception{
         listener.recoverMessageReference(new MessageId(record.getMessageId()));
     }
 
     public synchronized void recover(MessageRecoveryListener listener) throws Exception{
         for(StoreEntry entry=messageContainer.getFirst();entry!=null;entry=messageContainer.getNext(entry)){
             ReferenceRecord record=messageContainer.getValue(entry);
-            recover(listener,new MessageId(record.getMessageId()));
+            recoverReference(listener,record);
         }
         listener.finished();
     }
@@ -77,17 +76,20 @@ public class KahaReferenceStore implements ReferenceStore{
             entry=messageContainer.getFirst();
         }else{
             entry=messageContainer.refresh(entry);
-            if (entry != null) {
-            entry=messageContainer.getNext(entry);
+            if(entry!=null){
+                entry=messageContainer.getNext(entry);
             }
         }
         if(entry!=null){
             int count=0;
             do{
-                Object msg=messageContainer.getValue(entry);
+                ReferenceRecord msg=messageContainer.getValue(entry);
                 if(msg!=null){
-                    recover(listener,msg);
+                    recoverReference(listener,msg);
                     count++;
+                    lastBatchId=msg.getMessageId();
+                }else{
+                    lastBatchId=null;
                 }
                 batchEntry=entry;
                 entry=messageContainer.getNext(entry);
@@ -96,14 +98,14 @@ public class KahaReferenceStore implements ReferenceStore{
         listener.finished();
     }
 
-    public void addMessageReference(ConnectionContext context,MessageId messageId,ReferenceData data)
+    public synchronized void addMessageReference(ConnectionContext context,MessageId messageId,ReferenceData data)
             throws IOException{
         ReferenceRecord record=new ReferenceRecord(messageId.toString(),data);
         messageContainer.put(messageId,record);
         addInterest(record);
     }
 
-    public ReferenceData getMessageReference(MessageId identity) throws IOException{
+    public synchronized ReferenceData getMessageReference(MessageId identity) throws IOException{
         ReferenceRecord result=messageContainer.get(identity);
         if(result==null)
             return null;
@@ -127,7 +129,8 @@ public class KahaReferenceStore implements ReferenceStore{
             ReferenceRecord rr=messageContainer.remove(msgId);
             if(rr!=null){
                 removeInterest(rr);
-                if(messageContainer.isEmpty()||(batchEntry!=null&&batchEntry.equals(entry))){
+                if(messageContainer.isEmpty()||(lastBatchId!=null&&lastBatchId.equals(msgId.toString()))
+                        ||(batchEntry!=null&&batchEntry.equals(entry))){
                     resetBatching();
                 }
             }
@@ -148,6 +151,7 @@ public class KahaReferenceStore implements ReferenceStore{
 
     public void resetBatching(){
         batchEntry=null;
+        lastBatchId=null;
     }
 
     public int getMessageCount(){

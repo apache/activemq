@@ -63,11 +63,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         throw new RuntimeException("Use addMessageReference instead");
     }
 
-    protected void recover(MessageRecoveryListener listener,Object msg) throws Exception{
-        ReferenceRecord record=(ReferenceRecord)msg;
-        listener.recoverMessageReference(new MessageId(record.getMessageId()));
-    }
-
+    
     public void addMessageReference(final ConnectionContext context,final MessageId messageId,final ReferenceData data){
         final ReferenceRecord record=new ReferenceRecord(messageId.toString(),data);
         final int subscriberCount=subscriberMessages.size();
@@ -193,7 +189,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         return (SubscriptionInfo)subscriberContainer.get(getSubscriptionKey(clientId,subscriptionName));
     }
 
-    public void recoverNextMessages(String clientId,String subscriptionName,int maxReturned,
+    public synchronized void recoverNextMessages(String clientId,String subscriptionName,int maxReturned,
             MessageRecoveryListener listener) throws Exception{
         String key=getSubscriptionKey(clientId,subscriptionName);
         TopicSubContainer container=(TopicSubContainer)subscriberMessages.get(key);
@@ -208,15 +204,19 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
                     entry=container.getNextEntry(entry);
                 }
             }
+           
             if(entry!=null){
                 do{
                     ConsumerMessageRef consumerRef=container.get(entry);
-                    Object msg=messageContainer.getValue(consumerRef.getMessageEntry());
+                    ReferenceRecord msg=messageContainer.getValue(consumerRef.getMessageEntry());
                     if(msg!=null){
-                        recover(listener,msg);
+                        recoverReference(listener,msg);
                         count++;
+                        container.setBatchEntry(msg.getMessageId().toString(),entry);
+                    }else {
+                        container.reset();
                     }
-                    container.setBatchEntry(entry);
+                    
                     entry=container.getNextEntry(entry);
                 }while(entry!=null&&count<maxReturned&&listener.hasSpace());
             }
@@ -232,9 +232,9 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         if(container!=null){
             for(Iterator i=container.iterator();i.hasNext();){
                 ConsumerMessageRef ref=(ConsumerMessageRef)i.next();
-                Object msg=messageContainer.get(ref.getMessageEntry());
+                ReferenceRecord msg=messageContainer.get(ref.getMessageEntry());
                 if(msg!=null){
-                    recover(listener,msg);
+                    recoverReference(listener,msg);
                 }
             }
         }
