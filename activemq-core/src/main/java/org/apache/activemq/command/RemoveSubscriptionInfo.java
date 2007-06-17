@@ -20,8 +20,8 @@ package org.apache.activemq.command;
 import org.apache.activemq.state.CommandVisitor;
 
 /**
- * 
- * @openwire:marshaller command="9"
+ *
+ * @openwire:marshaller code="9"
  * @version $Revision: 1.7 $
  */
 public class RemoveSubscriptionInfo extends BaseCommand {
@@ -31,7 +31,7 @@ public class RemoveSubscriptionInfo extends BaseCommand {
     protected ConnectionId connectionId;
     protected String clientId;
     protected String subcriptionName;
-    
+
 
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
