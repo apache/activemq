@@ -40,6 +40,10 @@ public class XStreamTransformTest extends TestCase {
     protected long timeout = 5000;
 
     public void testSendObjectMessageReceiveAsTextMessageAndObjectMessage() throws Exception {
+        connectionFactory.setTransformer(new XStreamMessageTransformer());
+        connection = connectionFactory.createConnection();
+        connection.start();
+
         // lets create the consumers
         Session objectSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Destination destination = objectSession.createTopic(getClass().getName());
@@ -82,13 +86,57 @@ public class XStreamTransformTest extends TestCase {
         System.out.println(text);
     }
 
-
-    protected void setUp() throws Exception {
-        connectionFactory.setTransformer(new XStreamMessageTransformer());
+    public void testSendTextMessageReceiveAsObjectMessageAndTextMessage() throws Exception {
+        // Set reverse to true
+        connectionFactory.setTransformer(new XStreamMessageTransformer(true));
         connection = connectionFactory.createConnection();
         connection.start();
-    }
 
+        // lets create the consumers
+        Session textSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Destination destination = textSession.createTopic(getClass().getName());
+        MessageConsumer textConsumer = textSession.createConsumer(destination);
+
+        Session objectSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer objectConsumer = objectSession.createConsumer(destination);
+        // lets clear the transformer on this consumer so we see the message as it really is
+        ((ActiveMQMessageConsumer) objectConsumer).setTransformer(null);
+
+
+        // send a message
+        Session producerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageProducer producer = producerSession.createProducer(destination);
+
+        String xmlText =
+                "<org.apache.activemq.util.xstream.SamplePojo>" +
+                "<name>James</name>" +
+                "<city>London</city>" +
+                "</org.apache.activemq.util.xstream.SamplePojo>";
+
+        TextMessage request = producerSession.createTextMessage(xmlText);
+        producer.send(request);
+
+        Message message;
+        // lets consume it as a text message
+        message = textConsumer.receive(timeout);
+        assertNotNull("Should have received a message!", message);
+        assertTrue("Should be a TextMessage but was: " + message, message instanceof TextMessage);
+        TextMessage textMessage = (TextMessage) message;
+        String text = textMessage.getText();
+        assertTrue("Text should be non-empty!", text != null && text.length() > 0);
+
+        // lets consume it as an object message
+        message = objectConsumer.receive(timeout);
+        assertNotNull("Should have received a message!", message);
+        assertTrue("Should be an ObjectMessage but was: " + message, message instanceof ObjectMessage);
+        ObjectMessage objectMessage = (ObjectMessage) message;
+        Object object = objectMessage.getObject();
+        assertTrue("object payload of wrong type: " + object, object instanceof SamplePojo);
+        SamplePojo body = (SamplePojo) object;
+        assertEquals("name", "James", body.getName());
+        assertEquals("city", "London", body.getCity());
+
+    }
 
     protected void tearDown() throws Exception {
         if (connection != null) {
