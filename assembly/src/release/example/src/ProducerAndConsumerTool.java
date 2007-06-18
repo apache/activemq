@@ -30,21 +30,21 @@ public class ProducerAndConsumerTool extends ConsumerTool implements MessageList
 
     public static void main(String[] args) {
     	
-		ConsumerTool consumerTool = new ConsumerTool();
-		String[] unknonwn = CommnadLineSupport.setOptions(consumerTool, args);
-		HashSet set1 = new HashSet(Arrays.asList(unknonwn));
+	ConsumerTool consumerTool = new ConsumerTool();
+	String[] unknown = CommandLineSupport.setOptions(consumerTool, args);
+	HashSet set1 = new HashSet(Arrays.asList(unknown));
     	
-		ProducerTool producerTool = new ProducerTool();
-    	unknonwn = CommnadLineSupport.setOptions(producerTool, args);
-		HashSet set2 = new HashSet(Arrays.asList(unknonwn));
+	ProducerTool producerTool = new ProducerTool();
+        unknown = CommandLineSupport.setOptions(producerTool, args);
+	HashSet set2 = new HashSet(Arrays.asList(unknown));
 
-		set1.retainAll(set2);
-		if( set1.size() > 0 ) {
-    		System.out.println("Unknown options: "+set1);
-			System.exit(-1);
+	set1.retainAll(set2);
+	if( set1.size() > 0 ) {
+    	    System.out.println("Unknown options: "+set1);
+	    System.exit(-1);
     	}
     	
-		consumerTool.run();
+	consumerTool.run();
     	producerTool.run();
 		
     }

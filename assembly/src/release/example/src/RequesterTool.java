@@ -61,9 +61,9 @@ public class RequesterTool {
 
 	public static void main(String[] args) {
 		RequesterTool requesterTool = new RequesterTool();
-		String[] unknonwn = CommnadLineSupport.setOptions(requesterTool, args);
-		if (unknonwn.length > 0) {
-			System.out.println("Unknown options: " + Arrays.toString(unknonwn));
+		String[] unknown = CommandLineSupport.setOptions(requesterTool, args);
+		if (unknown.length > 0) {
+			System.out.println("Unknown options: " + Utilities.arrayToString(unknown));
 			System.exit(-1);
 		}
 		requesterTool.run();

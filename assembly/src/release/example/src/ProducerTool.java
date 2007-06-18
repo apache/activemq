@@ -52,12 +52,12 @@ public class ProducerTool {
 
 	public static void main(String[] args) {
 		ProducerTool producerTool = new ProducerTool();
-    	String[] unknonwn = CommnadLineSupport.setOptions(producerTool, args);
-    	if( unknonwn.length > 0 ) {
-    		System.out.println("Unknown options: "+Arrays.toString(unknonwn));
+    	        String[] unknown = CommandLineSupport.setOptions(producerTool, args);
+    	        if( unknown.length > 0 ) {
+    		        System.out.println("Unknown options: "+ Utilities.arrayToString(unknown));
 			System.exit(-1);
-    	}    		
-    	producerTool.run();
+           	}    		
+    	       producerTool.run();
 	}
 
 	public void run() {

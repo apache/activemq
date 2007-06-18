@@ -48,9 +48,9 @@ public class TopicPublisher implements MessageListener
     public static void main(String[] argv) throws Exception
     {
     	TopicPublisher p = new TopicPublisher();
-    	String[] unknonwn = CommnadLineSupport.setOptions(p, argv);
-		if (unknonwn.length > 0) {
-			System.out.println("Unknown options: " + Arrays.toString(unknonwn));
+    	String[] unknown = CommandLineSupport.setOptions(p, argv);
+		if (unknown.length > 0) {
+			System.out.println("Unknown options: " + Utilities.arrayToString(unknown));
 			System.exit(-1);
 		}
     	p.run();
