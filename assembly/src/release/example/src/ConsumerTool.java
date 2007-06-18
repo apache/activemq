@@ -66,9 +66,9 @@ public class ConsumerTool implements MessageListener, ExceptionListener {
 
 	public static void main(String[] args) {
 		ConsumerTool consumerTool = new ConsumerTool();
-		String[] unknonwn = CommnadLineSupport.setOptions(consumerTool, args);
-		if (unknonwn.length > 0) {
-			System.out.println("Unknown options: " + Arrays.toString(unknonwn));
+		String[] unknown = CommandLineSupport.setOptions(consumerTool, args);
+		if (unknown.length > 0) {
+			System.out.println("Unknown options: " + Arrays.toString(unknown));
 			System.exit(-1);
 		}
 		consumerTool.run();
