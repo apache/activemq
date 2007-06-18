@@ -28,11 +28,12 @@ import javax.jms.JMSException;
  */
 public class TransportUriTest extends EmbeddedBrokerTestSupport {
 
-    private String postfix = "?tcpNoDelay=true&keepAlive=true";
-    private Connection connection;
+    protected String prefix = "";
+    protected String postfix = "?tcpNoDelay=true&keepAlive=true";
+    protected Connection connection;
 
     public void testUriOptionsWork() throws Exception {
-        String uri = bindAddress + postfix;
+        String uri = prefix + bindAddress + postfix;
 //        System.out.println("Connecting via: " + uri);
 
         connection = new ActiveMQConnectionFactory(uri).createConnection();
@@ -40,7 +41,7 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
     }
 
     public void testBadVersionNumberDoesNotWork() throws Exception {
-        String uri = bindAddress + postfix + "&minmumWireFormatVersion=65535";
+        String uri = prefix + bindAddress + postfix + "&minmumWireFormatVersion=65535";
 //        System.out.println("Connecting via: " + uri);
 
         try {
@@ -54,7 +55,7 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
 
 
     public void testBadPropertyNameFails() throws Exception {
-        String uri = bindAddress + postfix + "&cheese=abc";
+        String uri = prefix + bindAddress + postfix + "&cheese=abc";
 //        System.out.println("Connecting via: " + uri);
 
         try {
@@ -63,12 +64,13 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
             fail("Should have thrown an exception!");
         }
         catch (Exception expected) {
+            expected.printStackTrace();
         }
     }
 
 
     protected void setUp() throws Exception {
-        bindAddress = "tcp://localhost:6161";
+        bindAddress = "tcp://localhost:61616";
         super.setUp();
     }
 
