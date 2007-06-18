@@ -47,12 +47,12 @@ public class TopicListener implements MessageListener {
 
 	public static void main(String[] argv) throws Exception {
 		TopicListener l = new TopicListener();
-		String[] unknonwn = CommnadLineSupport.setOptions(l, argv);
-		if (unknonwn.length > 0) {
-			System.out.println("Unknown options: " + Arrays.toString(unknonwn));
+		String[] unknown = CommandLineSupport.setOptions(l, argv);
+		if (unknown.length > 0) {
+			System.out.println("Unknown options: " + Arrays.toString(unknown));
 			System.exit(-1);
 		}
-    	l.run();
+    	        l.run();
 	}
 	
 	public void run() throws JMSException {

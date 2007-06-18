@@ -22,7 +22,7 @@
 # Sample Usage: 
 #   ./perfharness-activemq.sh -d dynamicQueues/FOO -tc jms.r11.PutGet -nt 6
 #
-# It assumes that the apache-activemq-4.1-incubator-SNAPSHOT.jar and 
+# It assumes that the apache-activemq-5.0-SNAPSHOT.jar and 
 # perfharness.jar files are in the current directory.  If they are not,
 # set the ACTIVEMQ_HOME and PERFHARNESS_HOME env variable to the correct location.
 #
@@ -46,4 +46,4 @@ if [ -z "$BROKER_URL" ] ; then
    BROKER_URL='vm://(broker://()/localhost?useJmx=false)/localhost'
 fi
 
-java ${JAVA_OPTIONS} -cp ${ACTIVEMQ_HOME}/apache-activemq-4.1-incubator-SNAPSHOT.jar:${PERFHARNESS_HOME}/perfharness.jar JMSPerfHarness -pc JNDI -ii org.apache.activemq.jndi.ActiveMQInitialContextFactory -iu $BROKER_URL -cf ConnectionFactory -d dynamic$DESTINATION $@
+java ${JAVA_OPTIONS} -cp ${ACTIVEMQ_HOME}/apache-activemq-5.0-SNAPSHOT.jar:${PERFHARNESS_HOME}/perfharness.jar JMSPerfHarness -pc JNDI -ii org.apache.activemq.jndi.ActiveMQInitialContextFactory -iu $BROKER_URL -cf ConnectionFactory -d dynamic$DESTINATION $@
