@@ -44,38 +44,69 @@ public class XStreamMessageTransformer extends MessageTransformerSupport {
     private XStream xStream;
 
     /**
-     * Defines the direction in which transformation goes.
-     * If 'false' (default),
+     * Defines the type of transformation.
+     * If XML (default),
      *  - producer transformation transforms from Object to XML.
      *  - consumer transformation transforms from XML to Object.
-     * If 'true' transformation directions changes,
+     * If OBJECT,
      *  - producer transformation transforms from XML to Object.
      *  - consumer transformation transforms from Object to XML.
+     * If ADAPTIVE,
+     *  - producer transformation transforms from Object to XML, or XML to Object
+     *    depending on the type of the original message
+     *  - consumer transformation transforms from XML to Object, or Object to XML
+     *    depending on the type of the original message
 	 */
-	private boolean reverse;
+	public enum MessageTransform {XML, OBJECT, ADAPTIVE};
 
-	public XStreamMessageTransformer() {
-		new XStreamMessageTransformer(false);
+    protected MessageTransform transformType;
+
+    public XStreamMessageTransformer() {
+		this(MessageTransform.XML);
 	}
 
-	public XStreamMessageTransformer(boolean direction) {
-		this.reverse = direction;
+	public XStreamMessageTransformer(MessageTransform transformType) {
+		this.transformType = transformType;
 	}
 
     public Message consumerTransform(Session session, MessageConsumer consumer, Message message) throws JMSException {
-		if (reverse) {
-			return objectToText(session, message);
-		} else {
-			return textToObject(session, message);
-		}
-	}
+		switch (transformType) {
+            case XML:
+                return (message instanceof TextMessage) ?
+                        textToObject(session, (TextMessage)message) :
+                        message;
+            case OBJECT:
+                return (message instanceof ObjectMessage) ?
+                        objectToText(session, (ObjectMessage)message) :
+                        message;
+            case ADAPTIVE:
+                return (message instanceof TextMessage) ?
+                        textToObject(session, (TextMessage)message) :
+                       (message instanceof ObjectMessage) ?
+                        objectToText(session, (ObjectMessage)message) :
+                        message;
+        }
+        return message;
+    }
 
 	public Message producerTransform(Session session, MessageProducer producer, Message message) throws JMSException {
-		if (reverse) {
-			return textToObject(session, message);
-		} else {
-			return objectToText(session, message);
-		}
+		switch (transformType) {
+            case XML:
+                return (message instanceof ObjectMessage) ?
+                        objectToText(session, (ObjectMessage)message) :
+                        message;
+            case OBJECT:
+                return (message instanceof TextMessage) ?
+                        textToObject(session, (TextMessage)message) :
+                        message;
+            case ADAPTIVE:
+                return (message instanceof TextMessage) ?
+                        textToObject(session, (TextMessage)message) :
+                       (message instanceof ObjectMessage) ?
+                        objectToText(session, (ObjectMessage)message) :
+                        message;
+        }
+        return message;
 	}
 
     // Properties
@@ -97,52 +128,44 @@ public class XStreamMessageTransformer extends MessageTransformerSupport {
         return new XStream();
     }
 
-
-    public boolean isReverse() {
-        return reverse;
+    public MessageTransform getTransformType() {
+        return transformType;
     }
 
-    public void setReverse(boolean reverse) {
-        this.reverse = reverse;
+    public void setTransformType(MessageTransform transformType) {
+        this.transformType = transformType;
     }
 
     /**
      * Transforms an incoming XML encoded {@link TextMessage} to an {@link ObjectMessage}
      * @param session - JMS session currently being used
-     * @param message - if this is a TextMessage, it will be transformed to an ObjectMessage
-     * @return ObjectMessage, if the incoming message is a TextMessage, the original message otherwise
+     * @param textMessage - text message to transform to object message
+     * @return ObjectMessage
      * @throws JMSException
      */
-    protected Message textToObject(Session session, Message message) throws JMSException {
-        if (message instanceof TextMessage) {
-            TextMessage textMessage = (TextMessage) message;
-            Object object = unmarshall(session, textMessage);
-            if (object instanceof Serializable) {
-                ObjectMessage answer = session.createObjectMessage((Serializable) object);
-                copyProperties(message, answer);
-                return answer;
-            }
-            else {
-                throw new JMSException("Object is not serializable: " + object);
-            }
+    protected ObjectMessage textToObject(Session session, TextMessage textMessage) throws JMSException {
+        Object object = unmarshall(session, textMessage);
+        if (object instanceof Serializable) {
+            ObjectMessage answer = session.createObjectMessage((Serializable) object);
+            copyProperties(textMessage, answer);
+            return answer;
         }
-        return message;
+        else {
+            throw new JMSException("Object is not serializable: " + object);
+        }
 	}
 
     /**
      * Transforms an incoming {@link ObjectMessage} to an XML encoded {@link TextMessage}
      * @param session - JMS session currently being used
-     * @param message - if this is an ObjectMessage, it will be transformed to a TextMessage
-     * @return XML encoded TextMessage, if the incoming messsage is an ObjectMessge, the original message otherwise
+     * @param objectMessage - object message to transform to text message
+     * @return XML encoded TextMessage
      * @throws JMSException
      */
-    protected Message objectToText(Session session, Message message) throws JMSException {
-        if (message instanceof ObjectMessage) {
-            TextMessage answer = session.createTextMessage(marshall(session, (ObjectMessage) message));
-            copyProperties(message, answer);
-            return answer;
-        }
-        return message;
+    protected TextMessage objectToText(Session session, ObjectMessage objectMessage) throws JMSException {
+        TextMessage answer = session.createTextMessage(marshall(session, objectMessage));
+        copyProperties(objectMessage, answer);
+        return answer;
 	}
 
     /**
