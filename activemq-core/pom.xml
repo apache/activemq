@@ -334,6 +334,8 @@
 
             <!-- The NIO implemenation is not working properly on OS X.. -->
             <exclude>**/nio/**</exclude>
+             <!-- The Duplex Network isn't finished yet. -->
+             <exclude>**/DuplexNetworkTest.*/**</exclude>
 
             <exclude>**/AMQDeadlockTest3.*</exclude>
           </excludes>
