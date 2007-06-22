@@ -128,6 +128,10 @@ public class MessageListenerServlet extends MessageServletSupport {
             {
                 // Get the message parameters.   Multiple messages are encoded with more compact parameter names.
                 String destination_name = request.getParameter(messages==0?"destination":("d"+messages));
+                
+                if(destination_name == null)
+                	destination_name = request.getHeader("destination");
+                
                 String message = request.getParameter(messages==0?"message":("m"+messages));
                 String type = request.getParameter(messages==0?"type":("t"+messages));
                 
@@ -148,11 +152,13 @@ public class MessageListenerServlet extends MessageServletSupport {
                     {
                         Listener listener = getListener(request);
                         Map consumerIdMap = getConsumerIdMap(request);
+                        Map consumerDestinationMap = getConsumerDestinationNameMap(request);
                         client.closeConsumer(destination); // drop any existing consumer.
                         MessageAvailableConsumer consumer = (MessageAvailableConsumer) client.getConsumer(destination);
                         
                         consumer.setAvailableListener(listener);
                         consumerIdMap.put(consumer, message);
+                        consumerDestinationMap.put(consumer, destination_name);
                         if (log.isDebugEnabled()) {
                             log.debug("Subscribed: "+consumer+" to "+destination+" id="+message);
                         }
@@ -160,10 +166,12 @@ public class MessageListenerServlet extends MessageServletSupport {
                     else if ("unlisten".equals(type))
                     {
                         Map consumerIdMap = getConsumerIdMap(request);
+                        Map consumerDestinationMap = getConsumerDestinationNameMap(request);
                         MessageAvailableConsumer consumer = (MessageAvailableConsumer) client.getConsumer(destination);
                         
                         consumer.setAvailableListener(null);
                         consumerIdMap.remove(consumer);
+                        consumerDestinationMap.remove(consumer);
                         client.closeConsumer(destination);
                         if (log.isDebugEnabled()) {
                             log.debug("Unsubscribed: "+consumer);
@@ -315,15 +323,20 @@ public class MessageListenerServlet extends MessageServletSupport {
             PrintWriter writer = new PrintWriter(swriter);
 
             Map consumerIdMap = getConsumerIdMap(request);
+            Map<MessageAvailableConsumer, String> consumerDestinationNameMap = getConsumerDestinationNameMap(request);
             response.setStatus(HttpServletResponse.SC_OK);
             writer.println("<ajax-response>");
 
             // Send any message we already have
             if (message != null) {
                 String id = (String) consumerIdMap.get(consumer);
+                String destinationName = consumerDestinationNameMap.get(consumer);
                 writer.print("<response id='");
                 writer.print(id);
-                writer.print("'>");
+                writer.print("'");
+                if(destinationName != null)
+                	writer.print(" destination='" + destinationName + "' ");
+                writer.print(">");
                 writeMessageResponse(writer, message);
                 writer.println("</response>");
                 messages++;
@@ -343,9 +356,13 @@ public class MessageListenerServlet extends MessageServletSupport {
                     }
                     messages++;
                     String id = (String) consumerIdMap.get(consumer);
+                    String destinationName = consumerDestinationNameMap.get(consumer);
                     writer.print("<response id='");
                     writer.print(id);
-                    writer.print("'>");
+                    writer.print("'");
+                    if(destinationName != null)
+                    	writer.print(" destination='" + destinationName + "' ");
+                    writer.print(">");                    
                     writeMessageResponse(writer, message);
                     writer.println("</response>");
                 }
@@ -399,6 +416,16 @@ public class MessageListenerServlet extends MessageServletSupport {
         return map;
     }
 
+    protected Map<MessageAvailableConsumer, String> getConsumerDestinationNameMap(HttpServletRequest request) {
+    	HttpSession session = request.getSession(true);
+    	Map map = (Map) session.getAttribute("mls.consumerDestinationNameMap");
+      if (map == null) {
+        map = new HashMap<MessageAvailableConsumer, String>();
+        session.setAttribute("mls.consumerDestinationNameMap", map);
+      }
+      return map;
+    }
+    
     protected boolean isRicoAjax(HttpServletRequest request) {
         String rico = request.getParameter("rico");
         return rico != null && rico.equals("true");
