@@ -153,6 +153,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         // to hang around
         if(!subscriberContainer.containsKey(key)){
             subscriberContainer.put(key,info);
+            adapter.addSubscriberState(info);
         }
         // add the subscriber
         ListContainer container=addSubscriberMessageContainer(key);
@@ -170,6 +171,10 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
     }
 
     public synchronized void deleteSubscription(String clientId,String subscriptionName) throws IOException{
+        SubscriptionInfo info = lookupSubscription(clientId,subscriptionName);
+        if (info != null) {
+            adapter.removeSubscriberState(info);
+        }
         String key=getSubscriptionKey(clientId,subscriptionName);
         removeSubscriberMessageContainer(key);
     }

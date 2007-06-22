@@ -17,8 +17,9 @@
  */
 package org.apache.activemq.store.kahadaptor;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -27,10 +28,14 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.SubscriptionInfo;
+import org.apache.activemq.kaha.CommandMarshaller;
+import org.apache.activemq.kaha.ContainerId;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.MessageIdMarshaller;
 import org.apache.activemq.kaha.Store;
+import org.apache.activemq.kaha.StoreFactory;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.ReferenceStore;
 import org.apache.activemq.store.ReferenceStoreAdapter;
@@ -45,7 +50,9 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
    private static final String RECORD_REFERENCES = "record-references";
     private MapContainer stateMap;
 	private Map<Integer,AtomicInteger>recordReferences = new HashMap<Integer,AtomicInteger>();
+    private ListContainer durableSubscribers;
     private boolean storeValid;
+    private Store stateStore;
 
 	
     public synchronized MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException{
@@ -57,50 +64,37 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     }
     
     @Override
-    public void start() throws Exception{
+    public synchronized void start() throws Exception{
         super.start();
-        Store store=getStore();
+        Store store=getStateStore();
         boolean empty=store.getMapContainerIds().isEmpty();
         stateMap=store.getMapContainer("state",STORE_STATE);
         stateMap.load();
         if(!empty){
-            
             AtomicBoolean status=(AtomicBoolean)stateMap.get(STORE_STATE);
             if(status!=null){
                 storeValid=status.get();
             }
-           
             if(storeValid){
                 if(stateMap.containsKey(RECORD_REFERENCES)){
                     recordReferences=(Map<Integer,AtomicInteger>)stateMap.get(RECORD_REFERENCES);
                 }
-            }else {
-                /*
-                log.warn("Store Not shutdown cleanly - clearing out unsafe records ...");
-                Set<ContainerId> set = store.getListContainerIds();
-                for (ContainerId cid:set) {
-                    if (!cid.getDataContainerName().equals(STORE_STATE)) {
-                        store.deleteListContainer(cid);
-                    }
-                }
-                set = store.getMapContainerIds();
-                for (ContainerId cid:set) {
-                    if (!cid.getDataContainerName().equals(STORE_STATE)) {
-                        store.deleteMapContainer(cid);
-                    }
-                }
-                */
-                buildReferenceFileIdsInUse();
             }
-            
         }
         stateMap.put(STORE_STATE,new AtomicBoolean());
+        durableSubscribers = store.getListContainer("durableSubscribers");
+        durableSubscribers.setMarshaller(new CommandMarshaller());
     }
-    
+       
     @Override
-    public void stop() throws Exception {
+    public synchronized void stop() throws Exception {
         stateMap.put(RECORD_REFERENCES,recordReferences);
         stateMap.put(STORE_STATE,new AtomicBoolean(true));
+        if (this.stateStore != null) {
+            this.stateStore.close();
+            this.stateStore = null;
+            this.stateMap = null;
+        }
         super.stop();        
     }
     
@@ -194,6 +188,68 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
         return recordReferences.keySet();
     }
 
+    /**
+     * 
+     * @throws IOException 
+     * @see org.apache.activemq.store.ReferenceStoreAdapter#clearMessages()
+     */
+    public void clearMessages() throws IOException{
+        deleteAllMessages();
+    }
+    
+    /**
+     * 
+     * @throws IOException 
+     * @see org.apache.activemq.store.ReferenceStoreAdapter#recoverState()
+     */
+    public void recoverState() throws IOException{
+        for (Iterator i = durableSubscribers.iterator();i.hasNext();) {
+            SubscriptionInfo info = (SubscriptionInfo)i.next();
+            TopicReferenceStore ts = createTopicReferenceStore((ActiveMQTopic)info.getDestination());
+            ts.addSubsciption(info.getClientId(),info.getSubcriptionName(),info.getSelector(),false);
+        }
+        
+    }
+    
+    @Override
+    public void setDirectory(File directory){
+        File file = new File(directory,"data");
+        super.setDirectory(file);
+        this.stateStore=createStateStore(directory);
+    }
+    
+    protected synchronized Store getStateStore() throws IOException{
+        if(this.stateStore==null){
+            File stateDirectory=new File(getDirectory(),"kr-state");
+            stateDirectory.mkdirs();
+            this.stateStore=createStateStore(getDirectory());
+        }
+        return this.stateStore;
+    }
+    
+    private Store createStateStore(File directory) {
+        File stateDirectory=new File(directory,"state");
+        stateDirectory.mkdirs();
+        try{
+            return StoreFactory.open(stateDirectory.getAbsolutePath(),"rw");
+        }catch(IOException e){
+            log.error("Failed to create the state store",e);
+        }
+        return null;
+        
+    }
+    
+    protected void addSubscriberState(SubscriptionInfo info) throws IOException {
+        durableSubscribers.add(info);
+    }
+    
+    protected void removeSubscriberState(SubscriptionInfo info) {
+        durableSubscribers.remove(info);
+    }
+
+   
+        
+}
     
 	
-}
+
