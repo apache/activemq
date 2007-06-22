@@ -89,5 +89,23 @@ public class SubscriptionInfo implements DataStructure {
     public String toString() {
         return IntrospectionSupport.toString(this);
     }
+    
+    public int hasCode() {
+        int h1 = clientId != null ? clientId.hashCode():-1;
+        int h2 = subcriptionName != null ? subcriptionName.hashCode():-1;
+        return h1 ^ h2;
+    }
+    
+    public boolean equals(Object obj){
+        boolean result=false;
+        if(obj instanceof SubscriptionInfo){
+            SubscriptionInfo other=(SubscriptionInfo)obj;
+            result=(clientId==null&&other.clientId==null||clientId!=null&&other.clientId!=null
+                    &&clientId.equals(other.clientId))
+                    &&(subcriptionName==null&&other.subcriptionName==null||subcriptionName!=null
+                            &&other.subcriptionName!=null&&subcriptionName.equals(other.subcriptionName));
+        }
+        return result;
+    }
 
 }
