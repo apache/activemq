@@ -183,16 +183,17 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 // need to be recovered when the broker starts up.  Perhaps on a graceful shutdown we 
 // should record all the in flight XA transactions to a file to avoid having to scan 
 // the entire transaction log.  For now going to comment this bit out.        
-//        
-//        if(referenceStoreAdapter.isStoreValid()==false){
-//            log.warn("The ReferenceStore is not valid - recovering ...");
-//            recover();
-//            log.info("Finished recovering the ReferenceStore");
-//        }else {
-//            Location location=writeTraceMessage("RECOVERED "+new Date(),true);
-//            asyncDataManager.setMark(location,true);
-//        }
-        
+//    
+        /*
+        if(referenceStoreAdapter.isStoreValid()==false){
+            log.warn("The ReferenceStore is not valid - recovering ...");
+            recover();
+            log.info("Finished recovering the ReferenceStore");
+        }else {
+           Location location=writeTraceMessage("RECOVERED "+new Date(),true);
+            asyncDataManager.setMark(location,true);
+       }
+        */
         recover();
         
         // Do a checkpoint periodically.
@@ -431,6 +432,8 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
      * @throws IllegalStateException
      */
     private void recover() throws IllegalStateException,IOException{
+        referenceStoreAdapter.clearMessages();
+        referenceStoreAdapter.recoverState();
         Location pos=null;
         int redoCounter=0;
         log.info("Journal Recovery Started from: "+asyncDataManager);

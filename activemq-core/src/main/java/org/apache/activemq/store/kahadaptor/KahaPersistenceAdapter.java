@@ -275,8 +275,9 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
         if(!initialized){
             initialized=true;
             if(this.directory==null){
-                this.directory=new File(IOHelper.getDefaultDataDirectory());
-                this.directory=new File(this.directory,brokerName+"-kahastore");
+                File file =new File(IOHelper.getDefaultDataDirectory());
+                file=new File(file,brokerName+"-kahastore");
+                setDirectory(file);
             }         
             this.directory.mkdirs();
             wireFormat.setCacheEnabled(false);

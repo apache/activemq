@@ -47,5 +47,18 @@ public interface ReferenceStoreAdapter extends PersistenceAdapter {
      * @return true if the reference store is in a consistent state
      */
     public boolean isStoreValid();
+    
+    /**
+     * called by recover to clear out message references
+     * @throws IOException 
+     */
+    public void clearMessages() throws IOException;
+    
+    /**
+     * recover any state 
+     * @throws IOException 
+     *
+     */
+    public void recoverState() throws IOException;
 
 }
