@@ -34,6 +34,7 @@ import javax.management.remote.JMXServiceURL;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -46,6 +47,8 @@ import java.util.Set;
 public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
     private static final transient Log log = LogFactory.getLog(RemoteJMXBrokerFacade.class);
     private String jmxUrl;
+    private String jmxRole;
+    private String jmxPassword;
     private String brokerName;
     private JMXConnector connector;
 
@@ -55,6 +58,14 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
 
     public void setJmxUrl(String url) {
         this.jmxUrl = url;
+    }
+
+    public void setJmxRole(String role) {
+        this.jmxRole = role;
+    }
+
+    public void setJmxPassword(String password) {
+        this.jmxPassword = password;
     }
 
     /**
@@ -110,6 +121,10 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
 
     protected JMXConnector createConnection() {
         String[] urls = this.jmxUrl.split(",");
+	HashMap env = new HashMap();
+	env.put("jmx.remote.credentials",
+		new String[] {this.jmxRole, this.jmxPassword});
+
         if (urls == null || urls.length == 0) {
             urls = new String[]{this.jmxUrl};
         }
@@ -118,7 +133,7 @@ public class RemoteJMXBrokerFacade extends BrokerFacadeSupport {
         for (int i = 0; i < urls.length; i++) {
             try {
                 JMXConnector connector = JMXConnectorFactory
-                        .connect(new JMXServiceURL(urls[i]));
+                        .connect(new JMXServiceURL(urls[i]), env);
                 connector.connect();
                 MBeanServerConnection connection = connector
                         .getMBeanServerConnection();

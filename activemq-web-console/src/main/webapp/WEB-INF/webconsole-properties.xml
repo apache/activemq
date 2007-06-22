@@ -29,6 +29,8 @@
 
   <bean id="brokerQuery" class="org.apache.activemq.web.RemoteJMXBrokerFacade" autowire="constructor" destroy-method="shutdown">
   	<property name="jmxUrl" value="${webconsole.jmx.url}"/>
+	<property name="jmxRole" value="${webconsole.jmx.role}"/>
+	<property name="jmxPassword" value="${webconsole.jmx.password}"/>
   	<property name="brokerName"><null/></property>
   </bean>
   
