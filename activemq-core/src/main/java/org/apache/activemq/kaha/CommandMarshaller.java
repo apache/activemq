@@ -21,6 +21,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import org.apache.activemq.kaha.Marshaller;
+import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.wireformat.WireFormat;
 
@@ -34,6 +35,10 @@ public class CommandMarshaller implements Marshaller<Object> {
     public CommandMarshaller(WireFormat wireFormat){
         this.wireFormat = wireFormat;
       
+    }
+    
+    public CommandMarshaller(){
+        this(new OpenWireFormat());
     }
     
     public void writePayload(Object object,DataOutput dataOut) throws IOException{
