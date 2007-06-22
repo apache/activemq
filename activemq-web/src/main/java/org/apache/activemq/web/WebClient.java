@@ -205,7 +205,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
         }
     }
 
-    public void send(Destination destination, Message message, boolean persistent, int priority, int timeToLive) throws JMSException {
+    public void send(Destination destination, Message message, boolean persistent, int priority, long timeToLive) throws JMSException {
         int deliveryMode = persistent ? DeliveryMode.PERSISTENT : DeliveryMode.NON_PERSISTENT;
         getProducer().send(destination, message, deliveryMode, priority, timeToLive);
         if (log.isDebugEnabled()) {

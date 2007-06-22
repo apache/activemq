@@ -21,9 +21,8 @@ package org.apache.activemq.web;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
+import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.TextMessage;
@@ -52,7 +51,7 @@ import java.util.Map;
 public abstract class MessageServletSupport extends HttpServlet {
 
     private static final transient Log log = LogFactory.getLog(MessageServletSupport.class);
-
+    
     private boolean defaultTopicFlag = true;
     private Destination defaultDestination;
     private String destinationParameter = "destination";
@@ -76,7 +75,6 @@ public abstract class MessageServletSupport extends HttpServlet {
         if (log.isDebugEnabled()) {
             log.debug("Defaulting to use topics: " + defaultTopicFlag);
         }
-
         name = servletConfig.getInitParameter("destination");
         if (name != null) {
             if (defaultTopicFlag) {
@@ -119,10 +117,6 @@ public abstract class MessageServletSupport extends HttpServlet {
         if (expiration != null) {
             message.setJMSExpiration(expiration.longValue());
         }
-        Integer priority = asInteger(parameters.remove("JMSPriority"));
-        if (expiration != null) {
-            message.setJMSPriority(priority.intValue());
-        }
         Destination replyTo = asDestination(parameters.remove("JMSReplyTo"));
         if (replyTo != null) {
             message.setJMSReplyTo(replyTo);
@@ -135,7 +129,12 @@ public abstract class MessageServletSupport extends HttpServlet {
         for (Iterator iter = parameters.entrySet().iterator(); iter.hasNext();) {
             Map.Entry entry = (Map.Entry) iter.next();
             String name = (String) entry.getKey();
-            if (!destinationParameter.equals(name) && !typeParameter.equals(name) && !bodyParameter.equals(name)) {
+            if (!destinationParameter.equals(name) 
+            		&& !typeParameter.equals(name) 
+            		&& !bodyParameter.equals(name)
+            		&& !"JMSDeliveryMode".equals(name)
+            		&& !"JMSPriority".equals(name)
+            		&& !"JMSTimeToLive".equals(name)) {
                 Object value = entry.getValue();
                 if (value instanceof Object[]) {
                     Object[] array = (Object[]) value;
@@ -146,7 +145,7 @@ public abstract class MessageServletSupport extends HttpServlet {
                         log.warn("Can't use property: " + name + " which is of type: " + value.getClass().getName() + " value");
                         value = null;
                         for (int i = 0, size = array.length; i < size; i++) {
-                            log.debug("value[" + i + "] = " + array[i]);
+                             log.debug("value[" + i + "] = " + array[i]);
                         }
                     }
                 }
@@ -174,6 +173,14 @@ public abstract class MessageServletSupport extends HttpServlet {
     }
 
     protected boolean isSendPersistent(HttpServletRequest request) {
+    	String text = request.getParameter("JMSDeliveryMode");
+    	if (text != null) {
+    		if (text.trim().equalsIgnoreCase("persistent")) {
+    			return true;
+    		} else {
+    			return false;
+    		}
+    	}
         return defaultMessagePersistent;
     }
 
