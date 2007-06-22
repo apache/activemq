@@ -137,11 +137,15 @@ public class JPAReferenceStoreAdapter extends JPAPersistenceAdapter implements R
     }
 
     /**
-     * 
      * @see org.apache.activemq.store.ReferenceStoreAdapter#clearMessages()
      */
-    public void clearMessages(){
-                
+    public void clearMessages(){        
+    }
+
+    /**
+     * @see org.apache.activemq.store.ReferenceStoreAdapter#recoverState()
+     */
+    public void recoverState(){        
     }
 
 }
