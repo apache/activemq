@@ -93,13 +93,13 @@ public class MessageServlet extends MessageServletSupport {
             if (log.isDebugEnabled()) {
                 log.debug("Sending message to: " + destination + " with text: " + text);
             }
-
+            
             TextMessage message = client.getSession().createTextMessage(text);
             appendParametersToMessage(request, message);
             boolean persistent = isSendPersistent(request);
             int priority = getSendPriority(request);
             long timeToLive = getSendTimeToLive(request);
-            client.send(destination, message);
+            client.send(destination, message, persistent, priority, timeToLive);
 
             // lets return a unique URI for reliable messaging
             response.setHeader("messageID", message.getJMSMessageID());
