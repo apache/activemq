@@ -41,7 +41,6 @@ import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import sun.security.x509.IssuerAlternativeNameExtension;
 
 import java.util.concurrent.ConcurrentHashMap;
 
