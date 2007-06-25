@@ -74,10 +74,11 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
 
     public String getText() throws JMSException {
         if (text == null && getContent() != null) {
+            InputStream is = null;
             try {
                 ByteSequence bodyAsBytes = getContent();
                 if (bodyAsBytes != null) {
-                    InputStream is = new ByteArrayInputStream(bodyAsBytes);
+                    is = new ByteArrayInputStream(bodyAsBytes);
                     if( isCompressed() ) {
                         is = new InflaterInputStream(is);
                     }
@@ -88,6 +89,16 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
                 }
             } catch (IOException ioe) {
                 throw JMSExceptionSupport.create(ioe);
+            }
+            finally {
+                if (is != null) {
+                    try {
+                        is.close();
+                    }
+                    catch (IOException e) {
+                        // ignore
+                    }
+                }
             }
         }
         return text;
