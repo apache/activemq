@@ -53,7 +53,6 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     }
 
     transient protected Callback acknowledgeCallback;
-    transient int hashCode;
 
     public Message copy() {
         ActiveMQMessage copy = new ActiveMQMessage();
@@ -545,23 +544,23 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         setBooleanProperty(name,value,true);
     }
     public void setBooleanProperty(String name, boolean value,boolean checkReadOnly) throws JMSException {
-        setObjectProperty(name, value ? Boolean.TRUE : Boolean.FALSE,checkReadOnly);
+        setObjectProperty(name, Boolean.valueOf(value), checkReadOnly);
     }
 
     public void setByteProperty(String name, byte value) throws JMSException {
-        setObjectProperty(name, new Byte(value));
+        setObjectProperty(name, Byte.valueOf(value));
     }
 
     public void setShortProperty(String name, short value) throws JMSException {
-        setObjectProperty(name, new Short(value));
+        setObjectProperty(name, Short.valueOf(value));
     }
 
     public void setIntProperty(String name, int value) throws JMSException {
-        setObjectProperty(name, new Integer(value));
+        setObjectProperty(name, Integer.valueOf(value));
     }
 
     public void setLongProperty(String name, long value) throws JMSException {
-        setObjectProperty(name, new Long(value));
+        setObjectProperty(name, Long.valueOf(value));
     }
 
     public void setFloatProperty(String name, float value) throws JMSException {

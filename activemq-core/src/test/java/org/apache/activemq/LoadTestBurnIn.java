@@ -97,25 +97,25 @@ public class LoadTestBurnIn extends JmsTestSupport {
     
     public void initCombosForTestSendReceive() {
         addCombinationValues("deliveryMode", new Object[] { 
-                new Integer(DeliveryMode.NON_PERSISTENT),
-                new Integer(DeliveryMode.PERSISTENT) });
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT),
+                Integer.valueOf(DeliveryMode.PERSISTENT) });
         addCombinationValues("destinationType", new Object[] { 
-                new Byte(ActiveMQDestination.TOPIC_TYPE), 
-//                new Byte(ActiveMQDestination.QUEUE_TYPE),
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), 
+//                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE),
                 });
         addCombinationValues("durableConsumer", new Object[] { 
                 Boolean.TRUE, 
 //                Boolean.FALSE,
                 });
         addCombinationValues("messageSize", new Object[] { 
-                new Integer(101), 
-                new Integer(102), 
-                new Integer(103), 
-                new Integer(104), 
-                new Integer(105), 
-                new Integer(106), 
-                new Integer(107), 
-                new Integer(108), 
+                Integer.valueOf(101), 
+                Integer.valueOf(102), 
+                Integer.valueOf(103), 
+                Integer.valueOf(104), 
+                Integer.valueOf(105), 
+                Integer.valueOf(106), 
+                Integer.valueOf(107), 
+                Integer.valueOf(108), 
         });
     }
 

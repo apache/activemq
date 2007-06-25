@@ -94,7 +94,7 @@ public final class LargeStreamletTest extends TestCase {
                 });
 
                 final Thread writerThread = new Thread(new Runnable() {
-
+                	private final Random random = new Random();
                     public void run() {
                         totalWritten.set(0);
                         int count = MESSAGE_COUNT;
@@ -103,7 +103,7 @@ public final class LargeStreamletTest extends TestCase {
                                     .createOutputStream(destination);
                             try {
                                 final byte[] buf = new byte[BUFFER_SIZE];
-                                new Random().nextBytes(buf);
+                                random.nextBytes(buf);
                                 while (count > 0 && !stopThreads.get()) {
                                     outputStream.write(buf);
                                     totalWritten.addAndGet(buf.length);

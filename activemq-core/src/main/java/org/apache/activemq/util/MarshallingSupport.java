@@ -155,22 +155,22 @@ public class MarshallingSupport {
         Object value=null;
         switch( in.readByte() ) {
         case BYTE_TYPE:
-            value = new Byte(in.readByte());
+            value = Byte.valueOf(in.readByte());
             break;
         case BOOLEAN_TYPE:
             value = in.readBoolean() ? Boolean.TRUE : Boolean.FALSE;
             break;
         case CHAR_TYPE:
-            value = new Character(in.readChar());
+            value = Character.valueOf(in.readChar());
             break;
         case SHORT_TYPE:
-            value = new Short(in.readShort());
+            value = Short.valueOf(in.readShort());
             break;
         case INTEGER_TYPE:
-            value = new Integer(in.readInt());
+            value = Integer.valueOf(in.readInt());
             break;
         case LONG_TYPE:
-            value = new Long(in.readLong());
+            value = Long.valueOf(in.readLong());
             break;
         case FLOAT_TYPE:
             value = new Float(in.readFloat());
@@ -378,6 +378,7 @@ public class MarshallingSupport {
             DataByteArrayOutputStream dataOut=new DataByteArrayOutputStream();
             props.store(dataOut,"");
             result=new String(dataOut.getData(),0,dataOut.size());
+            dataOut.close();
         }
         return result;
     }
@@ -387,6 +388,7 @@ public class MarshallingSupport {
         if (str != null && str.length() > 0 ) {
             DataByteArrayInputStream dataIn = new DataByteArrayInputStream(str.getBytes());
             result.load(dataIn);
+            dataIn.close();
         }
         return result;
     }

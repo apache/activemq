@@ -65,7 +65,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
     /**
      * Setting this to false makes the test run faster but they may be less accurate.
      */
-    public static boolean FAST_NO_MESSAGE_LEFT_ASSERT = System.getProperty("FAST_NO_MESSAGE_LEFT_ASSERT", "true").equals("true");
+    public static final boolean FAST_NO_MESSAGE_LEFT_ASSERT = System.getProperty("FAST_NO_MESSAGE_LEFT_ASSERT", "true").equals("true");
 
     protected RegionBroker regionBroker;    
     protected BrokerService broker;    

@@ -72,9 +72,6 @@ public class ForwardingBridge  implements Service{
     private boolean dispatchAsync;
     private String destinationFilter = ">";
     
-    private int queueDispatched;
-    private int topicDispatched;
-    
     BrokerId localBrokerId;
     BrokerId remoteBrokerId;
     private NetworkBridgeFailedListener bridgeFailedListener;

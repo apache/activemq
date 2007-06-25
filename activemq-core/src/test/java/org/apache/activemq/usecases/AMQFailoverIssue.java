@@ -174,7 +174,7 @@ public class AMQFailoverIssue extends TestCase{
         }
     }
 
-    private class PooledProducerTask implements Runnable{
+    private static class PooledProducerTask implements Runnable{
 
         private final String queueName;
         private final PooledConnectionFactory pcf;

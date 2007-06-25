@@ -195,7 +195,7 @@ public abstract class UnaryExpression implements Expression {
         	bd = bd.negate();
         	
         	if( BD_LONG_MIN_VALUE.compareTo(bd)==0  ) {
-        		return new Long(Long.MIN_VALUE);
+        		return Long.valueOf(Long.MIN_VALUE);
         	}
             return bd;
         }

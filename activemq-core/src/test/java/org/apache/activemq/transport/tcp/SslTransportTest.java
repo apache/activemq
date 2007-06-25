@@ -37,7 +37,6 @@ import org.apache.activemq.wireformat.ObjectStreamWireFormat;
 public class SslTransportTest extends TestCase {
     
     SSLSocket sslSocket;
-    SslTransport transport;    
     StubTransportListener stubListener;
     
     String username;

@@ -102,7 +102,7 @@ public class TypeConversionSupport {
 
         Converter longConverter = new Converter() {
             public Object convert(Object value) {
-                return new Long(((Number) value).longValue());
+                return Long.valueOf(((Number) value).longValue());
             }
         };
         CONVERSION_MAP.put(new ConversionKey(Byte.class, Long.class), longConverter);
@@ -110,13 +110,13 @@ public class TypeConversionSupport {
         CONVERSION_MAP.put(new ConversionKey(Integer.class, Long.class), longConverter);
         CONVERSION_MAP.put(new ConversionKey(Date.class, Long.class), new Converter() {
             public Object convert(Object value) {
-                return new Long(((Date) value).getTime());
+                return Long.valueOf(((Date) value).getTime());
             }
         });
 
         Converter intConverter = new Converter() {
             public Object convert(Object value) {
-                return new Integer(((Number) value).intValue());
+                return Integer.valueOf(((Number) value).intValue());
             }
         };
         CONVERSION_MAP.put(new ConversionKey(Byte.class, Integer.class), intConverter);
@@ -124,7 +124,7 @@ public class TypeConversionSupport {
 
         CONVERSION_MAP.put(new ConversionKey(Byte.class, Short.class), new Converter() {
             public Object convert(Object value) {
-                return new Short(((Number) value).shortValue());
+                return Short.valueOf(((Number) value).shortValue());
             }
         });
         

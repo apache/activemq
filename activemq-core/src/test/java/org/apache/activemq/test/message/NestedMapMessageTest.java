@@ -49,8 +49,8 @@ public class NestedMapMessageTest extends JmsTopicSendReceiveWithTwoConnectionsA
         Map map = (Map) mapMessage.getObject("mapField");
         assertNotNull(map);
         assertEquals("mapField.a", "foo", map.get("a"));
-        assertEquals("mapField.b", new Integer(23), map.get("b"));
-        assertEquals("mapField.c", new Long(45), map.get("c"));
+        assertEquals("mapField.b", Integer.valueOf(23), map.get("b"));
+        assertEquals("mapField.c", Long.valueOf(45), map.get("c"));
 
         value = map.get("d");
         assertTrue("mapField.d should be a Map", value instanceof Map);
@@ -84,8 +84,8 @@ public class NestedMapMessageTest extends JmsTopicSendReceiveWithTwoConnectionsA
 
         Map nestedMap = new HashMap();
         nestedMap.put("a", "foo");
-        nestedMap.put("b", new Integer(23));
-        nestedMap.put("c", new Long(45));
+        nestedMap.put("b", Integer.valueOf(23));
+        nestedMap.put("c", Long.valueOf(45));
         nestedMap.put("d", grandChildMap);
 
         answer.setObject("mapField", nestedMap);

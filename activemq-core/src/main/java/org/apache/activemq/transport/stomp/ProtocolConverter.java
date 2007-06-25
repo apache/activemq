@@ -114,7 +114,7 @@ public class ProtocolConverter {
 		command.setCommandId(generateCommandId());
 		if(handler!=null) {
 			command.setResponseRequired(true);
-			resposeHandlers.put(new Integer(command.getCommandId()), handler);
+			resposeHandlers.put(Integer.valueOf(command.getCommandId()), handler);
 		}
 		transportFilter.sendToActiveMQ(command);
 	}
@@ -472,7 +472,7 @@ public class ProtocolConverter {
     	if ( command.isResponse() ) {
 
 			Response response = (Response) command;
-		    ResponseHandler rh = (ResponseHandler) resposeHandlers.remove(new Integer(response.getCorrelationId()));
+		    ResponseHandler rh = (ResponseHandler) resposeHandlers.remove(Integer.valueOf(response.getCorrelationId()));
 		    if( rh !=null ) {
 		    	rh.onResponse(this, response);
 		    }

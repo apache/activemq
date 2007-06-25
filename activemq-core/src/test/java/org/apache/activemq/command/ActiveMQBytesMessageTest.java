@@ -243,11 +243,11 @@ public class ActiveMQBytesMessageTest extends TestCase {
         try {
             msg.writeObject("fred");
             msg.writeObject(Boolean.TRUE);
-            msg.writeObject(new Character('q'));
-            msg.writeObject(new Byte((byte) 1));
-            msg.writeObject(new Short((short) 3));
-            msg.writeObject(new Integer(3));
-            msg.writeObject(new Long(300l));
+            msg.writeObject(Character.valueOf('q'));
+            msg.writeObject(Byte.valueOf((byte) 1));
+            msg.writeObject(Short.valueOf((short) 3));
+            msg.writeObject(Integer.valueOf(3));
+            msg.writeObject(Long.valueOf(300l));
             msg.writeObject(new Float(3.3f));
             msg.writeObject(new Double(3.3));
             msg.writeObject(new byte[3]);

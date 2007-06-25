@@ -477,7 +477,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
      */
     public void setByte(String name, byte value) throws JMSException {
         initializeWriting();
-        put(name, new Byte(value));
+        put(name, Byte.valueOf(value));
     }
 
     /**
@@ -491,7 +491,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
      */
     public void setShort(String name, short value) throws JMSException {
         initializeWriting();
-        put(name, new Short(value));
+        put(name, Short.valueOf(value));
     }
 
     /**
@@ -505,7 +505,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
      */
     public void setChar(String name, char value) throws JMSException {
         initializeWriting();
-        put(name, new Character(value));
+        put(name, Character.valueOf(value));
     }
 
     /**
@@ -519,7 +519,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
      */
     public void setInt(String name, int value) throws JMSException {
         initializeWriting();
-        put(name, new Integer(value));
+        put(name, Integer.valueOf(value));
     }
 
     /**
@@ -533,7 +533,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
      */
     public void setLong(String name, long value) throws JMSException {
         initializeWriting();
-        put(name, new Long(value));
+        put(name, Long.valueOf(value));
     }
 
     /**

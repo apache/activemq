@@ -204,8 +204,8 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
         
         startClient();
 
-        addCombinationValues("clientInactivityLimit", new Object[] { new Long(1000)});
-        addCombinationValues("serverInactivityLimit", new Object[] { new Long(1000)});
+        addCombinationValues("clientInactivityLimit", new Object[] { Long.valueOf(1000)});
+        addCombinationValues("serverInactivityLimit", new Object[] { Long.valueOf(1000)});
         addCombinationValues("serverRunOnCommand", new Object[] { new Runnable() {
                 public void run() {
                     try {

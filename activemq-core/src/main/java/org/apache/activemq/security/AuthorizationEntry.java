@@ -108,7 +108,7 @@ public class AuthorizationEntry extends DestinationMapEntry {
             paramClass[0] = String.class;
             
             Object[] param = new Object[1];
-            param[0] = new String(name);
+            param[0] = name;
 
             try {
             	Class cls = Class.forName(groupClass);

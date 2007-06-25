@@ -61,8 +61,8 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
     }
 
     public void initCombosForTestPublisherFansout() {
-        addCombinationValues("deliveryMode", new Object[] { new Integer(DeliveryMode.NON_PERSISTENT),
-                new Integer(DeliveryMode.PERSISTENT) });
+        addCombinationValues("deliveryMode", new Object[] { Integer.valueOf(DeliveryMode.NON_PERSISTENT),
+        		Integer.valueOf(DeliveryMode.PERSISTENT) });
         addCombinationValues("destination", new Object[] { new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"), });
     }
 
@@ -109,8 +109,8 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
 
     
     public void initCombosForTestPublisherWaitsForServerToBeUp() {
-        addCombinationValues("deliveryMode", new Object[] { new Integer(DeliveryMode.NON_PERSISTENT),
-                new Integer(DeliveryMode.PERSISTENT) });
+        addCombinationValues("deliveryMode", new Object[] { Integer.valueOf(DeliveryMode.NON_PERSISTENT),
+                Integer.valueOf(DeliveryMode.PERSISTENT) });
         addCombinationValues("destination", new Object[] { new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"), });
     }
     public void testPublisherWaitsForServerToBeUp() throws Exception {

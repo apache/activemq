@@ -46,12 +46,12 @@ public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest{
     protected MessageProducer producer2;
     protected Destination consumerDestination2;
     BrokerService broker;
-    final int NMSG=100;
-    final int MSIZE=256000;
+    static final int NMSG=100;
+    static final int MSIZE=256000;
     private Connection connection3;
     private Session consumeSession3;
     private TopicSubscriber consumer3;
-    private final String countProperyName = "count";
+    private static final String countProperyName = "count";
 
     /**
      * Set up a durable suscriber test.

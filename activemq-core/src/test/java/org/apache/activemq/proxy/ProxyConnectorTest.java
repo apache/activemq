@@ -51,11 +51,11 @@ public class ProxyConnectorTest extends ProxyTestSupport {
 
     public void initCombosForTestSendAndConsume() {
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)
+        		Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+        		Integer.valueOf(DeliveryMode.PERSISTENT)
                 } );        
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.TOPIC_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), 
                 } );
     }
     public void testSendAndConsume() throws Exception {

@@ -165,9 +165,9 @@ public class TcpTransportServer extends TransportServerThreadSupport {
                     }
                     else {
                         HashMap options = new HashMap();
-                        options.put("maxInactivityDuration", new Long(maxInactivityDuration));
-                        options.put("minmumWireFormatVersion", new Integer(minmumWireFormatVersion));
-                        options.put("trace", new Boolean(trace));
+                        options.put("maxInactivityDuration", Long.valueOf(maxInactivityDuration));
+                        options.put("minmumWireFormatVersion", Integer.valueOf(minmumWireFormatVersion));
+                        options.put("trace", Boolean.valueOf(trace));
                         options.putAll(transportOptions);
                         WireFormat format = wireFormatFactory.createWireFormat();
                         Transport transport = createTransport(socket, format);

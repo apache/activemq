@@ -124,9 +124,9 @@ public class OpenTypeSupport {
             rc.put("JMSReplyTo", ""+m.getJMSReplyTo());
             rc.put("JMSType", m.getJMSType());
             rc.put("JMSDeliveryMode", m.getJMSDeliveryMode()==DeliveryMode.PERSISTENT ? "PERSISTENT" : "NON-PERSISTENT");
-            rc.put("JMSExpiration", new Long(m.getJMSExpiration()));
-            rc.put("JMSPriority", new Integer(m.getJMSPriority()));
-            rc.put("JMSRedelivered", new Boolean(m.getJMSRedelivered()));
+            rc.put("JMSExpiration", Long.valueOf(m.getJMSExpiration()));
+            rc.put("JMSPriority", Integer.valueOf(m.getJMSPriority()));
+            rc.put("JMSRedelivered", Boolean.valueOf(m.getJMSRedelivered()));
             rc.put("JMSTimestamp", new Date(m.getJMSTimestamp()));
             try {
                 rc.put("Properties", ""+m.getProperties());
@@ -155,9 +155,9 @@ public class OpenTypeSupport {
             long length=0;
             try {
                 length = m.getBodyLength();
-                rc.put("BodyLength", new Long(length));
+                rc.put("BodyLength", Long.valueOf(length));
             } catch (JMSException e) {
-                rc.put("BodyLength", new Long(0));
+                rc.put("BodyLength", Long.valueOf(0));
             }
             try {
                 byte preview[] = new byte[ (int)Math.min(length, 255) ];

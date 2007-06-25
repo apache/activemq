@@ -54,8 +54,8 @@ public class TopicClusterTest extends TestCase implements MessageListener {
     protected Destination destination;
     protected boolean topic = true;
     protected AtomicInteger receivedMessageCount = new AtomicInteger(0);
-    protected static int MESSAGE_COUNT = 50;
-    protected static int NUMBER_IN_CLUSTER = 3;
+    protected static final int MESSAGE_COUNT = 50;
+    protected static final int NUMBER_IN_CLUSTER = 3;
     protected int deliveryMode = DeliveryMode.NON_PERSISTENT;
     protected MessageProducer[] producers;
     protected Connection[] connections;

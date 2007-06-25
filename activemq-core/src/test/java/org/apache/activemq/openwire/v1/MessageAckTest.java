@@ -39,7 +39,7 @@ import org.apache.activemq.command.*;
 public class MessageAckTest extends BaseCommandTestSupport {
 
 
-    public static MessageAckTest SINGLETON = new MessageAckTest();
+    public static final MessageAckTest SINGLETON = new MessageAckTest();
 
     public Object createObject() throws Exception {
     		MessageAck info = new MessageAck();

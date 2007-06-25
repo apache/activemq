@@ -364,7 +364,7 @@ public class ActiveMQStreamMessageTest extends TestCase {
             msg.reset();
             assertTrue(msg.readLong() == test);
             msg.reset();
-            assertTrue(msg.readString().equals(new Long(test).toString()));
+            assertTrue(msg.readString().equals(Long.valueOf(test).toString()));
             msg.reset();
             try {
                 msg.readBoolean();

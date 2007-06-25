@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 public class Scheduler {
 
     
-    static public ScheduledThreadPoolExecutor clockDaemon = new ScheduledThreadPoolExecutor(5, new ThreadFactory(){
+    public static final ScheduledThreadPoolExecutor clockDaemon = new ScheduledThreadPoolExecutor(5, new ThreadFactory(){
             public Thread newThread(Runnable runnable) {
                 Thread thread = new Thread(runnable,"ActiveMQ Scheduler");
                 thread.setDaemon(true);

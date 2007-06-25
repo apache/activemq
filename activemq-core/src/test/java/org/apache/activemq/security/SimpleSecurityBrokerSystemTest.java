@@ -104,7 +104,7 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
         return new SimpleAuthorizationMap(writeAccess, readAccess, adminAccess);
     }
 
-    class SimpleAuthenticationFactory implements BrokerPlugin {
+    static class SimpleAuthenticationFactory implements BrokerPlugin {
         public Broker installPlugin(Broker broker) {
 
             HashMap u = new HashMap();

@@ -34,7 +34,7 @@ public class DummyMessageQuery implements MessageQuery {
     
     protected static final Log log = LogFactory.getLog(DummyMessageQuery.class);
 
-    public static int messageCount = 10;
+    public static final int messageCount = 10;
     
     public void execute(ActiveMQDestination destination, MessageListener listener) throws Exception {
         log.info("Initial query is creating: " + messageCount + " messages");

@@ -92,7 +92,7 @@ public class CompositeQueueTest extends EmbeddedBrokerTestSupport {
 
     protected TextMessage createMessage(Session session, int i) throws JMSException {
         TextMessage textMessage = session.createTextMessage("message: " + i);
-        if (i % 2 == 1) {
+        if (i % 2 != 0) {
             textMessage.setStringProperty("odd", "yes");
         }
         textMessage.setIntProperty("i", i);

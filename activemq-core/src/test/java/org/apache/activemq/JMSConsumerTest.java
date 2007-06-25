@@ -65,13 +65,13 @@ public class JMSConsumerTest extends JmsTestSupport {
     
     public void initCombosForTestMessageListenerWithConsumerCanBeStopped() {
         addCombinationValues("deliveryMode", new Object[] { 
-                new Integer(DeliveryMode.NON_PERSISTENT),
-                new Integer(DeliveryMode.PERSISTENT) });
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT),
+                Integer.valueOf(DeliveryMode.PERSISTENT) });
         addCombinationValues("destinationType", new Object[] { 
-                new Byte(ActiveMQDestination.QUEUE_TYPE),
-                new Byte(ActiveMQDestination.TOPIC_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE),
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE) });
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE),
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE),
+                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE) });
     }
     public void testMessageListenerWithConsumerCanBeStopped() throws Exception {
 
@@ -115,17 +115,17 @@ public class JMSConsumerTest extends JmsTestSupport {
     
     public void initCombosForTestMutiReceiveWithPrefetch1() {
         addCombinationValues("deliveryMode", new Object[] { 
-                new Integer(DeliveryMode.NON_PERSISTENT),
-                new Integer(DeliveryMode.PERSISTENT) });
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT),
+                Integer.valueOf(DeliveryMode.PERSISTENT) });
         addCombinationValues("ackMode", new Object[] { 
-                new Integer(Session.AUTO_ACKNOWLEDGE),
-                new Integer(Session.DUPS_OK_ACKNOWLEDGE), 
-                new Integer(Session.CLIENT_ACKNOWLEDGE) });
+                Integer.valueOf(Session.AUTO_ACKNOWLEDGE),
+                Integer.valueOf(Session.DUPS_OK_ACKNOWLEDGE), 
+                Integer.valueOf(Session.CLIENT_ACKNOWLEDGE) });
         addCombinationValues("destinationType", new Object[] { 
-                new Byte(ActiveMQDestination.QUEUE_TYPE),
-                new Byte(ActiveMQDestination.TOPIC_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE),
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE),
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE),
+                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)
                 });
     }
 
@@ -155,10 +155,10 @@ public class JMSConsumerTest extends JmsTestSupport {
 
     public void initCombosForTestDurableConsumerSelectorChange() {
         addCombinationValues("deliveryMode", new Object[] { 
-                new Integer(DeliveryMode.NON_PERSISTENT),
-                new Integer(DeliveryMode.PERSISTENT) });
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT),
+                Integer.valueOf(DeliveryMode.PERSISTENT) });
         addCombinationValues("destinationType", new Object[] { 
-                new Byte(ActiveMQDestination.TOPIC_TYPE)});
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE)});
     }
     public void testDurableConsumerSelectorChange() throws Exception {
 
@@ -200,11 +200,11 @@ public class JMSConsumerTest extends JmsTestSupport {
     }
 
     public void initCombosForTestSendReceiveBytesMessage() {
-        addCombinationValues("deliveryMode", new Object[] { new Integer(DeliveryMode.NON_PERSISTENT),
-                new Integer(DeliveryMode.PERSISTENT) });
-        addCombinationValues("destinationType", new Object[] { new Byte(ActiveMQDestination.QUEUE_TYPE),
-                new Byte(ActiveMQDestination.TOPIC_TYPE), new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE),
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE) });
+        addCombinationValues("deliveryMode", new Object[] { Integer.valueOf(DeliveryMode.NON_PERSISTENT),
+                Integer.valueOf(DeliveryMode.PERSISTENT) });
+        addCombinationValues("destinationType", new Object[] { Byte.valueOf(ActiveMQDestination.QUEUE_TYPE),
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE),
+                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE) });
     }
 
     public void testSendReceiveBytesMessage() throws Exception {
@@ -233,13 +233,13 @@ public class JMSConsumerTest extends JmsTestSupport {
     
     public void initCombosForTestSetMessageListenerAfterStart() {
         addCombinationValues("deliveryMode", new Object[] { 
-                new Integer(DeliveryMode.NON_PERSISTENT),
-                new Integer(DeliveryMode.PERSISTENT) });
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT),
+                Integer.valueOf(DeliveryMode.PERSISTENT) });
         addCombinationValues("destinationType", new Object[] { 
-                new Byte(ActiveMQDestination.QUEUE_TYPE),
-                new Byte(ActiveMQDestination.TOPIC_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE),
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE) });
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE),
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE),
+                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE) });
     }
     public void testSetMessageListenerAfterStart() throws Exception {
 
@@ -273,15 +273,15 @@ public class JMSConsumerTest extends JmsTestSupport {
     
     public void initCombosForTestMessageListenerUnackedWithPrefetch1StayInQueue() {
         addCombinationValues("deliveryMode", new Object[] { 
-                new Integer(DeliveryMode.NON_PERSISTENT),
-                new Integer(DeliveryMode.PERSISTENT) 
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT),
+                Integer.valueOf(DeliveryMode.PERSISTENT) 
                 });
         addCombinationValues("ackMode", new Object[] { 
-                new Integer(Session.AUTO_ACKNOWLEDGE),
-                new Integer(Session.DUPS_OK_ACKNOWLEDGE), 
-                new Integer(Session.CLIENT_ACKNOWLEDGE) 
+                Integer.valueOf(Session.AUTO_ACKNOWLEDGE),
+                Integer.valueOf(Session.DUPS_OK_ACKNOWLEDGE), 
+                Integer.valueOf(Session.CLIENT_ACKNOWLEDGE) 
                 });
-        addCombinationValues("destinationType", new Object[] { new Byte(ActiveMQDestination.QUEUE_TYPE), });
+        addCombinationValues("destinationType", new Object[] { Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), });
     }
 
     public void testMessageListenerUnackedWithPrefetch1StayInQueue() throws Exception {
@@ -364,13 +364,13 @@ public class JMSConsumerTest extends JmsTestSupport {
     
     public void initCombosForTestMessageListenerWithConsumerWithPrefetch1() {
         addCombinationValues("deliveryMode", new Object[] { 
-                new Integer(DeliveryMode.NON_PERSISTENT),
-                new Integer(DeliveryMode.PERSISTENT) });
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT),
+                Integer.valueOf(DeliveryMode.PERSISTENT) });
         addCombinationValues("destinationType", new Object[] { 
-                new Byte(ActiveMQDestination.QUEUE_TYPE),
-                new Byte(ActiveMQDestination.TOPIC_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE),
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE) });
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE),
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE),
+                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE) });
     }
     public void testMessageListenerWithConsumerWithPrefetch1() throws Exception {
 
@@ -404,13 +404,13 @@ public class JMSConsumerTest extends JmsTestSupport {
 
     public void initCombosForTestMessageListenerWithConsumer() {
         addCombinationValues("deliveryMode", new Object[] { 
-                new Integer(DeliveryMode.NON_PERSISTENT),
-                new Integer(DeliveryMode.PERSISTENT) });
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT),
+                Integer.valueOf(DeliveryMode.PERSISTENT) });
         addCombinationValues("destinationType", new Object[] { 
-                new Byte(ActiveMQDestination.QUEUE_TYPE),
-                new Byte(ActiveMQDestination.TOPIC_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE),
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE) });
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE),
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE),
+                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE) });
     }
     public void testMessageListenerWithConsumer() throws Exception {
 
@@ -441,11 +441,11 @@ public class JMSConsumerTest extends JmsTestSupport {
     }
 
     public void initCombosForTestUnackedWithPrefetch1StayInQueue() {
-        addCombinationValues("deliveryMode", new Object[] { new Integer(DeliveryMode.NON_PERSISTENT),
-                new Integer(DeliveryMode.PERSISTENT) });
-        addCombinationValues("ackMode", new Object[] { new Integer(Session.AUTO_ACKNOWLEDGE),
-                new Integer(Session.DUPS_OK_ACKNOWLEDGE), new Integer(Session.CLIENT_ACKNOWLEDGE) });
-        addCombinationValues("destinationType", new Object[] { new Byte(ActiveMQDestination.QUEUE_TYPE), });
+        addCombinationValues("deliveryMode", new Object[] { Integer.valueOf(DeliveryMode.NON_PERSISTENT),
+        		Integer.valueOf(DeliveryMode.PERSISTENT) });
+        addCombinationValues("ackMode", new Object[] { Integer.valueOf(Session.AUTO_ACKNOWLEDGE),
+        		Integer.valueOf(Session.DUPS_OK_ACKNOWLEDGE), Integer.valueOf(Session.CLIENT_ACKNOWLEDGE) });
+        addCombinationValues("destinationType", new Object[] { Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), });
     }
 
     public void testUnackedWithPrefetch1StayInQueue() throws Exception {
@@ -490,8 +490,8 @@ public class JMSConsumerTest extends JmsTestSupport {
 
     }
     public void initCombosForTestPrefetch1MessageNotDispatched() {
-        addCombinationValues("deliveryMode", new Object[] { new Integer(DeliveryMode.NON_PERSISTENT),
-                new Integer(DeliveryMode.PERSISTENT) });
+        addCombinationValues("deliveryMode", new Object[] { Integer.valueOf(DeliveryMode.NON_PERSISTENT),
+                Integer.valueOf(DeliveryMode.PERSISTENT) });
     }
     
     public void testPrefetch1MessageNotDispatched() throws Exception {
@@ -532,9 +532,9 @@ public class JMSConsumerTest extends JmsTestSupport {
     }
     
     public void initCombosForTestDontStart() {
-        addCombinationValues("deliveryMode", new Object[] { new Integer(DeliveryMode.NON_PERSISTENT), });
-        addCombinationValues("destinationType", new Object[] { new Byte(ActiveMQDestination.QUEUE_TYPE),
-                new Byte(ActiveMQDestination.TOPIC_TYPE), });
+        addCombinationValues("deliveryMode", new Object[] { Integer.valueOf(DeliveryMode.NON_PERSISTENT), });
+        addCombinationValues("destinationType", new Object[] { Byte.valueOf(ActiveMQDestination.QUEUE_TYPE),
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), });
     }
 
     public void testDontStart() throws Exception {
@@ -551,9 +551,9 @@ public class JMSConsumerTest extends JmsTestSupport {
     }
 
     public void initCombosForTestStartAfterSend() {
-        addCombinationValues("deliveryMode", new Object[] { new Integer(DeliveryMode.NON_PERSISTENT), });
-        addCombinationValues("destinationType", new Object[] { new Byte(ActiveMQDestination.QUEUE_TYPE),
-                new Byte(ActiveMQDestination.TOPIC_TYPE), });
+        addCombinationValues("deliveryMode", new Object[] { Integer.valueOf(DeliveryMode.NON_PERSISTENT), });
+        addCombinationValues("destinationType", new Object[] { Byte.valueOf(ActiveMQDestination.QUEUE_TYPE),
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), });
     }
 
     public void testStartAfterSend() throws Exception {
@@ -574,11 +574,11 @@ public class JMSConsumerTest extends JmsTestSupport {
     }
 
     public void initCombosForTestReceiveMessageWithConsumer() {
-        addCombinationValues("deliveryMode", new Object[] { new Integer(DeliveryMode.NON_PERSISTENT),
-                new Integer(DeliveryMode.PERSISTENT) });
-        addCombinationValues("destinationType", new Object[] { new Byte(ActiveMQDestination.QUEUE_TYPE),
-                new Byte(ActiveMQDestination.TOPIC_TYPE), new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE),
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE) });
+        addCombinationValues("deliveryMode", new Object[] { Integer.valueOf(DeliveryMode.NON_PERSISTENT),
+                Integer.valueOf(DeliveryMode.PERSISTENT) });
+        addCombinationValues("destinationType", new Object[] { Byte.valueOf(ActiveMQDestination.QUEUE_TYPE),
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE),
+                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE) });
     }
 
     public void testReceiveMessageWithConsumer() throws Exception {
