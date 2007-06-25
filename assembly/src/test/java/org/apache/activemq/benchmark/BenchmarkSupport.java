@@ -184,7 +184,7 @@ public class BenchmarkSupport {
                 times++;
             }
             if (times > 0) {
-                average = total / times;
+                average = total / (double) times;
             }
 
             long oldtime = time;
