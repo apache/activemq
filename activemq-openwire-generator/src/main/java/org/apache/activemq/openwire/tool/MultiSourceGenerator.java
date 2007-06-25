@@ -146,7 +146,7 @@ public abstract class MultiSourceGenerator extends OpenWireGenerator {
     }
     
     public boolean isAbstractClass() {
-        return jclass != null & jclass.isAbstract();
+        return jclass != null && jclass.isAbstract();
     }
 
     public String getAbstractClassText() {

@@ -235,7 +235,6 @@ out.println("apr_status_t ow_marshall(ow_byte_buffer *buffer, ow_DataStructure *
     protected void generateFile(PrintWriter out) throws Exception {
 
         String structName = jclass.getSimpleName();
-        String type = "OW_" + structName.toUpperCase() + "_TYPE";
 
 out.println("");
 out.println("typedef struct ow_"+structName+" {");
