@@ -402,7 +402,7 @@ public class MessageServlet extends MessageServletSupport {
     /*
      * Listen for available messages and wakeup any continuations.
      */
-    private class Listener implements MessageAvailableListener {
+    private static class Listener implements MessageAvailableListener {
         MessageConsumer consumer;
         Continuation continuation;
         List queue = new LinkedList();
