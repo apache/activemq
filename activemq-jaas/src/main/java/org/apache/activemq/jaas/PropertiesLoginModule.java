@@ -44,8 +44,8 @@ import org.apache.commons.logging.LogFactory;
  */
 public class PropertiesLoginModule implements LoginModule {
 
-    private final String USER_FILE = "org.apache.activemq.jaas.properties.user";
-    private final String GROUP_FILE = "org.apache.activemq.jaas.properties.group";
+    private static final String USER_FILE = "org.apache.activemq.jaas.properties.user";
+    private static final String GROUP_FILE = "org.apache.activemq.jaas.properties.group";
 
     private static final Log log = LogFactory.getLog(PropertiesLoginModule.class);
 
@@ -83,13 +83,17 @@ public class PropertiesLoginModule implements LoginModule {
     public boolean login() throws LoginException {
         File f = new File(baseDir,usersFile);
         try {
-            users.load(new java.io.FileInputStream(f));
+        	java.io.FileInputStream in = new java.io.FileInputStream(f);
+            users.load(in);
+            in.close();
         } catch (IOException ioe) {
             throw new LoginException("Unable to load user properties file " + f);
         }
         f = new File(baseDir, groupsFile);
         try {
-            groups.load(new java.io.FileInputStream(f));
+        	java.io.FileInputStream in = new java.io.FileInputStream(f);
+            groups.load(in);
+            in.close();
         } catch (IOException ioe) {
             throw new LoginException("Unable to load group properties file " + f);
         }
