@@ -109,7 +109,7 @@ public class ShutdownCommand extends AbstractJmxCommand {
             GlobalWriter.print("Stopping broker: " + brokerName);
 
             try {
-                server.invoke(brokerObjName, "terminateJVM", new Object[] {new Integer(0)}, new String[] {"int"});
+                server.invoke(brokerObjName, "terminateJVM", new Object[] {Integer.valueOf(0)}, new String[] {"int"});
                 GlobalWriter.print("Succesfully stopped broker: " + brokerName);
             } catch (Exception e) {
                 // TODO: Check exceptions throwned
