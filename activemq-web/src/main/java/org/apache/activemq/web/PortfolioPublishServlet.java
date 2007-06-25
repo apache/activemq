@@ -56,11 +56,11 @@ public class PortfolioPublishServlet extends MessageServletSupport {
         else {
             Integer total=(Integer)request.getSession(true).getAttribute("total");
             if (total==null)
-                total=new Integer(0);
+                total=Integer.valueOf(0);
             
             
             int count = getNumberOfMessages(request);
-            total=new Integer(total.intValue()+count);
+            total=Integer.valueOf(total.intValue()+count);
             request.getSession().setAttribute("total",total);
             
             try {
