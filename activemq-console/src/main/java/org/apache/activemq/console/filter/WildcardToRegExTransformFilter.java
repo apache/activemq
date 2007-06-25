@@ -39,7 +39,6 @@ public class WildcardToRegExTransformFilter extends WildcardTransformFilter {
         int pos = key.indexOf("=");
         if (pos >= 0) {
             val = key.substring(pos + 1);
-            key = key.substring(0, pos);
         }
 
         // If the value contains wildcards

@@ -81,15 +81,15 @@ public class JmxMBeansUtil {
         return query.replaceAll("%1", param);
     }
 
-    public static String createQueryString(String query, List params) {
+	public static String createQueryString(String query, List params) {
+		String output = query;
+		int count = 1;
+		for (Iterator i = params.iterator(); i.hasNext();) {
+			output = output.replaceAll("%" + count++, i.next().toString());
+		}
 
-        int count = 1;
-        for (Iterator i=params.iterator();i.hasNext();) {
-            query.replaceAll("%" + count++, i.next().toString());
-        }
-
-        return query;
-    }
+		return output;
+	}
 
     public static QueryFilter createMBeansObjectNameQuery(JMXServiceURL jmxUrl) {
         return new WildcardToRegExTransformFilter(       // Let us be able to accept wildcard queries
