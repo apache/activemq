@@ -51,7 +51,7 @@ public class MessageEndpointProxyTest extends MockObjectTestCase {
     public void testInvalidConstruction() {
         Mock mockEndpoint = new Mock(MessageEndpoint.class);
         try {
-            MessageEndpointProxy proxy = new MessageEndpointProxy((MessageEndpoint) mockEndpoint.proxy());
+            new MessageEndpointProxy((MessageEndpoint) mockEndpoint.proxy());
             fail("An exception should have been thrown");
         } catch (IllegalArgumentException e) {
             assertTrue(true);

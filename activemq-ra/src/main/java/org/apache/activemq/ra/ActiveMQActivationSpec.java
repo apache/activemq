@@ -533,7 +533,7 @@ public String toString() {
     }
 
     public String getMaxMessagesPerSessions() {
-        return maxMessagesPerSessions.toString();
+        return maxMessagesPerSessions;
     }
     
     /**
@@ -592,14 +592,14 @@ public String toString() {
     }
 
     public boolean isUseRAManagedTransactionEnabled() {
-        return new Boolean(useRAManagedTransaction).booleanValue();
+        return Boolean.valueOf(useRAManagedTransaction).booleanValue();
     }
 
     /**
      * 
      */
     public boolean getNoLocalBooleanValue() {
-        return new Boolean(noLocal).booleanValue();
+        return Boolean.valueOf(noLocal).booleanValue();
     }
 
     public String getEnableBatch() {
@@ -616,7 +616,7 @@ public String toString() {
     }
 
     public boolean getEnableBatchBooleanValue() {
-        return new Boolean(enableBatch).booleanValue();
+        return Boolean.valueOf(enableBatch).booleanValue();
     }
 
     public int getMaxMessagesPerBatchIntValue() {
@@ -624,7 +624,7 @@ public String toString() {
     }
 
     public String getMaxMessagesPerBatch() {
-        return maxMessagesPerBatch.toString();
+        return maxMessagesPerBatch;
     }
 
     /**

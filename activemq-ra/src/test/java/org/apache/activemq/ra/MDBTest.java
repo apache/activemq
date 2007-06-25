@@ -55,7 +55,7 @@ import java.util.concurrent.TimeUnit;
 
 public class MDBTest extends TestCase {
 
-    private final class StubBootstrapContext implements BootstrapContext {
+    private static final class StubBootstrapContext implements BootstrapContext {
         public WorkManager getWorkManager() {
             return new WorkManager() {
                 public void doWork(Work work) throws WorkException {

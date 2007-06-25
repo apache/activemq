@@ -68,7 +68,7 @@ public class ActiveMQEndpointActivationKey {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
+        if (obj == null || !(obj instanceof ActiveMQEndpointActivationKey)) {
             return false;
         }
         ActiveMQEndpointActivationKey o = (ActiveMQEndpointActivationKey) obj;
