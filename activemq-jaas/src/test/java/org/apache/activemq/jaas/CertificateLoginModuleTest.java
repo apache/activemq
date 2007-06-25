@@ -35,8 +35,8 @@ import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 
 public class CertificateLoginModuleTest extends TestCase {
-    private final String userName = "testUser";
-    private final List groupNames = new Vector();
+    private static final String userName = "testUser";
+    private static final List groupNames = new Vector();
     private StubCertificateLoginModule loginModule;
     
     private Subject subject;

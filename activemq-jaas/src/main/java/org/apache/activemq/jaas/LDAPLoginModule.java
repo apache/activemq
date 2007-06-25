@@ -119,8 +119,8 @@ public class LDAPLoginModule implements LoginModule {
         userRoleName = (String) options.get(USER_ROLE_NAME);
         userSearchMatchingFormat = new MessageFormat(userSearchMatching);
         roleSearchMatchingFormat = new MessageFormat(roleSearchMatching);
-        userSearchSubtreeBool = new Boolean(userSearchSubtree).booleanValue();
-        roleSearchSubtreeBool = new Boolean(roleSearchSubtree).booleanValue();
+        userSearchSubtreeBool = Boolean.valueOf(userSearchSubtree).booleanValue();
+        roleSearchSubtreeBool = Boolean.valueOf(roleSearchSubtree).booleanValue();
     }
 
     public boolean login() throws LoginException {

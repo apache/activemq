@@ -47,8 +47,8 @@ import javax.security.auth.login.LoginException;
  */
 public class TextFileCertificateLoginModule extends CertificateLoginModule {
     
-    private final String USER_FILE = "org.apache.activemq.jaas.textfiledn.user";
-    private final String GROUP_FILE = "org.apache.activemq.jaas.textfiledn.group";
+    private static final String USER_FILE = "org.apache.activemq.jaas.textfiledn.user";
+    private static final String GROUP_FILE = "org.apache.activemq.jaas.textfiledn.group";
     
     private File baseDir;
     private String usersFilePathname;
@@ -88,7 +88,9 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
         Properties users = new Properties();
         
         try {
-            users.load(new java.io.FileInputStream(usersFile));
+        	java.io.FileInputStream in = new java.io.FileInputStream(usersFile);
+            users.load(in);
+            in.close();
         } catch (IOException ioe) {
             throw new LoginException("Unable to load user properties file " + usersFile);
         }
@@ -119,7 +121,9 @@ public class TextFileCertificateLoginModule extends CertificateLoginModule {
         
         Properties groups = new Properties();
         try {
-            groups.load(new java.io.FileInputStream(groupsFile));
+        	java.io.FileInputStream in = new java.io.FileInputStream(groupsFile);
+            groups.load(in);
+            in.close();
         } catch (IOException ioe) {
             throw new LoginException("Unable to load group properties file " + groupsFile);
         }
