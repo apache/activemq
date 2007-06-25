@@ -108,8 +108,6 @@ out.println("import " + clazz.getQualifiedName() + ";");
 			}
 		}
 
-		boolean marshallerAware = isMarshallAware(jclass);
-
 out.println("");
 out.println("/**");
 out.println(" * Test case for the OpenWire marshalling for "+jclass.getSimpleName()+"");
