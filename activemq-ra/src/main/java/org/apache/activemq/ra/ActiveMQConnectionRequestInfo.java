@@ -199,19 +199,19 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     public Short getRedeliveryBackOffMultiplier() {
-        return new Short(redeliveryPolicy().getBackOffMultiplier());
+        return Short.valueOf(redeliveryPolicy().getBackOffMultiplier());
     }
 
     public Long getInitialRedeliveryDelay() {
-        return new Long(redeliveryPolicy().getInitialRedeliveryDelay());
+        return Long.valueOf(redeliveryPolicy().getInitialRedeliveryDelay());
     }
 
     public Integer getMaximumRedeliveries() {
-        return new Integer(redeliveryPolicy().getMaximumRedeliveries());
+        return Integer.valueOf(redeliveryPolicy().getMaximumRedeliveries());
     }
 
     public Boolean getRedeliveryUseExponentialBackOff() {
-        return new Boolean(redeliveryPolicy().isUseExponentialBackOff());
+        return Boolean.valueOf(redeliveryPolicy().isUseExponentialBackOff());
     }
 
     public void setRedeliveryBackOffMultiplier(Short value) {
@@ -239,23 +239,23 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     public Integer getDurableTopicPrefetch() {
-        return new Integer(prefetchPolicy().getDurableTopicPrefetch());
+        return Integer.valueOf(prefetchPolicy().getDurableTopicPrefetch());
     }
 
     public Integer getInputStreamPrefetch() {
-        return new Integer(prefetchPolicy().getInputStreamPrefetch());
+        return Integer.valueOf(prefetchPolicy().getInputStreamPrefetch());
     }
 
     public Integer getQueueBrowserPrefetch() {
-        return new Integer(prefetchPolicy().getQueueBrowserPrefetch());
+        return Integer.valueOf(prefetchPolicy().getQueueBrowserPrefetch());
     }
 
     public Integer getQueuePrefetch() {
-        return new Integer(prefetchPolicy().getQueuePrefetch());
+        return Integer.valueOf(prefetchPolicy().getQueuePrefetch());
     }
 
     public Integer getTopicPrefetch() {
-        return new Integer(prefetchPolicy().getTopicPrefetch());
+        return Integer.valueOf(prefetchPolicy().getTopicPrefetch());
     }
 
     public void setAllPrefetchValues(Integer i) {
