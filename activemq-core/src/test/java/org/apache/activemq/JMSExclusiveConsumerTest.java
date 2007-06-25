@@ -45,8 +45,8 @@ public class JMSExclusiveConsumerTest extends JmsTestSupport {
     public int deliveryMode;
     
     public void initCombosForTestRoundRobinDispatchOnNonExclusive() {
-        addCombinationValues("deliveryMode", new Object[] { new Integer(DeliveryMode.NON_PERSISTENT),
-                new Integer(DeliveryMode.PERSISTENT) });
+        addCombinationValues("deliveryMode", new Object[] { Integer.valueOf(DeliveryMode.NON_PERSISTENT),
+        		Integer.valueOf(DeliveryMode.PERSISTENT) });
     }
 
     /**
@@ -82,8 +82,8 @@ public class JMSExclusiveConsumerTest extends JmsTestSupport {
     }
 
     public void initCombosForTestDispatchExclusive() {
-        addCombinationValues("deliveryMode", new Object[] { new Integer(DeliveryMode.NON_PERSISTENT),
-                new Integer(DeliveryMode.PERSISTENT) });
+        addCombinationValues("deliveryMode", new Object[] { Integer.valueOf(DeliveryMode.NON_PERSISTENT),
+        		Integer.valueOf(DeliveryMode.PERSISTENT) });
     }
 
     /**

@@ -84,7 +84,7 @@ public class ResponseCorrelator extends TransportFilter{
             Response response=(Response)command;
             FutureResponse future=null;
             synchronized(requestMap){
-                future=(FutureResponse)requestMap.remove(new Integer(response.getCorrelationId()));
+                future=(FutureResponse)requestMap.remove(Integer.valueOf(response.getCorrelationId()));
             }
             if(future!=null){
                 future.set(response);

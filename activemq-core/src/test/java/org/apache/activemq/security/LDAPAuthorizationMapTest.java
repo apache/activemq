@@ -48,7 +48,6 @@ import junit.framework.TestCase;
  * 
  */
 public class LDAPAuthorizationMapTest extends TestCase {
-    private HashMap options;
     private LDAPAuthorizationMap authMap;
 
     protected void setUp() throws Exception {

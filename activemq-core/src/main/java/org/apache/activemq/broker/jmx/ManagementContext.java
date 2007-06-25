@@ -387,7 +387,7 @@ public class ManagementContext implements Service{
             mbeanServer.registerMBean(cl.newInstance(),namingServiceObjectName);
             // mbeanServer.createMBean("mx4j.tools.naming.NamingService", namingServiceObjectName, null);
             // set the naming port
-            Attribute attr=new Attribute("Port",new Integer(connectorPort));
+            Attribute attr=new Attribute("Port",Integer.valueOf(connectorPort));
             mbeanServer.setAttribute(namingServiceObjectName,attr);
         }catch(Throwable e){
             log.debug("Failed to create local registry",e);

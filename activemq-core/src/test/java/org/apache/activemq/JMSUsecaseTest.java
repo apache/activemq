@@ -50,11 +50,11 @@ public class JMSUsecaseTest extends JmsTestSupport {
 
     public void initCombosForTestQueueBrowser() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );        
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );        
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
                 } );
     }       
     public void testQueueBrowser() throws Exception {
@@ -80,13 +80,13 @@ public class JMSUsecaseTest extends JmsTestSupport {
 
     public void initCombosForTestSendReceive() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );        
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );        
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TOPIC_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
     }       
     public void testSendReceive() throws Exception {
         // Send a message to the broker.
@@ -105,13 +105,13 @@ public class JMSUsecaseTest extends JmsTestSupport {
 
     public void initCombosForTestSendReceiveTransacted() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );        
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );        
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TOPIC_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
     }       
     public void testSendReceiveTransacted() throws Exception {
         // Send a message to the broker.

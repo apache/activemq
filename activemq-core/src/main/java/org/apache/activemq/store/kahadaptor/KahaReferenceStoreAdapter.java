@@ -162,7 +162,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     }
     
     synchronized void addInterestInRecordFile(int recordNumber) {
-        Integer key = new Integer(recordNumber);
+        Integer key = Integer.valueOf(recordNumber);
         AtomicInteger rr = recordReferences.get(key);
         if (rr == null) {
             rr = new AtomicInteger();
@@ -172,7 +172,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     }
     
     synchronized void removeInterestInRecordFile(int recordNumber) {
-        Integer key = new Integer(recordNumber);
+        Integer key = Integer.valueOf(recordNumber);
         AtomicInteger rr = recordReferences.get(key);
         if (rr != null && rr.decrementAndGet() <= 0) {
             recordReferences.remove(key);

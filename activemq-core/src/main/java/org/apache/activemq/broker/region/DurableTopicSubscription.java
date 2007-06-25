@@ -119,9 +119,9 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 MessageReference node=(MessageReference)iter.next();
                 Integer count=(Integer)redeliveredMessages.get(node.getMessageId());
                 if(count!=null){
-                    redeliveredMessages.put(node.getMessageId(),new Integer(count.intValue()+1));
+                    redeliveredMessages.put(node.getMessageId(),Integer.valueOf(count.intValue()+1));
                 }else{
-                    redeliveredMessages.put(node.getMessageId(),new Integer(1));
+                    redeliveredMessages.put(node.getMessageId(),Integer.valueOf(1));
                 }
                 if(keepDurableSubsActive){
                     synchronized(pending){

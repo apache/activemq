@@ -65,10 +65,10 @@ public class JMSMessageTest extends JmsTestSupport {
                 "vm://localhost?marshal=true" 
                 });
         addCombinationValues("deliveryMode", new Object[] { 
-                new Integer(DeliveryMode.NON_PERSISTENT),
-                new Integer(DeliveryMode.PERSISTENT) });
+        		Integer.valueOf(DeliveryMode.NON_PERSISTENT),
+        		Integer.valueOf(DeliveryMode.PERSISTENT) });
         addCombinationValues("destinationType", new Object[] { 
-                new Byte(ActiveMQDestination.QUEUE_TYPE)});
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE)});
     }
     
     public void testTextMessage() throws Exception {

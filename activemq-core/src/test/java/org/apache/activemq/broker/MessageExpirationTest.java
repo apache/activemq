@@ -54,13 +54,13 @@ public class MessageExpirationTest extends BrokerTestSupport {
     
     public void initCombosForTestMessagesWaitingForUssageDecreaseExpire() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );        
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );        
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE),
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TOPIC_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE),
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), 
                 } );
     }
 
@@ -162,14 +162,14 @@ public class MessageExpirationTest extends BrokerTestSupport {
      */
     public void initCombosForTestMessagesInLongTransactionExpire() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                //new Integer(DeliveryMode.PERSISTENT)
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                //Integer.valueOf(DeliveryMode.PERSISTENT)
                 } );        
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TOPIC_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)
                 } );
     }
     
@@ -232,25 +232,25 @@ public class MessageExpirationTest extends BrokerTestSupport {
 
     public void TestMessagesInSubscriptionPendingListExpire() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );        
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );        
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TOPIC_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)
                 } );
     }
     
     public void initCombosForTestMessagesInSubscriptionPendingListExpire() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );        
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );        
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TOPIC_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)
                 } );
     }
 

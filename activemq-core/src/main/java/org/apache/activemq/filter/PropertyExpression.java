@@ -66,12 +66,12 @@ public class PropertyExpression implements Expression {
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSDeliveryMode", new SubExpression() {
             public Object evaluate(Message message) {
-                return new Integer(message.isPersistent() ? DeliveryMode.PERSISTENT : DeliveryMode.NON_PERSISTENT );
+                return Integer.valueOf(message.isPersistent() ? DeliveryMode.PERSISTENT : DeliveryMode.NON_PERSISTENT );
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSPriority", new SubExpression() {
             public Object evaluate(Message message) {
-                return new Integer(message.getPriority());
+                return Integer.valueOf(message.getPriority());
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSMessageID", new SubExpression() {
@@ -83,7 +83,7 @@ public class PropertyExpression implements Expression {
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSTimestamp", new SubExpression() {
             public Object evaluate(Message message) {
-                return new Long(message.getTimestamp());
+                return Long.valueOf(message.getTimestamp());
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSCorrelationID", new SubExpression() {
@@ -93,28 +93,28 @@ public class PropertyExpression implements Expression {
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSExpiration", new SubExpression() {
             public Object evaluate(Message message) {
-                return new Long(message.getExpiration());
+                return Long.valueOf(message.getExpiration());
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSPriority", new SubExpression() {
             public Object evaluate(Message message) {
-                return new Integer(message.getPriority());
+                return Integer.valueOf(message.getPriority());
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSTimestamp", new SubExpression() {
             public Object evaluate(Message message) {
-                return new Long(message.getTimestamp());
+                return Long.valueOf(message.getTimestamp());
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSRedelivered", new SubExpression() {
             public Object evaluate(Message message) {
-                return new Boolean(message.isRedelivered());
+                return Boolean.valueOf(message.isRedelivered());
             }
         });
         
         JMS_PROPERTY_EXPRESSIONS.put("JMSXDeliveryCount", new SubExpression() {
             public Object evaluate(Message message) {
-                return new Integer(message.getRedeliveryCounter()+1);
+                return Integer.valueOf(message.getRedeliveryCounter()+1);
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSXGroupID", new SubExpression() {

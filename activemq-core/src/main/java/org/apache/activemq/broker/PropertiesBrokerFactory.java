@@ -76,6 +76,7 @@ public class PropertiesBrokerFactory implements BrokerFactoryHandler {
             }
         }
         properties.load(inputStream);
+        inputStream.close();
 
         // should we append any system properties?
         try {

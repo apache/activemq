@@ -60,25 +60,25 @@ public class ConstantExpression implements Expression {
     	
         long l = value.longValue();
         if (Integer.MIN_VALUE <= l && l <= Integer.MAX_VALUE) {
-            value = new Integer(value.intValue());
+            value = Integer.valueOf(value.intValue());
         }
         return new ConstantExpression(value);
     }
 
     public static ConstantExpression createFromHex(String text) {
-        Number value = new Long(Long.parseLong(text.substring(2), 16));
+        Number value = Long.valueOf(Long.parseLong(text.substring(2), 16));
         long l = value.longValue();
         if (Integer.MIN_VALUE <= l && l <= Integer.MAX_VALUE) {
-            value = new Integer(value.intValue());
+            value = Integer.valueOf(value.intValue());
         }
         return new ConstantExpression(value);
     }
 
     public static ConstantExpression createFromOctal(String text) {
-        Number value = new Long(Long.parseLong(text, 8));
+        Number value = Long.valueOf(Long.parseLong(text, 8));
         long l = value.longValue();
         if (Integer.MIN_VALUE <= l && l <= Integer.MAX_VALUE) {
-            value = new Integer(value.intValue());
+            value = Integer.valueOf(value.intValue());
         }
         return new ConstantExpression(value);
     }

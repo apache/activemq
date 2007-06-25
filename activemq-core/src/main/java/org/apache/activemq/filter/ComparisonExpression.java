@@ -41,26 +41,26 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
     static final private HashSet REGEXP_CONTROL_CHARS = new HashSet();
 
     static {
-        REGEXP_CONTROL_CHARS.add(new Character('.'));
-        REGEXP_CONTROL_CHARS.add(new Character('\\'));
-        REGEXP_CONTROL_CHARS.add(new Character('['));
-        REGEXP_CONTROL_CHARS.add(new Character(']'));
-        REGEXP_CONTROL_CHARS.add(new Character('^'));
-        REGEXP_CONTROL_CHARS.add(new Character('$'));
-        REGEXP_CONTROL_CHARS.add(new Character('?'));
-        REGEXP_CONTROL_CHARS.add(new Character('*'));
-        REGEXP_CONTROL_CHARS.add(new Character('+'));
-        REGEXP_CONTROL_CHARS.add(new Character('{'));
-        REGEXP_CONTROL_CHARS.add(new Character('}'));
-        REGEXP_CONTROL_CHARS.add(new Character('|'));
-        REGEXP_CONTROL_CHARS.add(new Character('('));
-        REGEXP_CONTROL_CHARS.add(new Character(')'));
-        REGEXP_CONTROL_CHARS.add(new Character(':'));
-        REGEXP_CONTROL_CHARS.add(new Character('&'));
-        REGEXP_CONTROL_CHARS.add(new Character('<'));
-        REGEXP_CONTROL_CHARS.add(new Character('>'));
-        REGEXP_CONTROL_CHARS.add(new Character('='));
-        REGEXP_CONTROL_CHARS.add(new Character('!'));
+        REGEXP_CONTROL_CHARS.add(Character.valueOf('.'));
+        REGEXP_CONTROL_CHARS.add(Character.valueOf('\\'));
+        REGEXP_CONTROL_CHARS.add(Character.valueOf('['));
+        REGEXP_CONTROL_CHARS.add(Character.valueOf(']'));
+        REGEXP_CONTROL_CHARS.add(Character.valueOf('^'));
+        REGEXP_CONTROL_CHARS.add(Character.valueOf('$'));
+        REGEXP_CONTROL_CHARS.add(Character.valueOf('?'));
+        REGEXP_CONTROL_CHARS.add(Character.valueOf('*'));
+        REGEXP_CONTROL_CHARS.add(Character.valueOf('+'));
+        REGEXP_CONTROL_CHARS.add(Character.valueOf('{'));
+        REGEXP_CONTROL_CHARS.add(Character.valueOf('}'));
+        REGEXP_CONTROL_CHARS.add(Character.valueOf('|'));
+        REGEXP_CONTROL_CHARS.add(Character.valueOf('('));
+        REGEXP_CONTROL_CHARS.add(Character.valueOf(')'));
+        REGEXP_CONTROL_CHARS.add(Character.valueOf(':'));
+        REGEXP_CONTROL_CHARS.add(Character.valueOf('&'));
+        REGEXP_CONTROL_CHARS.add(Character.valueOf('<'));
+        REGEXP_CONTROL_CHARS.add(Character.valueOf('>'));
+        REGEXP_CONTROL_CHARS.add(Character.valueOf('='));
+        REGEXP_CONTROL_CHARS.add(Character.valueOf('!'));
     }
 
     static class LikeExpression extends UnaryExpression implements BooleanExpression {
@@ -354,13 +354,13 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
         if (lc != rc) {
             if (lc == Byte.class) {
                 if (rc == Short.class) {
-                    lv = new Short(((Number) lv).shortValue());
+                    lv = Short.valueOf(((Number) lv).shortValue());
                 }
                 else if (rc == Integer.class) {
-                    lv = new Integer(((Number) lv).intValue());
+                    lv = Integer.valueOf(((Number) lv).intValue());
                 }
                 else if (rc == Long.class) {
-                    lv = new Long(((Number) lv).longValue());
+                    lv = Long.valueOf(((Number) lv).longValue());
                 }
                 else if (rc == Float.class) {
                     lv = new Float(((Number) lv).floatValue());
@@ -373,10 +373,10 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
                 }
              } else if (lc == Short.class) {
                 if (rc == Integer.class) {
-                    lv = new Integer(((Number) lv).intValue());
+                    lv = Integer.valueOf(((Number) lv).intValue());
                 }
                 else if (rc == Long.class) {
-                    lv = new Long(((Number) lv).longValue());
+                    lv = Long.valueOf(((Number) lv).longValue());
                 }
                 else if (rc == Float.class) {
                     lv = new Float(((Number) lv).floatValue());
@@ -389,7 +389,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
                 }
             } else if (lc == Integer.class) {
                 if (rc == Long.class) {
-                    lv = new Long(((Number) lv).longValue());
+                    lv = Long.valueOf(((Number) lv).longValue());
                 }
                 else if (rc == Float.class) {
                     lv = new Float(((Number) lv).floatValue());
@@ -403,7 +403,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
             }
             else if (lc == Long.class) {
                 if (rc == Integer.class) {
-                    rv = new Long(((Number) rv).longValue());
+                    rv = Long.valueOf(((Number) rv).longValue());
                 }
                 else if (rc == Float.class) {
                     lv = new Float(((Number) lv).floatValue());

@@ -151,7 +151,7 @@ public final class IndexManager{
         return result;
     }
 
-    long getLength(){
+    synchronized long getLength(){
         return length;
     }
 

@@ -47,8 +47,8 @@ public class FailoverTransportBrokerTest extends NetworkTestSupport {
 
     public void initCombosForTestPublisherFailsOver() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)
                 } );        
         addCombinationValues( "destination", new Object[]{ 
                 new ActiveMQQueue("TEST"), 

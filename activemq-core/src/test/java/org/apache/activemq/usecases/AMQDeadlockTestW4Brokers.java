@@ -241,7 +241,7 @@ public class AMQDeadlockTestW4Brokers extends TestCase {
         return acf;
     }
 
-    private class TestMessageListener1 implements MessageListener {
+    private static class TestMessageListener1 implements MessageListener {
         private final long waitTime;
         final AtomicInteger count = new AtomicInteger(0);
 

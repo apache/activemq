@@ -49,7 +49,7 @@ public class ChangeSentMessageTest extends TestSupport {
         HashMap map = new HashMap();
         ObjectMessage message = publisherSession.createObjectMessage();
         for (int i = 0;i < COUNT;i++) {
-            map.put(VALUE_NAME, new Integer(i));
+            map.put(VALUE_NAME, Integer.valueOf(i));
             message.setObject(map);
             producer.send(message);
             assertTrue(message.getObject()==map);

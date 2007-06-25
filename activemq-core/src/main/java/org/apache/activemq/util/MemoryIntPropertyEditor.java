@@ -32,28 +32,28 @@ public class MemoryIntPropertyEditor extends PropertyEditorSupport {
 		Pattern p = Pattern.compile("^\\s*(\\d+)\\s*(b)?\\s*$",Pattern.CASE_INSENSITIVE);
 		Matcher m = p.matcher(text);
 		if (m.matches()) {
-			setValue(new Integer(Integer.parseInt(m.group(1))));
+			setValue(Integer.valueOf(Integer.parseInt(m.group(1))));
 			return;
 		}
 
 		p = Pattern.compile("^\\s*(\\d+)\\s*k(b)?\\s*$",Pattern.CASE_INSENSITIVE);
 		m = p.matcher(text);
 		if (m.matches()) {
-			setValue(new Integer(Integer.parseInt(m.group(1)) * 1024));
+			setValue(Integer.valueOf(Integer.parseInt(m.group(1)) * 1024));
 			return;
 		}
 
 		p = Pattern.compile("^\\s*(\\d+)\\s*m(b)?\\s*$", Pattern.CASE_INSENSITIVE);
 		m = p.matcher(text);
 		if (m.matches()) {
-			setValue(new Integer(Integer.parseInt(m.group(1)) * 1024 * 1024 ));
+			setValue(Integer.valueOf(Integer.parseInt(m.group(1)) * 1024 * 1024 ));
 			return;
 		}
 
 		p = Pattern.compile("^\\s*(\\d+)\\s*g(b)?\\s*$", Pattern.CASE_INSENSITIVE);
 		m = p.matcher(text);
 		if (m.matches()) {
-			setValue(new Integer(Integer.parseInt(m.group(1)) * 1024 * 1024 * 1024 ));
+			setValue(Integer.valueOf(Integer.parseInt(m.group(1)) * 1024 * 1024 * 1024 ));
 			return;
 		}
 

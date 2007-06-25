@@ -819,16 +819,16 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
                 return this.dataIn.readUTF();
             }
             if (type == MarshallingSupport.LONG_TYPE) {
-                return new Long(this.dataIn.readLong());
+                return Long.valueOf(this.dataIn.readLong());
             }
             if (type == MarshallingSupport.INTEGER_TYPE) {
-                return new Integer(this.dataIn.readInt());
+                return Integer.valueOf(this.dataIn.readInt());
             }
             if (type == MarshallingSupport.SHORT_TYPE) {
-                return new Short(this.dataIn.readShort());
+                return Short.valueOf(this.dataIn.readShort());
             }
             if (type == MarshallingSupport.BYTE_TYPE) {
-                return new Byte(this.dataIn.readByte());
+                return Byte.valueOf(this.dataIn.readByte());
             }
             if (type == MarshallingSupport.FLOAT_TYPE) {
                 return new Float(this.dataIn.readFloat());
@@ -840,7 +840,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
                 return this.dataIn.readBoolean() ? Boolean.TRUE : Boolean.FALSE;
             }
             if (type == MarshallingSupport.CHAR_TYPE) {
-                return new Character(this.dataIn.readChar());
+                return Character.valueOf(this.dataIn.readChar());
             }
             if (type == MarshallingSupport.BYTE_ARRAY_TYPE) {
                 int len = this.dataIn.readInt();

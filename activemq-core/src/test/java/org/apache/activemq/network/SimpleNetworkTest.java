@@ -61,6 +61,7 @@ public class SimpleNetworkTest extends TestCase{
     
     
     public void testRequestReply() throws Exception{
+        System.err.println("START TEST!");
         final MessageProducer remoteProducer=remoteSession.createProducer(null);
         MessageConsumer remoteConsumer=remoteSession.createConsumer(included);
         remoteConsumer.setMessageListener(new MessageListener(){
@@ -88,9 +89,11 @@ public class SimpleNetworkTest extends TestCase{
             assertNotNull(result);
             log.info(result.getText());
         }
+        System.err.println("FIN TEST!");
     }
 
-    public void testFiltering() throws Exception{
+    public void XtestFiltering() throws Exception{
+      
         MessageConsumer includedConsumer=remoteSession.createConsumer(included);
         MessageConsumer excludedConsumer=remoteSession.createConsumer(excluded);
         MessageProducer includedProducer=localSession.createProducer(included);
@@ -101,9 +104,10 @@ public class SimpleNetworkTest extends TestCase{
         excludedProducer.send(test);
         assertNull(excludedConsumer.receive(500));
         assertNotNull(includedConsumer.receive(500));
+        System.err.println("FIN TEST!");
     }
 
-    public void testConduitBridge() throws Exception{
+    public void XtestConduitBridge() throws Exception{
         MessageConsumer consumer1=remoteSession.createConsumer(included);
         MessageConsumer consumer2=remoteSession.createConsumer(included);
         MessageProducer producer=localSession.createProducer(included);
@@ -120,7 +124,7 @@ public class SimpleNetworkTest extends TestCase{
         assertNull(consumer2.receive(500));
     }
 
-    public void testDurableStoreAndForward() throws Exception{
+    public void XtestDurableStoreAndForward() throws Exception{
         // create a remote durable consumer
         MessageConsumer remoteConsumer=remoteSession.createDurableSubscriber(included,consumerName);
         Thread.sleep(1000);
@@ -165,19 +169,10 @@ public class SimpleNetworkTest extends TestCase{
     }
 
     protected void doSetUp() throws Exception{
-        Resource resource=new ClassPathResource(getRemoteBrokerURI());
-        BrokerFactoryBean factory=new BrokerFactoryBean(resource);
-        factory.afterPropertiesSet();
-        remoteBroker=factory.getBroker();
+        remoteBroker=createRemoteBroker();
         remoteBroker.start();
-        
-        resource=new ClassPathResource(getLocalBrokerURI());
-        factory=new BrokerFactoryBean(resource);
-        factory.afterPropertiesSet();
-        localBroker=factory.getBroker();
-        
+        localBroker=createLocalBroker();
         localBroker.start();
-        
         URI localURI=localBroker.getVmConnectorURI();
         ActiveMQConnectionFactory fac=new ActiveMQConnectionFactory(localURI);
         localConnection=fac.createConnection();
@@ -193,6 +188,7 @@ public class SimpleNetworkTest extends TestCase{
         localSession=localConnection.createSession(false,Session.AUTO_ACKNOWLEDGE);
         remoteSession=remoteConnection.createSession(false,Session.AUTO_ACKNOWLEDGE);
     }
+    
 
     protected String getRemoteBrokerURI() {
         return "org/apache/activemq/network/remoteBroker.xml";
@@ -200,5 +196,23 @@ public class SimpleNetworkTest extends TestCase{
 
     protected String getLocalBrokerURI() {
         return "org/apache/activemq/network/localBroker.xml";
+    }
+    
+    protected BrokerService createBroker(String URI) throws Exception {
+        Resource resource=new ClassPathResource(URI);
+        BrokerFactoryBean factory=new BrokerFactoryBean(resource);
+        resource=new ClassPathResource(URI);
+        factory=new BrokerFactoryBean(resource);
+        factory.afterPropertiesSet();
+        BrokerService result=factory.getBroker();
+        return result;
+    }
+    
+    protected BrokerService createLocalBroker() throws Exception {
+        return createBroker(getLocalBrokerURI());
+    }
+    
+    protected BrokerService createRemoteBroker() throws Exception {
+        return createBroker(getRemoteBrokerURI());
     }
 }

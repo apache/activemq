@@ -352,7 +352,7 @@ class DataFileAppender {
 	        		write = (WriteCommand) write.getNext();
 	        	}
 	    	}
-	    	
+	    	buff.close();
 		} catch (IOException e) {
 	    	synchronized( enqueueMutex ) {
 	    		firstAsyncException = e;

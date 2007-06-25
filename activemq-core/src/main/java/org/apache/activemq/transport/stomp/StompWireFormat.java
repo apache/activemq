@@ -189,6 +189,7 @@ public class StompWireFormat implements WireFormat {
         		throw new ProtocolException(errorMessage, true);
             baos.write(b);
         }
+        baos.close();
         ByteSequence sequence = baos.toByteSequence();
 		return new String(sequence.getData(),sequence.getOffset(),sequence.getLength(),"UTF-8");
 	}

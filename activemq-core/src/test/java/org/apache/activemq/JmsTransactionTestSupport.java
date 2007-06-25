@@ -54,8 +54,8 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
     protected Destination destination;
     
     // for message listener test
-    private final int messageCount = 5;
-    private final String messageText = "message";
+    private static final int messageCount = 5;
+    private static final String messageText = "message";
     private List unackMessages = new ArrayList(messageCount);
     private List ackMessages = new ArrayList(messageCount);
     private boolean resendPhase = false;

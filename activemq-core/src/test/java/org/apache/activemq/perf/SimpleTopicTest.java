@@ -43,7 +43,7 @@ public class SimpleTopicTest extends TestCase{
     protected String DESTINATION_NAME=getClass().getName();
     protected int SAMPLE_COUNT=10;
     protected long SAMPLE_INTERVAL=1000;
-    protected int NUMBER_OF_CONSUMERS=1;
+    protected int NUMBER_OF_CONSUMERS=10;
     protected int NUMBER_OF_PRODUCERS=1;
     protected int PAYLOAD_SIZE=1024;
     protected byte[] array=null;

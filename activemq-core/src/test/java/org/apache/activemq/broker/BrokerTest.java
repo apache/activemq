@@ -47,8 +47,8 @@ public class BrokerTest extends BrokerTestSupport {
     
     public void initCombosForTestQueuBrowserWith2Consumers() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );
     }   
     
     /**
@@ -114,13 +114,13 @@ public class BrokerTest extends BrokerTestSupport {
 
     public void initCombosForTestConsumerPrefetchAndStandardAck() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-//                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );        
+//                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );        
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TOPIC_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)
                 } );
     }
     
@@ -168,13 +168,13 @@ public class BrokerTest extends BrokerTestSupport {
 
     public void initCombosForTestTransactedAckWithPrefetchOfOne() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TOPIC_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)
                 } );
     }
 
@@ -222,13 +222,13 @@ public class BrokerTest extends BrokerTestSupport {
 
     public void initCombosForTestTransactedSend() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TOPIC_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
     }    
     public void testTransactedSend() throws Exception {
         
@@ -276,11 +276,11 @@ public class BrokerTest extends BrokerTestSupport {
 
     public void initCombosForTestQueueTransactedAck() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
         } );
     }
     
@@ -329,8 +329,8 @@ public class BrokerTest extends BrokerTestSupport {
 
     public void initCombosForTestConsumerCloseCausesRedelivery() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );
         addCombinationValues( "destination", new Object[]{ 
                 new ActiveMQQueue("TEST")} );
     }   
@@ -442,8 +442,8 @@ public class BrokerTest extends BrokerTestSupport {
 
     public void initCombosForTestGroupedMessagesDeliveredToOnlyOneConsumer() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );
     }
     public void testGroupedMessagesDeliveredToOnlyOneConsumer() throws Exception {
         
@@ -503,8 +503,8 @@ public class BrokerTest extends BrokerTestSupport {
 
     public void initCombosForTestTopicConsumerOnlySeeMessagesAfterCreation() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );
         addCombinationValues( "durableConsumer", new Object[]{ 
                 Boolean.TRUE, 
                 Boolean.FALSE});
@@ -551,8 +551,8 @@ public class BrokerTest extends BrokerTestSupport {
     
     public void initCombosForTestTopicRetroactiveConsumerSeeMessagesBeforeCreation() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );
         addCombinationValues( "durableConsumer", new Object[]{ 
                 Boolean.TRUE, 
                 Boolean.FALSE});
@@ -611,11 +611,11 @@ public class BrokerTest extends BrokerTestSupport {
 // 
 //    public void initCombosForTestTempDestinationsRemovedOnConnectionClose() {    
 //        addCombinationValues( "deliveryMode", new Object[]{ 
-//                new Integer(DeliveryMode.NON_PERSISTENT), 
-//                new Integer(DeliveryMode.PERSISTENT)} );
+//                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+//                Integer.valueOf(DeliveryMode.PERSISTENT)} );
 //        addCombinationValues( "destinationType", new Object[]{ 
-//                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
-//                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
+//                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+//                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
 //    }
 //    
 //    public void testTempDestinationsRemovedOnConnectionClose() throws Exception {
@@ -657,11 +657,11 @@ public class BrokerTest extends BrokerTestSupport {
     
 //    public void initCombosForTestTempDestinationsAreNotAutoCreated() {    
 //        addCombinationValues( "deliveryMode", new Object[]{ 
-//                new Integer(DeliveryMode.NON_PERSISTENT), 
-//                new Integer(DeliveryMode.PERSISTENT)} );
+//                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+//                Integer.valueOf(DeliveryMode.PERSISTENT)} );
 //        addCombinationValues( "destinationType", new Object[]{ 
-//                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
-//                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
+//                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+//                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
 //    }
 //    
 //   
@@ -697,11 +697,11 @@ public class BrokerTest extends BrokerTestSupport {
     
     public void initCombosForTestTempDestinationsOnlyAllowsLocalConsumers() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
     }
     
     public void testTempDestinationsOnlyAllowsLocalConsumers() throws Exception {
@@ -739,8 +739,8 @@ public class BrokerTest extends BrokerTestSupport {
 
     public void initCombosForTestExclusiveQueueDeliversToOnlyOneConsumer() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );
     }
     public void testExclusiveQueueDeliversToOnlyOneConsumer() throws Exception {
         
@@ -803,11 +803,11 @@ public class BrokerTest extends BrokerTestSupport {
 
     public void initCombosForTestWildcardConsume() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TOPIC_TYPE)} );
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE)} );
     }   
     
     public void testWildcardConsume() throws Exception {
@@ -850,11 +850,11 @@ public class BrokerTest extends BrokerTestSupport {
 
     public void initCombosForTestCompositeConsume() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TOPIC_TYPE)} );
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE)} );
     }   
     
     public void testCompositeConsume() throws Exception {
@@ -895,11 +895,11 @@ public class BrokerTest extends BrokerTestSupport {
 
     public void initCombosForTestCompositeSend() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TOPIC_TYPE)} );
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE)} );
     }   
     
     public void testCompositeSend() throws Exception {
@@ -964,8 +964,8 @@ public class BrokerTest extends BrokerTestSupport {
 
     public void initCombosForTestConnectionCloseCascades() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );
         addCombinationValues( "destination", new Object[]{ 
                 new ActiveMQTopic("TEST"), 
                 new ActiveMQQueue("TEST")} );
@@ -1018,8 +1018,8 @@ public class BrokerTest extends BrokerTestSupport {
     
     public void initCombosForTestSessionCloseCascades() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );
         addCombinationValues( "destination", new Object[]{ 
                 new ActiveMQTopic("TEST"), 
                 new ActiveMQQueue("TEST")} );
@@ -1072,8 +1072,8 @@ public class BrokerTest extends BrokerTestSupport {
     
     public void initCombosForTestConsumerClose() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );
         addCombinationValues( "destination", new Object[]{ 
                 new ActiveMQTopic("TEST"), 
                 new ActiveMQQueue("TEST")} );
@@ -1125,8 +1125,8 @@ public class BrokerTest extends BrokerTestSupport {
     }
     public void initCombosForTestTopicNoLocal() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );
     }   
     
     public void testTopicNoLocal() throws Exception {
@@ -1192,8 +1192,8 @@ public class BrokerTest extends BrokerTestSupport {
     
     public void initCombosForTopicDispatchIsBroadcast() {
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );
     }   
     
     public void testTopicDispatchIsBroadcast() throws Exception {
@@ -1242,11 +1242,11 @@ public class BrokerTest extends BrokerTestSupport {
     
     public void initCombosForTestQueueDispatchedAreRedeliveredOnConsumerClose() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
                 } );
     }   
     
@@ -1301,11 +1301,11 @@ public class BrokerTest extends BrokerTestSupport {
     
     public void initCombosForTestQueueBrowseMessages() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
                 } );
     }   
     public void testQueueBrowseMessages() throws Exception {
@@ -1343,8 +1343,8 @@ public class BrokerTest extends BrokerTestSupport {
      
     public void initCombosForTestQueueOnlyOnceDeliveryWith2Consumers() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );
     }   
     public void testQueueOnlyOnceDeliveryWith2Consumers() throws Exception {
         
@@ -1397,11 +1397,11 @@ public class BrokerTest extends BrokerTestSupport {
     
     public void initCombosForTestQueueSendThenAddConsumer() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
                 } );
     }   
     public void testQueueSendThenAddConsumer() throws Exception {
@@ -1432,11 +1432,11 @@ public class BrokerTest extends BrokerTestSupport {
     
     public void initCombosForTestQueueAckRemovesMessage() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );        
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );        
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
                 } );
     }
     
@@ -1477,10 +1477,10 @@ public class BrokerTest extends BrokerTestSupport {
             new ActiveMQTopic("TEST_TOPIC"), 
             new ActiveMQQueue("TEST_QUEUE")} );
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TOPIC_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
     }
     
     public void testSelectorSkipsMessages() throws Exception {
@@ -1518,13 +1518,13 @@ public class BrokerTest extends BrokerTestSupport {
     
     public void initCombosForTestAddConsumerThenSend() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );        
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );        
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TOPIC_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
     }
     
     public void testAddConsumerThenSend() throws Exception {
@@ -1552,13 +1552,13 @@ public class BrokerTest extends BrokerTestSupport {
 
     public void initCombosForTestConsumerPrefetchAtOne() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );        
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );        
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TOPIC_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
     }    
     
     public void testConsumerPrefetchAtOne() throws Exception {
@@ -1591,13 +1591,13 @@ public class BrokerTest extends BrokerTestSupport {
     
     public void initCombosForTestConsumerPrefetchAtTwo() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );        
+                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+                Integer.valueOf(DeliveryMode.PERSISTENT)} );        
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TOPIC_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
     }    
 
     public void testConsumerPrefetchAtTwo() throws Exception {
@@ -1633,13 +1633,13 @@ public class BrokerTest extends BrokerTestSupport {
     
     public void initCombosForTestConsumerPrefetchAndDeliveredAck() {    
         addCombinationValues( "deliveryMode", new Object[]{ 
-            new Integer(DeliveryMode.NON_PERSISTENT), 
-            new Integer(DeliveryMode.PERSISTENT)} );        
+            Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
+            Integer.valueOf(DeliveryMode.PERSISTENT)} );        
         addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TOPIC_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
+                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
+                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
     }
     
     public void testConsumerPrefetchAndDeliveredAck() throws Exception {

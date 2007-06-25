@@ -41,7 +41,7 @@ import org.apache.commons.logging.LogFactory;
 public final class DataManagerImpl implements DataManager {
     
     private static final Log log=LogFactory.getLog(DataManagerImpl.class);
-    public static long MAX_FILE_LENGTH=1024*1024*32;
+    public static final long MAX_FILE_LENGTH=1024*1024*32;
     private static final String NAME_PREFIX="data-";
     private final File dir;
     private final String name;
@@ -239,7 +239,7 @@ public final class DataManagerImpl implements DataManager {
 	 */
     public synchronized void addInterestInFile(int file) throws IOException{
         if(file>=0){
-            Integer key=new Integer(file);
+            Integer key=Integer.valueOf(file);
             DataFile dataFile=(DataFile) fileMap.get(key);
             if(dataFile==null){
                 dataFile=createAndAddDataFile(file);
@@ -259,7 +259,7 @@ public final class DataManagerImpl implements DataManager {
 	 */
     public synchronized void removeInterestInFile(int file) throws IOException{
         if(file>=0){
-            Integer key=new Integer(file);
+            Integer key=Integer.valueOf(file);
             DataFile dataFile=(DataFile) fileMap.get(key);
             removeInterestInFile(dataFile);
         }

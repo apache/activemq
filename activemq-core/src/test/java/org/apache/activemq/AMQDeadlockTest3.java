@@ -321,7 +321,7 @@ public class AMQDeadlockTest3 extends TestCase {
 	}
 
 
-	private class PooledProducerTask implements Runnable {
+	private static class PooledProducerTask implements Runnable {
 
 		private final String queueName;
 
@@ -377,7 +377,7 @@ public class AMQDeadlockTest3 extends TestCase {
 	}
 	
 	
-	private class NonPooledProducerTask implements Runnable {
+	private static class NonPooledProducerTask implements Runnable {
 
 		private final String queueName;
 

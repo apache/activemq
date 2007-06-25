@@ -58,7 +58,7 @@ public class StubBroker implements Broker {
         }
     }
     
-    public class RemoveConnectionData {
+    public static class RemoveConnectionData {
         public final ConnectionContext connectionContext;
         public final ConnectionInfo connectionInfo;
         public final Throwable error;

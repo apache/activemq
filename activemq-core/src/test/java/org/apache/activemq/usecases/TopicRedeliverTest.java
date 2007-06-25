@@ -45,7 +45,7 @@ public class TopicRedeliverTest extends TestSupport {
         super(n);
     }
     
-    protected void setup() throws Exception{
+    protected void setUp() throws Exception{
         super.setUp();
         topic = true;
     }

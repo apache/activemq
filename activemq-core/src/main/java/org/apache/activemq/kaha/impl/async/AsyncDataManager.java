@@ -51,7 +51,7 @@ public final class AsyncDataManager {
 
 	private static final Log log=LogFactory.getLog(AsyncDataManager.class);
 	
-    public static int CONTROL_RECORD_MAX_LENGTH=1024;
+    public static final int CONTROL_RECORD_MAX_LENGTH=1024;
     
     public static final int ITEM_HEAD_RESERVED_SPACE=21; 
     // ITEM_HEAD_SPACE = length + type+ reserved space + SOR
@@ -67,9 +67,9 @@ public final class AsyncDataManager {
     public static final byte DATA_ITEM_TYPE=1;
     public static final byte REDO_ITEM_TYPE=2;
 	
-    public static String DEFAULT_DIRECTORY="data";
-    public static String DEFAULT_FILE_PREFIX="data-";
-    public static int DEFAULT_MAX_FILE_LENGTH=1024*1024*32;
+    public static final String DEFAULT_DIRECTORY="data";
+    public static final String DEFAULT_FILE_PREFIX="data-";
+    public static final int DEFAULT_MAX_FILE_LENGTH=1024*1024*32;
     
     private File directory = new File(DEFAULT_DIRECTORY);
     private String filePrefix=DEFAULT_FILE_PREFIX;
@@ -314,7 +314,7 @@ public final class AsyncDataManager {
     
     public synchronized void addInterestInFile(int file) throws IOException{
         if(file>=0){
-            Integer key=new Integer(file);
+            Integer key=Integer.valueOf(file);
             DataFile dataFile=(DataFile) fileMap.get(key);
             if(dataFile==null){
                 throw new IOException("That data file does not exist");
@@ -331,7 +331,7 @@ public final class AsyncDataManager {
 
     public synchronized void removeInterestInFile(int file) throws IOException{
         if(file>=0){
-            Integer key=new Integer(file);
+            Integer key=Integer.valueOf(file);
             DataFile dataFile=(DataFile) fileMap.get(key);
             removeInterestInFile(dataFile);
         }

@@ -182,7 +182,7 @@ abstract public class BaseDataStreamMarshaller implements DataStreamMarshaller {
                                 tightUnmarshalString(dataIn, bs),
                                 tightUnmarshalString(dataIn, bs),
                                 tightUnmarshalString(dataIn, bs),
-                                new Integer(dataIn.readInt())
+                                Integer.valueOf(dataIn.readInt())
                                 });
                         } catch (IOException e) {
                             throw e;
@@ -483,7 +483,7 @@ abstract public class BaseDataStreamMarshaller implements DataStreamMarshaller {
                                 looseUnmarshalString(dataIn),
                                 looseUnmarshalString(dataIn),
                                 looseUnmarshalString(dataIn),
-                                new Integer(dataIn.readInt())
+                                Integer.valueOf(dataIn.readInt())
                                 });
                         } catch (IOException e) {
                             throw e;
