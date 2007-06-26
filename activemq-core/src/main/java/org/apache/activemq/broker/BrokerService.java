@@ -19,7 +19,6 @@ package org.apache.activemq.broker;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
@@ -93,7 +92,7 @@ import org.apache.commons.logging.LogFactory;
  *
  * @version $Revision: 1.1 $
  */
-public class BrokerService implements Service, Serializable {
+public class BrokerService implements Service {
 
    
 
