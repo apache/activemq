@@ -29,7 +29,7 @@ public class ProducerStartedEvent extends ProducerEvent {
 
     private static final long serialVersionUID = 5088138839609391074L;
 
-    private final ProducerInfo consumerInfo;
+    private transient final ProducerInfo consumerInfo;
 
     public ProducerStartedEvent(ProducerEventSource source, ActiveMQDestination destination, ProducerInfo consumerInfo, int count) {
         super(source, destination, consumerInfo.getProducerId(), count);

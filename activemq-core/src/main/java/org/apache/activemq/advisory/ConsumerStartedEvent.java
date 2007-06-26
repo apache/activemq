@@ -29,7 +29,7 @@ public class ConsumerStartedEvent extends ConsumerEvent {
 
     private static final long serialVersionUID = 5088138839609391074L;
 
-    private final ConsumerInfo consumerInfo;
+    private transient final ConsumerInfo consumerInfo;
 
     public ConsumerStartedEvent(ConsumerEventSource source, ActiveMQDestination destination, ConsumerInfo consumerInfo, int count) {
         super(source, destination, consumerInfo.getConsumerId(), count);
