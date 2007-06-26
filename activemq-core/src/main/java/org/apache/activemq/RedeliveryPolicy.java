@@ -33,13 +33,13 @@ public class RedeliveryPolicy implements Cloneable, Serializable {
 	public static final int NO_MAXIMUM_REDELIVERIES = -1;
 	
     // +/-15% for a 30% spread -cgs
-    protected double collisionAvoidanceFactor = 0.15d;
-    protected int maximumRedeliveries = 6;
-    protected long initialRedeliveryDelay = 1000L;
-    protected static Random randomNumberGenerator;
-    protected boolean useCollisionAvoidance = false;
-    protected boolean useExponentialBackOff = false;
-    protected short backOffMultiplier = 5;
+    private double collisionAvoidanceFactor = 0.15d;
+    private int maximumRedeliveries = 6;
+    private long initialRedeliveryDelay = 1000L;
+    private static Random randomNumberGenerator;
+    private boolean useCollisionAvoidance = false;
+    private boolean useExponentialBackOff = false;
+    private short backOffMultiplier = 5;
 
     public RedeliveryPolicy() {
     }
