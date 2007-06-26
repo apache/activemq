@@ -138,7 +138,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean useRetroactiveConsumer;
     private boolean alwaysSyncSend;
     private int closeTimeout = 15000;
-    private boolean useSyncSend=false;
     private boolean watchTopicAdvisories=true;
     private long warnAboutUnstartedConnectionTimeout = 500L;
 
@@ -1304,18 +1303,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
 
-    /**
-     * @return Returns the useAsyncSend.
-     */
-    public boolean isUseAsyncSend() {
-        return useAsyncSend;
-    }
-    
-	public void setUseSyncSend(boolean forceSyncSend) {
-		this.useSyncSend = forceSyncSend;
-	}
-
-
 	public synchronized boolean isWatchTopicAdvisories() {
 		return watchTopicAdvisories;
 	}
@@ -1325,7 +1312,13 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 		this.watchTopicAdvisories = watchTopicAdvisories;
 	}
         
-
+     /**
+     * @return Returns the useAsyncSend.
+     */
+    public boolean isUseAsyncSend() {
+        return useAsyncSend;
+    }
+  
     /**
      * Forces the use of <a
      * href="http://activemq.apache.org/async-sends.html">Async Sends</a>
