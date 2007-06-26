@@ -109,7 +109,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
     protected BrokerInfo brokerInfo;
     private WireFormatInfo wireFormatInfo;
     // Used to do async dispatch.. this should perhaps be pushed down into the transport layer..
-    protected final List dispatchQueue=Collections.synchronizedList(new LinkedList());
+    protected final List <Command>dispatchQueue=Collections.synchronizedList(new LinkedList<Command>());
     protected final TaskRunner taskRunner;
     protected final AtomicReference transportException = new AtomicReference();
     private boolean inServiceException=false;
@@ -200,6 +200,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
 
     /**
      * Returns the number of messages to be dispatched to this connection
+     * @return size of dispatch queue
      */
     public int getDispatchQueueSize(){
         return dispatchQueue.size();
@@ -800,14 +801,12 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
 
                  if( dispatchQueue.isEmpty() ) {
                      return false;
-                 } else {
-                     Command command = (Command) dispatchQueue.remove(0);
-                     processDispatch( command );
-                     return true;
                  }
-             } else {
-                 return false;
+                Command command = dispatchQueue.remove(0);
+                 processDispatch( command );
+                 return true;
              }
+            return false;
 
          } catch (IOException e) {
              if( dispatchStopped.compareAndSet(false, true)) {                                                                     
@@ -882,7 +881,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
                     transport.oneway(new ShutdownInfo());
                 }
             }catch(Exception ignore){
-                // ignore.printStackTrace();
+                log.trace("Exception caught stopping",ignore);
             }
             transport.stop();
             active=false;
@@ -1216,9 +1215,10 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
 	}
 
 	public Response processControlCommand(ControlCommand command) throws Exception {
-	    if (command.equals("shutdown"))
+        String control = command.getCommand();
+	    if (control != null && control.equals("shutdown"))
 	        System.exit(0);
-        return null;
+         return null;
 	}
 
 	public Response processMessageDispatch(MessageDispatch dispatch) throws Exception {
