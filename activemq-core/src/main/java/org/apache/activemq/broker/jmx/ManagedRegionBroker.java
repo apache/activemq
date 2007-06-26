@@ -346,7 +346,7 @@ public class ManagedRegionBroker extends RegionBroker {
                     if(infos!=null){
                         for(int i=0;i<infos.length;i++){
                             SubscriptionInfo info=infos[i];
-                            log.debug("Restoring durable subscription: "+infos);
+                            log.debug("Restoring durable subscription: "+info);
                             SubscriptionKey key=new SubscriptionKey(info);
                             subscriptions.put(key,info);
                         }
