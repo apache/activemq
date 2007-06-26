@@ -115,13 +115,13 @@ public class FanoutTransport implements CompositeTransport {
                 if( rc != null ) {
                     if( rc.ackCount.decrementAndGet() <= 0 ) {
                         requestMap.remove(id);
-                        transportListener.onCommand(command);
+                        transportListenerOnCommand(command);
                     }
                 } else {
-                    transportListener.onCommand(command);
+                    transportListenerOnCommand(command);
                 }
             } else {
-                transportListener.onCommand(command);
+                transportListenerOnCommand(command);
             }
         }
 
@@ -144,7 +144,9 @@ public class FanoutTransport implements CompositeTransport {
             }
             catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                transportListener.onException(new InterruptedIOException());
+                if (transportListener != null) {
+                    transportListener.onException(new InterruptedIOException());
+                }
             }
         }        
     }
@@ -532,4 +534,9 @@ public class FanoutTransport implements CompositeTransport {
 		return null;
 	}
 
+    protected void transportListenerOnCommand(Command command) {
+        if (transportListener != null) {
+            transportListener.onCommand(command);
+        }
+    }
 }
