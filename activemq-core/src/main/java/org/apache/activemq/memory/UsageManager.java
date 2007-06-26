@@ -307,10 +307,12 @@ public class UsageManager  implements Service{
     }
     
     private void setPercentUsage(int value) {
-        int oldValue = percentUsage;
-        percentUsage = value;
-        if( oldValue!=value ) {
-            fireEvent(oldValue, value);
+        synchronized (usageMutex) {
+            int oldValue = percentUsage;
+            percentUsage = value;
+            if( oldValue!=value ) {
+                fireEvent(oldValue, value);
+            }
         }
     }
     
