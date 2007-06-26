@@ -71,12 +71,14 @@ public class PropertiesBrokerFactory implements BrokerFactoryHandler {
                     throw new IOException("File does not exist: " + remaining + ", could not be found on the classpath and is not a valid URL: " + e);
                 }
             }
-            if (inputStream == null) {
+            if (inputStream == null && url != null) {
                 inputStream = url.openStream();
             }
         }
-        properties.load(inputStream);
-        inputStream.close();
+        if(inputStream!=null){
+            properties.load(inputStream);
+            inputStream.close();
+        }
 
         // should we append any system properties?
         try {
