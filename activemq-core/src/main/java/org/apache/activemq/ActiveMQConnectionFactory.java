@@ -266,8 +266,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             connection.setRedeliveryPolicy(getRedeliveryPolicy());
             connection.setTransformer(getTransformer());
             connection.setBlobTransferPolicy(getBlobTransferPolicy().copy());
-            connection.setWatchTopicAdvisories(watchTopicAdvisories);
-            connection.setProducerWindowSize(producerWindowSize);
+            connection.setWatchTopicAdvisories(isWatchTopicAdvisories());
+            connection.setProducerWindowSize(getProducerWindowSize());
             connection.setWarnAboutUnstartedConnectionTimeout(getWarnAboutUnstartedConnectionTimeout());
             transport.start();
 
