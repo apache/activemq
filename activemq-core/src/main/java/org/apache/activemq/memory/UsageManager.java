@@ -20,6 +20,7 @@ package org.apache.activemq.memory;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.activemq.Service;
@@ -326,7 +327,7 @@ public class UsageManager  implements Service{
         if(oldPercentUsage>=100&&newPercentUsage<100){
             synchronized(usageMutex){
                 usageMutex.notifyAll();
-                for (Iterator iter = callbacks.iterator(); iter.hasNext();) {
+                for (Iterator iter = new ArrayList<Runnable>(callbacks).iterator(); iter.hasNext();) {
 					Runnable callback = (Runnable) iter.next();
 					callback.run();
 				}
