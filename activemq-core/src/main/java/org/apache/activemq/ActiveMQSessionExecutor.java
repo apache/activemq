@@ -45,7 +45,6 @@ public class ActiveMQSessionExecutor implements Task {
     private boolean dispatchedBySessionPool;
     private TaskRunner taskRunner;
     private boolean startedOrWarnedThatNotStarted;
-    private long warnAboutUnstartedConnectionTime = 500L;
 
     ActiveMQSessionExecutor(ActiveMQSession session) {
         this.session = session;
