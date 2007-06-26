@@ -18,21 +18,13 @@
 
 package org.apache.activemq;
 
-import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportFactory;
-import org.apache.activemq.transport.tcp.SslTransportFactory;
-import org.apache.activemq.util.JMSExceptionSupport;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-
 import javax.jms.JMSException;
 import javax.net.ssl.KeyManager;
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
+import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.tcp.SslTransportFactory;
+import org.apache.activemq.util.JMSExceptionSupport;
 
 /**
  * An ActiveMQConnectionFactory that allows access to the key and trust managers used for SslConnections.
@@ -57,7 +49,7 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
      * @param tm The TrustManagers used.
      * @param random The SecureRandom number used.
      */
-    public void setKeyAndTrustManagers(KeyManager[] km, TrustManager[] tm, SecureRandom random) {
+    public void setKeyAndTrustManagers(final KeyManager[] km, final TrustManager[] tm, final SecureRandom random) {
         keyManager = km;
         trustManager = tm;
         secureRandom = random;
