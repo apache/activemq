@@ -125,7 +125,7 @@ public class ForwardingBridge  implements Service{
     /**
      * @throws IOException
      */
-    private void startBridge() throws IOException {
+    final void startBridge() throws IOException {
         connectionInfo = new ConnectionInfo();
         connectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
         connectionInfo.setClientId(clientId);

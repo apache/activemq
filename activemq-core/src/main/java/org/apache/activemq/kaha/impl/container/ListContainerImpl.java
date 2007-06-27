@@ -121,6 +121,10 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         }
         return result;
     }
+    
+    public int hashCode() {
+        return super.hashCode();
+    }
 
     /*
      * (non-Javadoc)
@@ -158,13 +162,14 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
     public synchronized Object removeFirst(){
         load();
         Object result=null;
-        IndexItem item=(IndexItem)indexList.getFirst();
+        IndexItem item=indexList.getFirst();
         if(item!=null){
             itemRemoved(0);
             result=getValue(item);
             IndexItem prev=root;
             IndexItem next=indexList.size()>1?(IndexItem)indexList.get(1):null;
             indexList.removeFirst();
+            
             delete(item,prev,next);
             item=null;
         }
@@ -306,6 +311,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
         IndexItem prev=indexList.getPrevEntry(item);
         IndexItem next=indexList.getNextEntry(item);
         indexList.remove(item);
+        
         delete(item,prev,next);
     }
 
@@ -591,7 +597,6 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
      */
     public synchronized ListIterator listIterator(){
         load();
-        IndexItem start= indexList.getFirst();
         return new ContainerListIterator(this,indexList,indexList.getRoot());
     }
 

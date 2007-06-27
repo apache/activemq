@@ -168,18 +168,22 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         }
     }
 
-    public Response processAddDestination(DestinationInfo info)  {
-        ConnectionState cs = (ConnectionState) connectionStates.get(info.getConnectionId());
-        if( cs != null && info != null && info.getDestination().isTemporary() ) {
-            cs.addTempDestination(info);
+    public Response processAddDestination(DestinationInfo info){
+        if(info!=null){
+            ConnectionState cs=(ConnectionState)connectionStates.get(info.getConnectionId());
+            if(cs!=null&&info.getDestination().isTemporary()){
+                cs.addTempDestination(info);
+            }
         }
         return TRACKED_RESPONSE_MARKER;
     }
 
-    public Response processRemoveDestination(DestinationInfo info)  {
-        ConnectionState cs = (ConnectionState) connectionStates.get(info.getConnectionId());
-        if( cs != null && info != null && info.getDestination().isTemporary() ) {
-            cs.removeTempDestination(info.getDestination());
+    public Response processRemoveDestination(DestinationInfo info){
+        if(info!=null){
+            ConnectionState cs=(ConnectionState)connectionStates.get(info.getConnectionId());
+            if(cs!=null&&info.getDestination().isTemporary()){
+                cs.removeTempDestination(info.getDestination());
+            }
         }
         return TRACKED_RESPONSE_MARKER;
     }

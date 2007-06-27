@@ -229,7 +229,7 @@ public class MemoryTransactionStore implements TransactionStore {
      * @param ack
      * @throws IOException
      */
-    private void removeMessage(final MessageStore destination,final MessageAck ack) throws IOException {
+    final void removeMessage(final MessageStore destination,final MessageAck ack) throws IOException {
         if( doingRecover )
             return;
 

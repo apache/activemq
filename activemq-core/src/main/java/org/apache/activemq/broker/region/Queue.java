@@ -47,7 +47,6 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerAck;
-import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.kaha.Store;
@@ -421,7 +420,7 @@ public class Queue implements Destination, Task {
         doMessageSend(producerExchange, message);
     }
 
-	private void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
+	void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
 		final ConnectionContext context = producerExchange.getConnectionContext();
 		message.setRegionDestination(this);
         if(store!=null&&message.isPersistent()){
@@ -979,7 +978,7 @@ public class Queue implements Destination, Task {
     }
     
       
-    private void sendMessage(final ConnectionContext context,Message msg) throws Exception{
+    final void sendMessage(final ConnectionContext context,Message msg) throws Exception{
         synchronized(messages){
             messages.addMessageLast(msg);
         }

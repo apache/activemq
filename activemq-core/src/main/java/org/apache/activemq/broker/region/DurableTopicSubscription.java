@@ -54,7 +54,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         return active;
     }
 
-    protected boolean isFull(){
+    protected synchronized boolean isFull(){
         return !active||super.isFull();
     }
 
@@ -113,25 +113,23 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 topic.deactivate(context,this);
             }
         }
-        synchronized(dispatched){
-            for(Iterator iter=dispatched.iterator();iter.hasNext();){
-                // Mark the dispatched messages as redelivered for next time.
-                MessageReference node=(MessageReference)iter.next();
-                Integer count=(Integer)redeliveredMessages.get(node.getMessageId());
-                if(count!=null){
-                    redeliveredMessages.put(node.getMessageId(),Integer.valueOf(count.intValue()+1));
-                }else{
-                    redeliveredMessages.put(node.getMessageId(),Integer.valueOf(1));
-                }
-                if(keepDurableSubsActive){
-                    synchronized(pending){
-                        pending.addMessageFirst(node);
-                    }
-                }else{
-                    node.decrementReferenceCount();
-                }
-                iter.remove();
+        for(Iterator iter=dispatched.iterator();iter.hasNext();){
+            // Mark the dispatched messages as redelivered for next time.
+            MessageReference node=(MessageReference)iter.next();
+            Integer count=(Integer)redeliveredMessages.get(node.getMessageId());
+            if(count!=null){
+                redeliveredMessages.put(node.getMessageId(),Integer.valueOf(count.intValue()+1));
+            }else{
+                redeliveredMessages.put(node.getMessageId(),Integer.valueOf(1));
             }
+            if(keepDurableSubsActive){
+                synchronized(pending){
+                    pending.addMessageFirst(node);
+                }
+            }else{
+                node.decrementReferenceCount();
+            }
+            iter.remove();
         }
         if(!keepDurableSubsActive){
             synchronized(pending){
@@ -167,11 +165,11 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         super.add(node);
     }
 
-    protected void doAddRecoveredMessage(MessageReference message) throws Exception{
+    protected synchronized void doAddRecoveredMessage(MessageReference message) throws Exception{
         pending.addRecoveredMessage(message);
     }
 
-    public int getPendingQueueSize(){
+    public synchronized int getPendingQueueSize(){
         if(active||keepDurableSubsActive){
             return super.getPendingQueueSize();
         }
@@ -184,7 +182,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 "You cannot dynamically change the selector for durable topic subscriptions");
     }
 
-    protected boolean canDispatch(MessageReference node){
+    protected synchronized boolean canDispatch(MessageReference node){
         return active;
     }
 
@@ -198,7 +196,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         return subscriptionKey.getSubscriptionName();
     }
 
-    public String toString(){
+    public synchronized String toString(){
         return "DurableTopicSubscription:"+" consumer="+info.getConsumerId()+", destinations="+destinations.size()
                 +", total="+enqueueCounter+", pending="+getPendingQueueSize()+", dispatched="+dispatchCounter
                 +", inflight="+dispatched.size()+", prefetchExtension="+this.prefetchExtension;
@@ -215,7 +213,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     /**
      * Release any references that we are holding.
      */
-    public void destroy(){
+    public synchronized void destroy(){
         try{
             synchronized(pending){
                 pending.reset();

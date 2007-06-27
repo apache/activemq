@@ -136,7 +136,6 @@ public class BrokerService implements Service {
     private transient Thread shutdownHook;
     private String[] transportConnectorURIs;
     private String[] networkConnectorURIs;
-    private String[] proxyConnectorURIs;
     private JmsConnector[] jmsBridgeConnectors; //these are Jms to Jms bridges to other jms messaging systems
     private boolean deleteAllMessagesOnStartup;
     private boolean advisorySupport = true;
@@ -1126,13 +1125,7 @@ public class BrokerService implements Service {
                 addNetworkConnector(uri);
             }
         }
-        if (proxyConnectorURIs != null) {
-            for (int i = 0; i < proxyConnectorURIs.length; i++) {
-                String uri = proxyConnectorURIs[i];
-                addProxyConnector(uri);
-            }
-        }
-        
+               
         if (jmsBridgeConnectors != null){
             for (int i = 0; i < jmsBridgeConnectors.length; i++){
                 addJmsConnector(jmsBridgeConnectors[i]);

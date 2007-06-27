@@ -196,7 +196,7 @@ public class ConnectionPool {
     protected class Synchronization implements javax.transaction.Synchronization {
         private final PooledSession session;
 
-        private Synchronization(PooledSession session) {
+        protected Synchronization(PooledSession session) {
             this.session = session;
         }
 

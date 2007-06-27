@@ -225,9 +225,12 @@ class HashPage {
 
     void dump() {
 
-        String str = this + ": ";
+        StringBuffer str = new StringBuffer(32);
+        str.append(toString());
+        str.append(": ");
         for (HashEntry entry : hashIndexEntries) {
-            str += entry + ",";
+            str .append(entry);
+            str.append(",");
         }
         log.info(str);
     }

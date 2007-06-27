@@ -341,7 +341,7 @@ public class Topic implements Destination {
         doMessageSend(producerExchange, message);
     }
 
-	private void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
+	void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
 		final ConnectionContext context = producerExchange.getConnectionContext();
 		message.setRegionDestination(this);
 

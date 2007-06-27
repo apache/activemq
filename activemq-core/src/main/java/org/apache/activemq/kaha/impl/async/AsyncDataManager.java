@@ -61,8 +61,8 @@ public final class AsyncDataManager {
     
     public static final int ITEM_HEAD_FOOT_SPACE=ITEM_HEAD_SPACE+ITEM_FOOT_SPACE;
 
-    public static final byte[] ITEM_HEAD_SOR=new byte[]{'S', 'O', 'R'}; // 
-    public static final byte[] ITEM_HEAD_EOR=new byte[]{'E', 'O', 'R'}; // 
+    static final byte[] ITEM_HEAD_SOR=new byte[]{'S', 'O', 'R'}; // 
+    static final byte[] ITEM_HEAD_EOR=new byte[]{'E', 'O', 'R'}; // 
     
     public static final byte DATA_ITEM_TYPE=1;
     public static final byte REDO_ITEM_TYPE=2;
@@ -71,8 +71,8 @@ public final class AsyncDataManager {
     public static final String DEFAULT_FILE_PREFIX="data-";
     public static final int DEFAULT_MAX_FILE_LENGTH=1024*1024*32;
     
-    private File directory = new File(DEFAULT_DIRECTORY);
-    private String filePrefix=DEFAULT_FILE_PREFIX;
+    File directory = new File(DEFAULT_DIRECTORY);
+    String filePrefix=DEFAULT_FILE_PREFIX;
     private int maxFileLength = DEFAULT_MAX_FILE_LENGTH;
     private int preferedFileLength = DEFAULT_MAX_FILE_LENGTH-1024*512;
     
@@ -101,8 +101,10 @@ public final class AsyncDataManager {
     	
     	started=true;
     	directory.mkdirs();
-    	controlFile = new ControlFile(new File(directory, filePrefix+"control"), CONTROL_RECORD_MAX_LENGTH);
-    	controlFile.lock();
+        synchronized(this){
+            controlFile=new ControlFile(new File(directory,filePrefix+"control"),CONTROL_RECORD_MAX_LENGTH);
+            controlFile.lock();
+        }
     	
     	ByteSequence sequence = controlFile.load();
     	if( sequence != null && sequence.getLength()>0 ) {
@@ -116,7 +118,7 @@ public final class AsyncDataManager {
 
         File[] files=directory.listFiles(new FilenameFilter(){
             public boolean accept(File dir,String n){
-                return dir.equals(dir)&&n.startsWith(filePrefix);
+                return dir.equals(directory)&&n.startsWith(filePrefix);
             }
         });
         
@@ -252,8 +254,8 @@ public final class AsyncDataManager {
     }
 
     DataFile getDataFile(Location item) throws IOException{
-        Integer key=new Integer(item.getDataFileId());
-        DataFile dataFile=(DataFile) fileMap.get(key);
+        Integer key= Integer.valueOf(item.getDataFileId());
+        DataFile dataFile=fileMap.get(key);
         if(dataFile==null){
             log.error("Looking for key " + key + " but not found in fileMap: " + fileMap);
             throw new IOException("Could not locate data file "+filePrefix+"-"+item.getDataFileId());
@@ -265,14 +267,12 @@ public final class AsyncDataManager {
 		return (DataFile) dataFile.getNext();
 	}
 
-    public void close() throws IOException{
-        synchronized(this){
-            if(!started){
-                return;
-            }
-            Scheduler.cancel(cleanupTask);
-            accessorPool.close();
+    public synchronized void close() throws IOException{
+        if(!started){
+            return;
         }
+        Scheduler.cancel(cleanupTask);
+        accessorPool.close();
         storeState(false);
         appender.close();
         fileMap.clear();
@@ -281,7 +281,7 @@ public final class AsyncDataManager {
         started=false;
     }
 
-	private synchronized void cleanup() {
+	synchronized void cleanup() {
 		if( accessorPool!=null ) {
 			accessorPool.disposeUnused();
 		}
@@ -375,7 +375,7 @@ public final class AsyncDataManager {
 		}
     }
 
-    private void removeDataFile(DataFile dataFile) throws IOException{
+    private synchronized void removeDataFile(DataFile dataFile) throws IOException{
 
     	// Make sure we don't delete too much data.
         if( dataFile==currentWriteFile || mark==null || dataFile.getDataFileId() >= mark.getDataFileId() ) {
@@ -414,7 +414,7 @@ public final class AsyncDataManager {
 		return mark;
 	}
 
-	public Location getNextLocation(Location location) throws IOException, IllegalStateException {
+	public synchronized Location getNextLocation(Location location) throws IOException, IllegalStateException {
 			
 			
 			Location cur = null;
@@ -492,17 +492,17 @@ public final class AsyncDataManager {
 		storeState(sync);
 	}
 
-	private void storeState(boolean sync) throws IOException {
-		ByteSequence state = marshallState();
-		appender.storeItem(state, Location.MARK_TYPE, sync);
-		controlFile.store(state, sync);
-	}
+	private synchronized void storeState(boolean sync) throws IOException{
+        ByteSequence state=marshallState();
+        appender.storeItem(state,Location.MARK_TYPE,sync);
+        controlFile.store(state,sync);
+    }
 
-	public Location write(ByteSequence data, boolean sync) throws IOException, IllegalStateException {
+	public synchronized Location write(ByteSequence data, boolean sync) throws IOException, IllegalStateException {
         return appender.storeItem(data, Location.USER_TYPE, sync);
 	}
 	
-	public Location write(ByteSequence data, byte type, boolean sync) throws IOException, IllegalStateException {
+	public  synchronized Location write(ByteSequence data, byte type, boolean sync) throws IOException, IllegalStateException {
         return appender.storeItem(data, type, sync);
 	}
 

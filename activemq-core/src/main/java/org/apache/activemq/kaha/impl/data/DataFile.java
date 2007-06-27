@@ -38,7 +38,7 @@ class DataFile{
 
     DataFile(File file,int number){
         this.file=file;
-        this.number=new Integer(number);
+        this.number=Integer.valueOf(number);
         length=file.exists()?file.length():0;
     }
 

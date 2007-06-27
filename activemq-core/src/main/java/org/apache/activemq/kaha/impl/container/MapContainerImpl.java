@@ -497,13 +497,12 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
     protected synchronized IndexItem write(Object key,Object value){
         IndexItem index=null;
         try{
-            if(key!=null){
-                index=indexManager.createNewIndex();
-                StoreLocation data=dataManager.storeDataItem(keyMarshaller,key);
-                index.setKeyData(data);
-            }
+            index=indexManager.createNewIndex();
+            StoreLocation data=dataManager.storeDataItem(keyMarshaller,key);
+            index.setKeyData(data);
+            
             if(value!=null){
-                StoreLocation data=dataManager.storeDataItem(valueMarshaller,value);
+                data=dataManager.storeDataItem(valueMarshaller,value);
                 index.setValueData(data);
             }
             IndexItem prev=indexList.getLast();           

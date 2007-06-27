@@ -143,7 +143,7 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
      * @param key
      * @throws InterruptedIOException
      */
-    private void acknowledge(MessageId messageId,Location location,SubscriptionKey key) throws InterruptedIOException{
+    protected void acknowledge(MessageId messageId,Location location,SubscriptionKey key) throws InterruptedIOException{
         synchronized(this){
             lastLocation=location;
             ackedLastAckLocations.put(key,messageId);

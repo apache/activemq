@@ -389,6 +389,7 @@ public class ReadOnlyContext implements Context, Serializable {
     }
 
     private class ListEnumeration extends LocalNamingEnumeration {
+        ListEnumeration(){}
         public Object next() throws NamingException {
             return nextElement();
         }
@@ -400,6 +401,8 @@ public class ReadOnlyContext implements Context, Serializable {
     }
 
     private class ListBindingEnumeration extends LocalNamingEnumeration {
+        ListBindingEnumeration(){
+        }
         public Object next() throws NamingException {
             return nextElement();
         }

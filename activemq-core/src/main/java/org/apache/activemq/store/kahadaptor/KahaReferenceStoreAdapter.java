@@ -212,7 +212,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     }
     
     @Override
-    public void setDirectory(File directory){
+    public synchronized void setDirectory(File directory){
         File file = new File(directory,"data");
         super.setDirectory(file);
         this.stateStore=createStateStore(directory);

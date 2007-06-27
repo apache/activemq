@@ -591,7 +591,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("optimizeAcknowledge", Boolean.toString(isOptimizeAcknowledge()));
         props.setProperty("statsEnabled",Boolean.toString(isStatsEnabled()));
         props.setProperty("alwaysSyncSend",Boolean.toString(isAlwaysSyncSend()));
-        props.setProperty("producerWindowSize", Integer.toString(producerWindowSize));
+        props.setProperty("producerWindowSize", Integer.toString(getProducerWindowSize()));
     }
 
     public boolean isUseCompression() {

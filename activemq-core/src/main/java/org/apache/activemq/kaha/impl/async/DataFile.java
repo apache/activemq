@@ -27,7 +27,7 @@ import org.apache.activemq.util.LinkedNode;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-class DataFile extends LinkedNode implements Comparable {
+class DataFile extends LinkedNode implements Comparable<DataFile> {
 	
     private final File file;
     private final Integer dataFileId;
@@ -39,7 +39,7 @@ class DataFile extends LinkedNode implements Comparable {
     DataFile(File file, int number, int preferedSize){
         this.file=file;
 		this.preferedSize = preferedSize;
-        this.dataFileId=new Integer(number);
+        this.dataFileId=Integer.valueOf(number);
         length=(int)(file.exists()?file.length():0);
     }
 
@@ -98,10 +98,17 @@ class DataFile extends LinkedNode implements Comparable {
         return file.delete();
     }
 
-	public int compareTo(Object o) {
-		DataFile df = (DataFile) o;
+	public int compareTo(DataFile df) {
 		return dataFileId - df.dataFileId;
 	}
+    
+    public boolean equals(Object o) {
+        boolean result = false;
+        if (o instanceof DataFile) {
+            result = compareTo((DataFile)o)==0;
+        }
+        return result;
+    }
 
 
 	

@@ -260,7 +260,7 @@ public class HashIndex implements Index{
     public synchronized void delete() throws IOException{
         unload();
         if(file.exists()){
-            boolean result=file.delete();
+            file.delete();
         }
         length=0;
     }

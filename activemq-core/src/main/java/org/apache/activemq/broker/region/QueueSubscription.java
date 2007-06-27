@@ -139,7 +139,7 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
         }
     }
     
-    public String toString() {
+    public synchronized String toString() {
         return 
             "QueueSubscription:" +
             " consumer="+info.getConsumerId()+

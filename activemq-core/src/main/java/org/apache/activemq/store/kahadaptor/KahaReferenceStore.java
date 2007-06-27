@@ -149,7 +149,7 @@ public class KahaReferenceStore implements ReferenceStore{
         messageContainer.clear();
     }
 
-    public void resetBatching(){
+    public synchronized void resetBatching(){
         batchEntry=null;
         lastBatchId=null;
     }

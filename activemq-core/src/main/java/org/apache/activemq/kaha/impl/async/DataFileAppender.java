@@ -55,10 +55,13 @@ class DataFileAppender {
 	    	return hash;  
 	    }
 	    
-	    public boolean equals(Object obj) {
-	    	WriteKey di = (WriteKey)obj;
-	    	return di.file == file && di.offset == offset;
-	    }
+	    public boolean equals(Object obj){
+            if(obj instanceof WriteKey){
+                WriteKey di=(WriteKey)obj;
+                return di.file==file&&di.offset==offset;
+            }
+            return false;
+        }
 	}
 	
 	public class WriteBatch {

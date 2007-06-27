@@ -131,5 +131,18 @@ public final class Location implements Comparable<Location> {
 		}
 		return dataFileId - l.dataFileId;
 	}
+    
+    public boolean equals(Object o) {
+        boolean result = false;
+        if (o instanceof Location) {
+            result = compareTo((Location)o)==0;
+        }
+        return result;
+    }
+    
+    public int hashCode() {
+        return dataFileId ^ offset;
+    }
+
 
 }

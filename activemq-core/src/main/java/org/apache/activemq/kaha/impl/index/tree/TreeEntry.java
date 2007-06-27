@@ -45,7 +45,7 @@ class TreeEntry implements Comparable{
         return compareTo(o)==0;
     }
 
-    public int hasCode(){
+    public int hashCode(){
         return key.hashCode();
     }
 

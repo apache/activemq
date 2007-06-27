@@ -91,7 +91,7 @@ public class FailoverTransport implements CompositeTransport {
 	                return;
 	            }
 	            if (command.isResponse()) {
-                    Object object = requestMap.remove(new Integer(((Response) command).getCorrelationId()));
+                    Object object = requestMap.remove(Integer.valueOf(((Response) command).getCorrelationId()));
                     if( object!=null && object.getClass() == Tracked.class ) {
                 	   ((Tracked)object).onResponses();
                     }
@@ -231,7 +231,7 @@ public class FailoverTransport implements CompositeTransport {
         }, "ActiveMQ Failover Worker: "+System.identityHashCode(this));
     }
 
-    private void handleTransportFailure(IOException e) throws InterruptedException {
+    final void handleTransportFailure(IOException e) throws InterruptedException {
         if (transportListener != null){
             transportListener.transportInterupted();
         }
@@ -382,9 +382,9 @@ public class FailoverTransport implements CompositeTransport {
                         // it later.
                         Tracked tracked = stateTracker.track(command);
                         if( tracked!=null && tracked.isWaitingForResponse() ) {
-                            requestMap.put(new Integer(command.getCommandId()), tracked);
+                            requestMap.put(Integer.valueOf(command.getCommandId()), tracked);
                         } else if ( tracked==null && command.isResponseRequired()) {
-                            requestMap.put(new Integer(command.getCommandId()), command);
+                            requestMap.put(Integer.valueOf(command.getCommandId()), command);
                         }
                                                 
                         // Send the message.
@@ -398,7 +398,7 @@ public class FailoverTransport implements CompositeTransport {
                         		// since we will retry in this method.. take it out of the request
                         		// map so that it is not sent 2 times on recovery
                             	if( command.isResponseRequired() ) {
-                            		requestMap.remove(new Integer(command.getCommandId()));
+                            		requestMap.remove(Integer.valueOf(command.getCommandId()));
                             	}
                             	
                                 // Rethrow the exception so it will handled by the outer catch

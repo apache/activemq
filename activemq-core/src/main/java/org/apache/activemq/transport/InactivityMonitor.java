@@ -68,7 +68,7 @@ public class InactivityMonitor extends TransportFilter {
     }
 
 
-    private void writeCheck() {
+    final void writeCheck() {
         synchronized(writeChecker) {
             if( inSend.get() ) {
                 log.trace("A send is in progress");
@@ -90,7 +90,7 @@ public class InactivityMonitor extends TransportFilter {
         }
     }
 
-    private void readCheck() {
+    final void readCheck() {
         synchronized(readChecker) {
             if( inReceive.get() ) {
                 log.trace("A receive is in progress");

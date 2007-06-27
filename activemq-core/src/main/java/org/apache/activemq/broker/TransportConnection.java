@@ -349,7 +349,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
         return null;
     }
 
-    public Response processWireFormat(WireFormatInfo info) throws Exception{
+    public synchronized Response processWireFormat(WireFormatInfo info) throws Exception{
         wireFormatInfo=info;
     	protocolVersion.set(info.getVersion());
         return null;
@@ -369,6 +369,9 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
         context=null;
         if(cs!=null){
             context=cs.getContext();
+        }
+        if (cs == null) {
+            throw new NullPointerException("Context is null");
         }
         // Avoid replaying dup commands
         if(cs.getTransactionState(info.getTransactionId())==null){
@@ -390,6 +393,9 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
         context=null;
         if(cs!=null){
             context=cs.getContext();
+        }
+        if (cs == null) {
+            throw new NullPointerException("Context is null");
         }
         TransactionState transactionState=cs.getTransactionState(info.getTransactionId());
         if(transactionState==null)
@@ -414,6 +420,9 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
         if(cs!=null){
             context=cs.getContext();
         }
+        if (cs == null) {
+            throw new NullPointerException("Context is null");
+        }
         cs.removeTransactionState(info.getTransactionId());
         broker.commitTransaction(context,info.getTransactionId(),true);
         return null;
@@ -425,6 +434,9 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
         if(cs!=null){
             context=cs.getContext();
         }
+        if (cs == null) {
+            throw new NullPointerException("Context is null");
+        }
         cs.removeTransactionState(info.getTransactionId());
         broker.commitTransaction(context,info.getTransactionId(),false);
         return null;
@@ -435,6 +447,9 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
         context=null;
         if(cs!=null){
             context=cs.getContext();
+        }
+        if (cs == null) {
+            throw new NullPointerException("Context is null");
         }
         cs.removeTransactionState(info.getTransactionId());
         broker.rollbackTransaction(context,info.getTransactionId());
@@ -869,17 +884,20 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
             log.debug("Stopping connection: "+transport.getRemoteAddress());
             connector.onStopped(this);
             try{
-                if(masterBroker!=null){
-                    masterBroker.stop();
+                synchronized(this){
+                    if(masterBroker!=null){
+                        masterBroker.stop();
+                    }
+                    if(duplexBridge!=null){
+                        duplexBridge.stop();
+                    }
+                    // If the transport has not failed yet,
+                    // notify the peer that we are doing a normal shutdown.
+                    if(transportException==null){
+                        transport.oneway(new ShutdownInfo());
+                    }
                 }
-                if (duplexBridge != null) {
-                    duplexBridge.stop();
-                }
-                // If the transport has not failed yet,
-                // notify the peer that we are doing a normal shutdown.
-                if(transportException==null){
-                    transport.oneway(new ShutdownInfo());
-                }
+                
             }catch(Exception ignore){
                 log.trace("Exception caught stopping",ignore);
             }
@@ -1069,7 +1087,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
         this.pendingStop=pendingStop;
     }
 
-    public Response processBrokerInfo(BrokerInfo info){
+    public synchronized Response processBrokerInfo(BrokerInfo info){
         if(info.isSlaveBroker()){
             // stream messages from this broker (the master) to
             // the slave
@@ -1172,8 +1190,10 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
             synchronized(consumerExchanges){
                 result=new ConsumerBrokerExchange();
                 ConnectionState state=lookupConnectionState(id);
-                context=state.getContext();
-                result.setConnectionContext(context);
+                synchronized(this){
+                    context=state.getContext();
+                    result.setConnectionContext(context);
+                }
                 SessionState ss=state.getSessionState(id.getParentId());
                 if(ss!=null){
                     ConsumerState cs=ss.getConsumerState(id);
