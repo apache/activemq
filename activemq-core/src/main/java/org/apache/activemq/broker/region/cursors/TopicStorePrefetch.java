@@ -80,7 +80,7 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements Message
     /**
      * @return true if there are no pendingCount messages
      */
-    public boolean isEmpty(){
+    public synchronized boolean isEmpty(){
         return pendingCount <= 0;
     }
 
@@ -99,7 +99,7 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements Message
         }
     }
     
-    public void addMessageFirst(MessageReference node) throws Exception{
+    public synchronized void addMessageFirst(MessageReference node) throws Exception{
         if(node!=null){
             if(started){
                 firstMessageId=node.getMessageId();

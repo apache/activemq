@@ -142,7 +142,7 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
      * @param location
      * @param key
      */
-    private void acknowledge(MessageId messageId, RecordLocation location, SubscriptionKey key) {
+    protected void acknowledge(MessageId messageId, RecordLocation location, SubscriptionKey key) {
         synchronized(this) {
 		    lastLocation = location;
 		    ackedLastAckLocations.put(key, messageId);

@@ -174,7 +174,7 @@ public class KahaMessageStore implements MessageStore{
      * @param nextToDispatch
      * @see org.apache.activemq.store.MessageStore#resetBatching(org.apache.activemq.command.MessageId)
      */
-    public void resetBatching(){
+    public synchronized void resetBatching(){
         batchEntry=null;
     }
 

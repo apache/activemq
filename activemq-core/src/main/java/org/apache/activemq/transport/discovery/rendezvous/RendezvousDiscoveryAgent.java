@@ -60,8 +60,6 @@ public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener
     private String group = "default";
     private final CopyOnWriteArrayList serviceInfos = new CopyOnWriteArrayList();
 
-    private String brokerName;
-
     // DiscoveryAgent interface
     //-------------------------------------------------------------------------
     public void start() throws Exception {
@@ -232,11 +230,16 @@ public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener
         return "_" + group+"."+TYPE_SUFFIX;
     }
 
-    public void setBrokerName(String brokerName) {
-        this.brokerName = brokerName;        
-    }
-
     public void serviceFailed(DiscoveryEvent event) throws IOException {
         // TODO: is there a way to notify the JmDNS that the service failed?
+    }
+
+    /**
+     * @param brokerName
+     * @see org.apache.activemq.transport.discovery.DiscoveryAgent#setBrokerName(java.lang.String)
+     */
+    public void setBrokerName(String brokerName){
+        // implementation of interface
+        
     }
 }

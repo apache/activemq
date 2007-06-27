@@ -92,8 +92,8 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     private final ConcurrentHashMap topics = new ConcurrentHashMap();
     
     private UsageManager usageManager;
-    private long checkpointInterval = 1000 * 60 * 5;
-    private long lastCheckpointRequest = System.currentTimeMillis();
+    long checkpointInterval = 1000 * 60 * 5;
+    long lastCheckpointRequest = System.currentTimeMillis();
     private long lastCleanup = System.currentTimeMillis();
     private int maxCheckpointWorkers = 10;
     private int maxCheckpointMessageAddSize = 1024*1024;
@@ -112,7 +112,11 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     final Runnable createPeriodicCheckpointTask() {
     	return new Runnable() {
 	        public void run() {
-	            if( System.currentTimeMillis()>lastCheckpointRequest+checkpointInterval ) {
+                long lastTime = 0;
+                synchronized(this) {
+                    lastTime = lastCheckpointRequest;
+                }
+	            if( System.currentTimeMillis()>lastTime+checkpointInterval ) {
 	                checkpoint(false, true);
 	            }
 	        }

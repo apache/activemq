@@ -125,7 +125,7 @@ public class JournalMessageStore implements MessageStore {
         }
     }
 
-    private void addMessage(final Message message, final RecordLocation location) {
+    void addMessage(final Message message, final RecordLocation location) {
         synchronized (this) {
             lastLocation = location;
             MessageId id = message.getMessageId();
@@ -187,7 +187,7 @@ public class JournalMessageStore implements MessageStore {
         }
     }
     
-    private void removeMessage(final MessageAck ack, final RecordLocation location) {
+    final void removeMessage(final MessageAck ack, final RecordLocation location) {
         synchronized (this) {
             lastLocation = location;
             MessageId id = ack.getLastMessageId();
@@ -253,33 +253,31 @@ public class JournalMessageStore implements MessageStore {
                 ConnectionContext context = transactionTemplate.getContext();
                 
                 // Checkpoint the added messages.
-                Iterator iterator = cpAddedMessageIds.values().iterator();
-                while (iterator.hasNext()) {
-                    Message message = (Message) iterator.next();
-                    try {
-                        longTermStore.addMessage(context, message);
-                    } catch (Throwable e) {
-                        log.warn("Message could not be added to long term store: " + e.getMessage(), e);
+                synchronized(JournalMessageStore.this){
+                    Iterator iterator=cpAddedMessageIds.values().iterator();
+                    while(iterator.hasNext()){
+                        Message message=(Message)iterator.next();
+                        try{
+                            longTermStore.addMessage(context,message);
+                        }catch(Throwable e){
+                            log.warn("Message could not be added to long term store: "+e.getMessage(),e);
+                        }
+                        size+=message.getSize();
+                        message.decrementReferenceCount();
+                        // Commit the batch if it's getting too big
+                        if(size>=maxCheckpointMessageAddSize){
+                            persitanceAdapter.commitTransaction(context);
+                            persitanceAdapter.beginTransaction(context);
+                            size=0;
+                        }
                     }
-                    
-                    size += message.getSize();
-                    
-                    message.decrementReferenceCount();
-                    
-                    // Commit the batch if it's getting too big
-                    if( size >= maxCheckpointMessageAddSize ) {
-                        persitanceAdapter.commitTransaction(context);
-                        persitanceAdapter.beginTransaction(context);
-                        size=0;
-                    }
-                    
                 }
 
                 persitanceAdapter.commitTransaction(context);
                 persitanceAdapter.beginTransaction(context);
 
                 // Checkpoint the removed messages.
-                iterator = cpRemovedMessageLocations.iterator();
+                Iterator iterator = cpRemovedMessageLocations.iterator();
                 while (iterator.hasNext()) {
                     try {
                         MessageAck ack = (MessageAck) iterator.next();
@@ -303,7 +301,8 @@ public class JournalMessageStore implements MessageStore {
         if( cpActiveJournalLocations.size() > 0 ) {
             Collections.sort(cpActiveJournalLocations);
             return (RecordLocation) cpActiveJournalLocations.get(0);
-        } else {
+        }
+        synchronized (this){
             return lastLocation;
         }
     }

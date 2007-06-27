@@ -92,7 +92,7 @@ public class FixedCountSubscriptionRecoveryPolicy implements SubscriptionRecover
         this.maximumSize=maximumSize;
     }
 
-    public Message[] browse(ActiveMQDestination destination) throws Exception{
+    public synchronized Message[] browse(ActiveMQDestination destination) throws Exception{
         List result=new ArrayList();
         DestinationFilter filter=DestinationFilter.parseFilter(destination);
         int t=tail;

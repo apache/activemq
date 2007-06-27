@@ -76,7 +76,7 @@ public class IndirectMessageReference implements QueueMessageReference {
         
         this.referenceCount=1;
         message.incrementReferenceCount();     
-        this.cachedSize = message != null ? message.getSize() : 0;
+        this.cachedSize = message.getSize();
     }
     
     synchronized public Message getMessageHardRef() {
@@ -212,7 +212,7 @@ public class IndirectMessageReference implements QueueMessageReference {
         return false;
     }
 
-    public int getSize(){
+    public synchronized int getSize(){
        Message msg = message;
        if (msg != null){
            return msg.getSize();

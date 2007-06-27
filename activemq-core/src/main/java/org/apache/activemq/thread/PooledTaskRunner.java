@@ -96,7 +96,7 @@ class PooledTaskRunner implements TaskRunner {
     public void shutdown() throws InterruptedException {
         shutdown(0);
     }
-    private void runTask() {
+    final void runTask() {
         
         synchronized (runable) {
             queued = false;

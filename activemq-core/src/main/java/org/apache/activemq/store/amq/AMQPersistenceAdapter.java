@@ -218,8 +218,10 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         if(!started.compareAndSet(true,false))
             return;
         this.usageManager.removeUsageListener(this);
-        Scheduler.cancel(periodicCheckpointTask);
-        Scheduler.cancel(periodicCleanupTask);
+        synchronized(this){
+            Scheduler.cancel(periodicCheckpointTask);
+            Scheduler.cancel(periodicCleanupTask);
+        }
         Iterator<AMQMessageStore> iterator=queues.values().iterator();
         while(iterator.hasNext()){
             AMQMessageStore ms=iterator.next();
@@ -232,7 +234,9 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         }
         // Take one final checkpoint and stop checkpoint processing.
         checkpoint(true);
-        checkpointTask.shutdown();
+        synchronized(this){
+            checkpointTask.shutdown();
+        }
         queues.clear();
         topics.clear();
         IOException firstException=null;
@@ -259,8 +263,8 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
             CountDownLatch latch=null;
             synchronized(this){
                 latch=nextCheckpointCountDownLatch;
+                checkpointTask.wakeup();
             }
-            checkpointTask.wakeup();
             if(sync){
                 if(log.isDebugEnabled()){
                     log.debug("Waitng for checkpoint to complete.");
@@ -585,7 +589,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         return transactionStore;
     }
 
-    public void deleteAllMessages() throws IOException{
+    public synchronized void deleteAllMessages() throws IOException{
         deleteAllMessages=true;
     }
 
@@ -669,11 +673,11 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         this.maxCheckpointWorkers=maxCheckpointWorkers;
     }
 
-    public File getDirectory(){
+    public synchronized File getDirectory(){
         return directory;
     }
 
-    public void setDirectory(File directory){
+    public synchronized void setDirectory(File directory){
         this.directory=directory;
     }
 

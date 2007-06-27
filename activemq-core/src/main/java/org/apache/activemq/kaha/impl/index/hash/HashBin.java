@@ -297,12 +297,8 @@ class HashBin {
         }
     }
 
-    private void doUnderFlow(int index) {
-        int pageNo = index / maximumEntries;
-        int nextPageNo = pageNo + 1;
-        if (nextPageNo < hashPages.size()) {
-        }
-        HashPageInfo info = hashPages.get(pageNo);
+    private void doUnderFlow(@SuppressWarnings("unused") int index) {
+        //does little
     }
 
     private void end() throws IOException {

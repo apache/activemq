@@ -138,7 +138,7 @@ public class KahaTransactionStore implements TransactionStore{
      * @param ack
      * @throws IOException
      */
-    private void removeMessage(final MessageStore destination,final MessageAck ack) throws IOException{
+    final void removeMessage(final MessageStore destination,final MessageAck ack) throws IOException{
         if(ack.isInTransaction()){
             KahaTransaction tx=getOrCreateTx(ack.getTransactionId());
             tx.add((KahaMessageStore) destination,ack);

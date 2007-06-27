@@ -115,13 +115,14 @@ public class ContainerKeySet extends ContainerCollectionSupport implements Set{
     }
     
     public String toString() {
-        String result ="ContainerKeySet[";
+        StringBuffer result =new StringBuffer(32);
+        result.append("ContainerKeySet[");
         IndexItem item = container.getInternalList().getRoot();
         while ((item = container.getInternalList().getNextEntry(item)) != null) {
-            result += container.getKey(item);
-            result += ",";
+            result.append(container.getKey(item));
+            result.append(",");
         }
-        result +="]";
-        return result;
+        result.append("]");
+        return result.toString();
     }
 }

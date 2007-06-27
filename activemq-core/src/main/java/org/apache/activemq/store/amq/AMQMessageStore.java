@@ -130,7 +130,7 @@ public class AMQMessageStore implements MessageStore{
         }
     }
 
-    private void addMessage(final Message message,final Location location) throws InterruptedIOException{
+    void addMessage(final Message message,final Location location) throws InterruptedIOException{
         ReferenceData data=new ReferenceData();
         data.setExpiration(message.getExpiration());
         data.setFileId(location.getDataFileId());
@@ -205,7 +205,7 @@ public class AMQMessageStore implements MessageStore{
         }
     }
 
-    private void removeMessage(final MessageAck ack,final Location location) throws InterruptedIOException{
+    final void removeMessage(final MessageAck ack,final Location location) throws InterruptedIOException{
         ReferenceData data;
         synchronized(this){
             lastLocation=location;
@@ -273,7 +273,7 @@ public class AMQMessageStore implements MessageStore{
      * @return
      * @throws IOException
      */
-    private void asyncWrite(){
+    void asyncWrite(){
         try{
             CountDownLatch countDown;
             synchronized(this){

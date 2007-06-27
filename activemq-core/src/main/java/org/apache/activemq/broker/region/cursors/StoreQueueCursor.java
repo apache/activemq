@@ -90,7 +90,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor{
         }
     }
     
-    public void addMessageFirst(MessageReference node) throws Exception{
+    public synchronized void addMessageFirst(MessageReference node) throws Exception{
         if(node!=null){
             Message msg=node.getMessage();
             if(started){
@@ -105,7 +105,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor{
         }
     }
 
-    public void clear(){
+    public synchronized void clear(){
         pendingCount=0;
     }
 
@@ -150,7 +150,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor{
         persistent.reset();
     }
 
-    public int size(){
+    public synchronized int size(){
         return pendingCount;
     }
 
@@ -165,25 +165,25 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor{
      * @see org.apache.activemq.region.cursors.PendingMessageCursor
      * @return true if recovery required
      */
-    public boolean isRecoveryRequired(){
+    public synchronized boolean isRecoveryRequired(){
         return false;
     }
 
     /**
      * @return the nonPersistent Cursor
      */
-    public PendingMessageCursor getNonPersistent(){
+    public synchronized PendingMessageCursor getNonPersistent(){
         return this.nonPersistent;
     }
 
     /**
      * @param nonPersistent cursor to set
      */
-    public void setNonPersistent(PendingMessageCursor nonPersistent){
+    public synchronized void setNonPersistent(PendingMessageCursor nonPersistent){
         this.nonPersistent=nonPersistent;
     }
 
-    public void setMaxBatchSize(int maxBatchSize){
+    public synchronized void setMaxBatchSize(int maxBatchSize){
         persistent.setMaxBatchSize(maxBatchSize);
         if(nonPersistent!=null){
             nonPersistent.setMaxBatchSize(maxBatchSize);
@@ -191,7 +191,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor{
         super.setMaxBatchSize(maxBatchSize);
     }
     
-    public void gc() {
+    public synchronized void gc() {
         if (persistent != null) {
             persistent.gc();
         }
@@ -200,7 +200,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor{
         }
     }
     
-    public void setUsageManager(UsageManager usageManager){
+    public synchronized void setUsageManager(UsageManager usageManager){
         super.setUsageManager(usageManager);
         if (persistent != null) {
             persistent.setUsageManager(usageManager);

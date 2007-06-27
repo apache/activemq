@@ -50,7 +50,7 @@ public class CacheEvictionUsageListener implements UsageListener {
         }, "Cache Evictor: "+System.identityHashCode(this));
     }
     
-    private boolean evictMessages() {
+    boolean evictMessages() {
         // Try to take the memory usage down below the low mark.
         try {            
             log.debug("Evicting cache memory usage: "+usageManager.getPercentUsage());

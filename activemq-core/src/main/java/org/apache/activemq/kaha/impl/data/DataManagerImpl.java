@@ -43,7 +43,7 @@ public final class DataManagerImpl implements DataManager {
     private static final Log log=LogFactory.getLog(DataManagerImpl.class);
     public static final long MAX_FILE_LENGTH=1024*1024*32;
     private static final String NAME_PREFIX="data-";
-    private final File dir;
+    private final File directory;
     private final String name;
     private SyncDataFileReader reader;
     private SyncDataFileWriter writer;
@@ -59,14 +59,14 @@ public final class DataManagerImpl implements DataManager {
     private String dataFilePrefix;
    
     public DataManagerImpl(File dir, final String name){
-        this.dir=dir;
+        this.directory=dir;
         this.name=name;
         
         dataFilePrefix = NAME_PREFIX+name+"-";
         // build up list of current dataFiles
         File[] files=dir.listFiles(new FilenameFilter(){
             public boolean accept(File dir,String n){
-                return dir.equals(dir)&&n.startsWith(dataFilePrefix);
+                return dir.equals(directory)&&n.startsWith(dataFilePrefix);
             }
         });
         if(files!=null){
@@ -86,7 +86,7 @@ public final class DataManagerImpl implements DataManager {
     
     private DataFile createAndAddDataFile(int num){
         String fileName=dataFilePrefix+num;
-        File file=new File(dir,fileName);
+        File file=new File(directory,fileName);
         DataFile result=new DataFile(file,num);
         fileMap.put(result.getNumber(),result);
         return result;
@@ -114,7 +114,7 @@ public final class DataManagerImpl implements DataManager {
     }
 
     DataFile getDataFile(StoreLocation item) throws IOException{
-        Integer key=new Integer(item.getFile());
+        Integer key=Integer.valueOf(item.getFile());
         DataFile dataFile=(DataFile) fileMap.get(key);
         if(dataFile==null){
             log.error("Looking for key " + key + " but not found in fileMap: " + fileMap);

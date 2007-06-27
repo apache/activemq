@@ -82,7 +82,7 @@ class DedicatedTaskRunner implements TaskRunner {
         shutdown(0);
     }
     
-    private void runTask() {
+    final void runTask() {
         
         try {
             while( true ) {

@@ -90,7 +90,7 @@ public class SubscriptionInfo implements DataStructure {
         return IntrospectionSupport.toString(this);
     }
     
-    public int hasCode() {
+    public int hashCode() {
         int h1 = clientId != null ? clientId.hashCode():-1;
         int h2 = subcriptionName != null ? subcriptionName.hashCode():-1;
         return h1 ^ h2;

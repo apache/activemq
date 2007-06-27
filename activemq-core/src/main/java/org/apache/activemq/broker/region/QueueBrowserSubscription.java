@@ -39,7 +39,7 @@ public class QueueBrowserSubscription extends QueueSubscription {
         return !((QueueMessageReference)node).isAcked();
     }
     
-    public String toString() {
+    public synchronized String toString() {
         return 
             "QueueBrowserSubscription:" +
             " consumer="+info.getConsumerId()+

@@ -104,7 +104,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
      * Occurs when a pull times out. If nothing has been dispatched since the timeout was setup, then send the NULL
      * message.
      */
-    private synchronized void pullTimeout(long dispatchCounterBeforePull){
+    final synchronized void pullTimeout(long dispatchCounterBeforePull){
         if(dispatchCounterBeforePull==dispatchCounter){
             try{
                 add(QueueMessageReference.NULL_MESSAGE);
@@ -300,14 +300,14 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
     /**
      * @return true when 60% or more room is left for dispatching messages
      */
-    public boolean isLowWaterMark(){
+    public synchronized boolean isLowWaterMark(){
         return (dispatched.size()-prefetchExtension)<=(info.getPrefetchSize()*.4);
     }
 
     /**
      * @return true when 10% or less room is left for dispatching messages
      */
-    public boolean isHighWaterMark(){
+    public synchronized boolean isHighWaterMark(){
         return (dispatched.size()-prefetchExtension)>=(info.getPrefetchSize()*.9);
     }
 
@@ -315,16 +315,12 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         return info.getPrefetchSize()+prefetchExtension-dispatched.size();
     }
 
-    public int getPendingQueueSize(){
-        synchronized(pending){
-            return pending.size();
-        }
+    public synchronized int getPendingQueueSize(){
+        return pending.size();
     }
 
-    public int getDispatchedQueueSize(){
-        synchronized(dispatched){
-            return dispatched.size();
-        }
+    public synchronized int getDispatchedQueueSize(){
+        return dispatched.size();
     }
 
     synchronized public long getDequeueCounter(){
@@ -344,11 +340,11 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
     }
     
    
-    public PendingMessageCursor getPending(){
+    public synchronized PendingMessageCursor getPending(){
         return this.pending;
     }
 
-    public void setPending(PendingMessageCursor pending){
+    public synchronized void setPending(PendingMessageCursor pending){
         this.pending=pending;
     }
     
@@ -413,7 +409,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         }
     }
 
-    protected boolean dispatch(final MessageReference node) throws IOException{
+    protected synchronized boolean dispatch(final MessageReference node) throws IOException{
         final Message message=node.getMessage();
         if(message==null){
             return false;

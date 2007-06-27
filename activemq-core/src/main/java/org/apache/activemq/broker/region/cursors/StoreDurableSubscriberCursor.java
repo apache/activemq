@@ -166,7 +166,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor{
         nonPersistent.addMessageLast(node);
     }
 
-    public void clear(){
+    public synchronized void clear(){
         pendingCount=0;
         nonPersistent.clear();
         for(PendingMessageCursor tsp: storePrefetches){

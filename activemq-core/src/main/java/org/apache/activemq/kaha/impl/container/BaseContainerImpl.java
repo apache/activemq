@@ -188,24 +188,26 @@ public abstract class BaseContainerImpl{
         }
     }
 
-    protected final void delete(IndexItem key,IndexItem prev,IndexItem next){
-        try{
-            dataManager.removeInterestInFile(key.getKeyFile());
-            dataManager.removeInterestInFile(key.getValueFile());
-            prev=prev==null?root:prev;
-            next=next!=root?next:null;
-            if(next!=null){
-                prev.setNextItem(next.getOffset());
-                next.setPreviousItem(prev.getOffset());
-                updateIndexes(next);
-            }else{
-                prev.setNextItem(Item.POSITION_NOT_SET);
+    protected final void delete(final IndexItem keyItem,final IndexItem prevItem,final IndexItem nextItem){
+        if(keyItem!=null){
+            try{
+                IndexItem prev=prevItem==null?root:prevItem;
+                IndexItem next=nextItem!=root?nextItem:null;
+                dataManager.removeInterestInFile(keyItem.getKeyFile());
+                dataManager.removeInterestInFile(keyItem.getValueFile());
+                if(next!=null){
+                    prev.setNextItem(next.getOffset());
+                    next.setPreviousItem(prev.getOffset());
+                    updateIndexes(next);
+                }else{
+                    prev.setNextItem(Item.POSITION_NOT_SET);
+                }
+                updateIndexes(prev);
+                indexManager.freeIndex(keyItem);
+            }catch(IOException e){
+                log.error("Failed to delete "+keyItem,e);
+                throw new RuntimeStoreException(e);
             }
-            updateIndexes(prev);
-            indexManager.freeIndex(key);
-        }catch(IOException e){
-            log.error("Failed to delete "+key,e);
-            throw new RuntimeStoreException(e);
         }
     }
 
