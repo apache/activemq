@@ -16,13 +16,23 @@ package org.apache.activemq.network;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+
 import org.apache.activemq.Service;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.NetworkBridgeView;
+import org.apache.activemq.broker.jmx.NetworkBridgeViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.util.JMXSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
@@ -40,6 +50,9 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     private List dynamicallyIncludedDestinations=new CopyOnWriteArrayList();
     private List staticallyIncludedDestinations=new CopyOnWriteArrayList();
     protected ConnectionFilter connectionFilter;
+    private BrokerService brokerService;
+    private ObjectName objectName;
+    
     protected ServiceSupport serviceSupport=new ServiceSupport(){
 
         protected void doStart() throws Exception{
@@ -188,4 +201,76 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     protected void handleStop(ServiceStopper stopper) throws Exception{
         log.info("Network Connector "+getName()+" Stopped");
     }
+    
+    public ObjectName getObjectName() {
+		return objectName;
+	}
+
+	public void setObjectName(ObjectName objectName) {
+		this.objectName = objectName;
+	}
+
+	public BrokerService getBrokerService() {
+		return brokerService;
+	}
+
+	public void setBrokerService(BrokerService brokerService) {
+		this.brokerService = brokerService;
+	}
+
+	protected void registerNetworkBridgeMBean(NetworkBridge bridge) {
+		if (!getBrokerService().isUseJmx())
+			return;
+
+		MBeanServer mbeanServer = getBrokerService().getManagementContext()
+				.getMBeanServer();
+		if (mbeanServer != null) {
+			NetworkBridgeViewMBean view = new NetworkBridgeView(bridge);
+			try {
+				ObjectName objectName = createNetworkBridgeObjectName(bridge);
+				mbeanServer.registerMBean(view, objectName);
+			} catch (Throwable e) {
+				log.debug("Network bridge could not be registered in JMX: "
+						+ e.getMessage(), e);
+			}
+		}
+	}
+
+	protected void unregisterNetworkBridgeMBean(NetworkBridge bridge) {
+		if (!getBrokerService().isUseJmx())
+			return;
+
+		MBeanServer mbeanServer = getBrokerService().getManagementContext()
+				.getMBeanServer();
+		if (mbeanServer != null) {
+			try {
+				ObjectName objectName = createNetworkBridgeObjectName(bridge);
+				mbeanServer.unregisterMBean(objectName);
+			} catch (Throwable e) {
+				log.debug("Network bridge could not be unregistered in JMX: "
+						+ e.getMessage(), e);
+			}
+		}
+	}
+
+	protected ObjectName createNetworkBridgeObjectName(NetworkBridge bridge)
+			throws MalformedObjectNameException {
+		ObjectName connectorName = getObjectName();
+		Hashtable map = connectorName.getKeyPropertyList();
+		return new ObjectName(connectorName.getDomain()
+				+ ":"
+				+ "BrokerName="
+				+ JMXSupport.encodeObjectNamePart((String) map
+						.get("BrokerName"))
+				+ ","
+				+ "Type=NetworkBridge,"
+				+ "NetworkConnectorName="
+				+ JMXSupport.encodeObjectNamePart((String) map
+						.get("NetworkConnectorName"))
+				+ ","
+				+ "Name="
+				+ JMXSupport.encodeObjectNamePart(JMXSupport
+						.encodeObjectNamePart(bridge.getRemoteAddress())));
+	}
+
 }

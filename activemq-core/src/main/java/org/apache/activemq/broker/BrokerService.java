@@ -278,6 +278,7 @@ public class BrokerService implements Service {
      * network
      */
     public NetworkConnector addNetworkConnector(NetworkConnector connector) throws Exception {
+    	connector.setBrokerService(this);
         URI uri = getVmConnectorURI();
         HashMap map = new HashMap(URISupport.parseParamters(uri));
         map.put("network", "true");
@@ -1217,6 +1218,7 @@ public class BrokerService implements Service {
             NetworkConnectorViewMBean view = new NetworkConnectorView(connector);
             try {
                 ObjectName objectName = createNetworkConnectorObjectName(connector);
+                connector.setObjectName(objectName);
                 mbeanServer.registerMBean(view, objectName);
                 registeredMBeanNames.add(objectName);
             }
