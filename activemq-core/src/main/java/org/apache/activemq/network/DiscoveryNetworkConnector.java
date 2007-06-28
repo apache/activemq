@@ -124,7 +124,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             }
         }
     }
-
+    
     public void onServiceRemove(DiscoveryEvent event) {
         String url = event.getServiceName();
         if (url != null) {
@@ -186,7 +186,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
     }
 
     protected NetworkBridge createBridge(Transport localTransport, Transport remoteTransport, final DiscoveryEvent event) {
-        NetworkBridgeFailedListener listener = new NetworkBridgeFailedListener() {
+        NetworkBridgeListener listener = new NetworkBridgeListener() {
 
             public void bridgeFailed(){
                 if( !serviceSupport.isStopped() ) {
@@ -197,6 +197,15 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 }
                 
             }
+
+			public void onStart(NetworkBridge bridge) {
+				 registerNetworkBridgeMBean(bridge);
+			}
+
+			public void onStop(NetworkBridge bridge) {
+				unregisterNetworkBridgeMBean(bridge);
+			}
+
             
         };
         DemandForwardingBridge result = NetworkBridgeFactory.createBridge(this,localTransport,remoteTransport,listener);

@@ -21,45 +21,50 @@ import org.apache.activemq.transport.Transport;
  * 
  * @version $Revision: 1.1 $
  */
-public class NetworkBridgeFactory{
+public class NetworkBridgeFactory {
 
-    /**
-     * Create a network bridge
-     * 
-     * @param config
-     * @param localTransport
-     * @param remoteTransport
-     * @return the NetworkBridge
-     */
-    public static DemandForwardingBridge createBridge(NetworkBridgeConfiguration config,Transport localTransport,
-            Transport remoteTransport){
-        return createBridge(config,localTransport,remoteTransport,null);
-    }
+	/**
+	 * Create a network bridge
+	 * 
+	 * @param config
+	 * @param localTransport
+	 * @param remoteTransport
+	 * @return the NetworkBridge
+	 */
+	public static DemandForwardingBridge createBridge(
+			NetworkBridgeConfiguration config, Transport localTransport,
+			Transport remoteTransport) {
+		return createBridge(config, localTransport, remoteTransport, null);
+	}
 
-    /**
-     * create a network bridge
-     * 
-     * @param configuration
-     * @param localTransport
-     * @param remoteTransport
-     * @param listener
-     * @return the NetworkBridge
-     */
-    public static DemandForwardingBridge createBridge(NetworkBridgeConfiguration configuration,Transport localTransport,
-            Transport remoteTransport,NetworkBridgeFailedListener listener){
-        DemandForwardingBridge result=null;
-        if(configuration.isConduitSubscriptions()){
-            if(configuration.isDynamicOnly()){
-                result=new ConduitBridge(configuration,localTransport,remoteTransport);
-            }else{
-                result=new DurableConduitBridge(configuration,localTransport,remoteTransport);
-            }
-        }else{
-            result=new DemandForwardingBridge(configuration,localTransport,remoteTransport);
-        }
-        if(listener!=null){
-            result.setNetworkBridgeFailedListener(listener);
-        }
-        return result;
-    }
+	/**
+	 * create a network bridge
+	 * 
+	 * @param configuration
+	 * @param localTransport
+	 * @param remoteTransport
+	 * @param listener
+	 * @return the NetworkBridge
+	 */
+	public static DemandForwardingBridge createBridge(
+			NetworkBridgeConfiguration configuration, Transport localTransport,
+			Transport remoteTransport, final NetworkBridgeListener listener) {
+		DemandForwardingBridge result = null;
+		if (configuration.isConduitSubscriptions()) {
+			if (configuration.isDynamicOnly()) {
+				result = new ConduitBridge(configuration, localTransport,
+						remoteTransport);
+			} else {
+				result = new DurableConduitBridge(configuration,
+						localTransport, remoteTransport);
+			}
+		} else {
+			result = new DemandForwardingBridge(configuration, localTransport,
+					remoteTransport);
+		}
+		if (listener != null) {
+			result.setNetworkBridgeListener(listener);
+		}
+		return result;
+	}
 }

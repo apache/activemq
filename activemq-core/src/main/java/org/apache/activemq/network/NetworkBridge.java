@@ -43,5 +43,18 @@ public interface NetworkBridge extends Service {
      * Set the NetworkBridgeFailedListener
      * @param listener
      */
-    public void setNetworkBridgeFailedListener(NetworkBridgeFailedListener listener);
+    public void setNetworkBridgeListener(NetworkBridgeListener listener);
+    
+    
+    public String getRemoteAddress();
+
+    public String getRemoteBrokerName();
+
+    public String getLocalAddress();
+
+    public String getLocalBrokerName();
+
+    public long getEnqueueCounter();
+
+    public long getDequeueCounter();
 }

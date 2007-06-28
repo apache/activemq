@@ -18,6 +18,12 @@
 package org.apache.activemq.network;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -61,12 +67,6 @@ import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.security.GeneralSecurityException;
-import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 /**
  * A useful base class for implementing demand forwarding bridges.
  * 
@@ -102,9 +102,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
     protected final AtomicBoolean remoteInterupted = new AtomicBoolean(false);
     protected final AtomicBoolean lastConnectSucceeded = new AtomicBoolean(false);
     protected NetworkBridgeConfiguration configuration;
-    private NetworkBridgeFailedListener bridgeFailedListener;
+    private NetworkBridgeListener networkBridgeListener;
     private boolean createdByDuplex;
 
+    private BrokerInfo localBrokerInfo;
+    private BrokerInfo remoteBrokerInfo;
+
+    final AtomicLong enqueueCounter = new AtomicLong();
+    final AtomicLong dequeueCounter = new AtomicLong();
     
     public DemandForwardingBridgeSupport(NetworkBridgeConfiguration configuration, Transport localBroker, Transport remoteBroker) {
         this.configuration=configuration;
@@ -194,6 +199,12 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
         }catch(IOException e){
             log.warn("Caught exception from remote start",e);
         }
+        
+        NetworkBridgeListener l = this.networkBridgeListener;
+        if (l!=null) {
+            l.onStart(this);
+        }
+
     }
 
     protected void triggerLocalStartBridge() throws IOException {
@@ -308,6 +319,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
         log.debug(" stopping "+configuration.getBrokerName()+" bridge to "+remoteBrokerName+" is disposed already ? "+disposed);
         boolean wasDisposedAlready=disposed;
         if(!disposed){
+            NetworkBridgeListener l = this.networkBridgeListener;
+            if (l!=null) {
+                l.onStop(this);
+            }
+
             try{
                 disposed=true;
                 remoteBridgeStarted.set(false);
@@ -364,6 +380,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                 }else if(command.isBrokerInfo()){
                 	
                 	lastConnectSucceeded.set(true);
+                        remoteBrokerInfo = ((BrokerInfo)command);
+
                 	serviceRemoteBrokerInfo(command);
                 	// Let the local broker know the remote broker's ID.
                 	localBroker.oneway(command);
@@ -507,6 +525,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
             final boolean trace=log.isTraceEnabled();
             try{
                 if(command.isMessageDispatch()){
+                	enqueueCounter.incrementAndGet();
                     waitStarted();
                     final MessageDispatch md=(MessageDispatch) command;
                     DemandSubscription sub=(DemandSubscription) subscriptionMapByLocalId.get(md.getConsumerId());
@@ -523,6 +542,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                             // by bridging it using an async send (small chance of message loss).
                             remoteBroker.oneway(message);
                             localBroker.oneway(new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,1));
+                            dequeueCounter.incrementAndGet();
                             
                         } else {
                             
@@ -537,6 +557,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                                             serviceLocalException(er.getException());
                                         } else {
                                             localBroker.oneway(new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,1));
+                                            dequeueCounter.incrementAndGet();
                                         }
                                     } catch (IOException e) {
                                         serviceLocalException(e);
@@ -551,6 +572,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                         if (trace)log.trace("No subscription registered with this network bridge for consumerId " + md.getConsumerId() + " for message: " + md.getMessage());
                     } 
                 }else if(command.isBrokerInfo()){
+                	localBrokerInfo = ((BrokerInfo)command);
                     serviceLocalBrokerInfo(command);
                 }else if(command.isShutdownInfo()){
                     log.info(configuration.getBrokerName()+" Shutting down");
@@ -812,14 +834,39 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
     
     protected abstract BrokerId[] getRemoteBrokerPath();
     
-    public void setNetworkBridgeFailedListener(NetworkBridgeFailedListener listener){
-        this.bridgeFailedListener=listener;  
+    public void setNetworkBridgeListener(NetworkBridgeListener listener){
+        this.networkBridgeListener=listener;  
       }
       
       private void fireBridgeFailed() {
-          NetworkBridgeFailedListener l = this.bridgeFailedListener;
+          NetworkBridgeListener l = this.networkBridgeListener;
           if (l!=null) {
               l.bridgeFailed();
           }
       }
+
+	public String getRemoteAddress() {
+ 		return remoteBroker.getRemoteAddress();
+ 	}
+ 
+ 	public String getLocalAddress() {
+ 		return localBroker.getRemoteAddress();
+ 	}
+ 
+ 	public String getRemoteBrokerName() {
+ 		return remoteBrokerInfo == null ? null : remoteBrokerInfo.getBrokerName();
+ 	}
+ 	
+	public String getLocalBrokerName() {
+ 		return localBrokerInfo == null ? null : localBrokerInfo.getBrokerName();
+	}
+
+ 	public long getDequeueCounter() {
+ 		return dequeueCounter.get();
+ 	}
+ 
+ 	public long getEnqueueCounter() {
+ 		return enqueueCounter.get();
+	}
+
 }

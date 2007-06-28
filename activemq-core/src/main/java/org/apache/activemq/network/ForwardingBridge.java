@@ -18,6 +18,7 @@
 package org.apache.activemq.network;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -45,6 +46,7 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 
 /**
  * Forwards all messages from the local broker to the remote broker.
@@ -74,7 +76,13 @@ public class ForwardingBridge  implements Service{
     
     BrokerId localBrokerId;
     BrokerId remoteBrokerId;
-    private NetworkBridgeFailedListener bridgeFailedListener;
+    private NetworkBridgeListener bridgeFailedListener;
+
+	BrokerInfo localBrokerInfo;
+	BrokerInfo remoteBrokerInfo;
+	
+	final AtomicLong enqueueCounter = new AtomicLong();
+	final AtomicLong dequeueCounter = new AtomicLong();
 
     public ForwardingBridge(Transport localBroker, Transport remoteBroker) {
         this.localBroker = localBroker;
@@ -187,7 +195,8 @@ public class ForwardingBridge  implements Service{
         try {
             if(command.isBrokerInfo() ) {
                 synchronized( this ) {
-                    remoteBrokerId = ((BrokerInfo)command).getBrokerId();
+                	remoteBrokerInfo = ((BrokerInfo)command);
+                    remoteBrokerId = remoteBrokerInfo.getBrokerId();
                     if( localBrokerId !=null) {
                         if( localBrokerId.equals(remoteBrokerId) ) {
                             log.info("Disconnecting loop back connection.");
@@ -213,6 +222,9 @@ public class ForwardingBridge  implements Service{
     protected void serviceLocalCommand(Command command) {
         try {
             if( command.isMessageDispatch() ) {
+            	
+            	enqueueCounter.incrementAndGet();
+            	
                 final MessageDispatch md = (MessageDispatch) command;
                 Message message = md.getMessage();
                 message.setProducerId(producerInfo.getProducerId());
@@ -223,10 +235,10 @@ public class ForwardingBridge  implements Service{
 
                 
                 if( !message.isResponseRequired() ) {
-                    
                     // If the message was originally sent using async send, we will preserve that QOS
                     // by bridging it using an async send (small chance of message loss).
                     remoteBroker.oneway(message);
+                	dequeueCounter.incrementAndGet();
                     localBroker.oneway(new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,1));
                     
                 } else {
@@ -241,6 +253,7 @@ public class ForwardingBridge  implements Service{
                                     ExceptionResponse er=(ExceptionResponse) response;
                                     serviceLocalException(er.getException());
                                 } else {
+                                	dequeueCounter.incrementAndGet();
                                     localBroker.oneway(new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,1));
                                 }
                             } catch (IOException e) {
@@ -273,7 +286,8 @@ public class ForwardingBridge  implements Service{
 //                }
             } else if(command.isBrokerInfo() ) {
                 synchronized( this ) {
-                    localBrokerId = ((BrokerInfo)command).getBrokerId();
+                	localBrokerInfo = ((BrokerInfo)command);
+                    localBrokerId = localBrokerInfo.getBrokerId();
                     if( remoteBrokerId !=null) {
                         if( remoteBrokerId.equals(localBrokerId) ) {
                             log.info("Disconnecting loop back connection.");
@@ -320,14 +334,39 @@ public class ForwardingBridge  implements Service{
     }
 
    
-    public void setNetworkBridgeFailedListener(NetworkBridgeFailedListener listener){
+    public void setNetworkBridgeFailedListener(NetworkBridgeListener listener){
       this.bridgeFailedListener=listener;  
     }
     
     private void fireBridgeFailed() {
-        NetworkBridgeFailedListener l = this.bridgeFailedListener;
+        NetworkBridgeListener l = this.bridgeFailedListener;
         if (l!=null) {
             l.bridgeFailed();
         }
     }
+
+	public String getRemoteAddress() {
+		return remoteBroker.getRemoteAddress();
+	}
+
+	public String getLocalAddress() {
+		return localBroker.getRemoteAddress();
+	}
+
+	public String getLocalBrokerName() {
+		return localBrokerInfo == null ? null : localBrokerInfo.getBrokerName();
+	}
+
+	public String getRemoteBrokerName() {
+		return remoteBrokerInfo == null ? null : remoteBrokerInfo.getBrokerName();
+	}
+	
+	public long getDequeueCounter() {
+		return dequeueCounter.get();
+	}
+
+	public long getEnqueueCounter() {
+		return enqueueCounter.get();
+	}
+
 }
