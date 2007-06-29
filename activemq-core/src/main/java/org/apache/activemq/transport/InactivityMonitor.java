@@ -147,8 +147,8 @@ public class InactivityMonitor extends TransportFilter {
     public void onException(IOException error) {
     	if( monitorStarted.get() ) {
 	        stopMonitorThreads();
-	        getTransportListener().onException(error);
     	}
+    	getTransportListener().onException(error);
     }
     
     
