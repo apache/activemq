@@ -108,5 +108,65 @@ public class IdGenerator{
         result = result.replace('.', '-');
         return result;
     }
+    
+    /**
+     * From a generated id - return the seed (i.e. minus the count)
+     *
+     * @param id the generated identifer
+     * @return the seed
+     */
+    public static String getSeedFromId(String id) {
+        String result = id;
+        if (id != null) {
+            int index = id.lastIndexOf(':');
+            if (index > 0 && (index + 1) < id.length()) {
+                result = id.substring(0, index + 1);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * From a generated id - return the generator count
+     *
+     * @param id
+     * @return the count
+     */
+    public static long getSequenceFromId(String id) {
+        long result = -1;
+        if (id != null) {
+            int index = id.lastIndexOf(':');
+
+            if (index > 0 && (index + 1) < id.length()) {
+                String numStr = id.substring(index + 1, id.length());
+                result = Long.parseLong(numStr);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Does a proper compare on the ids
+     *
+     * @param id1
+     * @param id2
+     * @return 0 if equal else a positive if id1 is > id2 ...
+     */
+
+    public static int compare(String id1, String id2) {
+        int result = -1;
+        String seed1 = IdGenerator.getSeedFromId(id1);
+        String seed2 = IdGenerator.getSeedFromId(id2);
+        if (seed1 != null && seed2 != null) {
+            result = seed1.compareTo(seed2);
+            if (result == 0) {
+                long count1 = IdGenerator.getSequenceFromId(id1);
+                long count2 = IdGenerator.getSequenceFromId(id2);
+                result = (int) (count1 - count2);
+            }
+        }
+        return result;
+
+    }
 
 }
