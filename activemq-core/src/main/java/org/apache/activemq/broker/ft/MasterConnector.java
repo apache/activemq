@@ -55,146 +55,137 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * 
  * @version $Revision$
  */
-public class MasterConnector implements Service, BrokerServiceAware {
+public class MasterConnector implements Service,BrokerServiceAware{
 
-    private static final Log log = LogFactory.getLog(MasterConnector.class);
+    private static final Log log=LogFactory.getLog(MasterConnector.class);
     private BrokerService broker;
     private URI remoteURI;
     private URI localURI;
     private Transport localBroker;
     private Transport remoteBroker;
     private TransportConnector connector;
-    private AtomicBoolean masterActive = new AtomicBoolean(false);
-    private AtomicBoolean started = new AtomicBoolean(false);
-    private final IdGenerator idGenerator = new IdGenerator();
+    private AtomicBoolean started=new AtomicBoolean(false);
+    private final IdGenerator idGenerator=new IdGenerator();
     private String userName;
     private String password;
     private ConnectionInfo connectionInfo;
     private SessionInfo sessionInfo;
     private ProducerInfo producerInfo;
+    final AtomicBoolean masterActive = new AtomicBoolean();
 
-    public MasterConnector() {
+    public MasterConnector(){
     }
 
-    public MasterConnector(String remoteUri) throws URISyntaxException {
-        remoteURI = new URI(remoteUri);
+    public MasterConnector(String remoteUri) throws URISyntaxException{
+        remoteURI=new URI(remoteUri);
     }
 
-    public void setBrokerService(BrokerService broker) {
-        this.broker = broker;
-        if (localURI == null) {
-            localURI = broker.getVmConnectorURI();
+    public void setBrokerService(BrokerService broker){
+        this.broker=broker;
+        if(localURI==null){
+            localURI=broker.getVmConnectorURI();
         }
-        if (connector == null) {
-            List transportConnectors = broker.getTransportConnectors();
-            if (!transportConnectors.isEmpty()) {
-                connector = (TransportConnector) transportConnectors.get(0);
+        if(connector==null){
+            List transportConnectors=broker.getTransportConnectors();
+            if(!transportConnectors.isEmpty()){
+                connector=(TransportConnector)transportConnectors.get(0);
             }
         }
     }
 
-    public boolean isSlave() {
+    public boolean isSlave(){
         return masterActive.get();
     }
 
-    public void start() throws Exception {
-        if (!started.compareAndSet(false, true)) {
+    public void start() throws Exception{
+        if(!started.compareAndSet(false,true)){
             return;
         }
-        if (remoteURI == null) {
+        if(remoteURI==null){
             throw new IllegalArgumentException("You must specify a remoteURI");
         }
-        localBroker = TransportFactory.connect(localURI);
-        remoteBroker = TransportFactory.connect(remoteURI);
-        log.info("Starting a network connection between " + localBroker + " and " + remoteBroker + " has been established.");
+        localBroker=TransportFactory.connect(localURI);
+        remoteBroker=TransportFactory.connect(remoteURI);
+        log.info("Starting a network connection between "+localBroker+" and "+remoteBroker+" has been established.");
+        localBroker.setTransportListener(new DefaultTransportListener(){
 
-        localBroker.setTransportListener(new DefaultTransportListener() {
-            public void onCommand(Object command) {
+            public void onCommand(Object command){
             }
 
-            public void onException(IOException error) {
-                if (started.get()) {
+            public void onException(IOException error){
+                if(started.get()){
                     serviceLocalException(error);
                 }
             }
         });
+        remoteBroker.setTransportListener(new DefaultTransportListener(){
 
-        remoteBroker.setTransportListener(new DefaultTransportListener() {
-            public void onCommand(Object o) {
-            	Command command = (Command) o;
-                if (started.get()) {
+            public void onCommand(Object o){
+                Command command=(Command)o;
+                if(started.get()){
                     serviceRemoteCommand(command);
                 }
             }
 
-            public void onException(IOException error) {
-                if (started.get()) {
+            public void onException(IOException error){
+                if(started.get()){
                     serviceRemoteException(error);
                 }
             }
         });
-
         masterActive.set(true);
-        Thread thead = new Thread() {
-            public void run() {
-                try {
+        Thread thead=new Thread(){
+
+            public void run(){
+                try{
                     localBroker.start();
                     remoteBroker.start();
                     startBridge();
-                }
-                catch (Exception e) {
+                }catch(Exception e){
                     masterActive.set(false);
-                    log.error("Failed to start network bridge: " + e, e);
+                    log.error("Failed to start network bridge: "+e,e);
                 }
             }
         };
         thead.start();
-
     }
 
-    protected void startBridge() throws Exception {
-        connectionInfo = new ConnectionInfo();
+    protected void startBridge() throws Exception{
+        connectionInfo=new ConnectionInfo();
         connectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
         connectionInfo.setClientId(idGenerator.generateId());
         connectionInfo.setUserName(userName);
         connectionInfo.setPassword(password);
         localBroker.oneway(connectionInfo);
-        ConnectionInfo remoteInfo = new ConnectionInfo();
+        ConnectionInfo remoteInfo=new ConnectionInfo();
         connectionInfo.copy(remoteInfo);
         remoteInfo.setBrokerMasterConnector(true);
         remoteBroker.oneway(connectionInfo);
-
-        sessionInfo = new SessionInfo(connectionInfo, 1);
+        sessionInfo=new SessionInfo(connectionInfo,1);
         localBroker.oneway(sessionInfo);
         remoteBroker.oneway(sessionInfo);
-
-        producerInfo = new ProducerInfo(sessionInfo, 1);
+        producerInfo=new ProducerInfo(sessionInfo,1);
         producerInfo.setResponseRequired(false);
         remoteBroker.oneway(producerInfo);
-
-        BrokerInfo brokerInfo = null;
-        if (connector != null) {
-
-            brokerInfo = connector.getBrokerInfo();
-        }
-        else {
-            brokerInfo = new BrokerInfo();
+        BrokerInfo brokerInfo=null;
+        if(connector!=null){
+            brokerInfo=connector.getBrokerInfo();
+        }else{
+            brokerInfo=new BrokerInfo();
         }
         brokerInfo.setBrokerName(broker.getBrokerName());
         brokerInfo.setPeerBrokerInfos(broker.getBroker().getPeerBrokerInfos());
         brokerInfo.setSlaveBroker(true);
         remoteBroker.oneway(brokerInfo);
-
-        log.info("Slave connection between " + localBroker + " and " + remoteBroker + " has been established.");
+        log.info("Slave connection between "+localBroker+" and "+remoteBroker+" has been established.");
     }
 
-    public void stop() throws Exception {
-        if (!started.compareAndSet(true, false)) {
+    public void stop() throws Exception{
+        if(!started.compareAndSet(true,false)){
             return;
         }
-
         masterActive.set(false);
-        try {
+        try{
             // if (connectionInfo!=null){
             // localBroker.request(connectionInfo.createRemoveCommand());
             // }
@@ -202,59 +193,56 @@ public class MasterConnector implements Service, BrokerServiceAware {
             // remoteBroker.setTransportListener(null);
             remoteBroker.oneway(new ShutdownInfo());
             localBroker.oneway(new ShutdownInfo());
-        }
-        catch (IOException e) {
-            log.debug("Caught exception stopping", e);
-        }
-        finally {
-            ServiceStopper ss = new ServiceStopper();
+        }catch(IOException e){
+            log.debug("Caught exception stopping",e);
+        }finally{
+            ServiceStopper ss=new ServiceStopper();
             ss.stop(localBroker);
             ss.stop(remoteBroker);
             ss.throwFirstException();
         }
     }
 
-    protected void serviceRemoteException(IOException error) {
-        log.error("Network connection between " + localBroker + " and " + remoteBroker + " shutdown: " + error.getMessage(), error);
+    protected void serviceRemoteException(IOException error){
+        log
+                .error("Network connection between "+localBroker+" and "+remoteBroker+" shutdown: "+error.getMessage(),
+                        error);
         shutDown();
     }
 
-    protected void serviceRemoteCommand(Command command) {
-        try {
-            if (command.isMessageDispatch()) {
-                MessageDispatch md = (MessageDispatch) command;
-                command = md.getMessage();
+    protected void serviceRemoteCommand(Command command){
+        try{
+            if(command.isMessageDispatch()){
+                MessageDispatch md=(MessageDispatch)command;
+                command=md.getMessage();
             }
-            if (command.getDataStructureType() == CommandTypes.SHUTDOWN_INFO) {
+            if(command.getDataStructureType()==CommandTypes.SHUTDOWN_INFO){
                 log.warn("The Master has shutdown");
                 shutDown();
-
-            }
-            else {
-                boolean responseRequired = command.isResponseRequired();
-                int commandId = command.getCommandId();
+            }else{
+                boolean responseRequired=command.isResponseRequired();
+                int commandId=command.getCommandId();
                 localBroker.oneway(command);
-                if (responseRequired) {
-                    Response response = new Response();
+                if(responseRequired){
+                    Response response=new Response();
                     response.setCorrelationId(commandId);
                     remoteBroker.oneway(response);
                 }
             }
-        }
-        catch (IOException e) {
+        }catch(IOException e){
             serviceRemoteException(e);
         }
     }
 
-    protected void serviceLocalException(Throwable error) {
-        log.info("Network connection between " + localBroker + " and " + remoteBroker + " shutdown: " + error.getMessage(), error);
+    protected void serviceLocalException(Throwable error){
+        log.info("Network connection between "+localBroker+" and "+remoteBroker+" shutdown: "+error.getMessage(),error);
         ServiceSupport.dispose(this);
     }
 
     /**
      * @return Returns the localURI.
      */
-    public URI getLocalURI() {
+    public URI getLocalURI(){
         return localURI;
     }
 
@@ -262,14 +250,14 @@ public class MasterConnector implements Service, BrokerServiceAware {
      * @param localURI
      *            The localURI to set.
      */
-    public void setLocalURI(URI localURI) {
-        this.localURI = localURI;
+    public void setLocalURI(URI localURI){
+        this.localURI=localURI;
     }
 
     /**
      * @return Returns the remoteURI.
      */
-    public URI getRemoteURI() {
+    public URI getRemoteURI(){
         return remoteURI;
     }
 
@@ -277,14 +265,14 @@ public class MasterConnector implements Service, BrokerServiceAware {
      * @param remoteURI
      *            The remoteURI to set.
      */
-    public void setRemoteURI(URI remoteURI) {
-        this.remoteURI = remoteURI;
+    public void setRemoteURI(URI remoteURI){
+        this.remoteURI=remoteURI;
     }
 
     /**
      * @return Returns the password.
      */
-    public String getPassword() {
+    public String getPassword(){
         return password;
     }
 
@@ -292,14 +280,14 @@ public class MasterConnector implements Service, BrokerServiceAware {
      * @param password
      *            The password to set.
      */
-    public void setPassword(String password) {
-        this.password = password;
+    public void setPassword(String password){
+        this.password=password;
     }
 
     /**
      * @return Returns the userName.
      */
-    public String getUserName() {
+    public String getUserName(){
         return userName;
     }
 
@@ -307,14 +295,13 @@ public class MasterConnector implements Service, BrokerServiceAware {
      * @param userName
      *            The userName to set.
      */
-    public void setUserName(String userName) {
-        this.userName = userName;
+    public void setUserName(String userName){
+        this.userName=userName;
     }
 
-    private void shutDown() {
+    private void shutDown(){
         masterActive.set(false);
         broker.masterFailed();
         ServiceSupport.dispose(this);
     }
-
 }

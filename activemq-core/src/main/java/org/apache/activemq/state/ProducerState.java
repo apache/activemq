@@ -33,10 +33,5 @@ public class ProducerState {
     public ProducerInfo getInfo() {
         return info;
     }
-	public void setLastSequenceId(long lastSequenceId) {
-		this.lastSequenceId = lastSequenceId;		
-	}
-	public long getLastSequenceId() {
-		return lastSequenceId;
-	}        
+	       
 }

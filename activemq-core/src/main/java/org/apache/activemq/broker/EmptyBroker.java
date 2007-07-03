@@ -241,5 +241,11 @@ public class EmptyBroker implements Broker {
     public URI getVmConnectorURI(){
         return null;
     }
-
+    
+    public void brokerServiceStarted(){
+    }
+    
+    public BrokerService getBrokerService(){
+        return null;
+    }
 }

@@ -242,5 +242,12 @@ public class BrokerFilter implements Broker {
     public URI getVmConnectorURI(){
         return next.getVmConnectorURI();
     }
+
+    public void brokerServiceStarted(){
+        next.brokerServiceStarted();
+    }
     
+    public BrokerService getBrokerService(){
+        return next.getBrokerService();
+    }
 }

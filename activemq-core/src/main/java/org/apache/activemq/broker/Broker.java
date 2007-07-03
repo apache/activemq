@@ -250,4 +250,8 @@ public interface Broker extends Region, Service {
      * @return the URI that can be used to connect to the local Broker
      */
     public URI getVmConnectorURI();
+    
+    public void brokerServiceStarted();
+    
+    BrokerService getBrokerService();
 }

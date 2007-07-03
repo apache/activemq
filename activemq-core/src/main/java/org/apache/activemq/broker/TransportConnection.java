@@ -479,24 +479,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
     public Response processMessage(Message messageSend) throws Exception{
         ProducerId producerId=messageSend.getProducerId();
         ProducerBrokerExchange producerExchange=getProducerBrokerExchange(producerId);
-        ProducerState producerState = null;
-        if(messageSend.getMessageId().getProducerId().equals(messageSend.getProducerId())){
-            producerState=producerExchange.getProducerState();
-        }
-        if(producerState!=null){
-            long seq=messageSend.getMessageId().getProducerSequenceId();
-            if(seq>producerState.getLastSequenceId()){
-                producerState.setLastSequenceId(seq);
-                broker.send(producerExchange,messageSend);
-            }else {
-                if (log.isDebugEnabled()) {
-                    log.debug("Discarding duplicate: " + messageSend);
-                }
-            }
-        }else{
-            // producer not local to this broker
-            broker.send(producerExchange,messageSend);
-        }
+        broker.send(producerExchange,messageSend);
         return null;
     }
 

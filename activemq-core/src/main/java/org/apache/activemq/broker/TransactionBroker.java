@@ -19,6 +19,7 @@ package org.apache.activemq.broker;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.Message;
@@ -28,6 +29,7 @@ import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.store.TransactionRecoveryListener;
 import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.transaction.LocalTransaction;
+import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.transaction.Transaction;
 import org.apache.activemq.transaction.XATransaction;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -36,6 +38,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.jms.JMSException;
+
 import javax.transaction.xa.XAException;
 
 import java.util.ArrayList;
@@ -55,6 +58,7 @@ public class TransactionBroker extends BrokerFilter {
     // The prepared XA transactions.
     private TransactionStore transactionStore;
     private Map xaTransactions = new LinkedHashMap();
+    ActiveMQMessageAudit audit;
 
     public TransactionBroker(Broker next, TransactionStore transactionStore) {
         super(next);
@@ -189,20 +193,41 @@ public class TransactionBroker extends BrokerFilter {
         }
     }
     
-    public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
-        // This method may be invoked recursively.  
+    public void send(ProducerBrokerExchange producerExchange,final Message message) throws Exception{
+        // This method may be invoked recursively.
         // Track original tx so that it can be restored.
-        final ConnectionContext context = producerExchange.getConnectionContext();
-        Transaction originalTx = context.getTransaction();
+        final ConnectionContext context=producerExchange.getConnectionContext();
+        Transaction originalTx=context.getTransaction();
         Transaction transaction=null;
-        if( message.getTransactionId()!=null ) {
-            transaction = getTransaction(context, message.getTransactionId(), false);
+        Synchronization sync=null;
+        if(message.getTransactionId()!=null){
+            transaction=getTransaction(context,message.getTransactionId(),false);
+            if(transaction!=null){
+                sync=new Synchronization(){
+
+                    public void afterRollback(){
+                        if(audit!=null){
+                            audit.rollbackMessageReference(message);
+                        }
+                    }
+                };
+                transaction.addSynchronization(sync);
+            }
         }
-        context.setTransaction(transaction);
-        try {
-            next.send(producerExchange, message);
-        } finally {
-            context.setTransaction(originalTx);
+        if(audit==null||!audit.isDuplicateMessageReference(message)){
+            context.setTransaction(transaction);
+            try{
+                next.send(producerExchange,message);
+            }finally{
+                context.setTransaction(originalTx);
+            }
+        }else{
+            if(sync!=null&&transaction!=null){
+                transaction.removeSynchronization(sync);
+            }
+            if(log.isDebugEnabled()){
+                log.debug("IGNORING duplicate message "+message);
+            }
         }
     }
     
@@ -248,5 +273,12 @@ public class TransactionBroker extends BrokerFilter {
             xaTransactions.remove(xid);
         }
     }
+    
+    public synchronized void brokerServiceStarted(){
+        super.brokerServiceStarted();
+        if(getBrokerService().isSupportFailOver()&&audit==null){
+            audit=new ActiveMQMessageAudit();
+        }
+    } 
 
 }

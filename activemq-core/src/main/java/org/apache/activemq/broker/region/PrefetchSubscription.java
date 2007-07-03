@@ -17,7 +17,6 @@ package org.apache.activemq.broker.region;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.concurrent.atomic.AtomicBoolean;
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 import org.apache.activemq.broker.Broker;
@@ -55,7 +54,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
     protected long enqueueCounter;
     protected long dispatchCounter;
     protected long dequeueCounter;
-    private AtomicBoolean dispatching=new AtomicBoolean();
+    
 
     public PrefetchSubscription(Broker broker,ConnectionContext context,ConsumerInfo info,PendingMessageCursor cursor)
             throws InvalidSelectorException{
@@ -207,7 +206,9 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
             }
             // this only happens after a reconnect - get an ack which is not valid
             if(!callDispatchMatched){
-                log.info("Could not correlate acknowledgment with dispatched message: "+ack);
+                if (log.isDebugEnabled()) {
+                    log.debug("Could not correlate acknowledgment with dispatched message: "+ack);
+                }
             }
         }else if(ack.isDeliveredAck()){
             // Message was delivered but not acknowledged: update pre-fetch counters.
@@ -376,35 +377,31 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
     }
 
     protected synchronized void dispatchMatched() throws IOException{
-        if(!broker.isSlaveBroker()&&dispatching.compareAndSet(false,true)){
+        if(!broker.isSlaveBroker()){
             try{
-                try{
-                    int numberToDispatch=countBeforeFull();
-                    if(numberToDispatch>0){
-                        pending.setMaxBatchSize(numberToDispatch);
-                        int count=0;
-                        pending.reset();
-                        while(pending.hasNext()&&!isFull()&&count<numberToDispatch){
-                            MessageReference node=pending.next();
-                            if(node==null)
-                                break;
-                            if(canDispatch(node)){
-                                pending.remove();
-                                // Message may have been sitting in the pending list a while
-                                // waiting for the consumer to ak the message.
-                                if(node!=QueueMessageReference.NULL_MESSAGE&&node.isExpired()){
-                                    continue; // just drop it.
-                                }
-                                dispatch(node);
-                                count++;
+                int numberToDispatch=countBeforeFull();
+                if(numberToDispatch>0){
+                    pending.setMaxBatchSize(numberToDispatch);
+                    int count=0;
+                    pending.reset();
+                    while(pending.hasNext()&&!isFull()&&count<numberToDispatch){
+                        MessageReference node=pending.next();
+                        if(node==null)
+                            break;
+                        if(canDispatch(node)){
+                            pending.remove();
+                            // Message may have been sitting in the pending list a while
+                            // waiting for the consumer to ak the message.
+                            if(node!=QueueMessageReference.NULL_MESSAGE&&node.isExpired()){
+                                continue; // just drop it.
                             }
+                            dispatch(node);
+                            count++;
                         }
                     }
-                }finally{
-                    pending.release();
                 }
             }finally{
-                dispatching.set(false);
+                pending.release();
             }
         }
     }

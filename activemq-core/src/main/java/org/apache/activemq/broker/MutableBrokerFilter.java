@@ -254,5 +254,13 @@ public class MutableBrokerFilter implements Broker {
     public URI getVmConnectorURI(){
         return getNext().getVmConnectorURI();
     }
+    
+    public void brokerServiceStarted(){
+        getNext().brokerServiceStarted();
+    } 
+    
+    public BrokerService getBrokerService(){
+        return getNext().getBrokerService();
+    }
 
 }
