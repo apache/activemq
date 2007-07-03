@@ -114,4 +114,12 @@ public class TransportFilter implements TransportListener,Transport{
 	public String getRemoteAddress() {
 		return next.getRemoteAddress();
 	}
+
+    /**
+     * @return
+     * @see org.apache.activemq.transport.Transport#isFaultTolerant()
+     */
+    public boolean isFaultTolerant(){
+        return next.isFaultTolerant();
+    }
 }

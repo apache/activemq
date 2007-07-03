@@ -130,6 +130,13 @@ public class MockTransport extends DefaultTransportListener implements Transport
 
 	public String getRemoteAddress() {
 		return getNext().getRemoteAddress();
-	}  
+	}
+
+    /**
+     * @see org.apache.activemq.transport.Transport#isFaultTolerant()
+     */
+    public boolean isFaultTolerant(){
+       return getNext().isFaultTolerant();
+    }  
     
 }

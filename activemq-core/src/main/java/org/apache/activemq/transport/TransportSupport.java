@@ -19,6 +19,7 @@ package org.apache.activemq.transport;
 
 import java.io.IOException;
 
+import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -102,6 +103,10 @@ public abstract class TransportSupport extends ServiceSupport implements Transpo
         if (!isStarted()) {
 			throw new IOException("The transport is not running.");
         }
+    }
+    
+    public boolean isFaultTolerant(){
+        return false;
     }
 
 }
