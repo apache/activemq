@@ -195,7 +195,7 @@ public class CommandShellOutputFormatter implements OutputFormatter {
     public void printVersion(String version) {
         out.println("");
         out.println("ActiveMQ " + version);
-        out.println("For help or more information please see: http://www.logicblaze.com");
+        out.println("For help or more information please see: http://activemq.apache.org");
         out.println("");
     }
 
