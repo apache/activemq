@@ -78,8 +78,7 @@ public class TransactedTopicMasterSlaveTest extends JmsTopicTransactionTest{
     }
 
     protected void messageSent() throws Exception{
-        if(true)
-            return;
+       
         if(++inflightMessageCount>=failureCount){
             inflightMessageCount=0;
             Thread.sleep(1000);
