@@ -23,6 +23,8 @@ import java.util.Map;
  * A Simple LRU Cache
  * 
  * @version $Revision$
+ * @param <K> 
+ * @param <V> 
  */
 
 public class LRUCache<K, V> extends LinkedHashMap<K, V> {
@@ -31,13 +33,21 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 
     
     /**
-     * Constructs LRU Cache
+     * Default constructorfor an LRU Cache
+     * The default capacity is 10000
      * 
      */
     public LRUCache(){
         super(1000,0.75f,true);
     }
     
+    /**
+     * Constructs a LRUCache with a maximum capacity
+     * @param maximumCacheSize
+     */
+    public LRUCache(int maximumCacheSize) {
+        this(maximumCacheSize,maximumCacheSize,0.75f,true);
+    }
     /**
      * Constructs an empty <tt>LRUCache</tt> instance with the
      * specified initial capacity, maximumCacheSize,load factor and ordering mode.
