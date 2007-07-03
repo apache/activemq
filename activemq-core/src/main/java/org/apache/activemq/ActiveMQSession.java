@@ -754,7 +754,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         while ((messageDispatch = executor.dequeueNoWait()) != null) {
             final MessageDispatch md = messageDispatch;
             ActiveMQMessage message = (ActiveMQMessage)md.getMessage();
-            if( message.isExpired() ) {
+            if( message.isExpired() || connection.isDuplicate(ActiveMQSession.this,message)) {
                 //TODO: Ack it without delivery to client
                 continue;
             }
@@ -785,39 +785,35 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                 ack.setFirstMessageId(md.getMessage().getMessageId());
                 doStartTransaction();
                 ack.setTransactionId(getTransactionContext().getTransactionId());
-                if( ack.getTransactionId()!=null ) {
+                if(ack.getTransactionId()!=null){
                     getTransactionContext().addSynchronization(new Synchronization(){
-                        public void afterRollback() throws Exception {
 
+                        public void afterRollback() throws Exception{
                             md.getMessage().onMessageRolledBack();
-                            
-                            RedeliveryPolicy redeliveryPolicy = connection.getRedeliveryPolicy();
-                            int redeliveryCounter = md.getMessage().getRedeliveryCounter();
-                            if (redeliveryPolicy.getMaximumRedeliveries() != RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES
-                            		&& redeliveryCounter > redeliveryPolicy.getMaximumRedeliveries()) {
-                                
+                            // ensure we don't filter this as a duplicate
+                            connection.rollbackDuplicate(ActiveMQSession.this,md.getMessage());
+                            RedeliveryPolicy redeliveryPolicy=connection.getRedeliveryPolicy();
+                            int redeliveryCounter=md.getMessage().getRedeliveryCounter();
+                            if(redeliveryPolicy.getMaximumRedeliveries()!=RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES
+                                    &&redeliveryCounter>redeliveryPolicy.getMaximumRedeliveries()){
                                 // We need to NACK the messages so that they get sent to the
                                 // DLQ.
-
                                 // Acknowledge the last message.
-                                MessageAck ack = new MessageAck(md,MessageAck.POSION_ACK_TYPE,1);
+                                MessageAck ack=new MessageAck(md,MessageAck.POSION_ACK_TYPE,1);
                                 ack.setFirstMessageId(md.getMessage().getMessageId());
                                 asyncSendPacket(ack);
-
-                            } else {
-                                
+                            }else{
                                 // Figure out how long we should wait to resend this message.
                                 long redeliveryDelay=0;
-                                for( int i=0; i < redeliveryCounter; i++) {
-                                    redeliveryDelay = redeliveryPolicy.getRedeliveryDelay(redeliveryDelay);
+                                for(int i=0;i<redeliveryCounter;i++){
+                                    redeliveryDelay=redeliveryPolicy.getRedeliveryDelay(redeliveryDelay);
                                 }
-                                
-                                Scheduler.executeAfterDelay(new Runnable() {
-                                    public void run() {
+                                Scheduler.executeAfterDelay(new Runnable(){
+
+                                    public void run(){
                                         ((ActiveMQDispatcher)md.getConsumer()).dispatch(md);
                                     }
-                                }, redeliveryDelay);
-                                
+                                },redeliveryDelay);
                             }
                         }
                     });
@@ -1499,6 +1495,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             stats.onRemoveDurableSubscriber();
         }
         this.consumers.remove(consumer);
+        this.connection.removeDispatcher(consumer);
     }
 
     /**
@@ -1765,9 +1762,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         return deliveryIdGenerator.getNextSequenceId();
     }
 
-    public void redispatch(MessageDispatchChannel unconsumedMessages) throws JMSException {
+    public void redispatch(ActiveMQDispatcher dispatcher,MessageDispatchChannel unconsumedMessages) throws JMSException {
         
-        List c = unconsumedMessages.removeAll();
+        List <MessageDispatch>c = unconsumedMessages.removeAll();
+        for (MessageDispatch md: c) {
+            this.connection.rollbackDuplicate(dispatcher,md.getMessage());
+        }
         Collections.reverse(c);
         
         for (Iterator iter = c.iterator(); iter.hasNext();) {

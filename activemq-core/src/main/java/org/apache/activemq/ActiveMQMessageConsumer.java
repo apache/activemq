@@ -36,6 +36,7 @@ import javax.jms.Message;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -89,7 +90,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     // The are the messages that were delivered to the consumer but that have
     // not been acknowledged. It's kept in reverse order since we
     // Always walk list in reverse order. Only used when session is client ack.
-    private final LinkedList deliveredMessages = new LinkedList();
+    private final LinkedList <MessageDispatch>deliveredMessages = new LinkedList<MessageDispatch>();
     private int deliveredCounter = 0;
     private int additionalWindowSize = 0;
     private int rollbackCounter = 0;
@@ -342,7 +343,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             if (wasRunning)
                 session.stop();
 
-            session.redispatch(unconsumedMessages);
+            session.redispatch(this,unconsumedMessages);
 
             if (wasRunning)
                 session.start();
@@ -574,7 +575,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         if(deliveryingAcknowledgements.compareAndSet(false,true)){
             if(this.optimizeAcknowledge){
                 if(!deliveredMessages.isEmpty()){
-                    MessageDispatch md=(MessageDispatch) deliveredMessages.getFirst();
+                    MessageDispatch md=deliveredMessages.getFirst();
                     ack=new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,deliveredMessages.size());
                     deliveredMessages.clear();
                     ackCounter=0;
@@ -602,24 +603,39 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         }
     }
 
-    public void dispose() throws JMSException {
-        if (!unconsumedMessages.isClosed()) {
+    public void dispose() throws JMSException{
+        if(!unconsumedMessages.isClosed()){
             // Do we have any acks we need to send out before closing?
             // Ack any delivered messages now. (session may still
             // commit/rollback the acks).
-            deliverAcks();//only processes optimized acknowledgements
-            if (executorService!=null){
+            deliverAcks();// only processes optimized acknowledgements
+            if(executorService!=null){
                 executorService.shutdown();
-                try {
-                    executorService.awaitTermination(60, TimeUnit.SECONDS);
-                } catch (InterruptedException e) {
+                try{
+                    executorService.awaitTermination(60,TimeUnit.SECONDS);
+                }catch(InterruptedException e){
                     Thread.currentThread().interrupt();
                 }
             }
-            if ((session.isTransacted() || session.isDupsOkAcknowledge())) {
+            if((session.isTransacted()||session.isDupsOkAcknowledge())){
                 acknowledge();
             }
+            if (session.isClientAcknowledge()) {
+                if(!this.info.isBrowser()){
+                    // rollback duplicates that aren't acknowledged
+                    for(MessageDispatch old:deliveredMessages){
+                        session.connection.rollbackDuplicate(this,old.getMessage());
+                    }
+                }
+            }
             deliveredMessages.clear();
+            List<MessageDispatch> list=unconsumedMessages.removeAll();
+            if(!this.info.isBrowser()){
+                for(MessageDispatch old:list){
+                    // ensure we don't filter this as a duplicate
+                    session.connection.rollbackDuplicate(this,old.getMessage());
+                }
+            }
             unconsumedMessages.close();
             this.session.removeConsumer(this);
         }
@@ -766,7 +782,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             return;
 
         // Acknowledge the last message.
-        MessageDispatch lastMd = (MessageDispatch) deliveredMessages.get(0);
+        MessageDispatch lastMd = deliveredMessages.get(0);
         MessageAck ack = new MessageAck(lastMd, MessageAck.STANDARD_ACK_TYPE, deliveredMessages.size());
         if (session.isTransacted()) {
             session.doStartTransaction();
@@ -793,8 +809,12 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         synchronized(unconsumedMessages.getMutex()){
             if(optimizeAcknowledge){
                 // remove messages read but not acked at the broker yet through optimizeAcknowledge
-                for(int i=0;(i<deliveredMessages.size())&&(i<ackCounter);i++){
-                    deliveredMessages.removeLast();
+                if(!this.info.isBrowser()){
+                    for(int i=0;(i<deliveredMessages.size())&&(i<ackCounter);i++){
+                        // ensure we don't filter this as a duplicate
+                        MessageDispatch md=deliveredMessages.removeLast();
+                        session.connection.rollbackDuplicate(this,md.getMessage());
+                    }
                 }
             }
             if(deliveredMessages.isEmpty())
@@ -810,9 +830,11 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 // We need to NACK the messages so that they get sent to the
                 // DLQ.
                 // Acknowledge the last message.
-                MessageDispatch lastMd=(MessageDispatch) deliveredMessages.get(0);
+                MessageDispatch lastMd=deliveredMessages.get(0);
                 MessageAck ack=new MessageAck(lastMd,MessageAck.POSION_ACK_TYPE,deliveredMessages.size());
                 session.asyncSendPacket(ack);
+                //ensure we don't filter this as a duplicate
+                session.connection.rollbackDuplicate(this,lastMd.getMessage()); 
                 // Adjust the window size.
                 additionalWindowSize=Math.max(0,additionalWindowSize-deliveredMessages.size());
                 rollbackCounter=0;
@@ -848,50 +870,63 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             deliveredMessages.clear();
         }
         if(messageListener!=null){
-            session.redispatch(unconsumedMessages);
+            session.redispatch(this,unconsumedMessages);
         }
     }
 
-    public void dispatch(MessageDispatch md) {
-        MessageListener listener = this.messageListener;
-        try {
+    public void dispatch(MessageDispatch md){
+        MessageListener listener=this.messageListener;
+        try{
             synchronized(unconsumedMessages.getMutex()){
-                if (clearDispatchList) {
+                if(clearDispatchList){
                     // we are reconnecting so lets flush the in progress messages
-                    clearDispatchList = false;
-                    unconsumedMessages.clear();
+                    clearDispatchList=false;
+                    List<MessageDispatch> list=unconsumedMessages.removeAll();
+                    if(!this.info.isBrowser()){
+                        for(MessageDispatch old:list){
+                            // ensure we don't filter this as a duplicate
+                            session.connection.rollbackDuplicate(this,old.getMessage());
+                        }
+                    }
                 }
-
-                if (!unconsumedMessages.isClosed()) {
-	                if (listener != null && unconsumedMessages.isRunning() ) {
-	                    ActiveMQMessage message = createActiveMQMessage(md);
-	                    beforeMessageIsConsumed(md);
-	                    try {
-	                        listener.onMessage(message);
-	                        afterMessageIsConsumed(md, false);
-	                    } catch (RuntimeException e) {
-	                        if ( session.isDupsOkAcknowledge() || session.isAutoAcknowledge() ) {
-	                            // Redeliver the message
-	                        } else {
-	                            // Transacted or Client ack: Deliver the next message.
-	                            afterMessageIsConsumed(md, false);
-	                        }
-	                        log.error("Exception while processing message: " + e, e);
-	                    }
-	                } else {
-	                    unconsumedMessages.enqueue(md);
-	                    if (availableListener != null) {
-	                        availableListener.onMessageAvailable(this);
-	                    }
-	                }
-	            }
+                if(!unconsumedMessages.isClosed()){
+                    if(this.info.isBrowser() || session.connection.isDuplicate(this,md.getMessage())==false){
+                        if(listener!=null&&unconsumedMessages.isRunning()){
+                            ActiveMQMessage message=createActiveMQMessage(md);
+                            beforeMessageIsConsumed(md);
+                            try{
+                                listener.onMessage(message);
+                                afterMessageIsConsumed(md,false);
+                            }catch(RuntimeException e){
+                                if(session.isDupsOkAcknowledge()||session.isAutoAcknowledge()){
+                                    // Redeliver the message
+                                }else{
+                                    // Transacted or Client ack: Deliver the next message.
+                                    afterMessageIsConsumed(md,false);
+                                }
+                                log.error("Exception while processing message: "+e,e);
+                            }
+                        }else{
+                            unconsumedMessages.enqueue(md);
+                            if(availableListener!=null){
+                                availableListener.onMessageAvailable(this);
+                            }
+                        }
+                    }else {
+                        //ignore duplicate
+                        if (log.isDebugEnabled()) {
+                            log.debug("Ignoring Duplicate: " + md.getMessage());
+                        }
+                        ackLater(md,MessageAck.STANDARD_ACK_TYPE);
+                    }
+                }
             }
-            if (++dispatchedCount%1000==0) {
+            if(++dispatchedCount%1000==0){
                 dispatchedCount=0;
-            Thread.yield();
+                Thread.yield();
             }
-        } catch (Exception e) {
-        	session.connection.onAsyncException(e);
+        }catch(Exception e){
+            session.connection.onAsyncException(e);
         }
     }
 
