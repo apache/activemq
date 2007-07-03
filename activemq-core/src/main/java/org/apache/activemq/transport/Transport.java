@@ -125,5 +125,11 @@ public interface Transport extends Service {
      *  
      */
 	public String getRemoteAddress();
+    
+    /**
+     * Indicates if the transport can handle faults
+     * @return tru if fault tolerant
+     */
+    public boolean isFaultTolerant();
 
 }

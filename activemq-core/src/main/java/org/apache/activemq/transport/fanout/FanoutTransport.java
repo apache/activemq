@@ -539,4 +539,9 @@ public class FanoutTransport implements CompositeTransport {
             transportListener.onCommand(command);
         }
     }
+
+    
+    public boolean isFaultTolerant(){
+        return true;
+    }
 }

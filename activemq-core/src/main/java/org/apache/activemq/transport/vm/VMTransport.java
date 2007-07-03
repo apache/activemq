@@ -269,4 +269,8 @@ public class VMTransport implements Transport,Task{
             }
         }
     }
+
+    public boolean isFaultTolerant(){
+        return false;
+    }
 }

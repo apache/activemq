@@ -545,5 +545,9 @@ public class FailoverTransport implements CompositeTransport {
 		}
 		return null;
 	}
+    
+    public boolean isFaultTolerant(){
+        return true;
+    }
 
 }
