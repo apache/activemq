@@ -28,6 +28,7 @@ import java.util.Set;
 import javax.jms.InvalidClientIDException;
 import javax.jms.JMSException;
 
+import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.Connection;
@@ -35,6 +36,7 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.DestinationAlreadyExistsException;
 import org.apache.activemq.broker.ProducerBrokerExchange;
+import org.apache.activemq.broker.TransactionBroker;
 import org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.VMPendingDurableSubscriberMessageStoragePolicy;
@@ -63,6 +65,8 @@ import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.util.ServiceStopper;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -74,7 +78,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @version $Revision$
  */
 public class RegionBroker implements Broker {
-
+    private static final Log log = LogFactory.getLog(RegionBroker.class);
     private static final IdGenerator brokerIdGenerator = new IdGenerator();
 
     private final Region queueRegion;
@@ -99,6 +103,7 @@ public class RegionBroker implements Broker {
     private ConnectionContext adminConnectionContext;
     protected DestinationFactory destinationFactory;
     protected final ConcurrentHashMap connectionStates = new ConcurrentHashMap();
+   
     
         
     public RegionBroker(BrokerService brokerService,TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager, DestinationFactory destinationFactory, DestinationInterceptor destinationInterceptor) throws IOException {
@@ -378,26 +383,26 @@ public class RegionBroker implements Broker {
         topicRegion.removeSubscription(context, info);
     }
 
-    public void send(ProducerBrokerExchange producerExchange,  Message message) throws Exception {
-        long si = sequenceGenerator.getNextSequenceId();
+    public void send(ProducerBrokerExchange producerExchange,Message message) throws Exception{
+        long si=sequenceGenerator.getNextSequenceId();
         message.getMessageId().setBrokerSequenceId(si);
-        if (producerExchange.isMutable() || producerExchange.getRegion()==null) {
-            ActiveMQDestination destination = message.getDestination();
-            //ensure the destination is registered with the RegionBroker
+        if(producerExchange.isMutable()||producerExchange.getRegion()==null){
+            ActiveMQDestination destination=message.getDestination();
+            // ensure the destination is registered with the RegionBroker
             addDestination(producerExchange.getConnectionContext(),destination);
-            Region region = null;
-            switch(destination.getDestinationType()) {
+            Region region=null;
+            switch(destination.getDestinationType()){
             case ActiveMQDestination.QUEUE_TYPE:
-                region = queueRegion;
+                region=queueRegion;
                 break;
             case ActiveMQDestination.TOPIC_TYPE:
-                region = topicRegion;
+                region=topicRegion;
                 break;
             case ActiveMQDestination.TEMP_QUEUE_TYPE:
-                region = tempQueueRegion;
+                region=tempQueueRegion;
                 break;
             case ActiveMQDestination.TEMP_TOPIC_TYPE:
-                region = tempTopicRegion;
+                region=tempTopicRegion;
                 break;
             default:
                 throw createUnknownDestinationTypeException(destination);
@@ -613,4 +618,13 @@ public class RegionBroker implements Broker {
     public URI getVmConnectorURI(){
         return brokerService.getVmConnectorURI();
     }
+
+    public void brokerServiceStarted(){
+    }
+
+    public BrokerService getBrokerService(){
+        return brokerService;
+    }
+    
+    
 }

@@ -55,6 +55,10 @@ public abstract class Transaction {
             state = IN_USE_STATE;
         }
     }
+    
+    public void removeSynchronization(Synchronization r) {
+        synchronizations.remove(r);
+    }
 
     public void prePrepare() throws Exception {
 

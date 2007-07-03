@@ -153,6 +153,7 @@ public class BrokerService implements Service {
     private int persistenceThreadPriority = Thread.MAX_PRIORITY;
     private boolean useLocalHostBrokerName = false;
     private CountDownLatch stoppedLatch = new CountDownLatch(1);
+    private boolean supportFailOver = false;
 
     static{
         String localHostName = "localhost";
@@ -364,7 +365,7 @@ public class BrokerService implements Service {
     /**
      * @return true if this Broker is a slave to a Master
      */
-    public boolean isSlave(){
+    public synchronized boolean isSlave(){
         return masterConnector != null && masterConnector.isSlave();
     }
     
@@ -436,6 +437,7 @@ public class BrokerService implements Service {
      
             brokerId = broker.getBrokerId();
             log.info("ActiveMQ JMS Message Broker (" + getBrokerName()+", "+brokerId+") started");
+            getBroker().brokerServiceStarted();
         }
         catch (Exception e) {
             log.error("Failed to start ActiveMQ JMS Message Broker. Reason: " + e, e);
@@ -486,7 +488,6 @@ public class BrokerService implements Service {
         VMTransportFactory.stopped(getBrokerName());
         stopped.set(true);
         stoppedLatch.countDown();
-
         log.info("ActiveMQ JMS Message Broker ("+getBrokerName()+", "+brokerId+") stopped");
         stopper.throwFirstException();
     }
@@ -1104,6 +1105,20 @@ public class BrokerService implements Service {
             brokerName=LOCAL_HOST_NAME;
         }
     }
+    
+    /**
+     * @return the supportFailOver
+     */
+    public boolean isSupportFailOver(){
+        return this.supportFailOver;
+    }
+
+    /**
+     * @param supportFailOver the supportFailOver to set
+     */
+    public void setSupportFailOver(boolean supportFailOver){
+        this.supportFailOver=supportFailOver;
+    }    
 
     // Implementation methods
     // -------------------------------------------------------------------------
@@ -1649,6 +1664,7 @@ public class BrokerService implements Service {
         }
         if (service instanceof MasterConnector) {
             masterConnector = (MasterConnector) service;
+            supportFailOver=true;
         }
     }
 
@@ -1675,8 +1691,6 @@ public class BrokerService implements Service {
                 broker.addDestination(adminConnectionContext, destination);
             }
         }
-    }    
-
-    
+    }
    
 }

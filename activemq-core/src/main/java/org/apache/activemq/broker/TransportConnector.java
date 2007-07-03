@@ -132,6 +132,7 @@ public class TransportConnector implements Connector {
         this.broker = broker;
         brokerInfo.setBrokerId(broker.getBrokerId());
         brokerInfo.setPeerBrokerInfos(broker.getPeerBrokerInfos());
+        brokerInfo.setFaultTolerantConfiguration(broker.isFaultTolerantConfiguration());
     }
 	
     public void setBrokerName(String brokerName) {

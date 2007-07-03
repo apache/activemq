@@ -240,5 +240,12 @@ public class ErrorBroker implements Broker {
     public URI getVmConnectorURI(){
         throw new BrokerStoppedException(this.message);
     }
-
+    
+    public void brokerServiceStarted(){
+        throw new BrokerStoppedException(this.message);
+    }
+    
+    public BrokerService getBrokerService(){
+        throw new BrokerStoppedException(this.message);
+    }
 }
