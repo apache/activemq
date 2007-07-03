@@ -66,11 +66,11 @@ public class TopicSubContainer {
             while(entry!=null){
                 ConsumerMessageRef ref=(ConsumerMessageRef)listContainer.get(entry);
                 listContainer.remove(entry);
+                if(listContainer!=null&&batchEntry!=null&&(listContainer.isEmpty()||batchEntry.equals(entry))){
+                    reset();
+                }
                 if(ref!=null&&ref.getMessageId().equals(id)){
                     result=ref;
-                    if(listContainer!=null&&batchEntry!=null&&(listContainer.isEmpty()||batchEntry.equals(entry))){
-                        reset();
-                    }
                     break;
                 }
                 entry=listContainer.getFirst();
