@@ -57,6 +57,7 @@ public class ActiveMQSessionExecutor implements Task {
     
 
     void execute(MessageDispatch message) throws InterruptedException {
+        
         if (!startedOrWarnedThatNotStarted) {
 
             ActiveMQConnection connection = session.connection;
@@ -119,6 +120,7 @@ public class ActiveMQSessionExecutor implements Task {
             ConsumerId consumerId = message.getConsumerId();
             if( consumerId.equals(consumer.getConsumerId()) ) {
                 consumer.dispatch(message);
+                break;
             }
         }
     }

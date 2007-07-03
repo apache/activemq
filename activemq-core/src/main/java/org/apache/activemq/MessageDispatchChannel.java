@@ -28,12 +28,12 @@ import org.apache.activemq.command.MessageDispatch;
 public class MessageDispatchChannel {
 
     private final Object mutex = new Object();
-    private final LinkedList list;
+    private final LinkedList<MessageDispatch> list;
     private boolean closed;
     private boolean running;
 
     public MessageDispatchChannel() {
-        this.list = new LinkedList();
+        this.list = new LinkedList<MessageDispatch>();
     }
 
     public void enqueue(MessageDispatch message) {
@@ -84,7 +84,7 @@ public class MessageDispatchChannel {
             if (closed || !running || list.isEmpty()) {
                 return null;
             }
-            return (MessageDispatch) list.removeFirst();
+            return list.removeFirst();
         }
     }
     
@@ -93,7 +93,7 @@ public class MessageDispatchChannel {
             if (closed || !running || list.isEmpty()) {
                 return null;
             }
-            return (MessageDispatch) list.removeFirst();
+            return list.removeFirst();
         }
     }
     
@@ -102,7 +102,7 @@ public class MessageDispatchChannel {
             if (closed || !running || list.isEmpty()) {
                 return null;
             }
-            return (MessageDispatch) list.getFirst();
+            return list.getFirst();
         }
     }
 
@@ -154,9 +154,9 @@ public class MessageDispatchChannel {
         return running;
     }
 
-    public List removeAll() {
+    public List<MessageDispatch> removeAll() {
         synchronized(mutex) {
-            ArrayList rc = new ArrayList(list);
+            ArrayList <MessageDispatch>rc = new ArrayList<MessageDispatch>(list);
             list.clear();
             return rc;
         }

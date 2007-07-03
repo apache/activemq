@@ -178,6 +178,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     // version when a WireFormatInfo is received.
     private AtomicInteger protocolVersion=new AtomicInteger(CommandTypes.PROTOCOL_VERSION);
     private long timeCreated;
+    private ConnectionAudit connectionAudit = new ConnectionAudit();
 
     /**
      * Construct an <code>ActiveMQConnection</code>
@@ -210,6 +211,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         this.stats = new JMSConnectionStatsImpl(sessions, this instanceof XAConnection);
         this.factoryStats.addConnection(this);
         this.timeCreated = System.currentTimeMillis();
+        this.connectionAudit.setCheckForDuplicates(transport.isFaultTolerant());
     }
 
 
@@ -947,6 +949,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     protected void removeSession(ActiveMQSession session) {
         this.sessions.remove(session);
+        this.removeDispatcher(session);
     }
 
     /**
@@ -966,6 +969,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     protected void removeConnectionConsumer(ActiveMQConnectionConsumer connectionConsumer) {
         this.connectionConsumers.remove(connectionConsumer);
+        this.removeDispatcher(connectionConsumer);
     }
 
     /**
@@ -2083,6 +2087,18 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 	public void setProducerWindowSize(int producerWindowSize) {
 		this.producerWindowSize = producerWindowSize;
 	}
+    
+    protected void removeDispatcher(ActiveMQDispatcher dispatcher){
+       connectionAudit.removeDispatcher(dispatcher);
+    }
+
+    protected boolean isDuplicate(ActiveMQDispatcher dispatcher,Message message){
+       return connectionAudit.isDuplicate(dispatcher,message);
+    }
+
+    protected void rollbackDuplicate(ActiveMQDispatcher dispatcher,Message message){
+       connectionAudit.rollbackDuplicate(dispatcher,message);
+    }
 
 
 }
