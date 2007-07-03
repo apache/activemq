@@ -36,6 +36,7 @@
     <aopalliance-version>1.0</aopalliance-version>
     <axion-version>1.0-M3-dev</axion-version>
     <axis-version>1.2-RC1</axis-version>
+    <camel-version>1.0.0</camel-version>
     <cglib-version>2.0</cglib-version>
     <commons-beanutils-version>1.6.1</commons-beanutils-version>
     <commons-collections-version>3.1</commons-collections-version>
@@ -371,6 +372,29 @@
       <!-- =============================== -->
       <!-- Optional dependencies -->
       <!-- =============================== -->
+
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-core</artifactId>
+        <version>${camel-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-spring</artifactId>
+        <version>${camel-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-jms</artifactId>
+        <version>${camel-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-activemq</artifactId>
+        <version>${camel-version}</version>
+      </dependency>
+
+
       <!--  for custom XML parsing -->
       <dependency>
         <groupId>org.apache.xbean</groupId>
@@ -418,7 +442,7 @@
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring</artifactId>
-        <version>2.0</version>
+        <version>2.0.6</version>
         <optional>true</optional>
         <exclusions>
           <exclusion>

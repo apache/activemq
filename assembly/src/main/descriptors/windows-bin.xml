@@ -155,6 +155,12 @@
         <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.0_spec</include>
         <include>org.apache.geronimo.specs:geronimo-jms_1.1_spec</include>
         <include>${pom.groupId}:activemq-web</include>
+
+        <!-- camel -->
+        <include>org.apache.camel:camel-core</include>
+        <include>org.apache.camel:camel-spring</include>
+        <include>org.apache.camel:camel-jms</include>
+        <include>org.apache.camel:camel-activemq</include>
       </includes>
     </dependencySet>
     <dependencySet>
@@ -215,5 +221,6 @@
         <include>jdom:jdom</include>
       </includes>
     </dependencySet>
+    
   </dependencySets>
 </assembly>
