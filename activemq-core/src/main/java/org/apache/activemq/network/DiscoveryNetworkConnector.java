@@ -57,69 +57,56 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
         setDiscoveryAgent(DiscoveryAgentFactory.createDiscoveryAgent(discoveryURI));
     }
 
-    public void onServiceAdd(DiscoveryEvent event) {
-    	
-    	// Ignore events once we start stopping.
-    	if( serviceSupport.isStopped() || serviceSupport.isStopping() )
-    		return;
-    	
-        String url = event.getServiceName();
-        if (url != null) {
-
+    public void onServiceAdd(DiscoveryEvent event){
+        String localURIName=localURI.getScheme() + "://" + localURI.getHost();
+        // Ignore events once we start stopping.
+        if(serviceSupport.isStopped()||serviceSupport.isStopping())
+            return;
+        String url=event.getServiceName();
+        if(url!=null){
             URI uri;
-            try {
-                uri = new URI(url);
-            }
-            catch (URISyntaxException e) {
-                log.warn("Could not connect to remote URI: " + url + " due to bad URI syntax: " + e, e);
+            try{
+                uri=new URI(url);
+            }catch(URISyntaxException e){
+                log.warn("Could not connect to remote URI: "+url+" due to bad URI syntax: "+e,e);
                 return;
             }
-
             // Should we try to connect to that URI?
-            if (    bridges.containsKey(uri) 
-                    || localURI.equals(uri) 
-                    || (connectionFilter!=null && !connectionFilter.connectTo(uri))
-                    )
+            if(bridges.containsKey(uri)||localURI.equals(uri)
+                    ||(connectionFilter!=null&&!connectionFilter.connectTo(uri)))
                 return;
-
-            URI connectUri = uri;
-            log.info("Establishing network connection between from " + localURI + " to " + connectUri);
+            URI connectUri=uri;
+            log.info("Establishing network connection between from "+localURIName+" to "+connectUri);
             Transport remoteTransport;
-            try {
-                remoteTransport = TransportFactory.connect(connectUri);
-            }
-            catch (Exception e) {
-                log.warn("Could not connect to remote URI: " + localURI + ": " + e.getMessage());
-                log.debug("Connection failure exception: "+ e, e);
+            try{
+                remoteTransport=TransportFactory.connect(connectUri);
+            }catch(Exception e){
+                log.warn("Could not connect to remote URI: "+localURIName+": "+e.getMessage());
+                log.debug("Connection failure exception: "+e,e);
                 return;
             }
-
             Transport localTransport;
-            try {
-                localTransport = createLocalTransport();
-            }
-            catch (Exception e) {
+            try{
+                localTransport=createLocalTransport();
+            }catch(Exception e){
                 ServiceSupport.dispose(remoteTransport);
-                log.warn("Could not connect to local URI: " + localURI + ": " + e.getMessage());
-                log.debug("Connection failure exception: "+ e, e);
+                log.warn("Could not connect to local URI: "+localURIName+": "+e.getMessage());
+                log.debug("Connection failure exception: "+e,e);
                 return;
             }
-
-            NetworkBridge bridge = createBridge(localTransport, remoteTransport, event);
-            bridges.put(uri, bridge);
-            try {
+            NetworkBridge bridge=createBridge(localTransport,remoteTransport,event);
+            bridges.put(uri,bridge);
+            try{
                 bridge.start();
-            }
-            catch (Exception e) {
+            }catch(Exception e){
                 ServiceSupport.dispose(localTransport);
                 ServiceSupport.dispose(remoteTransport);
-                log.warn("Could not start network bridge between: " + localURI + " and: " + uri + " due to: " + e);
-                log.debug("Start failure exception: "+ e, e);
-                
-                try {
-					discoveryAgent.serviceFailed(event);
-				} catch (IOException e1) {
-				}
+                log.warn("Could not start network bridge between: "+localURIName+" and: "+uri+" due to: "+e);
+                log.debug("Start failure exception: "+e,e);
+                try{
+                    discoveryAgent.serviceFailed(event);
+                }catch(IOException e1){
+                }
                 return;
             }
         }
