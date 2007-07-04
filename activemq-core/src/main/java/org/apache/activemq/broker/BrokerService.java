@@ -283,6 +283,7 @@ public class BrokerService implements Service {
         URI uri = getVmConnectorURI();
         HashMap map = new HashMap(URISupport.parseParamters(uri));
         map.put("network", "true");
+        map.put("async","false");
         uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
         connector.setLocalUri(uri);
         
@@ -1605,10 +1606,15 @@ public class BrokerService implements Service {
             	this.transportConnectors.clear();
             	setTransportConnectors(al);
             }
+            URI uri = getVmConnectorURI();
+            HashMap map = new HashMap(URISupport.parseParamters(uri));
+            map.put("network", "true");
+            map.put("async","false");
+            uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
 
             for (Iterator iter = getNetworkConnectors().iterator(); iter.hasNext();) {
                 NetworkConnector connector = (NetworkConnector) iter.next();
-                connector.setLocalUri(getVmConnectorURI());
+                connector.setLocalUri(uri);
                 connector.setBrokerName(getBrokerName());
                 connector.setDurableDestinations(getBroker().getDurableDestinations());
                 connector.start();
