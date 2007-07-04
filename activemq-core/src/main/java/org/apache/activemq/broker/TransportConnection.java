@@ -1173,10 +1173,8 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
             synchronized(consumerExchanges){
                 result=new ConsumerBrokerExchange();
                 ConnectionState state=lookupConnectionState(id);
-                synchronized(this){
-                    context=state.getContext();
-                    result.setConnectionContext(context);
-                }
+                context=state.getContext();
+                result.setConnectionContext(context);
                 SessionState ss=state.getSessionState(id.getParentId());
                 if(ss!=null){
                     ConsumerState cs=ss.getConsumerState(id);
