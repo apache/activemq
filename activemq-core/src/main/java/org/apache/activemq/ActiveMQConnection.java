@@ -136,6 +136,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean optimizeAcknowledge = false;
     private boolean nestedMapAndListEnabled = true;
     private boolean useRetroactiveConsumer;
+    private boolean exclusiveConsumer;
     private boolean alwaysSyncSend;
     private int closeTimeout = 15000;
     private boolean watchTopicAdvisories=true;
@@ -876,6 +877,20 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         this.nestedMapAndListEnabled = structuredMapsEnabled;
     }
 
+    public boolean isExclusiveConsumer() {
+        return exclusiveConsumer;
+    }
+
+    /**
+     * Enables or disables whether or not queue consumers should be exclusive or not
+     * for example to preserve ordering when not using
+     * <a href="http://activemq.apache.org/message-groups.html">Message Groups</a>
+     *
+     * @param exclusiveConsumer
+     */
+    public void setExclusiveConsumer(boolean exclusiveConsumer) {
+        this.exclusiveConsumer = exclusiveConsumer;
+    }
 
     /**
      * Adds a transport listener so that a client can be notified of events in the underlying 
@@ -2099,6 +2114,4 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     protected void rollbackDuplicate(ActiveMQDispatcher dispatcher,Message message){
        connectionAudit.rollbackDuplicate(dispatcher,message);
     }
-
-
 }
