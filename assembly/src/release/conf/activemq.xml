@@ -105,8 +105,8 @@
     in the package named 'org.foo.bar' or any of its child packages
 
     <route>
-      <from uri="activemq:com.acme.MyQueue"/>
-      <to uri="activemq:com.acme.SomeOtherQueue"/>
+      <from uri="activemq:example.A"/>
+      <to uri="activemq:example.B"/>
     </route>
 -->
   </camelContext>
