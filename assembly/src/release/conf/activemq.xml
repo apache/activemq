@@ -103,12 +103,12 @@
 <!--
     Create EIP routes here using Spring if we like; otherwise Camel will pick up all routes defined
     in the package named 'org.foo.bar' or any of its child packages
+-->
 
     <route>
       <from uri="activemq:example.A"/>
       <to uri="activemq:example.B"/>
     </route>
--->
   </camelContext>
 
 
