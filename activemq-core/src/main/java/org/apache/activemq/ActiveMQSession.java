@@ -851,6 +851,11 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     public MessageProducer createProducer(Destination destination) throws JMSException {
         checkClosed();
+        if (destination instanceof CustomDestination)  {
+            CustomDestination customDestination = (CustomDestination) destination;
+            return customDestination.createProducer(this);
+        }
+
         return new ActiveMQMessageProducer(this, getNextProducerId(), ActiveMQMessageTransformation
                 .transformDestination(destination));
     }
@@ -904,6 +909,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     public MessageConsumer createConsumer(Destination destination, String messageSelector) throws JMSException {
         checkClosed();
+
+        if (destination instanceof CustomDestination)  {
+            CustomDestination customDestination = (CustomDestination) destination;
+            return customDestination.createConsumer(this, messageSelector);
+        }
+
         int prefetch = 0;
 
         ActiveMQPrefetchPolicy prefetchPolicy = connection.getPrefetchPolicy();
@@ -958,7 +969,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *            expression are delivered. A value of null or an empty string
      *            indicates that there is no message selector for the message
      *            consumer.
-     * @param NoLocal -
+     * @param noLocal -
      *            if true, and the destination is a topic, inhibits the delivery
      *            of messages published by its own connection. The behavior for
      *            <CODE>NoLocal</CODE> is not specified if the destination is
@@ -973,13 +984,20 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      *             if the message selector is invalid.
      * @since 1.1
      */
-    public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean NoLocal)
+    public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean noLocal)
             throws JMSException {
         checkClosed();
+
+        if (destination instanceof CustomDestination)  {
+            CustomDestination customDestination = (CustomDestination) destination;
+            return customDestination.createConsumer(this, messageSelector, noLocal);
+        }
+
+
         ActiveMQPrefetchPolicy prefetchPolicy = connection.getPrefetchPolicy();
         return new ActiveMQMessageConsumer(this, getNextConsumerId(), 
                 ActiveMQMessageTransformation.transformDestination(destination), null, messageSelector, 
-                prefetchPolicy.getTopicPrefetch(), prefetchPolicy.getMaximumPendingMessageLimit(), NoLocal, false, asyncDispatch);
+                prefetchPolicy.getTopicPrefetch(), prefetchPolicy.getMaximumPendingMessageLimit(), noLocal, false, asyncDispatch);
     }
 
     /**
@@ -1145,6 +1163,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     public TopicSubscriber createDurableSubscriber(Topic topic,String name,String messageSelector,boolean noLocal)
                     throws JMSException{
         checkClosed();
+
+        if (topic instanceof CustomDestination)  {
+            CustomDestination customDestination = (CustomDestination) topic;
+            return customDestination.createDurableSubscriber(this, name, messageSelector, noLocal);
+        }
+
         connection.checkClientIDWasManuallySpecified();
         ActiveMQPrefetchPolicy prefetchPolicy=this.connection.getPrefetchPolicy();
         int prefetch=isAutoAcknowledge()&&connection.isOptimizedMessageDispatch()?prefetchPolicy
@@ -1272,6 +1296,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     public QueueReceiver createReceiver(Queue queue, String messageSelector) throws JMSException {
         checkClosed();
+
+        if (queue instanceof CustomDestination)  {
+            CustomDestination customDestination = (CustomDestination) queue;
+            return customDestination.createReceiver(this, messageSelector);
+        }
+
         ActiveMQPrefetchPolicy prefetchPolicy = this.connection.getPrefetchPolicy();
         return new ActiveMQQueueReceiver(this, getNextConsumerId(), ActiveMQMessageTransformation
                 .transformDestination(queue), messageSelector, prefetchPolicy.getQueuePrefetch(), 
@@ -1294,6 +1324,11 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     public QueueSender createSender(Queue queue) throws JMSException {
         checkClosed();
+        if (queue instanceof CustomDestination)  {
+            CustomDestination customDestination = (CustomDestination) queue;
+            return customDestination.createSender(this);
+        }
+
         return new ActiveMQQueueSender(this, ActiveMQMessageTransformation.transformDestination(queue));
     }
 
@@ -1366,6 +1401,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     public TopicSubscriber createSubscriber(Topic topic, String messageSelector, boolean noLocal) throws JMSException {
         checkClosed();
+
+        if (topic instanceof CustomDestination)  {
+            CustomDestination customDestination = (CustomDestination) topic;
+            return customDestination.createSubscriber(this, messageSelector, noLocal);
+        }
+
         ActiveMQPrefetchPolicy prefetchPolicy = this.connection.getPrefetchPolicy();
         return new ActiveMQTopicSubscriber(this, getNextConsumerId(), ActiveMQMessageTransformation
                 .transformDestination(topic), null, messageSelector, prefetchPolicy.getTopicPrefetch(), 
@@ -1392,6 +1433,11 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     public TopicPublisher createPublisher(Topic topic) throws JMSException {
         checkClosed();
+        
+        if (topic instanceof CustomDestination)  {
+            CustomDestination customDestination = (CustomDestination) topic;
+            return customDestination.createPublisher(this);
+        }
         return new ActiveMQTopicPublisher(this, ActiveMQMessageTransformation.transformDestination(topic));
     }
 
@@ -1807,6 +1853,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         return transformer;
     }
 
+    public ActiveMQConnection getConnection() {
+        return connection;
+    }
+
     /**
      * Sets the transformer used to transform messages before they are sent on to the JMS bus
      * or when they are received from the bus but before they are delivered to the JMS client
@@ -1830,7 +1880,6 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     public List getUnconsumedMessages() {
 		return executor.getUnconsumedMessages();
 	}
-
 
     public String toString() {
         return "ActiveMQSession {id="+info.getSessionId()+",started="+started.get()+"}";
