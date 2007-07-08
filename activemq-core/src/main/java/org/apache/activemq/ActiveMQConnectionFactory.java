@@ -251,24 +251,9 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         	
             connection.setUserName(userName);
             connection.setPassword(password);
-            connection.setPrefetchPolicy(getPrefetchPolicy());
-            connection.setDisableTimeStampsByDefault(isDisableTimeStampsByDefault());
-            connection.setOptimizedMessageDispatch(isOptimizedMessageDispatch());
-            connection.setCopyMessageOnSend(isCopyMessageOnSend());
-            connection.setUseCompression(isUseCompression());
-            connection.setObjectMessageSerializationDefered(isObjectMessageSerializationDefered());
-            connection.setDispatchAsync(isDispatchAsync());
-            connection.setUseAsyncSend(isUseAsyncSend());
-            connection.setAlwaysSyncSend(isAlwaysSyncSend());
-            connection.setAlwaysSessionAsync(isAlwaysSessionAsync());
-            connection.setOptimizeAcknowledge(isOptimizeAcknowledge());
-            connection.setUseRetroactiveConsumer(isUseRetroactiveConsumer());
-            connection.setRedeliveryPolicy(getRedeliveryPolicy());
-            connection.setTransformer(getTransformer());
-            connection.setBlobTransferPolicy(getBlobTransferPolicy().copy());
-            connection.setWatchTopicAdvisories(isWatchTopicAdvisories());
-            connection.setProducerWindowSize(getProducerWindowSize());
-            connection.setWarnAboutUnstartedConnectionTimeout(getWarnAboutUnstartedConnectionTimeout());
+
+            configureConnection(connection);
+
             transport.start();
 
             if( clientID !=null )
@@ -291,6 +276,28 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     protected ActiveMQConnection createActiveMQConnection(Transport transport, JMSStatsImpl stats) throws Exception {
         ActiveMQConnection connection = new ActiveMQConnection(transport, getClientIdGenerator(), stats);
         return connection;
+    }
+
+
+    protected void configureConnection(ActiveMQConnection connection) {
+        connection.setPrefetchPolicy(getPrefetchPolicy());
+        connection.setDisableTimeStampsByDefault(isDisableTimeStampsByDefault());
+        connection.setOptimizedMessageDispatch(isOptimizedMessageDispatch());
+        connection.setCopyMessageOnSend(isCopyMessageOnSend());
+        connection.setUseCompression(isUseCompression());
+        connection.setObjectMessageSerializationDefered(isObjectMessageSerializationDefered());
+        connection.setDispatchAsync(isDispatchAsync());
+        connection.setUseAsyncSend(isUseAsyncSend());
+        connection.setAlwaysSyncSend(isAlwaysSyncSend());
+        connection.setAlwaysSessionAsync(isAlwaysSessionAsync());
+        connection.setOptimizeAcknowledge(isOptimizeAcknowledge());
+        connection.setUseRetroactiveConsumer(isUseRetroactiveConsumer());
+        connection.setRedeliveryPolicy(getRedeliveryPolicy());
+        connection.setTransformer(getTransformer());
+        connection.setBlobTransferPolicy(getBlobTransferPolicy().copy());
+        connection.setWatchTopicAdvisories(isWatchTopicAdvisories());
+        connection.setProducerWindowSize(getProducerWindowSize());
+        connection.setWarnAboutUnstartedConnectionTimeout(getWarnAboutUnstartedConnectionTimeout());
     }
 
     // /////////////////////////////////////////////
