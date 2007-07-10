@@ -20,6 +20,7 @@ package org.apache.activemq.store.jpa;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -28,11 +29,13 @@ import javax.persistence.Query;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.ReferenceStore;
 import org.apache.activemq.store.ReferenceStoreAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TopicReferenceStore;
+import org.apache.activemq.store.amq.AMQTx;
 import org.apache.activemq.util.IOExceptionSupport;
 
 /**
@@ -146,6 +149,13 @@ public class JPAReferenceStoreAdapter extends JPAPersistenceAdapter implements R
      * @see org.apache.activemq.store.ReferenceStoreAdapter#recoverState()
      */
     public void recoverState(){        
+    }
+
+    public Map<TransactionId,AMQTx> retrievePreparedState() throws IOException{
+        return null;
+    }
+
+    public void savePreparedState(Map<TransactionId,AMQTx> map) throws IOException{        
     }
 
 }
