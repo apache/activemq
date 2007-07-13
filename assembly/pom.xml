@@ -46,7 +46,7 @@
     <!-- activemq -->
     <dependency>
       <groupId>${pom.groupId}</groupId>
-      <artifactId>activemq-core</artifactId>
+      <artifactId>activemq-all</artifactId>
     </dependency>
     <dependency>
       <groupId>${pom.groupId}</groupId>
@@ -285,7 +285,26 @@
   <build>
     
     <plugins>
-      <!-- Configure which tests are included/excuded -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>unpack</id>
+            <phase>package</phase>
+            <goals>
+              <goal>unpack-dependencies</goal>
+            </goals>
+            <configuration>
+              <includeGroupIds>${pom.groupId}</includeGroupIds>
+              <includeArtifactIds>activemq-console</includeArtifactIds>
+              <outputDirectory>target/classes</outputDirectory>
+              <overWriteReleases>false</overWriteReleases>
+              <overWriteSnapshots>true</overWriteSnapshots>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
@@ -297,10 +316,10 @@
             <configuration>
               <tasks>
                 <jar destfile="target/run.jar" basedir="target/classes">
-                      <include name="org/apache/activemq/console/Main*.class"/>
-                      <manifest>
-                        <attribute name="Main-Class" value="org.apache.activemq.console.Main"/>
-                      </manifest>
+                  <include name="org/apache/activemq/console/Main*.class"/>
+                  <manifest>
+                    <attribute name="Main-Class" value="org.apache.activemq.console.Main"/>
+                  </manifest>
                 </jar>
               </tasks>
             </configuration>
@@ -315,22 +334,6 @@
         <configuration>
           <forkMode>pertest</forkMode>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <version>4.1-incubator</version>
-        <executions>
-          <execution>
-            <phase>compile</phase>
-            <goals>
-              <goal>createbundle</goal>
-            </goals>
-            <configuration>
-              <includes>activemq-core,activemq-console,activeio-core,activemq-jaas,activemq-optional,commons-logging,geronimo-jms_1.1_spec,geronimo-j2ee-management_1.0_spec,derby</includes>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -424,7 +427,7 @@
                   </descriptors>
                 </configuration>
               </execution>
-			  <execution>
+              <execution>
                 <id>windows-src</id>
                 <phase>package</phase>
                 <goals>
@@ -438,7 +441,7 @@
               </execution>
             </executions>
           </plugin>
-    </plugins>
+        </plugins>
       </build>
     </profile>
   </profiles>

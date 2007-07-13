@@ -90,13 +90,6 @@
     <!-- Copy over jar files -->
     <fileSet>
       <directory>target</directory>
-      <outputDirectory>/</outputDirectory>
-      <includes>
-        <include>${pom.artifactId}-${pom.version}.jar</include>
-      </includes>
-    </fileSet>
-    <fileSet>
-      <directory>target</directory>
       <outputDirectory>/bin</outputDirectory>
       <includes>
         <include>run.jar</include>
@@ -139,6 +132,14 @@
   </fileSets>
 
   <dependencySets>
+    <dependencySet>
+      <outputDirectory>/</outputDirectory>
+      <unpack>false</unpack>
+      <scope>runtime</scope>
+      <includes>
+        <include>${pom.groupId}:activemq-all</include>
+      </includes>
+    </dependencySet>
     <dependencySet>
       <outputDirectory>/lib</outputDirectory>
       <unpack>false</unpack>
