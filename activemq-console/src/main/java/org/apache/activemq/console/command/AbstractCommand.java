@@ -103,7 +103,8 @@ public abstract class AbstractCommand implements Command {
 
         // Token is unrecognized
         else {
-            GlobalWriter.printInfo("Ignoring unrecognized option: " + token);
+            GlobalWriter.printInfo("Unrecognized option: " + token);
+            isPrintHelp = true;
         }
     }
 
