@@ -19,13 +19,10 @@
 package org.apache.activemq.store.amq;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import javax.transaction.xa.XAException;
-
 import org.apache.activemq.command.JournalTopicAck;
 import org.apache.activemq.command.JournalTransaction;
 import org.apache.activemq.command.Message;
@@ -39,92 +36,15 @@ import org.apache.activemq.store.TransactionStore;
 
 /**
  */
-public class AMQTransactionStore implements TransactionStore {
+public class AMQTransactionStore implements TransactionStore{
 
     private final AMQPersistenceAdapter peristenceAdapter;
-    Map<TransactionId, Tx> inflightTransactions = new LinkedHashMap<TransactionId, Tx>();
-    Map<TransactionId, Tx> preparedTransactions = new LinkedHashMap<TransactionId, Tx>();
+    Map<TransactionId,AMQTx> inflightTransactions=new LinkedHashMap<TransactionId,AMQTx>();
+    Map<TransactionId,AMQTx> preparedTransactions=new LinkedHashMap<TransactionId,AMQTx>();
     private boolean doingRecover;
 
-    
-    public static class TxOperation {
-        
-        static final byte ADD_OPERATION_TYPE       = 0;
-        static final byte REMOVE_OPERATION_TYPE    = 1;
-        static final byte ACK_OPERATION_TYPE       = 3;
-        
-        public byte operationType;
-        public AMQMessageStore store;
-        public Object data;
-        public Location location;
-        
-        public TxOperation(byte operationType, AMQMessageStore store, Object data, Location location) {
-            this.operationType=operationType;
-            this.store=store;
-            this.data=data;
-            this.location=location;
-        }
-        
-    }
-    /**
-     * Operations
-     * @version $Revision: 1.6 $
-     */
-    public static class Tx {
-
-        private final Location location;
-        private ArrayList<TxOperation> operations = new ArrayList<TxOperation>();
-
-        public Tx(Location location) {
-            this.location=location;
-        }
-
-        public void add(AMQMessageStore store, Message msg, Location location) {
-            operations.add(new TxOperation(TxOperation.ADD_OPERATION_TYPE, store, msg, location));
-        }
-
-        public void add(AMQMessageStore store, MessageAck ack) {
-            operations.add(new TxOperation(TxOperation.REMOVE_OPERATION_TYPE, store, ack, null));
-        }
-
-        public void add(AMQTopicMessageStore store, JournalTopicAck ack) {
-            operations.add(new TxOperation(TxOperation.ACK_OPERATION_TYPE, store, ack, null));
-        }
-        
-        public Message[] getMessages() {
-            ArrayList<Object> list = new ArrayList<Object>();
-            for (Iterator<TxOperation> iter = operations.iterator(); iter.hasNext();) {
-                TxOperation op = iter.next();
-                if( op.operationType==TxOperation.ADD_OPERATION_TYPE ) {
-                    list.add(op.data);
-                }
-            }
-            Message rc[] = new Message[list.size()];
-            list.toArray(rc);
-            return rc;
-        }
-
-        public MessageAck[] getAcks() {
-            ArrayList<Object> list = new ArrayList<Object>();
-            for (Iterator<TxOperation> iter = operations.iterator(); iter.hasNext();) {
-                TxOperation op = iter.next();
-                if( op.operationType==TxOperation.REMOVE_OPERATION_TYPE ) {
-                    list.add(op.data);
-                }
-            }
-            MessageAck rc[] = new MessageAck[list.size()];
-            list.toArray(rc);
-            return rc;
-        }
-
-        public ArrayList<TxOperation> getOperations() {
-            return operations;
-        }
-
-    }
-
-    public AMQTransactionStore(AMQPersistenceAdapter adapter) {
-        this.peristenceAdapter = adapter;
+    public AMQTransactionStore(AMQPersistenceAdapter adapter){
+        this.peristenceAdapter=adapter;
     }
 
     /**
@@ -132,7 +52,7 @@ public class AMQTransactionStore implements TransactionStore {
      * @see org.apache.activemq.store.TransactionStore#prepare(TransactionId)
      */
     public void prepare(TransactionId txid) throws IOException{
-        Tx tx=null;
+        AMQTx tx=null;
         synchronized(inflightTransactions){
             tx=inflightTransactions.remove(txid);
         }
@@ -143,13 +63,13 @@ public class AMQTransactionStore implements TransactionStore {
             preparedTransactions.put(txid,tx);
         }
     }
-    
+
     /**
      * @throws IOException
      * @see org.apache.activemq.store.TransactionStore#prepare(TransactionId)
      */
     public void replayPrepare(TransactionId txid) throws IOException{
-        Tx tx=null;
+        AMQTx tx=null;
         synchronized(inflightTransactions){
             tx=inflightTransactions.remove(txid);
         }
@@ -160,13 +80,13 @@ public class AMQTransactionStore implements TransactionStore {
         }
     }
 
-    public Tx getTx(TransactionId txid,Location location){
-        Tx tx=null;
+    public AMQTx getTx(TransactionId txid,Location location){
+        AMQTx tx=null;
         synchronized(inflightTransactions){
             tx=inflightTransactions.get(txid);
         }
         if(tx==null){
-            tx=new Tx(location);
+            tx=new AMQTx(location);
             inflightTransactions.put(txid,tx);
         }
         return tx;
@@ -177,7 +97,7 @@ public class AMQTransactionStore implements TransactionStore {
      * @see org.apache.activemq.store.TransactionStore#commit(org.apache.activemq.service.Transaction)
      */
     public void commit(TransactionId txid,boolean wasPrepared) throws IOException{
-        Tx tx;
+        AMQTx tx;
         if(wasPrepared){
             synchronized(preparedTransactions){
                 tx=preparedTransactions.remove(txid);
@@ -201,7 +121,7 @@ public class AMQTransactionStore implements TransactionStore {
      * @throws XAException
      * @see org.apache.activemq.store.TransactionStore#commit(org.apache.activemq.service.Transaction)
      */
-    public Tx replayCommit(TransactionId txid,boolean wasPrepared) throws IOException{
+    public AMQTx replayCommit(TransactionId txid,boolean wasPrepared) throws IOException{
         if(wasPrepared){
             synchronized(preparedTransactions){
                 return preparedTransactions.remove(txid);
@@ -218,7 +138,7 @@ public class AMQTransactionStore implements TransactionStore {
      * @see org.apache.activemq.store.TransactionStore#rollback(TransactionId)
      */
     public void rollback(TransactionId txid) throws IOException{
-        Tx tx=null;
+        AMQTx tx=null;
         synchronized(inflightTransactions){
             tx=inflightTransactions.remove(txid);
         }
@@ -251,13 +171,13 @@ public class AMQTransactionStore implements TransactionStore {
             }
         }
     }
-    
-    public void start() throws Exception {
+
+    public void start() throws Exception{
     }
 
-    public void stop() throws Exception {
+    public void stop() throws Exception{
     }
-    
+
     synchronized public void recover(TransactionRecoveryListener listener) throws IOException{
         // All the in-flight transactions get rolled back..
         synchronized(inflightTransactions){
@@ -265,13 +185,13 @@ public class AMQTransactionStore implements TransactionStore {
         }
         this.doingRecover=true;
         try{
-            Map<TransactionId, Tx> txs=null;
+            Map<TransactionId,AMQTx> txs=null;
             synchronized(preparedTransactions){
-                txs=new LinkedHashMap<TransactionId, Tx>(preparedTransactions);
+                txs=new LinkedHashMap<TransactionId,AMQTx>(preparedTransactions);
             }
             for(Iterator<TransactionId> iter=txs.keySet().iterator();iter.hasNext();){
                 Object txid=iter.next();
-                Tx tx=txs.get(txid);
+                AMQTx tx=txs.get(txid);
                 listener.recover((XATransactionId)txid,tx.getMessages(),tx.getAcks());
             }
         }finally{
@@ -283,26 +203,24 @@ public class AMQTransactionStore implements TransactionStore {
      * @param message
      * @throws IOException
      */
-    void addMessage(AMQMessageStore store, Message message, Location location) throws IOException {
-        Tx tx = getTx(message.getTransactionId(), location);
-        tx.add(store, message, location);
+    void addMessage(AMQMessageStore store,Message message,Location location) throws IOException{
+        AMQTx tx=getTx(message.getTransactionId(),location);
+        tx.add(store,message,location);
     }
 
     /**
      * @param ack
      * @throws IOException
      */
-    public void removeMessage(AMQMessageStore store, MessageAck ack, Location location) throws IOException {
-        Tx tx = getTx(ack.getTransactionId(), location);
-        tx.add(store, ack);
-    }
-    
-    
-    public void acknowledge(AMQTopicMessageStore store, JournalTopicAck ack, Location location) {
-        Tx tx = getTx(ack.getTransactionId(), location);
-        tx.add(store, ack);
+    public void removeMessage(AMQMessageStore store,MessageAck ack,Location location) throws IOException{
+        AMQTx tx=getTx(ack.getTransactionId(),location);
+        tx.add(store,ack);
     }
 
+    public void acknowledge(AMQTopicMessageStore store,JournalTopicAck ack,Location location){
+        AMQTx tx=getTx(ack.getTransactionId(),location);
+        tx.add(store,ack);
+    }
 
     public Location checkpoint() throws IOException{
         // Nothing really to checkpoint.. since, we don't
@@ -312,18 +230,18 @@ public class AMQTransactionStore implements TransactionStore {
         // roll over active tx records.
         Location rc=null;
         synchronized(inflightTransactions){
-            for(Iterator<Tx> iter=inflightTransactions.values().iterator();iter.hasNext();){
-                Tx tx=iter.next();
-                Location location=tx.location;
+            for(Iterator<AMQTx> iter=inflightTransactions.values().iterator();iter.hasNext();){
+                AMQTx tx=iter.next();
+                Location location=tx.getLocation();
                 if(rc==null||rc.compareTo(location)<0){
                     rc=location;
                 }
             }
         }
         synchronized(preparedTransactions){
-            for(Iterator<Tx> iter=preparedTransactions.values().iterator();iter.hasNext();){
-                Tx tx=iter.next();
-                Location location=tx.location;
+            for(Iterator<AMQTx> iter=preparedTransactions.values().iterator();iter.hasNext();){
+                AMQTx tx=iter.next();
+                Location location=tx.getLocation();
                 if(rc==null||rc.compareTo(location)<0){
                     rc=location;
                 }
@@ -332,9 +250,24 @@ public class AMQTransactionStore implements TransactionStore {
         }
     }
 
-    public boolean isDoingRecover() {
+    public boolean isDoingRecover(){
         return doingRecover;
     }
 
+    /**
+     * @return the preparedTransactions
+     */
+    public Map<TransactionId,AMQTx> getPreparedTransactions(){
+        return this.preparedTransactions;
+    }
 
+    /**
+     * @param preparedTransactions the preparedTransactions to set
+     */
+    public void setPreparedTransactions(Map<TransactionId,AMQTx> preparedTransactions){
+        if(preparedTransactions!=null){
+            this.preparedTransactions.clear();
+            this.preparedTransactions.putAll(preparedTransactions);
+        }
+    }
 }
