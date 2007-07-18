@@ -11,7 +11,6 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-
 package org.apache.activemq.store.amq;
 
 import java.io.File;
@@ -49,8 +48,6 @@ import org.apache.activemq.store.ReferenceStoreAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TopicReferenceStore;
 import org.apache.activemq.store.TransactionStore;
-import org.apache.activemq.store.amq.AMQTransactionStore.Tx;
-import org.apache.activemq.store.amq.AMQTransactionStore.TxOperation;
 import org.apache.activemq.store.kahadaptor.KahaReferenceStoreAdapter;
 import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.Scheduler;
@@ -180,11 +177,8 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 // The following was attempting to reduce startup times by avoiding the log 
 // file scanning that recovery performs.  The problem with it is that XA transactions
 // only live in transaction log and are not stored in the reference store, but they still
-// need to be recovered when the broker starts up.  Perhaps on a graceful shutdown we 
-// should record all the in flight XA transactions to a file to avoid having to scan 
-// the entire transaction log.  For now going to comment this bit out.        
-//    
-        /*
+// need to be recovered when the broker starts up.  
+        
         if(referenceStoreAdapter.isStoreValid()==false){
             log.warn("The ReferenceStore is not valid - recovering ...");
             recover();
@@ -192,10 +186,11 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         }else {
            Location location=writeTraceMessage("RECOVERED "+new Date(),true);
             asyncDataManager.setMark(location,true);
+            //recover transactions
+            getTransactionStore().setPreparedTransactions(referenceStoreAdapter.retrievePreparedState());
        }
-        */
-        recover();
         
+              
         // Do a checkpoint periodically.
         periodicCheckpointTask=new Runnable(){
 
@@ -237,6 +232,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         synchronized(this){
             checkpointTask.shutdown();
         }
+        referenceStoreAdapter.savePreparedState(getTransactionStore().getPreparedTransactions());
         queues.clear();
         topics.clear();
         IOException firstException=null;
@@ -355,13 +351,15 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         return destinations;
     }
 
-    private MessageStore createMessageStore(ActiveMQDestination destination) throws IOException{
+    MessageStore createMessageStore(ActiveMQDestination destination) throws IOException{
         if(destination.isQueue()){
             return createQueueMessageStore((ActiveMQQueue)destination);
         }else{
             return createTopicMessageStore((ActiveMQTopic)destination);
         }
     }
+    
+    
 
     public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException{
         AMQMessageStore store=queues.get(destination);
@@ -494,28 +492,16 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
                             break;
                         case JournalTransaction.XA_COMMIT:
                         case JournalTransaction.LOCAL_COMMIT:
-                            Tx tx=transactionStore.replayCommit(command.getTransactionId(),command.getWasPrepared());
+                            AMQTx tx=transactionStore.replayCommit(command.getTransactionId(),command.getWasPrepared());
                             if(tx==null)
                                 break; // We may be trying to replay a commit that
                             // was already committed.
                             // Replay the committed operations.
                             tx.getOperations();
                             for(Iterator iter=tx.getOperations().iterator();iter.hasNext();){
-                                TxOperation op=(TxOperation)iter.next();
-                                if(op.operationType==TxOperation.ADD_OPERATION_TYPE){
-                                    if(op.store.replayAddMessage(context,(Message)op.data,op.location))
-                                        redoCounter++;
-                                }
-                                if(op.operationType==TxOperation.REMOVE_OPERATION_TYPE){
-                                    if(op.store.replayRemoveMessage(context,(MessageAck)op.data))
-                                        redoCounter++;
-                                }
-                                if(op.operationType==TxOperation.ACK_OPERATION_TYPE){
-                                    JournalTopicAck ack=(JournalTopicAck)op.data;
-                                    if(((AMQTopicMessageStore)op.store).replayAcknowledge(context,ack.getClientId(),ack
-                                            .getSubscritionName(),ack.getMessageId())){
-                                        redoCounter++;
-                                    }
+                                AMQTxOperation op=(AMQTxOperation)iter.next();
+                                if (op.replay(this,context)) {
+                                    redoCounter++;
                                 }
                             }
                             break;
