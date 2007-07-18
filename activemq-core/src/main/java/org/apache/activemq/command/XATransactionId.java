@@ -18,9 +18,7 @@
 package org.apache.activemq.command;
 
 import java.util.Arrays;
-
 import javax.transaction.xa.Xid;
-
 import org.apache.activemq.util.HexSupport;
 
 
@@ -28,7 +26,7 @@ import org.apache.activemq.util.HexSupport;
  * @openwire:marshaller code="112"
  * @version $Revision: 1.6 $
  */
-public class XATransactionId extends TransactionId implements Xid {
+public class XATransactionId extends TransactionId implements Xid, Comparable{
     
     public static final byte DATA_STRUCTURE_TYPE=CommandTypes.ACTIVEMQ_XA_TRANSACTION_ID;
 
@@ -37,6 +35,7 @@ public class XATransactionId extends TransactionId implements Xid {
     private byte[] globalTransactionId;
     
     private transient int hash;
+    private transient String transactionKey;
     
     public XATransactionId() {        
     }
@@ -51,8 +50,12 @@ public class XATransactionId extends TransactionId implements Xid {
         return DATA_STRUCTURE_TYPE;
     }
         
-    public String getTransactionKey() {
-        return "XID:"+formatId+":"+HexSupport.toHexFromBytes(globalTransactionId)+":"+HexSupport.toHexFromBytes(branchQualifier);
+    public synchronized String getTransactionKey(){
+        if(transactionKey==null){
+            transactionKey="XID:"+formatId+":"+HexSupport.toHexFromBytes(globalTransactionId)+":"
+                    +HexSupport.toHexFromBytes(branchQualifier);
+        }
+        return transactionKey;
     }
 
     public String toString() {
@@ -128,6 +131,13 @@ public class XATransactionId extends TransactionId implements Xid {
         XATransactionId xid = (XATransactionId)o;
         return xid.formatId==formatId && Arrays.equals(xid.globalTransactionId,globalTransactionId)
                && Arrays.equals(xid.branchQualifier, branchQualifier);
+    }
+
+    public int compareTo(Object o){
+        if( o==null || o.getClass()!=XATransactionId.class )
+            return -1;
+        XATransactionId xid = (XATransactionId)o;
+        return getTransactionKey().compareTo(xid.getTransactionKey());
     }
     
 }
