@@ -44,6 +44,12 @@ public interface Store{
      * String Marshaller
      */
     public final static Marshaller StringMarshaller = new StringMarshaller();
+    
+    
+    /**
+     * Command Marshaller
+     */
+    public final static Marshaller CommandMarshaller = new CommandMarshaller();
     /**
      * close the store
      * 
