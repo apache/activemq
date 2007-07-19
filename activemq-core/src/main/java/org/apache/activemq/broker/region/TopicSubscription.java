@@ -74,7 +74,7 @@ public class TopicSubscription extends AbstractSubscription{
     public void add(MessageReference node) throws Exception{
         enqueueCounter.incrementAndGet();
         node.incrementReferenceCount();
-        if(!isFull()&&!isSlaveBroker()){
+        if(!isFull()&&!isSlave()){
             optimizePrefetch();
             // if maximumPendingMessages is set we will only discard messages which
             // have not been dispatched (i.e. we allow the prefetch buffer to be filled)

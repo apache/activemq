@@ -191,12 +191,7 @@ public interface Broker extends Region, Service {
      * @param messageDispatch
      */
     public void processDispatch(MessageDispatch messageDispatch);
-    
-    /**
-     * @return true if the broker is running as a slave
-     */
-    public boolean isSlaveBroker();
-    
+  
     /**
      * @return true if the broker has stopped
      */
@@ -229,7 +224,7 @@ public interface Broker extends Region, Service {
      * @return true if fault tolerant
      */
     public boolean isFaultTolerantConfiguration();
-
+    
     /**
      * @return the connection context used to make administration operations on startup or via JMX MBeans
      */

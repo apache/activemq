@@ -154,6 +154,7 @@ public class BrokerService implements Service {
     private boolean useLocalHostBrokerName = false;
     private CountDownLatch stoppedLatch = new CountDownLatch(1);
     private boolean supportFailOver = false;
+    private boolean clustered = false;
 
     static{
         String localHostName = "localhost";
@@ -1120,6 +1121,20 @@ public class BrokerService implements Service {
     public void setSupportFailOver(boolean supportFailOver){
         this.supportFailOver=supportFailOver;
     }    
+    
+    /**
+     * @return the clustered
+     */
+    public boolean isClustered(){
+        return this.clustered;
+    }
+
+    /**
+     * @param clustered the clustered to set
+     */
+    public void setClustered(boolean clustered){
+        this.clustered=clustered;
+    }
 
     // Implementation methods
     // -------------------------------------------------------------------------
@@ -1697,6 +1712,5 @@ public class BrokerService implements Service {
                 broker.addDestination(adminConnectionContext, destination);
             }
         }
-    }
-   
+    }   
 }
