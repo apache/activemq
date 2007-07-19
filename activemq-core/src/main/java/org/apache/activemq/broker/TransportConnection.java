@@ -658,6 +658,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
         context.setClientId(clientId);
         context.setUserName(info.getUserName());
         context.setConnectionId(info.getConnectionId());
+        context.setClientMaster(info.isClientMaster());
         context.setWireFormatInfo(wireFormatInfo);
         context.setNetworkConnection(networkConnection);
         context.incrementReference();
@@ -1199,18 +1200,19 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
         }
     }
     
-	protected void disposeTransport() {
-    	if( transportDisposed.compareAndSet(false, true) ) {
-        try {
-			transport.stop();
-			active = false;
-			log.debug("Stopped connection: "+transport.getRemoteAddress());
-		} catch (Exception e) {
-			log.debug("Could not stop transport: "+e,e);
-		}
-    	}
-	}
-	
+	protected void disposeTransport(){
+        if(transportDisposed.compareAndSet(false,true)){
+            try{
+                transport.stop();
+                active=false;
+                log.debug("Stopped connection: "+transport.getRemoteAddress());
+            }catch(Exception e){
+                log.debug("Could not stop transport: "+e,e);
+            }
+        }
+    }
+    
+   	
 	public int getProtocolVersion() {
 		return protocolVersion.get();
 	}

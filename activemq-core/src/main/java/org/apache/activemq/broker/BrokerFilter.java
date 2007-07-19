@@ -200,11 +200,7 @@ public class BrokerFilter implements Broker {
     public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception{
         next.processDispatchNotification(messageDispatchNotification);
     }
-    
-    public boolean isSlaveBroker(){
-        return next.isSlaveBroker();
-    }
-    
+        
     public boolean isStopped(){
         return next.isStopped();
     }

@@ -74,7 +74,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         // The slave should not deliver pull messages. TODO: when the slave becomes a master,
         // He should send a NULL message to all the consumers to 'wake them up' in case
         // they were waiting for a message.
-        if(getPrefetchSize()==0&&!isSlaveBroker()){
+        if(getPrefetchSize()==0&&!isSlave()){
             prefetchExtension++;
             final long dispatchCounterBeforePull=dispatchCounter;
             dispatchMatched();
@@ -119,7 +119,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         pendingEmpty=pending.isEmpty();
         enqueueCounter++;
        
-        if(!isFull()&&pendingEmpty&&!broker.isSlaveBroker()){
+        if(!isFull()&&pendingEmpty&&!isSlave()){
             dispatch(node);
         }else{
             optimizePrefetch();
@@ -260,7 +260,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
         if(callDispatchMatched){
             dispatchMatched();
         }else{
-            if(isSlaveBroker()){
+            if(isSlave()){
                 throw new JMSException("Slave broker out of sync with master: Acknowledgment ("+ack
                         +") was not in the dispatch list: "+dispatched);
             }else{
@@ -295,7 +295,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
      * @return
      */
     protected synchronized boolean isFull(){
-        return isSlaveBroker()||dispatched.size()-prefetchExtension>=info.getPrefetchSize();
+        return isSlave()||dispatched.size()-prefetchExtension>=info.getPrefetchSize();
     }
 
     /**
@@ -377,7 +377,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
     }
 
     protected synchronized void dispatchMatched() throws IOException{
-        if(!broker.isSlaveBroker()){
+        if(!isSlave()){
             try{
                 int numberToDispatch=countBeforeFull();
                 if(numberToDispatch>0){
@@ -412,7 +412,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
             return false;
         }
         // Make sure we can dispatch a message.
-        if(canDispatch(node)&&!isSlaveBroker()){
+        if(canDispatch(node)&&!isSlave()){
             MessageDispatch md=createMessageDispatch(node,message);
             // NULL messages don't count... they don't get Acked.
             if(node!=QueueMessageReference.NULL_MESSAGE){

@@ -111,7 +111,7 @@ public interface Subscription extends SubscriptionRecovery {
     /**
      * @return true if the broker is currently in slave mode
      */
-    boolean isSlaveBroker();
+    boolean isSlave();
     
     /**
      * @return number of messages pending delivery

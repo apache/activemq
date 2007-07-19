@@ -36,7 +36,7 @@ public class ConnectionInfo extends BaseCommand {
     protected BrokerId[] brokerPath;
     protected boolean brokerMasterConnector;
     protected boolean manageable;
-    protected boolean clientMaster;
+    protected boolean clientMaster=true;
     protected transient Object transportContext; 
     
     public ConnectionInfo() {        

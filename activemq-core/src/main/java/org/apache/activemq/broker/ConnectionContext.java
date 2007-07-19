@@ -59,6 +59,7 @@ public class ConnectionContext {
     private final AtomicBoolean stopping = new AtomicBoolean();
     private final MessageEvaluationContext messageEvaluationContext = new MessageEvaluationContext();
 	private boolean dontSendReponse;
+    private boolean clientMaster=true;
     
     public ConnectionContext() {
     }
@@ -267,6 +268,29 @@ public class ConnectionContext {
 
 	public boolean isDontSendReponse() {
 		return dontSendReponse;
-	}	
-	
+	}
+
+    
+    /**
+     * @return the slave
+     */
+    public boolean isSlave(){
+        return (this.broker!=null&&this.broker.getBrokerService().isSlave())||!this.clientMaster;
+    }
+
+    
+    /**
+     * @return the clientMaster
+     */
+    public boolean isClientMaster(){
+        return this.clientMaster;
+    }
+
+    
+    /**
+     * @param clientMaster the clientMaster to set
+     */
+    public void setClientMaster(boolean clientMaster){
+        this.clientMaster=clientMaster;
+    }	
 }

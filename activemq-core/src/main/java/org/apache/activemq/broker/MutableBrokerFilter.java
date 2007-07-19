@@ -209,10 +209,7 @@ public class MutableBrokerFilter implements Broker {
         getNext().processDispatchNotification(messageDispatchNotification);
     }
     
-    public boolean isSlaveBroker(){
-        return getNext().isSlaveBroker();
-    }
-    
+       
     public boolean isStopped(){
         return getNext().isStopped();
     }
