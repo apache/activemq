@@ -22,14 +22,10 @@ import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.*;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.activemq.transport.stomp.Stomp;
 
 import javax.jms.*;
 import javax.jms.Connection;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.net.URI;
@@ -40,8 +36,7 @@ public class StompTest extends CombinationTestSupport {
 
     private BrokerService broker;
     private TransportConnector connector;
-    private Socket stompSocket;
-    private ByteArrayOutputStream inputBuffer;
+    private StompConnection stompConnection = new StompConnection();
     private Connection connection;
     private Session session;
     private ActiveMQQueue queue;
@@ -55,8 +50,7 @@ public class StompTest extends CombinationTestSupport {
         broker.start();
 
         URI connectUri = connector.getConnectUri();
-        stompSocket = createSocket(connectUri);
-        inputBuffer = new ByteArrayOutputStream();
+        stompConnection.open("127.0.0.1", connectUri.getPort());
 
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost");
         connection = cf.createConnection();
@@ -66,7 +60,7 @@ public class StompTest extends CombinationTestSupport {
     }
 
     protected Socket createSocket(URI connectUri) throws IOException {
-        return new Socket("127.0.0.1", connectUri.getPort());
+        return new Socket();
     }
 
     protected String getQueueName() {
@@ -75,42 +69,9 @@ public class StompTest extends CombinationTestSupport {
 
     protected void tearDown() throws Exception {
         connection.close();
-        if (stompSocket != null) {
-            stompSocket.close();
-        }
+        stompConnection.close();
         broker.stop();
     }
-
-    public void sendFrame(String data) throws Exception {
-        byte[] bytes = data.getBytes("UTF-8");
-        OutputStream outputStream = stompSocket.getOutputStream();
-        for (int i = 0; i < bytes.length; i++) {
-            outputStream.write(bytes[i]);
-        }
-        outputStream.flush();
-    }
-
-    public String receiveFrame(long timeOut) throws Exception {
-        stompSocket.setSoTimeout((int) timeOut);
-        InputStream is = stompSocket.getInputStream();
-        int c=0;
-        for(;;) {
-            c = is.read();
-            if( c < 0 ) {
-                throw new IOException("socket closed.");
-            } else if( c == 0 ) {
-                c = is.read();
-                assertEquals("Expecting stomp frame to terminate with \0\n", c, '\n');
-                byte[] ba = inputBuffer.toByteArray();
-                inputBuffer.reset();
-                return new String(ba, "UTF-8");
-            } else {
-                inputBuffer.write(c);
-            }
-        }
-    }
-
-
 
     public void sendMessage(String msg) throws Exception {
         sendMessage(msg, "foo", "xyz");
@@ -128,15 +89,14 @@ public class StompTest extends CombinationTestSupport {
         BytesMessage message = session.createBytesMessage();
         message.writeBytes(msg);
         producer.send(message);
-
     }
 
     public void testConnect() throws Exception {
 
         String connect_frame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n" + "request-id: 1\n" + "\n" + Stomp.NULL;
-        sendFrame(connect_frame);
+        stompConnection.sendFrame(connect_frame);
 
-        String f = receiveFrame(10000);
+        String f = stompConnection.receiveFrame();
         assertTrue(f.startsWith("CONNECTED"));
         assertTrue(f.indexOf("response-id:1") >= 0);
 
@@ -151,9 +111,9 @@ public class StompTest extends CombinationTestSupport {
             "login: brianm\n" +
             "passcode: wombats\n\n"+
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
-        frame = receiveFrame(10000);
+        frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
 
         frame =
@@ -162,7 +122,7 @@ public class StompTest extends CombinationTestSupport {
             "Hello World" +
             Stomp.NULL;
 
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
         TextMessage message = (TextMessage) consumer.receive(1000);
         assertNotNull(message);
@@ -184,9 +144,9 @@ public class StompTest extends CombinationTestSupport {
             "login: brianm\n" +
             "passcode: wombats\n\n"+
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
-        frame = receiveFrame(10000);
+        frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
 
         frame =
@@ -196,7 +156,7 @@ public class StompTest extends CombinationTestSupport {
             "Hello World" +
             Stomp.NULL;
 
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
         TextMessage message = (TextMessage) consumer.receive(1000);
         assertNotNull(message);
@@ -213,9 +173,9 @@ public class StompTest extends CombinationTestSupport {
             "login: brianm\n" +
             "passcode: wombats\n\n"+
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
-        frame = receiveFrame(10000);
+        frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
 
         frame =
@@ -226,7 +186,7 @@ public class StompTest extends CombinationTestSupport {
             "Hello World" +
             Stomp.NULL;
 
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
         TextMessage message = (TextMessage) consumer.receive(1000);
         assertNotNull(message);
@@ -244,9 +204,9 @@ public class StompTest extends CombinationTestSupport {
             "login: brianm\n" +
             "passcode: wombats\n\n"+
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
-        frame = receiveFrame(10000);
+        frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
 
         frame =
@@ -261,7 +221,7 @@ public class StompTest extends CombinationTestSupport {
             "Hello World" +
             Stomp.NULL;
 
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
         TextMessage message = (TextMessage) consumer.receive(1000);
         assertNotNull(message);
@@ -284,9 +244,9 @@ public class StompTest extends CombinationTestSupport {
             "login: brianm\n" +
             "passcode: wombats\n\n"+
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
-        frame = receiveFrame(100000);
+        frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
 
         frame =
@@ -294,18 +254,18 @@ public class StompTest extends CombinationTestSupport {
             "destination:/queue/" + getQueueName() + "\n" +
             "ack:auto\n\n" +
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
         sendMessage(getName());
 
-        frame = receiveFrame(10000);
+        frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("MESSAGE"));
 
         frame =
             "DISCONNECT\n" +
             "\n\n"+
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
     }
 
         public void testSubscribeWithAutoAckAndBytesMessage() throws Exception {
@@ -315,9 +275,9 @@ public class StompTest extends CombinationTestSupport {
             "login: brianm\n" +
             "passcode: wombats\n\n"+
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
-        frame = receiveFrame(100000);
+        frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
 
         frame =
@@ -325,11 +285,11 @@ public class StompTest extends CombinationTestSupport {
             "destination:/queue/" + getQueueName() + "\n" +
             "ack:auto\n\n" +
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
         sendBytesMessage(new byte[] {1,2,3,4,5});
 
-        frame = receiveFrame(10000);
+        frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("MESSAGE"));
 
         Pattern cl = Pattern.compile("Content-length:\\s*(\\d+)", Pattern.CASE_INSENSITIVE);
@@ -343,7 +303,7 @@ public class StompTest extends CombinationTestSupport {
             "DISCONNECT\n" +
             "\n\n"+
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
     }
 
     public void testSubscribeWithMessageSentWithProperties() throws Exception {
@@ -353,9 +313,9 @@ public class StompTest extends CombinationTestSupport {
             "login: brianm\n" +
             "passcode: wombats\n\n"+
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
-        frame = receiveFrame(100000);
+        frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
 
         frame =
@@ -363,7 +323,7 @@ public class StompTest extends CombinationTestSupport {
             "destination:/queue/" + getQueueName() + "\n" +
             "ack:auto\n\n" +
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
 
         MessageProducer producer = session.createProducer(queue);
@@ -378,7 +338,7 @@ public class StompTest extends CombinationTestSupport {
         message.setShortProperty("s", (short) 12);
         producer.send(message);
 
-        frame = receiveFrame(10000);
+        frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("MESSAGE"));
 
 //        System.out.println("out: "+frame);
@@ -387,7 +347,7 @@ public class StompTest extends CombinationTestSupport {
             "DISCONNECT\n" +
             "\n\n"+
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
     }
 
     public void testMessagesAreInOrder() throws Exception {
@@ -399,9 +359,9 @@ public class StompTest extends CombinationTestSupport {
                 "login: brianm\n" +
                 "passcode: wombats\n\n" +
                 Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
-        frame = receiveFrame(100000);
+        frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
 
         frame =
@@ -409,7 +369,7 @@ public class StompTest extends CombinationTestSupport {
                 "destination:/queue/" + getQueueName() + "\n" +
                 "ack:auto\n\n" +
                 Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
         for (int i = 0; i < ctr; ++i) {
             data[i] = getName() + i;
@@ -417,7 +377,7 @@ public class StompTest extends CombinationTestSupport {
         }
 
         for (int i = 0; i < ctr; ++i) {
-            frame = receiveFrame(1000);
+            frame = stompConnection.receiveFrame();
             assertTrue("Message not in order", frame.indexOf(data[i]) >=0 );
         }
 
@@ -430,7 +390,7 @@ public class StompTest extends CombinationTestSupport {
         }
 
         for (int i = 0; i < ctr; ++i) {
-            frame = receiveFrame(1000);
+            frame = stompConnection.receiveFrame();
             assertTrue("Message not in order", frame.indexOf(data[i]) >=0 );
         }
 
@@ -438,7 +398,7 @@ public class StompTest extends CombinationTestSupport {
                 "DISCONNECT\n" +
                 "\n\n" +
                 Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
     }
 
 
@@ -449,9 +409,9 @@ public class StompTest extends CombinationTestSupport {
             "login: brianm\n" +
             "passcode: wombats\n\n"+
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
-        frame = receiveFrame(100000);
+        frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
 
         frame =
@@ -460,12 +420,12 @@ public class StompTest extends CombinationTestSupport {
             "selector: foo = 'zzz'\n" +
             "ack:auto\n\n" +
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
         sendMessage("Ignored message", "foo", "1234");
         sendMessage("Real message", "foo", "zzz");
 
-        frame = receiveFrame(10000);
+        frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("MESSAGE"));
         assertTrue("Should have received the real message but got: " + frame, frame.indexOf("Real message") > 0);
 
@@ -473,7 +433,7 @@ public class StompTest extends CombinationTestSupport {
             "DISCONNECT\n" +
             "\n\n"+
             Stomp.NULL;
-       sendFrame(frame);
+       stompConnection.sendFrame(frame);
     }
 
 
@@ -484,9 +444,9 @@ public class StompTest extends CombinationTestSupport {
             "login: brianm\n" +
             "passcode: wombats\n\n"+
             Stomp.NULL;
-       sendFrame(frame);
+       stompConnection.sendFrame(frame);
 
-       frame = receiveFrame(10000);
+       frame = stompConnection.receiveFrame();
        assertTrue(frame.startsWith("CONNECTED"));
 
 
@@ -497,25 +457,22 @@ public class StompTest extends CombinationTestSupport {
             Stomp.NULL;
 
 
-       sendFrame(frame);
+       stompConnection.sendFrame(frame);
        sendMessage(getName());
-       frame = receiveFrame(10000);
+       frame = stompConnection.receiveFrame();
        assertTrue(frame.startsWith("MESSAGE"));
 
        frame =
             "DISCONNECT\n" +
             "\n\n"+
             Stomp.NULL;
-       sendFrame(frame);
+       stompConnection.sendFrame(frame);
 
        // message should be received since message was not acknowledged
        MessageConsumer consumer = session.createConsumer(queue);
        TextMessage message = (TextMessage) consumer.receive(1000);
        assertNotNull(message);
        assertTrue(message.getJMSRedelivered());
-
-
-
     }
 
     public void testUnsubscribe() throws Exception {
@@ -525,8 +482,8 @@ public class StompTest extends CombinationTestSupport {
             "login: brianm\n" +
             "passcode: wombats\n\n"+
             Stomp.NULL;
-        sendFrame(frame);
-        frame = receiveFrame(100000);
+        stompConnection.sendFrame(frame);
+        frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
 
         frame =
@@ -534,14 +491,13 @@ public class StompTest extends CombinationTestSupport {
             "destination:/queue/" + getQueueName() + "\n" +
             "ack:auto\n\n" +
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
         //send a message to our queue
         sendMessage("first message");
 
-
         //receive message from socket
-        frame = receiveFrame(1000);
+        frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("MESSAGE"));
 
         //remove suscription
@@ -550,7 +506,7 @@ public class StompTest extends CombinationTestSupport {
             "destination:/queue/" + getQueueName() + "\n" +
             "\n\n" +
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
         waitForFrameToTakeEffect();
 
@@ -559,7 +515,7 @@ public class StompTest extends CombinationTestSupport {
 
 
         try {
-            frame = receiveFrame(1000);
+            frame = stompConnection.receiveFrame();
             log.info("Received frame: " + frame);
             fail("No message should have been received since subscription was removed");
         }catch (SocketTimeoutException e){
@@ -577,9 +533,9 @@ public class StompTest extends CombinationTestSupport {
             "login: brianm\n" +
             "passcode: wombats\n\n"+
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
-        String f = receiveFrame(1000);
+        String f = stompConnection.receiveFrame();
         assertTrue(f.startsWith("CONNECTED"));
 
         frame =
@@ -587,7 +543,7 @@ public class StompTest extends CombinationTestSupport {
             "transaction: tx1\n" +
             "\n\n" +
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
         frame =
             "SEND\n" +
@@ -596,14 +552,14 @@ public class StompTest extends CombinationTestSupport {
             "\n\n" +
             "Hello World" +
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
         frame =
             "COMMIT\n" +
             "transaction: tx1\n" +
             "\n\n" +
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
         waitForFrameToTakeEffect();
 
@@ -619,9 +575,9 @@ public class StompTest extends CombinationTestSupport {
             "login: brianm\n" +
             "passcode: wombats\n\n"+
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
-        String f = receiveFrame(1000);
+        String f = stompConnection.receiveFrame();
         assertTrue(f.startsWith("CONNECTED"));
 
         frame =
@@ -629,7 +585,7 @@ public class StompTest extends CombinationTestSupport {
             "transaction: tx1\n" +
             "\n\n" +
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
         frame =
             "SEND\n" +
@@ -638,7 +594,7 @@ public class StompTest extends CombinationTestSupport {
             "\n" +
             "first message" +
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
         //rollback first message
         frame =
@@ -646,14 +602,14 @@ public class StompTest extends CombinationTestSupport {
             "transaction: tx1\n" +
             "\n\n" +
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
         frame =
             "BEGIN\n" +
             "transaction: tx1\n" +
             "\n\n" +
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
         frame =
             "SEND\n" +
@@ -662,14 +618,14 @@ public class StompTest extends CombinationTestSupport {
             "\n" +
             "second message" +
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
         frame =
             "COMMIT\n" +
             "transaction: tx1\n" +
             "\n\n" +
             Stomp.NULL;
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
         // This test case is currently failing
         waitForFrameToTakeEffect();
@@ -688,16 +644,15 @@ public class StompTest extends CombinationTestSupport {
             "passcode: wombats\n\n"+
             Stomp.NULL;
 
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
 
         // This test case is currently failing
         waitForFrameToTakeEffect();
 
         assertClients(2);
 
-        // now lets kill the socket
-        stompSocket.close();
-        stompSocket = null;
+        // now lets kill the stomp connection
+        stompConnection.close();
 
         Thread.sleep(2000);
 

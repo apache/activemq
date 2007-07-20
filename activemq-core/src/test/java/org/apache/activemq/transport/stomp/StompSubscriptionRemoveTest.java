@@ -18,13 +18,9 @@
 package org.apache.activemq.transport.stomp;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
 
 import javax.jms.Connection;
 import javax.jms.Message;
@@ -45,10 +41,11 @@ import org.apache.commons.logging.LogFactory;
  */
 public class StompSubscriptionRemoveTest extends TestCase {
     private static final Log log = LogFactory.getLog(StompSubscriptionRemoveTest.class);
+    private static final String COMMAND_MESSAGE = "MESSAGE";
+    private static final String HEADER_MESSAGE_ID = "message-id";
+    private static final int STOMP_PORT = 61613;
 
-    private Socket stompSocket;
-    private ByteArrayOutputStream inputBuffer;
-
+    private StompConnection stompConnection = new StompConnection();
     
     public void testRemoveSubscriber() throws Exception {
         BrokerService broker = new BrokerService();
@@ -68,104 +65,64 @@ public class StompSubscriptionRemoveTest extends TestCase {
             log.debug("Sending: " + idx);
         }
         producer.close();
-        // consumer.close();
         session.close();
         connection.close();
 
-        stompSocket = new Socket("localhost", 61613);
-        inputBuffer = new ByteArrayOutputStream();
+        stompConnection.open("localhost", STOMP_PORT);
 
         String connect_frame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n" + "\n";
-        sendFrame(connect_frame);
+        stompConnection.sendFrame(connect_frame);
 
-        String f = receiveFrame(100000);
+        stompConnection.receiveFrame();
         String frame = "SUBSCRIBE\n" + "destination:/queue/" + getDestinationName() + "\n" + "ack:client\n\n";
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
+        
         int messagesCount = 0;
         int count = 0;
         while (count < 2) {
-            String receiveFrame = receiveFrame(10000);
-            DataInput input = new DataInputStream(new ByteArrayInputStream(receiveFrame.getBytes()));
-            String line;
-            while (true) {
-                line = input.readLine();
-                if (line == null) {
-                    throw new IOException("connection was closed");
-                }
-                else {
-                    line = line.trim();
-                    if (line.length() > 0) {
-                        break;
-                    }
-                }
-            }
-            line = input.readLine();
-            if (line == null) {
-                throw new IOException("connection was closed");
-            }
-            String messageId = line.substring(line.indexOf(':') + 1);
-            messageId = messageId.trim();
-            String ackmessage = "ACK\n" + "message-id:" + messageId + "\n\n";
-            sendFrame(ackmessage);
-            log.debug(receiveFrame);
-            //Thread.sleep(1000);
+            String receiveFrame = stompConnection.receiveFrame();
+            log.debug("Received: " + receiveFrame);
+            assertEquals("Unexpected frame received", COMMAND_MESSAGE, getCommand(receiveFrame));
+            String messageId = getHeaderValue(receiveFrame, HEADER_MESSAGE_ID);
+            String ackmessage = "ACK\n" + HEADER_MESSAGE_ID + ":" + messageId + "\n\n";
+            stompConnection.sendFrame(ackmessage);
+            // Thread.sleep(1000);
             ++messagesCount;
             ++count;
         }
 
-        sendFrame("DISCONNECT\n\n");
+        stompConnection.sendFrame("DISCONNECT\n\n");
         Thread.sleep(1000);
-        stompSocket.close();
+        stompConnection.close();
 
-        stompSocket = new Socket("localhost", 61613);
-        inputBuffer = new ByteArrayOutputStream();
+        stompConnection.open("localhost", STOMP_PORT);
 
         connect_frame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n" + "\n";
-        sendFrame(connect_frame);
+        stompConnection.sendFrame(connect_frame);
 
-        f = receiveFrame(5000);
+        stompConnection.receiveFrame();
 
         frame = "SUBSCRIBE\n" + "destination:/queue/" + getDestinationName() + "\n" + "ack:client\n\n";
-        sendFrame(frame);
+        stompConnection.sendFrame(frame);
         try {
             while (count != 2000) {
-                String receiveFrame = receiveFrame(5000);
-                DataInput input = new DataInputStream(new ByteArrayInputStream(receiveFrame.getBytes()));
-                String line;
-                while (true) {
-                    line = input.readLine();
-                    if (line == null) {
-                        throw new IOException("connection was closed");
-                    }
-                    else {
-                        line = line.trim();
-                        if (line.length() > 0) {
-                            break;
-                        }
-                    }
-                }
-
-                line = input.readLine();
-                if (line == null) {
-                    throw new IOException("connection was closed");
-                }
-                String messageId = line.substring(line.indexOf(':') + 1);
-                messageId = messageId.trim();
-                String ackmessage = "ACK\n" + "message-id:" + messageId + "\n\n";
-                sendFrame(ackmessage);
+                String receiveFrame = stompConnection.receiveFrame();
                 log.debug("Received: " + receiveFrame);
+                assertEquals("Unexpected frame received", COMMAND_MESSAGE, getCommand(receiveFrame));
+                String messageId = getHeaderValue(receiveFrame, HEADER_MESSAGE_ID);
+                String ackmessage = "ACK\n" + HEADER_MESSAGE_ID + ":" + messageId.trim() + "\n\n";
+                stompConnection.sendFrame(ackmessage);
                 //Thread.sleep(1000);
                 ++messagesCount;
                 ++count;
             }
-
         }
         catch (IOException ex) {
             ex.printStackTrace();
         }
 
-        sendFrame("DISCONNECT\n\n");
-        stompSocket.close();
+        stompConnection.sendFrame("DISCONNECT\n\n");
+        stompConnection.close();
         broker.stop();
 
         log.info("Total messages received: " + messagesCount);
@@ -178,36 +135,35 @@ public class StompSubscriptionRemoveTest extends TestCase {
         // Subscription without any connections
     }
 
-    public void sendFrame(String data) throws Exception {
-        byte[] bytes = data.getBytes("UTF-8");
-        OutputStream outputStream = stompSocket.getOutputStream();
-        outputStream.write(bytes);
-        outputStream.write(0);
-        outputStream.flush();
-    }
-
-    public String receiveFrame(long timeOut) throws Exception {
-        stompSocket.setSoTimeout((int) timeOut);
-        InputStream is = stompSocket.getInputStream();
-        int c = 0;
-        for (;;) {
-            c = is.read();
-            if (c < 0) {
-                throw new IOException("socket closed.");
-            }
-            else if (c == 0) {
-                c = is.read();
-                byte[] ba = inputBuffer.toByteArray();
-                inputBuffer.reset();
-                return new String(ba, "UTF-8");
-            }
-            else {
-                inputBuffer.write(c);
-            }
-        }
-    }
-
     protected String getDestinationName() {
         return getClass().getName() + "." + getName();
+    }
+
+    // These two methods could move to a utility class
+    protected String getCommand(String frame) {
+    	return frame.substring(0, frame.indexOf('\n') + 1).trim();
+    }
+
+    protected String getHeaderValue (String frame, String header) throws IOException {
+        DataInput input = new DataInputStream(new ByteArrayInputStream(frame.getBytes()));
+        String line;
+        for (int idx = 0; /*forever, sort of*/; ++idx) {
+            line = input.readLine();
+            if (line == null) {
+            	// end of message, no headers
+            	return null;
+            } 
+            line = line.trim();
+            if (line.length() == 0) {
+            	// start body, no headers from here on
+            	return null;
+            } 
+            if (idx > 0) {     // Ignore command line
+            	int pos = line.indexOf(':');
+            	if (header.equals(line.substring(0, pos))) {
+            		return line.substring(pos + 1).trim();
+            	}
+            }
+        }
     }
 }
