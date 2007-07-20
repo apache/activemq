@@ -103,12 +103,7 @@ public class TopicSubscription extends AbstractSubscription{
                             int messagesToEvict=oldMessages.length;
                             for(int i=0;i<messagesToEvict;i++){
                                 MessageReference oldMessage=oldMessages[i];
-                                oldMessage.decrementReferenceCount();
-                                matched.remove(oldMessage);
-                                discarded++;
-                                if(log.isDebugEnabled()){
-                                    log.debug("Discarding message "+oldMessages[i]);
-                                }
+                                discard(oldMessage);
                             }
                             // lets avoid an infinite loop if we are given a bad eviction strategy
                             // for a bad strategy lets just not evict
@@ -138,6 +133,7 @@ public class TopicSubscription extends AbstractSubscription{
                     matched.remove();
                     dispatchedCounter.incrementAndGet();
                     node.decrementReferenceCount();
+                    broker.messageExpired(getContext(),node);
                     break;
                 }
             }
@@ -367,6 +363,8 @@ public class TopicSubscription extends AbstractSubscription{
                     // waiting for the consumer to ak the message.
                     if(message.isExpired()){
                         message.decrementReferenceCount();
+                        broker.messageExpired(getContext(),message);
+                        dequeueCounter.incrementAndGet();
                         continue; // just drop it.
                     }
                     dispatch(message);
@@ -409,6 +407,17 @@ public class TopicSubscription extends AbstractSubscription{
             node.getRegionDestination().getDestinationStatistics().getDispatched().increment();
             node.decrementReferenceCount();
         }
+    }
+    
+    private void discard(MessageReference message) {
+        message.decrementReferenceCount();
+        matched.remove(message);
+        discarded++;
+        dequeueCounter.incrementAndGet();
+        if(log.isDebugEnabled()){
+            log.debug("Discarding message "+message);
+        }
+        broker.getRoot().sendToDeadLetterQueue(getContext(),message);
     }
 
     public String toString(){

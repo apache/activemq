@@ -64,6 +64,13 @@ public class AdvisorySupport {
             return new ActiveMQTopic(TOPIC_PRODUCER_ADVISORY_TOPIC_PREFIX+destination.getPhysicalName());
     }
     
+    public static ActiveMQTopic getExpiredMessageTopic(ActiveMQDestination destination) {
+        if (destination.isQueue()) {
+            return getExpiredQueueMessageAdvisoryTopic(destination);
+        }
+        return getExpiredTopicMessageAdvisoryTopic(destination);
+    }
+    
     public static ActiveMQTopic getExpiredTopicMessageAdvisoryTopic(ActiveMQDestination destination) {
         String name = EXPIRED_TOPIC_MESSAGES_TOPIC_PREFIX+destination.getPhysicalName();
         return new ActiveMQTopic(name);

@@ -21,10 +21,9 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
-import org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
@@ -245,4 +244,16 @@ public class ErrorBroker implements Broker {
     public BrokerService getBrokerService(){
         throw new BrokerStoppedException(this.message);
     }
+
+    public void messageExpired(ConnectionContext context,MessageReference message){
+       throw new BrokerStoppedException(this.message);        
+    }
+
+    public void sendToDeadLetterQueue(ConnectionContext context,MessageReference messageReference){
+       throw new BrokerStoppedException(this.message); 
+    }
+    
+    public Broker getRoot(){
+        throw new BrokerStoppedException(this.message);
+     }
 }

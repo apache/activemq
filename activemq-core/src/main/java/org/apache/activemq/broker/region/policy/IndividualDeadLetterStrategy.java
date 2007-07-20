@@ -29,7 +29,7 @@ import org.apache.activemq.command.ActiveMQTopic;
  * 
  * @version $Revision$
  */
-public class IndividualDeadLetterStrategy implements DeadLetterStrategy {
+public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
 
     private String topicPrefix = "ActiveMQ.DLQ.Topic.";
     private String queuePrefix = "ActiveMQ.DLQ.Queue.";

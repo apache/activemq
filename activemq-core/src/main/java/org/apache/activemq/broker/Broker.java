@@ -20,19 +20,15 @@ package org.apache.activemq.broker;
 import java.net.URI;
 import java.util.Set;
 import org.apache.activemq.Service;
-import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Region;
-import org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.MessageDispatch;
-import org.apache.activemq.command.MessageDispatchNotification;
-import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.ProducerInfo;
-import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.kaha.Store;
@@ -135,6 +131,8 @@ public interface Broker extends Region, Service {
     
     /**
      * Gets a list of all the prepared xa transactions.
+     * @param context transaction ids
+     * @return 
      * @throws Exception TODO
      */
     public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Exception;
@@ -151,7 +149,7 @@ public interface Broker extends Region, Service {
      * Prepares a transaction. Only valid for xa transactions.
      * @param context
      * @param xid
-     * @return
+     * @return id
      * @throws Exception TODO
      */
     public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception;
@@ -176,6 +174,9 @@ public interface Broker extends Region, Service {
 
     /**
      * Forgets a transaction.
+     * @param context 
+     * @param transactionId 
+     * @throws Exception 
      */
     public void forgetTransaction(ConnectionContext context, TransactionId transactionId) throws Exception;
     
@@ -246,7 +247,35 @@ public interface Broker extends Region, Service {
      */
     public URI getVmConnectorURI();
     
+    /**
+     * called when the brokerService starts
+     */
     public void brokerServiceStarted();
     
+    /**
+     * @return the BrokerService
+     */
     BrokerService getBrokerService();
+    
+    /**
+     * Ensure we get the Broker at the top of the Stack
+     * @return the broker at the top of the Stack
+     */
+    Broker getRoot();
+    
+    /**
+     * A Message has Expired
+     * @param context
+     * @param messageReference
+     * @throws Exception 
+     */
+    public void messageExpired(ConnectionContext context, MessageReference messageReference);
+    
+    /**
+     * A message needs to go the a DLQ
+     * @param context
+     * @param messageReference
+     * @throws Exception
+     */
+    public void sendToDeadLetterQueue(ConnectionContext context,MessageReference messageReference);
 }

@@ -332,14 +332,15 @@ abstract public class AbstractRegion implements Region {
                     // Try to auto create the destination... re-invoke broker from the
                     // top so that the proper security checks are performed.
                     try {
+                        
+                        context.getBroker().addDestination(context,destination);
                         dest = addDestination(context, destination);
-                        //context.getBroker().addDestination(context,destination);
                     }
                     catch (DestinationAlreadyExistsException e) {
                         // if the destination already exists then lets ignore this error
                     }
                     // We should now have the dest created.
-                    //dest=(Destination) destinations.get(destination);
+                    dest=(Destination) destinations.get(destination);
                 }
                 if(dest==null){
                     throw new JMSException("The destination "+destination+" does not exist.");

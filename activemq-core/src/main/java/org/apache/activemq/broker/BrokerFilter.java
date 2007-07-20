@@ -17,9 +17,12 @@
  */
 package org.apache.activemq.broker;
 
+import java.net.URI;
+import java.util.Map;
+import java.util.Set;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
-import org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
@@ -37,10 +40,6 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.kaha.Store;
-
-import java.net.URI;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Allows you to intercept broker operation so that features such as security can be 
@@ -245,5 +244,17 @@ public class BrokerFilter implements Broker {
     
     public BrokerService getBrokerService(){
         return next.getBrokerService();
+    }
+
+    public void messageExpired(ConnectionContext context,MessageReference message){
+        next.messageExpired(context,message); 
+    }
+
+    public void sendToDeadLetterQueue(ConnectionContext context,MessageReference messageReference){
+       next.sendToDeadLetterQueue(context,messageReference);       
+    }
+
+    public Broker getRoot() {
+       return next.getRoot();
     }
 }

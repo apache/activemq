@@ -18,6 +18,7 @@
 package org.apache.activemq.broker.region.policy;
 
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.Message;
 
 /**
  * A strategy for choosing which destination is used for dead letter queue messages.
@@ -25,6 +26,14 @@ import org.apache.activemq.command.ActiveMQDestination;
  * @version $Revision$
  */
 public interface DeadLetterStrategy {
+    
+    /**
+     * Allow pluggable strategy for deciding if message should be sent to a dead letter queue
+     * for example, you might not want to ignore expired or non-persistent messages
+     * @param message
+     * @return true if message should be sent to a dead letter queue
+     */
+    public boolean isSendToDeadLetterQueue(Message message);
 
     /**
      * Returns the dead letter queue for the given destination.
