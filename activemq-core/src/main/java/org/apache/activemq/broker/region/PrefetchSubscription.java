@@ -276,17 +276,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
      * @throws Exception
      */
     protected void sendToDLQ(final ConnectionContext context,final MessageReference node) throws IOException,Exception{
-        // Send the message to the DLQ
-        Message message=node.getMessage();
-        if(message!=null){
-            // The original destination and transaction id do not get filled when the message is first
-            // sent,
-            // it is only populated if the message is routed to another destination like the DLQ
-            DeadLetterStrategy deadLetterStrategy=node.getRegionDestination().getDeadLetterStrategy();
-            ActiveMQDestination deadLetterDestination=deadLetterStrategy
-                    .getDeadLetterQueueFor(message.getDestination());
-            BrokerSupport.resend(context,message,deadLetterDestination);
-        }
+        broker.sendToDeadLetterQueue(context,node);
     }
 
     /**
@@ -393,7 +383,9 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                             // Message may have been sitting in the pending list a while
                             // waiting for the consumer to ak the message.
                             if(node!=QueueMessageReference.NULL_MESSAGE&&node.isExpired()){
-                                continue; // just drop it.
+                                broker.messageExpired(getContext(),node);
+                                dequeueCounter++;
+                                continue;
                             }
                             dispatch(node);
                             count++;

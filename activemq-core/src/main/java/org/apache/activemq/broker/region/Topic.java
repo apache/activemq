@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import org.apache.activemq.advisory.AdvisorySupport;
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
@@ -72,10 +73,11 @@ public class Topic implements Destination {
     private boolean sendAdvisoryIfNoConsumers;
     private DeadLetterStrategy deadLetterStrategy = new SharedDeadLetterStrategy();
     private final ConcurrentHashMap durableSubcribers = new ConcurrentHashMap();
+    final Broker broker;
     
-    public Topic(ActiveMQDestination destination, TopicMessageStore store, UsageManager memoryManager, DestinationStatistics parentStats,
+    public Topic(Broker broker,ActiveMQDestination destination, TopicMessageStore store, UsageManager memoryManager, DestinationStatistics parentStats,
             TaskRunnerFactory taskFactory) {
-
+        this.broker=broker;
         this.destination = destination;
         this.store = store; //this could be NULL! (If an advsiory)
         this.usageManager = new UsageManager(memoryManager,destination.toString());
@@ -261,9 +263,8 @@ public class Topic implements Destination {
     	// There is delay between the client sending it and it arriving at the
     	// destination.. it may have expired.
     	if( message.isExpired() ) {
-            if (log.isDebugEnabled()) {
-                log.debug("Expired message: " + message);
-            }
+            broker.messageExpired(context,message);
+            destinationStatistics.getMessages().decrement();
             if( ( !message.isResponseRequired() || producerExchange.getProducerState().getInfo().getWindowSize() > 0 ) && !context.isInRecoveryMode() ) {
         		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
 				context.getConnection().dispatchAsync(ack);	    	            	        		
@@ -285,9 +286,8 @@ public class Topic implements Destination {
         					
         					// While waiting for space to free up... the message may have expired.
         			        if(message.isExpired()){
-        			            if (log.isDebugEnabled()) {
-        			                log.debug("Expired message: " + message);
-        			            }
+        			            broker.messageExpired(context,message);
+                                destinationStatistics.getMessages().decrement();
         			            
         			            if( !message.isResponseRequired() && !context.isInRecoveryMode() ) {
         			        		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
@@ -357,7 +357,9 @@ public class Topic implements Destination {
                     	// It could take while before we receive the commit
                     	// operration.. by that time the message could have expired..
                     	if( message.isExpired() ) {
-                    		// TODO: remove message from store.
+                    		broker.messageExpired(context,message);
+                            message.decrementReferenceCount();
+                            destinationStatistics.getMessages().decrement();
                     		return;
                     	}
                         dispatch(context, message);

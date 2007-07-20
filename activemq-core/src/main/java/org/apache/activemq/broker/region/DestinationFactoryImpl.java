@@ -42,118 +42,121 @@ import org.apache.activemq.thread.TaskRunnerFactory;
  * @author fateev@amazon.com
  * @version $Revision$
  */
-public class DestinationFactoryImpl extends DestinationFactory {
+public class DestinationFactoryImpl extends DestinationFactory{
 
     protected final UsageManager memoryManager;
     protected final TaskRunnerFactory taskRunnerFactory;
     protected final PersistenceAdapter persistenceAdapter;
     protected RegionBroker broker;
 
-    public DestinationFactoryImpl(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory,
-            PersistenceAdapter persistenceAdapter) {
-        this.memoryManager = memoryManager;
-        this.taskRunnerFactory = taskRunnerFactory;
-        if (persistenceAdapter == null) {
+    public DestinationFactoryImpl(UsageManager memoryManager,TaskRunnerFactory taskRunnerFactory,
+            PersistenceAdapter persistenceAdapter){
+        this.memoryManager=memoryManager;
+        this.taskRunnerFactory=taskRunnerFactory;
+        if(persistenceAdapter==null){
             throw new IllegalArgumentException("null persistenceAdapter");
         }
-        this.persistenceAdapter = persistenceAdapter;
+        this.persistenceAdapter=persistenceAdapter;
     }
 
-    public void setRegionBroker(RegionBroker broker) {
-        if (broker == null) {
+    public void setRegionBroker(RegionBroker broker){
+        if(broker==null){
             throw new IllegalArgumentException("null broker");
         }
-        this.broker = broker;
+        this.broker=broker;
     }
 
-    public Set getDestinations() {
+    public Set getDestinations(){
         return persistenceAdapter.getDestinations();
     }
 
     /**
      * @return instance of {@link Queue} or {@link Topic}
      */
-    public Destination createDestination(ConnectionContext context, ActiveMQDestination destination, DestinationStatistics destinationStatistics) throws Exception {
-        if (destination.isQueue()) {
-            if (destination.isTemporary()) {
-                final ActiveMQTempDestination tempDest = (ActiveMQTempDestination) destination;
-                return new Queue(destination, memoryManager, null, destinationStatistics, taskRunnerFactory,broker.getTempDataStore()) {
-                   
-                    public void addSubscription(ConnectionContext context,Subscription sub) throws Exception {
+    public Destination createDestination(ConnectionContext context,ActiveMQDestination destination,
+            DestinationStatistics destinationStatistics) throws Exception{
+        if(destination.isQueue()){
+            if(destination.isTemporary()){
+                final ActiveMQTempDestination tempDest=(ActiveMQTempDestination)destination;
+                return new Queue(broker.getRoot(),destination,memoryManager,null,
+                        destinationStatistics,taskRunnerFactory,broker.getTempDataStore()){
+
+                    public void addSubscription(ConnectionContext context,Subscription sub) throws Exception{
                         // Only consumers on the same connection can consume from 
                         // the temporary destination
-                        if( !tempDest.getConnectionId().equals( sub.getConsumerInfo().getConsumerId().getConnectionId() ) ) {
+                        if(!tempDest.getConnectionId().equals(sub.getConsumerInfo().getConsumerId().getConnectionId())){
                             throw new JMSException("Cannot subscribe to remote temporary destination: "+tempDest);
                         }
-                        super.addSubscription(context, sub);
+                        super.addSubscription(context,sub);
                     };
                 };
-            } else {
-                MessageStore store = persistenceAdapter.createQueueMessageStore((ActiveMQQueue) destination);
-                Queue queue = new Queue(destination, memoryManager, store, destinationStatistics, taskRunnerFactory,broker.getTempDataStore());
-                configureQueue(queue, destination);
+            }else{
+                MessageStore store=persistenceAdapter.createQueueMessageStore((ActiveMQQueue)destination);
+                Queue queue=new Queue(broker.getRoot(),destination,memoryManager,store,
+                        destinationStatistics,taskRunnerFactory,broker.getTempDataStore());
+                configureQueue(queue,destination);
                 queue.initialize();
                 return queue;
             }
-        } else if (destination.isTemporary()){
-            final ActiveMQTempDestination tempDest = (ActiveMQTempDestination) destination;
-            return new Topic(destination, null, memoryManager, destinationStatistics, taskRunnerFactory) {
-                public void addSubscription(ConnectionContext context,Subscription sub) throws Exception {
+        }else if(destination.isTemporary()){
+            final ActiveMQTempDestination tempDest=(ActiveMQTempDestination)destination;
+            return new Topic(broker.getRoot(),destination,null,memoryManager,
+                    destinationStatistics,taskRunnerFactory){
+
+                public void addSubscription(ConnectionContext context,Subscription sub) throws Exception{
                     // Only consumers on the same connection can consume from 
                     // the temporary destination
-                    if( !tempDest.getConnectionId().equals( sub.getConsumerInfo().getConsumerId().getConnectionId() ) ) {
+                    if(!tempDest.getConnectionId().equals(sub.getConsumerInfo().getConsumerId().getConnectionId())){
                         throw new JMSException("Cannot subscribe to remote temporary destination: "+tempDest);
                     }
-                    super.addSubscription(context, sub);
+                    super.addSubscription(context,sub);
                 };
             };
-        } else {
-            TopicMessageStore store = null;
-            if (!AdvisorySupport.isAdvisoryTopic(destination)) {
-                store = persistenceAdapter.createTopicMessageStore((ActiveMQTopic) destination);
+        }else{
+            TopicMessageStore store=null;
+            if(!AdvisorySupport.isAdvisoryTopic(destination)){
+                store=persistenceAdapter.createTopicMessageStore((ActiveMQTopic)destination);
             }
-            
-            Topic topic = new Topic(destination, store, memoryManager, destinationStatistics, taskRunnerFactory);
-            configureTopic(topic, destination);
-            
+            Topic topic=new Topic(broker.getRoot(),destination,store,memoryManager,
+                    destinationStatistics,taskRunnerFactory);
+            configureTopic(topic,destination);
             return topic;
         }
     }
 
-    protected void configureQueue(Queue queue, ActiveMQDestination destination) {
-        if (broker == null) {
+    protected void configureQueue(Queue queue,ActiveMQDestination destination){
+        if(broker==null){
             throw new IllegalStateException("broker property is not set");
         }
-        if (broker.getDestinationPolicy() != null) {
-            PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
-            if (entry != null) {
+        if(broker.getDestinationPolicy()!=null){
+            PolicyEntry entry=broker.getDestinationPolicy().getEntryFor(destination);
+            if(entry!=null){
                 entry.configure(queue,broker.getTempDataStore());
             }
         }
     }
 
-    protected void configureTopic(Topic topic, ActiveMQDestination destination) {
-        if (broker == null) {
+    protected void configureTopic(Topic topic,ActiveMQDestination destination){
+        if(broker==null){
             throw new IllegalStateException("broker property is not set");
         }
-        if (broker.getDestinationPolicy() != null) {
-            PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
-            if (entry != null) {
+        if(broker.getDestinationPolicy()!=null){
+            PolicyEntry entry=broker.getDestinationPolicy().getEntryFor(destination);
+            if(entry!=null){
                 entry.configure(topic);
             }
         }
     }
 
-    public long getLastMessageBrokerSequenceId() throws IOException {
+    public long getLastMessageBrokerSequenceId() throws IOException{
         return persistenceAdapter.getLastMessageBrokerSequenceId();
     }
 
-    public PersistenceAdapter getPersistenceAdapter() {
+    public PersistenceAdapter getPersistenceAdapter(){
         return persistenceAdapter;
     }
 
-    public SubscriptionInfo[] getAllDurableSubscriptions(ActiveMQTopic topic) throws IOException {
+    public SubscriptionInfo[] getAllDurableSubscriptions(ActiveMQTopic topic) throws IOException{
         return persistenceAdapter.createTopicMessageStore(topic).getAllSubscriptions();
     }
-
 }

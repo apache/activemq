@@ -37,6 +37,7 @@ import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.DestinationAlreadyExistsException;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.TransactionBroker;
+import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.VMPendingDurableSubscriberMessageStoragePolicy;
@@ -62,6 +63,7 @@ import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.activemq.util.BrokerSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.util.ServiceStopper;
@@ -625,6 +627,52 @@ public class RegionBroker implements Broker {
     public BrokerService getBrokerService(){
         return brokerService;
     }
-    
-    
+
+    public void messageExpired(ConnectionContext context,MessageReference node){
+        if(log.isDebugEnabled()){
+            log.debug("Message expired "+node);
+        }
+        getRoot().sendToDeadLetterQueue(context,node);
+    }
+
+    public void sendToDeadLetterQueue(ConnectionContext context,MessageReference node){
+        try{
+            if(node!=null){
+                Message message=node.getMessage();
+                if(message!=null){
+                    DeadLetterStrategy deadLetterStrategy=node.getRegionDestination().getDeadLetterStrategy();
+                    if(deadLetterStrategy!=null){
+                        if(deadLetterStrategy.isSendToDeadLetterQueue(message)){
+                            long expiration=message.getExpiration();
+                            message.setExpiration(0);
+                            message.setProperty("originalExpiration",new Long(expiration));
+                            if(!message.isPersistent()){
+                                message.setPersistent(true);
+                                message.setProperty("originalDeliveryMode","NON_PERSISTENT");
+                            }
+                            // The original destination and transaction id do not get filled when the message is first
+                            // sent,
+                            // it is only populated if the message is routed to another destination like the DLQ
+                            ActiveMQDestination deadLetterDestination=deadLetterStrategy.getDeadLetterQueueFor(message
+                                    .getDestination());
+                            BrokerSupport.resend(context,message,deadLetterDestination);
+                        }
+                    }
+                }else{
+                    log.warn("Null message for node: "+node);
+                }
+            }
+        }catch(Exception e){
+            log.warn("Failed to pass expired message to dead letter queue");
+        }
+    }
+
+    public Broker getRoot(){
+        try{
+            return getBrokerService().getBroker();
+        }catch(Exception e){
+            log.fatal("Trying to get Root Broker "+e);
+            throw new RuntimeException("The broker from the BrokerService should not throw an exception");
+        }
+    }
 }

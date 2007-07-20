@@ -27,6 +27,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
@@ -72,7 +73,6 @@ import org.apache.commons.logging.LogFactory;
 public class Queue implements Destination, Task {
 
     private final Log log;
-
     private final ActiveMQDestination destination;
     private final List consumers = new CopyOnWriteArrayList();
     private final Valve dispatchValve = new Valve(true);
@@ -96,9 +96,11 @@ public class Queue implements Destination, Task {
     private final Object doDispatchMutex = new Object();
     private TaskRunner taskRunner;
     private boolean started = false;
+    final Broker broker;
     
-    public Queue(ActiveMQDestination destination, final UsageManager memoryManager, MessageStore store, DestinationStatistics parentStats,
+    public Queue(Broker broker,ActiveMQDestination destination, final UsageManager memoryManager, MessageStore store, DestinationStatistics parentStats,
             TaskRunnerFactory taskFactory, Store tmpStore) throws Exception {
+        this.broker=broker;
         this.destination = destination;
         this.usageManager = new UsageManager(memoryManager,destination.toString());
         this.usageManager.setUsagePortion(1.0f);
@@ -136,7 +138,8 @@ public class Queue implements Destination, Task {
                     public void recoverMessage(Message message){
                         // Message could have expired while it was being loaded..
                         if(message.isExpired()){
-                            // TODO remove from store
+                            broker.messageExpired(createConnectionContext(),message);
+                            destinationStatistics.getMessages().decrement();
                             return;
                         }
                         message.setRegionDestination(Queue.this);
@@ -342,9 +345,8 @@ public class Queue implements Destination, Task {
         // There is delay between the client sending it and it arriving at the
         // destination.. it may have expired.
         if(message.isExpired()){
-            if (log.isDebugEnabled()) {
-                log.debug("Expired message: " + message);
-            }
+            broker.messageExpired(context,message);
+            destinationStatistics.getMessages().decrement();
             if( ( !message.isResponseRequired() || producerExchange.getProducerState().getInfo().getWindowSize() > 0 ) && !context.isInRecoveryMode() ) {
         		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
 				context.getConnection().dispatchAsync(ack);	    	            	        		
@@ -365,9 +367,8 @@ public class Queue implements Destination, Task {
         					
         					// While waiting for space to free up... the message may have expired.
         			        if(message.isExpired()){
-        			            if (log.isDebugEnabled()) {
-        			                log.debug("Expired message: " + message);
-        			            }
+        			            broker.messageExpired(context,message);
+                                destinationStatistics.getMessages().decrement();
         			            
         			            if( !message.isResponseRequired() && !context.isInRecoveryMode() ) {
         			        		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
@@ -440,10 +441,8 @@ public class Queue implements Destination, Task {
                         // It could take while before we receive the commit
                         // op, by that time the message could have expired..
 	                    if(message.isExpired()){
-	                        // TODO: remove message from store.
-	                        if (log.isDebugEnabled()) {
-	                            log.debug("Expired message: " + message);
-	                        }
+	                        broker.messageExpired(context,message);
+                            destinationStatistics.getMessages().decrement();
 	                        return;
 	                    }
 	                    sendMessage(context,message);
@@ -1011,9 +1010,8 @@ public class Queue implements Destination, Task {
                                 result.add(node);
                                 count++;
                             }else{
-                                if (log.isDebugEnabled()) {
-                                    log.debug("Expired message: " + node);
-                                }
+                                broker.messageExpired(createConnectionContext(),node);
+                                destinationStatistics.getMessages().decrement();
                             }
                         }
                     }finally{

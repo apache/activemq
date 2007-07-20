@@ -19,6 +19,7 @@
 package org.apache.activemq.broker;
 
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -243,5 +244,15 @@ public class StubBroker implements Broker {
     
     public BrokerService getBrokerService(){
         return null;
+    }
+
+    public void messageExpired(ConnectionContext context,MessageReference messageReference){
+    }
+
+    public void sendToDeadLetterQueue(ConnectionContext context,MessageReference messageReference) {
+    }
+
+    public Broker getRoot(){
+        return this;
     }
 }

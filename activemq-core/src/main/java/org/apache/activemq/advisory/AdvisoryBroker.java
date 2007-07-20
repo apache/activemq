@@ -17,6 +17,7 @@
  */
 package org.apache.activemq.advisory;
 
+import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.activemq.broker.Broker;
@@ -24,6 +25,7 @@ import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -38,6 +40,8 @@ import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -49,7 +53,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class AdvisoryBroker extends BrokerFilter {
     
-    //private static final Log log = LogFactory.getLog(AdvisoryBroker.class);
+    private static final Log log = LogFactory.getLog(AdvisoryBroker.class);
     
     protected final ConcurrentHashMap connections = new ConcurrentHashMap();
     protected final ConcurrentHashMap consumers = new ConcurrentHashMap();
@@ -226,6 +230,16 @@ public class AdvisoryBroker extends BrokerFilter {
             ActiveMQTopic topic = AdvisorySupport.getProducerAdvisoryTopic(info.getDestination());
             producers.remove(info.getProducerId());
             fireProducerAdvisory(context, topic, info.createRemoveCommand());
+        }
+    }
+    
+    public void messageExpired(ConnectionContext context,MessageReference messageReference){
+        next.messageExpired(context,messageReference);
+        try{
+            ActiveMQTopic topic=AdvisorySupport.getExpiredMessageTopic(messageReference.getMessage().getDestination());
+            fireAdvisory(context,topic,messageReference.getMessage());
+        }catch(Exception e){
+            log.warn("Failed to fire message expired advisory");
         }
     }
     
