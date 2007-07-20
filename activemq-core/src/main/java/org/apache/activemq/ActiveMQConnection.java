@@ -1603,13 +1603,15 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 					}
 					
 					@Override
-					public Response processProducerAck(ProducerAck pa) throws Exception {
-		            	ActiveMQMessageProducer producer = producers.get(pa.getProducerId());
-		            	if( producer!=null ) {
-		            		producer.onProducerAck(pa);
-		            	}
-		            	return null;
-					}
+					public Response processProducerAck(ProducerAck pa) throws Exception{
+                        if(pa!=null&&pa.getProducerId()!=null){
+                            ActiveMQMessageProducer producer=producers.get(pa.getProducerId());
+                            if(producer!=null){
+                                producer.onProducerAck(pa);
+                            }
+                        }
+                        return null;
+                    }
 					
 					@Override
 					public Response processBrokerInfo(BrokerInfo info) throws Exception {
