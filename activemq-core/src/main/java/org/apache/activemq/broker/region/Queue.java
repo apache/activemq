@@ -87,7 +87,6 @@ public class Queue implements Destination, Task {
     private int garbageSizeBeforeCollection = 1000;
     private DispatchPolicy dispatchPolicy = new RoundRobinDispatchPolicy();
     private final MessageStore store;
-    private int highestSubscriptionPriority = Integer.MIN_VALUE;
     private DeadLetterStrategy deadLetterStrategy = new SharedDeadLetterStrategy();
     private MessageGroupMapFactory messageGroupMapFactory = new MessageGroupHashBucketFactory();
     private int maximumPagedInMessages = garbageSizeBeforeCollection * 2;
@@ -179,20 +178,12 @@ public class Queue implements Destination, Task {
      */
     public boolean lock(MessageReference node,LockOwner lockOwner){
         synchronized(exclusiveLockMutex){
-            if(exclusiveOwner==lockOwner){
-                return true;
-            }
-            if(exclusiveOwner!=null){
-                return false;
-            }
-            if(lockOwner.getLockPriority()<highestSubscriptionPriority){
-                return false;
-            }
-            if(lockOwner.isLockExclusive()){
-                exclusiveOwner=lockOwner;
-            }
+        	if (exclusiveOwner == lockOwner)
+				return true;
+			if (exclusiveOwner != null)
+				return false;
         }
-        return true;
+     	return true;
     }
 
     public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
@@ -204,25 +195,28 @@ public class Queue implements Destination, Task {
         
         MessageEvaluationContext msgContext=context.getMessageEvaluationContext();
         try{
-            synchronized(consumers){
-                if (sub.getConsumerInfo().isExclusive()) {
-                    // Add to front of list to ensure that an exclusive consumer gets all messages
-                    // before non-exclusive consumers
-                    consumers.add(0, sub);
-                } else {
-                    consumers.add(sub);
-                }
-            }
+            synchronized (consumers) {
+				consumers.add(sub);
+				if (sub.getConsumerInfo().isExclusive()) {
+					LockOwner owner = (LockOwner) sub;
+					if (exclusiveOwner == null) {
+						exclusiveOwner = owner;
+					} else {
+						// switch the owner if the priority is higher.
+						if (owner.getLockPriority() > exclusiveOwner.getLockPriority()) {
+							exclusiveOwner = owner;
+						}
+					}
+				}
+			}
             // page in messages
             doPageIn();
             // synchronize with dispatch method so that no new messages are sent
             // while
-            // setting up a subscription. avoid out of order messages, duplicates
+            // setting up a subscription. avoid out of order messages,
+			// duplicates
             // etc.
             dispatchValve.turnOff();
-            if (sub.getConsumerInfo().getPriority() > highestSubscriptionPriority) {
-                highestSubscriptionPriority = sub.getConsumerInfo().getPriority();
-            }
             msgContext.setDestination(destination);
             synchronized(pagedInMessages){
                 // Add all the matching messages in the queue to the
@@ -261,14 +255,29 @@ public class Queue implements Destination, Task {
         try {
 
             synchronized (consumers) {
-                consumers.remove(sub);
-                if (consumers.isEmpty()) {
-                    messages.gc();
-                }
-            }
-            sub.remove(context, this);
+				consumers.remove(sub);
+				if (sub.getConsumerInfo().isExclusive()) {
+					LockOwner owner = (LockOwner) sub;
+					// Did we loose the exclusive owner??
+					if (exclusiveOwner == owner) {
 
-            highestSubscriptionPriority = calcHighestSubscriptionPriority();
+						// Find the exclusive consumer with the higest Lock
+						// Priority.
+						exclusiveOwner = null;
+						for (Iterator iter = consumers.iterator(); iter.hasNext();) {
+							Subscription s = (Subscription) iter.next();
+							LockOwner so = (LockOwner) s;
+							if (s.getConsumerInfo().isExclusive() && (exclusiveOwner == null || so.getLockPriority() > exclusiveOwner.getLockPriority()))
+								exclusiveOwner = so;
+						}
+					}
+				}
+				if (consumers.isEmpty()) {
+					messages.gc();
+				}
+
+			}
+            sub.remove(context, this);
 
             boolean wasExclusiveOwner = false;
             if (exclusiveOwner == sub) {
@@ -627,20 +636,6 @@ public class Queue implements Destination, Task {
         MessageReference result =  new IndirectMessageReference(this, store, message);
         result.decrementReferenceCount();
         return result;
-    }
-
-    
-    private int calcHighestSubscriptionPriority() {
-        int rc = Integer.MIN_VALUE;
-        synchronized (consumers) {
-            for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-                Subscription sub = (Subscription) iter.next();
-                if (sub.getConsumerInfo().getPriority() > rc) {
-                    rc = sub.getConsumerInfo().getPriority();
-                }
-            }
-        }
-        return rc;
     }
 
     public MessageStore getMessageStore() {
