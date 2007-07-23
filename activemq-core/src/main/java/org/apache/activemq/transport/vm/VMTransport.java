@@ -21,8 +21,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.activemq.command.Command;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
@@ -52,10 +52,11 @@ public class VMTransport implements Transport,Task{
     protected boolean marshal;
     protected boolean network;
     protected boolean async=true;
-    protected AtomicBoolean started=new AtomicBoolean();
     protected int asyncQueueDepth=2000;
     protected List prePeerSetQueue=Collections.synchronizedList(new LinkedList());
     protected LinkedBlockingQueue messageQueue=null;
+    protected boolean started;
+    protected final Object startMutex = new Object();
     protected final URI location;
     protected final long id;
     private TaskRunner taskRunner;
@@ -96,11 +97,15 @@ public class VMTransport implements Transport,Task{
     }
 
     protected void syncOneWay(Object command){
-        final TransportListener tl=peer.transportListener;
-        prePeerSetQueue=peer.prePeerSetQueue;
-        if(tl==null){
-            prePeerSetQueue.add(command);
-        }else{
+    	TransportListener tl=null;
+    	synchronized(peer.startMutex){
+        	if( peer.started ) {
+                tl = peer.transportListener;
+        	} else if(!peer.disposed) {
+                peer.prePeerSetQueue.add(command);
+        	}
+    	}
+    	if( tl!=null ) {
             tl.onCommand(command);
         }
     }
@@ -147,30 +152,33 @@ public class VMTransport implements Transport,Task{
     }
 
     public void start() throws Exception{
-        if(started.compareAndSet(false,true)){
-            if(transportListener==null)
-                throw new IOException("TransportListener not set.");
-            if(!async){
-                for(Iterator iter=prePeerSetQueue.iterator();iter.hasNext();){
-                    Command command=(Command)iter.next();
-                    transportListener.onCommand(command);
-                    iter.remove();
-                }
-            }else{
-                peer.wakeup();
-                wakeup();
-            }
+        if(transportListener==null)
+            throw new IOException("TransportListener not set.");
+        synchronized(startMutex) {
+	        if( !prePeerSetQueue.isEmpty() ) {
+	            for(Iterator iter=prePeerSetQueue.iterator();iter.hasNext();){
+	                Command command=(Command)iter.next();
+	                transportListener.onCommand(command);
+	            }
+	            prePeerSetQueue.clear();
+	        } 
+	        started = true;
+	        if( isAsync() ) {
+	            peer.wakeup();
+	            wakeup();
+	        }
         }
     }
 
     public void stop() throws Exception{
-        if(started.compareAndSet(true,false)){
+    	synchronized(startMutex) {
             if(!disposed){
+    	        started=false;
                 disposed=true;
-            }
-            if(taskRunner!=null){
-                taskRunner.shutdown(1000);
-                taskRunner=null;
+                if(taskRunner!=null){
+                    taskRunner.shutdown(1000);
+                    taskRunner=null;
+                }
             }
         }
     }
