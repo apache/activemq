@@ -21,10 +21,10 @@ package org.apache.activemq.kaha.impl;
 import java.io.File;
 import java.io.IOException;
 import java.nio.channels.FileLock;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.activemq.kaha.ContainerId;
@@ -53,13 +53,11 @@ import org.apache.commons.logging.LogFactory;
  */
 public class KahaStore implements Store{
 
-    private static final String LOCK_FILE_NAME="store.lock";
-    
     private final static String PROPERTY_PREFIX="org.apache.activemq.kaha.Store";
     private final static boolean brokenFileLock="true".equals(System.getProperty(PROPERTY_PREFIX+".broken","false"));
     private final static boolean disableLocking="true".equals(System.getProperty(PROPERTY_PREFIX+"DisableLocking",
             "false"));
-    private static Set<String> lockSet;
+   
     private static final Log log=LogFactory.getLog(KahaStore.class);
     private File directory;
     private IndexRootContainer mapsContainer;
@@ -455,41 +453,35 @@ public class KahaStore implements Store{
         }
     }
 
-    private synchronized void lock() throws IOException{
-        if(!disableLocking&&directory!=null&&lock==null){
-            Set<String> set=getVmLockSet();
-            synchronized(set){
-                if(lock==null){
-                    if(!set.add(directory.getCanonicalPath())){
-                        throw new StoreLockedExcpetion("Kaha Store "+directory.getName()
-                                +" is already opened by this application.");
-                    }
-                    if(!brokenFileLock){
-                        lock=rootIndexManager.getLock();
-                        if(lock==null){
-                            set.remove(directory.getCanonicalPath());
-                            throw new StoreLockedExcpetion("Kaha Store "+directory.getName()
-                                    +"  is already opened by another application");
-                        }
-                    }
+    private synchronized void lock() throws IOException {
+        if (!disableLocking && directory != null && lock == null) {
+            String key = getPropertyKey();
+            String property = System.getProperty(key);
+            if (null == property) {
+                if (!brokenFileLock) {
+                    lock = rootIndexManager.getLock();
+                    if (lock == null) {
+    throw new StoreLockedExcpetion("Kaha Store " + directory.getName() + "  is already opened by another application");
+                    } else
+                        System.setProperty(key, new Date().toString()); 
                 }
+            } else { //already locked
+    throw new StoreLockedExcpetion("Kaha Store " + directory.getName() + " is already opened by this application.");
             }
         }
     }
-
-    private synchronized void unlock() throws IOException{
-        if(!disableLocking&&directory!=null){
-            Set<String> set=getVmLockSet();
-            synchronized(set){
-                if(lock!=null){
-                    set.remove(directory.getCanonicalPath());
-                    if(lock.isValid()){
-                        lock.release();
-                    }
-                    lock=null;
-                }
+    private synchronized void unlock() throws IOException {
+        if (!disableLocking && (null != directory) && (null != lock)) {
+            System.getProperties().remove(getPropertyKey());
+            if (lock.isValid()) {
+                lock.release();
             }
+            lock = null;
         }
+    }
+    private String getPropertyKey() throws IOException{
+        //Is replaceAll() needed?  Should test without it.
+        return getClass().getName() + ".lock." + directory.getCanonicalPath();
     }
     
     private void checkClosed(){
@@ -498,21 +490,6 @@ public class KahaStore implements Store{
         }
     }
 
-    
-
-    static synchronized private Set<String> getVmLockSet(){
-        if(lockSet==null){
-            Properties properties=System.getProperties();
-            synchronized(properties){
-                lockSet=(Set<String>) properties.get("org.apache.activemq.kaha.impl.KahaStore");
-                if(lockSet==null){
-                    lockSet=new HashSet<String>();
-                }
-                properties.put(PROPERTY_PREFIX,lockSet);
-            }
-        }
-        return lockSet;
-    }
     
     /**
      * scans the directory and builds up the IndexManager and DataManager
