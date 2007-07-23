@@ -117,6 +117,14 @@ public class DemandForwardingBridgeTest extends NetworkTestSupport {
         ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo2, destination);        
         connection2.send(consumerInfo);
         
+        // Give demand forwarding bridge a chance to finish forwarding the subscriptions.
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException ie) {
+            ie.printStackTrace();
+        }
+        
+        
         // Send the message to the local boker.
         connection1.request(createMessage(producerInfo, destination, deliveryMode));
         // Make sure the message was delivered via the remote.
@@ -129,14 +137,7 @@ public class DemandForwardingBridgeTest extends NetworkTestSupport {
         config.setBrokerName("local");
         config.setDispatchAsync(false);
         bridge = new DemandForwardingBridge(config,createTransport(), createRemoteTransport()); 
-        bridge.start();
-        
-        // PATCH: Give demand forwarding bridge a chance to finish setting up
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException ie) {
-            ie.printStackTrace();
-        }
+        bridge.start();        
     }
     
     protected void tearDown() throws Exception {

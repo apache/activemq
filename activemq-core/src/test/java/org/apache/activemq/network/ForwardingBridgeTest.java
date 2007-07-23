@@ -68,6 +68,13 @@ public class ForwardingBridgeTest extends NetworkTestSupport {
         ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo2, destination);        
         connection2.send(consumerInfo);
         Thread.sleep(1000);
+        // Give forwarding bridge a chance to finish setting up
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException ie) {
+            ie.printStackTrace();
+        }
+        
         // Send the message to the local boker.
         connection1.send(createMessage(producerInfo, destination, deliveryMode));
         
@@ -82,14 +89,7 @@ public class ForwardingBridgeTest extends NetworkTestSupport {
         bridge = new ForwardingBridge(createTransport(), createRemoteTransport());
         bridge.setClientId("local-remote-bridge");
         bridge.setDispatchAsync(false);
-        bridge.start();
-        
-        // PATCH: Give forwarding bridge a chance to finish setting up
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException ie) {
-            ie.printStackTrace();
-        }
+        bridge.start();        
     }
     
     protected void tearDown() throws Exception {

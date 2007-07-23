@@ -143,10 +143,23 @@ public class TransportConnector implements Connector {
         this.server = server;
         this.brokerInfo.setBrokerURL(server.getConnectURI().toString());
         this.server.setAcceptListener(new TransportAcceptListener() {
-            public void onAccept(Transport transport) {
+            public void onAccept(final Transport transport) {
                 try {
-                    Connection connection = createConnection(transport);
-                    connection.start();
+                	// Starting the connection could block due to 
+                	// wireformat negociation, so start it in an async thread.
+                	Thread startThread = new Thread("ActiveMQ Transport Initiator: "+transport.getRemoteAddress()) {
+                		public void run() {
+                            try {
+								Connection connection = createConnection(transport);
+								connection.start();
+							} catch (Exception e) {
+			                	ServiceSupport.dispose(transport);
+			                    onAcceptError(e);
+							}
+                		}
+                	};
+                	startThread.setPriority(4);
+                	startThread.start();
                 }
                 catch (Exception e) {
                     String remoteHost = transport.getRemoteAddress();

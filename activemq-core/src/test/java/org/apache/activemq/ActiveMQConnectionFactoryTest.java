@@ -36,23 +36,34 @@ import org.apache.activemq.broker.TransportConnector;
 
 public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
     
-    public void testUseURIToSetUseClientIDPrefixOnConnectionFactory() throws URISyntaxException, JMSException {
+    private ActiveMQConnection connection;
+	private BrokerService broker;
+
+	public void testUseURIToSetUseClientIDPrefixOnConnectionFactory() throws URISyntaxException, JMSException {
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost?jms.clientIDPrefix=Cheese");
         assertEquals("Cheese", cf.getClientIDPrefix());
 
-        ActiveMQConnection connection = (ActiveMQConnection) cf.createConnection();
-        try {
-            connection.start();
+        connection = (ActiveMQConnection) cf.createConnection();
+        connection.start();
 
-            String clientID = connection.getClientID();
-            log.info("Got client ID: " + clientID);
+        String clientID = connection.getClientID();
+        log.info("Got client ID: " + clientID);
 
-            assertTrue("should start with Cheese! but was: " + clientID, clientID.startsWith("Cheese"));
-        }
-        finally {
-            connection.close();
-        }
+        assertTrue("should start with Cheese! but was: " + clientID, clientID.startsWith("Cheese"));
     }
+	
+	protected void tearDown() throws Exception {
+		// Try our best to close any previously opend connection.
+		try {
+			connection.close();
+		} catch (Throwable ignore) {			
+		}
+		// Try our best to stop any previously started broker.
+		try {
+			broker.stop();
+		} catch (Throwable ignore) {			
+		}
+	}
     
     public void testUseURIToSetOptionsOnConnectionFactory() throws URISyntaxException, JMSException {
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost?jms.useAsyncSend=true");
@@ -88,26 +99,27 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
         // Make sure the broker is not created until the connection is instantiated.
         assertNull( BrokerRegistry.getInstance().lookup("localhost") );        
-        Connection connection = cf.createConnection();
+        connection = (ActiveMQConnection) cf.createConnection();
         // This should create the connection.
         assertNotNull(connection);
         // Verify the broker was created.
         assertNotNull( BrokerRegistry.getInstance().lookup("localhost") );
+        
         connection.close();
+        
         // Verify the broker was destroyed.
         assertNull( BrokerRegistry.getInstance().lookup("localhost") );
     }
     
     public void testGetBrokerName() throws URISyntaxException, JMSException {
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
-        ActiveMQConnection connection = (ActiveMQConnection) cf.createConnection();
+        connection = (ActiveMQConnection) cf.createConnection();
         connection.start();
         
         String brokerName = connection.getBrokerName();
         log.info("Got broker name: " + brokerName);
         
         assertNotNull("No broker name available!", brokerName);
-        connection.close();
     }
     
     public void testCreateTcpConnectionUsingAllocatedPort() throws Exception {
@@ -143,7 +155,7 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
 
     protected void assertCreateConnection(String uri) throws Exception {
         // Start up a broker with a tcp connector.
-        BrokerService broker = new BrokerService();
+        broker = new BrokerService();
         broker.setPersistent(false);
         TransportConnector connector = broker.addConnector(uri);
         broker.start();
@@ -162,9 +174,8 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         
         // This should create the connection.
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(connectURI);
-        Connection connection = cf.createConnection();
+        connection = (ActiveMQConnection) cf.createConnection();
         assertNotNull(connection);
-        connection.close();
         
         broker.stop();
     }
