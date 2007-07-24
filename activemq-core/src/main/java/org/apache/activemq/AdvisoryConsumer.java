@@ -27,9 +27,12 @@ import org.apache.activemq.command.DataStructure;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class AdvisoryConsumer implements ActiveMQDispatcher {
 
+    private static final transient Log log = LogFactory.getLog(AdvisoryConsumer.class);
     private final ActiveMQConnection connection;
     private ConsumerInfo info;
     private boolean closed;
@@ -48,6 +51,11 @@ public class AdvisoryConsumer implements ActiveMQDispatcher {
 
     public void dispose() {
         if (!closed) {
+            try {
+                this.connection.asyncSendPacket(info.createRemoveCommand());
+            } catch (JMSException e) {
+                log.info("Failed to send remove command: " + e, e);
+            }        	
             this.connection.removeDispatcher(info.getConsumerId());
             closed = true;
         }
