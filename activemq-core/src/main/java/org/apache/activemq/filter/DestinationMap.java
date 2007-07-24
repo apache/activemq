@@ -162,7 +162,7 @@ public class DestinationMap {
     }
 
     /**
-     * @param dest
+     * @param key
      * @return 
      */
     public Set removeAll(ActiveMQDestination key) {
