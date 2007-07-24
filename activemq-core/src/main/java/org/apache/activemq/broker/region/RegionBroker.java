@@ -88,7 +88,7 @@ public class RegionBroker implements Broker {
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
     
     private final CopyOnWriteArrayList connections = new CopyOnWriteArrayList();
-    private final HashMap destinations = new HashMap();
+    private final Map destinations = new ConcurrentHashMap();
     private final CopyOnWriteArrayList brokerInfos = new CopyOnWriteArrayList();
 
     private final LongSequenceGenerator sequenceGenerator = new LongSequenceGenerator();    
@@ -249,59 +249,60 @@ public class RegionBroker implements Broker {
     }
 
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
-  
-    	Destination answer;
-    	synchronized(destinations) {
-    		answer = (Destination) destinations.get(destination);
-            if( answer!=null )
-            	return answer;
-    	}
-    	
-        switch(destination.getDestinationType()) {
-        case ActiveMQDestination.QUEUE_TYPE:
-            answer  = queueRegion.addDestination(context, destination);
-            break;
-        case ActiveMQDestination.TOPIC_TYPE:
-            answer = topicRegion.addDestination(context, destination);
-            break;
-        case ActiveMQDestination.TEMP_QUEUE_TYPE:
-            answer = tempQueueRegion.addDestination(context, destination);
-            break;
-        case ActiveMQDestination.TEMP_TOPIC_TYPE:
-            answer = tempTopicRegion.addDestination(context, destination);
-            break;
-        default:
-            throw createUnknownDestinationTypeException(destination);
-        }
 
-    	synchronized(destinations) {
-            destinations.put(destination, answer);
-            return answer;
-    	}
-    }
+		Destination answer;
 
-    public void removeDestination(ConnectionContext context,ActiveMQDestination destination,long timeout) throws Exception{
-    	synchronized(destinations) {
-	        if( destinations.remove(destination)!=null ){
-	            switch(destination.getDestinationType()){
-	            case ActiveMQDestination.QUEUE_TYPE:
-	                queueRegion.removeDestination(context,destination,timeout);
-	                break;
-	            case ActiveMQDestination.TOPIC_TYPE:
-	                topicRegion.removeDestination(context,destination,timeout);
-	                break;
-	            case ActiveMQDestination.TEMP_QUEUE_TYPE:
-	                tempQueueRegion.removeDestination(context,destination,timeout);
-	                break;
-	            case ActiveMQDestination.TEMP_TOPIC_TYPE:
-	                tempTopicRegion.removeDestination(context,destination,timeout);
-	                break;
-	            default:
-	                throw createUnknownDestinationTypeException(destination);
-	            }
-	        }
-    	}
-    }
+		answer = (Destination) destinations.get(destination);
+		if (answer != null)
+			return answer;
+
+		switch (destination.getDestinationType()) {
+		case ActiveMQDestination.QUEUE_TYPE:
+			answer = queueRegion.addDestination(context, destination);
+			break;
+		case ActiveMQDestination.TOPIC_TYPE:
+			answer = topicRegion.addDestination(context, destination);
+			break;
+		case ActiveMQDestination.TEMP_QUEUE_TYPE:
+			answer = tempQueueRegion.addDestination(context, destination);
+			break;
+		case ActiveMQDestination.TEMP_TOPIC_TYPE:
+			answer = tempTopicRegion.addDestination(context, destination);
+			break;
+		default:
+			throw createUnknownDestinationTypeException(destination);
+		}
+
+		destinations.put(destination, answer);
+		return answer;
+
+	}
+
+	public void removeDestination(ConnectionContext context,
+			ActiveMQDestination destination, long timeout) throws Exception {
+
+		if (destinations.remove(destination) != null) {
+			switch (destination.getDestinationType()) {
+			case ActiveMQDestination.QUEUE_TYPE:
+				queueRegion.removeDestination(context, destination, timeout);
+				break;
+			case ActiveMQDestination.TOPIC_TYPE:
+				topicRegion.removeDestination(context, destination, timeout);
+				break;
+			case ActiveMQDestination.TEMP_QUEUE_TYPE:
+				tempQueueRegion
+						.removeDestination(context, destination, timeout);
+				break;
+			case ActiveMQDestination.TEMP_TOPIC_TYPE:
+				tempTopicRegion
+						.removeDestination(context, destination, timeout);
+				break;
+			default:
+				throw createUnknownDestinationTypeException(destination);
+			}
+		}
+
+	}
     
     public void addDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{
         addDestination(context,info.getDestination());
@@ -314,14 +315,14 @@ public class RegionBroker implements Broker {
     }
 
     public ActiveMQDestination[] getDestinations() throws Exception {
-    	ArrayList l;
-    	synchronized(destinations) {
-	        l = new ArrayList(destinations.values());
-    	}
-        ActiveMQDestination rc[] = new ActiveMQDestination[l.size()];
-        l.toArray(rc);
-        return rc;
-    }
+		ArrayList l;
+
+		l = new ArrayList(destinations.values());
+
+		ActiveMQDestination rc[] = new ActiveMQDestination[l.size()];
+		l.toArray(rc);
+		return rc;
+	}
 
 
     public void addSession(ConnectionContext context, SessionInfo info) throws Exception {
