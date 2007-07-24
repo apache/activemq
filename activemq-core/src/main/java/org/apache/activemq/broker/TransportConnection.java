@@ -110,7 +110,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
     private WireFormatInfo wireFormatInfo;
     // Used to do async dispatch.. this should perhaps be pushed down into the transport layer..
     protected final List <Command>dispatchQueue=Collections.synchronizedList(new LinkedList<Command>());
-    protected final TaskRunner taskRunner;
+    protected TaskRunner taskRunner;
     protected final AtomicReference transportException = new AtomicReference();
     private boolean inServiceException=false;
     private ConnectionStatistics statistics=new ConnectionStatistics();
@@ -137,6 +137,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
     private boolean networkConnection;
     private AtomicInteger protocolVersion=new AtomicInteger(CommandTypes.PROTOCOL_VERSION);
     private DemandForwardingBridge duplexBridge = null;
+	final private TaskRunnerFactory taskRunnerFactory;
     
     static class ConnectionState extends org.apache.activemq.state.ConnectionState{
 
@@ -173,12 +174,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
         if(connector!=null){
             this.statistics.setParent(connector.getStatistics());
         }
-        if(taskRunnerFactory!=null){
-            taskRunner=taskRunnerFactory.createTaskRunner(this,"ActiveMQ Connection Dispatcher: "
-                    +System.identityHashCode(this));
-        }else{
-            taskRunner=null;
-        }
+        this.taskRunnerFactory=taskRunnerFactory;
         connector.setBrokerName(broker.getBrokerName());
         this.transport=transport;
         this.transport.setTransportListener(new DefaultTransportListener(){
@@ -838,7 +834,14 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
     public synchronized void start() throws Exception{
         starting=true;
         try{
-            transport.start();
+        	transport.start();
+        	
+        	if (taskRunnerFactory != null) {
+				taskRunner = taskRunnerFactory.createTaskRunner(this, "ActiveMQ Connection Dispatcher: " + getRemoteAddress());
+			} else {
+				taskRunner = null;
+			} 
+
             active=true;
             this.processDispatch(connector.getBrokerInfo());
             connector.onStarted(this);
