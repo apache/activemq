@@ -67,8 +67,9 @@ class DedicatedTaskRunner implements TaskRunner {
             pending=true;
             mutex.notifyAll();
 
-            // Wait till the thread stops.
-            if(!threadTerminated){
+            // Wait till the thread stops ( no need to wait if shutdown 
+            // is called from thread that is shutting down) 
+            if( Thread.currentThread()!=thread && !threadTerminated ){
                 mutex.wait(timeout);
             }
         }
@@ -97,6 +98,9 @@ class DedicatedTaskRunner implements TaskRunner {
                 if( !task.iterate() ) {
                     // wait to be notified.
                     synchronized (mutex) {
+                        if( shutdown ) {
+                            return;
+                        }
                         while( !pending ) {
                             mutex.wait();
                         }
