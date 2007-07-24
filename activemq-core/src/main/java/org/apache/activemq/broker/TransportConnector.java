@@ -146,7 +146,7 @@ public class TransportConnector implements Connector {
             public void onAccept(final Transport transport) {
                 try {
                 	// Starting the connection could block due to 
-                	// wireformat negociation, so start it in an async thread.
+                	// wireformat negotiation, so start it in an async thread.
                 	Thread startThread = new Thread("ActiveMQ Transport Initiator: "+transport.getRemoteAddress()) {
                 		public void run() {
                             try {
