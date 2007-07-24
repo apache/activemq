@@ -165,14 +165,17 @@ public class AdvisoryBroker extends BrokerFilter {
             info.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
             ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destination);
             fireAdvisory(context, topic, info);
-            try {
-                next.removeDestination(context, AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination()), -1);
-            } catch (Exception expectedIfDestinationDidNotExistYet) {
-            }
-            try {
-                next.removeDestination(context, AdvisorySupport.getProducerAdvisoryTopic(info.getDestination()), -1);
-            } catch (Exception expectedIfDestinationDidNotExistYet) {
-            }
+
+            if (!AdvisorySupport.isAdvisoryTopic(destination)) {
+                try {
+                    context.getBroker().removeDestination(context, AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination()), -1);
+                } catch (Exception expectedIfDestinationDidNotExistYet) {
+                }
+                try {
+                    context.getBroker().removeDestination(context, AdvisorySupport.getProducerAdvisoryTopic(info.getDestination()), -1);
+                } catch (Exception expectedIfDestinationDidNotExistYet) {
+                }
+             }
         }
        
     }
@@ -186,14 +189,17 @@ public class AdvisoryBroker extends BrokerFilter {
             info.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
             ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destInfo.getDestination());
             fireAdvisory(context, topic, info);
-            try {
-                next.removeDestination(context, AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination()), -1);
-            } catch (Exception expectedIfDestinationDidNotExistYet) {
-            }
-            try {
-                next.removeDestination(context, AdvisorySupport.getProducerAdvisoryTopic(info.getDestination()), -1);
-            } catch (Exception expectedIfDestinationDidNotExistYet) {
-            }
+
+            if (!AdvisorySupport.isAdvisoryTopic(destInfo.getDestination())) {
+                try {
+                    context.getBroker().removeDestination(context, AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination()), -1);
+                } catch (Exception expectedIfDestinationDidNotExistYet) {
+                }
+                try {
+                    context.getBroker().removeDestination(context, AdvisorySupport.getProducerAdvisoryTopic(info.getDestination()), -1);
+                } catch (Exception expectedIfDestinationDidNotExistYet) {
+                }
+             }
         }
 
     }
