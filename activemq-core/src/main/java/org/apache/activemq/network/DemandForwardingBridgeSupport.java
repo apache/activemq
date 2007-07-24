@@ -335,6 +335,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                 ServiceStopper ss=new ServiceStopper();
                 ss.stop(localBroker);
                 ss.stop(remoteBroker);
+                
+				// Release the started Latch since another thread could be stuck waiting for it to start up.
+				startedLatch.countDown();
+				startedLatch.countDown();
+
                 ss.throwFirstException();
             }
         }
