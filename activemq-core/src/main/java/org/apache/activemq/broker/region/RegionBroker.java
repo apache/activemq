@@ -24,23 +24,20 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.jms.InvalidClientIDException;
 import javax.jms.JMSException;
 
-import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.Connection;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
-import org.apache.activemq.broker.DestinationAlreadyExistsException;
 import org.apache.activemq.broker.ProducerBrokerExchange;
-import org.apache.activemq.broker.TransactionBroker;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
-import org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.broker.region.policy.VMPendingDurableSubscriberMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
@@ -70,9 +67,6 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 
 /**
  * Routes Broker operations to the correct messaging regions for processing.
@@ -100,7 +94,7 @@ public class RegionBroker implements Broker {
     private final LongSequenceGenerator sequenceGenerator = new LongSequenceGenerator();    
     private BrokerId brokerId;
     private String brokerName;
-    private Map clientIdSet = new HashMap(); // we will synchronize access
+    private Map<String, ConnectionContext> clientIdSet = new HashMap<String, ConnectionContext>(); // we will synchronize access
     private final DestinationInterceptor destinationInterceptor;
     private ConnectionContext adminConnectionContext;
     protected DestinationFactory destinationFactory;
@@ -213,11 +207,12 @@ public class RegionBroker implements Broker {
             throw new InvalidClientIDException("No clientID specified for connection request");
         }
         synchronized (clientIdSet ) {
-            if (clientIdSet.containsKey(clientId)) {
-                throw new InvalidClientIDException("Broker: " + getBrokerName() + " - Client: " + clientId + " already connected");
+        	ConnectionContext oldContext = clientIdSet.get(clientId);
+            if (oldContext!=null) {
+            	throw new InvalidClientIDException("Broker: " + getBrokerName() + " - Client: " + clientId + " already connected from "+oldContext.getConnection().getRemoteAddress());
             }
             else {
-                clientIdSet.put(clientId, info);
+                clientIdSet.put(clientId, context);
             }
         }
 
@@ -230,10 +225,10 @@ public class RegionBroker implements Broker {
             throw new InvalidClientIDException("No clientID specified for connection disconnect request");
         }
         synchronized (clientIdSet) {
-            ConnectionInfo oldValue = (ConnectionInfo) clientIdSet.get(clientId);
+            ConnectionContext oldValue = clientIdSet.get(clientId);
             // we may be removing the duplicate connection, not the first connection to be created
             // so lets check that their connection IDs are the same
-            if (oldValue != null) {
+            if (oldValue == context ) {
                 if (isEqual(oldValue.getConnectionId(), info.getConnectionId())) {
                     clientIdSet.remove(clientId);
                 }
