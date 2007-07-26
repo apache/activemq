@@ -19,10 +19,12 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
@@ -48,6 +50,7 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerAck;
+import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.kaha.Store;
@@ -217,28 +220,31 @@ public class Queue implements Destination, Task {
 			// duplicates
             // etc.
             dispatchValve.turnOff();
-            msgContext.setDestination(destination);
-            synchronized(pagedInMessages){
-                // Add all the matching messages in the queue to the
-                // subscription.
-                for(Iterator i=pagedInMessages.iterator();i.hasNext();){
-                    QueueMessageReference node=(QueueMessageReference)i.next();
-                    if(node.isDropped()){
-                        continue;
-                    }
-                    try{
-                        msgContext.setMessageReference(node);
-                        if(sub.matches(node,msgContext)){
-                            sub.add(node);
-                        }
-                    }catch(IOException e){
-                        log.warn("Could not load message: "+e,e);
-                    }
-                }
+            try { 
+	            msgContext.setDestination(destination);
+	            synchronized(pagedInMessages){
+	                // Add all the matching messages in the queue to the
+	                // subscription.
+	                for(Iterator i=pagedInMessages.iterator();i.hasNext();){
+	                    QueueMessageReference node=(QueueMessageReference)i.next();
+	                    if(node.isDropped()){
+	                        continue;
+	                    }
+	                    try{
+	                        msgContext.setMessageReference(node);
+	                        if(sub.matches(node,msgContext)){
+	                            sub.add(node);
+	                        }
+	                    }catch(IOException e){
+	                        log.warn("Could not load message: "+e,e);
+	                    }
+	                }
+	            }
+            } finally {
+                dispatchValve.turnOn();
             }
         }finally{
             msgContext.clear();
-            dispatchValve.turnOn();
         }
     }
 
@@ -251,7 +257,6 @@ public class Queue implements Destination, Task {
         // while
         // removing up a subscription.
         dispatchValve.turnOff();
-
         try {
 
             synchronized (consumers) {
@@ -353,10 +358,12 @@ public class Queue implements Destination, Task {
     	final ConnectionContext context = producerExchange.getConnectionContext(); 
         // There is delay between the client sending it and it arriving at the
         // destination.. it may have expired.
+    	
+    	final boolean sendProducerAck = ( !message.isResponseRequired() || producerExchange.getProducerState().getInfo().getWindowSize() > 0 ) && !context.isInRecoveryMode();
         if(message.isExpired()){
             broker.messageExpired(context,message);
             destinationStatistics.getMessages().decrement();
-            if( ( !message.isResponseRequired() || producerExchange.getProducerState().getInfo().getWindowSize() > 0 ) && !context.isInRecoveryMode() ) {
+            if( sendProducerAck ) {
         		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
 				context.getConnection().dispatchAsync(ack);	    	            	        		
             }
@@ -373,24 +380,28 @@ public class Queue implements Destination, Task {
         		synchronized( messagesWaitingForSpace ) {
             		messagesWaitingForSpace.add(new Runnable() {
         				public void run() {
-        					
-        					// While waiting for space to free up... the message may have expired.
-        			        if(message.isExpired()){
-        			            broker.messageExpired(context,message);
-                                destinationStatistics.getMessages().decrement();
-        			            
-        			            if( !message.isResponseRequired() && !context.isInRecoveryMode() ) {
-        			        		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
-        							context.getConnection().dispatchAsync(ack);	    	            	        		
-        			            }
-        			            return;
-        			        }
-        					
-        					
+        					        			                    					
 	            	        try {							
-	            	        	doMessageSend(producerExchange, message);
+	        			        
+	        					// While waiting for space to free up... the message may have expired.
+	            	        	if(message.isExpired()) {
+	        			            broker.messageExpired(context,message);
+	                                destinationStatistics.getMessages().decrement();
+	        			        } else {
+	        			        	doMessageSend(producerExchange, message);
+	        			        }
+	        			        
+	            	            if( sendProducerAck ) {
+	            	        		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
+	            					context.getConnection().dispatchAsync(ack);	    	            	        		
+	            	            } else {
+	            	            	Response response = new Response();
+    				                response.setCorrelationId(message.getCommandId());
+    								context.getConnection().dispatchAsync(response);	    								
+	            	            }
+	            	            
 							} catch (Exception e) {
-	            	        	if( message.isResponseRequired() && !context.isInRecoveryMode() ) {
+	            	        	if( !sendProducerAck && !context.isInRecoveryMode() ) {
     				                ExceptionResponse response = new ExceptionResponse(e);
     				                response.setCorrelationId(message.getCommandId());
     								context.getConnection().dispatchAsync(response);	    								
@@ -428,6 +439,10 @@ public class Queue implements Destination, Task {
         	}
         }
         doMessageSend(producerExchange, message);
+        if( sendProducerAck ) {
+    		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
+			context.getConnection().dispatchAsync(ack);	    	            	        		
+        }
     }
 
 	void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
@@ -435,10 +450,6 @@ public class Queue implements Destination, Task {
 		message.setRegionDestination(this);
         if(store!=null&&message.isPersistent()){
             store.addMessage(context,message);
-        }
-        if( ( !message.isResponseRequired() || producerExchange.getProducerState().getInfo().getWindowSize() > 0 ) && !context.isInRecoveryMode() ) {
-    		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
-			context.getConnection().dispatchAsync(ack);	    	            	        		
         }
         if(context.isInTransaction()){
         	// If this is a transacted message.. increase the usage now so that a big TX does not blow up
@@ -986,6 +997,7 @@ public class Queue implements Destination, Task {
     }
     
     private List doPageIn(boolean force) throws Exception{
+    	        
         final int toPageIn=maximumPagedInMessages-pagedInMessages.size();
         List result=null;
         if((force||!consumers.isEmpty())&&toPageIn>0){
@@ -995,6 +1007,7 @@ public class Queue implements Destination, Task {
                 int count=0;
                 result=new ArrayList(toPageIn);
                 synchronized(messages){
+                	
                     try{
                         messages.reset();
                         while(messages.hasNext()&&count<toPageIn){
