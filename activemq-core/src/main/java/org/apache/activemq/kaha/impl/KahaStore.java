@@ -20,6 +20,7 @@ package org.apache.activemq.kaha.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
 import java.util.Date;
 import java.util.HashSet;
@@ -27,6 +28,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.activemq.kaha.ContainerId;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.MapContainer;
@@ -34,6 +36,7 @@ import org.apache.activemq.kaha.RuntimeStoreException;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StoreLocation;
 import org.apache.activemq.kaha.impl.async.AsyncDataManager;
+import org.apache.activemq.kaha.impl.async.ControlFile;
 import org.apache.activemq.kaha.impl.async.DataManagerFacade;
 import org.apache.activemq.kaha.impl.container.ListContainerImpl;
 import org.apache.activemq.kaha.impl.container.MapContainerImpl;
@@ -54,12 +57,13 @@ import org.apache.commons.logging.LogFactory;
 public class KahaStore implements Store{
 
     private final static String PROPERTY_PREFIX="org.apache.activemq.kaha.Store";
-    private final static boolean brokenFileLock="true".equals(System.getProperty(PROPERTY_PREFIX+".broken","false"));
-    private final static boolean disableLocking="true".equals(System.getProperty(PROPERTY_PREFIX+"DisableLocking",
+    private final static boolean brokenFileLock="true".equals(System.getProperty(PROPERTY_PREFIX+".FileLockBroken","false"));
+    private final static boolean disableLocking="true".equals(System.getProperty(PROPERTY_PREFIX+".DisableLocking",
             "false"));
    
     private static final Log log=LogFactory.getLog(KahaStore.class);
-    private File directory;
+    private final File directory;
+    private final String mode;
     private IndexRootContainer mapsContainer;
     private IndexRootContainer listsContainer;
     private Map<ContainerId, ListContainerImpl> lists=new ConcurrentHashMap<ContainerId, ListContainerImpl>();
@@ -68,13 +72,13 @@ public class KahaStore implements Store{
     private Map<String, IndexManager> indexManagers=new ConcurrentHashMap<String, IndexManager>();
     private IndexManager rootIndexManager; // contains all the root indexes
     private boolean closed=false;
-    private String mode;
     private boolean initialized;
     private boolean logIndexChanges=false;
     private boolean useAsyncDataManager=false;
     private long maxDataFileLength=1024*1024*32;
     private FileLock lock;
     private boolean persistentIndex=true;
+	private RandomAccessFile lockFile;
 
     public KahaStore(String name,String mode) throws IOException{
         this.mode=mode;
@@ -107,6 +111,8 @@ public class KahaStore implements Store{
                     iter.remove();
                 }
             }
+            if( lockFile!=null )
+            	lockFile.close();            
         }
     }
 
@@ -423,6 +429,9 @@ public class KahaStore implements Store{
         if(!initialized){
            
             log.info("Kaha Store using data directory "+directory);
+            lockFile = new RandomAccessFile(new File(directory, "lock"), "rw"); 
+            lock();
+
             DataManager defaultDM=getDataManager(DEFAULT_CONTAINER_NAME);
             rootIndexManager=getIndexManager(defaultDM,DEFAULT_CONTAINER_NAME);
             IndexItem mapRoot=new IndexItem();
@@ -437,7 +446,6 @@ public class KahaStore implements Store{
                 mapRoot=rootIndexManager.getIndex(0);
                 listRoot=rootIndexManager.getIndex(IndexItem.INDEX_SIZE);
             }
-            lock();
             initialized=true;
             mapsContainer=new IndexRootContainer(mapRoot,rootIndexManager,defaultDM);
             listsContainer=new IndexRootContainer(listRoot,rootIndexManager,defaultDM);
@@ -459,7 +467,7 @@ public class KahaStore implements Store{
             String property = System.getProperty(key);
             if (null == property) {
                 if (!brokenFileLock) {
-                    lock = rootIndexManager.getLock();
+                	lock = lockFile.getChannel().tryLock();
                     if (lock == null) {
     throw new StoreLockedExcpetion("Kaha Store " + directory.getName() + "  is already opened by another application");
                     } else

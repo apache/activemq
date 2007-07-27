@@ -159,10 +159,6 @@ public final class IndexManager{
         this.length=value;
     }
 
-    public synchronized FileLock getLock() throws IOException{
-        return indexFile.getChannel().tryLock();
-    }
-
     public String toString(){
         return "IndexManager:("+NAME_PREFIX+name+")";
     }

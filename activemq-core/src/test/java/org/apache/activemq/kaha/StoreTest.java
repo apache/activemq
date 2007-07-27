@@ -186,12 +186,14 @@ public class StoreTest extends TestCase{
     }
     
     public void testLock() throws Exception{
-        try {
         store.doesListContainerExist("fred");
         Store s = getStore();
-        s.doesListContainerExist("fred");
+        try {
+        	s.doesListContainerExist("fred");
         }catch(StoreLockedExcpetion e) {
             return;
+        } finally {
+        	s.close();
         }
         fail("Expected to catch an exception");
     }
