@@ -51,7 +51,8 @@ public class MessageIdList extends Assert implements MessageListener {
     private boolean verbose;
     private MessageListener parent;
     private long maximumDuration = 15000L;
-
+    private long processingDelay=0;
+    
 	private CountDownLatch countDownLatch;
 
     public MessageIdList() {
@@ -118,6 +119,12 @@ public class MessageIdList extends Assert implements MessageListener {
         }
         if (parent != null) {
             parent.onMessage(message);
+        }
+        if( processingDelay > 0 ) {
+        	try {
+				Thread.sleep(processingDelay);
+			} catch (InterruptedException e) {
+			}
         }
     }
 
@@ -239,6 +246,26 @@ public class MessageIdList extends Assert implements MessageListener {
 
 	public void setCountDownLatch(CountDownLatch countDownLatch) {
 		this.countDownLatch = countDownLatch;
+	}
+
+	/**
+	 * Gets the amount of time the message listener will spend sleeping to
+	 * simulate a processing delay.
+	 * 
+	 * @return
+	 */
+	public long getProcessingDelay() {
+		return processingDelay;
+	}
+
+	/**
+	 * Sets the amount of time the message listener will spend sleeping to
+	 * simulate a processing delay.
+	 * 
+	 * @param processingDelay
+	 */
+	public void setProcessingDelay(long processingDelay) {
+		this.processingDelay = processingDelay;
 	}
 
 }
