@@ -334,7 +334,7 @@ abstract public class AbstractRegion implements Region {
                     try {
                         
                         context.getBroker().addDestination(context,destination);
-                        dest = addDestination(context, destination);
+                        //dest = addDestination(context, destination);
                     }
                     catch (DestinationAlreadyExistsException e) {
                         // if the destination already exists then lets ignore this error
