@@ -19,12 +19,10 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
@@ -340,17 +338,10 @@ public class Queue implements Destination, Task {
     private final LinkedList<Runnable> messagesWaitingForSpace = new LinkedList<Runnable>();
     private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
     	public void run() {
-    		
-    		// We may need to do this in async thread since this is run for within a synchronization
-    		// that the UsageManager is holding.
-    		
-    		synchronized( messagesWaitingForSpace ) {
-	    		while( !usageManager.isFull() && !messagesWaitingForSpace.isEmpty()) {
-	    			Runnable op = messagesWaitingForSpace.removeFirst();
-	    			op.run();
-	    		}
-    		}
-    		
+			try {
+				taskRunner.wakeup();
+			} catch (InterruptedException e) {
+			}
     	};
     };
 
@@ -928,6 +919,12 @@ public class Queue implements Destination, Task {
      * @see org.apache.activemq.thread.Task#iterate()
      */
     public boolean iterate(){
+    	
+		while( !usageManager.isFull() && !messagesWaitingForSpace.isEmpty()) {
+			Runnable op = messagesWaitingForSpace.removeFirst();
+			op.run();
+		}
+
         try{
             pageInMessages(false);
          }catch(Exception e){
