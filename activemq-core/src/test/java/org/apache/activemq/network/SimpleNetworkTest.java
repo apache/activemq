@@ -61,7 +61,6 @@ public class SimpleNetworkTest extends TestCase{
     
     
     public void testRequestReply() throws Exception{
-        System.err.println("START TEST!");
         final MessageProducer remoteProducer=remoteSession.createProducer(null);
         MessageConsumer remoteConsumer=remoteSession.createConsumer(included);
         remoteConsumer.setMessageListener(new MessageListener(){
@@ -82,14 +81,13 @@ public class SimpleNetworkTest extends TestCase{
         });
         
         TopicRequestor requestor=new TopicRequestor((TopicSession) localSession,included);
-        Thread.sleep(2000);//alow for consumer infos to perculate arround
+        Thread.sleep(2000);//allow for consumer infos to perculate arround
         for (int i =0;i < MESSAGE_COUNT; i++){
             TextMessage msg = localSession.createTextMessage("test msg: " +i);
             TextMessage result = (TextMessage) requestor.request(msg);
             assertNotNull(result);
             log.info(result.getText());
         }
-        System.err.println("FIN TEST!");
     }
 
     public void XtestFiltering() throws Exception{
@@ -104,7 +102,6 @@ public class SimpleNetworkTest extends TestCase{
         excludedProducer.send(test);
         assertNull(excludedConsumer.receive(500));
         assertNotNull(includedConsumer.receive(500));
-        System.err.println("FIN TEST!");
     }
 
     public void XtestConduitBridge() throws Exception{
