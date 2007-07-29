@@ -15,6 +15,7 @@
 package org.apache.activemq.broker;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,7 +30,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ft.MasterBroker;
 import org.apache.activemq.broker.region.ConnectionStatistics;
@@ -80,11 +80,13 @@ import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.DefaultTransportListener;
+import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.MarshallingSupport;
 import org.apache.activemq.util.ServiceSupport;
+import org.apache.activemq.util.URISupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -834,7 +836,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
     public synchronized void start() throws Exception{
         starting=true;
         try{
-        	transport.start();
+            transport.start();
         	
         	if (taskRunnerFactory != null) {
 				taskRunner = taskRunnerFactory.createTaskRunner(this, "ActiveMQ Connection Dispatcher: " + getRemoteAddress());
@@ -1090,12 +1092,21 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
                 NetworkBridgeConfiguration config = new NetworkBridgeConfiguration();
                 IntrospectionSupport.setProperties(config,props,"");
                 config.setBrokerName(broker.getBrokerName());
-                Transport localTransport = TransportFactory.connect(broker.getVmConnectorURI());
-                duplexBridge = NetworkBridgeFactory.createBridge(config,localTransport,transport);
+                URI uri = broker.getVmConnectorURI();
+                HashMap map = new HashMap(URISupport.parseParamters(uri));
+                map.put("network", "true");
+                map.put("async","false");
+                uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
+                Transport localTransport = TransportFactory.connect(uri);
+                Transport remoteBridgeTransport = new ResponseCorrelator(transport);
+                duplexBridge = NetworkBridgeFactory.createBridge(config,localTransport,remoteBridgeTransport);
                 //now turn duplex off this side
+                info.setDuplexConnection(false);
                 duplexBridge.setCreatedByDuplex(true);
-                duplexBridge.start();
+                duplexBridge.duplexStart(brokerInfo,info);
+                
                 log.info("Created Duplex Bridge back to " + info.getBrokerName());
+                return null;
             }catch(Exception e){
                log.error("Creating duplex network bridge",e);
             }
@@ -1103,7 +1114,6 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
         // We only expect to get one broker info command per connection
         if(this.brokerInfo!=null){
             log.warn("Unexpected extra broker info command received: "+info);
-            Thread.dumpStack();
         }
         this.brokerInfo=info;
         broker.addBroker(this,info);
