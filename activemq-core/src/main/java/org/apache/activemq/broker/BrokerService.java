@@ -1063,12 +1063,27 @@ public class BrokerService implements Service {
      */
     public synchronized Store getTempDataStore(){
         if(tempDataStore==null){
-            String name=getTmpDataDirectory().getPath();
+            boolean result=true;
+            boolean empty=true;
             try{
-                log.info("About to delete any non-persistent messages that may have overflowed to disk ...");
-                StoreFactory.delete(name);
-                log.info("Successfully deleted temporary storage");
-                tempDataStore=StoreFactory.open(name,"rw");
+                File directory=getTmpDataDirectory();
+                if(directory.exists()&&directory.isDirectory()){
+                    File[] files=directory.listFiles();
+                    if(files!=null&&files.length>0){
+                        empty=false;
+                        for(int i=0;i<files.length;i++){
+                            File file=files[i];
+                            if(!file.isDirectory()){
+                                result&=file.delete();
+                            }
+                        }
+                    }
+                }
+                if(!empty){
+                    String str=result?"Successfully deleted":"Failed to delete";
+                    log.info(str+" temporary storage");
+                }
+                tempDataStore=StoreFactory.open(getTmpDataDirectory().getPath(),"rw");
             }catch(IOException e){
                 throw new RuntimeException(e);
             }
