@@ -72,18 +72,15 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         try {
             adapter.doRecoverSubscription(c, destination, clientId, subscriptionName,
                     new JDBCMessageRecoveryListener() {
-                        public void recoverMessage(long sequenceId, byte[] data) throws Exception {
+                        public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
                             Message msg = (Message) wireFormat.unmarshal(new ByteSequence(data));
                             msg.getMessageId().setBrokerSequenceId(sequenceId);
-                            listener.recoverMessage(msg);
+                            return listener.recoverMessage(msg);
                         }
-                        public void recoverMessageReference(String reference) throws Exception {
-                            listener.recoverMessageReference(new MessageId(reference));
+                        public boolean  recoverMessageReference(String reference) throws Exception {
+                            return listener.recoverMessageReference(new MessageId(reference));
                         }
                         
-                        public void finished(){
-                            listener.finished();
-                        }
                     });
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ",e);
@@ -108,22 +105,21 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
             adapter.doRecoverNextMessages(c,destination,clientId,subscriptionName,last.get(),maxReturned,
                     new JDBCMessageRecoveryListener(){
 
-                        public void recoverMessage(long sequenceId,byte[] data) throws Exception{
+                        public boolean recoverMessage(long sequenceId,byte[] data) throws Exception{
                             if(listener.hasSpace()){
                                 Message msg=(Message)wireFormat.unmarshal(new ByteSequence(data));
                                 msg.getMessageId().setBrokerSequenceId(sequenceId);
                                 listener.recoverMessage(msg);
                                 finalLast.set(sequenceId);
+                                return true;
                             }
+                            return false;
                         }
 
-                        public void recoverMessageReference(String reference) throws Exception{
-                            listener.recoverMessageReference(new MessageId(reference));
+                        public boolean recoverMessageReference(String reference) throws Exception{
+                            return listener.recoverMessageReference(new MessageId(reference));
                         }
 
-                        public void finished(){
-                            listener.finished();
-                        }
                     });
         }catch(SQLException e){
             JDBCPersistenceAdapter.log("JDBC Failure: ",e);

@@ -226,12 +226,10 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
                 }while(entry!=null&&count<maxReturned&&listener.hasSpace());
             }
         }
-        listener.finished();
     }
 
     public void recoverSubscription(String clientId,String subscriptionName,MessageRecoveryListener listener)
             throws Exception{
-        
         String key=getSubscriptionKey(clientId,subscriptionName);
         TopicSubContainer container=(TopicSubContainer)subscriberMessages.get(key);
         if(container!=null){
@@ -239,11 +237,12 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
                 ConsumerMessageRef ref=(ConsumerMessageRef)i.next();
                 ReferenceRecord msg=messageContainer.get(ref.getMessageEntry());
                 if(msg!=null){
-                    recoverReference(listener,msg);
+                    if(!recoverReference(listener,msg)){
+                        break;
+                    }
                 }
             }
         }
-        listener.finished();
     }
 
     public synchronized void resetBatching(String clientId,String subscriptionName){

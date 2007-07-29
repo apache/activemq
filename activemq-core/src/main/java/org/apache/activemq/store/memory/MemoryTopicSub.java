@@ -57,7 +57,6 @@ class MemoryTopicSub{
                 listener.recoverMessage((Message)msg);
             }
         }
-        listener.finished();
     }
 
     void recoverNextMessages(int maxReturned,MessageRecoveryListener listener) throws Exception{
@@ -83,7 +82,7 @@ class MemoryTopicSub{
         if(lastId!=null){
             lastBatch=lastId;
         }
-        listener.finished();
+
     }
 
     void resetBatching(){

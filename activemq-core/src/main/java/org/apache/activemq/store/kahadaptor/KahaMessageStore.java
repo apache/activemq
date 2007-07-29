@@ -66,8 +66,12 @@ public class KahaMessageStore implements MessageStore{
         return result;
     }
 
-    protected void recoverMessage(MessageRecoveryListener listener,Message msg) throws Exception{
-        listener.recoverMessage(msg);
+    protected boolean recoverMessage(MessageRecoveryListener listener,Message msg) throws Exception{
+        if(listener.hasSpace()){
+            listener.recoverMessage(msg);
+            return true;
+        }
+        return false;
     }
 
     public void removeMessage(ConnectionContext context,MessageAck ack) throws IOException{
@@ -89,9 +93,10 @@ public class KahaMessageStore implements MessageStore{
     public synchronized void recover(MessageRecoveryListener listener) throws Exception{
         for(StoreEntry entry=messageContainer.getFirst();entry!=null;entry=messageContainer.getNext(entry)){
             Message msg=(Message)messageContainer.getValue(entry);
-            recoverMessage(listener,msg);
+            if(!recoverMessage(listener,msg)) {
+                break;
+            }
         }
-        listener.finished();
     }
 
     public void start(){
@@ -167,7 +172,6 @@ public class KahaMessageStore implements MessageStore{
                 entry=messageContainer.getNext(entry);
             }while(entry!=null&&count<maxReturned&&listener.hasSpace());
         }
-        listener.finished();
     }
 
     /**

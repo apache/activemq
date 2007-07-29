@@ -190,7 +190,7 @@ public class Topic implements Destination {
             msgContext.setDestination(destination);
             if(subscription.isRecoveryRequired()){
                 store.recoverSubscription(clientId,subscriptionName,new MessageRecoveryListener(){
-                    public void recoverMessage(Message message) throws Exception{
+                    public boolean recoverMessage(Message message) throws Exception{
                         message.setRegionDestination(Topic.this);
                         try{
                             msgContext.setMessageReference(message);
@@ -203,9 +203,10 @@ public class Topic implements Destination {
                             // TODO: Need to handle this better.
                             e.printStackTrace();
                         }
+                        return true;
                     }
 
-                    public void recoverMessageReference(MessageId messageReference) throws Exception{
+                    public boolean recoverMessageReference(MessageId messageReference) throws Exception{
                         throw new RuntimeException("Should not be called.");
                     }
 
@@ -426,11 +427,14 @@ public class Topic implements Destination {
         try{
             if(store!=null){
                 store.recover(new MessageRecoveryListener(){
-                    public void recoverMessage(Message message) throws Exception{
+                    public boolean recoverMessage(Message message) throws Exception{
                         result.add(message);
+                        return true;
                     }
 
-                    public void recoverMessageReference(MessageId messageReference) throws Exception{}
+                    public boolean  recoverMessageReference(MessageId messageReference) throws Exception{
+                        return true;
+                    }
 
                     public void finished(){}
 

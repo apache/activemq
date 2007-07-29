@@ -23,7 +23,6 @@ package org.apache.activemq.store.jdbc;
  * @version $Revision: 1.3 $
  */
 public interface JDBCMessageRecoveryListener {
-    void recoverMessage(long sequenceId, byte[] message) throws Exception;
-    void recoverMessageReference(String reference) throws Exception;
-    void finished();
+    boolean recoverMessage(long sequenceId, byte[] message) throws Exception;
+    boolean recoverMessageReference(String reference) throws Exception;
 }
