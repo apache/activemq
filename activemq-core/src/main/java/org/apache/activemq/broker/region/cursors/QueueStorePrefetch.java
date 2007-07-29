@@ -130,16 +130,17 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements
     public void finished(){
     }
 
-    public void recoverMessage(Message message) throws Exception{
+    public boolean recoverMessage(Message message) throws Exception{
         message.setRegionDestination(regionDestination);
         message.incrementReferenceCount();
         batchList.addLast(message);
+        return true;
     }
 
-    public void recoverMessageReference(MessageId messageReference) throws Exception {
+    public boolean recoverMessageReference(MessageId messageReference) throws Exception {
         Message msg=store.getMessage(messageReference);
         if(msg!=null){
-            recoverMessage(msg);
+            return recoverMessage(msg);
         }else{
             String err = "Failed to retrieve message for id: "+messageReference;
             log.error(err);

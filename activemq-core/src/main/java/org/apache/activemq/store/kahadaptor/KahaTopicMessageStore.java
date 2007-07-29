@@ -148,11 +148,12 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
                 ConsumerMessageRef ref=(ConsumerMessageRef)i.next();
                 Message msg=messageContainer.get(ref.getMessageEntry());
                 if(msg!=null){
-                	recoverMessage(listener, msg);
+                    if(!recoverMessage(listener,msg)){
+                        break;
+                    }
                 }
             }
         }
-        listener.finished();
     }
 
 	public void recoverNextMessages(String clientId,String subscriptionName,int maxReturned,
@@ -186,7 +187,6 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
                 }while(entry!=null&&count<maxReturned&&listener.hasSpace());
             }
         }
-        listener.finished();
     }
 
     public void delete(){

@@ -135,25 +135,29 @@ public class Queue implements Destination, Task {
             if(messages.isRecoveryRequired()){
                 store.recover(new MessageRecoveryListener(){
 
-                    public void recoverMessage(Message message){
+                    public boolean recoverMessage(Message message){
                         // Message could have expired while it was being loaded..
                         if(message.isExpired()){
                             broker.messageExpired(createConnectionContext(),message);
                             destinationStatistics.getMessages().decrement();
-                            return;
+                            return true;
                         }
-                        message.setRegionDestination(Queue.this);
-                        synchronized(messages){
-                            try{
-                                messages.addMessageLast(message);
-                            }catch(Exception e){
-                                log.fatal("Failed to add message to cursor",e);
+                        if(hasSpace()){
+                            message.setRegionDestination(Queue.this);
+                            synchronized(messages){
+                                try{
+                                    messages.addMessageLast(message);
+                                }catch(Exception e){
+                                    log.fatal("Failed to add message to cursor",e);
+                                }
                             }
+                            destinationStatistics.getMessages().increment();
+                            return true;
                         }
-                        destinationStatistics.getMessages().increment();
+                        return false;
                     }
 
-                    public void recoverMessageReference(MessageId messageReference) throws Exception{
+                    public boolean recoverMessageReference(MessageId messageReference) throws Exception{
                         throw new RuntimeException("Should not be called.");
                     }
 

@@ -34,27 +34,29 @@ final class RecoveryListenerAdapter implements MessageRecoveryListener{
         this.listener=listener;
     }
 
-    public void finished(){
-        listener.finished();
-    }
-
+    
     public boolean hasSpace(){
         return listener.hasSpace();
     }
 
-    public void recoverMessage(Message message) throws Exception{
-        listener.recoverMessage(message);
-        lastRecovered=message.getMessageId();
-        count++;
+    public boolean recoverMessage(Message message) throws Exception{
+        if(listener.hasSpace()){
+            listener.recoverMessage(message);
+            lastRecovered=message.getMessageId();
+            count++;
+            return true;
+        }
+        return false;
     }
 
-    public void recoverMessageReference(MessageId ref) throws Exception{
+    public boolean recoverMessageReference(MessageId ref) throws Exception{
         Message message=this.store.getMessage(ref);
         if(message!=null){
-            recoverMessage(message);
+           return  recoverMessage(message);
         }else{
             log.error("Message id "+ref+" could not be recovered from the data store!");
         }
+        return false;
     }
     
     MessageId getLastRecoveredMessageId() {

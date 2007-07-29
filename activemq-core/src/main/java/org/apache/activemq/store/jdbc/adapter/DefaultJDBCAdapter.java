@@ -297,17 +297,20 @@ public class DefaultJDBCAdapter implements JDBCAdapter{
             rs=s.executeQuery();
             if(statements.isUseExternalMessageReferences()){
                 while(rs.next()){
-                    listener.recoverMessageReference(rs.getString(2));
+                    if (!listener.recoverMessageReference(rs.getString(2))) {
+                        break;
+                    }
                 }
             }else{
                 while(rs.next()){
-                    listener.recoverMessage(rs.getLong(1),getBinaryData(rs,2));
+                    if(!listener.recoverMessage(rs.getLong(1),getBinaryData(rs,2))) {
+                        break;
+                    }
                 }
             }
         }finally{
             close(rs);
             close(s);
-            listener.finished();
         }
     }
 
@@ -350,17 +353,20 @@ public class DefaultJDBCAdapter implements JDBCAdapter{
             rs=s.executeQuery();
             if(statements.isUseExternalMessageReferences()){
                 while(rs.next()){
-                    listener.recoverMessageReference(rs.getString(2));
+                    if (!listener.recoverMessageReference(rs.getString(2))){
+                        break;
+                    }
                 }
             }else{
                 while(rs.next()){
-                    listener.recoverMessage(rs.getLong(1),getBinaryData(rs,2));
+                    if (!listener.recoverMessage(rs.getLong(1),getBinaryData(rs,2))) {
+                        break;
+                    }
                 }
             }
         }finally{
             close(rs);
             close(s);
-            listener.finished();
         }
     }
 
@@ -379,19 +385,24 @@ public class DefaultJDBCAdapter implements JDBCAdapter{
             int count=0;
             if(statements.isUseExternalMessageReferences()){
                 while(rs.next()&&count<maxReturned){
-                    listener.recoverMessageReference(rs.getString(1));
-                    count++;
+                    if(listener.recoverMessageReference(rs.getString(1))){
+                        count++;
+                    }else{
+                        break;
+                    }
                 }
             }else{
                 while(rs.next()&&count<maxReturned){
-                    listener.recoverMessage(rs.getLong(1),getBinaryData(rs,2));
-                    count++;
+                    if(listener.recoverMessage(rs.getLong(1),getBinaryData(rs,2))){
+                        count++;
+                    }else{
+                        break;
+                    }
                 }
             }
         }finally{
             close(rs);
             close(s);
-            listener.finished();
         }
     }
 
@@ -657,7 +668,8 @@ public class DefaultJDBCAdapter implements JDBCAdapter{
     }
 
     
-    public void doRecoverNextMessages(TransactionContext c,ActiveMQDestination destination,long nextSeq,int maxReturned,JDBCMessageRecoveryListener listener) throws Exception{
+    public void doRecoverNextMessages(TransactionContext c,ActiveMQDestination destination,long nextSeq,
+            int maxReturned,JDBCMessageRecoveryListener listener) throws Exception{
         PreparedStatement s=null;
         ResultSet rs=null;
         try{
@@ -669,23 +681,27 @@ public class DefaultJDBCAdapter implements JDBCAdapter{
             int count=0;
             if(statements.isUseExternalMessageReferences()){
                 while(rs.next()&&count<maxReturned){
-                    listener.recoverMessageReference(rs.getString(1));
-                    count++;
+                    if(listener.recoverMessageReference(rs.getString(1))){
+                        count++;
+                    }else{
+                        log.debug("Stopped recover next messages");
+                    }
                 }
             }else{
                 while(rs.next()&&count<maxReturned){
-                    listener.recoverMessage(rs.getLong(1),getBinaryData(rs,2));
-                    count++;
+                    if(listener.recoverMessage(rs.getLong(1),getBinaryData(rs,2))){
+                        count++;
+                    }else{
+                        log.debug("Stopped recover next messages");
+                    }
                 }
             }
-        }catch(Exception e) {
+        }catch(Exception e){
             e.printStackTrace();
-        }finally {
+        }finally{
             close(rs);
             close(s);
-            listener.finished();
         }
-        
     }
     /*
      * Useful for debugging. public void dumpTables(Connection c, String destinationName, String clientId, String

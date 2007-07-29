@@ -421,11 +421,12 @@ public class ManagedRegionBroker extends RegionBroker {
             ActiveMQTopic topic=new ActiveMQTopic(view.getDestinationName());
             TopicMessageStore store=adapter.createTopicMessageStore(topic);
             store.recover(new MessageRecoveryListener(){
-                public void recoverMessage(Message message) throws Exception{
+                public boolean recoverMessage(Message message) throws Exception{
                     result.add(message);
+                    return true;
                 }
 
-                public void recoverMessageReference(MessageId messageReference) throws Exception{
+                public boolean recoverMessageReference(MessageId messageReference) throws Exception{
                 	throw new RuntimeException("Should not be called.");
                 }
 

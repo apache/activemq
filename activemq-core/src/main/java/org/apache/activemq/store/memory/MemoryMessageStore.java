@@ -95,7 +95,6 @@ public class MemoryMessageStore implements MessageStore{
                     listener.recoverMessage((Message)msg);
                 }
             }
-            listener.finished();
         }
     }
 
@@ -150,7 +149,6 @@ public class MemoryMessageStore implements MessageStore{
                     pastLackBatch=entry.getKey().equals(lastBatchId);
                 }
             }
-            listener.finished();
         }
     }
 

@@ -58,16 +58,21 @@ public class KahaReferenceStore implements ReferenceStore{
         throw new RuntimeException("Use addMessageReference instead");
     }
 
-    protected final void recoverReference(MessageRecoveryListener listener,ReferenceRecord record) throws Exception{
-        listener.recoverMessageReference(new MessageId(record.getMessageId()));
+    protected final boolean recoverReference(MessageRecoveryListener listener,ReferenceRecord record) throws Exception{
+        if (listener.hasSpace()) {
+            listener.recoverMessageReference(new MessageId(record.getMessageId()));
+            return true;
+        }
+        return false;
     }
 
     public synchronized void recover(MessageRecoveryListener listener) throws Exception{
         for(StoreEntry entry=messageContainer.getFirst();entry!=null;entry=messageContainer.getNext(entry)){
             ReferenceRecord record=messageContainer.getValue(entry);
-            recoverReference(listener,record);
+            if (!recoverReference(listener,record)) {
+                break;
+            }
         }
-        listener.finished();
     }
 
     public synchronized void recoverNextMessages(int maxReturned,MessageRecoveryListener listener) throws Exception{
@@ -95,7 +100,6 @@ public class KahaReferenceStore implements ReferenceStore{
                 entry=messageContainer.getNext(entry);
             }while(entry!=null&&count<maxReturned&&listener.hasSpace());
         }
-        listener.finished();
     }
 
     public synchronized void addMessageReference(ConnectionContext context,MessageId messageId,ReferenceData data)

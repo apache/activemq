@@ -24,8 +24,7 @@ import org.apache.activemq.command.MessageId;
  * @version $Revision: 1.4 $
  */
 public interface MessageRecoveryListener {
-    void recoverMessage(Message message) throws Exception;
-    void recoverMessageReference(MessageId ref) throws Exception;
-    void finished();
+    boolean recoverMessage(Message message) throws Exception;
+    boolean recoverMessageReference(MessageId ref) throws Exception;
     boolean hasSpace();
 }

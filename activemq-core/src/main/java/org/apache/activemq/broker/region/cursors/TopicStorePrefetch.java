@@ -159,16 +159,17 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements Message
     public void finished(){
     }
 
-    public synchronized void recoverMessage(Message message) throws Exception{
+    public synchronized boolean recoverMessage(Message message) throws Exception{
         message.setRegionDestination(regionDestination);
         // only increment if count is zero (could have been cached)
         if(message.getReferenceCount()==0){
             message.incrementReferenceCount();
         }
         batchList.addLast(message);
+        return true;
     }
 
-    public void recoverMessageReference(MessageId messageReference) throws Exception{
+    public boolean recoverMessageReference(MessageId messageReference) throws Exception{
         // shouldn't get called
         throw new RuntimeException("Not supported");
     }
