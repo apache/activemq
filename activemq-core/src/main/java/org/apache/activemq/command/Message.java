@@ -626,4 +626,8 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
 	public void setCluster(BrokerId[] cluster) {
 		this.cluster = cluster;
 	}
+    
+    public boolean isMessage() {
+        return true;
+    }
 }
