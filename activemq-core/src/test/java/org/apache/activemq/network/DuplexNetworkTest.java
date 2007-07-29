@@ -21,14 +21,15 @@ import org.apache.commons.logging.LogFactory;
 public class DuplexNetworkTest extends SimpleNetworkTest{
 
     protected static final Log log=LogFactory.getLog(DuplexNetworkTest.class);
-/*
+
     protected String getLocalBrokerURI(){
         return "org/apache/activemq/network/duplexLocalBroker.xml";
     }
-    */
+    
 
     protected BrokerService createRemoteBroker() throws Exception{
         BrokerService broker=new BrokerService();
+        broker.setBrokerName("remoteBroker");
         broker.addConnector("tcp://localhost:61617");
         return broker;
     }
