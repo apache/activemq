@@ -94,7 +94,7 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
         if(message.isAdvisory()&&message.getDataStructure()!=null
                         &&message.getDataStructure().getDataStructureType()==CommandTypes.CONSUMER_INFO){
             ConsumerInfo info=(ConsumerInfo) message.getDataStructure();
-            hops = info.getBrokerPath() == null ? 0 : message.getBrokerPath().length;
+            hops = info.getBrokerPath() == null ? 0 : info.getBrokerPath().length;
             if(hops >= networkTTL ){
                 if (log.isTraceEnabled()){
                     log.trace("ConsumerInfo advisory restricted to " + networkTTL + " network hops ignoring: " + message);
@@ -106,7 +106,7 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
     }
     
     public static boolean contains(BrokerId[] brokerPath,BrokerId brokerId){
-        if(brokerPath!=null){
+        if(brokerPath!=null && brokerId != null){
             for(int i=0;i<brokerPath.length;i++){
                 if(brokerId.equals(brokerPath[i]))
                     return true;
