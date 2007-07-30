@@ -103,6 +103,8 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         else {
             info.setCluster(null);
         }
+        info.setBrokerInTime(tightUnmarshalLong(wireFormat, dataIn, bs));
+        info.setBrokerOutTime(tightUnmarshalLong(wireFormat, dataIn, bs));
 
         info.afterUnmarshall(wireFormat);
 
@@ -143,6 +145,8 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         bs.writeBoolean(info.isRecievedByDFBridge());
         bs.writeBoolean(info.isDroppable());
         rc += tightMarshalObjectArray1(wireFormat, info.getCluster(), bs);
+        rc+=tightMarshalLong1(wireFormat, info.getBrokerInTime(), bs);
+        rc+=tightMarshalLong1(wireFormat, info.getBrokerOutTime(), bs);
 
         return rc + 9;
     }
@@ -185,6 +189,8 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         bs.readBoolean();
         bs.readBoolean();
         tightMarshalObjectArray2(wireFormat, info.getCluster(), dataOut, bs);
+        tightMarshalLong2(wireFormat, info.getBrokerInTime(), dataOut, bs);
+        tightMarshalLong2(wireFormat, info.getBrokerOutTime(), dataOut, bs);
 
         info.afterMarshall(wireFormat);
 
@@ -253,6 +259,8 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         else {
             info.setCluster(null);
         }
+        info.setBrokerInTime(looseUnmarshalLong(wireFormat, dataIn));
+        info.setBrokerOutTime(looseUnmarshalLong(wireFormat, dataIn));
 
         info.afterUnmarshall(wireFormat);
 
@@ -296,6 +304,8 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         dataOut.writeBoolean(info.isRecievedByDFBridge());
         dataOut.writeBoolean(info.isDroppable());
         looseMarshalObjectArray(wireFormat, info.getCluster(), dataOut);
+        looseMarshalLong(wireFormat, info.getBrokerInTime(), dataOut);
+        looseMarshalLong(wireFormat, info.getBrokerOutTime(), dataOut);
 
     }
 }

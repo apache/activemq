@@ -88,5 +88,7 @@ public abstract class MessageTestSupport extends BaseCommandTestSupport {
             }
             info.setCluster(value);
         }
+        info.setBrokerInTime(4);
+        info.setBrokerOutTime(5);
     }
 }
