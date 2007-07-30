@@ -169,7 +169,7 @@
     </dependency>
   </dependencies>
 
-	<reporting>
+    <reporting>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -248,8 +248,8 @@
         </configuration>
       </plugin>
     </plugins>
-	</reporting>
-	
+    </reporting>
+    
   <build>
     <plugins>
       <!-- Configure which tests are included/excuded -->
@@ -370,21 +370,6 @@
 
         <executions>
           <execution>
-            <id>default</id>
-            <phase>default</phase>
-		        <configuration>
-              <tasks>
-                <echo>Running OpenWire Generator</echo>
-                <taskdef name="generate" classname="org.apache.activemq.openwire.tool.JavaGeneratorTask"/>
-		            <generate version="3" basedir="${basedir}"/>
-		          </tasks>
-		        </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-
-          <execution>
             <id>site</id>
             <phase>site</phase>
             <configuration>
@@ -409,11 +394,6 @@
           </execution>
         </executions>
         <dependencies>
-          <dependency>
-            <groupId>org.apache.activemq</groupId>
-            <artifactId>activemq-openwire-generator</artifactId>
-            <version>${activemq-version}</version>
-          </dependency>
           <dependency>
             <groupId>xsddoc</groupId>
             <artifactId>maven-xsddoc-plugin</artifactId>
@@ -488,6 +468,43 @@
   </build>
 
   <profiles>
+    
+    <profile>
+      <id>openwire-generate</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.apache.activemq</groupId>
+          <artifactId>activemq-openwire-generator</artifactId>
+          <version>${activemq-version}</version>
+          <optional>true</optional>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>default</id>
+                <phase>generate-sources</phase>
+                <configuration>
+                  <tasks>
+                    <echo>Running OpenWire Generator</echo>
+                    <taskdef name="generate" classname="org.apache.activemq.openwire.tool.JavaGeneratorTask" classpathref="maven.compile.classpath"/>
+                    <generate version="3" basedir="${basedir}"/>
+                  </tasks>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    
     <profile>
       <id>jdk1.4</id>
       <activation>
@@ -498,10 +515,9 @@
           <groupId>activesoap</groupId>
           <artifactId>jaxp-api</artifactId>
         </dependency>
-
       </dependencies>
     </profile>
+    
   </profiles>
-
 
 </project>
