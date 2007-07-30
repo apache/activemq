@@ -211,7 +211,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
         for(Iterator i=durableSubscribers.iterator();i.hasNext();){
             SubscriptionInfo info=(SubscriptionInfo)i.next();
             TopicReferenceStore ts=createTopicReferenceStore((ActiveMQTopic)info.getDestination());
-            ts.addSubsciption(info.getClientId(),info.getSubcriptionName(),info.getSelector(),false);
+            ts.addSubsciption(info.getClientId(),info.getSubscriptionName(),info.getSelector(),false);
         }
     }
 

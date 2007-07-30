@@ -27,7 +27,7 @@ public class SubscriptionKey {
 
 
     public SubscriptionKey(SubscriptionInfo info) {
-        this(info.getClientId(), info.getSubcriptionName());
+        this(info.getClientId(), info.getSubscriptionName());
     }
 
     public SubscriptionKey(String clientId, String subscriptionName) {
