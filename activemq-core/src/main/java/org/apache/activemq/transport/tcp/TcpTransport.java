@@ -17,16 +17,6 @@
  */
 package org.apache.activemq.transport.tcp;
 
-import org.apache.activemq.Service;
-import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportThreadSupport;
-import org.apache.activemq.util.IntrospectionSupport;
-import org.apache.activemq.util.ServiceStopper;
-import org.apache.activemq.wireformat.WireFormat;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import javax.net.SocketFactory;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -40,6 +30,19 @@ import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
+
+import javax.net.SocketFactory;
+
+import org.apache.activemq.Service;
+import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportThreadSupport;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.wireformat.WireFormat;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * An implementation of the {@link Transport} interface using raw tcp/ip
@@ -64,6 +67,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     protected boolean useLocalHost = true;
     protected int minmumWireFormatVersion;
     protected SocketFactory socketFactory;
+    protected final AtomicReference<CountDownLatch> stoppedLatch = new AtomicReference<CountDownLatch>();
 
     private Map socketOptions;
     private Boolean keepAlive;
@@ -131,24 +135,22 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      */
     public void run() {
         log.trace("TCP consumer thread starting");
-        while (!isStopped()) {
-            try {
-                Object command = readCommand();
-                doConsume(command);
-            }
-            catch (SocketTimeoutException e) {
-            }
-            catch (InterruptedIOException e) {
-            }
-            catch (IOException e) {
-                try {
-                    stop();
-                }
-                catch (Exception e2) {
-                    log.warn("Caught while closing: " + e2 + ". Now Closed", e2);
-                }
-                onException(e);
-            }
+        try {
+	        while (!isStopped()) {
+	            try {
+	                Object command = readCommand();
+	                doConsume(command);
+	            }
+	            catch (SocketTimeoutException e) {
+	            }
+	            catch (InterruptedIOException e) {
+	            }
+	        }
+        } catch (IOException e) {
+        	stoppedLatch.get().countDown();
+            onException(e);
+        } finally {
+        	stoppedLatch.get().countDown();
         }
     }
 
@@ -301,6 +303,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
 
     protected void doStart() throws Exception {
         connect();
+        stoppedLatch.set(new CountDownLatch(1));
         super.doStart();
     }
 
@@ -355,6 +358,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         initializeStreams();
     }
 
+    
     protected void doStop(ServiceStopper stopper) throws Exception {
         if (log.isDebugEnabled()) {
             log.debug("Stopping transport " + this);
@@ -366,6 +370,19 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         if (socket != null) {
             socket.close();
         }
+    }
+    
+    
+    /**
+     * Override so that stop() blocks until the run thread is no longer running.
+     */
+    @Override
+    public void stop() throws Exception {
+    	super.stop();
+    	CountDownLatch countDownLatch = stoppedLatch.get();
+    	if( countDownLatch!=null ) {
+    		countDownLatch.await();
+    	}
     }
 
     protected void initializeStreams() throws Exception {

@@ -60,7 +60,7 @@ public class ManagedTransportConnection extends TransportConnection {
         registerMBean(byAddressName);
     }
 
-    public synchronized void stop() throws Exception {
+    public void doStop() throws Exception {
         if (isStarting()) {
             setPendingStop(true);
             return;
@@ -71,7 +71,7 @@ public class ManagedTransportConnection extends TransportConnection {
 	        byClientIdName=null;
 	        byAddressName=null;
     	}
-        super.stop();
+        super.doStop();
     }
 
     /**

@@ -184,8 +184,9 @@ public class JmsTempDestinationTest extends TestCase {
      * Make sure you cannot publish to a temp destination that does not exist anymore.
      * 
      * @throws JMSException
+     * @throws InterruptedException 
      */
-    public void testPublishFailsForClosedConnection() throws JMSException {
+    public void testPublishFailsForClosedConnection() throws JMSException, InterruptedException {
         
         Connection tempConnection = factory.createConnection();
         Session tempSession = tempConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);        
@@ -202,6 +203,7 @@ public class JmsTempDestinationTest extends TestCase {
 
         // Closing the connection should destroy the temp queue that was created.
         tempConnection.close();
+        Thread.sleep(1000); // Wait a little bit to let the delete take effect.
         
         // This message delivery NOT should work since the temp connection is now closed.
         try {
