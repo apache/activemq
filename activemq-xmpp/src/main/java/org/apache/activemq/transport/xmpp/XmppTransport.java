@@ -144,9 +144,8 @@ public class XmppTransport extends TcpTransport {
     }
 
     @Override
-    public void run() {
+    public void doRun() throws IOException {
         log.debug("XMPP consumer thread starting");
-
         try {
             XMLInputFactory xif = XMLInputFactory.newInstance();
             xif.setXMLReporter(new XMLReporter() {
@@ -196,17 +195,8 @@ public class XmppTransport extends TcpTransport {
                 }
             }
         }
-        catch (XMLStreamException e) {
-            log.error("XMPP Reader thread caught: " + e, e);
-        }
         catch (Exception e) {
-            log.error("XMPP Reader thread caught: " + e, e);
-        }
-        try {
-            stop();
-        }
-        catch (Exception e) {
-            log.error("Failed to stop XMPP transport: " + e, e);
+        	throw IOExceptionSupport.create(e);
         }
     }
 
