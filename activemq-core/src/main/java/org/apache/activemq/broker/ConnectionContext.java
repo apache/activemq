@@ -54,7 +54,6 @@ public class ConnectionContext {
     private Object longTermStoreContext;
     private boolean producerFlowControl=true;
     private MessageAuthorizationPolicy messageAuthorizationPolicy;
-    private AtomicInteger referenceCounter = new AtomicInteger();
     private boolean networkConnection;
     private final AtomicBoolean stopping = new AtomicBoolean();
     private final MessageEvaluationContext messageEvaluationContext = new MessageEvaluationContext();
@@ -241,15 +240,6 @@ public class ConnectionContext {
         }
         return true;
     }
-
-	public int incrementReference() {
-		return referenceCounter.incrementAndGet();
-	}
-	
-	public int decrementReference() {
-		return referenceCounter.decrementAndGet();
-	}
-
 	public synchronized boolean isNetworkConnection() {
 		return networkConnection;
 	}

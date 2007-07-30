@@ -57,6 +57,7 @@ import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.memory.UsageManager;
+import org.apache.activemq.state.ConnectionState;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -98,7 +99,7 @@ public class RegionBroker implements Broker {
     private final DestinationInterceptor destinationInterceptor;
     private ConnectionContext adminConnectionContext;
     protected DestinationFactory destinationFactory;
-    protected final ConcurrentHashMap connectionStates = new ConcurrentHashMap();
+    protected final Map<ConnectionId, ConnectionState> connectionStates = Collections.synchronizedMap(new HashMap<ConnectionId, ConnectionState>());
    
     
         
@@ -605,7 +606,7 @@ public class RegionBroker implements Broker {
         this.adminConnectionContext = adminConnectionContext;
     }
     
-	public Map getConnectionStates() {
+	public Map<ConnectionId, ConnectionState> getConnectionStates() {
 		return connectionStates;
 	}
 

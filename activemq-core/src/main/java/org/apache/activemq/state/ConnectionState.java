@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConnectionInfo;
@@ -32,12 +34,9 @@ import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 public class ConnectionState {
     
-    final ConnectionInfo info;
+    ConnectionInfo info;
     private final ConcurrentHashMap transactions = new ConcurrentHashMap();
     private final ConcurrentHashMap sessions = new ConcurrentHashMap();
     private final List tempDestinations = Collections.synchronizedList(new ArrayList());
@@ -52,6 +51,15 @@ public class ConnectionState {
     public String toString() {
         return info.toString();
     }
+    
+	public void reset(ConnectionInfo info) {
+		this.info=info;
+		transactions.clear();
+		sessions.clear();
+		tempDestinations.clear();
+		shutdown.set(false);
+	}
+
 
     public void addTempDestination(DestinationInfo info) {
     	checkShutdown();

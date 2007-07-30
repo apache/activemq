@@ -32,6 +32,7 @@ import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.TransportListener;
+import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -53,10 +54,8 @@ public class VMTransport implements Transport,Task{
     protected boolean network;
     protected boolean async=true;
     protected int asyncQueueDepth=2000;
-    protected List prePeerSetQueue=Collections.synchronizedList(new LinkedList());
     protected LinkedBlockingQueue messageQueue=null;
     protected boolean started;
-    protected final Object startMutex = new Object();
     protected final URI location;
     protected final long id;
     private TaskRunner taskRunner;
@@ -85,45 +84,37 @@ public class VMTransport implements Transport,Task{
         }
         if(peer==null)
             throw new IOException("Peer not connected.");
-        if(!peer.disposed){
-            if(async){
-                asyncOneWay(command);
-            }else{
-                syncOneWay(command);
-            }
-        }else{
-            throw new TransportDisposedIOException("Peer ("+peer.toString()+") disposed.");
-        }
-    }
 
-    protected void syncOneWay(Object command){
     	TransportListener tl=null;
-    	synchronized(peer.startMutex){
+    	synchronized(peer.mutex) {
+    		if( peer.disposed ) {
+    			throw new TransportDisposedIOException("Peer ("+peer.toString()+") disposed.");
+    		}
         	if( peer.started ) {
-                tl = peer.transportListener;
-        	} else if(!peer.disposed) {
-                peer.prePeerSetQueue.add(command);
+                if(peer.async){
+                    peer.enqueue(command);
+        		    peer.wakeup();
+                } else {
+                    tl = peer.transportListener;                   
+                }
+        	} else {
+        		peer.enqueue(command);
         	}
     	}
+    	
     	if( tl!=null ) {
-            tl.onCommand(command);
-        }
+    		tl.onCommand(command);
+    	}
+        
     }
 
-    protected void asyncOneWay(Object command) throws IOException{
-        try{
-            synchronized(mutex){
-                if(messageQueue==null){
-                    messageQueue=new LinkedBlockingQueue(this.asyncQueueDepth);
-                }
-            }
-            messageQueue.put(command);
-            wakeup();
-        }catch(final InterruptedException e){
-            log.error("messageQueue interupted",e);
-            throw new IOException(e.getMessage());
-        }
-    }
+	private void enqueue(Object command) throws IOException {
+		try{
+			getMessageQueue().put(command);
+		}catch(final InterruptedException e){
+		    throw IOExceptionSupport.create(e);
+		}
+	}
 
     public FutureResponse asyncRequest(Object command,ResponseCallback responseCallback) throws IOException{
         throw new AssertionError("Unsupported Method");
@@ -146,32 +137,38 @@ public class VMTransport implements Transport,Task{
     public void setTransportListener(TransportListener commandListener){
         synchronized(mutex){
             this.transportListener=commandListener;
+            wakeup();
         }
-        wakeup();
-        peer.wakeup();
     }
 
+    private LinkedBlockingQueue getMessageQueue() {
+    	synchronized(mutex) {
+	        if( messageQueue==null ) {
+	            messageQueue=new LinkedBlockingQueue(this.asyncQueueDepth);
+	        }
+	        return messageQueue;
+    	}
+    }
+    
+    
     public void start() throws Exception{
         if(transportListener==null)
             throw new IOException("TransportListener not set.");
-        synchronized(startMutex) {
-	        if( !prePeerSetQueue.isEmpty() ) {
-	            for(Iterator iter=prePeerSetQueue.iterator();iter.hasNext();){
-	                Command command=(Command)iter.next();
-	                transportListener.onCommand(command);
-	            }
-	            prePeerSetQueue.clear();
-	        } 
+        
+        synchronized(mutex) {
+        	if( messageQueue!=null ) {
+	           Object command;
+	           while( (command = messageQueue.poll()) !=null ) {
+	        	   transportListener.onCommand(command);
+	           }
+        	}
 	        started = true;
-	        if( isAsync() ) {
-	            peer.wakeup();
-	            wakeup();
-	        }
+            wakeup();
         }
     }
 
     public void stop() throws Exception{
-    	synchronized(startMutex) {
+    	synchronized(mutex) {
             if(!disposed){
     	        started=false;
                 disposed=true;
@@ -221,18 +218,21 @@ public class VMTransport implements Transport,Task{
      * @see org.apache.activemq.thread.Task#iterate()
      */
     public boolean iterate(){
-        final TransportListener tl=peer.transportListener;
-        Command command=null;
+        final TransportListener tl;
         synchronized(mutex){
-            if(messageQueue!=null&&!disposed&&!peer.disposed&&tl!=null&&!messageQueue.isEmpty()){
-                command=(Command)messageQueue.poll();
-            }
+        	tl = transportListener;
+        	if( !started || disposed || tl==null )
+        		return false;
         }
-        if(tl!=null&&command!=null){
+        
+        LinkedBlockingQueue mq = getMessageQueue();
+        final Command command = (Command)mq.poll();                
+        if( command!=null ) {
             tl.onCommand(command);
-        }
-        boolean result=messageQueue!=null&&!messageQueue.isEmpty()&&!peer.disposed;
-        return result;
+            return !mq.isEmpty();
+        } else {
+        	return false;
+    	}        
     }
 
     /**
