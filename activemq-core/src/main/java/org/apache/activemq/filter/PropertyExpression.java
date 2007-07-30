@@ -137,6 +137,16 @@ public class PropertyExpression implements Expression {
                 return new Integer(txId.toString());
             }
         });
+        JMS_PROPERTY_EXPRESSIONS.put("JMS_ActiveMQBrokerInTime", new SubExpression() {
+            public Object evaluate(Message message) {
+                return Long.valueOf(message.getBrokerInTime());
+            }
+        });
+        JMS_PROPERTY_EXPRESSIONS.put("JMS_ActiveMQBrokerOutTime", new SubExpression() {
+            public Object evaluate(Message message) {
+                return Long.valueOf(message.getBrokerOutTime());
+            }
+        });
     }
     
     private final String name;

@@ -125,5 +125,21 @@ public interface DestinationViewMBean {
      * Browses the current destination with the given selector returning a list of messages
      */
     public List browseMessages(String selector) throws InvalidSelectorException;
+    
+       
+    /**
+     * @return longest time a message is held by a destination
+     */
+    public long getMaxEnqueueTime();
+    
+    /**
+     * @return shortest time a message is held by a destination
+     */
+    public long getMinEnqueueTime();
+    
+    /**
+     * @return average time a message is held by a destination
+     */
+    public double getAverageEnqueueTime();
 
 }
