@@ -200,8 +200,12 @@ public class MutableBrokerFilter implements Broker {
        return getNext().getPeerBrokerInfos();
     }
     
-    public void processDispatch(MessageDispatch messageDispatch){
-        getNext().processDispatch(messageDispatch);
+    public void preProcessDispatch(MessageDispatch messageDispatch){
+        getNext().preProcessDispatch(messageDispatch);
+    }
+    
+    public void postProcessDispatch(MessageDispatch messageDispatch){
+        getNext().postProcessDispatch(messageDispatch);
     }
     
     public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception{
@@ -259,6 +263,9 @@ public class MutableBrokerFilter implements Broker {
         return getNext().getBrokerService();
     }
 
+    public boolean isExpired(MessageReference messageReference) {
+        return getNext().isExpired(messageReference);
+    }
    
     public void messageExpired(ConnectionContext context,MessageReference message){
         getNext().messageExpired(context,message);        

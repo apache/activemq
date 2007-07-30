@@ -385,6 +385,7 @@ public class RegionBroker implements Broker {
     public void send(ProducerBrokerExchange producerExchange,Message message) throws Exception{
         long si=sequenceGenerator.getNextSequenceId();
         message.getMessageId().setBrokerSequenceId(si);
+        message.setBrokerInTime(System.currentTimeMillis());
         if(producerExchange.isMutable()||producerExchange.getRegion()==null){
             ActiveMQDestination destination=message.getDestination();
             // ensure the destination is registered with the RegionBroker
@@ -538,8 +539,14 @@ public class RegionBroker implements Broker {
         return result;
     }
     
-    public void processDispatch(MessageDispatch messageDispatch){
-        
+    public void preProcessDispatch(MessageDispatch messageDispatch){ 
+        Message message = messageDispatch.getMessage();
+        if(message != null) {
+            message.setBrokerOutTime(System.currentTimeMillis());
+        }
+    }
+    
+    public void postProcessDispatch(MessageDispatch messageDispatch){   
     }
     
     public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
@@ -623,6 +630,10 @@ public class RegionBroker implements Broker {
 
     public BrokerService getBrokerService(){
         return brokerService;
+    }
+    
+    public boolean isExpired(MessageReference messageReference) {
+        return messageReference.isExpired();
     }
 
     public void messageExpired(ConnectionContext context,MessageReference node){

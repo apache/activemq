@@ -283,7 +283,7 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * 
      * @param messageDispatch
      */
-    public void processDispatch(MessageDispatch messageDispatch){
+    public void postProcessDispatch(MessageDispatch messageDispatch){
         MessageDispatchNotification mdn=new MessageDispatchNotification();
         mdn.setConsumerId(messageDispatch.getConsumerId());
         mdn.setDeliverySequenceId(messageDispatch.getDeliverySequenceId());
@@ -293,7 +293,7 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
             mdn.setMessageId(msg.getMessageId());
             sendAsyncToSlave(mdn);
         }
-        super.processDispatch(messageDispatch);
+        super.postProcessDispatch(messageDispatch);
     }
 
     /**

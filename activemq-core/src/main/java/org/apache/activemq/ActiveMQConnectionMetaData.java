@@ -142,6 +142,7 @@ public class ActiveMQConnectionMetaData implements ConnectionMetaData {
         jmxProperties.put("JMSXGroupID", "1");
         jmxProperties.put("JMSXGroupSeq", "1");
         jmxProperties.put("JMSXDeliveryCount","1");
+        jmxProperties.put("JMSXProducerTXID","1");
         return jmxProperties.keys();
     }
 }

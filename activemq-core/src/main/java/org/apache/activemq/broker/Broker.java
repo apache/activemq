@@ -186,12 +186,17 @@ public interface Broker extends Region, Service {
      */
     BrokerInfo[] getPeerBrokerInfos();
     
-    
+    /**
+     * Notify the Broker that a dispatch is going to happen
+     * @param messageDispatch
+     */
+    public void preProcessDispatch(MessageDispatch messageDispatch);
+       
     /**
      * Notify the Broker that a dispatch has happened
      * @param messageDispatch
      */
-    public void processDispatch(MessageDispatch messageDispatch);
+    public void postProcessDispatch(MessageDispatch messageDispatch);
   
     /**
      * @return true if the broker has stopped
@@ -264,10 +269,17 @@ public interface Broker extends Region, Service {
     Broker getRoot();
     
     /**
+     * Determine if a message has expired -allows default behaviour to be overriden - 
+     * as the timestamp set by the producer can be out of sync with the broker
+     * @param messageReference
+     * @return true if the message is expired
+     */
+    public boolean isExpired(MessageReference messageReference);
+    
+    /**
      * A Message has Expired
      * @param context
      * @param messageReference
-     * @throws Exception 
      */
     public void messageExpired(ConnectionContext context, MessageReference messageReference);
     
@@ -275,7 +287,8 @@ public interface Broker extends Region, Service {
      * A message needs to go the a DLQ
      * @param context
      * @param messageReference
-     * @throws Exception
      */
     public void sendToDeadLetterQueue(ConnectionContext context,MessageReference messageReference);
+    
+    
 }

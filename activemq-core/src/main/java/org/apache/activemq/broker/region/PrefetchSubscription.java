@@ -382,7 +382,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                             pending.remove();
                             // Message may have been sitting in the pending list a while
                             // waiting for the consumer to ak the message.
-                            if(node!=QueueMessageReference.NULL_MESSAGE&&node.isExpired()){
+                            if(node!=QueueMessageReference.NULL_MESSAGE&&broker.isExpired(node)){
                                 broker.messageExpired(getContext(),node);
                                 dequeueCounter++;
                                 continue;

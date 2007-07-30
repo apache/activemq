@@ -896,8 +896,11 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                             ActiveMQMessage message=createActiveMQMessage(md);
                             beforeMessageIsConsumed(md);
                             try{
-                                listener.onMessage(message);
-                                afterMessageIsConsumed(md,false);
+                                boolean expired=message.isExpired();
+                                if(!expired){
+                                    listener.onMessage(message);
+                                }
+                                afterMessageIsConsumed(md,expired);
                             }catch(RuntimeException e){
                                 if(session.isDupsOkAcknowledge()||session.isAutoAcknowledge()){
                                     // Redeliver the message

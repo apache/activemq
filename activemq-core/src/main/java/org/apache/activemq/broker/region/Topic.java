@@ -263,7 +263,7 @@ public class Topic implements Destination {
     	
     	// There is delay between the client sending it and it arriving at the
     	// destination.. it may have expired.
-    	if( message.isExpired() ) {
+    	if( broker.isExpired(message) ) {
             broker.messageExpired(context,message);
             destinationStatistics.getMessages().decrement();
             if( ( !message.isResponseRequired() || producerExchange.getProducerState().getInfo().getWindowSize() > 0 ) && !context.isInRecoveryMode() ) {
@@ -286,7 +286,7 @@ public class Topic implements Destination {
         				public void run() {
         					
         					// While waiting for space to free up... the message may have expired.
-        			        if(message.isExpired()){
+        			        if(broker.isExpired(message)){
         			            broker.messageExpired(context,message);
                                 destinationStatistics.getMessages().decrement();
         			            
@@ -357,7 +357,7 @@ public class Topic implements Destination {
                     public void afterCommit() throws Exception {
                     	// It could take while before we receive the commit
                     	// operration.. by that time the message could have expired..
-                    	if( message.isExpired() ) {
+                    	if(broker.isExpired(message) ) {
                     		broker.messageExpired(context,message);
                             message.decrementReferenceCount();
                             destinationStatistics.getMessages().decrement();

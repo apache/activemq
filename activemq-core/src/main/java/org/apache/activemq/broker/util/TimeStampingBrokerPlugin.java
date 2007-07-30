@@ -18,7 +18,6 @@
 package org.apache.activemq.broker.util;
 
 import org.apache.activemq.broker.BrokerPluginSupport;
-import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.command.Message;
 
