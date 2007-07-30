@@ -70,13 +70,13 @@ public class TopicRegion extends AbstractRegion {
                 lookup(context,destination);
             }
             String clientId=context.getClientId();
-            String subcriptionName=info.getSubscriptionName();
-            SubscriptionKey key=new SubscriptionKey(clientId,subcriptionName);
+            String subscriptionName=info.getSubscriptionName();
+            SubscriptionKey key=new SubscriptionKey(clientId,subscriptionName);
             DurableTopicSubscription sub=(DurableTopicSubscription)durableSubscriptions.get(key);
             if(sub!=null){
                 if(sub.isActive()){
                     throw new JMSException("Durable consumer is in use for client: "+clientId+" and subscriptionName: "
-                            +subcriptionName);
+                            +subscriptionName);
                 }
                 // Has the selector changed??
                 if(hasDurableSubChanged(info,sub.getConsumerInfo())){
@@ -189,7 +189,7 @@ public class TopicRegion extends AbstractRegion {
     private ConsumerInfo createInactiveConsumerInfo(SubscriptionInfo info) {
         ConsumerInfo rc = new ConsumerInfo();
         rc.setSelector(info.getSelector());
-        rc.setSubscriptionName(info.getSubcriptionName());
+        rc.setSubscriptionName(info.getSubscriptionName());
         rc.setDestination(info.getDestination());
         rc.setConsumerId(createConsumerId());
         return rc;

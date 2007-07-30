@@ -31,7 +31,7 @@ public class SubscriptionInfo implements DataStructure {
 
     protected ActiveMQDestination destination;
     protected String clientId;
-    protected String subcriptionName;
+    protected String subscriptionName;
     protected String selector;
     
     public byte getDataStructureType() {
@@ -73,13 +73,26 @@ public class SubscriptionInfo implements DataStructure {
 
     /**
      * @openwire:property version=1
+     * @deprecated
      */
     public String getSubcriptionName() {
-        return subcriptionName;
+        return subscriptionName;
     }
 
-    public void setSubcriptionName(String subcriptionName) {
-        this.subcriptionName = subcriptionName;
+    /**
+     * @param subscriptionName
+     *  * @deprecated
+     */
+    public void setSubcriptionName(String subscriptionName) {
+        this.subscriptionName = subscriptionName;
+    }
+    
+    public String getSubscriptionName() {
+        return subscriptionName;
+    }
+
+    public void setSubscriptionName(String subscriptionName) {
+        this.subscriptionName = subscriptionName;
     }
 
     public boolean isMarshallAware() {
@@ -92,7 +105,7 @@ public class SubscriptionInfo implements DataStructure {
     
     public int hashCode() {
         int h1 = clientId != null ? clientId.hashCode():-1;
-        int h2 = subcriptionName != null ? subcriptionName.hashCode():-1;
+        int h2 = subscriptionName != null ? subscriptionName.hashCode():-1;
         return h1 ^ h2;
     }
     
@@ -102,8 +115,8 @@ public class SubscriptionInfo implements DataStructure {
             SubscriptionInfo other=(SubscriptionInfo)obj;
             result=(clientId==null&&other.clientId==null||clientId!=null&&other.clientId!=null
                     &&clientId.equals(other.clientId))
-                    &&(subcriptionName==null&&other.subcriptionName==null||subcriptionName!=null
-                            &&other.subcriptionName!=null&&subcriptionName.equals(other.subcriptionName));
+                    &&(subscriptionName==null&&other.subscriptionName==null||subscriptionName!=null
+                            &&other.subscriptionName!=null&&subscriptionName.equals(other.subscriptionName));
         }
         return result;
     }

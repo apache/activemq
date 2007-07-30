@@ -89,7 +89,7 @@ public class InactiveDurableSubscriptionView extends SubscriptionView implements
      * @return name of the durable consumer
      */
     public String getSubscriptionName(){
-        return subscriptionInfo.getSubcriptionName();
+        return subscriptionInfo.getSubscriptionName();
     }
     
     /**
@@ -125,7 +125,7 @@ public class InactiveDurableSubscriptionView extends SubscriptionView implements
     public void destroy() throws Exception {
         RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
         info.setClientId(clientId);
-        info.setSubcriptionName(subscriptionInfo.getSubcriptionName());
+        info.setSubcriptionName(subscriptionInfo.getSubscriptionName());
         ConnectionContext context = new ConnectionContext();
         context.setBroker(broker);
         context.setClientId(clientId);

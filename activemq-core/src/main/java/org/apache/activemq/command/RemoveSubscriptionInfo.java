@@ -30,7 +30,7 @@ public class RemoveSubscriptionInfo extends BaseCommand {
 
     protected ConnectionId connectionId;
     protected String clientId;
-    protected String subcriptionName;
+    protected String subscriptionName;
 
 
     public byte getDataStructureType() {
@@ -49,13 +49,25 @@ public class RemoveSubscriptionInfo extends BaseCommand {
 
     /**
      * @openwire:property version=1
+     * @deprecated
      */
     public String getSubcriptionName() {
-        return subcriptionName;
+        return subscriptionName;
     }
 
-    public void setSubcriptionName(String subcriptionName) {
-        this.subcriptionName = subcriptionName;
+    /**
+     * @deprecated
+     */
+    public void setSubcriptionName(String subscriptionName) {
+        this.subscriptionName = subscriptionName;
+    }
+    
+    public String getSubscriptionName() {
+        return subscriptionName;
+    }
+
+    public void setSubscriptionName(String subscriptionName) {
+        this.subscriptionName = subscriptionName;
     }
 
     /**
