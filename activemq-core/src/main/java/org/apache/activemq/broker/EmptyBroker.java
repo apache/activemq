@@ -185,13 +185,10 @@ public class EmptyBroker implements Broker {
         return null;
     }
 
-    /**
-     * Notifiy the Broker that a dispatch has happened
-     * 
-     * @param messageDispatch
-     */
-    public void processDispatch(MessageDispatch messageDispatch) {
-
+    public void preProcessDispatch(MessageDispatch messageDispatch) {
+    }
+    
+    public void postProcessDispatch(MessageDispatch messageDispatch) {
     }
 
     public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
@@ -245,6 +242,10 @@ public class EmptyBroker implements Broker {
         return null;
     }
 
+    public boolean isExpired(MessageReference messageReference) {
+        return false;
+    }
+    
     public void messageExpired(ConnectionContext context,MessageReference message){        
     }
 

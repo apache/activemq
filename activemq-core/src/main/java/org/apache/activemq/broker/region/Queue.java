@@ -137,7 +137,7 @@ public class Queue implements Destination, Task {
 
                     public boolean recoverMessage(Message message){
                         // Message could have expired while it was being loaded..
-                        if(message.isExpired()){
+                        if(broker.isExpired(message)){
                             broker.messageExpired(createConnectionContext(),message);
                             destinationStatistics.getMessages().decrement();
                             return true;
@@ -379,7 +379,7 @@ public class Queue implements Destination, Task {
 	            	        try {							
 	        			        
 	        					// While waiting for space to free up... the message may have expired.
-	            	        	if(message.isExpired()) {
+	            	        	if(broker.isExpired(message)) {
 	        			            broker.messageExpired(context,message);
 	                                destinationStatistics.getMessages().decrement();
 	        			        } else {
@@ -455,7 +455,7 @@ public class Queue implements Destination, Task {
                 	try { 
                         // It could take while before we receive the commit
                         // op, by that time the message could have expired..
-	                    if(message.isExpired()){
+	                    if(broker.isExpired(message)){
 	                        broker.messageExpired(context,message);
                             destinationStatistics.getMessages().decrement();
 	                        return;
@@ -1014,7 +1014,7 @@ public class Queue implements Destination, Task {
                         while(messages.hasNext()&&count<toPageIn){
                             MessageReference node=messages.next();
                             messages.remove();
-                            if(!node.isExpired()){
+                            if(!broker.isExpired(node)){
                                 node=createMessageReference(node.getMessage());
                                 result.add(node);
                                 count++;

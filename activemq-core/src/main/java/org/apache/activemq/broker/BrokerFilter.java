@@ -51,189 +51,190 @@ public class BrokerFilter implements Broker {
     
     final protected Broker next;
 
-    public BrokerFilter(Broker next) {
+    public BrokerFilter(Broker next){
         this.next=next;
     }
-   
+
     public Broker getAdaptor(Class type){
-        if (type.isInstance(this)){
+        if(type.isInstance(this)){
             return this;
         }
         return next.getAdaptor(type);
     }
 
-    public Map getDestinationMap() {
+    public Map getDestinationMap(){
         return next.getDestinationMap();
     }
 
-    public Set getDestinations(ActiveMQDestination destination) {
+    public Set getDestinations(ActiveMQDestination destination){
         return next.getDestinations(destination);
     }
 
-    public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
-        next.acknowledge(consumerExchange, ack);
+    public void acknowledge(ConsumerBrokerExchange consumerExchange,MessageAck ack) throws Exception{
+        next.acknowledge(consumerExchange,ack);
     }
 
-    public Response messagePull(ConnectionContext context, MessagePull pull) throws Exception {
-        return next.messagePull(context, pull);
+    public Response messagePull(ConnectionContext context,MessagePull pull) throws Exception{
+        return next.messagePull(context,pull);
     }
 
-    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
-        next.addConnection(context, info);
+    public void addConnection(ConnectionContext context,ConnectionInfo info) throws Exception{
+        next.addConnection(context,info);
     }
 
-    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        return next.addConsumer(context, info);
+    public Subscription addConsumer(ConnectionContext context,ConsumerInfo info) throws Exception{
+        return next.addConsumer(context,info);
     }
 
-    public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
-        next.addProducer(context, info);
+    public void addProducer(ConnectionContext context,ProducerInfo info) throws Exception{
+        next.addProducer(context,info);
     }
 
-    public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Exception {
-        next.commitTransaction(context, xid, onePhase);
+    public void commitTransaction(ConnectionContext context,TransactionId xid,boolean onePhase) throws Exception{
+        next.commitTransaction(context,xid,onePhase);
     }
 
-    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
-        next.removeSubscription(context, info);
+    public void removeSubscription(ConnectionContext context,RemoveSubscriptionInfo info) throws Exception{
+        next.removeSubscription(context,info);
     }
 
-    public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Exception {
+    public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Exception{
         return next.getPreparedTransactions(context);
     }
 
-    public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception {
-        return next.prepareTransaction(context, xid);
+    public int prepareTransaction(ConnectionContext context,TransactionId xid) throws Exception{
+        return next.prepareTransaction(context,xid);
     }
 
-    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
-        next.removeConnection(context, info, error);
+    public void removeConnection(ConnectionContext context,ConnectionInfo info,Throwable error) throws Exception{
+        next.removeConnection(context,info,error);
     }
 
-    public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        next.removeConsumer(context, info);
+    public void removeConsumer(ConnectionContext context,ConsumerInfo info) throws Exception{
+        next.removeConsumer(context,info);
     }
 
-    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
-        next.removeProducer(context, info);
+    public void removeProducer(ConnectionContext context,ProducerInfo info) throws Exception{
+        next.removeProducer(context,info);
     }
 
-    public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Exception {
-        next.rollbackTransaction(context, xid);
+    public void rollbackTransaction(ConnectionContext context,TransactionId xid) throws Exception{
+        next.rollbackTransaction(context,xid);
     }
 
-    public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
-        next.send(producerExchange, messageSend);
+    public void send(ProducerBrokerExchange producerExchange,Message messageSend) throws Exception{
+        next.send(producerExchange,messageSend);
     }
 
-    public void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception {
-        next.beginTransaction(context, xid);
+    public void beginTransaction(ConnectionContext context,TransactionId xid) throws Exception{
+        next.beginTransaction(context,xid);
     }
 
-    public void forgetTransaction(ConnectionContext context, TransactionId transactionId) throws Exception {
-        next.forgetTransaction(context, transactionId);
+    public void forgetTransaction(ConnectionContext context,TransactionId transactionId) throws Exception{
+        next.forgetTransaction(context,transactionId);
     }
 
-    public Connection[] getClients() throws Exception {
+    public Connection[] getClients() throws Exception{
         return next.getClients();
     }
 
-    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
-        return next.addDestination(context, destination);
+    public Destination addDestination(ConnectionContext context,ActiveMQDestination destination) throws Exception{
+        return next.addDestination(context,destination);
     }
 
-    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
-        next.removeDestination(context, destination, timeout);
+    public void removeDestination(ConnectionContext context,ActiveMQDestination destination,long timeout)
+            throws Exception{
+        next.removeDestination(context,destination,timeout);
     }
 
-    public ActiveMQDestination[] getDestinations() throws Exception {
+    public ActiveMQDestination[] getDestinations() throws Exception{
         return next.getDestinations();
     }
 
-    public void start() throws Exception {
+    public void start() throws Exception{
         next.start();
     }
 
-    public void stop() throws Exception {
+    public void stop() throws Exception{
         next.stop();
     }
 
-    public void addSession(ConnectionContext context, SessionInfo info) throws Exception {
-        next.addSession(context, info);
+    public void addSession(ConnectionContext context,SessionInfo info) throws Exception{
+        next.addSession(context,info);
     }
 
-    public void removeSession(ConnectionContext context, SessionInfo info) throws Exception {
-        next.removeSession(context, info);
+    public void removeSession(ConnectionContext context,SessionInfo info) throws Exception{
+        next.removeSession(context,info);
     }
 
-    public BrokerId getBrokerId() {
+    public BrokerId getBrokerId(){
         return next.getBrokerId();
     }
 
-    public String getBrokerName() {
+    public String getBrokerName(){
         return next.getBrokerName();
     }
-	
-    public void gc() {
+
+    public void gc(){
         next.gc();
     }
 
-
     public void addBroker(Connection connection,BrokerInfo info){
-        next.addBroker(connection, info);
-    }
-    
-    public void removeBroker(Connection connection,BrokerInfo info){
-        next.removeBroker(connection, info);
+        next.addBroker(connection,info);
     }
 
+    public void removeBroker(Connection connection,BrokerInfo info){
+        next.removeBroker(connection,info);
+    }
 
     public BrokerInfo[] getPeerBrokerInfos(){
         return next.getPeerBrokerInfos();
     }
-    
-    public void processDispatch(MessageDispatch messageDispatch){
-        next.processDispatch(messageDispatch);
+
+    public void preProcessDispatch(MessageDispatch messageDispatch){
+        next.preProcessDispatch(messageDispatch);
     }
-    
+
+    public void postProcessDispatch(MessageDispatch messageDispatch){
+        next.postProcessDispatch(messageDispatch);
+    }
+
     public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception{
         next.processDispatchNotification(messageDispatchNotification);
     }
-        
+
     public boolean isStopped(){
         return next.isStopped();
     }
-    
+
     public Set getDurableDestinations(){
         return next.getDurableDestinations();
     }
-    
+
     public void addDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{
-        next.addDestinationInfo(context, info);
-        
+        next.addDestinationInfo(context,info);
     }
 
     public void removeDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{
-        next.removeDestinationInfo(context, info);
-        
+        next.removeDestinationInfo(context,info);
     }
 
     public boolean isFaultTolerantConfiguration(){
         return next.isFaultTolerantConfiguration();
     }
 
-    public ConnectionContext getAdminConnectionContext() {
+    public ConnectionContext getAdminConnectionContext(){
         return next.getAdminConnectionContext();
     }
 
-    public void setAdminConnectionContext(ConnectionContext adminConnectionContext) {
+    public void setAdminConnectionContext(ConnectionContext adminConnectionContext){
         next.setAdminConnectionContext(adminConnectionContext);
     }
-    
-    public Store getTempDataStore() {
+
+    public Store getTempDataStore(){
         return next.getTempDataStore();
     }
-    
+
     public URI getVmConnectorURI(){
         return next.getVmConnectorURI();
     }
@@ -241,20 +242,24 @@ public class BrokerFilter implements Broker {
     public void brokerServiceStarted(){
         next.brokerServiceStarted();
     }
-    
+
     public BrokerService getBrokerService(){
         return next.getBrokerService();
     }
 
+    public boolean isExpired(MessageReference messageReference){
+        return next.isExpired(messageReference);
+    }
+
     public void messageExpired(ConnectionContext context,MessageReference message){
-        next.messageExpired(context,message); 
+        next.messageExpired(context,message);
     }
 
     public void sendToDeadLetterQueue(ConnectionContext context,MessageReference messageReference){
-       next.sendToDeadLetterQueue(context,messageReference);       
+        next.sendToDeadLetterQueue(context,messageReference);
     }
 
-    public Broker getRoot() {
-       return next.getRoot();
+    public Broker getRoot(){
+        return next.getRoot();
     }
 }

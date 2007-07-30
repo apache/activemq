@@ -54,6 +54,8 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
     protected long expiration;
     protected long timestamp;
     protected long arrival;
+    protected long brokerInTime;
+    protected long brokerOutTime;
     protected String correlationId;
     protected ActiveMQDestination replyTo;
     protected boolean persistent;
@@ -83,6 +85,8 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
     private BrokerId [] brokerPath;
     protected boolean droppable = false;
     private BrokerId [] cluster;
+    
+    
 
     abstract public Message copy();
     
@@ -123,6 +127,8 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
         copy.arrival = arrival;
         copy.connection = connection;
         copy.regionDestination = regionDestination;
+        copy.brokerInTime=brokerInTime;
+        copy.brokerOutTime=brokerOutTime;
         //copying the broker path breaks networks - if a consumer re-uses a consumed
         //message and forwards it on
         //copy.brokerPath = brokerPath;
@@ -629,5 +635,27 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
     
     public boolean isMessage() {
         return true;
+    }
+
+    /**
+     * @openwire:property version=3
+     */
+    public long getBrokerInTime(){
+        return this.brokerInTime;
+    }
+
+    public void setBrokerInTime(long brokerInTime){
+        this.brokerInTime=brokerInTime;
+    }
+
+    /**
+     * @openwire:property version=3
+     */
+    public long getBrokerOutTime(){
+        return this.brokerOutTime;
+    }
+
+    public void setBrokerOutTime(long brokerOutTime){
+        this.brokerOutTime=brokerOutTime;
     }
 }

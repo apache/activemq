@@ -188,7 +188,11 @@ public class ErrorBroker implements Broker {
         throw new BrokerStoppedException(this.message);
     }
 
-    public void processDispatch(MessageDispatch messageDispatch) {
+    public void preProcessDispatch(MessageDispatch messageDispatch) {
+        throw new BrokerStoppedException(this.message);
+    }
+    
+    public void postProcessDispatch(MessageDispatch messageDispatch) {
         throw new BrokerStoppedException(this.message);
     }
 
@@ -242,6 +246,10 @@ public class ErrorBroker implements Broker {
     }
     
     public BrokerService getBrokerService(){
+        throw new BrokerStoppedException(this.message);
+    }
+    
+    public boolean isExpired(MessageReference messageReference) {
         throw new BrokerStoppedException(this.message);
     }
 

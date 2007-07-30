@@ -129,7 +129,7 @@ public class TopicSubscription extends AbstractSubscription{
             matched.reset();
             while(matched.hasNext()){
                 MessageReference node=matched.next();
-                if(node.isExpired()){
+                if(broker.isExpired(node)){
                     matched.remove();
                     dispatchedCounter.incrementAndGet();
                     node.decrementReferenceCount();
@@ -361,7 +361,7 @@ public class TopicSubscription extends AbstractSubscription{
                     matched.remove();
                     // Message may have been sitting in the matched list a while
                     // waiting for the consumer to ak the message.
-                    if(message.isExpired()){
+                    if(broker.isExpired(message)){
                         message.decrementReferenceCount();
                         broker.messageExpired(getContext(),message);
                         dequeueCounter.incrementAndGet();

@@ -28,6 +28,7 @@ public abstract  class AbstractDeadLetterStrategy implements DeadLetterStrategy 
     private boolean processNonPersistent=true;
     private boolean processExpired=true;
     
+    
     public boolean isSendToDeadLetterQueue(Message message){
         boolean result=false;
         if(message!=null){

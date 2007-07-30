@@ -189,9 +189,9 @@ public class UDPTraceBrokerPlugin extends BrokerPluginSupport {
 		return super.prepareTransaction(context, xid);
 	}
 
-	public void processDispatch(MessageDispatch messageDispatch) {
+	public void postProcessDispatch(MessageDispatch messageDispatch) {
     	trace(messageDispatch);
-		super.processDispatch(messageDispatch);
+		super.postProcessDispatch(messageDispatch);
 	}
 
 	public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {

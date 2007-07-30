@@ -741,7 +741,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
             if(message.isMessageDispatch()) {
                 MessageDispatch md=(MessageDispatch) message;
                 Runnable sub=md.getTransmitCallback();
-                broker.processDispatch(md);
+                broker.postProcessDispatch(md);
                 if(sub!=null){
                     sub.run();
                 }
@@ -749,25 +749,26 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
         }
     }
 
-    protected void processDispatch(Command command) throws IOException {
-        try {
-            if( !disposed.get() ) {
-                 dispatch(command);
+    protected void processDispatch(Command command) throws IOException{
+        final MessageDispatch messageDispatch=(MessageDispatch)(command.isMessageDispatch()?command:null);
+        try{
+            if(!disposed.get()){
+                if(messageDispatch!=null){
+                    broker.preProcessDispatch(messageDispatch);
+                }
+                dispatch(command);
             }
-       } finally {
-
-            if(command.isMessageDispatch()){
-                MessageDispatch md=(MessageDispatch) command;
-                Runnable sub=md.getTransmitCallback();
-                broker.processDispatch(md);
+        }finally{
+            if(messageDispatch!=null){
+                Runnable sub=messageDispatch.getTransmitCallback();
+                broker.postProcessDispatch(messageDispatch);
                 if(sub!=null){
                     sub.run();
                 }
             }
-
             getStatistics().getDequeues().increment();
         }
-     }   
+    }   
 
 
 
@@ -918,7 +919,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
 		        if(command.isMessageDispatch()) {
 		            MessageDispatch md=(MessageDispatch) command;
 		            Runnable sub=md.getTransmitCallback();
-		            broker.processDispatch(md);
+		            broker.postProcessDispatch(md);
 		            if(sub!=null){
 		                sub.run();
 		            }
