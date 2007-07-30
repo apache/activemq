@@ -270,25 +270,27 @@ public class AdvisoryBroker extends BrokerFilter {
         fireAdvisory(context, topic, command, targetConsumerId, advisoryMessage);
     }
 
-    protected void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId, ActiveMQMessage advisoryMessage) throws Exception {
-        advisoryMessage.setDataStructure(command);
-        advisoryMessage.setPersistent(false);
-        advisoryMessage.setType(AdvisorySupport.ADIVSORY_MESSAGE_TYPE);
-        advisoryMessage.setMessageId(new MessageId(advisoryProducerId, messageIdGenerator.getNextSequenceId()));
-        advisoryMessage.setTargetConsumerId(targetConsumerId);
-
-        advisoryMessage.setDestination(topic);
-        advisoryMessage.setResponseRequired(false);
-        advisoryMessage.setProducerId(advisoryProducerId);
-        boolean originalFlowControl = context.isProducerFlowControl();
-        final ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
-        producerExchange.setConnectionContext(context);
-        producerExchange.setMutable(true);
-        try {
-            context.setProducerFlowControl(false);
-            next.send(producerExchange, advisoryMessage);
-        } finally {
-            context.setProducerFlowControl(originalFlowControl);
+    protected void fireAdvisory(ConnectionContext context,ActiveMQTopic topic,Command command,
+            ConsumerId targetConsumerId,ActiveMQMessage advisoryMessage) throws Exception{
+        if(getBrokerService().isStarted()){
+            advisoryMessage.setDataStructure(command);
+            advisoryMessage.setPersistent(false);
+            advisoryMessage.setType(AdvisorySupport.ADIVSORY_MESSAGE_TYPE);
+            advisoryMessage.setMessageId(new MessageId(advisoryProducerId,messageIdGenerator.getNextSequenceId()));
+            advisoryMessage.setTargetConsumerId(targetConsumerId);
+            advisoryMessage.setDestination(topic);
+            advisoryMessage.setResponseRequired(false);
+            advisoryMessage.setProducerId(advisoryProducerId);
+            boolean originalFlowControl=context.isProducerFlowControl();
+            final ProducerBrokerExchange producerExchange=new ProducerBrokerExchange();
+            producerExchange.setConnectionContext(context);
+            producerExchange.setMutable(true);
+            try{
+                context.setProducerFlowControl(false);
+                next.send(producerExchange,advisoryMessage);
+            }finally{
+                context.setProducerFlowControl(originalFlowControl);
+            }
         }
     }
 

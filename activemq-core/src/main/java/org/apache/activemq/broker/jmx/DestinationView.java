@@ -107,6 +107,19 @@ public class DestinationView implements DestinationViewMBean {
     public void setMemoryLimit(long limit) {
        destination.getUsageManager().setLimit(limit);
     }
+    
+    public double getAverageEnqueueTime(){
+        return destination.getDestinationStatistics().getProcessTime().getAverageTime();
+    }
+
+    public long getMaxEnqueueTime(){
+        return destination.getDestinationStatistics().getProcessTime().getMaxTime();
+    }
+
+    public long getMinEnqueueTime(){
+        return destination.getDestinationStatistics().getProcessTime().getMinTime();
+    }
+
 
     public CompositeData[] browse() throws OpenDataException{
         try {
@@ -260,5 +273,4 @@ public class DestinationView implements DestinationViewMBean {
     	}
     	
     }
-
 }

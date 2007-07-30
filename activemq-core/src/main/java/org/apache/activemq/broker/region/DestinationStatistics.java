@@ -22,6 +22,7 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.management.PollCountStatisticImpl;
 import org.apache.activemq.management.StatsImpl;
+import org.apache.activemq.management.TimeStatisticImpl;
 
 /**
  * The J2EE Statistics for the a Destination.
@@ -36,6 +37,7 @@ public class DestinationStatistics extends StatsImpl {
     protected CountStatisticImpl messages;
     protected PollCountStatisticImpl messagesCached;
     protected CountStatisticImpl dispatched;
+    protected TimeStatisticImpl processTime;
 
     public DestinationStatistics() {
 
@@ -45,13 +47,14 @@ public class DestinationStatistics extends StatsImpl {
         consumers = new CountStatisticImpl("consumers", "The number of consumers that that are subscribing to messages from the destination");
         messages = new CountStatisticImpl("messages", "The number of messages that that are being held by the destination");
         messagesCached = new PollCountStatisticImpl("messagesCached", "The number of messages that are held in the destination's memory cache");
-
+        processTime = new TimeStatisticImpl("processTime","information around length of time messages are held by a destination");
         addStatistic("enqueues", enqueues);
         addStatistic("dispatched", dispatched);
         addStatistic("dequeues", dequeues);
         addStatistic("consumers", consumers);
         addStatistic("messages", messages);
         addStatistic("messagesCached", messagesCached);
+        addStatistic("processTime",processTime);
     }
 
     public CountStatisticImpl getEnqueues() {
@@ -73,6 +76,18 @@ public class DestinationStatistics extends StatsImpl {
     public CountStatisticImpl getMessages() {
         return messages;
     }
+    
+    public void setMessagesCached(PollCountStatisticImpl messagesCached) {
+        this.messagesCached = messagesCached;
+    }
+
+    public CountStatisticImpl getDispatched() {
+    return dispatched;
+    }
+
+    public TimeStatisticImpl getProcessTime(){
+        return this.processTime;
+    }
 
     public void reset() {
         super.reset();
@@ -89,6 +104,7 @@ public class DestinationStatistics extends StatsImpl {
         consumers.setEnabled(enabled);
         messages.setEnabled(enabled);
         messagesCached.setEnabled(enabled);
+        processTime.setEnabled(enabled);
 
     }    
 
@@ -100,6 +116,7 @@ public class DestinationStatistics extends StatsImpl {
             consumers.setParent(parent.consumers);
             messagesCached.setParent(parent.messagesCached);
             messages.setParent(parent.messages);
+            processTime.setParent(parent.processTime);
         }
         else {
             enqueues.setParent(null);
@@ -108,14 +125,9 @@ public class DestinationStatistics extends StatsImpl {
             consumers.setParent(null);
             messagesCached.setParent(null);
             messages.setParent(null);
+            processTime.setParent(null);
         }
     }
 
-    public void setMessagesCached(PollCountStatisticImpl messagesCached) {
-        this.messagesCached = messagesCached;
-    }
-
-    public CountStatisticImpl getDispatched() {
-	return dispatched;
-    }
+    
 }

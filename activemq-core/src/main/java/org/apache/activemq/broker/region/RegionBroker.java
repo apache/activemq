@@ -539,10 +539,15 @@ public class RegionBroker implements Broker {
         return result;
     }
     
-    public void preProcessDispatch(MessageDispatch messageDispatch){ 
-        Message message = messageDispatch.getMessage();
-        if(message != null) {
-            message.setBrokerOutTime(System.currentTimeMillis());
+    public void preProcessDispatch(MessageDispatch messageDispatch){
+        Message message=messageDispatch.getMessage();
+        if(message!=null){
+            long endTime=System.currentTimeMillis();
+            message.setBrokerOutTime(endTime);
+            if(getBrokerService().isEnableStatistics()){
+                long totalTime = endTime - message.getBrokerInTime();
+                message.getRegionDestination().getDestinationStatistics().getProcessTime().addTime(totalTime);
+            }
         }
     }
     

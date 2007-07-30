@@ -153,8 +153,11 @@ public class StubBroker implements Broker {
     public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         return 0;
     }
+    
+    public void preProcessDispatch(MessageDispatch messageDispatch) {
+    }
 
-    public void processDispatch(MessageDispatch messageDispatch) {
+    public void postProcessDispatch(MessageDispatch messageDispatch) {
     }
 
     public void removeBroker(Connection connection, BrokerInfo info) {
@@ -244,6 +247,10 @@ public class StubBroker implements Broker {
     
     public BrokerService getBrokerService(){
         return null;
+    }
+    
+    public boolean isExpired(MessageReference messageReference) {
+        return false;
     }
 
     public void messageExpired(ConnectionContext context,MessageReference messageReference){
