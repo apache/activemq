@@ -136,7 +136,7 @@ public class JPAReferenceStoreAdapter extends JPAPersistenceAdapter implements R
      * @see org.apache.activemq.store.ReferenceStoreAdapter#isStoreValid()
      */
     public boolean isStoreValid(){
-        return true;
+        return false;
     }
 
     /**
