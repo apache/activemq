@@ -137,14 +137,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         log.trace("TCP consumer thread starting");
         try {
 	        while (!isStopped()) {
-	            try {
-	                Object command = readCommand();
-	                doConsume(command);
-	            }
-	            catch (SocketTimeoutException e) {
-	            }
-	            catch (InterruptedIOException e) {
-	            }
+	            doRun();
 	        }
         } catch (IOException e) {
         	stoppedLatch.get().countDown();
@@ -153,6 +146,18 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         	stoppedLatch.get().countDown();
         }
     }
+
+
+	protected void doRun() throws IOException {
+		try {
+		    Object command = readCommand();
+		    doConsume(command);
+		}
+		catch (SocketTimeoutException e) {
+		}
+		catch (InterruptedIOException e) {
+		}
+	}
 
     protected Object readCommand() throws IOException {
         return wireFormat.unmarshal(dataIn);
