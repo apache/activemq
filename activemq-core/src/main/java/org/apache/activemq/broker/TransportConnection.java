@@ -930,6 +930,7 @@ public class TransportConnection implements Service,Connection,Task,CommandVisit
 		    // from the broker.
 		    
 		    if (!broker.isStopped()) {
+		    	connectionStates=listConnectionStates();
 				for (TransportConnectionState cs : connectionStates) {
 					cs.getContext().getStopping().set(true);
 					try {

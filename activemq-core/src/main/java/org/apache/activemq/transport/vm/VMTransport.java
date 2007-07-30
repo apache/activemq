@@ -168,16 +168,20 @@ public class VMTransport implements Transport,Task{
     }
 
     public void stop() throws Exception{
+    	TaskRunner tr=null;
     	synchronized(mutex) {
             if(!disposed){
     	        started=false;
                 disposed=true;
                 if(taskRunner!=null){
-                    taskRunner.shutdown(1000);
+                	tr = taskRunner;
                     taskRunner=null;
                 }
             }
         }
+    	if( tr !=null ) {
+    		tr.shutdown(1000);
+    	}
     }
 
     public Object narrow(Class target){
