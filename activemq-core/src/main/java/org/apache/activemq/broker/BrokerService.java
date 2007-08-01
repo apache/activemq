@@ -549,13 +549,18 @@ public class BrokerService implements Service {
 
     /**
      * Sets the name of this broker; which must be unique in the network
+     * @param brokerName 
      */
     public void setBrokerName(String brokerName) {
         if (brokerName == null) {
             throw new NullPointerException("The broker name cannot be null");
         }
-        brokerName = brokerName.trim();
-        this.brokerName = brokerName;
+        String str = brokerName.replaceAll("[^a-zA-Z0-9\\.\\_\\-\\:]", "_");
+        if (!str.equals(brokerName)) {
+            log.error("Broker Name: " + brokerName + " contained illegal characters - replaced with " + str);
+        }
+        this.brokerName = str.trim();
+        
     }
 
     public PersistenceAdapterFactory getPersistenceFactory() {
@@ -573,7 +578,7 @@ public class BrokerService implements Service {
     }
 
     public File getBrokerDataDirectory() {
-        String brokerDir = getBrokerName().replaceAll("[^a-zA-Z0-9\\.\\_\\-]", "_");
+        String brokerDir = getBrokerName();
         return new File(getDataDirectoryFile(), brokerDir);
     }
 
