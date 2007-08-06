@@ -27,6 +27,7 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.kaha.CommandMarshaller;
+import org.apache.activemq.kaha.ContainerId;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.Marshaller;
@@ -71,7 +72,8 @@ public class KahaPersistenceAdapter implements PersistenceAdapter{
         try{
             Store store=getStore();
             for(Iterator i=store.getMapContainerIds().iterator();i.hasNext();){
-                Object obj=i.next();
+                ContainerId id=(ContainerId) i.next();
+                Object obj = id.getKey();
                 if(obj instanceof ActiveMQDestination){
                     rc.add((ActiveMQDestination)obj);
                 }

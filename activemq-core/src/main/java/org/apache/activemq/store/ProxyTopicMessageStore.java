@@ -71,8 +71,8 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
             throws IOException {
         delegate.acknowledge(context, clientId, subscriptionName, messageId);
     }
-    public void addSubsciption(String clientId, String subscriptionName, String selector, boolean retroactive) throws IOException {
-        delegate.addSubsciption(clientId, subscriptionName, selector, retroactive);
+    public void addSubsciption(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
+        delegate.addSubsciption(subscriptionInfo, retroactive);
     }
     public void deleteSubscription(String clientId, String subscriptionName) throws IOException {
         delegate.deleteSubscription(clientId, subscriptionName);

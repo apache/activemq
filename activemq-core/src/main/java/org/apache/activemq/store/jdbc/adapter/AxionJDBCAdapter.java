@@ -48,6 +48,7 @@ public class AxionJDBCAdapter extends StreamJDBCAdapter {
                          "CREATE INDEX "+statements.getFullMessageTableName()+"_EIDX ON "+statements.getFullMessageTableName()+" (EXPIRATION)",                 
                          "CREATE TABLE "+statements.getFullAckTableName()+"("
                                +"CONTAINER "+statements.getContainerNameDataType()+" NOT NULL"
+                               +", SUB_DEST " + statements.getContainerNameDataType()
                                +", CLIENT_ID "+statements.getStringIdDataType()+" NOT NULL"
                                +", SUB_NAME "+statements.getStringIdDataType()+" NOT NULL"
                                +", SELECTOR "+statements.getStringIdDataType()

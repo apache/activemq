@@ -21,6 +21,7 @@ import org.apache.activemq.util.IntrospectionSupport;
 
 
 /**
+ * Used to represent a durable subscription.
  * 
  * @openwire:marshaller code="55"
  * @version $Revision: 1.6 $
@@ -29,6 +30,7 @@ public class SubscriptionInfo implements DataStructure {
 
     public static final byte DATA_STRUCTURE_TYPE=CommandTypes.DURABLE_SUBSCRIPTION_INFO;
 
+    protected ActiveMQDestination subscribedDestination;
     protected ActiveMQDestination destination;
     protected String clientId;
     protected String subscriptionName;
@@ -50,6 +52,9 @@ public class SubscriptionInfo implements DataStructure {
     }
 
     /**
+     * This is the a resolved destination that the subscription is receiving messages from.
+     * This will never be a pattern or a composite destination.
+     * 
      * @openwire:property version=1 cache=true
      */
     public ActiveMQDestination getDestination() {
@@ -120,5 +125,24 @@ public class SubscriptionInfo implements DataStructure {
         }
         return result;
     }
+
+    /**
+     * The destination the client originally subscribed to.. This may not match the {@see getDestination} method
+     * if the subscribed destination uses patterns or composites.
+     *  
+     *  If the subscribed destinationis not set, this just ruturns the desitination.
+     *  
+     * @openwire:property version=3
+     */
+	public ActiveMQDestination getSubscribedDestination() {
+		if( subscribedDestination == null ) {
+			return getDestination();
+		}
+		return subscribedDestination;
+	}
+
+	public void setSubscribedDestination(ActiveMQDestination subscribedDestination) {
+		this.subscribedDestination = subscribedDestination;
+	}
 
 }

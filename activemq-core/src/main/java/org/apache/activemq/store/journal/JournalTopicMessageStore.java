@@ -68,9 +68,9 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
         return longTermStore.lookupSubscription(clientId, subscriptionName);
     }
 
-    public void addSubsciption(String clientId, String subscriptionName, String selector, boolean retroactive) throws IOException {
+    public void addSubsciption(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
         this.peristenceAdapter.checkpoint(true, true);
-        longTermStore.addSubsciption(clientId, subscriptionName, selector, retroactive);
+        longTermStore.addSubsciption(subscriptionInfo, retroactive);
     }
 
     public void addMessage(ConnectionContext context, Message message) throws IOException {

@@ -18,7 +18,9 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import javax.jms.InvalidDestinationException;
@@ -148,19 +150,14 @@ public class TopicRegion extends AbstractRegion {
         return "TopicRegion: destinations=" + destinations.size() + ", subscriptions=" + subscriptions.size() + ", memory=" + memoryManager.getPercentUsage()
                 + "%";
     }
-
-    // Implementation methods
-    // -------------------------------------------------------------------------
-    protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
-        Topic topic = (Topic) super.createDestination(context, destination);
- 
-        recoverDurableSubscriptions(context, topic);
-        
-        return topic;
-    }
-
-    private void recoverDurableSubscriptions(ConnectionContext context, Topic topic) throws IOException, JMSException, Exception {
-        TopicMessageStore store = (TopicMessageStore) topic.getMessageStore();
+    
+    @Override
+    protected List<Subscription> addSubscriptionsForDestination(ConnectionContext context, Destination dest) throws Exception {
+    	
+    	List<Subscription> rc = super.addSubscriptionsForDestination(context, dest);    	
+    	HashSet<Subscription> dupChecker = new HashSet<Subscription>(rc);
+    	
+        TopicMessageStore store = (TopicMessageStore) dest.getMessageStore();
         // Eagerly recover the durable subscriptions
         if (store != null) {            
             SubscriptionInfo[] infos = store.getAllSubscriptions();
@@ -181,16 +178,40 @@ public class TopicRegion extends AbstractRegion {
                     sub = (DurableTopicSubscription) createSubscription(c, consumerInfo );
                 }
                 
-                topic.addSubscription(context, sub);
-            }            
+				if( dupChecker.contains(sub ) ) {
+					continue;
+				}
+
+                dupChecker.add(sub);
+                rc.add(sub);
+                dest.addSubscription(context, sub);
+            }
+            
+            // Now perhaps there other durable subscriptions (via wild card) that would match this destination..
+            durableSubscriptions.values();
+            for (Iterator iterator = durableSubscriptions.values().iterator(); iterator
+					.hasNext();) {
+				DurableTopicSubscription sub = (DurableTopicSubscription) iterator.next();
+				// Skip over subscriptions that we allready added..
+				if( dupChecker.contains(sub ) ) {
+					continue;
+				}
+				
+				if( sub.matches(dest.getActiveMQDestination()) ) {
+	                rc.add(sub);
+	                dest.addSubscription(context, sub);
+				}
+			}            
         }
+        
+        return rc;
     }
     
     private ConsumerInfo createInactiveConsumerInfo(SubscriptionInfo info) {
         ConsumerInfo rc = new ConsumerInfo();
         rc.setSelector(info.getSelector());
         rc.setSubscriptionName(info.getSubscriptionName());
-        rc.setDestination(info.getDestination());
+        rc.setDestination(info.getSubscribedDestination());
         rc.setConsumerId(createConsumerId());
         return rc;
     }

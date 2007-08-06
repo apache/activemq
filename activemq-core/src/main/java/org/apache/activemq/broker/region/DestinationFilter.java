@@ -25,6 +25,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.memory.UsageManager;
+import org.apache.activemq.store.MessageStore;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -114,4 +115,8 @@ public class DestinationFilter implements Destination {
             dest.send(context, message);
         }
     }
+
+	public MessageStore getMessageStore() {
+		return next.getMessageStore();
+	}
 }

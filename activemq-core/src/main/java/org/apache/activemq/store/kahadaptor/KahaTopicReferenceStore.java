@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -46,7 +47,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         subscriberContainer=subsContainer;
         // load all the Ack containers
         for(Iterator i=subscriberContainer.keySet().iterator();i.hasNext();){
-            Object key=i.next();
+            String key=(String) i.next();
             addSubscriberMessageContainer(key);
         }
     }
@@ -102,8 +103,8 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         }
     }
 
-    protected ListContainer addSubscriberMessageContainer(Object key) throws IOException{
-        ListContainer container=store.getListContainer(key,"topic-subs-references");
+    protected ListContainer addSubscriberMessageContainer(String key) throws IOException{
+        ListContainer container=store.getListContainer(destination,"topic-subs-references-"+key);
         Marshaller marshaller=new ConsumerMessageRefMarshaller();
         container.setMarshaller(marshaller);
         TopicSubContainer tsc=new TopicSubContainer(container);
@@ -141,14 +142,9 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         }
     }
 
-    public synchronized void addSubsciption(String clientId,String subscriptionName,String selector,boolean retroactive)
+    public synchronized void addSubsciption(SubscriptionInfo info,boolean retroactive)
             throws IOException{
-        SubscriptionInfo info=new SubscriptionInfo();
-        info.setDestination(destination);
-        info.setClientId(clientId);
-        info.setSelector(selector);
-        info.setSubcriptionName(subscriptionName);
-        String key=getSubscriptionKey(clientId,subscriptionName);
+        String key=getSubscriptionKey(info.getClientId(), info.getSubscriptionName());
         // if already exists - won't add it again as it causes data files
         // to hang around
         if(!subscriberContainer.containsKey(key)){
@@ -253,7 +249,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         }
     }
 
-    protected void removeSubscriberMessageContainer(Object key) throws IOException{
+    protected void removeSubscriberMessageContainer(String key) throws IOException{
         subscriberContainer.remove(key);
         TopicSubContainer container=(TopicSubContainer)subscriberMessages.remove(key);
         for(Iterator i=container.iterator();i.hasNext();){
@@ -270,7 +266,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
                 }
             }
         }
-        store.deleteListContainer(key,"topic-subs-references");
+        store.deleteListContainer(destination,"topic-subs-references-"+key);
     }
 
     protected String getSubscriptionKey(String clientId,String subscriberName){

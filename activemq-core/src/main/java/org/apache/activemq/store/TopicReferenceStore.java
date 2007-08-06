@@ -132,6 +132,6 @@ public interface TopicReferenceStore extends ReferenceStore, TopicMessageStore {
      * @throws IOException
      * 
      */
-    public void addSubsciption(String clientId,String subscriptionName,String selector,boolean retroactive)
+    public void addSubsciption(SubscriptionInfo subscriptionInfo,boolean retroactive)
                     throws IOException;	
 }

@@ -106,7 +106,7 @@ public interface TopicMessageStore extends MessageStore{
     public SubscriptionInfo lookupSubscription(String clientId,String subscriptionName) throws IOException;
 
     /**
-     * Lists all the durable subscirptions for a given destination.
+     * Lists all the durable subscriptions for a given destination.
      * 
      * @return an array SubscriptionInfos
      * @throws IOException
@@ -126,6 +126,6 @@ public interface TopicMessageStore extends MessageStore{
      * @throws IOException
      * 
      */
-    public void addSubsciption(String clientId,String subscriptionName,String selector,boolean retroactive)
+    public void addSubsciption(SubscriptionInfo subscriptionInfo, boolean retroactive)
                     throws IOException;
 }

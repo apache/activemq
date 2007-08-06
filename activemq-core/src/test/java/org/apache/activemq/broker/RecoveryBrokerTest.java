@@ -17,6 +17,8 @@
  */
 package org.apache.activemq.broker;
 
+import java.util.ArrayList;
+
 import javax.jms.DeliveryMode;
 
 import junit.framework.Test;
@@ -29,6 +31,7 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
 
@@ -39,6 +42,113 @@ import org.apache.activemq.command.SessionInfo;
  */
 public class RecoveryBrokerTest extends BrokerRestartTestSupport {
         
+	/**
+	 * Used to verify that after a broker restart durable subscriptions that 
+	 * use wild cards are still wild card subscription after broker restart.
+	 * 
+	 * @throws Exception
+	 */
+    public void testWildCardSubscriptionPreservedOnRestart() throws Exception {
+        ActiveMQDestination dest1 = new ActiveMQTopic("TEST.A");
+        ActiveMQDestination dest2 = new ActiveMQTopic("TEST.B");
+        ActiveMQDestination dest3 = new ActiveMQTopic("TEST.C");
+        ActiveMQDestination wildDest = new ActiveMQTopic("TEST.>");
+        
+        ArrayList<MessageId> sentBeforeRestart = new ArrayList<MessageId>(); 
+        ArrayList<MessageId> sentBeforeCreateConsumer = new ArrayList<MessageId>(); 
+        ArrayList<MessageId> sentAfterCreateConsumer = new ArrayList<MessageId>(); 
+        
+        // Setup a first connection
+        {
+	        StubConnection connection1 = createConnection();
+	        ConnectionInfo connectionInfo1 = createConnectionInfo();
+	        connectionInfo1.setClientId("A");
+	        SessionInfo sessionInfo1 = createSessionInfo(connectionInfo1);
+	        ProducerInfo producerInfo1 = createProducerInfo(sessionInfo1);
+	        connection1.send(connectionInfo1);
+	        connection1.send(sessionInfo1);
+	        connection1.send(producerInfo1);
+	        
+	        // Create the durable subscription.
+	        ConsumerInfo consumerInfo1 = createConsumerInfo(sessionInfo1, wildDest);
+	        consumerInfo1.setSubscriptionName("test");
+	        consumerInfo1.setPrefetchSize(100);
+	        connection1.send(consumerInfo1);
+	        
+	        // Close the subscription.
+	        connection1.send(closeConsumerInfo(consumerInfo1));
+	
+	        // Send the messages
+	        for( int i=0; i < 4; i++) {
+	        	Message m = createMessage(producerInfo1, dest1, DeliveryMode.PERSISTENT);
+		        connection1.send(m);
+		        sentBeforeRestart.add(m.getMessageId());
+	        }
+	        connection1.request(closeConnectionInfo(connectionInfo1));
+	        connection1.stop();
+        }
+        
+        // Restart the broker.
+        restartBroker();
+        
+        // Get a connection to the new broker.
+        {
+	        StubConnection connection2 = createConnection();
+	        ConnectionInfo connectionInfo2 = createConnectionInfo();
+	        connectionInfo2.setClientId("A");
+	        SessionInfo sessionInfo2 = createSessionInfo(connectionInfo2);
+	        connection2.send(connectionInfo2);
+	        connection2.send(sessionInfo2);
+	        
+	        ProducerInfo producerInfo2 = createProducerInfo(sessionInfo2);
+	        connection2.send(producerInfo2);        
+
+	        // Send messages before the durable subscription is re-activated.	        
+	        for( int i=0; i < 4; i++) {
+	        	Message m = createMessage(producerInfo2, dest2, DeliveryMode.PERSISTENT);
+		        connection2.send(m);
+		        sentBeforeCreateConsumer.add(m.getMessageId());
+	        }
+	        
+	        // Re-open the subscription.
+	        ConsumerInfo consumerInfo2 = createConsumerInfo(sessionInfo2, wildDest);
+	        consumerInfo2.setSubscriptionName("test");
+	        consumerInfo2.setPrefetchSize(100);
+	        connection2.send(consumerInfo2);
+
+	        // Send messages after the subscription is activated.
+	        for( int i=0; i < 4; i++) {
+	        	Message m = createMessage(producerInfo2, dest3, DeliveryMode.PERSISTENT);
+		        connection2.send(m);
+		        sentAfterCreateConsumer.add(m.getMessageId());
+	        }
+	        	        
+	        // We should get the recovered messages...
+	        for( int i=0; i < 4 ; i++ ) {
+	            Message m2 = receiveMessage(connection2);
+	            assertNotNull("Recovered message missing: "+i, m2);
+	            assertEquals(sentBeforeRestart.get(i), m2.getMessageId());
+	        }
+	        
+	        // We should get get the messages that were sent before the sub was reactivated.
+	        for( int i=0; i < 4 ; i++ ) {
+	            Message m2 = receiveMessage(connection2);
+	            assertNotNull("Before activated message missing: "+i, m2);
+	            assertEquals(sentBeforeCreateConsumer.get(i), m2.getMessageId());
+	        }
+	        
+	        // We should get get the messages that were sent after the sub was reactivated.
+	        for( int i=0; i < 4 ; i++ ) {
+	            Message m2 = receiveMessage(connection2);
+	            assertNotNull("After activated message missing: "+i, m2);
+	            assertEquals(""+i, sentAfterCreateConsumer.get(i), m2.getMessageId());
+	        }
+	        
+	        assertNoMessagesLeft(connection2);
+        }
+        
+    }
+    
     public void testConsumedQueuePersistentMessagesLostOnRestart() throws Exception {
         
         ActiveMQDestination destination = new ActiveMQQueue("TEST");

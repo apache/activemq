@@ -84,6 +84,7 @@ public class Statements {
                     "CREATE INDEX " + getFullMessageTableName() + "_EIDX ON " + getFullMessageTableName()
                             + " (EXPIRATION)",
                     "CREATE TABLE " + getFullAckTableName() + "(" + "CONTAINER " + containerNameDataType + " NOT NULL"
+                            + ", SUB_DEST " + stringIdDataType 
                             + ", CLIENT_ID " + stringIdDataType + " NOT NULL" + ", SUB_NAME " + stringIdDataType
                             + " NOT NULL" + ", SELECTOR " + stringIdDataType + ", LAST_ACKED_ID " + sequenceDataType
                             + ", PRIMARY KEY ( CONTAINER, CLIENT_ID, SUB_NAME))", 
@@ -165,14 +166,14 @@ public class Statements {
     public String getCreateDurableSubStatement() {
         if (createDurableSubStatement == null) {
             createDurableSubStatement = "INSERT INTO " + getFullAckTableName()
-                    + "(CONTAINER, CLIENT_ID, SUB_NAME, SELECTOR, LAST_ACKED_ID) " + "VALUES (?, ?, ?, ?, ?)";
+                    + "(CONTAINER, CLIENT_ID, SUB_NAME, SELECTOR, LAST_ACKED_ID, SUB_DEST) " + "VALUES (?, ?, ?, ?, ?, ?)";
         }
         return createDurableSubStatement;
     }
 
     public String getFindDurableSubStatement() {
         if (findDurableSubStatement == null) {
-            findDurableSubStatement = "SELECT SELECTOR, SUB_NAME " + "FROM " + getFullAckTableName()
+            findDurableSubStatement = "SELECT SELECTOR, SUB_DEST " + "FROM " + getFullAckTableName()
                     + " WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?";
         }
         return findDurableSubStatement;
@@ -180,7 +181,7 @@ public class Statements {
 
     public String getFindAllDurableSubsStatement() {
         if (findAllDurableSubsStatement == null) {
-            findAllDurableSubsStatement = "SELECT SELECTOR, SUB_NAME, CLIENT_ID" + " FROM " + getFullAckTableName()
+            findAllDurableSubsStatement = "SELECT SELECTOR, SUB_NAME, CLIENT_ID, SUB_DEST" + " FROM " + getFullAckTableName()
                     + " WHERE CONTAINER=?";
         }
         return findAllDurableSubsStatement;

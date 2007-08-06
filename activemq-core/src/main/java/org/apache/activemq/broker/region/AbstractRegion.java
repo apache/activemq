@@ -17,10 +17,13 @@
  */
 package org.apache.activemq.broker.region;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jms.JMSException;
 
@@ -36,13 +39,12 @@ import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
+import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -81,6 +83,16 @@ abstract public class AbstractRegion implements Region {
 
     public void start() throws Exception {
         started = true;
+        
+        Set inactiveDests = getInactiveDestinations();
+        for (Iterator iter = inactiveDests.iterator(); iter.hasNext();) {
+        	ActiveMQDestination dest = (ActiveMQDestination) iter.next();
+        	
+        	ConnectionContext context = new ConnectionContext();
+        	context.setBroker(broker.getBrokerService().getBroker());
+        	context.getBroker().addDestination(context , dest);
+        }
+        
         for (Iterator i = destinations.values().iterator();i.hasNext();) {
             Destination dest = (Destination)i.next();
             dest.start();
@@ -110,17 +122,27 @@ abstract public class AbstractRegion implements Region {
                 dest.start();
                 destinations.put(destination,dest);
                 destinationMap.put(destination,dest);
-                // Add all consumers that are interested in the destination.
-                for(Iterator iter=subscriptions.values().iterator();iter.hasNext();){
-                    Subscription sub=(Subscription)iter.next();
-                    if(sub.matches(destination)){
-                        dest.addSubscription(context,sub);
-                    }
-                }
+                addSubscriptionsForDestination(context, dest);
             }
             return dest;
         }
     }
+
+	protected List<Subscription> addSubscriptionsForDestination(ConnectionContext context,
+			Destination dest) throws Exception {
+		
+		ArrayList<Subscription> rc = new ArrayList<Subscription>();
+		// Add all consumers that are interested in the destination.
+		for(Iterator iter=subscriptions.values().iterator();iter.hasNext();){
+		    Subscription sub=(Subscription)iter.next();
+		    if(sub.matches(dest.getActiveMQDestination())){
+		        dest.addSubscription(context,sub);
+		        rc.add(sub);
+		    }
+		}
+		return rc;
+		
+	}
 
     public void removeDestination(ConnectionContext context,ActiveMQDestination destination,long timeout)
                     throws Exception{
@@ -205,7 +227,6 @@ abstract public class AbstractRegion implements Region {
                 return (Subscription)o;
             }
 
-            Subscription sub = createSubscription(context, info);
 
             // We may need to add some destinations that are in persistent store but not active
             // in the broker.
@@ -216,14 +237,9 @@ abstract public class AbstractRegion implements Region {
             // eagerly load all destinations into the broker but have an inactive state for the
             // destination which has reduced memory usage.
             //
-            Set inactiveDests = getInactiveDestinations();
-            for (Iterator iter = inactiveDests.iterator(); iter.hasNext();) {
-            	ActiveMQDestination dest = (ActiveMQDestination) iter.next();
-            	if( sub.matches(dest) ) {
-            		context.getBroker().addDestination(context, dest);
-            	}
-            }
+            DestinationFilter destinationFilter = DestinationFilter.parseFilter(info.getDestination());
             
+            Subscription sub = createSubscription(context, info);
 
             subscriptions.put(info.getConsumerId(), sub);
 

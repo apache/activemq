@@ -39,9 +39,9 @@ public class TransactedTopicMasterSlaveTest extends JmsTopicTransactionTest{
         broker.start();
         slave = new BrokerService();
         slave.setBrokerName("slave");
-        slave.addConnector("tcp://localhost:62002");
         slave.setDeleteAllMessagesOnStartup(true);
         slave.setMasterConnectorURI("tcp://localhost:62001");
+        slave.addConnector("tcp://localhost:62002");
         slave.start();
         // wait for thing to connect
         Thread.sleep(1000);
@@ -62,8 +62,8 @@ public class TransactedTopicMasterSlaveTest extends JmsTopicTransactionTest{
     protected BrokerService createBroker() throws Exception,URISyntaxException{
         BrokerService broker=new BrokerService();
         broker.setBrokerName("master");
-        broker.addConnector("tcp://localhost:62001");
         broker.setDeleteAllMessagesOnStartup(true);
+        broker.addConnector("tcp://localhost:62001");
         return broker;
     }
 
