@@ -57,14 +57,15 @@ public class JPATopicReferenceStore extends JPAReferenceStore implements TopicRe
 		adapter.commitEntityManager(context,manager);
 	}
 
-	public void addSubsciption(String clientId, String subscriptionName, String selector, boolean retroactive) throws IOException {
+	public void addSubsciption(SubscriptionInfo info, boolean retroactive) throws IOException {
 		EntityManager manager = adapter.beginEntityManager(null);
 		try {			
 			StoredSubscription ss = new StoredSubscription();
-			ss.setClientId(clientId);
-			ss.setSubscriptionName(subscriptionName);
+			ss.setClientId(info.getClientId());
+			ss.setSubscriptionName(info.getSubcriptionName());
 			ss.setDestination(destinationName);
-			ss.setSelector(selector);
+			ss.setSelector(info.getSelector());
+			ss.setSubscribedDestination(info.getSubscribedDestination().getQualifiedName());
 			ss.setLastAckedId(-1);
 			
 			if( !retroactive ) {
@@ -123,7 +124,8 @@ public class JPATopicReferenceStore extends JPAReferenceStore implements TopicRe
 				info.setClientId(ss.getClientId());
 				info.setDestination(destination);
 				info.setSelector(ss.getSelector());
-				info.setSubcriptionName(ss.getSubscriptionName());
+				info.setSubscriptionName(ss.getSubscriptionName());
+				info.setSubscribedDestination(toSubscribedDestination(ss));
 				l.add(info);
 	        }
 			
@@ -135,6 +137,12 @@ public class JPATopicReferenceStore extends JPAReferenceStore implements TopicRe
 		}
 		adapter.commitEntityManager(null,manager);		
 		return rc;
+	}
+	
+	private ActiveMQDestination toSubscribedDestination(StoredSubscription ss) {
+		if( ss.getSubscribedDestination() == null )
+			return null;
+		return ActiveMQDestination.createDestination(ss.getSubscribedDestination(), ActiveMQDestination.QUEUE_TYPE);
 	}
 
 	public int getMessageCount(String clientId, String subscriptionName) throws IOException {
@@ -169,7 +177,8 @@ public class JPATopicReferenceStore extends JPAReferenceStore implements TopicRe
 				rc.setClientId(ss.getClientId());
 				rc.setDestination(destination);
 				rc.setSelector(ss.getSelector());
-				rc.setSubcriptionName(ss.getSubscriptionName());
+				rc.setSubscriptionName(ss.getSubscriptionName());
+				rc.setSubscribedDestination(toSubscribedDestination(ss));
 			}
 		} catch (Throwable e) {
 			adapter.rollbackEntityManager(null,manager);

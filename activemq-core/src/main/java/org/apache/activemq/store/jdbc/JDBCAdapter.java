@@ -56,8 +56,7 @@ public interface JDBCAdapter{
     public abstract void doRecoverNextMessages(TransactionContext c,ActiveMQDestination destination,String clientId,
             String subscriptionName,long seq,int maxReturned,JDBCMessageRecoveryListener listener) throws Exception;
 
-    public abstract void doSetSubscriberEntry(TransactionContext c,ActiveMQDestination destination,String clientId,
-            String subscriptionName,String selector,boolean retroactive) throws SQLException,IOException;
+    public abstract void doSetSubscriberEntry(TransactionContext c,SubscriptionInfo subscriptionInfo,boolean retroactive) throws SQLException,IOException;
 
     public abstract SubscriptionInfo doGetSubscriberEntry(TransactionContext c,ActiveMQDestination destination,
             String clientId,String subscriptionName) throws SQLException,IOException;

@@ -425,7 +425,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                 context.getConnection().dispatchAsync(md);
             }else{
                 context.getConnection().dispatchSync(md);
-                onDispatch(node,message);
+                onDispatch(node,message);                
             }
             //System.err.println(broker.getBrokerName() + " " + this + " (" + enqueueCounter + ", " + dispatchCounter +") " + node);
             return true;
@@ -439,11 +439,13 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
             if(node!=QueueMessageReference.NULL_MESSAGE){
                 node.getRegionDestination().getDestinationStatistics().getDispatched().increment();
             }
-            try{
-                dispatchMatched();
-            }catch(IOException e){
-                context.getConnection().serviceExceptionAsync(e);
-            }
+        }
+        if( info.isDispatchAsync() ) {
+	        try{
+	            dispatchMatched();
+	        }catch(IOException e){
+	            context.getConnection().serviceExceptionAsync(e);
+	        }
         }
     }
 

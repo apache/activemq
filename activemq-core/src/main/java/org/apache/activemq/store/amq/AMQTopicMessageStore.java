@@ -70,9 +70,9 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
         return topicReferenceStore.lookupSubscription(clientId,subscriptionName);
     }
 
-    public void addSubsciption(String clientId,String subscriptionName,String selector,boolean retroactive)
+    public void addSubsciption(SubscriptionInfo subscriptionInfo,boolean retroactive)
             throws IOException{
-        topicReferenceStore.addSubsciption(clientId,subscriptionName,selector,retroactive);
+        topicReferenceStore.addSubsciption(subscriptionInfo,retroactive);
     }
 
     /**

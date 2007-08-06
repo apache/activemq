@@ -106,7 +106,8 @@ public class StoredSubscription {
     private long lastAckedId;
     @Basic
     private String selector;
-
+    @Basic
+    private String subscribedDestination;
 
 	public long getLastAckedId() {
 		return lastAckedId;
@@ -154,5 +155,13 @@ public class StoredSubscription {
 
 	public void setId(long id) {
 		this.id = id;
+	}
+
+	public String getSubscribedDestination() {
+		return subscribedDestination;
+	}
+
+	public void setSubscribedDestination(String subscribedDestination) {
+		this.subscribedDestination = subscribedDestination;
 	}
 }

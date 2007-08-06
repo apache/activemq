@@ -211,7 +211,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
         for(Iterator i=durableSubscribers.iterator();i.hasNext();){
             SubscriptionInfo info=(SubscriptionInfo)i.next();
             TopicReferenceStore ts=createTopicReferenceStore((ActiveMQTopic)info.getDestination());
-            ts.addSubsciption(info.getClientId(),info.getSubscriptionName(),info.getSelector(),false);
+            ts.addSubsciption(info,false);
         }
     }
 
@@ -247,6 +247,20 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
             this.stateStore=createStateStore(getDirectory());
         }
         return this.stateStore;
+    }
+
+    public void deleteAllMessages() throws IOException{
+    	super.deleteAllMessages();
+        if(stateStore!=null){
+            if(stateStore.isInitialized()){
+            	stateStore.clear();
+            }else{
+            	stateStore.delete();
+            }
+        }else{
+            File stateDirectory=new File(getDirectory(),"kr-state");
+            StoreFactory.delete(stateDirectory.getAbsolutePath());
+        }
     }
 
     private Store createStateStore(File directory){

@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
+
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
@@ -183,7 +184,13 @@ public class Topic implements Destination {
             }
             // Do we need to create the subscription?
             if (info == null) {
-                store.addSubsciption(clientId, subscriptionName, selector, subscription.getConsumerInfo().isRetroactive());
+            	info = new SubscriptionInfo();
+            	info.setClientId(clientId);
+            	info.setSelector(selector);
+            	info.setSubscriptionName(subscriptionName);
+            	info.setDestination(getActiveMQDestination()); // This destination is an actual destination id.
+            	info.setSubscribedDestination(subscription.getConsumerInfo().getDestination()); // This destination might be a pattern
+                store.addSubsciption(info, subscription.getConsumerInfo().isRetroactive());
             }
     
             final MessageEvaluationContext msgContext = new MessageEvaluationContext();

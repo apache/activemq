@@ -431,8 +431,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter{
      * @see org.apache.activemq.store.jdbc.JDBCAdapter#doSetSubscriberEntry(java.sql.Connection, java.lang.Object,
      *      org.apache.activemq.service.SubscriptionInfo)
      */
-    public void doSetSubscriberEntry(TransactionContext c,ActiveMQDestination destination,String clientId,
-            String subscriptionName,String selector,boolean retroactive) throws SQLException,IOException{
+    public void doSetSubscriberEntry(TransactionContext c,SubscriptionInfo info,boolean retroactive) throws SQLException,IOException{
         // dumpTables(c, destination.getQualifiedName(), clientId, subscriptionName);
         PreparedStatement s=null;
         try{
@@ -451,13 +450,14 @@ public class DefaultJDBCAdapter implements JDBCAdapter{
                 }
             }
             s=c.getConnection().prepareStatement(statements.getCreateDurableSubStatement());
-            s.setString(1,destination.getQualifiedName());
-            s.setString(2,clientId);
-            s.setString(3,subscriptionName);
-            s.setString(4,selector);
+            s.setString(1,info.getDestination().getQualifiedName());
+            s.setString(2,info.getClientId());
+            s.setString(3,info.getSubscriptionName());
+            s.setString(4,info.getSelector());
             s.setLong(5,lastMessageId);
+            s.setString(6, info.getSubscribedDestination().getQualifiedName());
             if(s.executeUpdate()!=1){
-                throw new IOException("Could not create durable subscription for: "+clientId);
+                throw new IOException("Could not create durable subscription for: "+info.getClientId());
             }
         }finally{
             close(s);
@@ -480,8 +480,9 @@ public class DefaultJDBCAdapter implements JDBCAdapter{
             SubscriptionInfo subscription=new SubscriptionInfo();
             subscription.setDestination(destination);
             subscription.setClientId(clientId);
-            subscription.setSubcriptionName(subscriptionName);
+            subscription.setSubscriptionName(subscriptionName);
             subscription.setSelector(rs.getString(1));
+            subscription.setSubscribedDestination(ActiveMQDestination.createDestination(rs.getString(2), ActiveMQDestination.QUEUE_TYPE));
             return subscription;
         }finally{
             close(rs);
@@ -502,8 +503,9 @@ public class DefaultJDBCAdapter implements JDBCAdapter{
                 SubscriptionInfo subscription=new SubscriptionInfo();
                 subscription.setDestination(destination);
                 subscription.setSelector(rs.getString(1));
-                subscription.setSubcriptionName(rs.getString(2));
+                subscription.setSubscriptionName(rs.getString(2));
                 subscription.setClientId(rs.getString(3));
+                subscription.setSubscribedDestination(ActiveMQDestination.createDestination(rs.getString(4),ActiveMQDestination.QUEUE_TYPE));
                 rc.add(subscription);
             }
             return (SubscriptionInfo[])rc.toArray(new SubscriptionInfo[rc.size()]);

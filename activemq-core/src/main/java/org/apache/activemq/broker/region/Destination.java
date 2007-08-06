@@ -27,6 +27,8 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.memory.UsageManager;
+import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.TopicMessageStore;
 
 /**
  * 
@@ -53,4 +55,5 @@ public interface Destination extends Service {
     
     public Message[] browse();
     public String getName();
+	public MessageStore getMessageStore();
 }

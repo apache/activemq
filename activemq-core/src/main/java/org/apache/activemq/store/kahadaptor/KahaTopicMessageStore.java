@@ -106,14 +106,9 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
         return (SubscriptionInfo)subscriberContainer.get(getSubscriptionKey(clientId,subscriptionName));
     }
 
-    public synchronized void addSubsciption(String clientId,String subscriptionName,String selector,boolean retroactive)
+    public synchronized void addSubsciption(SubscriptionInfo info,boolean retroactive)
             throws IOException{
-        SubscriptionInfo info=new SubscriptionInfo();
-        info.setDestination(destination);
-        info.setClientId(clientId);
-        info.setSelector(selector);
-        info.setSubcriptionName(subscriptionName);
-        String key=getSubscriptionKey(clientId,subscriptionName);
+        String key=getSubscriptionKey(info.getClientId(),info.getSubscriptionName());
         // if already exists - won't add it again as it causes data files
         // to hang around
         if(!subscriberContainer.containsKey(key)){

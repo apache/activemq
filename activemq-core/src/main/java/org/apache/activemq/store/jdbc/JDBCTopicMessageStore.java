@@ -138,16 +138,16 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
      * @see org.apache.activemq.store.TopicMessageStore#storeSubsciption(org.apache.activemq.service.SubscriptionInfo,
      *      boolean)
      */
-    public void addSubsciption(String clientId, String subscriptionName, String selector, boolean retroactive)
+    public void addSubsciption(SubscriptionInfo subscriptionInfo, boolean retroactive)
             throws IOException {
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
             c = persistenceAdapter.getTransactionContext();
-            adapter.doSetSubscriberEntry(c, destination, clientId, subscriptionName, selector, retroactive);
+            adapter.doSetSubscriberEntry(c, subscriptionInfo, retroactive);
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ",e);
             throw IOExceptionSupport
-                    .create("Failed to lookup subscription for info: " + clientId + ". Reason: " + e, e);
+                    .create("Failed to lookup subscription for info: " + subscriptionInfo.getClientId() + ". Reason: " + e, e);
         } finally {
             c.close();
         }
