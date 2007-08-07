@@ -39,34 +39,35 @@
     <!-- =============================== -->
     <dependency>
       <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
-      <optional>false</optional>
-    </dependency>
-
-    <dependency>
-      <groupId>${pom.groupId}</groupId>
-      <artifactId>activeio-core</artifactId>
-      <optional>false</optional>
+      <artifactId>commons-logging-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>${pom.groupId}</groupId>
-      <artifactId>activeio-core</artifactId>
-      <optional>false</optional>
-      <type>test-jar</type>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-core</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-jms_1.1_spec</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activeio-core</artifactId>
       <optional>false</optional>
     </dependency>
 
+
     <!-- =============================== -->
-    <!-- Optional Dependencies -->
+    <!-- Optional Dependencies           -->
     <!-- =============================== -->
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-jaas</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-jms</artifactId>
       <optional>true</optional>
     </dependency>
 
@@ -84,43 +85,28 @@
       <artifactId>geronimo-j2ee-jacc_1.0_spec</artifactId>
       <optional>true</optional>
     </dependency>
-
-    <!-- commons -->
-    <dependency>
-      <groupId>commons-collections</groupId>
-      <artifactId>commons-collections</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>commons-primitives</groupId>
-      <artifactId>commons-primitives</artifactId>
-      <scope>test</scope>
-    </dependency>
     <dependency>
       <groupId>commons-pool</groupId>
       <artifactId>commons-pool</artifactId>
       <optional>true</optional>
     </dependency>
 
+    <!-- for XML parsing -->
     <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <scope>test</scope>
+      <groupId>org.apache.xbean</groupId>
+      <artifactId>xbean-spring</artifactId>
+      <optional>true</optional>
     </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring</artifactId>
+      <optional>true</optional>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.derby</groupId>
       <artifactId>derby</artifactId>
       <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>axion</groupId>
-      <artifactId>axion</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>regexp</groupId>
-      <artifactId>regexp</artifactId>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>activemq</groupId>
@@ -132,25 +118,74 @@
       <artifactId>xalan</artifactId>
       <optional>true</optional>
     </dependency>
+
+
+    <!--- not really a dependency at all - just added optionally to get the generator working -->
     <dependency>
-      <groupId>org.apache.xbean</groupId>
-      <artifactId>xbean-spring</artifactId>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-openwire-generator</artifactId>
       <optional>true</optional>
     </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring</artifactId>
-      <optional>true</optional>
-    </dependency>
+
+    <!-- =============================== -->
+    <!-- Testing Dependencies            -->
+    <!-- =============================== -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-openwire-generator</artifactId>
-      <optional>true</optional>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activeio-core</artifactId>
+      <optional>false</optional>
+      <type>test-jar</type>
+    </dependency>
+
+    <!-- testing camel helpers -->
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-core</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-spring</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- database testing -->
+    <dependency>
+      <groupId>commons-collections</groupId>
+      <artifactId>commons-collections</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-primitives</groupId>
+      <artifactId>commons-primitives</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>axion</groupId>
+      <artifactId>axion</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>regexp</groupId>
+      <artifactId>regexp</artifactId>
+      <scope>test</scope>
     </dependency>
 
     <!--  LDAP tests -->
