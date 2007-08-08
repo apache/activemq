@@ -32,45 +32,46 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * perist pending messages pending message (messages awaiting disptach to a consumer) cursor
+ * persist pending messages pending message (messages awaiting dispatch to a
+ * consumer) cursor
  * 
  * @version $Revision$
  */
-public class FilePendingMessageCursor extends AbstractPendingMessageCursor implements UsageListener{
+public class FilePendingMessageCursor extends AbstractPendingMessageCursor implements UsageListener {
 
-    static private final Log log=LogFactory.getLog(FilePendingMessageCursor.class);
+    static private final Log LOG = LogFactory.getLog(FilePendingMessageCursor.class);
     static private final AtomicLong nameCount = new AtomicLong();
     private Store store;
     private String name;
-    private LinkedList memoryList=new LinkedList();
+    private LinkedList memoryList = new LinkedList();
     private ListContainer diskList;
-    private Iterator iter=null;
+    private Iterator iter;
     private Destination regionDestination;
     private boolean iterating;
     private boolean flushRequired;
-    private AtomicBoolean started=new AtomicBoolean();
+    private AtomicBoolean started = new AtomicBoolean();
 
     /**
      * @param name
      * @param store
      */
-    public FilePendingMessageCursor(String name,Store store){
-        this.name=nameCount.incrementAndGet() + "_"+name;
-        this.store=store;
+    public FilePendingMessageCursor(String name, Store store) {
+        this.name = nameCount.incrementAndGet() + "_" + name;
+        this.store = store;
     }
 
-    public void start(){
-        if(started.compareAndSet(false,true)){
-            if(usageManager!=null){
+    public void start() {
+        if (started.compareAndSet(false, true)) {
+            if (usageManager != null) {
                 usageManager.addUsageListener(this);
             }
         }
     }
 
-    public void stop(){
-        if(started.compareAndSet(true,false)){
+    public void stop() {
+        if (started.compareAndSet(true, false)) {
             gc();
-            if(usageManager!=null){
+            if (usageManager != null) {
                 usageManager.removeUsageListener(this);
             }
         }
@@ -79,49 +80,48 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     /**
      * @return true if there are no pending messages
      */
-    public synchronized boolean isEmpty(){
-        return memoryList.isEmpty()&&isDiskListEmpty();
+    public synchronized boolean isEmpty() {
+        return memoryList.isEmpty() && isDiskListEmpty();
     }
 
     /**
      * reset the cursor
-     * 
      */
-    public synchronized void reset(){
-        iterating=true;
-        iter=isDiskListEmpty()?memoryList.iterator():getDiskList().listIterator();
+    public synchronized void reset() {
+        iterating = true;
+        iter = isDiskListEmpty() ? memoryList.iterator() : getDiskList().listIterator();
     }
 
-    public synchronized void release(){
-        iterating=false;
-        if(flushRequired){
-            flushRequired=false;
+    public synchronized void release() {
+        iterating = false;
+        if (flushRequired) {
+            flushRequired = false;
             flushToDisk();
         }
     }
 
-    public synchronized void destroy(){
+    public synchronized void destroy() {
         stop();
-        for(Iterator i=memoryList.iterator();i.hasNext();){
-            Message node=(Message)i.next();
+        for (Iterator i = memoryList.iterator(); i.hasNext();) {
+            Message node = (Message)i.next();
             node.decrementReferenceCount();
         }
         memoryList.clear();
-        if(!isDiskListEmpty()){
+        if (!isDiskListEmpty()) {
             getDiskList().clear();
         }
     }
 
-    public synchronized LinkedList pageInList(int maxItems){
-        LinkedList result=new LinkedList();
-        int count=0;
-        for(Iterator i=memoryList.iterator();i.hasNext()&&count<maxItems;){
+    public synchronized LinkedList pageInList(int maxItems) {
+        LinkedList result = new LinkedList();
+        int count = 0;
+        for (Iterator i = memoryList.iterator(); i.hasNext() && count < maxItems;) {
             result.add(i.next());
             count++;
         }
-        if(count<maxItems&&!isDiskListEmpty()){
-            for(Iterator i=getDiskList().iterator();i.hasNext()&&count<maxItems;){
-                Message message=(Message)i.next();
+        if (count < maxItems && !isDiskListEmpty()) {
+            for (Iterator i = getDiskList().iterator(); i.hasNext() && count < maxItems;) {
+                Message message = (Message)i.next();
                 message.setRegionDestination(regionDestination);
                 message.incrementReferenceCount();
                 result.add(message);
@@ -136,17 +136,17 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      * 
      * @param node
      */
-    public synchronized void addMessageLast(MessageReference node){
-        try{
-            regionDestination=node.getMessage().getRegionDestination();
-            if(isSpaceInMemoryList()){
+    public synchronized void addMessageLast(MessageReference node) {
+        try {
+            regionDestination = node.getMessage().getRegionDestination();
+            if (isSpaceInMemoryList()) {
                 memoryList.add(node);
-            }else{
+            } else {
                 flushToDisk();
                 node.decrementReferenceCount();
                 getDiskList().addLast(node);
             }
-        }catch(IOException e){
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -156,17 +156,17 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      * 
      * @param node
      */
-    public synchronized void addMessageFirst(MessageReference node){
-        try{
-            regionDestination=node.getMessage().getRegionDestination();
-            if(isSpaceInMemoryList()){
+    public synchronized void addMessageFirst(MessageReference node) {
+        try {
+            regionDestination = node.getMessage().getRegionDestination();
+            if (isSpaceInMemoryList()) {
                 memoryList.addFirst(node);
-            }else{
+            } else {
                 flushToDisk();
                 node.decrementReferenceCount();
                 getDiskList().addFirst(node);
             }
-        }catch(IOException e){
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -174,16 +174,16 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     /**
      * @return true if there pending messages to dispatch
      */
-    public synchronized boolean hasNext(){
+    public synchronized boolean hasNext() {
         return iter.hasNext();
     }
 
     /**
      * @return the next pending message
      */
-    public synchronized MessageReference next(){
-        Message message=(Message)iter.next();
-        if(!isDiskListEmpty()){
+    public synchronized MessageReference next() {
+        Message message = (Message)iter.next();
+        if (!isDiskListEmpty()) {
             // got from disk
             message.setRegionDestination(regionDestination);
             message.incrementReferenceCount();
@@ -193,9 +193,8 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
 
     /**
      * remove the message at the cursor position
-     * 
      */
-    public synchronized void remove(){
+    public synchronized void remove() {
         iter.remove();
     }
 
@@ -203,9 +202,9 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      * @param node
      * @see org.apache.activemq.broker.region.cursors.AbstractPendingMessageCursor#remove(org.apache.activemq.broker.region.MessageReference)
      */
-    public synchronized void remove(MessageReference node){
+    public synchronized void remove(MessageReference node) {
         memoryList.remove(node);
-        if(!isDiskListEmpty()){
+        if (!isDiskListEmpty()) {
             getDiskList().remove(node);
         }
     }
@@ -213,55 +212,54 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     /**
      * @return the number of pending messages
      */
-    public synchronized int size(){
-        return memoryList.size()+(isDiskListEmpty()?0:getDiskList().size());
+    public synchronized int size() {
+        return memoryList.size() + (isDiskListEmpty() ? 0 : getDiskList().size());
     }
 
     /**
      * clear all pending messages
-     * 
      */
-    public synchronized void clear(){
+    public synchronized void clear() {
         memoryList.clear();
-        if(!isDiskListEmpty()){
+        if (!isDiskListEmpty()) {
             getDiskList().clear();
         }
     }
 
-    public synchronized boolean isFull(){
+    public synchronized boolean isFull() {
         // we always have space - as we can persist to disk
         return false;
     }
 
-    public boolean hasMessagesBufferedToDeliver(){
+    public boolean hasMessagesBufferedToDeliver() {
         return !isEmpty();
     }
 
-    public void setUsageManager(UsageManager usageManager){
+    public void setUsageManager(UsageManager usageManager) {
         super.setUsageManager(usageManager);
         usageManager.addUsageListener(this);
     }
 
-    public void onMemoryUseChanged(UsageManager memoryManager,int oldPercentUsage,int newPercentUsage){
-        if(newPercentUsage>=getMemoryUsageHighWaterMark()){
-            synchronized(this){
-                flushRequired=true;
-                if(!iterating){
+    public void onMemoryUseChanged(UsageManager memoryManager, int oldPercentUsage, int newPercentUsage) {
+        if (newPercentUsage >= getMemoryUsageHighWaterMark()) {
+            synchronized (this) {
+                flushRequired = true;
+                if (!iterating) {
                     flushToDisk();
-                    flushRequired=false;
+                    flushRequired = false;
                 }
             }
         }
     }
 
-    protected boolean isSpaceInMemoryList(){
-        return hasSpace()&&isDiskListEmpty();
+    protected boolean isSpaceInMemoryList() {
+        return hasSpace() && isDiskListEmpty();
     }
 
-    protected synchronized void flushToDisk(){
-        if(!memoryList.isEmpty()){
-            while(!memoryList.isEmpty()){
-                MessageReference node=(MessageReference)memoryList.removeFirst();
+    protected synchronized void flushToDisk() {
+        if (!memoryList.isEmpty()) {
+            while (!memoryList.isEmpty()) {
+                MessageReference node = (MessageReference)memoryList.removeFirst();
                 node.decrementReferenceCount();
                 getDiskList().addLast(node);
             }
@@ -269,16 +267,16 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         }
     }
 
-    protected boolean isDiskListEmpty(){
-        return diskList==null||diskList.isEmpty();
+    protected boolean isDiskListEmpty() {
+        return diskList == null || diskList.isEmpty();
     }
 
-    protected ListContainer getDiskList(){
-        if(diskList==null){
-            try{
-                diskList=store.getListContainer(name,"TopicSubscription",true);
+    protected ListContainer getDiskList() {
+        if (diskList == null) {
+            try {
+                diskList = store.getListContainer(name, "TopicSubscription", true);
                 diskList.setMarshaller(new CommandMarshaller(new OpenWireFormat()));
-            }catch(IOException e){
+            } catch (IOException e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);
             }

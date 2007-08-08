@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -59,26 +58,26 @@ import org.apache.commons.logging.LogFactory;
 import java.util.concurrent.TimeUnit;
 
 public class BrokerTestSupport extends CombinationTestSupport {
-    
-    protected static final Log log = LogFactory.getLog(BrokerTestSupport.class);
-    
+
+    protected static final Log LOG = LogFactory.getLog(BrokerTestSupport.class);
+
     /**
-     * Setting this to false makes the test run faster but they may be less accurate.
+     * Setting this to false makes the test run faster but they may be less
+     * accurate.
      */
     public static final boolean FAST_NO_MESSAGE_LEFT_ASSERT = System.getProperty("FAST_NO_MESSAGE_LEFT_ASSERT", "true").equals("true");
 
-    protected RegionBroker regionBroker;    
-    protected BrokerService broker;    
-    protected long idGenerator=0;
-    protected int msgIdGenerator=0;
-    protected int txGenerator=0;
-    protected int tempDestGenerator=0;
+    protected RegionBroker regionBroker;
+    protected BrokerService broker;
+    protected long idGenerator;
+    protected int msgIdGenerator;
+    protected int txGenerator;
+    protected int tempDestGenerator;
     protected PersistenceAdapter persistenceAdapter;
 
     protected int MAX_WAIT = 4000;
 
     protected UsageManager memoryManager;
-
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -88,29 +87,28 @@ public class BrokerTestSupport extends CombinationTestSupport {
         broker.setDestinationPolicy(policyMap);
         broker.start();
     }
-    
+
     protected PolicyEntry getDefaultPolicy() {
         PolicyEntry policy = new PolicyEntry();
         policy.setDispatchPolicy(new RoundRobinDispatchPolicy());
         policy.setSubscriptionRecoveryPolicy(new FixedCountSubscriptionRecoveryPolicy());
         return policy;
     }
-    
-  
+
     protected BrokerService createBroker() throws Exception {
-        BrokerService broker =  BrokerFactory.createBroker(new URI("broker:()/localhost?persistent=false"));
-        return  broker;
+        BrokerService broker = BrokerFactory.createBroker(new URI("broker:()/localhost?persistent=false"));
+        return broker;
     }
-    
+
     protected void tearDown() throws Exception {
         broker.stop();
-        broker=null;    
-        regionBroker=null;    
-        persistenceAdapter=null;
-        memoryManager=null;
+        broker = null;
+        regionBroker = null;
+        persistenceAdapter = null;
+        memoryManager = null;
         super.tearDown();
     }
-    
+
     protected ConsumerInfo createConsumerInfo(SessionInfo sessionInfo, ActiveMQDestination destination) throws Exception {
         ConsumerInfo info = new ConsumerInfo(sessionInfo, ++idGenerator);
         info.setBrowser(false);
@@ -119,7 +117,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
         info.setDispatchAsync(false);
         return info;
     }
-    
+
     protected RemoveInfo closeConsumerInfo(ConsumerInfo consumerInfo) {
         return consumerInfo.createRemoveCommand();
     }
@@ -136,11 +134,11 @@ public class BrokerTestSupport extends CombinationTestSupport {
 
     protected ConnectionInfo createConnectionInfo() throws Exception {
         ConnectionInfo info = new ConnectionInfo();
-        info.setConnectionId(new ConnectionId("connection:"+(++idGenerator)));
-        info.setClientId( info.getConnectionId().getValue() );
+        info.setConnectionId(new ConnectionId("connection:" + (++idGenerator)));
+        info.setClientId(info.getConnectionId().getValue());
         return info;
     }
-    
+
     protected Message createMessage(ProducerInfo producerInfo, ActiveMQDestination destination) {
         ActiveMQTextMessage message = new ActiveMQTextMessage();
         message.setMessageId(new MessageId(producerInfo, ++msgIdGenerator));
@@ -157,8 +155,8 @@ public class BrokerTestSupport extends CombinationTestSupport {
         MessageAck ack = new MessageAck();
         ack.setAckType(ackType);
         ack.setConsumerId(consumerInfo.getConsumerId());
-        ack.setDestination( msg.getDestination() );
-        ack.setLastMessageId( msg.getMessageId() );
+        ack.setDestination(msg.getDestination());
+        ack.setLastMessageId(msg.getMessageId());
         ack.setMessageCount(count);
         return ack;
     }
@@ -168,12 +166,12 @@ public class BrokerTestSupport extends CombinationTestSupport {
     }
 
     protected void profilerPause(String prompt) throws IOException {
-        if( System.getProperty("profiler")!=null ) {
+        if (System.getProperty("profiler") != null) {
             System.out.println();
-            System.out.println(prompt+"> Press enter to continue: ");
-            while( System.in.read()!='\n' ) {            
+            System.out.println(prompt + "> Press enter to continue: ");
+            while (System.in.read() != '\n') {
             }
-            System.out.println(prompt+"> Done.");
+            System.out.println(prompt + "> Done.");
         }
     }
 
@@ -199,7 +197,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
         LocalTransactionId id = new LocalTransactionId(info.getSessionId().getParentId(), ++txGenerator);
         return id;
     }
-    
+
     protected XATransactionId createXATransaction(SessionInfo info) throws IOException {
         long id = txGenerator;
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -207,7 +205,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
         os.writeLong(++txGenerator);
         os.close();
         byte[] bs = baos.toByteArray();
-        
+
         XATransactionId xid = new XATransactionId();
         xid.setBranchQualifier(bs);
         xid.setGlobalTransactionId(bs);
@@ -219,7 +217,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
         TransactionInfo info = new TransactionInfo(connectionInfo.getConnectionId(), txid, TransactionInfo.BEGIN);
         return info;
     }
-    
+
     protected TransactionInfo createPrepareTransaction(ConnectionInfo connectionInfo, TransactionId txid) {
         TransactionInfo info = new TransactionInfo(connectionInfo.getConnectionId(), txid, TransactionInfo.PREPARE);
         return info;
@@ -229,35 +227,35 @@ public class BrokerTestSupport extends CombinationTestSupport {
         TransactionInfo info = new TransactionInfo(connectionInfo.getConnectionId(), txid, TransactionInfo.COMMIT_ONE_PHASE);
         return info;
     }
-    
+
     protected TransactionInfo createCommitTransaction2Phase(ConnectionInfo connectionInfo, TransactionId txid) {
         TransactionInfo info = new TransactionInfo(connectionInfo.getConnectionId(), txid, TransactionInfo.COMMIT_TWO_PHASE);
         return info;
     }
-    
+
     protected TransactionInfo createRollbackTransaction(ConnectionInfo connectionInfo, TransactionId txid) {
         TransactionInfo info = new TransactionInfo(connectionInfo.getConnectionId(), txid, TransactionInfo.ROLLBACK);
         return info;
     }
 
     protected int countMessagesInQueue(StubConnection connection, ConnectionInfo connectionInfo, ActiveMQDestination destination) throws Exception {
-        
+
         SessionInfo sessionInfo = createSessionInfo(connectionInfo);
         connection.send(sessionInfo);
         ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
         consumerInfo.setPrefetchSize(1);
         consumerInfo.setBrowser(true);
         connection.send(consumerInfo);
-    
+
         ArrayList skipped = new ArrayList();
-        
+
         // Now get the messages.
         Object m = connection.getDispatchQueue().poll(MAX_WAIT, TimeUnit.MILLISECONDS);
-        int i=0;
-        while( m!=null ) {
-            if( m instanceof MessageDispatch && ((MessageDispatch)m).getConsumerId().equals(consumerInfo.getConsumerId()) ) {
-                MessageDispatch md  = (MessageDispatch) m;
-                if( md.getMessage()!=null ) {
+        int i = 0;
+        while (m != null) {
+            if (m instanceof MessageDispatch && ((MessageDispatch)m).getConsumerId().equals(consumerInfo.getConsumerId())) {
+                MessageDispatch md = (MessageDispatch)m;
+                if (md.getMessage() != null) {
                     i++;
                     connection.send(createAck(consumerInfo, md.getMessage(), 1, MessageAck.STANDARD_ACK_TYPE));
                 } else {
@@ -268,26 +266,26 @@ public class BrokerTestSupport extends CombinationTestSupport {
             }
             m = connection.getDispatchQueue().poll(MAX_WAIT, TimeUnit.MILLISECONDS);
         }
-        
+
         for (Iterator iter = skipped.iterator(); iter.hasNext();) {
             connection.getDispatchQueue().put(iter.next());
         }
-        
-        connection.send(closeSessionInfo(sessionInfo));        
+
+        connection.send(closeSessionInfo(sessionInfo));
         return i;
-        
+
     }
 
     protected DestinationInfo createTempDestinationInfo(ConnectionInfo connectionInfo, byte destinationType) {
         DestinationInfo info = new DestinationInfo();
         info.setConnectionId(connectionInfo.getConnectionId());
         info.setOperationType(DestinationInfo.ADD_OPERATION_TYPE);
-        info.setDestination(ActiveMQDestination.createDestination(info.getConnectionId()+":"+(++tempDestGenerator), destinationType));
+        info.setDestination(ActiveMQDestination.createDestination(info.getConnectionId() + ":" + (++tempDestGenerator), destinationType));
         return info;
     }
-    
+
     protected ActiveMQDestination createDestinationInfo(StubConnection connection, ConnectionInfo connectionInfo1, byte destinationType) throws Exception {
-        if( (destinationType & ActiveMQDestination.TEMP_MASK)!=0 ) {
+        if ((destinationType & ActiveMQDestination.TEMP_MASK) != 0) {
             DestinationInfo info = createTempDestinationInfo(connectionInfo1, destinationType);
             connection.send(info);
             return info.getDestination();
@@ -295,16 +293,15 @@ public class BrokerTestSupport extends CombinationTestSupport {
             return ActiveMQDestination.createDestination("TEST", destinationType);
         }
     }
-    
-    
+
     protected DestinationInfo closeDestinationInfo(DestinationInfo info) {
         info.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
         info.setTimeout(0);
         return info;
     }
-    
+
     public static void recursiveDelete(File f) {
-        if( f.isDirectory() ) {
+        if (f.isDirectory()) {
             File[] files = f.listFiles();
             for (int i = 0; i < files.length; i++) {
                 recursiveDelete(files[i]);
@@ -325,20 +322,20 @@ public class BrokerTestSupport extends CombinationTestSupport {
     public Message receiveMessage(StubConnection connection) throws InterruptedException {
         return receiveMessage(connection, MAX_WAIT);
     }
-    
+
     public Message receiveMessage(StubConnection connection, long timeout) throws InterruptedException {
-        while( true ) {
+        while (true) {
             Object o = connection.getDispatchQueue().poll(timeout, TimeUnit.MILLISECONDS);
-            
-            if( o == null )
+
+            if (o == null)
                 return null;
-            
-            if( o instanceof MessageDispatch ) {
-                
+
+            if (o instanceof MessageDispatch) {
+
                 MessageDispatch dispatch = (MessageDispatch)o;
-                if( dispatch.getMessage()==null )
+                if (dispatch.getMessage() == null)
                     return null;
-                
+
                 dispatch.setMessage(dispatch.getMessage().copy());
                 dispatch.getMessage().setRedeliveryCounter(dispatch.getRedeliveryCounter());
                 return dispatch.getMessage();
@@ -348,15 +345,14 @@ public class BrokerTestSupport extends CombinationTestSupport {
 
     protected void assertNoMessagesLeft(StubConnection connection) throws InterruptedException {
         long wait = FAST_NO_MESSAGE_LEFT_ASSERT ? 0 : MAX_WAIT;
-        while( true ) {
+        while (true) {
             Object o = connection.getDispatchQueue().poll(wait, TimeUnit.MILLISECONDS);
-            if( o == null )
-                return;            
-            if( o instanceof MessageDispatch && ((MessageDispatch)o).getMessage()!=null ) {
+            if (o == null)
+                return;
+            if (o instanceof MessageDispatch && ((MessageDispatch)o).getMessage() != null) {
                 fail("Received a message.");
             }
         }
     }
-
 
 }

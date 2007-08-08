@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,12 +26,12 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSessionContext;
 
 class StubSSLSession implements SSLSession {
-    
+
     X509Certificate cert;
-    boolean isVerified = false;
-    
+    boolean isVerified;
+
     public StubSSLSession(X509Certificate cert) {
-        if ( cert != null ) {
+        if (cert != null) {
             this.isVerified = true;
             this.cert = cert;
         } else {
@@ -40,21 +39,20 @@ class StubSSLSession implements SSLSession {
             this.cert = null;
         }
     }
-    
-    public void setIsVerified( boolean verified ) {
+
+    public void setIsVerified(boolean verified) {
         this.isVerified = verified;
     }
-    
+
     public Certificate[] getPeerCertificates() throws SSLPeerUnverifiedException {
-        if ( this.isVerified )
-            return new X509Certificate[] { this.cert };
+        if (this.isVerified)
+            return new X509Certificate[] {this.cert};
         else
             throw new SSLPeerUnverifiedException("Socket is unverified.");
     }
-    
-    
+
     // --- Stubbed methods ---
-    
+
     public byte[] getId() {
         return null;
     }
@@ -96,8 +94,7 @@ class StubSSLSession implements SSLSession {
         return null;
     }
 
-    public javax.security.cert.X509Certificate[] getPeerCertificateChain()
-            throws SSLPeerUnverifiedException {
+    public javax.security.cert.X509Certificate[] getPeerCertificateChain() throws SSLPeerUnverifiedException {
         return null;
     }
 

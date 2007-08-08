@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -68,14 +67,13 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-
 /**
  * Routes Broker operations to the correct messaging regions for processing.
  * 
  * @version $Revision$
  */
 public class RegionBroker implements Broker {
-    private static final Log log = LogFactory.getLog(RegionBroker.class);
+    private static final Log LOG = LogFactory.getLog(RegionBroker.class);
     private static final IdGenerator brokerIdGenerator = new IdGenerator();
 
     private final Region queueRegion;
@@ -83,40 +81,42 @@ public class RegionBroker implements Broker {
     private final Region tempQueueRegion;
     private final Region tempTopicRegion;
     private BrokerService brokerService;
-    private boolean started = false;
-    private boolean keepDurableSubsActive=false;
-    
+    private boolean started;
+    private boolean keepDurableSubsActive;
+
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
-    
+
     private final CopyOnWriteArrayList connections = new CopyOnWriteArrayList();
     private final Map destinations = new ConcurrentHashMap();
     private final CopyOnWriteArrayList brokerInfos = new CopyOnWriteArrayList();
 
-    private final LongSequenceGenerator sequenceGenerator = new LongSequenceGenerator();    
+    private final LongSequenceGenerator sequenceGenerator = new LongSequenceGenerator();
     private BrokerId brokerId;
     private String brokerName;
-    private Map<String, ConnectionContext> clientIdSet = new HashMap<String, ConnectionContext>(); // we will synchronize access
+    private Map<String, ConnectionContext> clientIdSet = new HashMap<String, ConnectionContext>(); // we
+    // will
+    // synchronize
+    // access
     private final DestinationInterceptor destinationInterceptor;
     private ConnectionContext adminConnectionContext;
     protected DestinationFactory destinationFactory;
     protected final Map<ConnectionId, ConnectionState> connectionStates = Collections.synchronizedMap(new HashMap<ConnectionId, ConnectionState>());
-   
-    
-        
-    public RegionBroker(BrokerService brokerService,TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager, DestinationFactory destinationFactory, DestinationInterceptor destinationInterceptor) throws IOException {
+
+    public RegionBroker(BrokerService brokerService, TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager, DestinationFactory destinationFactory,
+                        DestinationInterceptor destinationInterceptor) throws IOException {
         this.brokerService = brokerService;
         if (destinationFactory == null) {
             throw new IllegalArgumentException("null destinationFactory");
         }
-        this.sequenceGenerator.setLastSequenceId( destinationFactory.getLastMessageBrokerSequenceId() );
+        this.sequenceGenerator.setLastSequenceId(destinationFactory.getLastMessageBrokerSequenceId());
         this.destinationFactory = destinationFactory;
         queueRegion = createQueueRegion(memoryManager, taskRunnerFactory, destinationFactory);
         topicRegion = createTopicRegion(memoryManager, taskRunnerFactory, destinationFactory);
         this.destinationInterceptor = destinationInterceptor;
         tempQueueRegion = createTempQueueRegion(memoryManager, taskRunnerFactory, destinationFactory);
-        tempTopicRegion = createTempTopicRegion(memoryManager, taskRunnerFactory, destinationFactory);        
+        tempTopicRegion = createTempTopicRegion(memoryManager, taskRunnerFactory, destinationFactory);
     }
-    
+
     public Map getDestinationMap() {
         Map answer = getQueueRegion().getDestinationMap();
         answer.putAll(getTopicRegion().getDestinationMap());
@@ -124,7 +124,7 @@ public class RegionBroker implements Broker {
     }
 
     public Set getDestinations(ActiveMQDestination destination) {
-        switch(destination.getDestinationType()) {
+        switch (destination.getDestinationType()) {
         case ActiveMQDestination.QUEUE_TYPE:
             return queueRegion.getDestinations(destination);
         case ActiveMQDestination.TOPIC_TYPE:
@@ -138,8 +138,8 @@ public class RegionBroker implements Broker {
         }
     }
 
-    public Broker getAdaptor(Class type){
-        if (type.isInstance(this)){
+    public Broker getAdaptor(Class type) {
+        if (type.isInstance(this)) {
             return this;
         }
         return null;
@@ -162,26 +162,25 @@ public class RegionBroker implements Broker {
     }
 
     protected Region createTempTopicRegion(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
-        return new TempTopicRegion(this,destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
+        return new TempTopicRegion(this, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
     }
 
     protected Region createTempQueueRegion(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
-        return new TempQueueRegion(this,destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
+        return new TempQueueRegion(this, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
     }
 
     protected Region createTopicRegion(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
-        return new TopicRegion(this,destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
+        return new TopicRegion(this, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
     }
 
     protected Region createQueueRegion(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
-        return new QueueRegion(this,destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
+        return new QueueRegion(this, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
     }
-    
+
     private static PersistenceAdapter createDefaultPersistenceAdapter(UsageManager memoryManager) throws IOException {
         return new MemoryPersistenceAdapter();
     }
-    
-    
+
     public void start() throws Exception {
         ((TopicRegion)topicRegion).setKeepDurableSubsActive(keepDurableSubsActive);
         started = true;
@@ -197,8 +196,8 @@ public class RegionBroker implements Broker {
         doStop(ss);
         ss.throwFirstException();
     }
-    
-    public PolicyMap getDestinationPolicy(){
+
+    public PolicyMap getDestinationPolicy() {
         return brokerService != null ? brokerService.getDestinationPolicy() : null;
     }
 
@@ -207,12 +206,12 @@ public class RegionBroker implements Broker {
         if (clientId == null) {
             throw new InvalidClientIDException("No clientID specified for connection request");
         }
-        synchronized (clientIdSet ) {
-        	ConnectionContext oldContext = clientIdSet.get(clientId);
-            if (oldContext!=null) {
-            	throw new InvalidClientIDException("Broker: " + getBrokerName() + " - Client: " + clientId + " already connected from "+oldContext.getConnection().getRemoteAddress());
-            }
-            else {
+        synchronized (clientIdSet) {
+            ConnectionContext oldContext = clientIdSet.get(clientId);
+            if (oldContext != null) {
+                throw new InvalidClientIDException("Broker: " + getBrokerName() + " - Client: " + clientId + " already connected from "
+                                                   + oldContext.getConnection().getRemoteAddress());
+            } else {
                 clientIdSet.put(clientId, context);
             }
         }
@@ -227,9 +226,10 @@ public class RegionBroker implements Broker {
         }
         synchronized (clientIdSet) {
             ConnectionContext oldValue = clientIdSet.get(clientId);
-            // we may be removing the duplicate connection, not the first connection to be created
+            // we may be removing the duplicate connection, not the first
+            // connection to be created
             // so lets check that their connection IDs are the same
-            if (oldValue == context ) {
+            if (oldValue == context) {
                 if (isEqual(oldValue.getConnectionId(), info.getConnectionId())) {
                     clientIdSet.remove(clientId);
                 }
@@ -251,80 +251,76 @@ public class RegionBroker implements Broker {
 
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
 
-		Destination answer;
+        Destination answer;
 
-		answer = (Destination) destinations.get(destination);
-		if (answer != null)
-			return answer;
+        answer = (Destination)destinations.get(destination);
+        if (answer != null)
+            return answer;
 
-		switch (destination.getDestinationType()) {
-		case ActiveMQDestination.QUEUE_TYPE:
-			answer = queueRegion.addDestination(context, destination);
-			break;
-		case ActiveMQDestination.TOPIC_TYPE:
-			answer = topicRegion.addDestination(context, destination);
-			break;
-		case ActiveMQDestination.TEMP_QUEUE_TYPE:
-			answer = tempQueueRegion.addDestination(context, destination);
-			break;
-		case ActiveMQDestination.TEMP_TOPIC_TYPE:
-			answer = tempTopicRegion.addDestination(context, destination);
-			break;
-		default:
-			throw createUnknownDestinationTypeException(destination);
-		}
+        switch (destination.getDestinationType()) {
+        case ActiveMQDestination.QUEUE_TYPE:
+            answer = queueRegion.addDestination(context, destination);
+            break;
+        case ActiveMQDestination.TOPIC_TYPE:
+            answer = topicRegion.addDestination(context, destination);
+            break;
+        case ActiveMQDestination.TEMP_QUEUE_TYPE:
+            answer = tempQueueRegion.addDestination(context, destination);
+            break;
+        case ActiveMQDestination.TEMP_TOPIC_TYPE:
+            answer = tempTopicRegion.addDestination(context, destination);
+            break;
+        default:
+            throw createUnknownDestinationTypeException(destination);
+        }
 
-		destinations.put(destination, answer);
-		return answer;
+        destinations.put(destination, answer);
+        return answer;
 
-	}
-
-	public void removeDestination(ConnectionContext context,
-			ActiveMQDestination destination, long timeout) throws Exception {
-
-		if (destinations.remove(destination) != null) {
-			switch (destination.getDestinationType()) {
-			case ActiveMQDestination.QUEUE_TYPE:
-				queueRegion.removeDestination(context, destination, timeout);
-				break;
-			case ActiveMQDestination.TOPIC_TYPE:
-				topicRegion.removeDestination(context, destination, timeout);
-				break;
-			case ActiveMQDestination.TEMP_QUEUE_TYPE:
-				tempQueueRegion
-						.removeDestination(context, destination, timeout);
-				break;
-			case ActiveMQDestination.TEMP_TOPIC_TYPE:
-				tempTopicRegion
-						.removeDestination(context, destination, timeout);
-				break;
-			default:
-				throw createUnknownDestinationTypeException(destination);
-			}
-		}
-
-	}
-    
-    public void addDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{
-        addDestination(context,info.getDestination());
-        
     }
 
-    public void removeDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{
-        removeDestination(context,info.getDestination(), info.getTimeout());
-        
+    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
+
+        if (destinations.remove(destination) != null) {
+            switch (destination.getDestinationType()) {
+            case ActiveMQDestination.QUEUE_TYPE:
+                queueRegion.removeDestination(context, destination, timeout);
+                break;
+            case ActiveMQDestination.TOPIC_TYPE:
+                topicRegion.removeDestination(context, destination, timeout);
+                break;
+            case ActiveMQDestination.TEMP_QUEUE_TYPE:
+                tempQueueRegion.removeDestination(context, destination, timeout);
+                break;
+            case ActiveMQDestination.TEMP_TOPIC_TYPE:
+                tempTopicRegion.removeDestination(context, destination, timeout);
+                break;
+            default:
+                throw createUnknownDestinationTypeException(destination);
+            }
+        }
+
+    }
+
+    public void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
+        addDestination(context, info.getDestination());
+
+    }
+
+    public void removeDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
+        removeDestination(context, info.getDestination(), info.getTimeout());
+
     }
 
     public ActiveMQDestination[] getDestinations() throws Exception {
-		ArrayList l;
+        ArrayList l;
 
-		l = new ArrayList(destinations.values());
+        l = new ArrayList(destinations.values());
 
-		ActiveMQDestination rc[] = new ActiveMQDestination[l.size()];
-		l.toArray(rc);
-		return rc;
-	}
-
+        ActiveMQDestination rc[] = new ActiveMQDestination[l.size()];
+        l.toArray(rc);
+        return rc;
+    }
 
     public void addSession(ConnectionContext context, SessionInfo info) throws Exception {
     }
@@ -340,19 +336,19 @@ public class RegionBroker implements Broker {
 
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         ActiveMQDestination destination = info.getDestination();
-        switch(destination.getDestinationType()) {
+        switch (destination.getDestinationType()) {
         case ActiveMQDestination.QUEUE_TYPE:
             return queueRegion.addConsumer(context, info);
-            
+
         case ActiveMQDestination.TOPIC_TYPE:
             return topicRegion.addConsumer(context, info);
-        
+
         case ActiveMQDestination.TEMP_QUEUE_TYPE:
             return tempQueueRegion.addConsumer(context, info);
-            
+
         case ActiveMQDestination.TEMP_TOPIC_TYPE:
             return tempTopicRegion.addConsumer(context, info);
-            
+
         default:
             throw createUnknownDestinationTypeException(destination);
         }
@@ -360,7 +356,7 @@ public class RegionBroker implements Broker {
 
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         ActiveMQDestination destination = info.getDestination();
-        switch(destination.getDestinationType()) {
+        switch (destination.getDestinationType()) {
         case ActiveMQDestination.QUEUE_TYPE:
             queueRegion.removeConsumer(context, info);
             break;
@@ -382,62 +378,61 @@ public class RegionBroker implements Broker {
         topicRegion.removeSubscription(context, info);
     }
 
-    public void send(ProducerBrokerExchange producerExchange,Message message) throws Exception{
-        long si=sequenceGenerator.getNextSequenceId();
+    public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
+        long si = sequenceGenerator.getNextSequenceId();
         message.getMessageId().setBrokerSequenceId(si);
         message.setBrokerInTime(System.currentTimeMillis());
-        if(producerExchange.isMutable()||producerExchange.getRegion()==null){
-            ActiveMQDestination destination=message.getDestination();
+        if (producerExchange.isMutable() || producerExchange.getRegion() == null) {
+            ActiveMQDestination destination = message.getDestination();
             // ensure the destination is registered with the RegionBroker
-            addDestination(producerExchange.getConnectionContext(),destination);
-            Region region=null;
-            switch(destination.getDestinationType()){
+            addDestination(producerExchange.getConnectionContext(), destination);
+            Region region = null;
+            switch (destination.getDestinationType()) {
             case ActiveMQDestination.QUEUE_TYPE:
-                region=queueRegion;
+                region = queueRegion;
                 break;
             case ActiveMQDestination.TOPIC_TYPE:
-                region=topicRegion;
+                region = topicRegion;
                 break;
             case ActiveMQDestination.TEMP_QUEUE_TYPE:
-                region=tempQueueRegion;
+                region = tempQueueRegion;
                 break;
             case ActiveMQDestination.TEMP_TOPIC_TYPE:
-                region=tempTopicRegion;
+                region = tempTopicRegion;
                 break;
             default:
                 throw createUnknownDestinationTypeException(destination);
             }
             producerExchange.setRegion(region);
         }
-        producerExchange.getRegion().send(producerExchange,message);
+        producerExchange.getRegion().send(producerExchange, message);
     }
 
-    public void acknowledge(ConsumerBrokerExchange consumerExchange,MessageAck ack) throws Exception{
-        if(consumerExchange.isWildcard() || consumerExchange.getRegion()==null){
-            ActiveMQDestination destination=ack.getDestination();
-            Region region=null;
-            switch(destination.getDestinationType()){
+    public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
+        if (consumerExchange.isWildcard() || consumerExchange.getRegion() == null) {
+            ActiveMQDestination destination = ack.getDestination();
+            Region region = null;
+            switch (destination.getDestinationType()) {
             case ActiveMQDestination.QUEUE_TYPE:
-                region=queueRegion;
+                region = queueRegion;
                 break;
             case ActiveMQDestination.TOPIC_TYPE:
-                region=topicRegion;
+                region = topicRegion;
                 break;
             case ActiveMQDestination.TEMP_QUEUE_TYPE:
-                region=tempQueueRegion;
+                region = tempQueueRegion;
                 break;
             case ActiveMQDestination.TEMP_TOPIC_TYPE:
-                region=tempTopicRegion;
+                region = tempTopicRegion;
                 break;
             default:
                 throw createUnknownDestinationTypeException(destination);
             }
             consumerExchange.setRegion(region);
         }
-        consumerExchange.getRegion().acknowledge(consumerExchange,ack);
+        consumerExchange.getRegion().acknowledge(consumerExchange, ack);
     }
 
-    
     public Response messagePull(ConnectionContext context, MessagePull pull) throws Exception {
         ActiveMQDestination destination = pull.getDestination();
         switch (destination.getDestinationType()) {
@@ -476,11 +471,10 @@ public class RegionBroker implements Broker {
     public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Exception {
         throw new IllegalAccessException("Transaction operation not implemented by this broker.");
     }
-    
+
     public void forgetTransaction(ConnectionContext context, TransactionId transactionId) throws Exception {
         throw new IllegalAccessException("Transaction operation not implemented by this broker.");
     }
-
 
     public void gc() {
         queueRegion.gc();
@@ -488,33 +482,34 @@ public class RegionBroker implements Broker {
     }
 
     public BrokerId getBrokerId() {
-        if( brokerId==null ) {
-            // TODO: this should persist the broker id so that subsequent startup
+        if (brokerId == null) {
+            // TODO: this should persist the broker id so that subsequent
+            // startup
             // uses the same broker id.
-            brokerId=new BrokerId(brokerIdGenerator.generateId());
+            brokerId = new BrokerId(brokerIdGenerator.generateId());
         }
         return brokerId;
     }
-    
+
     public void setBrokerId(BrokerId brokerId) {
         this.brokerId = brokerId;
     }
 
     public String getBrokerName() {
-        if( brokerName==null ) {
+        if (brokerName == null) {
             try {
                 brokerName = java.net.InetAddress.getLocalHost().getHostName().toLowerCase();
             } catch (Exception e) {
-                brokerName="localhost";
+                brokerName = "localhost";
             }
         }
         return brokerName;
     }
-    
+
     public void setBrokerName(String brokerName) {
         this.brokerName = brokerName;
     }
-	
+
     public DestinationStatistics getDestinationStatistics() {
         return destinationStatistics;
     }
@@ -523,40 +518,40 @@ public class RegionBroker implements Broker {
         return new JMSException("Unknown destination type: " + destination.getDestinationType());
     }
 
-    public synchronized void addBroker(Connection connection,BrokerInfo info){
-            brokerInfos.add(info);
-    }
-    
-    public synchronized void removeBroker(Connection connection,BrokerInfo info){
-        if (info != null){
-            brokerInfos.remove(info);
-        }   
+    public synchronized void addBroker(Connection connection, BrokerInfo info) {
+        brokerInfos.add(info);
     }
 
-    public synchronized BrokerInfo[] getPeerBrokerInfos(){
+    public synchronized void removeBroker(Connection connection, BrokerInfo info) {
+        if (info != null) {
+            brokerInfos.remove(info);
+        }
+    }
+
+    public synchronized BrokerInfo[] getPeerBrokerInfos() {
         BrokerInfo[] result = new BrokerInfo[brokerInfos.size()];
         result = (BrokerInfo[])brokerInfos.toArray(result);
         return result;
     }
-    
-    public void preProcessDispatch(MessageDispatch messageDispatch){
-        Message message=messageDispatch.getMessage();
-        if(message!=null){
-            long endTime=System.currentTimeMillis();
+
+    public void preProcessDispatch(MessageDispatch messageDispatch) {
+        Message message = messageDispatch.getMessage();
+        if (message != null) {
+            long endTime = System.currentTimeMillis();
             message.setBrokerOutTime(endTime);
-            if(getBrokerService().isEnableStatistics()){
+            if (getBrokerService().isEnableStatistics()) {
                 long totalTime = endTime - message.getBrokerInTime();
                 message.getRegionDestination().getDestinationStatistics().getProcessTime().addTime(totalTime);
             }
         }
     }
-    
-    public void postProcessDispatch(MessageDispatch messageDispatch){   
+
+    public void postProcessDispatch(MessageDispatch messageDispatch) {
     }
-    
+
     public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
         ActiveMQDestination destination = messageDispatchNotification.getDestination();
-        switch(destination.getDestinationType()) {
+        switch (destination.getDestinationType()) {
         case ActiveMQDestination.QUEUE_TYPE:
             queueRegion.processDispatchNotification(messageDispatchNotification);
             break;
@@ -573,23 +568,22 @@ public class RegionBroker implements Broker {
             throw createUnknownDestinationTypeException(destination);
         }
     }
-    
-    public boolean isSlaveBroker(){
+
+    public boolean isSlaveBroker() {
         return brokerService.isSlave();
     }
-    
-    public boolean isStopped(){
+
+    public boolean isStopped() {
         return !started;
     }
-    
-    public Set getDurableDestinations(){
+
+    public Set getDurableDestinations() {
         return destinationFactory.getDestinations();
     }
-    
-    public boolean isFaultTolerantConfiguration(){
+
+    public boolean isFaultTolerantConfiguration() {
         return false;
     }
-
 
     protected void doStop(ServiceStopper ss) {
         ss.stop(queueRegion);
@@ -613,78 +607,79 @@ public class RegionBroker implements Broker {
     public ConnectionContext getAdminConnectionContext() {
         return adminConnectionContext;
     }
- 
+
     public void setAdminConnectionContext(ConnectionContext adminConnectionContext) {
         this.adminConnectionContext = adminConnectionContext;
     }
-    
-	public Map<ConnectionId, ConnectionState> getConnectionStates() {
-		return connectionStates;
-	}
+
+    public Map<ConnectionId, ConnectionState> getConnectionStates() {
+        return connectionStates;
+    }
 
     public Store getTempDataStore() {
         return brokerService.getTempDataStore();
     }
-    
-    public URI getVmConnectorURI(){
+
+    public URI getVmConnectorURI() {
         return brokerService.getVmConnectorURI();
     }
 
-    public void brokerServiceStarted(){
+    public void brokerServiceStarted() {
     }
 
-    public BrokerService getBrokerService(){
+    public BrokerService getBrokerService() {
         return brokerService;
     }
-    
+
     public boolean isExpired(MessageReference messageReference) {
         return messageReference.isExpired();
     }
 
-    public void messageExpired(ConnectionContext context,MessageReference node){
-        if(log.isDebugEnabled()){
-            log.debug("Message expired "+node);
+    public void messageExpired(ConnectionContext context, MessageReference node) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Message expired " + node);
         }
-        getRoot().sendToDeadLetterQueue(context,node);
+        getRoot().sendToDeadLetterQueue(context, node);
     }
 
-    public void sendToDeadLetterQueue(ConnectionContext context,MessageReference node){
-        try{
-            if(node!=null){
-                Message message=node.getMessage();
-                if(message!=null){
-                    DeadLetterStrategy deadLetterStrategy=node.getRegionDestination().getDeadLetterStrategy();
-                    if(deadLetterStrategy!=null){
-                        if(deadLetterStrategy.isSendToDeadLetterQueue(message)){
-                            long expiration=message.getExpiration();
+    public void sendToDeadLetterQueue(ConnectionContext context, MessageReference node) {
+        try {
+            if (node != null) {
+                Message message = node.getMessage();
+                if (message != null) {
+                    DeadLetterStrategy deadLetterStrategy = node.getRegionDestination().getDeadLetterStrategy();
+                    if (deadLetterStrategy != null) {
+                        if (deadLetterStrategy.isSendToDeadLetterQueue(message)) {
+                            long expiration = message.getExpiration();
                             message.setExpiration(0);
-                            message.setProperty("originalExpiration",new Long(expiration));
-                            if(!message.isPersistent()){
+                            message.setProperty("originalExpiration", new Long(expiration));
+                            if (!message.isPersistent()) {
                                 message.setPersistent(true);
-                                message.setProperty("originalDeliveryMode","NON_PERSISTENT");
+                                message.setProperty("originalDeliveryMode", "NON_PERSISTENT");
                             }
-                            // The original destination and transaction id do not get filled when the message is first
+                            // The original destination and transaction id do
+                            // not get filled when the message is first
                             // sent,
-                            // it is only populated if the message is routed to another destination like the DLQ
-                            ActiveMQDestination deadLetterDestination=deadLetterStrategy.getDeadLetterQueueFor(message
-                                    .getDestination());
-                            BrokerSupport.resend(context,message,deadLetterDestination);
+                            // it is only populated if the message is routed to
+                            // another destination like the DLQ
+                            ActiveMQDestination deadLetterDestination = deadLetterStrategy.getDeadLetterQueueFor(message.getDestination());
+                            BrokerSupport.resend(context, message, deadLetterDestination);
                         }
                     }
-                }else{
-                    log.warn("Null message for node: "+node);
+                } else {
+                    LOG.warn("Null message for node: " + node);
                 }
             }
-        }catch(Exception e){
-            log.warn("Failed to pass expired message to dead letter queue");
+        } catch (Exception e) {
+            LOG.warn("Failed to pass expired message to dead letter queue");
         }
     }
 
-    public Broker getRoot(){
-        try{
+    public Broker getRoot() {
+        try {
             return getBrokerService().getBroker();
-        }catch(Exception e){
-            log.fatal("Trying to get Root Broker "+e);
+        } catch (Exception e) {
+            LOG.fatal("Trying to get Root Broker " + e);
             throw new RuntimeException("The broker from the BrokerService should not throw an exception");
         }
     }

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -52,18 +51,18 @@ public class CompositePublishTest extends JmsSendReceiveTestSupport {
         receiveConnection = createConnection();
         receiveConnection.start();
 
-        log.info("Created sendConnection: " + sendConnection);
-        log.info("Created receiveConnection: " + receiveConnection);
+        LOG.info("Created sendConnection: " + sendConnection);
+        LOG.info("Created receiveConnection: " + receiveConnection);
 
         session = sendConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         receiveSession = receiveConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-        log.info("Created sendSession: " + session);
-        log.info("Created receiveSession: " + receiveSession);
+        LOG.info("Created sendSession: " + session);
+        LOG.info("Created receiveSession: " + receiveSession);
 
         producer = session.createProducer(null);
 
-        log.info("Created producer: " + producer);
+        LOG.info("Created producer: " + producer);
 
         if (topic) {
             consumerDestination = session.createTopic(getConsumerSubject());
@@ -74,8 +73,8 @@ public class CompositePublishTest extends JmsSendReceiveTestSupport {
             producerDestination = session.createQueue(getProducerSubject());
         }
 
-        log.info("Created  consumer destination: " + consumerDestination + " of type: " + consumerDestination.getClass());
-        log.info("Created  producer destination: " + producerDestination + " of type: " + producerDestination.getClass());
+        LOG.info("Created  consumer destination: " + consumerDestination + " of type: " + consumerDestination.getClass());
+        LOG.info("Created  producer destination: " + producerDestination + " of type: " + producerDestination.getClass());
 
         Destination[] destinations = getDestinations();
         consumers = new MessageConsumer[destinations.length];
@@ -88,7 +87,7 @@ public class CompositePublishTest extends JmsSendReceiveTestSupport {
         }
 
 
-        log.info("Started connections");
+        LOG.info("Started connections");
     }
 
     protected MessageListener createMessageListener(int i, final List messageList) {
@@ -121,7 +120,7 @@ public class CompositePublishTest extends JmsSendReceiveTestSupport {
         waitForMessagesToBeDelivered();
 
         for (int i = 0, size = messageLists.length; i < size; i++) {
-            log.info("Message list: " + i + " contains: " + messageLists[i].size() + " message(s)");
+            LOG.info("Message list: " + i + " contains: " + messageLists[i].size() + " message(s)");
         }
 
         for (int i = 0, size = messageLists.length; i < size; i++) {

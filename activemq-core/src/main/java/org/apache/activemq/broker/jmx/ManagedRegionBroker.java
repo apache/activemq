@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -94,419 +93,412 @@ public class ManagedRegionBroker extends RegionBroker {
     /* This is the first broker in the broker interceptor chain. */
     private Broker contextBroker;
 
-    public ManagedRegionBroker(BrokerService brokerService,MBeanServer mbeanServer,ObjectName brokerObjectName,
-                    TaskRunnerFactory taskRunnerFactory,UsageManager memoryManager, DestinationFactory destinationFactory, DestinationInterceptor destinationInterceptor)
-                    throws IOException{
-        super(brokerService,taskRunnerFactory,memoryManager, destinationFactory, destinationInterceptor);
-        this.mbeanServer=mbeanServer;
-        this.brokerObjectName=brokerObjectName;
+    public ManagedRegionBroker(BrokerService brokerService, MBeanServer mbeanServer, ObjectName brokerObjectName, TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager,
+                               DestinationFactory destinationFactory, DestinationInterceptor destinationInterceptor) throws IOException {
+        super(brokerService, taskRunnerFactory, memoryManager, destinationFactory, destinationInterceptor);
+        this.mbeanServer = mbeanServer;
+        this.brokerObjectName = brokerObjectName;
     }
 
-    public void start() throws Exception{
+    public void start() throws Exception {
         super.start();
         // build all existing durable subscriptions
         buildExistingSubscriptions();
     }
 
-    protected void doStop(ServiceStopper stopper){
+    protected void doStop(ServiceStopper stopper) {
         super.doStop(stopper);
         // lets remove any mbeans not yet removed
-        for(Iterator iter=registeredMBeans.iterator();iter.hasNext();){
-            ObjectName name=(ObjectName) iter.next();
-            try{
+        for (Iterator iter = registeredMBeans.iterator(); iter.hasNext();) {
+            ObjectName name = (ObjectName)iter.next();
+            try {
                 mbeanServer.unregisterMBean(name);
-            }catch(InstanceNotFoundException e){
-                log.warn("The MBean: "+name+" is no longer registered with JMX");
-            }catch(Exception e){
-                stopper.onException(this,e);
+            } catch (InstanceNotFoundException e) {
+                log.warn("The MBean: " + name + " is no longer registered with JMX");
+            } catch (Exception e) {
+                stopper.onException(this, e);
             }
         }
         registeredMBeans.clear();
     }
 
-    protected Region createQueueRegion(UsageManager memoryManager,TaskRunnerFactory taskRunnerFactory,
-            DestinationFactory destinationFactory){
-        return new ManagedQueueRegion(this,destinationStatistics,memoryManager,taskRunnerFactory,destinationFactory);
+    protected Region createQueueRegion(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
+        return new ManagedQueueRegion(this, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
     }
 
-    protected Region createTempQueueRegion(UsageManager memoryManager,TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory){
-        return new ManagedTempQueueRegion(this,destinationStatistics,memoryManager,taskRunnerFactory, destinationFactory);
+    protected Region createTempQueueRegion(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
+        return new ManagedTempQueueRegion(this, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
     }
 
-    protected Region createTempTopicRegion(UsageManager memoryManager,TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory){
-        return new ManagedTempTopicRegion(this,destinationStatistics,memoryManager,taskRunnerFactory, destinationFactory);
+    protected Region createTempTopicRegion(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
+        return new ManagedTempTopicRegion(this, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
     }
 
-    protected Region createTopicRegion(UsageManager memoryManager,TaskRunnerFactory taskRunnerFactory,
-            DestinationFactory destinationFactory){
-        return new ManagedTopicRegion(this,destinationStatistics,memoryManager,taskRunnerFactory, destinationFactory);
+    protected Region createTopicRegion(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
+        return new ManagedTopicRegion(this, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
     }
 
-    public void register(ActiveMQDestination destName,Destination destination){
+    public void register(ActiveMQDestination destName, Destination destination) {
         // TODO refactor to allow views for custom destinations
-        try{
-            ObjectName objectName=createObjectName(destName);
+        try {
+            ObjectName objectName = createObjectName(destName);
             DestinationView view;
             if (destination instanceof Queue) {
-                view=new QueueView(this,(Queue) destination);
-            } else if (destination instanceof Topic){
-                view=new TopicView(this,(Topic) destination);
+                view = new QueueView(this, (Queue)destination);
+            } else if (destination instanceof Topic) {
+                view = new TopicView(this, (Topic)destination);
             } else {
                 view = null;
                 log.warn("JMX View is not supported for custom destination: " + destination);
             }
             if (view != null) {
-                registerDestination(objectName,destName,view);
+                registerDestination(objectName, destName, view);
             }
-        }catch(Exception e){
-            log.error("Failed to register destination "+destName,e);
+        } catch (Exception e) {
+            log.error("Failed to register destination " + destName, e);
         }
     }
 
-    public void unregister(ActiveMQDestination destName){
-        try{
-            ObjectName objectName=createObjectName(destName);
+    public void unregister(ActiveMQDestination destName) {
+        try {
+            ObjectName objectName = createObjectName(destName);
             unregisterDestination(objectName);
-        }catch(Exception e){
-            log.error("Failed to unregister "+destName,e);
+        } catch (Exception e) {
+            log.error("Failed to unregister " + destName, e);
         }
     }
 
-    public ObjectName registerSubscription(ConnectionContext context,Subscription sub){
-        Hashtable map=brokerObjectName.getKeyPropertyList();
-        String objectNameStr=brokerObjectName.getDomain()+":"+"BrokerName="+map.get("BrokerName")+",Type=Subscription,";
-        String destinationType="destinationType="+sub.getConsumerInfo().getDestination().getDestinationTypeAsString();
-        String destinationName="destinationName="
-                +JMXSupport.encodeObjectNamePart(sub.getConsumerInfo().getDestination().getPhysicalName());
-        String clientId="clientId="+JMXSupport.encodeObjectNamePart(context.getClientId());
-        String persistentMode="persistentMode=";
-        String consumerId="";
-        SubscriptionKey key=new SubscriptionKey(context.getClientId(),sub.getConsumerInfo().getSubscriptionName());
-        if(sub.getConsumerInfo().isDurable()){
-            persistentMode+="Durable, subscriptionID="
-                    +JMXSupport.encodeObjectNamePart(sub.getConsumerInfo().getSubscriptionName());
-        }else{
-            persistentMode+="Non-Durable";
-            if(sub.getConsumerInfo()!=null&&sub.getConsumerInfo().getConsumerId()!=null){
-                consumerId=",consumerId="
-                        +JMXSupport.encodeObjectNamePart(sub.getConsumerInfo().getConsumerId().toString());
+    public ObjectName registerSubscription(ConnectionContext context, Subscription sub) {
+        Hashtable map = brokerObjectName.getKeyPropertyList();
+        String objectNameStr = brokerObjectName.getDomain() + ":" + "BrokerName=" + map.get("BrokerName") + ",Type=Subscription,";
+        String destinationType = "destinationType=" + sub.getConsumerInfo().getDestination().getDestinationTypeAsString();
+        String destinationName = "destinationName=" + JMXSupport.encodeObjectNamePart(sub.getConsumerInfo().getDestination().getPhysicalName());
+        String clientId = "clientId=" + JMXSupport.encodeObjectNamePart(context.getClientId());
+        String persistentMode = "persistentMode=";
+        String consumerId = "";
+        SubscriptionKey key = new SubscriptionKey(context.getClientId(), sub.getConsumerInfo().getSubscriptionName());
+        if (sub.getConsumerInfo().isDurable()) {
+            persistentMode += "Durable, subscriptionID=" + JMXSupport.encodeObjectNamePart(sub.getConsumerInfo().getSubscriptionName());
+        } else {
+            persistentMode += "Non-Durable";
+            if (sub.getConsumerInfo() != null && sub.getConsumerInfo().getConsumerId() != null) {
+                consumerId = ",consumerId=" + JMXSupport.encodeObjectNamePart(sub.getConsumerInfo().getConsumerId().toString());
             }
         }
-        objectNameStr+=persistentMode+",";
-        objectNameStr+=destinationType+",";
-        objectNameStr+=destinationName+",";
-        objectNameStr+=clientId;
-        objectNameStr+=consumerId;
-        try{
-            ObjectName objectName=new ObjectName(objectNameStr);
+        objectNameStr += persistentMode + ",";
+        objectNameStr += destinationType + ",";
+        objectNameStr += destinationName + ",";
+        objectNameStr += clientId;
+        objectNameStr += consumerId;
+        try {
+            ObjectName objectName = new ObjectName(objectNameStr);
             SubscriptionView view;
-            if(sub.getConsumerInfo().isDurable()){
-                view=new DurableSubscriptionView(this,context.getClientId(),sub);
-            }else{
-                if(sub instanceof TopicSubscription){
-                    view=new TopicSubscriptionView(context.getClientId(),(TopicSubscription)sub);
-                }else{
-                    view=new SubscriptionView(context.getClientId(),sub);
+            if (sub.getConsumerInfo().isDurable()) {
+                view = new DurableSubscriptionView(this, context.getClientId(), sub);
+            } else {
+                if (sub instanceof TopicSubscription) {
+                    view = new TopicSubscriptionView(context.getClientId(), (TopicSubscription)sub);
+                } else {
+                    view = new SubscriptionView(context.getClientId(), sub);
                 }
             }
-            registerSubscription(objectName,sub.getConsumerInfo(),key,view);
-            subscriptionMap.put(sub,objectName);
+            registerSubscription(objectName, sub.getConsumerInfo(), key, view);
+            subscriptionMap.put(sub, objectName);
             return objectName;
-        }catch(Exception e){
-            log.error("Failed to register subscription "+sub,e);
+        } catch (Exception e) {
+            log.error("Failed to register subscription " + sub, e);
             return null;
         }
     }
 
-    public void unregisterSubscription(Subscription sub){
-        ObjectName name=(ObjectName) subscriptionMap.remove(sub);
-        if(name!=null){
-            try{
+    public void unregisterSubscription(Subscription sub) {
+        ObjectName name = (ObjectName)subscriptionMap.remove(sub);
+        if (name != null) {
+            try {
                 unregisterSubscription(name);
-            }catch(Exception e){
-                log.error("Failed to unregister subscription "+sub,e);
+            } catch (Exception e) {
+                log.error("Failed to unregister subscription " + sub, e);
             }
         }
     }
 
-    protected void registerDestination(ObjectName key,ActiveMQDestination dest,DestinationView view) throws Exception{
-        if(dest.isQueue()){
-            if(dest.isTemporary()){
-                temporaryQueues.put(key,view);
-            }else{
-                queues.put(key,view);
+    protected void registerDestination(ObjectName key, ActiveMQDestination dest, DestinationView view) throws Exception {
+        if (dest.isQueue()) {
+            if (dest.isTemporary()) {
+                temporaryQueues.put(key, view);
+            } else {
+                queues.put(key, view);
             }
-        }else{
-            if(dest.isTemporary()){
-                temporaryTopics.put(key,view);
-            }else{
-                topics.put(key,view);
+        } else {
+            if (dest.isTemporary()) {
+                temporaryTopics.put(key, view);
+            } else {
+                topics.put(key, view);
             }
         }
         try {
-            mbeanServer.registerMBean(view,key);
+            mbeanServer.registerMBean(view, key);
             registeredMBeans.add(key);
         } catch (Throwable e) {
-            log.warn("Failed to register MBean: "+key);
-            log.debug("Failure reason: "+e,e);
-        }            
+            log.warn("Failed to register MBean: " + key);
+            log.debug("Failure reason: " + e, e);
+        }
     }
 
-    protected void unregisterDestination(ObjectName key) throws Exception{
+    protected void unregisterDestination(ObjectName key) throws Exception {
         topics.remove(key);
         queues.remove(key);
         temporaryQueues.remove(key);
         temporaryTopics.remove(key);
-        if(registeredMBeans.remove(key)){
+        if (registeredMBeans.remove(key)) {
             try {
-        		mbeanServer.unregisterMBean(key);
+                mbeanServer.unregisterMBean(key);
             } catch (Throwable e) {
-                log.warn("Failed to unregister MBean: "+key);
-                log.debug("Failure reason: "+e,e);
-            }            
+                log.warn("Failed to unregister MBean: " + key);
+                log.debug("Failure reason: " + e, e);
+            }
         }
     }
 
-    protected void registerSubscription(ObjectName key,ConsumerInfo info,SubscriptionKey subscriptionKey,
-                    SubscriptionView view) throws Exception{
-        ActiveMQDestination dest=info.getDestination();
-        if(dest.isQueue()){
-            if(dest.isTemporary()){
-                temporaryQueueSubscribers.put(key,view);
-            }else{
-                queueSubscribers.put(key,view);
+    protected void registerSubscription(ObjectName key, ConsumerInfo info, SubscriptionKey subscriptionKey, SubscriptionView view) throws Exception {
+        ActiveMQDestination dest = info.getDestination();
+        if (dest.isQueue()) {
+            if (dest.isTemporary()) {
+                temporaryQueueSubscribers.put(key, view);
+            } else {
+                queueSubscribers.put(key, view);
             }
-        }else{
-            if(dest.isTemporary()){
-                temporaryTopicSubscribers.put(key,view);
-            }else{
-                if(info.isDurable()){
-                    durableTopicSubscribers.put(key,view);
+        } else {
+            if (dest.isTemporary()) {
+                temporaryTopicSubscribers.put(key, view);
+            } else {
+                if (info.isDurable()) {
+                    durableTopicSubscribers.put(key, view);
                     // unregister any inactive durable subs
-                    try{
-                        ObjectName inactiveName=(ObjectName) subscriptionKeys.get(subscriptionKey);
-                        if(inactiveName!=null){
+                    try {
+                        ObjectName inactiveName = (ObjectName)subscriptionKeys.get(subscriptionKey);
+                        if (inactiveName != null) {
                             inactiveDurableTopicSubscribers.remove(inactiveName);
                             registeredMBeans.remove(inactiveName);
                             mbeanServer.unregisterMBean(inactiveName);
                         }
-                    }catch(Throwable e){
-                        log.error("Unable to unregister inactive durable subscriber: "+subscriptionKey,e);
+                    } catch (Throwable e) {
+                        log.error("Unable to unregister inactive durable subscriber: " + subscriptionKey, e);
                     }
-                }else{
-                    topicSubscribers.put(key,view);
+                } else {
+                    topicSubscribers.put(key, view);
                 }
             }
         }
-        
+
         try {
-            mbeanServer.registerMBean(view,key);
+            mbeanServer.registerMBean(view, key);
             registeredMBeans.add(key);
         } catch (Throwable e) {
-            log.warn("Failed to register MBean: "+key);
-            log.debug("Failure reason: "+e,e);
+            log.warn("Failed to register MBean: " + key);
+            log.debug("Failure reason: " + e, e);
         }
-        
+
     }
 
-    protected void unregisterSubscription(ObjectName key) throws Exception{
+    protected void unregisterSubscription(ObjectName key) throws Exception {
         queueSubscribers.remove(key);
         topicSubscribers.remove(key);
         inactiveDurableTopicSubscribers.remove(key);
         temporaryQueueSubscribers.remove(key);
         temporaryTopicSubscribers.remove(key);
-        if(registeredMBeans.remove(key)){
+        if (registeredMBeans.remove(key)) {
             try {
                 mbeanServer.unregisterMBean(key);
             } catch (Throwable e) {
-                log.warn("Failed to unregister MBean: "+key);
-                log.debug("Failure reason: "+e,e);
+                log.warn("Failed to unregister MBean: " + key);
+                log.debug("Failure reason: " + e, e);
             }
         }
-        DurableSubscriptionView view=(DurableSubscriptionView) durableTopicSubscribers.remove(key);
-        if(view!=null){
+        DurableSubscriptionView view = (DurableSubscriptionView)durableTopicSubscribers.remove(key);
+        if (view != null) {
             // need to put this back in the inactive list
-            SubscriptionKey subscriptionKey=new SubscriptionKey(view.getClientId(),view.getSubscriptionName());
-            SubscriptionInfo info=new SubscriptionInfo();
+            SubscriptionKey subscriptionKey = new SubscriptionKey(view.getClientId(), view.getSubscriptionName());
+            SubscriptionInfo info = new SubscriptionInfo();
             info.setClientId(subscriptionKey.getClientId());
             info.setSubcriptionName(subscriptionKey.getSubscriptionName());
             info.setDestination(new ActiveMQTopic(view.getDestinationName()));
-            addInactiveSubscription(subscriptionKey,info);
+            addInactiveSubscription(subscriptionKey, info);
         }
     }
 
-    protected void buildExistingSubscriptions() throws Exception{
-        Map subscriptions=new HashMap();
-        Set destinations=destinationFactory.getDestinations();
-        if(destinations!=null){
-            for(Iterator iter=destinations.iterator();iter.hasNext();){
-                ActiveMQDestination dest=(ActiveMQDestination) iter.next();
-                if(dest.isTopic()){
-                    SubscriptionInfo[] infos= destinationFactory.getAllDurableSubscriptions((ActiveMQTopic) dest);
-                    if(infos!=null){
-                        for(int i=0;i<infos.length;i++){
-                            SubscriptionInfo info=infos[i];
-                            log.debug("Restoring durable subscription: "+info);
-                            SubscriptionKey key=new SubscriptionKey(info);
-                            subscriptions.put(key,info);
+    protected void buildExistingSubscriptions() throws Exception {
+        Map subscriptions = new HashMap();
+        Set destinations = destinationFactory.getDestinations();
+        if (destinations != null) {
+            for (Iterator iter = destinations.iterator(); iter.hasNext();) {
+                ActiveMQDestination dest = (ActiveMQDestination)iter.next();
+                if (dest.isTopic()) {
+                    SubscriptionInfo[] infos = destinationFactory.getAllDurableSubscriptions((ActiveMQTopic)dest);
+                    if (infos != null) {
+                        for (int i = 0; i < infos.length; i++) {
+                            SubscriptionInfo info = infos[i];
+                            log.debug("Restoring durable subscription: " + info);
+                            SubscriptionKey key = new SubscriptionKey(info);
+                            subscriptions.put(key, info);
                         }
                     }
                 }
             }
         }
-        for(Iterator i=subscriptions.entrySet().iterator();i.hasNext();){
-            Map.Entry entry=(Entry) i.next();
-            SubscriptionKey key=(SubscriptionKey) entry.getKey();
-            SubscriptionInfo info=(SubscriptionInfo) entry.getValue();
-            addInactiveSubscription(key,info);
+        for (Iterator i = subscriptions.entrySet().iterator(); i.hasNext();) {
+            Map.Entry entry = (Entry)i.next();
+            SubscriptionKey key = (SubscriptionKey)entry.getKey();
+            SubscriptionInfo info = (SubscriptionInfo)entry.getValue();
+            addInactiveSubscription(key, info);
         }
     }
 
-    protected void addInactiveSubscription(SubscriptionKey key,SubscriptionInfo info){
-        Hashtable map=brokerObjectName.getKeyPropertyList();
-        try{
-            ObjectName objectName=new ObjectName(brokerObjectName.getDomain()+":"+"BrokerName="+map.get("BrokerName")
-                            +","+"Type=Subscription,"+"active=false,"+"name="
-                            +JMXSupport.encodeObjectNamePart(key.toString())+"");
-            SubscriptionView view=new InactiveDurableSubscriptionView(this,key.getClientId(),info);
-            
+    protected void addInactiveSubscription(SubscriptionKey key, SubscriptionInfo info) {
+        Hashtable map = brokerObjectName.getKeyPropertyList();
+        try {
+            ObjectName objectName = new ObjectName(brokerObjectName.getDomain() + ":" + "BrokerName=" + map.get("BrokerName") + "," + "Type=Subscription," + "active=false,"
+                                                   + "name=" + JMXSupport.encodeObjectNamePart(key.toString()) + "");
+            SubscriptionView view = new InactiveDurableSubscriptionView(this, key.getClientId(), info);
+
             try {
-                mbeanServer.registerMBean(view,objectName);
+                mbeanServer.registerMBean(view, objectName);
                 registeredMBeans.add(objectName);
             } catch (Throwable e) {
-                log.warn("Failed to register MBean: "+key);
-                log.debug("Failure reason: "+e,e);
-            }            
-            
-            inactiveDurableTopicSubscribers.put(objectName,view);
-            subscriptionKeys.put(key,objectName);
-        }catch(Exception e){
-            log.error("Failed to register subscription "+info,e);
+                log.warn("Failed to register MBean: " + key);
+                log.debug("Failure reason: " + e, e);
+            }
+
+            inactiveDurableTopicSubscribers.put(objectName, view);
+            subscriptionKeys.put(key, objectName);
+        } catch (Exception e) {
+            log.error("Failed to register subscription " + info, e);
         }
     }
 
-    public CompositeData[] browse(SubscriptionView view) throws OpenDataException{
-        List messages=getSubscriberMessages(view);
-        CompositeData c[]=new CompositeData[messages.size()];
-        for(int i=0;i<c.length;i++){
-            try{
-                c[i]=OpenTypeSupport.convert((Message) messages.get(i));
-            }catch(Throwable e){
-                log.error("failed to browse : " + view,e);
+    public CompositeData[] browse(SubscriptionView view) throws OpenDataException {
+        List messages = getSubscriberMessages(view);
+        CompositeData c[] = new CompositeData[messages.size()];
+        for (int i = 0; i < c.length; i++) {
+            try {
+                c[i] = OpenTypeSupport.convert((Message)messages.get(i));
+            } catch (Throwable e) {
+                log.error("failed to browse : " + view, e);
             }
         }
         return c;
     }
 
-    public TabularData browseAsTable(SubscriptionView view) throws OpenDataException{
-        OpenTypeFactory factory=OpenTypeSupport.getFactory(ActiveMQMessage.class);
-        List messages=getSubscriberMessages(view);
-        CompositeType ct=factory.getCompositeType();
-        TabularType tt=new TabularType("MessageList","MessageList",ct,new String[] { "JMSMessageID" });
-        TabularDataSupport rc=new TabularDataSupport(tt);
-        for(int i=0;i<messages.size();i++){
-            rc.put(new CompositeDataSupport(ct,factory.getFields(messages.get(i))));
+    public TabularData browseAsTable(SubscriptionView view) throws OpenDataException {
+        OpenTypeFactory factory = OpenTypeSupport.getFactory(ActiveMQMessage.class);
+        List messages = getSubscriberMessages(view);
+        CompositeType ct = factory.getCompositeType();
+        TabularType tt = new TabularType("MessageList", "MessageList", ct, new String[] {"JMSMessageID"});
+        TabularDataSupport rc = new TabularDataSupport(tt);
+        for (int i = 0; i < messages.size(); i++) {
+            rc.put(new CompositeDataSupport(ct, factory.getFields(messages.get(i))));
         }
         return rc;
     }
 
-    protected List getSubscriberMessages(SubscriptionView view){
-        //TODO It is very dangerous operation for big backlogs
+    protected List getSubscriberMessages(SubscriptionView view) {
+        // TODO It is very dangerous operation for big backlogs
         if (!(destinationFactory instanceof DestinationFactoryImpl)) {
             throw new RuntimeException("unsupported by " + destinationFactory);
         }
-        PersistenceAdapter adapter = ((DestinationFactoryImpl)destinationFactory).getPersistenceAdapter(); 
-        final List result=new ArrayList();
-        try{
-            ActiveMQTopic topic=new ActiveMQTopic(view.getDestinationName());
-            TopicMessageStore store=adapter.createTopicMessageStore(topic);
-            store.recover(new MessageRecoveryListener(){
-                public boolean recoverMessage(Message message) throws Exception{
+        PersistenceAdapter adapter = ((DestinationFactoryImpl)destinationFactory).getPersistenceAdapter();
+        final List result = new ArrayList();
+        try {
+            ActiveMQTopic topic = new ActiveMQTopic(view.getDestinationName());
+            TopicMessageStore store = adapter.createTopicMessageStore(topic);
+            store.recover(new MessageRecoveryListener() {
+                public boolean recoverMessage(Message message) throws Exception {
                     result.add(message);
                     return true;
                 }
 
-                public boolean recoverMessageReference(MessageId messageReference) throws Exception{
-                	throw new RuntimeException("Should not be called.");
+                public boolean recoverMessageReference(MessageId messageReference) throws Exception {
+                    throw new RuntimeException("Should not be called.");
                 }
 
-                public void finished(){}
+                public void finished() {
+                }
 
-                public boolean hasSpace(){
+                public boolean hasSpace() {
                     return true;
                 }
             });
-        }catch(Throwable e){
-            log.error("Failed to browse messages for Subscription "+view,e);
+        } catch (Throwable e) {
+            log.error("Failed to browse messages for Subscription " + view, e);
         }
         return result;
-        
+
     }
 
-    protected ObjectName[] getTopics(){
-        Set set=topics.keySet();
-        return (ObjectName[]) set.toArray(new ObjectName[set.size()]);
+    protected ObjectName[] getTopics() {
+        Set set = topics.keySet();
+        return (ObjectName[])set.toArray(new ObjectName[set.size()]);
     }
 
-    protected ObjectName[] getQueues(){
-        Set set=queues.keySet();
-        return (ObjectName[]) set.toArray(new ObjectName[set.size()]);
+    protected ObjectName[] getQueues() {
+        Set set = queues.keySet();
+        return (ObjectName[])set.toArray(new ObjectName[set.size()]);
     }
 
-    protected ObjectName[] getTemporaryTopics(){
-        Set set=temporaryTopics.keySet();
-        return (ObjectName[]) set.toArray(new ObjectName[set.size()]);
+    protected ObjectName[] getTemporaryTopics() {
+        Set set = temporaryTopics.keySet();
+        return (ObjectName[])set.toArray(new ObjectName[set.size()]);
     }
 
-    protected ObjectName[] getTemporaryQueues(){
-        Set set=temporaryQueues.keySet();
-        return (ObjectName[]) set.toArray(new ObjectName[set.size()]);
+    protected ObjectName[] getTemporaryQueues() {
+        Set set = temporaryQueues.keySet();
+        return (ObjectName[])set.toArray(new ObjectName[set.size()]);
     }
 
-    protected ObjectName[] getTopicSubscribers(){
-        Set set=topicSubscribers.keySet();
-        return (ObjectName[]) set.toArray(new ObjectName[set.size()]);
+    protected ObjectName[] getTopicSubscribers() {
+        Set set = topicSubscribers.keySet();
+        return (ObjectName[])set.toArray(new ObjectName[set.size()]);
     }
 
-    protected ObjectName[] getDurableTopicSubscribers(){
-        Set set=durableTopicSubscribers.keySet();
-        return (ObjectName[]) set.toArray(new ObjectName[set.size()]);
+    protected ObjectName[] getDurableTopicSubscribers() {
+        Set set = durableTopicSubscribers.keySet();
+        return (ObjectName[])set.toArray(new ObjectName[set.size()]);
     }
 
-    protected ObjectName[] getQueueSubscribers(){
-        Set set=queueSubscribers.keySet();
-        return (ObjectName[]) set.toArray(new ObjectName[set.size()]);
+    protected ObjectName[] getQueueSubscribers() {
+        Set set = queueSubscribers.keySet();
+        return (ObjectName[])set.toArray(new ObjectName[set.size()]);
     }
 
-    protected ObjectName[] getTemporaryTopicSubscribers(){
-        Set set=temporaryTopicSubscribers.keySet();
-        return (ObjectName[]) set.toArray(new ObjectName[set.size()]);
+    protected ObjectName[] getTemporaryTopicSubscribers() {
+        Set set = temporaryTopicSubscribers.keySet();
+        return (ObjectName[])set.toArray(new ObjectName[set.size()]);
     }
 
-    protected ObjectName[] getTemporaryQueueSubscribers(){
-        Set set=temporaryQueueSubscribers.keySet();
-        return (ObjectName[]) set.toArray(new ObjectName[set.size()]);
+    protected ObjectName[] getTemporaryQueueSubscribers() {
+        Set set = temporaryQueueSubscribers.keySet();
+        return (ObjectName[])set.toArray(new ObjectName[set.size()]);
     }
 
-    protected ObjectName[] getInactiveDurableTopicSubscribers(){
-        Set set=inactiveDurableTopicSubscribers.keySet();
-        return (ObjectName[]) set.toArray(new ObjectName[set.size()]);
+    protected ObjectName[] getInactiveDurableTopicSubscribers() {
+        Set set = inactiveDurableTopicSubscribers.keySet();
+        return (ObjectName[])set.toArray(new ObjectName[set.size()]);
     }
 
-    public Broker getContextBroker(){
+    public Broker getContextBroker() {
         return contextBroker;
     }
 
-    public void setContextBroker(Broker contextBroker){
-        this.contextBroker=contextBroker;
+    public void setContextBroker(Broker contextBroker) {
+        this.contextBroker = contextBroker;
     }
 
-    protected ObjectName createObjectName(ActiveMQDestination destName) throws MalformedObjectNameException{
+    protected ObjectName createObjectName(ActiveMQDestination destName) throws MalformedObjectNameException {
         // Build the object name for the destination
-        Hashtable map=brokerObjectName.getKeyPropertyList();
-        ObjectName objectName=new ObjectName(brokerObjectName.getDomain()+":"+"BrokerName="+map.get("BrokerName")+","
-                        +"Type="+JMXSupport.encodeObjectNamePart(destName.getDestinationTypeAsString())+","
-                        +"Destination="+JMXSupport.encodeObjectNamePart(destName.getPhysicalName()));
+        Hashtable map = brokerObjectName.getKeyPropertyList();
+        ObjectName objectName = new ObjectName(brokerObjectName.getDomain() + ":" + "BrokerName=" + map.get("BrokerName") + "," + "Type="
+                                               + JMXSupport.encodeObjectNamePart(destName.getDestinationTypeAsString()) + "," + "Destination="
+                                               + JMXSupport.encodeObjectNamePart(destName.getPhysicalName()));
         return objectName;
     }
 }

@@ -21,13 +21,14 @@ import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.memory.UsageManager;
 
 /**
- * Abstract method holder for pending message (messages awaiting disptach to a consumer) cursor
+ * Abstract method holder for pending message (messages awaiting disptach to a
+ * consumer) cursor
  * 
  * @version $Revision$
  */
-public class AbstractPendingMessageCursor implements PendingMessageCursor{
+public class AbstractPendingMessageCursor implements PendingMessageCursor {
     protected int memoryUsageHighWaterMark = 90;
-    protected int maxBatchSize=100;
+    protected int maxBatchSize = 100;
     protected UsageManager usageManager;
 
     public void start() throws Exception {
@@ -37,131 +38,128 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor{
         gc();
     }
 
-    public void add(ConnectionContext context,Destination destination) throws Exception{
+    public void add(ConnectionContext context, Destination destination) throws Exception {
     }
 
-    public void remove(ConnectionContext context,Destination destination) throws Exception{
+    public void remove(ConnectionContext context, Destination destination) throws Exception {
     }
 
-    public boolean isRecoveryRequired(){
+    public boolean isRecoveryRequired() {
         return true;
     }
 
-    public void addMessageFirst(MessageReference node) throws Exception{
+    public void addMessageFirst(MessageReference node) throws Exception {
     }
 
-    public void addMessageLast(MessageReference node) throws Exception{
+    public void addMessageLast(MessageReference node) throws Exception {
     }
-    
-    public void addRecoveredMessage(MessageReference node) throws Exception{
+
+    public void addRecoveredMessage(MessageReference node) throws Exception {
         addMessageLast(node);
     }
 
-    public void clear(){
+    public void clear() {
     }
 
-    public boolean hasNext(){
+    public boolean hasNext() {
         return false;
     }
 
-    public boolean isEmpty(){
+    public boolean isEmpty() {
         return false;
     }
-    
+
     public boolean isEmpty(Destination destination) {
         return isEmpty();
     }
 
-    public MessageReference next(){
+    public MessageReference next() {
         return null;
     }
 
-    public void remove(){
+    public void remove() {
     }
 
-    public void reset(){
+    public void reset() {
     }
 
-    public int size(){
+    public int size() {
         return 0;
     }
 
-    public int getMaxBatchSize(){
+    public int getMaxBatchSize() {
         return maxBatchSize;
     }
 
-    public void setMaxBatchSize(int maxBatchSize){
-        this.maxBatchSize=maxBatchSize;
+    public void setMaxBatchSize(int maxBatchSize) {
+        this.maxBatchSize = maxBatchSize;
     }
 
-    protected void fillBatch() throws Exception{
+    protected void fillBatch() throws Exception {
     }
 
-    public void resetForGC(){
+    public void resetForGC() {
         reset();
     }
 
-    public void remove(MessageReference node){
-    }
-    
-    public void gc(){
+    public void remove(MessageReference node) {
     }
 
-   
-    public void setUsageManager(UsageManager usageManager){
-       this.usageManager = usageManager; 
+    public void gc() {
     }
-    
+
+    public void setUsageManager(UsageManager usageManager) {
+        this.usageManager = usageManager;
+    }
+
     public boolean hasSpace() {
-        return usageManager != null ? (usageManager.getPercentUsage() < memoryUsageHighWaterMark): true;
+        return usageManager != null ? (usageManager.getPercentUsage() < memoryUsageHighWaterMark) : true;
     }
-    
+
     public boolean isFull() {
         return usageManager != null ? usageManager.isFull() : false;
     }
 
-    
-    public void release(){        
+    public void release() {
     }
-    
+
     public boolean hasMessagesBufferedToDeliver() {
         return false;
     }
 
-    
     /**
      * @return the memoryUsageHighWaterMark
      */
-    public int getMemoryUsageHighWaterMark(){
+    public int getMemoryUsageHighWaterMark() {
         return this.memoryUsageHighWaterMark;
     }
 
-    
     /**
      * @param memoryUsageHighWaterMark the memoryUsageHighWaterMark to set
      */
-    public void setMemoryUsageHighWaterMark(int memoryUsageHighWaterMark){
-        this.memoryUsageHighWaterMark=memoryUsageHighWaterMark;
+    public void setMemoryUsageHighWaterMark(int memoryUsageHighWaterMark) {
+        this.memoryUsageHighWaterMark = memoryUsageHighWaterMark;
     }
 
-    
     /**
      * @return the usageManager
      */
-    public UsageManager getUsageManager(){
+    public UsageManager getUsageManager() {
         return this.usageManager;
     }
-    
+
     /**
      * destroy the cursor
-     * @throws Exception 
+     * 
+     * @throws Exception
      */
     public void destroy() throws Exception {
         stop();
     }
-    
+
     /**
      * Page in a restricted number of messages
+     * 
      * @param maxItems
      * @return a list of paged in messages
      */

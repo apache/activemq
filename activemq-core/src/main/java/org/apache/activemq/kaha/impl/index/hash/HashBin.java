@@ -22,7 +22,7 @@ import java.util.List;
 
 /**
  * Bin in a HashIndex
- *
+ * 
  * @version $Revision: 1.1.1.1 $
  */
 class HashBin {
@@ -30,12 +30,12 @@ class HashBin {
     private HashIndex hashIndex;
     private int id;
     private int maximumEntries;
-    private int size = 0;
+    private int size;
     private List<HashPageInfo> hashPages = new ArrayList<HashPageInfo>();
 
     /**
      * Constructor
-     *
+     * 
      * @param hashIndex
      * @param id
      * @param maximumEntries
@@ -53,14 +53,14 @@ class HashBin {
     public boolean equals(Object o) {
         boolean result = false;
         if (o instanceof HashBin) {
-            HashBin other = (HashBin) o;
+            HashBin other = (HashBin)o;
             result = other.id == id;
         }
         return result;
     }
 
     public int hashCode() {
-        return (int) id;
+        return (int)id;
     }
 
     int getId() {
@@ -108,16 +108,13 @@ class HashBin {
                 if (cmp == 0) {
                     result = te;
                     break;
-                }
-                else if (cmp < 0) {
+                } else if (cmp < 0) {
                     low = mid + 1;
-                }
-                else {
+                } else {
                     high = mid - 1;
                 }
             }
-        }
-        finally {
+        } finally {
             end();
         }
         return result;
@@ -134,11 +131,9 @@ class HashBin {
                 int cmp = midVal.compareTo(newEntry);
                 if (cmp < 0) {
                     low = mid + 1;
-                }
-                else if (cmp > 0) {
+                } else if (cmp > 0) {
                     high = mid - 1;
-                }
-                else {
+                } else {
                     replace = true;
                     midVal.setIndexOffset(newEntry.getIndexOffset());
                     break;
@@ -151,8 +146,7 @@ class HashBin {
                 addHashEntry(low, newEntry);
                 size++;
             }
-        }
-        finally {
+        } finally {
             end();
         }
     }
@@ -171,16 +165,13 @@ class HashBin {
                     removeHashEntry(mid);
                     size--;
                     break;
-                }
-                else if (cmp < 0) {
+                } else if (cmp < 0) {
                     low = mid + 1;
-                }
-                else {
+                } else {
                     high = mid - 1;
                 }
             }
-        }
-        finally {
+        } finally {
             end();
         }
         return result;
@@ -219,8 +210,7 @@ class HashBin {
             HashPage page = hashIndex.createPage(id);
             result = addHashPageInfo(page.getId(), 0);
             result.setPage(page);
-        }
-        else {
+        } else {
             int offset = index / maximumEntries;
             result = hashPages.get(offset);
         }
@@ -284,8 +274,7 @@ class HashBin {
             HashPage page = hashIndex.createPage(id);
             info = addHashPageInfo(page.getId(), 0);
             info.setPage(page);
-        }
-        else {
+        } else {
             info = hashPages.get(pageNo);
         }
         info.begin();
@@ -297,8 +286,9 @@ class HashBin {
         }
     }
 
-    private void doUnderFlow(@SuppressWarnings("unused") int index) {
-        //does little
+    private void doUnderFlow(@SuppressWarnings("unused")
+    int index) {
+        // does little
     }
 
     private void end() throws IOException {

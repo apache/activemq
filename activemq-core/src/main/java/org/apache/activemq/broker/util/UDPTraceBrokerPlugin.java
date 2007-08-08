@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -60,257 +59,255 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * A Broker interceptor which allows you to trace all operations to a UDP socket.
+ * A Broker interceptor which allows you to trace all operations to a UDP
+ * socket.
  * 
- * @org.apache.xbean.XBean element="udpTraceBrokerPlugin" 
- * 
+ * @org.apache.xbean.XBean element="udpTraceBrokerPlugin"
  * @version $Revision: 427613 $
  */
 public class UDPTraceBrokerPlugin extends BrokerPluginSupport {
 
-	static final private Log log = LogFactory.getLog(UDPTraceBrokerPlugin.class);
-	protected WireFormat wireFormat;
-	protected WireFormatFactory wireFormatFactory;
-	protected int maxTraceDatagramSize = 1024*4;
-	protected URI destination;
-	protected DatagramSocket socket;
-		
-	protected BrokerId brokerId;
-	protected SocketAddress address;
-	protected boolean broadcast;
-	
-	public UDPTraceBrokerPlugin() {
-		try {
-			destination = new URI("udp://127.0.0.1:61616");
-		} catch (URISyntaxException wontHappen) {
-		}
-	}
+    static final private Log log = LogFactory.getLog(UDPTraceBrokerPlugin.class);
+    protected WireFormat wireFormat;
+    protected WireFormatFactory wireFormatFactory;
+    protected int maxTraceDatagramSize = 1024 * 4;
+    protected URI destination;
+    protected DatagramSocket socket;
 
-	public void start() throws Exception {
-		super.start();
-		if( getWireFormat() == null )
-			throw new IllegalArgumentException("Wireformat must be specifed.");	
-		if( address == null ) {
-			address = createSocketAddress(destination);
-		}
-		socket = createSocket();
-		
-		brokerId = super.getBrokerId();
-		trace(new JournalTrace("START"));		
-	}	
+    protected BrokerId brokerId;
+    protected SocketAddress address;
+    protected boolean broadcast;
 
-	protected DatagramSocket createSocket() throws IOException {
-		DatagramSocket s = new DatagramSocket();
-		s.setSendBufferSize(maxTraceDatagramSize);
-		s.setBroadcast(broadcast);
-		return s;
-	}
+    public UDPTraceBrokerPlugin() {
+        try {
+            destination = new URI("udp://127.0.0.1:61616");
+        } catch (URISyntaxException wontHappen) {
+        }
+    }
 
-	public void stop() throws Exception {
-		trace(new JournalTrace("STOP"));
-		socket.close();
-		super.stop();
-	}
-	
-	private void trace(DataStructure command) {
-		try {
-			
-			ByteArrayOutputStream baos = new ByteArrayOutputStream(maxTraceDatagramSize);
-			DataOutputStream out = new DataOutputStream(baos);
-			wireFormat.marshal(brokerId, out);
-			wireFormat.marshal(command, out);
-			out.close();
-			ByteSequence sequence = baos.toByteSequence();
-			DatagramPacket datagram = new DatagramPacket( sequence.getData(), sequence.getOffset(), sequence.getLength(), address);		
-			socket.send(datagram);
-			
-		} catch ( Throwable e) {
-			log.debug("Failed to trace: "+command, e);
- 		}
-	}
-	
+    public void start() throws Exception {
+        super.start();
+        if (getWireFormat() == null)
+            throw new IllegalArgumentException("Wireformat must be specifed.");
+        if (address == null) {
+            address = createSocketAddress(destination);
+        }
+        socket = createSocket();
+
+        brokerId = super.getBrokerId();
+        trace(new JournalTrace("START"));
+    }
+
+    protected DatagramSocket createSocket() throws IOException {
+        DatagramSocket s = new DatagramSocket();
+        s.setSendBufferSize(maxTraceDatagramSize);
+        s.setBroadcast(broadcast);
+        return s;
+    }
+
+    public void stop() throws Exception {
+        trace(new JournalTrace("STOP"));
+        socket.close();
+        super.stop();
+    }
+
+    private void trace(DataStructure command) {
+        try {
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream(maxTraceDatagramSize);
+            DataOutputStream out = new DataOutputStream(baos);
+            wireFormat.marshal(brokerId, out);
+            wireFormat.marshal(command, out);
+            out.close();
+            ByteSequence sequence = baos.toByteSequence();
+            DatagramPacket datagram = new DatagramPacket(sequence.getData(), sequence.getOffset(), sequence.getLength(), address);
+            socket.send(datagram);
+
+        } catch (Throwable e) {
+            log.debug("Failed to trace: " + command, e);
+        }
+    }
+
     public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
-    	trace(messageSend);
+        trace(messageSend);
         super.send(producerExchange, messageSend);
     }
 
     public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
-    	trace(ack);
+        trace(ack);
         super.acknowledge(consumerExchange, ack);
     }
-  
-	public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
-    	trace(info);
-		super.addConnection(context, info);
-	}
 
-	public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-    	trace(info);
-		return super.addConsumer(context, info);
-	}
+    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
+        trace(info);
+        super.addConnection(context, info);
+    }
 
-	public void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
-    	trace(info);
-		super.addDestinationInfo(context, info);
-	}
+    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
+        trace(info);
+        return super.addConsumer(context, info);
+    }
 
-	public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
-    	trace(info);
-		super.addProducer(context, info);
-	}
+    public void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
+        trace(info);
+        super.addDestinationInfo(context, info);
+    }
 
-	public void addSession(ConnectionContext context, SessionInfo info) throws Exception {
-    	trace(info);
-		super.addSession(context, info);
-	}
+    public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
+        trace(info);
+        super.addProducer(context, info);
+    }
 
-	public void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception {
+    public void addSession(ConnectionContext context, SessionInfo info) throws Exception {
+        trace(info);
+        super.addSession(context, info);
+    }
+
+    public void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         trace(new TransactionInfo(context.getConnectionId(), xid, TransactionInfo.BEGIN));
-		super.beginTransaction(context, xid);
-	}
+        super.beginTransaction(context, xid);
+    }
 
-	public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Exception {
+    public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Exception {
         trace(new TransactionInfo(context.getConnectionId(), xid, onePhase ? TransactionInfo.COMMIT_ONE_PHASE : TransactionInfo.COMMIT_TWO_PHASE));
-		super.commitTransaction(context, xid, onePhase);
-	}
+        super.commitTransaction(context, xid, onePhase);
+    }
 
-	public void forgetTransaction(ConnectionContext context, TransactionId xid) throws Exception {
+    public void forgetTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         trace(new TransactionInfo(context.getConnectionId(), xid, TransactionInfo.FORGET));
-		super.forgetTransaction(context, xid);
-	}
+        super.forgetTransaction(context, xid);
+    }
 
-	public Response messagePull(ConnectionContext context, MessagePull pull) throws Exception {
-    	trace(pull);
-		return super.messagePull(context, pull);
-	}
+    public Response messagePull(ConnectionContext context, MessagePull pull) throws Exception {
+        trace(pull);
+        return super.messagePull(context, pull);
+    }
 
-	public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception {
+    public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         trace(new TransactionInfo(context.getConnectionId(), xid, TransactionInfo.PREPARE));
-		return super.prepareTransaction(context, xid);
-	}
+        return super.prepareTransaction(context, xid);
+    }
 
-	public void postProcessDispatch(MessageDispatch messageDispatch) {
-    	trace(messageDispatch);
-		super.postProcessDispatch(messageDispatch);
-	}
+    public void postProcessDispatch(MessageDispatch messageDispatch) {
+        trace(messageDispatch);
+        super.postProcessDispatch(messageDispatch);
+    }
 
-	public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
-    	trace(messageDispatchNotification);
-		super.processDispatchNotification(messageDispatchNotification);
-	}
+    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
+        trace(messageDispatchNotification);
+        super.processDispatchNotification(messageDispatchNotification);
+    }
 
-	public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
-    	trace(info.createRemoveCommand());
-		super.removeConnection(context, info, error);
-	}
+    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
+        trace(info.createRemoveCommand());
+        super.removeConnection(context, info, error);
+    }
 
-	public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-    	trace(info.createRemoveCommand());
-		super.removeConsumer(context, info);
-	}
+    public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
+        trace(info.createRemoveCommand());
+        super.removeConsumer(context, info);
+    }
 
-	public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
-		super.removeDestination(context, destination, timeout);
-	}
+    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
+        super.removeDestination(context, destination, timeout);
+    }
 
-	public void removeDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
-    	trace(info);
-		super.removeDestinationInfo(context, info);
-	}
+    public void removeDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
+        trace(info);
+        super.removeDestinationInfo(context, info);
+    }
 
-	public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
-    	trace(info.createRemoveCommand());
-		super.removeProducer(context, info);
-	}
+    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
+        trace(info.createRemoveCommand());
+        super.removeProducer(context, info);
+    }
 
-	public void removeSession(ConnectionContext context, SessionInfo info) throws Exception {
-    	trace(info.createRemoveCommand());
-		super.removeSession(context, info);
-	}
+    public void removeSession(ConnectionContext context, SessionInfo info) throws Exception {
+        trace(info.createRemoveCommand());
+        super.removeSession(context, info);
+    }
 
-	public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
-    	trace(info);
-		super.removeSubscription(context, info);
-	}
+    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
+        trace(info);
+        super.removeSubscription(context, info);
+    }
 
-	public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Exception {
+    public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         trace(new TransactionInfo(context.getConnectionId(), xid, TransactionInfo.ROLLBACK));
-		super.rollbackTransaction(context, xid);
-	}
+        super.rollbackTransaction(context, xid);
+    }
 
-	public WireFormat getWireFormat() {
-		if( wireFormat == null ) {
-			wireFormat = createWireFormat();
-		}
-		return wireFormat;
-	}
+    public WireFormat getWireFormat() {
+        if (wireFormat == null) {
+            wireFormat = createWireFormat();
+        }
+        return wireFormat;
+    }
 
-	protected WireFormat createWireFormat() {
-		return getWireFormatFactory().createWireFormat();
-	}
+    protected WireFormat createWireFormat() {
+        return getWireFormatFactory().createWireFormat();
+    }
 
-	public void setWireFormat(WireFormat wireFormat) {
-		this.wireFormat = wireFormat;
-	}
+    public void setWireFormat(WireFormat wireFormat) {
+        this.wireFormat = wireFormat;
+    }
 
-	public WireFormatFactory getWireFormatFactory() {
-		if( wireFormatFactory == null ) {
-			wireFormatFactory = createWireFormatFactory();
-		}
-		return wireFormatFactory;
-	}
+    public WireFormatFactory getWireFormatFactory() {
+        if (wireFormatFactory == null) {
+            wireFormatFactory = createWireFormatFactory();
+        }
+        return wireFormatFactory;
+    }
 
-	protected OpenWireFormatFactory createWireFormatFactory() {
-		OpenWireFormatFactory wf = new OpenWireFormatFactory();
-		wf.setCacheEnabled(false);
-		wf.setVersion(1);
-		wf.setTightEncodingEnabled(true);
-		wf.setSizePrefixDisabled(true);
-		return wf;
-	}
+    protected OpenWireFormatFactory createWireFormatFactory() {
+        OpenWireFormatFactory wf = new OpenWireFormatFactory();
+        wf.setCacheEnabled(false);
+        wf.setVersion(1);
+        wf.setTightEncodingEnabled(true);
+        wf.setSizePrefixDisabled(true);
+        return wf;
+    }
 
-	public void setWireFormatFactory(WireFormatFactory wireFormatFactory) {
-		this.wireFormatFactory = wireFormatFactory;
-	}
+    public void setWireFormatFactory(WireFormatFactory wireFormatFactory) {
+        this.wireFormatFactory = wireFormatFactory;
+    }
 
+    protected SocketAddress createSocketAddress(URI location) throws UnknownHostException {
+        InetAddress a = InetAddress.getByName(location.getHost());
+        int port = location.getPort();
+        return new InetSocketAddress(a, port);
+    }
 
-	protected SocketAddress createSocketAddress(URI location) throws UnknownHostException {
-		InetAddress a = InetAddress.getByName(location.getHost());
-		int port = location.getPort();
-		return new InetSocketAddress(a, port);
-	}
+    public URI getDestination() {
+        return destination;
+    }
 
-	public URI getDestination() {
-		return destination;
-	}
+    public void setDestination(URI destination) {
+        this.destination = destination;
+    }
 
-	public void setDestination(URI destination) {
-		this.destination = destination;
-	}
+    public int getMaxTraceDatagramSize() {
+        return maxTraceDatagramSize;
+    }
 
-	public int getMaxTraceDatagramSize() {
-		return maxTraceDatagramSize;
-	}
+    public void setMaxTraceDatagramSize(int maxTraceDatagramSize) {
+        this.maxTraceDatagramSize = maxTraceDatagramSize;
+    }
 
-	public void setMaxTraceDatagramSize(int maxTraceDatagramSize) {
-		this.maxTraceDatagramSize = maxTraceDatagramSize;
-	}
+    public boolean isBroadcast() {
+        return broadcast;
+    }
 
-	public boolean isBroadcast() {
-		return broadcast;
-	}
+    public void setBroadcast(boolean broadcast) {
+        this.broadcast = broadcast;
+    }
 
-	public void setBroadcast(boolean broadcast) {
-		this.broadcast = broadcast;
-	}
+    public SocketAddress getAddress() {
+        return address;
+    }
 
-	public SocketAddress getAddress() {
-		return address;
-	}
-
-	public void setAddress(SocketAddress address) {
-		this.address = address;
-	}
-
+    public void setAddress(SocketAddress address) {
+        this.address = address;
+    }
 
 }

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,16 +26,15 @@ import org.apache.activemq.state.CommandVisitor;
  */
 public class FlushCommand extends BaseCommand {
 
-    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.FLUSH_COMMAND;
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.FLUSH_COMMAND;
     public static final Command COMMAND = new FlushCommand();
-    
+
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
 
     public Response visit(CommandVisitor visitor) throws Exception {
-        return visitor.processFlush( this );
+        return visitor.processFlush(this);
     }
-
 
 }

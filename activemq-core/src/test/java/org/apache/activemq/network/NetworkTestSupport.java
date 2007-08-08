@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,9 +35,9 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 
 public class NetworkTestSupport extends BrokerTestSupport {
-    
+
     protected ArrayList connections = new ArrayList();
-    
+
     protected TransportConnector connector;
 
     protected PersistenceAdapter remotePersistenceAdapter;
@@ -46,13 +45,12 @@ public class NetworkTestSupport extends BrokerTestSupport {
     protected UsageManager remoteMemoryManager;
     protected TransportConnector remoteConnector;
 
-
     protected void setUp() throws Exception {
-        
+
         super.setUp();
         connector = createConnector();
         connector.start();
-        
+
         remotePersistenceAdapter = createRemotePersistenceAdapter(true);
         remotePersistenceAdapter.start();
         remoteBroker = createRemoteBroker(remotePersistenceAdapter);
@@ -69,9 +67,7 @@ public class NetworkTestSupport extends BrokerTestSupport {
      * @throws URISyntaxException
      */
     protected TransportConnector createRemoteConnector() throws Exception, IOException, URISyntaxException {
-        return new TransportConnector(remoteBroker.getBroker(),
-                TransportFactory.bind(broker.getBrokerName(),
-                        new URI(getRemoteURI())));
+        return new TransportConnector(remoteBroker.getBroker(), TransportFactory.bind(broker.getBrokerName(), new URI(getRemoteURI())));
     }
 
     /**
@@ -82,8 +78,7 @@ public class NetworkTestSupport extends BrokerTestSupport {
      * @throws URISyntaxException
      */
     protected TransportConnector createConnector() throws Exception, IOException, URISyntaxException {
-        return new TransportConnector(broker.getBroker(),
-                TransportFactory.bind(broker.getBrokerName(), new URI(getLocalURI())));
+        return new TransportConnector(broker.getBroker(), TransportFactory.bind(broker.getBrokerName(), new URI(getLocalURI())));
     }
 
     protected String getRemoteURI() {
@@ -95,17 +90,17 @@ public class NetworkTestSupport extends BrokerTestSupport {
     }
 
     protected PersistenceAdapter createRemotePersistenceAdapter(boolean clean) throws Exception {
-        if( remotePersistenceAdapter == null || clean ) {
+        if (remotePersistenceAdapter == null || clean) {
             remotePersistenceAdapter = new MemoryPersistenceAdapter();
         }
         return remotePersistenceAdapter;
     }
-    
+
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = BrokerFactory.createBroker(new URI("broker:()/localhost?persistent=false&useJmx=false&"));
         return broker;
     }
-    
+
     protected BrokerService createRemoteBroker(PersistenceAdapter persistenceAdapter) throws Exception {
         BrokerService answer = new BrokerService();
         answer.setBrokerName("remote");
@@ -113,7 +108,7 @@ public class NetworkTestSupport extends BrokerTestSupport {
         answer.setPersistenceAdapter(persistenceAdapter);
         return answer;
     }
-    
+
     protected StubConnection createConnection() throws Exception {
         Transport transport = TransportFactory.connect(connector.getServer().getConnectURI());
         StubConnection connection = new StubConnection(transport);
@@ -127,7 +122,7 @@ public class NetworkTestSupport extends BrokerTestSupport {
         connections.add(connection);
         return connection;
     }
-    
+
     protected Transport createTransport() throws Exception {
         Transport transport = TransportFactory.connect(connector.getServer().getConnectURI());
         return transport;
@@ -139,9 +134,10 @@ public class NetworkTestSupport extends BrokerTestSupport {
     }
 
     /**
-     * Simulates a broker restart.  The memory based persistence adapter is
+     * Simulates a broker restart. The memory based persistence adapter is
      * reused so that it does not "loose" it's "persistent" messages.
-     * @throws Exception 
+     * 
+     * @throws Exception
      */
     protected void restartRemoteBroker() throws Exception {
 
@@ -155,24 +151,24 @@ public class NetworkTestSupport extends BrokerTestSupport {
         remoteBroker = createRemoteBroker(remotePersistenceAdapter);
         remoteBroker.start();
         String brokerId = remoteBroker.getBrokerName();
-        remoteConnector = new TransportConnector(broker.getBroker(),TransportFactory.bind(brokerId,new URI(getRemoteURI())));
+        remoteConnector = new TransportConnector(broker.getBroker(), TransportFactory.bind(brokerId, new URI(getRemoteURI())));
         remoteConnector.start();
         BrokerRegistry.getInstance().bind("remotehost", remoteBroker);
     }
-    
+
     protected void tearDown() throws Exception {
         for (Iterator iter = connections.iterator(); iter.hasNext();) {
-            StubConnection connection = (StubConnection) iter.next();
+            StubConnection connection = (StubConnection)iter.next();
             connection.stop();
             iter.remove();
         }
-        
+
         BrokerRegistry.getInstance().unbind("remotehost");
         remoteConnector.stop();
         connector.stop();
 
         remoteBroker.stop();
-        remotePersistenceAdapter.stop();        
+        remotePersistenceAdapter.stop();
         super.tearDown();
     }
 

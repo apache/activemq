@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,18 +34,19 @@ public class ManagedQueueRegion extends QueueRegion {
 
     private final ManagedRegionBroker regionBroker;
 
-    public ManagedQueueRegion(ManagedRegionBroker broker, DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
-        super(broker,destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
+    public ManagedQueueRegion(ManagedRegionBroker broker, DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory,
+                              DestinationFactory destinationFactory) {
+        super(broker, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
         regionBroker = broker;
     }
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
         Subscription sub = super.createSubscription(context, info);
-        ObjectName name = regionBroker.registerSubscription(context,sub);
+        ObjectName name = regionBroker.registerSubscription(context, sub);
         sub.setObjectName(name);
         return sub;
     }
-    
+
     protected void destroySubscription(Subscription sub) {
         regionBroker.unregisterSubscription(sub);
         super.destroySubscription(sub);
@@ -57,7 +57,7 @@ public class ManagedQueueRegion extends QueueRegion {
         regionBroker.register(destination, rc);
         return rc;
     }
-    
+
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
         super.removeDestination(context, destination, timeout);
         regionBroker.unregister(destination);

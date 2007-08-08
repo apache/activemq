@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,130 +23,154 @@ import org.apache.activemq.kaha.StoreEntry;
  * 
  * @version $Revision: 1.2 $
  */
-public final class VMIndexLinkedList implements Cloneable, IndexLinkedList{
+public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
     private transient IndexItem root;
-    private transient int size=0;
+    private transient int size;
 
-   
     /**
      * Constructs an empty list.
      */
-    public VMIndexLinkedList(IndexItem header){
+    public VMIndexLinkedList(IndexItem header) {
         this.root = header;
-        this.root.next=root.prev=root;
+        this.root.next = root.prev = root;
     }
-    
-    public IndexItem getRoot(){
+
+    public IndexItem getRoot() {
         return root;
     }
-    
 
-
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#getFirst()
      */
-    public IndexItem getFirst(){
-        if(size==0)
+    public IndexItem getFirst() {
+        if (size == 0)
             return null;
         return root.next;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#getLast()
      */
-    public IndexItem getLast(){
-        if(size==0)
+    public IndexItem getLast() {
+        if (size == 0)
             return null;
         return root.prev;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#removeFirst()
      */
-    public StoreEntry removeFirst(){
-        if(size==0){
+    public StoreEntry removeFirst() {
+        if (size == 0) {
             return null;
         }
-        StoreEntry result=root.next;
+        StoreEntry result = root.next;
         remove(root.next);
         return result;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#removeLast()
      */
-    public Object removeLast(){
-        if(size==0)
+    public Object removeLast() {
+        if (size == 0)
             return null;
-        StoreEntry result=root.prev;
+        StoreEntry result = root.prev;
         remove(root.prev);
         return result;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#addFirst(org.apache.activemq.kaha.impl.IndexItem)
      */
-    public void addFirst(IndexItem item){
-        addBefore(item,root.next);
+    public void addFirst(IndexItem item) {
+        addBefore(item, root.next);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#addLast(org.apache.activemq.kaha.impl.IndexItem)
      */
-    public void addLast(IndexItem item){
-        addBefore(item,root);
+    public void addLast(IndexItem item) {
+        addBefore(item, root);
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#size()
      */
-    public int size(){
+    public int size() {
         return size;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#isEmpty()
      */
-    public boolean isEmpty(){
-        return size==0;
+    public boolean isEmpty() {
+        return size == 0;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#add(org.apache.activemq.kaha.impl.IndexItem)
      */
-    public boolean add(IndexItem item){
-        addBefore(item,root);
+    public boolean add(IndexItem item) {
+        addBefore(item, root);
         return true;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#clear()
      */
-   public  void clear(){
-        root.next=root.prev=root;
-        size=0;
+    public void clear() {
+        root.next = root.prev = root;
+        size = 0;
     }
 
     // Positional Access Operations
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#get(int)
      */
-    public IndexItem get(int index){
+    public IndexItem get(int index) {
         return entry(index);
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.activemq.kaha.impl.IndexLinkedList#add(int, org.apache.activemq.kaha.impl.IndexItem)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.apache.activemq.kaha.impl.IndexLinkedList#add(int,
+     *      org.apache.activemq.kaha.impl.IndexItem)
      */
-    public void add(int index,IndexItem element){
-        addBefore(element,(index==size?root:entry(index)));
+    public void add(int index, IndexItem element) {
+        addBefore(element, (index == size ? root : entry(index)));
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#remove(int)
      */
-    public Object remove(int index){
-        IndexItem e=entry(index);
+    public Object remove(int index) {
+        IndexItem e = entry(index);
         remove(e);
         return e;
     }
@@ -155,28 +178,30 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList{
     /**
      * Return the indexed entry.
      */
-    private IndexItem entry(int index){
-        if(index<0||index>=size)
-            throw new IndexOutOfBoundsException("Index: "+index+", Size: "+size);
-        IndexItem e=root;
-        if(index<size/2){
-            for(int i=0;i<=index;i++)
-                e=e.next;
-        }else{
-            for(int i=size;i>index;i--)
-                e=e.prev;
+    private IndexItem entry(int index) {
+        if (index < 0 || index >= size)
+            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
+        IndexItem e = root;
+        if (index < size / 2) {
+            for (int i = 0; i <= index; i++)
+                e = e.next;
+        } else {
+            for (int i = size; i > index; i--)
+                e = e.prev;
         }
         return e;
     }
 
     // Search Operations
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#indexOf(org.apache.activemq.kaha.impl.IndexItem)
      */
-    public int indexOf(StoreEntry o){
-        int index=0;
-        for(IndexItem e=root.next;e!=root;e=e.next){
-            if(o==e){
+    public int indexOf(StoreEntry o) {
+        int index = 0;
+        for (IndexItem e = root.next; e != root; e = e.next) {
+            if (o == e) {
                 return index;
             }
             index++;
@@ -184,61 +209,71 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList{
         return -1;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#getNextEntry(org.apache.activemq.kaha.impl.IndexItem)
      */
-    public IndexItem getNextEntry(IndexItem entry){
+    public IndexItem getNextEntry(IndexItem entry) {
         return entry.next != root ? entry.next : null;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#getPrevEntry(org.apache.activemq.kaha.impl.IndexItem)
      */
-    public IndexItem getPrevEntry(IndexItem entry){
+    public IndexItem getPrevEntry(IndexItem entry) {
         return entry.prev != root ? entry.prev : null;
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.activemq.kaha.impl.IndexLinkedList#addBefore(org.apache.activemq.kaha.impl.IndexItem, org.apache.activemq.kaha.impl.IndexItem)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.apache.activemq.kaha.impl.IndexLinkedList#addBefore(org.apache.activemq.kaha.impl.IndexItem,
+     *      org.apache.activemq.kaha.impl.IndexItem)
      */
-    public void addBefore(IndexItem insert,IndexItem e){
-        insert.next=e;
-        insert.prev=e.prev;
-        insert.prev.next=insert;
-        insert.next.prev=insert;
+    public void addBefore(IndexItem insert, IndexItem e) {
+        insert.next = e;
+        insert.prev = e.prev;
+        insert.prev.next = insert;
+        insert.next.prev = insert;
         size++;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#remove(org.apache.activemq.kaha.impl.IndexItem)
      */
-    public void remove(IndexItem e){
-        if(e==root)
+    public void remove(IndexItem e) {
+        if (e == root)
             return;
-        e.prev.next=e.next;
-        e.next.prev=e.prev;
+        e.prev.next = e.next;
+        e.next.prev = e.prev;
         size--;
     }
-    
+
     /**
-     *@return clone
+     * @return clone
      */
-    public Object clone(){
-        IndexLinkedList clone=new VMIndexLinkedList(this.root);
-        for(IndexItem e=root.next;e!=root;e=e.next)
+    public Object clone() {
+        IndexLinkedList clone = new VMIndexLinkedList(this.root);
+        for (IndexItem e = root.next; e != root; e = e.next)
             clone.add(e);
         return clone;
     }
 
-    public StoreEntry getEntry(StoreEntry current){
+    public StoreEntry getEntry(StoreEntry current) {
         return current;
     }
-    
+
     /**
      * Update the indexes of a StoreEntry
+     * 
      * @param current
      */
-    public StoreEntry refreshEntry(StoreEntry current){
+    public StoreEntry refreshEntry(StoreEntry current) {
         return current;
     }
 }

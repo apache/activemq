@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,15 +18,13 @@ package org.apache.activemq;
 
 import javax.jms.TextMessage;
 
-import org.apache.activemq.JmsTopicSendReceiveWithTwoConnectionsTest;
-
 /**
  * @version $Revision: 1.3 $
  */
 public class JmsTopicSendSameMessageTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
-    
+
     private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-            .getLog(JmsTopicSendSameMessageTest.class);
+        .getLog(JmsTopicSendSameMessageTest.class);
 
     public void testSendReceive() throws Exception {
         messages.clear();
@@ -36,8 +33,8 @@ public class JmsTopicSendSameMessageTest extends JmsTopicSendReceiveWithTwoConne
 
         for (int i = 0; i < data.length; i++) {
             message.setText(data[i]);
-            message.setStringProperty("stringProperty",data[i]);
-            message.setIntProperty("intProperty",i);
+            message.setStringProperty("stringProperty", data[i]);
+            message.setIntProperty("intProperty", i);
 
             if (verbose) {
                 log.info("About to send a message: " + message + " with text: " + data[i]);

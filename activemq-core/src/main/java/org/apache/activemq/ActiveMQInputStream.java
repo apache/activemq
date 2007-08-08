@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,7 +39,6 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.JMSExceptionSupport;
 
 /**
- * 
  * @version $Revision$
  */
 public class ActiveMQInputStream extends InputStream implements ActiveMQDispatcher {
@@ -50,17 +48,17 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
     // These are the messages waiting to be delivered to the client
     private final MessageDispatchChannel unconsumedMessages = new MessageDispatchChannel();
 
-    private int deliveredCounter = 0;
+    private int deliveredCounter;
     private MessageDispatch lastDelivered;
     private boolean eosReached;
     private byte buffer[];
     private int pos;
-    
-    private ProducerId producerId;
-    private long nextSequenceId=0;
 
-    public ActiveMQInputStream(ActiveMQConnection connection, ConsumerId consumerId, ActiveMQDestination dest,
-            String selector, boolean noLocal, String name, int prefetch) throws JMSException {
+    private ProducerId producerId;
+    private long nextSequenceId;
+
+    public ActiveMQInputStream(ActiveMQConnection connection, ConsumerId consumerId, ActiveMQDestination dest, String selector, boolean noLocal, String name, int prefetch)
+        throws JMSException {
         this.connection = connection;
 
         if (dest == null) {
@@ -87,25 +85,25 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
         this.info.setSubscriptionName(name);
 
         if (selector != null && selector.trim().length() != 0) {
-            selector = "JMSType='org.apache.activemq.Stream' AND ( "+selector+" ) ";
+            selector = "JMSType='org.apache.activemq.Stream' AND ( " + selector + " ) ";
         } else {
             selector = "JMSType='org.apache.activemq.Stream'";
         }
-        
+
         new SelectorParser().parse(selector);
         this.info.setSelector(selector);
-        
+
         this.info.setPrefetchSize(prefetch);
         this.info.setNoLocal(noLocal);
         this.info.setBrowser(false);
         this.info.setDispatchAsync(false);
-        
+
         // Allows the options on the destination to configure the consumerInfo
         if (dest.getOptions() != null) {
             HashMap options = new HashMap(dest.getOptions());
             IntrospectionSupport.setProperties(this.info, options, "consumer.");
         }
-        
+
         this.info.setDestination(dest);
 
         this.connection.addInputStream(this);
@@ -160,7 +158,7 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
             lastDelivered = md;
         }
 
-        return (ActiveMQMessage) md.getMessage();
+        return (ActiveMQMessage)md.getMessage();
     }
 
     /**
@@ -174,56 +172,56 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
 
     public int read() throws IOException {
         fillBuffer();
-        if( eosReached )
+        if (eosReached)
             return -1;
         return buffer[pos++] & 0xff;
     }
 
     public int read(byte[] b, int off, int len) throws IOException {
         fillBuffer();
-        if( eosReached )
+        if (eosReached)
             return -1;
 
-        int max = Math.min(len, buffer.length-pos);            
+        int max = Math.min(len, buffer.length - pos);
         System.arraycopy(buffer, pos, b, off, max);
-        
-        pos += max;            
+
+        pos += max;
         return max;
     }
 
     private void fillBuffer() throws IOException {
-        if( eosReached || (buffer!=null && buffer.length > pos) )
+        if (eosReached || (buffer != null && buffer.length > pos))
             return;
         try {
-            while(true) {
+            while (true) {
                 ActiveMQMessage m = receive();
-                if( m!=null && m.getDataStructureType() == CommandTypes.ACTIVEMQ_BYTES_MESSAGE ) {
+                if (m != null && m.getDataStructureType() == CommandTypes.ACTIVEMQ_BYTES_MESSAGE) {
                     // First message.
                     long producerSequenceId = m.getMessageId().getProducerSequenceId();
-                    if( producerId == null ) {
+                    if (producerId == null) {
                         // We have to start a stream at sequence id = 0
-                        if( producerSequenceId!=0 ) {
+                        if (producerSequenceId != 0) {
                             continue;
                         }
                         nextSequenceId++;
                         producerId = m.getMessageId().getProducerId();
                     } else {
                         // Verify it's the next message of the sequence.
-                        if( !m.getMessageId().getProducerId().equals(producerId) ) {
-                            throw new IOException("Received an unexpected message: invalid producer: "+m);
+                        if (!m.getMessageId().getProducerId().equals(producerId)) {
+                            throw new IOException("Received an unexpected message: invalid producer: " + m);
                         }
-                        if( producerSequenceId!=nextSequenceId++ ) {
-                            throw new IOException("Received an unexpected message: expected ID: " + (nextSequenceId - 1)  +  " but was: " + producerSequenceId + " for message: "+m);
+                        if (producerSequenceId != nextSequenceId++) {
+                            throw new IOException("Received an unexpected message: expected ID: " + (nextSequenceId - 1) + " but was: " + producerSequenceId + " for message: " + m);
                         }
                     }
-                    
+
                     // Read the buffer in.
-                    ActiveMQBytesMessage bm = (ActiveMQBytesMessage) m;
-                    buffer = new byte[(int) bm.getBodyLength()];
+                    ActiveMQBytesMessage bm = (ActiveMQBytesMessage)m;
+                    buffer = new byte[(int)bm.getBodyLength()];
                     bm.readBytes(buffer);
-                    pos=0;                    
+                    pos = 0;
                 } else {
-                    eosReached=true;
+                    eosReached = true;
                 }
                 return;
             }
@@ -238,7 +236,7 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
     }
 
     public String toString() {
-        return "ActiveMQInputStream { value="+info.getConsumerId()+", producerId=" +producerId+" }";
+        return "ActiveMQInputStream { value=" + info.getConsumerId() + ", producerId=" + producerId + " }";
     }
 
 }

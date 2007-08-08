@@ -36,7 +36,7 @@ import org.apache.commons.logging.LogFactory;
 /**
  * @version $Revision: 1.5 $
  */
-public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest{
+public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest {
     private static final transient Log log = LogFactory.getLog(JmsDurableTopicSlowReceiveTest.class);
 
     protected Connection connection2;
@@ -46,8 +46,8 @@ public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest{
     protected MessageProducer producer2;
     protected Destination consumerDestination2;
     BrokerService broker;
-    static final int NMSG=100;
-    static final int MSIZE=256000;
+    static final int NMSG = 100;
+    static final int MSIZE = 256000;
     private Connection connection3;
     private Session consumeSession3;
     private TopicSubscriber consumer3;
@@ -58,34 +58,34 @@ public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest{
      * 
      * @see junit.framework.TestCase#setUp()
      */
-    protected void setUp() throws Exception{
-        this.durable=true;
-        broker=createBroker();
+    protected void setUp() throws Exception {
+        this.durable = true;
+        broker = createBroker();
         super.setUp();
     }
 
-    protected void tearDown() throws Exception{
+    protected void tearDown() throws Exception {
         super.tearDown();
         broker.stop();
     }
 
-    protected ActiveMQConnectionFactory createConnectionFactory() throws Exception{
-        ActiveMQConnectionFactory result=new ActiveMQConnectionFactory("vm://localhost?async=false");
-        Properties props=new Properties();
-        props.put("prefetchPolicy.durableTopicPrefetch","5");
-        props.put("prefetchPolicy.optimizeDurableTopicPrefetch","5");
+    protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
+        ActiveMQConnectionFactory result = new ActiveMQConnectionFactory("vm://localhost?async=false");
+        Properties props = new Properties();
+        props.put("prefetchPolicy.durableTopicPrefetch", "5");
+        props.put("prefetchPolicy.optimizeDurableTopicPrefetch", "5");
         result.setProperties(props);
         return result;
     }
 
-    protected BrokerService createBroker() throws Exception{
-        BrokerService answer=new BrokerService();
+    protected BrokerService createBroker() throws Exception {
+        BrokerService answer = new BrokerService();
         configureBroker(answer);
         answer.start();
         return answer;
     }
 
-    protected void configureBroker(BrokerService answer) throws Exception{
+    protected void configureBroker(BrokerService answer) throws Exception {
         answer.setDeleteAllMessagesOnStartup(true);
     }
 
@@ -94,39 +94,39 @@ public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest{
      * 
      * @throws Exception
      */
-    public void testSlowReceiver() throws Exception{
-        connection2=createConnection();
+    public void testSlowReceiver() throws Exception {
+        connection2 = createConnection();
         connection2.setClientID("test");
         connection2.start();
-        consumeSession2=connection2.createSession(false,Session.AUTO_ACKNOWLEDGE);
-        session2=connection2.createSession(false,Session.AUTO_ACKNOWLEDGE);
-        consumerDestination2=session2.createTopic(getConsumerSubject()+"2");
-        consumer2=consumeSession2.createDurableSubscriber((Topic)consumerDestination2,getName());
-      
+        consumeSession2 = connection2.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        session2 = connection2.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        consumerDestination2 = session2.createTopic(getConsumerSubject() + "2");
+        consumer2 = consumeSession2.createDurableSubscriber((Topic)consumerDestination2, getName());
+
         consumer2.close();
         connection2.close();
-        new Thread(new Runnable(){
+        new Thread(new Runnable() {
 
-            public void run(){
-                try{
+            public void run() {
+                try {
                     int count = 0;
-                    for(int loop=0;loop<4;loop++){
-                        connection2=createConnection();
+                    for (int loop = 0; loop < 4; loop++) {
+                        connection2 = createConnection();
                         connection2.start();
-                        session2=connection2.createSession(false,Session.AUTO_ACKNOWLEDGE);
-                        producer2=session2.createProducer(null);
+                        session2 = connection2.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                        producer2 = session2.createProducer(null);
                         producer2.setDeliveryMode(deliveryMode);
                         Thread.sleep(1000);
-                        for(int i=0;i<NMSG/4;i++){
-                            BytesMessage message=session2.createBytesMessage();
+                        for (int i = 0; i < NMSG / 4; i++) {
+                            BytesMessage message = session2.createBytesMessage();
                             message.writeBytes(new byte[MSIZE]);
-                            message.setStringProperty("test","test");
-                            message.setIntProperty(countProperyName,count);
+                            message.setStringProperty("test", "test");
+                            message.setIntProperty(countProperyName, count);
                             message.setJMSType("test");
-                            producer2.send(consumerDestination2,message);
+                            producer2.send(consumerDestination2, message);
                             Thread.sleep(50);
-                            if(verbose){
-                                log.debug("Sent("+loop+"): "+i);
+                            if (verbose) {
+                                log.debug("Sent(" + loop + "): " + i);
                             }
                             count++;
                         }
@@ -134,43 +134,43 @@ public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest{
                         connection2.stop();
                         connection2.close();
                     }
-                }catch(Throwable e){
+                } catch (Throwable e) {
                     e.printStackTrace();
                 }
             }
-        },"SENDER Thread").start();
-        connection3=createConnection();
+        }, "SENDER Thread").start();
+        connection3 = createConnection();
         connection3.setClientID("test");
         connection3.start();
-        consumeSession3=connection3.createSession(false,Session.CLIENT_ACKNOWLEDGE);
-        consumer3=consumeSession3.createDurableSubscriber((Topic)consumerDestination2,getName());
+        consumeSession3 = connection3.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        consumer3 = consumeSession3.createDurableSubscriber((Topic)consumerDestination2, getName());
         connection3.close();
-        int count =0;
-        for(int loop=0;loop<4;++loop){
-            connection3=createConnection();
+        int count = 0;
+        for (int loop = 0; loop < 4; ++loop) {
+            connection3 = createConnection();
             connection3.setClientID("test");
             connection3.start();
-            consumeSession3=connection3.createSession(false,Session.CLIENT_ACKNOWLEDGE);
-            consumer3=consumeSession3.createDurableSubscriber((Topic)consumerDestination2,getName());
-            Message msg=null;
+            consumeSession3 = connection3.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+            consumer3 = consumeSession3.createDurableSubscriber((Topic)consumerDestination2, getName());
+            Message msg = null;
             int i;
-            for(i=0;i<NMSG/4;i++){
-                msg=consumer3.receive(10000);
-                if(msg==null)
+            for (i = 0; i < NMSG / 4; i++) {
+                msg = consumer3.receive(10000);
+                if (msg == null)
                     break;
-                if(verbose) {
-                    log.debug("Received("+loop+"): "+i + " count = " + msg.getIntProperty(countProperyName));
+                if (verbose) {
+                    log.debug("Received(" + loop + "): " + i + " count = " + msg.getIntProperty(countProperyName));
                 }
                 assertNotNull(msg);
-                assertEquals(msg.getJMSType(),"test");
-                assertEquals(msg.getStringProperty("test"),"test");
-                assertEquals("Messages received out of order",count,msg.getIntProperty(countProperyName));
+                assertEquals(msg.getJMSType(), "test");
+                assertEquals(msg.getStringProperty("test"), "test");
+                assertEquals("Messages received out of order", count, msg.getIntProperty(countProperyName));
                 Thread.sleep(500);
                 msg.acknowledge();
                 count++;
             }
             consumer3.close();
-            assertEquals("Receiver "+loop,NMSG/4,i);
+            assertEquals("Receiver " + loop, NMSG / 4, i);
             connection3.close();
         }
     }

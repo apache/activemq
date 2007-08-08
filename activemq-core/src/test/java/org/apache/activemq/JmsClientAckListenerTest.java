@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,7 +30,7 @@ import javax.jms.Session;
 public class JmsClientAckListenerTest extends TestSupport implements MessageListener {
 
     private Connection connection;
-    private  boolean dontAck=false;
+    private boolean dontAck;
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -48,7 +47,7 @@ public class JmsClientAckListenerTest extends TestSupport implements MessageList
         }
         super.tearDown();
     }
-    
+
     /**
      * Tests if acknowleged messages are being consumed.
      * 
@@ -66,31 +65,30 @@ public class JmsClientAckListenerTest extends TestSupport implements MessageList
         consumer.setMessageListener(this);
 
         Thread.sleep(10000);
-        
+
         // Reset the session.
         session.close();
 
-
-
         session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-        
+
         // Attempt to Consume the message...
         consumer = session.createConsumer(queue);
         Message msg = consumer.receive(1000);
-        assertNull(msg);        
+        assertNull(msg);
 
         session.close();
     }
-    
+
     /**
-     * Tests if unacknowleged messages are being redelivered when the consumer connects again.
+     * Tests if unacknowleged messages are being redelivered when the consumer
+     * connects again.
      * 
      * @throws javax.jms.JMSException
      */
     public void testUnAckedMessageAreNotConsumedOnSessionClose() throws Exception {
         connection.start();
-        //don't aknowledge message on onMessage() call
-        dontAck=true;
+        // don't aknowledge message on onMessage() call
+        dontAck = true;
         Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
         Queue queue = session.createQueue("test");
         MessageProducer producer = session.createProducer(queue);
@@ -100,8 +98,9 @@ public class JmsClientAckListenerTest extends TestSupport implements MessageList
         MessageConsumer consumer = session.createConsumer(queue);
         consumer.setMessageListener(this);
         // Don't ack the message.
-        
-        // Reset the session.  This should cause the Unacked message to be redelivered.
+
+        // Reset the session. This should cause the Unacked message to be
+        // redelivered.
         session.close();
 
         Thread.sleep(10000);
@@ -109,24 +108,23 @@ public class JmsClientAckListenerTest extends TestSupport implements MessageList
         // Attempt to Consume the message...
         consumer = session.createConsumer(queue);
         Message msg = consumer.receive(2000);
-        assertNotNull(msg);        
+        assertNotNull(msg);
         msg.acknowledge();
-        
+
         session.close();
     }
 
-
-   public void onMessage(Message message){
+    public void onMessage(Message message) {
 
         assertNotNull(message);
-       if(!dontAck) {
-           try {
+        if (!dontAck) {
+            try {
                 message.acknowledge();
-               }catch(Exception e){
-                 e.printStackTrace();
-              }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
-       }
+        }
 
-   }
+    }
 }

@@ -40,65 +40,64 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.2 $
  */
-public abstract class BaseContainerImpl{
+public abstract class BaseContainerImpl {
 
-    private static final Log log=LogFactory.getLog(BaseContainerImpl.class);
+    private static final Log LOG = LogFactory.getLog(BaseContainerImpl.class);
     protected IndexItem root;
     protected IndexLinkedList indexList;
     protected IndexManager indexManager;
     protected DataManager dataManager;
     protected ContainerId containerId;
-    protected boolean loaded=false;
-    protected boolean closed=false;
-    protected boolean initialized=false;
+    protected boolean loaded;
+    protected boolean closed;
+    protected boolean initialized;
     protected boolean persistentIndex;
 
-    protected BaseContainerImpl(ContainerId id,IndexItem root,IndexManager indexManager,
-            DataManager dataManager,boolean persistentIndex){
-        this.containerId=id;
-        this.root=root;
-        this.indexManager=indexManager;
-        this.dataManager=dataManager;
+    protected BaseContainerImpl(ContainerId id, IndexItem root, IndexManager indexManager, DataManager dataManager, boolean persistentIndex) {
+        this.containerId = id;
+        this.root = root;
+        this.indexManager = indexManager;
+        this.dataManager = dataManager;
         this.persistentIndex = persistentIndex;
     }
 
-    public ContainerId getContainerId(){
+    public ContainerId getContainerId() {
         return containerId;
     }
 
-    public synchronized void init(){
-        if(!initialized){
-            if(!initialized){
-                initialized=true;
-                if(this.indexList==null){
-                    if(persistentIndex){
-                        this.indexList=new DiskIndexLinkedList(indexManager,root);
-                    }else{
-                        this.indexList=new VMIndexLinkedList(root);
+    public synchronized void init() {
+        if (!initialized) {
+            if (!initialized) {
+                initialized = true;
+                if (this.indexList == null) {
+                    if (persistentIndex) {
+                        this.indexList = new DiskIndexLinkedList(indexManager, root);
+                    } else {
+                        this.indexList = new VMIndexLinkedList(root);
                     }
                 }
             }
         }
     }
 
-    
-    public synchronized void clear(){
-        if(indexList!=null){
+    public synchronized void clear() {
+        if (indexList != null) {
             indexList.clear();
-        }       
+        }
     }
+
     /**
      * @return the indexList
      */
-    public IndexLinkedList getList(){
+    public IndexLinkedList getList() {
         return indexList;
     }
 
     /**
      * @param indexList the indexList to set
      */
-    public void setList(IndexLinkedList indexList){
-        this.indexList=indexList;
+    public void setList(IndexLinkedList indexList) {
+        this.indexList = indexList;
     }
 
     public abstract void unload();
@@ -111,13 +110,13 @@ public abstract class BaseContainerImpl{
 
     protected abstract void remove(IndexItem currentItem);
 
-    protected synchronized final IndexLinkedList getInternalList(){
+    protected synchronized final IndexLinkedList getInternalList() {
         return indexList;
     }
 
-    public synchronized final void close(){
+    public synchronized final void close() {
         unload();
-        closed=true;
+        closed = true;
     }
 
     /*
@@ -125,7 +124,7 @@ public abstract class BaseContainerImpl{
      * 
      * @see org.apache.activemq.kaha.ListContainer#isLoaded()
      */
-    public synchronized final boolean isLoaded(){
+    public synchronized final boolean isLoaded() {
         checkClosed();
         return loaded;
     }
@@ -135,101 +134,98 @@ public abstract class BaseContainerImpl{
      * 
      * @see org.apache.activemq.kaha.ListContainer#getId()
      */
-    public final Object getId(){
+    public final Object getId() {
         checkClosed();
         return containerId.getKey();
     }
-    
-    public DataManager getDataManager(){
+
+    public DataManager getDataManager() {
         return dataManager;
     }
 
-    
-    public IndexManager getIndexManager(){
+    public IndexManager getIndexManager() {
         return indexManager;
     }
 
-    public synchronized final void expressDataInterest() throws IOException{
-        long nextItem=root.getNextItem();
-        while(nextItem!=Item.POSITION_NOT_SET){
-            IndexItem item=indexManager.getIndex(nextItem);
+    public synchronized final void expressDataInterest() throws IOException {
+        long nextItem = root.getNextItem();
+        while (nextItem != Item.POSITION_NOT_SET) {
+            IndexItem item = indexManager.getIndex(nextItem);
             item.setOffset(nextItem);
             dataManager.addInterestInFile(item.getKeyFile());
             dataManager.addInterestInFile(item.getValueFile());
-            nextItem=item.getNextItem();
+            nextItem = item.getNextItem();
         }
     }
 
-    protected final void doClear(){
+    protected final void doClear() {
         checkClosed();
-        loaded=true;
-        List indexList=new ArrayList();
-        try{
+        loaded = true;
+        List indexList = new ArrayList();
+        try {
             init();
-            long nextItem=root.getNextItem();
-            while(nextItem!=Item.POSITION_NOT_SET){
-                IndexItem item=new IndexItem();
+            long nextItem = root.getNextItem();
+            while (nextItem != Item.POSITION_NOT_SET) {
+                IndexItem item = new IndexItem();
                 item.setOffset(nextItem);
                 indexList.add(item);
-                nextItem=item.getNextItem();
+                nextItem = item.getNextItem();
             }
             root.setNextItem(Item.POSITION_NOT_SET);
             storeIndex(root);
-            for(int i=0;i<indexList.size();i++){
-                IndexItem item=(IndexItem)indexList.get(i);
+            for (int i = 0; i < indexList.size(); i++) {
+                IndexItem item = (IndexItem)indexList.get(i);
                 dataManager.removeInterestInFile(item.getKeyFile());
                 dataManager.removeInterestInFile(item.getValueFile());
                 indexManager.freeIndex(item);
             }
             indexList.clear();
-        }catch(IOException e){
-            log.error("Failed to clear Container "+getId(),e);
+        } catch (IOException e) {
+            LOG.error("Failed to clear Container " + getId(), e);
             throw new RuntimeStoreException(e);
         }
     }
 
-    protected final void delete(final IndexItem keyItem,final IndexItem prevItem,final IndexItem nextItem){
-        if(keyItem!=null){
-            try{
-                IndexItem prev=prevItem==null?root:prevItem;
-                IndexItem next=nextItem!=root?nextItem:null;
+    protected final void delete(final IndexItem keyItem, final IndexItem prevItem, final IndexItem nextItem) {
+        if (keyItem != null) {
+            try {
+                IndexItem prev = prevItem == null ? root : prevItem;
+                IndexItem next = nextItem != root ? nextItem : null;
                 dataManager.removeInterestInFile(keyItem.getKeyFile());
                 dataManager.removeInterestInFile(keyItem.getValueFile());
-                if(next!=null){
+                if (next != null) {
                     prev.setNextItem(next.getOffset());
                     next.setPreviousItem(prev.getOffset());
                     updateIndexes(next);
-                }else{
+                } else {
                     prev.setNextItem(Item.POSITION_NOT_SET);
                 }
                 updateIndexes(prev);
                 indexManager.freeIndex(keyItem);
-            }catch(IOException e){
-                log.error("Failed to delete "+keyItem,e);
+            } catch (IOException e) {
+                LOG.error("Failed to delete " + keyItem, e);
                 throw new RuntimeStoreException(e);
             }
         }
     }
 
-    protected final void checkClosed(){
-        if(closed){
+    protected final void checkClosed() {
+        if (closed) {
             throw new RuntimeStoreException("The store is closed");
         }
     }
 
-    protected void storeIndex(IndexItem item) throws IOException{
+    protected void storeIndex(IndexItem item) throws IOException {
         indexManager.storeIndex(item);
     }
-    
-    protected void updateIndexes(IndexItem item) throws IOException{
+
+    protected void updateIndexes(IndexItem item) throws IOException {
         indexManager.updateIndexes(item);
     }
 
-    protected final boolean isRoot(StoreEntry item){
-        return item!=null&&root!=null&&(root==item||root.getOffset()==item.getOffset());
+    protected final boolean isRoot(StoreEntry item) {
+        return item != null && root != null && (root == item || root.getOffset() == item.getOffset());
         // return item != null && indexRoot != null && indexRoot == item;
     }
 
-    
-   
 }

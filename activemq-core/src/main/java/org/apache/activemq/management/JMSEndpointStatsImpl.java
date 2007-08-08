@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,8 +27,9 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * Statistics for a JMS endpoint, typically a MessageProducer or MessageConsumer
- * but this class can also be used to represent statistics on a {@link Destination} as well.
- *
+ * but this class can also be used to represent statistics on a
+ * {@link Destination} as well.
+ * 
  * @version $Revision: 1.3 $
  */
 public class JMSEndpointStatsImpl extends StatsImpl {
@@ -45,7 +45,7 @@ public class JMSEndpointStatsImpl extends StatsImpl {
      * This constructor is used to create statistics for a
      * {@link MessageProducer} or {@link MessageConsumer} as it passes in a
      * {@link Session} parent statistic.
-     *
+     * 
      * @param sessionStats
      */
     public JMSEndpointStatsImpl(JMSSessionStatsImpl sessionStats) {
@@ -62,14 +62,14 @@ public class JMSEndpointStatsImpl extends StatsImpl {
      * {@link Destination}
      */
     public JMSEndpointStatsImpl() {
-        this(new CountStatisticImpl("messageCount", "Number of messages processed"),
-                new CountStatisticImpl("pendingMessageCount", "Number of pending messages"),
-                new CountStatisticImpl("expiredMessageCount", "Number of expired messages"),
-                new TimeStatisticImpl("messageWaitTime", "Time spent by a message before being delivered"),
-                new TimeStatisticImpl("messageRateTime", "Time taken to process a message (thoughtput rate)"));
+        this(new CountStatisticImpl("messageCount", "Number of messages processed"), new CountStatisticImpl("pendingMessageCount", "Number of pending messages"),
+             new CountStatisticImpl("expiredMessageCount", "Number of expired messages"),
+             new TimeStatisticImpl("messageWaitTime", "Time spent by a message before being delivered"), new TimeStatisticImpl("messageRateTime",
+                                                                                                                               "Time taken to process a message (thoughtput rate)"));
     }
 
-    public JMSEndpointStatsImpl(CountStatisticImpl messageCount, CountStatisticImpl pendingMessageCount, CountStatisticImpl expiredMessageCount, TimeStatisticImpl messageWaitTime, TimeStatisticImpl messageRateTime) {
+    public JMSEndpointStatsImpl(CountStatisticImpl messageCount, CountStatisticImpl pendingMessageCount, CountStatisticImpl expiredMessageCount, TimeStatisticImpl messageWaitTime,
+                                TimeStatisticImpl messageRateTime) {
         this.messageCount = messageCount;
         this.pendingMessageCount = pendingMessageCount;
         this.expiredMessageCount = expiredMessageCount;
@@ -152,23 +152,21 @@ public class JMSEndpointStatsImpl extends StatsImpl {
     }
 
     // Implementation methods
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     protected void setParent(CountStatisticImpl child, CountStatisticImpl parent) {
         if (child instanceof CountStatisticImpl && parent instanceof CountStatisticImpl) {
-            CountStatisticImpl c = (CountStatisticImpl) child;
-            c.setParent((CountStatisticImpl) parent);
-        }
-        else {
+            CountStatisticImpl c = (CountStatisticImpl)child;
+            c.setParent((CountStatisticImpl)parent);
+        } else {
             log.warn("Cannot associate endpoint counters with session level counters as they are not both CountStatisticImpl clases. Endpoint: " + child + " session: " + parent);
         }
     }
 
     protected void setParent(TimeStatisticImpl child, TimeStatisticImpl parent) {
         if (child instanceof TimeStatisticImpl && parent instanceof TimeStatisticImpl) {
-            TimeStatisticImpl c = (TimeStatisticImpl) child;
-            c.setParent((TimeStatisticImpl) parent);
-        }
-        else {
+            TimeStatisticImpl c = (TimeStatisticImpl)child;
+            c.setParent((TimeStatisticImpl)parent);
+        } else {
             log.warn("Cannot associate endpoint counters with session level counters as they are not both TimeStatisticImpl clases. Endpoint: " + child + " session: " + parent);
         }
     }

@@ -28,43 +28,42 @@ import org.springframework.core.io.Resource;
 /**
  * @version $Revision: 1.3 $
  */
-public class SlowConsumerTopicTest extends SimpleTopicTest{
+public class SlowConsumerTopicTest extends SimpleTopicTest {
 
     protected PerfConsumer[] slowConsumers;
-    protected int NUMBER_OF_SLOW_CONSUMERS=1;
+    protected int NUMBER_OF_SLOW_CONSUMERS = 1;
 
-    protected void setUp() throws Exception{
-        NUMBER_OF_CONSUMERS=0;
-        PAYLOAD_SIZE=10 * 1024;
+    protected void setUp() throws Exception {
+        numberOfConsumers = 0;
+        playloadSize = 10 * 1024;
         super.setUp();
-        slowConsumers=new SlowConsumer[NUMBER_OF_SLOW_CONSUMERS];
-        for(int i=0;i<NUMBER_OF_SLOW_CONSUMERS;i++){
-            slowConsumers[i]=createSlowConsumer(factory,destination,i);
+        slowConsumers = new SlowConsumer[NUMBER_OF_SLOW_CONSUMERS];
+        for (int i = 0; i < NUMBER_OF_SLOW_CONSUMERS; i++) {
+            slowConsumers[i] = createSlowConsumer(factory, destination, i);
             slowConsumers[i].start();
         }
     }
 
-    protected PerfConsumer createSlowConsumer(ConnectionFactory fac,Destination dest,int number) throws JMSException{
-        return new SlowConsumer(fac,dest);
+    protected PerfConsumer createSlowConsumer(ConnectionFactory fac, Destination dest, int number) throws JMSException {
+        return new SlowConsumer(fac, dest);
     }
 
-    protected PerfProducer createProducer(ConnectionFactory fac,Destination dest,int number,byte[] payload)
-            throws JMSException{
-        PerfProducer result=super.createProducer(fac,dest,number,payload);
+    protected PerfProducer createProducer(ConnectionFactory fac, Destination dest, int number, byte[] payload) throws JMSException {
+        PerfProducer result = super.createProducer(fac, dest, number, payload);
         result.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         return result;
     }
 
-    protected BrokerService createBroker() throws Exception{
-        Resource resource=new ClassPathResource("org/apache/activemq/perf/slowConsumerBroker.xml");
-        BrokerFactoryBean factory=new BrokerFactoryBean(resource);
+    protected BrokerService createBroker() throws Exception {
+        Resource resource = new ClassPathResource("org/apache/activemq/perf/slowConsumerBroker.xml");
+        BrokerFactoryBean factory = new BrokerFactoryBean(resource);
         factory.afterPropertiesSet();
-        BrokerService broker=factory.getBroker();
+        BrokerService broker = factory.getBroker();
         broker.start();
         return broker;
     }
-    
-    protected ActiveMQConnectionFactory createConnectionFactory() throws Exception{
+
+    protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         ActiveMQConnectionFactory result = super.createConnectionFactory();
         ActiveMQPrefetchPolicy policy = new ActiveMQPrefetchPolicy();
         policy.setTopicPrefetch(1000);

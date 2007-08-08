@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -42,7 +41,7 @@ import java.net.URI;
  * @version $Revision: 1.1 $
  */
 public class BrokerFactoryBean implements FactoryBean, InitializingBean, DisposableBean, ApplicationContextAware {
-    private static final Log log = LogFactory.getLog(BrokerFactoryBean.class);
+    private static final Log LOG = LogFactory.getLog(BrokerFactoryBean.class);
 
     static {
         PropertyEditorManager.registerEditor(URI.class, URIEditor.class);
@@ -50,7 +49,7 @@ public class BrokerFactoryBean implements FactoryBean, InitializingBean, Disposa
 
     private Resource config;
     private XBeanBrokerService broker;
-    private boolean start = false;
+    private boolean start;
     private ResourceXmlApplicationContext context;
     private ApplicationContext parentContext;
 
@@ -76,7 +75,7 @@ public class BrokerFactoryBean implements FactoryBean, InitializingBean, Disposa
     public void setApplicationContext(ApplicationContext parentContext) throws BeansException {
         this.parentContext = parentContext;
     }
-    
+
     public void afterPropertiesSet() throws Exception {
         if (config == null) {
             throw new IllegalArgumentException("config property must be set");
@@ -84,18 +83,17 @@ public class BrokerFactoryBean implements FactoryBean, InitializingBean, Disposa
         context = new ResourceXmlApplicationContext(config, parentContext);
 
         try {
-            broker = (XBeanBrokerService) context.getBean("broker");
-        }
-        catch (BeansException e) {
+            broker = (XBeanBrokerService)context.getBean("broker");
+        } catch (BeansException e) {
             // ignore...
-            //log.trace("No bean named broker available: " + e, e);
+            // log.trace("No bean named broker available: " + e, e);
         }
         if (broker == null) {
             // lets try find by type
             String[] names = context.getBeanNamesForType(BrokerService.class);
             for (int i = 0; i < names.length; i++) {
                 String name = names[i];
-                broker = (XBeanBrokerService) context.getBean(name);
+                broker = (XBeanBrokerService)context.getBean(name);
                 if (broker != null) {
                     break;
                 }
@@ -137,6 +135,5 @@ public class BrokerFactoryBean implements FactoryBean, InitializingBean, Disposa
     public void setStart(boolean start) {
         this.start = start;
     }
-
 
 }

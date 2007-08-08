@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,15 +38,15 @@ public class StubConnection implements Service {
     private final BlockingQueue dispatchQueue = new LinkedBlockingQueue();
     private Connection connection;
     private Transport transport;
-    boolean shuttingDown = false;
-    
+    boolean shuttingDown;
+
     protected void dispatch(Object command) throws InterruptedException, IOException {
         dispatchQueue.put(command);
     }
 
     public StubConnection(BrokerService broker) throws Exception {
-		this(TransportFactory.connect(broker.getVmConnectorURI()));
-	}
+        this(TransportFactory.connect(broker.getVmConnectorURI()));
+    }
 
     public StubConnection(Connection connection) {
         this.connection = connection;
@@ -62,8 +61,7 @@ public class StubConnection implements Service {
                         shuttingDown = true;
                     }
                     StubConnection.this.dispatch(command);
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     onException(new IOException("" + e));
                 }
             }
@@ -77,46 +75,44 @@ public class StubConnection implements Service {
         transport.start();
     }
 
-	public BlockingQueue getDispatchQueue() {
+    public BlockingQueue getDispatchQueue() {
         return dispatchQueue;
     }
 
     public void send(Command command) throws Exception {
-        if( command instanceof Message ) {
-            Message message = (Message) command;
+        if (command instanceof Message) {
+            Message message = (Message)command;
             message.setProducerId(message.getMessageId().getProducerId());
         }
         command.setResponseRequired(false);
         if (connection != null) {
             Response response = connection.service(command);
             if (response != null && response.isException()) {
-                ExceptionResponse er = (ExceptionResponse) response;
+                ExceptionResponse er = (ExceptionResponse)response;
                 throw JMSExceptionSupport.create(er.getException());
             }
-        }
-        else if (transport != null) {
+        } else if (transport != null) {
             transport.oneway(command);
         }
     }
 
     public Response request(Command command) throws Exception {
-        if( command instanceof Message ) {
-            Message message = (Message) command;
+        if (command instanceof Message) {
+            Message message = (Message)command;
             message.setProducerId(message.getMessageId().getProducerId());
         }
         command.setResponseRequired(true);
         if (connection != null) {
             Response response = connection.service(command);
             if (response != null && response.isException()) {
-                ExceptionResponse er = (ExceptionResponse) response;
+                ExceptionResponse er = (ExceptionResponse)response;
                 throw JMSExceptionSupport.create(er.getException());
             }
             return response;
-        }
-        else if (transport != null) {
-            Response response = (Response) transport.request(command);
+        } else if (transport != null) {
+            Response response = (Response)transport.request(command);
             if (response != null && response.isException()) {
-                ExceptionResponse er = (ExceptionResponse) response;
+                ExceptionResponse er = (ExceptionResponse)response;
                 throw JMSExceptionSupport.create(er.getException());
             }
             return response;
@@ -140,8 +136,7 @@ public class StubConnection implements Service {
         if (transport != null) {
             try {
                 transport.oneway(new ShutdownInfo());
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
             }
             ServiceSupport.dispose(transport);
         }

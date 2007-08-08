@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,19 +34,18 @@ public class ThreeBrokerTopicNetworkUsingTcpTest extends ThreeBrokerTopicNetwork
 
     protected void bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker) throws Exception {
         List remoteTransports = remoteBroker.getTransportConnectors();
-        List localTransports  = localBroker.getTransportConnectors();
+        List localTransports = localBroker.getTransportConnectors();
 
         URI remoteURI, localURI;
         if (!remoteTransports.isEmpty() && !localTransports.isEmpty()) {
             remoteURI = ((TransportConnector)remoteTransports.get(0)).getConnectUri();
-            localURI  = ((TransportConnector)localTransports.get(0)).getConnectUri();
+            localURI = ((TransportConnector)localTransports.get(0)).getConnectUri();
 
             // Ensure that we are connecting using tcp
             if (remoteURI.toString().startsWith("tcp:") && localURI.toString().startsWith("tcp:")) {
                 NetworkBridgeConfiguration config = new NetworkBridgeConfiguration();
                 config.setBrokerName(localBroker.getBrokerName());
-                DemandForwardingBridge bridge = new DemandForwardingBridge(config,TransportFactory.connect(localURI),
-                                                                           TransportFactory.connect(remoteURI));
+                DemandForwardingBridge bridge = new DemandForwardingBridge(config, TransportFactory.connect(localURI), TransportFactory.connect(remoteURI));
                 bridges.add(bridge);
 
                 bridge.start();

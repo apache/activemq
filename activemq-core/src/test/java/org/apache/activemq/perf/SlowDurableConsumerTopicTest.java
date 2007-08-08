@@ -28,17 +28,13 @@ import org.springframework.core.io.Resource;
 /**
  * @version $Revision: 1.3 $
  */
-public class SlowDurableConsumerTopicTest extends SlowConsumerTopicTest{
+public class SlowDurableConsumerTopicTest extends SlowConsumerTopicTest {
 
     protected PerfConsumer[] slowConsumers;
-    protected int NUMBER_OF_SLOW_CONSUMERS=1;
+    protected int NUMBER_OF_SLOW_CONSUMERS = 1;
 
-    
-
-    protected PerfConsumer createSlowConsumer(ConnectionFactory fac,Destination dest,int number) throws JMSException{
-        return new SlowConsumer(fac,dest,"durableSlowConsumer"+number);
+    protected PerfConsumer createSlowConsumer(ConnectionFactory fac, Destination dest, int number) throws JMSException {
+        return new SlowConsumer(fac, dest, "durableSlowConsumer" + number);
     }
 
-    
 }
-

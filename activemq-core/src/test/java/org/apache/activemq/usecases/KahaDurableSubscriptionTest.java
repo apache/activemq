@@ -22,11 +22,11 @@ import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
 /**
  * @version $Revision: 1.1.1.1 $
  */
-public class KahaDurableSubscriptionTest extends DurableSubscriptionTestSupport{
+public class KahaDurableSubscriptionTest extends DurableSubscriptionTestSupport {
 
-    protected PersistenceAdapter createPersistenceAdapter() throws IOException{
-        File dataDir=new File("target/test-data/durableKaha");
-        KahaPersistenceAdapter adaptor=new KahaPersistenceAdapter();
+    protected PersistenceAdapter createPersistenceAdapter() throws IOException {
+        File dataDir = new File("target/test-data/durableKaha");
+        KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter();
         adaptor.setDirectory(dataDir);
         return adaptor;
     }

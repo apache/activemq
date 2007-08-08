@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,44 +16,54 @@
  */
 package org.apache.activemq;
 
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+import javax.jms.TopicSubscriber;
+
+import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.MessageIdList;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.BrokerFactory;
-
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Arrays;
-import java.util.Collections;
-import java.net.URI;
-
-import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.jms.*;
 
 /**
- * Test case support used to test multiple message comsumers and message producers connecting to a single broker.
+ * Test case support used to test multiple message comsumers and message
+ * producers connecting to a single broker.
  * 
  * @version $Revision$
  */
 public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
     private AtomicInteger producerLock;
 
-    protected Map consumers = new HashMap(); // Map of consumer with messages received
+    protected Map consumers = new HashMap(); // Map of consumer with messages
+                                                // received
     protected int consumerCount = 1;
     protected int producerCount = 1;
 
-    protected int messageSize  = 1024;
+    protected int messageSize = 1024;
 
     protected boolean useConcurrentSend = true;
-    protected boolean durable = false;
-    protected boolean topic = false;
-    protected boolean persistent = false;
+    protected boolean durable;
+    protected boolean topic;
+    protected boolean persistent;
 
     protected BrokerService broker;
     protected Destination destination;
@@ -70,7 +79,7 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
         if (useConcurrentSend) {
             producerLock = new AtomicInteger(producerCount);
 
-            for (int i=0; i<producerCount; i++) {
+            for (int i = 0; i < producerCount; i++) {
                 Thread t = new Thread(new Runnable() {
                     public void run() {
                         try {
@@ -96,10 +105,9 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
                 }
             }
 
-
-        // Use serialized send
+            // Use serialized send
         } else {
-            for (int i=0; i<producerCount; i++) {
+            for (int i = 0; i < producerCount; i++) {
                 sendMessages(factory.createConnection(), dest, msgCount);
             }
         }
@@ -111,7 +119,7 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = session.createProducer(destination);
         producer.setDeliveryMode(persistent ? DeliveryMode.PERSISTENT : DeliveryMode.NON_PERSISTENT);
-        
+
         for (int i = 0; i < count; i++) {
             TextMessage msg = createTextMessage(session, "" + i);
             producer.send(msg);
@@ -132,7 +140,7 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
             String str = new String(data);
             msg.setText(initText + str);
 
-        // Do not pad message text
+            // Do not pad message text
         } else {
             msg.setText(initText);
         }
@@ -146,9 +154,9 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
 
     protected void startConsumers(ConnectionFactory factory, Destination dest) throws Exception {
         MessageConsumer consumer;
-        for (int i=0; i<consumerCount; i++) {
+        for (int i = 0; i < consumerCount; i++) {
             if (durable && topic) {
-                consumer = createDurableSubscriber(factory.createConnection(), dest, "consumer" + (i+1));
+                consumer = createDurableSubscriber(factory.createConnection(), dest, "consumer" + (i + 1));
             } else {
                 consumer = createMessageConsumer(factory.createConnection(), dest);
             }
@@ -185,7 +193,7 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
     }
 
     protected ActiveMQDestination createDestination() throws JMSException {
-        String name =  "." + getClass().getName() + "." + getName();
+        String name = "." + getClass().getName() + "." + getName();
         if (topic) {
             destination = new ActiveMQTopic("Topic" + name);
             return (ActiveMQDestination)destination;
@@ -212,7 +220,7 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
 
     protected void tearDown() throws Exception {
         for (Iterator iter = connections.iterator(); iter.hasNext();) {
-            Connection conn= (Connection) iter.next();
+            Connection conn = (Connection)iter.next();
             try {
                 conn.close();
             } catch (Throwable e) {
@@ -243,29 +251,29 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
     }
 
     protected void assertEachConsumerReceivedAtLeastXMessages(int msgCount) {
-        for (Iterator i=consumers.keySet().iterator();i.hasNext();) {
+        for (Iterator i = consumers.keySet().iterator(); i.hasNext();) {
             assertConsumerReceivedAtLeastXMessages((MessageConsumer)i.next(), msgCount);
         }
     }
 
     protected void assertEachConsumerReceivedAtMostXMessages(int msgCount) {
-        for (Iterator i=consumers.keySet().iterator();i.hasNext();) {
+        for (Iterator i = consumers.keySet().iterator(); i.hasNext();) {
             assertConsumerReceivedAtMostXMessages((MessageConsumer)i.next(), msgCount);
         }
     }
 
     protected void assertEachConsumerReceivedXMessages(int msgCount) {
-        for (Iterator i=consumers.keySet().iterator();i.hasNext();) {
+        for (Iterator i = consumers.keySet().iterator(); i.hasNext();) {
             assertConsumerReceivedXMessages((MessageConsumer)i.next(), msgCount);
         }
     }
 
     protected void assertTotalMessagesReceived(int msgCount) {
         allMessagesList.assertMessagesReceivedNoWait(msgCount);
-        
-        // now lets count the individual messages received 
+
+        // now lets count the individual messages received
         int totalMsg = 0;
-        for (Iterator i=consumers.keySet().iterator(); i.hasNext();) {
+        for (Iterator i = consumers.keySet().iterator(); i.hasNext();) {
             MessageIdList messageIdList = (MessageIdList)consumers.get(i.next());
             totalMsg += messageIdList.getMessageCount();
         }

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,7 +31,7 @@ import java.net.URI;
  * @version $Revision: 1.1.1.1 $
  */
 public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSupport {
-    protected static final int MESSAGE_COUNT  = 100; // Best if a factor of 100
+    protected static final int MESSAGE_COUNT = 100; // Best if a factor of 100
     protected static final int PREFETCH_COUNT = 1;
 
     protected int msgsClient1, msgsClient2;
@@ -293,7 +292,7 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         client2 = createConsumer(broker2, dest);
         Thread.sleep(500);
 
-        // Let each client receive 30% more of the total messages  - 60% total
+        // Let each client receive 30% more of the total messages - 60% total
         msgsClient1 += receiveExactMessages(client1, (int)(MESSAGE_COUNT * 0.30));
         client1.close();
 
@@ -310,7 +309,7 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
     protected int receiveExactMessages(MessageConsumer consumer, int msgCount) throws Exception {
         Message msg;
         int i;
-        for (i=0; i<msgCount; i++) {
+        for (i = 0; i < msgCount; i++) {
             msg = consumer.receive(1000);
             if (msg == null) {
                 log.error("Consumer failed to receive exactly " + msgCount + " messages. Actual messages received is: " + i);

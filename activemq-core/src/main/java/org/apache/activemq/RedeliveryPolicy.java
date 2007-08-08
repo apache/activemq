@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,20 +24,19 @@ import java.util.Random;
  * are rolled back.
  * 
  * @org.apache.xbean.XBean element="redeliveryPolicy"
- * 
  * @version $Revision: 1.11 $
  */
 public class RedeliveryPolicy implements Cloneable, Serializable {
 
-	public static final int NO_MAXIMUM_REDELIVERIES = -1;
-	
+    public static final int NO_MAXIMUM_REDELIVERIES = -1;
+    private static Random randomNumberGenerator;
+
     // +/-15% for a 30% spread -cgs
     private double collisionAvoidanceFactor = 0.15d;
     private int maximumRedeliveries = 6;
     private long initialRedeliveryDelay = 1000L;
-    private static Random randomNumberGenerator;
-    private boolean useCollisionAvoidance = false;
-    private boolean useExponentialBackOff = false;
+    private boolean useCollisionAvoidance;
+    private boolean useExponentialBackOff;
     private short backOffMultiplier = 5;
 
     public RedeliveryPolicy() {
@@ -46,9 +44,8 @@ public class RedeliveryPolicy implements Cloneable, Serializable {
 
     public RedeliveryPolicy copy() {
         try {
-            return (RedeliveryPolicy) clone();
-        }
-        catch (CloneNotSupportedException e) {
+            return (RedeliveryPolicy)clone();
+        } catch (CloneNotSupportedException e) {
             throw new RuntimeException("Could not clone: " + e, e);
         }
     }
@@ -62,7 +59,7 @@ public class RedeliveryPolicy implements Cloneable, Serializable {
     }
 
     public short getCollisionAvoidancePercent() {
-        return (short) Math.round(collisionAvoidanceFactor * 100);
+        return (short)Math.round(collisionAvoidanceFactor * 100);
     }
 
     public void setCollisionAvoidancePercent(short collisionAvoidancePercent) {

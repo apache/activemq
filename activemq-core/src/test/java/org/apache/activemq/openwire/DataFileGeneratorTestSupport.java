@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -63,7 +62,7 @@ import org.apache.commons.logging.LogFactory;
 public abstract class DataFileGeneratorTestSupport extends TestSupport {
 
     private static final Log log = LogFactory.getLog(DataFileGeneratorTestSupport.class);
-    
+
     protected static final Object[] EMPTY_ARGUMENTS = {};
     private static Throwable singletonException = new Exception("shared exception");
 
@@ -77,8 +76,7 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
             URL resource = DataFileGeneratorTestSupport.class.getResource("DataFileGeneratorTestSupport.class");
             URI baseURI = new URI(resource.toString()).resolve("../../../../..");
             basedir = new File(baseURI).getCanonicalFile();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
         moduleBaseDir = basedir;
@@ -132,8 +130,7 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
                 try {
                     expectedValue = method.invoke(expected, EMPTY_ARGUMENTS);
                     actualValue = method.invoke(actual, EMPTY_ARGUMENTS);
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     log.info("Failed to access property: " + name);
                 }
                 assertPropertyValuesEqual(message + name, comparedObjects, expectedValue, actualValue);
@@ -145,47 +142,43 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
         String message = "Property " + name + " not equal";
         if (expectedValue == null) {
             assertNull("Property " + name + " should be null", actualValue);
-        }
-        else if (expectedValue instanceof Object[]) {
-            assertArrayEqual(message, comparedObjects, (Object[]) expectedValue, (Object[]) actualValue);
-        }
-        else if (expectedValue.getClass().isArray()) {
+        } else if (expectedValue instanceof Object[]) {
+            assertArrayEqual(message, comparedObjects, (Object[])expectedValue, (Object[])actualValue);
+        } else if (expectedValue.getClass().isArray()) {
             assertPrimitiveArrayEqual(message, comparedObjects, expectedValue, actualValue);
-        }
-        else {
+        } else {
             if (expectedValue instanceof Exception) {
-                assertExceptionsEqual(message, (Exception) expectedValue, actualValue);
-            }
-            else if (expectedValue instanceof ByteSequence) {
-                assertByteSequencesEqual(message, (ByteSequence) expectedValue, actualValue);
-            }
-            else if (expectedValue instanceof DataStructure) {
+                assertExceptionsEqual(message, (Exception)expectedValue, actualValue);
+            } else if (expectedValue instanceof ByteSequence) {
+                assertByteSequencesEqual(message, (ByteSequence)expectedValue, actualValue);
+            } else if (expectedValue instanceof DataStructure) {
                 assertBeansEqual(message + name, comparedObjects, expectedValue, actualValue);
-            }
-            else {
+            } else {
                 assertEquals(message, expectedValue, actualValue);
             }
-                
+
         }
     }
 
-    protected void assertArrayEqual(String message,Set comparedObjects,  Object[] expected, Object[] actual) throws Exception {
+    protected void assertArrayEqual(String message, Set comparedObjects, Object[] expected, Object[] actual) throws Exception {
         assertEquals(message + ". Array length", expected.length, actual.length);
         for (int i = 0; i < expected.length; i++) {
             assertPropertyValuesEqual(message + ". element: " + i, comparedObjects, expected[i], actual[i]);
         }
     }
-    
-    protected void assertPrimitiveArrayEqual(String message, Set comparedObjects, Object expected, Object actual) throws ArrayIndexOutOfBoundsException, IllegalArgumentException, Exception {
+
+    protected void assertPrimitiveArrayEqual(String message, Set comparedObjects, Object expected, Object actual) throws ArrayIndexOutOfBoundsException, IllegalArgumentException,
+        Exception {
         int length = Array.getLength(expected);
         assertEquals(message + ". Array length", length, Array.getLength(actual));
         for (int i = 0; i < length; i++) {
             assertPropertyValuesEqual(message + ". element: " + i, comparedObjects, Array.get(expected, i), Array.get(actual, i));
         }
     }
+
     protected void assertByteSequencesEqual(String message, ByteSequence expected, Object actualValue) {
         assertTrue(message + ". Actual value should be a ByteSequence but was: " + actualValue, actualValue instanceof ByteSequence);
-        ByteSequence actual = (ByteSequence) actualValue;
+        ByteSequence actual = (ByteSequence)actualValue;
         int length = expected.getLength();
         assertEquals(message + ". Length", length, actual.getLength());
         int offset = expected.getOffset();
@@ -199,7 +192,7 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
 
     protected void assertExceptionsEqual(String message, Exception expected, Object actualValue) {
         assertTrue(message + ". Actual value should be an exception but was: " + actualValue, actualValue instanceof Exception);
-        Exception actual = (Exception) actualValue;
+        Exception actual = (Exception)actualValue;
         assertEquals(message, expected.getMessage(), actual.getMessage());
     }
 
@@ -245,8 +238,7 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
                 assertEquals("Data does not match control file: " + dataFile + " at byte position " + pos, a, b);
             }
             is2.close();
-        }
-        finally {
+        } finally {
             is1.close();
         }
     }
@@ -299,17 +291,17 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
     }
 
     protected Message createMessage(String string) throws Exception {
-        ActiveMQTextMessage message = (ActiveMQTextMessage) ActiveMQTextMessageTest.SINGLETON.createObject();
+        ActiveMQTextMessage message = (ActiveMQTextMessage)ActiveMQTextMessageTest.SINGLETON.createObject();
         message.setText(string);
         return message;
     }
 
     protected BrokerInfo createBrokerInfo(String string) throws Exception {
-        return (BrokerInfo) BrokerInfoTest.SINGLETON.createObject();
+        return (BrokerInfo)BrokerInfoTest.SINGLETON.createObject();
     }
 
     protected MessageAck createMessageAck(String string) throws Exception {
-        return (MessageAck) MessageAckTest.SINGLETON.createObject();
+        return (MessageAck)MessageAckTest.SINGLETON.createObject();
     }
 
     protected DataStructure createDataStructure(String string) throws Exception {
@@ -321,7 +313,7 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
         // exception each time
         return singletonException;
     }
-    
+
     protected BooleanExpression createBooleanExpression(String string) {
         return new NetworkBridgeFilter(new BrokerId(string), 10);
     }

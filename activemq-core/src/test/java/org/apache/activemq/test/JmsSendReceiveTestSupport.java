@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,8 +40,8 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.2 $
  */
 public abstract class JmsSendReceiveTestSupport extends TestSupport implements MessageListener {
-    protected static final Log log = LogFactory.getLog(JmsSendReceiveTestSupport.class);
-    
+    protected static final Log LOG = LogFactory.getLog(JmsSendReceiveTestSupport.class);
+
     protected int messageCount = 100;
     protected String[] data;
     protected Session session;
@@ -53,12 +52,12 @@ public abstract class JmsSendReceiveTestSupport extends TestSupport implements M
     protected Destination producerDestination;
     protected List messages = createConcurrentList();
     protected boolean topic = true;
-    protected boolean durable = false;
+    protected boolean durable;
     protected int deliveryMode = DeliveryMode.PERSISTENT;
     protected final Object lock = new Object();
-    protected boolean verbose = false;
-    protected boolean useSeparateSession = false;
-    protected boolean largeMessages = false;
+    protected boolean verbose;
+    protected boolean useSeparateSession;
+    protected boolean largeMessages;
     protected int largeMessageLoopSize = 4 * 1024;
 
     /*
@@ -67,28 +66,26 @@ public abstract class JmsSendReceiveTestSupport extends TestSupport implements M
     protected void setUp() throws Exception {
         super.setUp();
         String temp = System.getProperty("messageCount");
-        
+
         if (temp != null) {
             int i = Integer.parseInt(temp);
             if (i > 0) {
                 messageCount = i;
             }
         }
-        
-        log.info("Message count for test case is: " + messageCount);
+
+        LOG.info("Message count for test case is: " + messageCount);
         data = new String[messageCount];
-        
+
         for (int i = 0; i < messageCount; i++) {
             data[i] = createMessageText(i);
         }
     }
 
-
     protected String createMessageText(int i) {
         if (largeMessages) {
             return createMessageBodyText();
-        }
-        else {
+        } else {
             return "Text for message: " + i + " at " + new Date();
         }
     }
@@ -102,7 +99,7 @@ public abstract class JmsSendReceiveTestSupport extends TestSupport implements M
     }
 
     /**
-     * Test if all the messages sent are being received.  
+     * Test if all the messages sent are being received.
      * 
      * @throws Exception
      */
@@ -110,21 +107,20 @@ public abstract class JmsSendReceiveTestSupport extends TestSupport implements M
 
         Thread.sleep(1000);
         messages.clear();
-        
+
         for (int i = 0; i < data.length; i++) {
             Message message = createMessage(i);
             configureMessage(message);
             if (verbose) {
-                log.info("About to send a message: " + message + " with text: " + data[i]);
+                LOG.info("About to send a message: " + message + " with text: " + data[i]);
             }
-            
+
             producer.send(producerDestination, message);
         }
-        
-        assertMessagesAreReceived();
-        log.info("" + data.length + " messages(s) received, closing down connections");
-    }
 
+        assertMessagesAreReceived();
+        LOG.info("" + data.length + " messages(s) received, closing down connections");
+    }
 
     protected Message createMessage(int index) throws JMSException {
         Message message = session.createTextMessage(data[index]);
@@ -133,15 +129,15 @@ public abstract class JmsSendReceiveTestSupport extends TestSupport implements M
 
     /**
      * A hook to allow the message to be configured such as adding extra headers
-     * @throws JMSException 
+     * 
+     * @throws JMSException
      */
     protected void configureMessage(Message message) throws JMSException {
     }
 
-
     /**
-     * Waits to receive the messages and performs the test if all messages have been received and 
-     * are in sequential order.  
+     * Waits to receive the messages and performs the test if all messages have
+     * been received and are in sequential order.
      * 
      * @throws JMSException
      */
@@ -151,7 +147,7 @@ public abstract class JmsSendReceiveTestSupport extends TestSupport implements M
     }
 
     /**
-     * Tests if the messages have all been received and are in sequential order. 
+     * Tests if the messages have all been received and are in sequential order.
      * 
      * @param receivedMessages
      * @throws JMSException
@@ -159,56 +155,54 @@ public abstract class JmsSendReceiveTestSupport extends TestSupport implements M
     protected void assertMessagesReceivedAreValid(List receivedMessages) throws JMSException {
         List copyOfMessages = Arrays.asList(receivedMessages.toArray());
         int counter = 0;
-        
+
         if (data.length != copyOfMessages.size()) {
             for (Iterator iter = copyOfMessages.iterator(); iter.hasNext();) {
                 Object message = iter.next();
-                log.info("<== " + counter++ + " = " + message);
+                LOG.info("<== " + counter++ + " = " + message);
             }
         }
-        
+
         assertEquals("Not enough messages received", data.length, receivedMessages.size());
-        
+
         for (int i = 0; i < data.length; i++) {
-        	Message received = (Message) receivedMessages.get(i);
+            Message received = (Message)receivedMessages.get(i);
             assertMessageValid(i, received);
         }
     }
 
-
     protected void assertMessageValid(int index, Message message) throws JMSException {
-        TextMessage textMessage = (TextMessage) message;
+        TextMessage textMessage = (TextMessage)message;
         String text = textMessage.getText();
-      
+
         if (verbose) {
-            log.info("Received Text: " + text);
+            LOG.info("Received Text: " + text);
         }
-        
+
         assertEquals("Message: " + index, data[index], text);
     }
 
     /**
-     * Waits for the messages to be delivered or when the wait time has been reached. 
+     * Waits for the messages to be delivered or when the wait time has been
+     * reached.
      */
     protected void waitForMessagesToBeDelivered() {
         long maxWaitTime = 60000;
         long waitTime = maxWaitTime;
         long start = (maxWaitTime <= 0) ? 0 : System.currentTimeMillis();
-        
+
         synchronized (lock) {
             while (messages.size() < data.length && waitTime >= 0) {
                 try {
                     lock.wait(200);
-                }
-                catch (InterruptedException e) {
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                
+
                 waitTime = maxWaitTime - (System.currentTimeMillis() - start);
             }
         }
     }
-
 
     /**
      * @see javax.jms.MessageListener#onMessage(javax.jms.Message)
@@ -220,16 +214,16 @@ public abstract class JmsSendReceiveTestSupport extends TestSupport implements M
     /**
      * Consumes a received message.
      * 
-     * @param message - a newly received message. 
-     * @param messageList - list containing the received messages. 
+     * @param message - a newly received message.
+     * @param messageList - list containing the received messages.
      */
     protected void consumeMessage(Message message, List messageList) {
         if (verbose) {
-            log.info("Received message: " + message);
+            LOG.info("Received message: " + message);
         }
-       
+
         messageList.add(message);
-       
+
         if (messageList.size() >= data.length) {
             synchronized (lock) {
                 lock.notifyAll();
@@ -238,7 +232,7 @@ public abstract class JmsSendReceiveTestSupport extends TestSupport implements M
     }
 
     /**
-     * Creates a synchronized list. 
+     * Creates a synchronized list.
      * 
      * @return a synchronized view of the specified list.
      */

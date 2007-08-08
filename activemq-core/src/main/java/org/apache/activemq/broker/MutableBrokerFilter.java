@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -42,40 +41,40 @@ import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.kaha.Store;
 
 /**
- * Like a BrokerFilter but it allows you to switch the getNext().broker.  This has more 
- * overhead than a BrokerFilter since access to the getNext().broker has to synchronized
- * since it is mutable
+ * Like a BrokerFilter but it allows you to switch the getNext().broker. This
+ * has more overhead than a BrokerFilter since access to the getNext().broker
+ * has to synchronized since it is mutable
  * 
  * @version $Revision: 1.10 $
  */
 public class MutableBrokerFilter implements Broker {
-    
+
     private Broker next;
     private final Object mutext = new Object();
 
     public MutableBrokerFilter(Broker next) {
         this.next = next;
     }
-    
-    public Broker getAdaptor(Class type){
-        if (type.isInstance(this)){
+
+    public Broker getAdaptor(Class type) {
+        if (type.isInstance(this)) {
             return this;
         }
         return next.getAdaptor(type);
     }
-    
+
     public Broker getNext() {
-        synchronized(mutext) {
+        synchronized (mutext) {
             return next;
         }
     }
-    
+
     public void setNext(Broker next) {
-        synchronized(mutext) {
-            this.next=next;
+        synchronized (mutext) {
+            this.next = next;
         }
     }
-        
+
     public Map getDestinationMap() {
         return getNext().getDestinationMap();
     }
@@ -183,56 +182,55 @@ public class MutableBrokerFilter implements Broker {
     public String getBrokerName() {
         return getNext().getBrokerName();
     }
-	
+
     public void gc() {
         getNext().gc();
     }
 
-    public void addBroker(Connection connection,BrokerInfo info){
-        getNext().addBroker(connection, info);      
+    public void addBroker(Connection connection, BrokerInfo info) {
+        getNext().addBroker(connection, info);
     }
-    
-    public void removeBroker(Connection connection,BrokerInfo info){
+
+    public void removeBroker(Connection connection, BrokerInfo info) {
         getNext().removeBroker(connection, info);
     }
 
-    public BrokerInfo[] getPeerBrokerInfos(){
-       return getNext().getPeerBrokerInfos();
+    public BrokerInfo[] getPeerBrokerInfos() {
+        return getNext().getPeerBrokerInfos();
     }
-    
-    public void preProcessDispatch(MessageDispatch messageDispatch){
+
+    public void preProcessDispatch(MessageDispatch messageDispatch) {
         getNext().preProcessDispatch(messageDispatch);
     }
-    
-    public void postProcessDispatch(MessageDispatch messageDispatch){
+
+    public void postProcessDispatch(MessageDispatch messageDispatch) {
         getNext().postProcessDispatch(messageDispatch);
     }
-    
-    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception{
+
+    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
         getNext().processDispatchNotification(messageDispatchNotification);
     }
-    
-       
-    public boolean isStopped(){
+
+    public boolean isStopped() {
         return getNext().isStopped();
     }
-    
-    public Set getDurableDestinations(){
+
+    public Set getDurableDestinations() {
         return getNext().getDurableDestinations();
     }
 
-    public void addDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{
+    public void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
         getNext().addDestinationInfo(context, info);
-        
+
     }
 
-    public void removeDestinationInfo(ConnectionContext context,DestinationInfo info) throws Exception{
+    public void removeDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
         getNext().removeDestinationInfo(context, info);
-        
+
     }
 
-    public boolean isFaultTolerantConfiguration(){
-       return getNext().isFaultTolerantConfiguration();
+    public boolean isFaultTolerantConfiguration() {
+        return getNext().isFaultTolerantConfiguration();
     }
 
     public ConnectionContext getAdminConnectionContext() {
@@ -246,36 +244,36 @@ public class MutableBrokerFilter implements Broker {
     public Response messagePull(ConnectionContext context, MessagePull pull) throws Exception {
         return getNext().messagePull(context, pull);
     }
-    
+
     public Store getTempDataStore() {
         return getNext().getTempDataStore();
     }
-    
-    public URI getVmConnectorURI(){
+
+    public URI getVmConnectorURI() {
         return getNext().getVmConnectorURI();
     }
-    
-    public void brokerServiceStarted(){
+
+    public void brokerServiceStarted() {
         getNext().brokerServiceStarted();
-    } 
-    
-    public BrokerService getBrokerService(){
+    }
+
+    public BrokerService getBrokerService() {
         return getNext().getBrokerService();
     }
 
     public boolean isExpired(MessageReference messageReference) {
         return getNext().isExpired(messageReference);
     }
-   
-    public void messageExpired(ConnectionContext context,MessageReference message){
-        getNext().messageExpired(context,message);        
+
+    public void messageExpired(ConnectionContext context, MessageReference message) {
+        getNext().messageExpired(context, message);
     }
 
-    public void sendToDeadLetterQueue(ConnectionContext context,MessageReference messageReference) {
-       getNext().sendToDeadLetterQueue(context,messageReference);
+    public void sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference) {
+        getNext().sendToDeadLetterQueue(context, messageReference);
     }
-    
-    public Broker getRoot(){
+
+    public Broker getRoot() {
         return getNext().getRoot();
     }
 

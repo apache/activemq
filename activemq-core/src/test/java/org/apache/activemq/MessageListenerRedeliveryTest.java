@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,7 +29,6 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import junit.framework.TestCase;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -58,7 +56,7 @@ public class MessageListenerRedeliveryTest extends TestCase {
         RedeliveryPolicy redeliveryPolicy = new RedeliveryPolicy();
         redeliveryPolicy.setInitialRedeliveryDelay(1000);
         redeliveryPolicy.setMaximumRedeliveries(3);
-        redeliveryPolicy.setBackOffMultiplier((short) 2);
+        redeliveryPolicy.setBackOffMultiplier((short)2);
         redeliveryPolicy.setUseExponentialBackOff(true);
         return redeliveryPolicy;
     }
@@ -72,7 +70,7 @@ public class MessageListenerRedeliveryTest extends TestCase {
     private class TestMessageListener implements MessageListener {
         private Session session;
 
-        public int counter = 0;
+        public int counter;
 
         public TestMessageListener(Session session) {
             this.session = session;
@@ -108,7 +106,7 @@ public class MessageListenerRedeliveryTest extends TestCase {
 
         MessageConsumer consumer = session.createConsumer(queue);
 
-        ActiveMQMessageConsumer mc = (ActiveMQMessageConsumer) consumer;
+        ActiveMQMessageConsumer mc = (ActiveMQMessageConsumer)consumer;
         mc.setRedeliveryPolicy(getRedeliveryPolicy());
 
         TestMessageListener listener = new TestMessageListener(session);
@@ -119,8 +117,8 @@ public class MessageListenerRedeliveryTest extends TestCase {
         } catch (InterruptedException e) {
 
         }
-        
-        // first try.. should get 2 since there is no delay on the 
+
+        // first try.. should get 2 since there is no delay on the
         // first redeliver..
         assertEquals(2, listener.counter);
 
@@ -137,7 +135,8 @@ public class MessageListenerRedeliveryTest extends TestCase {
         } catch (InterruptedException e) {
 
         }
-        // 3rd redeliver (redelivery after 2 seconds) - it should give up after that
+        // 3rd redeliver (redelivery after 2 seconds) - it should give up after
+        // that
         assertEquals(4, listener.counter);
 
         // create new message
@@ -175,7 +174,7 @@ public class MessageListenerRedeliveryTest extends TestCase {
 
         MessageConsumer consumer = session.createConsumer(queue);
 
-        ActiveMQMessageConsumer mc = (ActiveMQMessageConsumer) consumer;
+        ActiveMQMessageConsumer mc = (ActiveMQMessageConsumer)consumer;
         mc.setRedeliveryPolicy(getRedeliveryPolicy());
 
         TestMessageListener listener = new TestMessageListener(session);
@@ -186,7 +185,7 @@ public class MessageListenerRedeliveryTest extends TestCase {
         } catch (InterruptedException e) {
 
         }
-        // first try 
+        // first try
         assertEquals(2, listener.counter);
 
         try {

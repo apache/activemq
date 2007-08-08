@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +16,8 @@
  */
 
 package org.apache.activemq;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
@@ -30,21 +31,18 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.Topic;
 
-import org.apache.activemq.ActiveMQConnection;
-import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.IdGenerator;
-
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @version $Revision: 1.4 $
  */
 public class LargeMessageTestSupport extends ClientTestSupport implements MessageListener {
 
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(LargeMessageTestSupport.class);
+    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
+        .getLog(LargeMessageTestSupport.class);
 
     protected static final int LARGE_MESSAGE_SIZE = 128 * 1024;
     protected static final int MESSAGE_COUNT = 100;
@@ -69,17 +67,15 @@ public class LargeMessageTestSupport extends ClientTestSupport implements Messag
         String subject = getClass().getName();
         if (isTopic) {
             return new ActiveMQTopic(subject);
-        }
-        else {
+        } else {
             return new ActiveMQQueue(subject);
         }
     }
 
     protected MessageConsumer createConsumer() throws JMSException {
         if (isTopic && isDurable) {
-            return consumerSession.createDurableSubscriber((Topic) destination, idGen.generateId());
-        }
-        else {
+            return consumerSession.createDurableSubscriber((Topic)destination, idGen.generateId());
+        } else {
             return consumerSession.createConsumer(destination);
         }
     }
@@ -95,26 +91,24 @@ public class LargeMessageTestSupport extends ClientTestSupport implements Messag
         for (int i = 0; i < LARGE_MESSAGE_SIZE; i++) {
             if (i % 2 == 0) {
                 largeMessageData[i] = 'a';
-            }
-            else {
+            } else {
                 largeMessageData[i] = 'z';
             }
         }
 
         try {
             Thread.sleep(1000);// allow the broker to start
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             throw new JMSException(e.getMessage());
         }
 
         ActiveMQConnectionFactory fac = getConnectionFactory();
         producerConnection = fac.createConnection();
-        setPrefetchPolicy((ActiveMQConnection) producerConnection);
+        setPrefetchPolicy((ActiveMQConnection)producerConnection);
         producerConnection.start();
 
         consumerConnection = fac.createConnection();
-        setPrefetchPolicy((ActiveMQConnection) consumerConnection);
+        setPrefetchPolicy((ActiveMQConnection)consumerConnection);
         consumerConnection.setClientID(idGen.generateId());
         consumerConnection.start();
         producerSession = producerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -146,7 +140,7 @@ public class LargeMessageTestSupport extends ClientTestSupport implements Messag
 
     protected boolean isSame(BytesMessage msg1) throws Exception {
         boolean result = false;
-        ((ActiveMQMessage) msg1).setReadOnlyBody(true);
+        ((ActiveMQMessage)msg1).setReadOnlyBody(true);
 
         for (int i = 0; i < LARGE_MESSAGE_SIZE; i++) {
             result = msg1.readByte() == largeMessageData[i];
@@ -159,7 +153,7 @@ public class LargeMessageTestSupport extends ClientTestSupport implements Messag
 
     public void onMessage(Message msg) {
         try {
-            BytesMessage ba = (BytesMessage) msg;
+            BytesMessage ba = (BytesMessage)msg;
             validMessageConsumption &= isSame(ba);
             assertTrue(ba.getBodyLength() == LARGE_MESSAGE_SIZE);
             if (messageCount.incrementAndGet() >= MESSAGE_COUNT) {
@@ -171,8 +165,7 @@ public class LargeMessageTestSupport extends ClientTestSupport implements Messag
             if (messageCount.get() % 50 == 0) {
                 log.info("count = " + messageCount);
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -192,7 +185,8 @@ public class LargeMessageTestSupport extends ClientTestSupport implements Messag
             }
         }
         log.info("Finished count = " + messageCount);
-        assertTrue("Not enough messages - expected " + MESSAGE_COUNT + " but got " + messageCount, messageCount.get() == MESSAGE_COUNT);
+        assertTrue("Not enough messages - expected " + MESSAGE_COUNT + " but got " + messageCount,
+                   messageCount.get() == MESSAGE_COUNT);
         assertTrue("received messages are not valid", validMessageConsumption);
         Thread.sleep(1000);
         log.info("FINAL count = " + messageCount);

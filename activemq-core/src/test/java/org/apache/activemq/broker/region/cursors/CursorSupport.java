@@ -38,13 +38,13 @@ import org.apache.commons.logging.LogFactory;
 /**
  * @version $Revision: 1.3 $
  */
-public abstract class CursorSupport extends TestCase{
-    protected static final Log log=LogFactory.getLog(CursorSupport.class);
+public abstract class CursorSupport extends TestCase {
+    protected static final Log log = LogFactory.getLog(CursorSupport.class);
 
-    protected static final int MESSAGE_COUNT=500;
-    protected static final int PREFETCH_SIZE=50;
+    protected static final int MESSAGE_COUNT = 500;
+    protected static final int PREFETCH_SIZE = 50;
     protected BrokerService broker;
-    protected String bindAddress="tcp://localhost:60706";
+    protected String bindAddress = "tcp://localhost:60706";
 
     protected abstract Destination getDestination(Session session) throws JMSException;
 
@@ -52,137 +52,134 @@ public abstract class CursorSupport extends TestCase{
 
     protected abstract void configureBroker(BrokerService answer) throws Exception;
 
-    public void testSendFirstThenConsume() throws Exception{
-        ConnectionFactory factory=createConnectionFactory();
-        Connection consumerConnection=getConsumerConnection(factory);
-        MessageConsumer consumer=getConsumer(consumerConnection);
+    public void testSendFirstThenConsume() throws Exception {
+        ConnectionFactory factory = createConnectionFactory();
+        Connection consumerConnection = getConsumerConnection(factory);
+        MessageConsumer consumer = getConsumer(consumerConnection);
         consumerConnection.close();
-        Connection producerConnection=factory.createConnection();
+        Connection producerConnection = factory.createConnection();
         producerConnection.start();
-        Session session=producerConnection.createSession(false,Session.AUTO_ACKNOWLEDGE);
-        MessageProducer producer=session.createProducer(getDestination(session));
-        List senderList=new ArrayList();
-        for(int i=0;i<MESSAGE_COUNT;i++){
-            Message msg=session.createTextMessage("test"+i);
+        Session session = producerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageProducer producer = session.createProducer(getDestination(session));
+        List senderList = new ArrayList();
+        for (int i = 0; i < MESSAGE_COUNT; i++) {
+            Message msg = session.createTextMessage("test" + i);
             senderList.add(msg);
             producer.send(msg);
         }
         producerConnection.close();
         // now consume the messages
-        consumerConnection=getConsumerConnection(factory);
+        consumerConnection = getConsumerConnection(factory);
         // create durable subs
-        consumer=getConsumer(consumerConnection);
-        List consumerList=new ArrayList();
-        for(int i=0;i<MESSAGE_COUNT;i++){
-            Message msg=consumer.receive();
+        consumer = getConsumer(consumerConnection);
+        List consumerList = new ArrayList();
+        for (int i = 0; i < MESSAGE_COUNT; i++) {
+            Message msg = consumer.receive();
             consumerList.add(msg);
         }
-        assertEquals(senderList,consumerList);
+        assertEquals(senderList, consumerList);
         consumerConnection.close();
     }
 
-    public void testSendWhilstConsume() throws Exception{
-        ConnectionFactory factory=createConnectionFactory();
-        Connection consumerConnection=getConsumerConnection(factory);
+    public void testSendWhilstConsume() throws Exception {
+        ConnectionFactory factory = createConnectionFactory();
+        Connection consumerConnection = getConsumerConnection(factory);
         // create durable subs
-        MessageConsumer consumer=getConsumer(consumerConnection);
+        MessageConsumer consumer = getConsumer(consumerConnection);
         consumerConnection.close();
-        Connection producerConnection=factory.createConnection();
+        Connection producerConnection = factory.createConnection();
         producerConnection.start();
-        Session session=producerConnection.createSession(false,Session.AUTO_ACKNOWLEDGE);
-        MessageProducer producer=session.createProducer(getDestination(session));
-        List senderList=new ArrayList();
-        for(int i=0;i<MESSAGE_COUNT/10;i++){
-            TextMessage msg=session.createTextMessage("test"+i);
+        Session session = producerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageProducer producer = session.createProducer(getDestination(session));
+        List senderList = new ArrayList();
+        for (int i = 0; i < MESSAGE_COUNT / 10; i++) {
+            TextMessage msg = session.createTextMessage("test" + i);
             senderList.add(msg);
             producer.send(msg);
         }
         // now consume the messages
-        consumerConnection=getConsumerConnection(factory);
+        consumerConnection = getConsumerConnection(factory);
         // create durable subs
-        consumer=getConsumer(consumerConnection);
-        final List consumerList=new ArrayList();
-        final CountDownLatch latch=new CountDownLatch(1);
-        consumer.setMessageListener(new MessageListener(){
+        consumer = getConsumer(consumerConnection);
+        final List consumerList = new ArrayList();
+        final CountDownLatch latch = new CountDownLatch(1);
+        consumer.setMessageListener(new MessageListener() {
 
-            public void onMessage(Message msg){
-                try{
+            public void onMessage(Message msg) {
+                try {
                     // sleep to act as a slow consumer
                     // which will force a mix of direct and polled dispatching
                     // using the cursor on the broker
                     Thread.sleep(50);
-                }catch(Exception e){
+                } catch (Exception e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
                 consumerList.add(msg);
-                if(consumerList.size()==MESSAGE_COUNT){
+                if (consumerList.size() == MESSAGE_COUNT) {
                     latch.countDown();
                 }
             }
         });
-        for(int i=MESSAGE_COUNT/10;i<MESSAGE_COUNT;i++){
-            TextMessage msg=session.createTextMessage("test"+i);
+        for (int i = MESSAGE_COUNT / 10; i < MESSAGE_COUNT; i++) {
+            TextMessage msg = session.createTextMessage("test" + i);
             senderList.add(msg);
             producer.send(msg);
         }
-        latch.await(300000,TimeUnit.MILLISECONDS);
+        latch.await(300000, TimeUnit.MILLISECONDS);
         producerConnection.close();
         consumerConnection.close();
-        assertEquals("Still dipatching - count down latch not sprung",latch.getCount(),0);
-        assertEquals("cosumerList - expected: "+MESSAGE_COUNT+" but was: "+consumerList.size(),consumerList.size(),
-                senderList.size());
-        for (int i =0; i < senderList.size(); i++) {
+        assertEquals("Still dipatching - count down latch not sprung", latch.getCount(), 0);
+        assertEquals("cosumerList - expected: " + MESSAGE_COUNT + " but was: " + consumerList.size(), consumerList.size(), senderList.size());
+        for (int i = 0; i < senderList.size(); i++) {
             Message sent = (Message)senderList.get(i);
             Message consumed = (Message)consumerList.get(i);
             if (!sent.equals(consumed)) {
-               log.error("BAD MATCH AT POS " + i);
-               log.error(sent);
-               log.error(consumed);
-               /*
-               log.error("\n\n\n\n\n");
-               for (int j = 0; j < consumerList.size(); j++) {
-                   log.error(consumerList.get(j));
-               }
-               */
+                log.error("BAD MATCH AT POS " + i);
+                log.error(sent);
+                log.error(consumed);
+                /*
+                 * log.error("\n\n\n\n\n"); for (int j = 0; j <
+                 * consumerList.size(); j++) { log.error(consumerList.get(j)); }
+                 */
             }
-            assertEquals("This should be the same at pos " + i + " in the list",sent.getJMSMessageID(),consumed.getJMSMessageID());
-        }       
+            assertEquals("This should be the same at pos " + i + " in the list", sent.getJMSMessageID(), consumed.getJMSMessageID());
+        }
     }
 
-    protected Connection getConsumerConnection(ConnectionFactory fac) throws JMSException{
-        Connection connection=fac.createConnection();
+    protected Connection getConsumerConnection(ConnectionFactory fac) throws JMSException {
+        Connection connection = fac.createConnection();
         connection.setClientID("testConsumer");
         connection.start();
         return connection;
     }
 
-    protected void setUp() throws Exception{
-        if(broker==null){
-            broker=createBroker();
+    protected void setUp() throws Exception {
+        if (broker == null) {
+            broker = createBroker();
         }
         super.setUp();
     }
 
-    protected void tearDown() throws Exception{
+    protected void tearDown() throws Exception {
         super.tearDown();
-        if(broker!=null){
+        if (broker != null) {
             broker.stop();
         }
     }
 
-    protected ActiveMQConnectionFactory createConnectionFactory() throws Exception{
-        ActiveMQConnectionFactory cf=new ActiveMQConnectionFactory(bindAddress);
-        Properties props=new Properties();
-        props.setProperty("prefetchPolicy.durableTopicPrefetch",""+PREFETCH_SIZE);
-        props.setProperty("prefetchPolicy.optimizeDurableTopicPrefetch",""+PREFETCH_SIZE);
-        props.setProperty("prefetchPolicy.queuePrefetch",""+PREFETCH_SIZE);
+    protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(bindAddress);
+        Properties props = new Properties();
+        props.setProperty("prefetchPolicy.durableTopicPrefetch", "" + PREFETCH_SIZE);
+        props.setProperty("prefetchPolicy.optimizeDurableTopicPrefetch", "" + PREFETCH_SIZE);
+        props.setProperty("prefetchPolicy.queuePrefetch", "" + PREFETCH_SIZE);
         cf.setProperties(props);
         return cf;
     }
 
-    protected BrokerService createBroker() throws Exception{
-        BrokerService answer=new BrokerService();
+    protected BrokerService createBroker() throws Exception {
+        BrokerService answer = new BrokerService();
         configureBroker(answer);
         answer.start();
         return answer;

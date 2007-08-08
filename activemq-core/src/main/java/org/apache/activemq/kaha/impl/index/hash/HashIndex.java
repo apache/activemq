@@ -33,32 +33,32 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-public class HashIndex implements Index{
+public class HashIndex implements Index {
 
-    private static final String NAME_PREFIX="hash-index-";
+    private static final String NAME_PREFIX = "hash-index-";
     private static final int DEFAULT_PAGE_SIZE;
     private static final int DEFAULT_KEY_SIZE;
-    private static final Log log=LogFactory.getLog(HashIndex.class);
+    private static final Log log = LogFactory.getLog(HashIndex.class);
     private final String name;
     private File directory;
     private File file;
     private RandomAccessFile indexFile;
     private IndexManager indexManager;
-    private int pageSize=DEFAULT_PAGE_SIZE;
-    private int keySize=DEFAULT_KEY_SIZE;
-    private int keysPerPage=pageSize/keySize;
+    private int pageSize = DEFAULT_PAGE_SIZE;
+    private int keySize = DEFAULT_KEY_SIZE;
+    private int keysPerPage = pageSize / keySize;
     private DataByteArrayInputStream dataIn;
     private DataByteArrayOutputStream dataOut;
     private byte[] readBuffer;
     private HashBin[] bins;
     private Marshaller keyMarshaller;
-    private long length=0;
+    private long length;
     private HashPage firstFree;
     private HashPage lastFree;
-    private AtomicBoolean loaded=new AtomicBoolean();
-    private LRUCache<Long,HashPage> pageCache;
-    private boolean enablePageCaching=false;
-    private int pageCacheSize=10;
+    private AtomicBoolean loaded = new AtomicBoolean();
+    private LRUCache<Long, HashPage> pageCache;
+    private boolean enablePageCaching = false;
+    private int pageCacheSize = 10;
 
     /**
      * Constructor
@@ -68,8 +68,8 @@ public class HashIndex implements Index{
      * @param indexManager
      * @throws IOException
      */
-    public HashIndex(File directory,String name,IndexManager indexManager) throws IOException{
-        this(directory,name,indexManager,1024);
+    public HashIndex(File directory, String name, IndexManager indexManager) throws IOException {
+        this(directory, name, indexManager, 1024);
     }
 
     /**
@@ -81,16 +81,16 @@ public class HashIndex implements Index{
      * @param numberOfBins
      * @throws IOException
      */
-    public HashIndex(File directory,String name,IndexManager indexManager,int numberOfBins) throws IOException{
-        this.directory=directory;
-        this.name=name;
-        this.indexManager=indexManager;
-        int capacity=1;
-        while(capacity<numberOfBins)
-            capacity<<=1;
-        this.bins=new HashBin[capacity];
+    public HashIndex(File directory, String name, IndexManager indexManager, int numberOfBins) throws IOException {
+        this.directory = directory;
+        this.name = name;
+        this.indexManager = indexManager;
+        int capacity = 1;
+        while (capacity < numberOfBins)
+            capacity <<= 1;
+        this.bins = new HashBin[capacity];
         openIndexFile();
-        pageCache=new LRUCache<Long,HashPage>(pageCacheSize,pageCacheSize,0.75f,true);
+        pageCache = new LRUCache<Long, HashPage>(pageCacheSize, pageCacheSize, 0.75f, true);
     }
 
     /**
@@ -98,23 +98,23 @@ public class HashIndex implements Index{
      * 
      * @param marshaller
      */
-    public synchronized void setKeyMarshaller(Marshaller marshaller){
-        this.keyMarshaller=marshaller;
+    public synchronized void setKeyMarshaller(Marshaller marshaller) {
+        this.keyMarshaller = marshaller;
     }
 
     /**
      * @return the keySize
      */
-    public  synchronized int getKeySize(){
+    public synchronized int getKeySize() {
         return this.keySize;
     }
 
     /**
      * @param keySize the keySize to set
      */
-    public synchronized void setKeySize(int keySize){
-        this.keySize=keySize;
-        if(loaded.get()){
+    public synchronized void setKeySize(int keySize) {
+        this.keySize = keySize;
+        if (loaded.get()) {
             throw new RuntimeException("Pages already loaded - can't reset key size");
         }
     }
@@ -122,160 +122,158 @@ public class HashIndex implements Index{
     /**
      * @return the pageSize
      */
-    public synchronized int getPageSize(){
+    public synchronized int getPageSize() {
         return this.pageSize;
     }
 
     /**
      * @param pageSize the pageSize to set
      */
-    public synchronized void setPageSize(int pageSize){
-        if(loaded.get()&&pageSize!=this.pageSize){
+    public synchronized void setPageSize(int pageSize) {
+        if (loaded.get() && pageSize != this.pageSize) {
             throw new RuntimeException("Pages already loaded - can't reset page size");
         }
-        this.pageSize=pageSize;
+        this.pageSize = pageSize;
     }
-    
 
     /**
      * @return the enablePageCaching
      */
-    public synchronized boolean isEnablePageCaching(){
+    public synchronized boolean isEnablePageCaching() {
         return this.enablePageCaching;
     }
 
     /**
      * @param enablePageCaching the enablePageCaching to set
      */
-    public synchronized void setEnablePageCaching(boolean enablePageCaching){
-        this.enablePageCaching=enablePageCaching;
+    public synchronized void setEnablePageCaching(boolean enablePageCaching) {
+        this.enablePageCaching = enablePageCaching;
     }
 
     /**
      * @return the pageCacheSize
      */
-    public synchronized int getPageCacheSize(){
+    public synchronized int getPageCacheSize() {
         return this.pageCacheSize;
     }
 
     /**
      * @param pageCacheSize the pageCacheSize to set
      */
-    public synchronized void setPageCacheSize(int pageCacheSize){
-        this.pageCacheSize=pageCacheSize;
+    public synchronized void setPageCacheSize(int pageCacheSize) {
+        this.pageCacheSize = pageCacheSize;
         pageCache.setMaxCacheSize(pageCacheSize);
     }
 
-
-    public synchronized  boolean isTransient(){
+    public synchronized boolean isTransient() {
         return false;
     }
 
-    public synchronized void load(){
-        if(loaded.compareAndSet(false,true)){
-            keysPerPage=pageSize/keySize;
-            dataIn=new DataByteArrayInputStream();
-            dataOut=new DataByteArrayOutputStream(pageSize);
-            readBuffer=new byte[pageSize];
-            try{
+    public synchronized void load() {
+        if (loaded.compareAndSet(false, true)) {
+            keysPerPage = pageSize / keySize;
+            dataIn = new DataByteArrayInputStream();
+            dataOut = new DataByteArrayOutputStream(pageSize);
+            readBuffer = new byte[pageSize];
+            try {
                 openIndexFile();
-                long offset=0;
-                while((offset+pageSize)<=indexFile.length()){
+                long offset = 0;
+                while ((offset + pageSize) <= indexFile.length()) {
                     indexFile.seek(offset);
-                    indexFile.readFully(readBuffer,0,HashPage.PAGE_HEADER_SIZE);
+                    indexFile.readFully(readBuffer, 0, HashPage.PAGE_HEADER_SIZE);
                     dataIn.restart(readBuffer);
-                    HashPage page=new HashPage(keysPerPage);
+                    HashPage page = new HashPage(keysPerPage);
                     page.setId(offset);
                     page.readHeader(dataIn);
-                    if(!page.isActive()){
-                        if(lastFree!=null){
+                    if (!page.isActive()) {
+                        if (lastFree != null) {
                             lastFree.setNextFreePageId(offset);
                             indexFile.seek(lastFree.getId());
                             dataOut.reset();
                             lastFree.writeHeader(dataOut);
-                            indexFile.write(dataOut.getData(),0,HashPage.PAGE_HEADER_SIZE);
-                            lastFree=page;
-                        }else{
-                            lastFree=firstFree=page;
+                            indexFile.write(dataOut.getData(), 0, HashPage.PAGE_HEADER_SIZE);
+                            lastFree = page;
+                        } else {
+                            lastFree = firstFree = page;
                         }
-                    }else{
+                    } else {
                         addToBin(page);
                     }
-                    offset+=pageSize;
+                    offset += pageSize;
                 }
-                length=offset;
-            }catch(IOException e){
-                log.error("Failed to load index ",e);
+                length = offset;
+            } catch (IOException e) {
+                log.error("Failed to load index ", e);
                 throw new RuntimeException(e);
             }
         }
     }
 
-    public synchronized void unload() throws IOException{
-        if(loaded.compareAndSet(true,false)){
-            if(indexFile!=null){
+    public synchronized void unload() throws IOException {
+        if (loaded.compareAndSet(true, false)) {
+            if (indexFile != null) {
                 indexFile.close();
-                indexFile=null;
-                firstFree=lastFree=null;
-                bins=new HashBin[bins.length];
+                indexFile = null;
+                firstFree = lastFree = null;
+                bins = new HashBin[bins.length];
             }
         }
     }
 
-    public synchronized void store(Object key,StoreEntry value) throws IOException{
+    public synchronized void store(Object key, StoreEntry value) throws IOException {
         load();
-        HashEntry entry=new HashEntry();
+        HashEntry entry = new HashEntry();
         entry.setKey((Comparable)key);
         entry.setIndexOffset(value.getOffset());
         getBin(key).put(entry);
     }
 
-    public synchronized StoreEntry get(Object key) throws IOException{
+    public synchronized StoreEntry get(Object key) throws IOException {
         load();
-        HashEntry entry=new HashEntry();
+        HashEntry entry = new HashEntry();
         entry.setKey((Comparable)key);
-        HashEntry result=getBin(key).find(entry);
-        return result!=null?indexManager.getIndex(result.getIndexOffset()):null;
+        HashEntry result = getBin(key).find(entry);
+        return result != null ? indexManager.getIndex(result.getIndexOffset()) : null;
     }
 
-    public synchronized StoreEntry remove(Object key) throws IOException{
+    public synchronized StoreEntry remove(Object key) throws IOException {
         load();
-        HashEntry entry=new HashEntry();
+        HashEntry entry = new HashEntry();
         entry.setKey((Comparable)key);
         HashEntry result = getBin(key).remove(entry);
-        return result!=null?indexManager.getIndex(result.getIndexOffset()):null;
+        return result != null ? indexManager.getIndex(result.getIndexOffset()) : null;
     }
 
-    public synchronized boolean containsKey(Object key) throws IOException{
-        return get(key)!=null;
+    public synchronized boolean containsKey(Object key) throws IOException {
+        return get(key) != null;
     }
 
-    public synchronized  void clear() throws IOException{
+    public synchronized void clear() throws IOException {
         unload();
         delete();
         openIndexFile();
         load();
     }
 
-    public synchronized void delete() throws IOException{
+    public synchronized void delete() throws IOException {
         unload();
-        if(file.exists()){
+        if (file.exists()) {
             file.delete();
         }
-        length=0;
+        length = 0;
     }
 
-    HashPage lookupPage(long pageId) throws IOException{
-        HashPage result=null;
-        if(pageId>=0){
-            result=getFromCache(pageId);
-            if(result==null){
-                result=getFullPage(pageId);
-                if(result!=null){
-                    if(result.isActive()){
+    HashPage lookupPage(long pageId) throws IOException {
+        HashPage result = null;
+        if (pageId >= 0) {
+            result = getFromCache(pageId);
+            if (result == null) {
+                result = getFullPage(pageId);
+                if (result != null) {
+                    if (result.isActive()) {
                         addToCache(result);
-                    }else{
-                        throw new IllegalStateException("Trying to access an inactive page: "+pageId);
+                    } else {
+                        throw new IllegalStateException("Trying to access an inactive page: " + pageId);
                     }
                 }
             }
@@ -283,15 +281,15 @@ public class HashIndex implements Index{
         return result;
     }
 
-    HashPage createPage(int binId) throws IOException{
-        HashPage result=getNextFreePage();
-        if(result==null){
+    HashPage createPage(int binId) throws IOException {
+        HashPage result = getNextFreePage();
+        if (result == null) {
             // allocate one
-            result=new HashPage(keysPerPage);
+            result = new HashPage(keysPerPage);
             result.setId(length);
             result.setBinId(binId);
             writePageHeader(result);
-            length+=pageSize;
+            length += pageSize;
             indexFile.seek(length);
             indexFile.write(HashEntry.NOT_SET);
         }
@@ -299,30 +297,30 @@ public class HashIndex implements Index{
         return result;
     }
 
-    void releasePage(HashPage page) throws IOException{
+    void releasePage(HashPage page) throws IOException {
         removeFromCache(page);
         page.reset();
         page.setActive(false);
-        if(lastFree==null){
-            firstFree=lastFree=page;
-        }else{
+        if (lastFree == null) {
+            firstFree = lastFree = page;
+        } else {
             lastFree.setNextFreePageId(page.getId());
             writePageHeader(lastFree);
         }
         writePageHeader(page);
     }
 
-    private HashPage getNextFreePage() throws IOException{
-        HashPage result=null;
-        if(firstFree!=null){
-            if(firstFree.equals(lastFree)){
-                result=firstFree;
-                firstFree=lastFree=null;
-            }else{
-                result=firstFree;
-                firstFree=getPageHeader(firstFree.getNextFreePageId());
-                if(firstFree==null){
-                    lastFree=null;
+    private HashPage getNextFreePage() throws IOException {
+        HashPage result = null;
+        if (firstFree != null) {
+            if (firstFree.equals(lastFree)) {
+                result = firstFree;
+                firstFree = lastFree = null;
+            } else {
+                result = firstFree;
+                firstFree = getPageHeader(firstFree.getNextFreePageId());
+                if (firstFree == null) {
+                    lastFree = null;
                 }
             }
             result.setActive(true);
@@ -332,104 +330,105 @@ public class HashIndex implements Index{
         return result;
     }
 
-    void writeFullPage(HashPage page) throws IOException{
+    void writeFullPage(HashPage page) throws IOException {
         dataOut.reset();
-        page.write(keyMarshaller,dataOut);
-        if(dataOut.size()>pageSize){
-            throw new IOException("Page Size overflow: pageSize is "+pageSize+" trying to write "+dataOut.size());
+        page.write(keyMarshaller, dataOut);
+        if (dataOut.size() > pageSize) {
+            throw new IOException("Page Size overflow: pageSize is " + pageSize + " trying to write " + dataOut.size());
         }
         indexFile.seek(page.getId());
-        indexFile.write(dataOut.getData(),0,dataOut.size());
+        indexFile.write(dataOut.getData(), 0, dataOut.size());
     }
 
-    void writePageHeader(HashPage page) throws IOException{
+    void writePageHeader(HashPage page) throws IOException {
         dataOut.reset();
         page.writeHeader(dataOut);
         indexFile.seek(page.getId());
-        indexFile.write(dataOut.getData(),0,HashPage.PAGE_HEADER_SIZE);
+        indexFile.write(dataOut.getData(), 0, HashPage.PAGE_HEADER_SIZE);
     }
 
-    HashPage getFullPage(long id) throws IOException{
+    HashPage getFullPage(long id) throws IOException {
         indexFile.seek(id);
-        indexFile.readFully(readBuffer,0,pageSize);
+        indexFile.readFully(readBuffer, 0, pageSize);
         dataIn.restart(readBuffer);
-        HashPage page=new HashPage(keysPerPage);
+        HashPage page = new HashPage(keysPerPage);
         page.setId(id);
-        page.read(keyMarshaller,dataIn);
+        page.read(keyMarshaller, dataIn);
         return page;
     }
 
-    HashPage getPageHeader(long id) throws IOException{
+    HashPage getPageHeader(long id) throws IOException {
         indexFile.seek(id);
-        indexFile.readFully(readBuffer,0,HashPage.PAGE_HEADER_SIZE);
+        indexFile.readFully(readBuffer, 0, HashPage.PAGE_HEADER_SIZE);
         dataIn.restart(readBuffer);
-        HashPage page=new HashPage(keysPerPage);
+        HashPage page = new HashPage(keysPerPage);
         page.setId(id);
         page.readHeader(dataIn);
         return page;
     }
 
-    void addToBin(HashPage page){
-        HashBin bin=getBin(page.getBinId());
-        bin.addHashPageInfo(page.getId(),page.getPersistedSize());
+    void addToBin(HashPage page) {
+        HashBin bin = getBin(page.getBinId());
+        bin.addHashPageInfo(page.getId(), page.getPersistedSize());
     }
 
-    private HashBin getBin(int index){
-        HashBin result=bins[index];
-        if(result==null){
-            result=new HashBin(this,index,pageSize/keySize);
-            bins[index]=result;
+    private HashBin getBin(int index) {
+        HashBin result = bins[index];
+        if (result == null) {
+            result = new HashBin(this, index, pageSize / keySize);
+            bins[index] = result;
         }
         return result;
     }
 
-    private void openIndexFile() throws IOException{
-        if(indexFile==null){
-            file=new File(directory,NAME_PREFIX+name);
-            indexFile=new RandomAccessFile(file,"rw");
+    private void openIndexFile() throws IOException {
+        if (indexFile == null) {
+            file = new File(directory, NAME_PREFIX + name);
+            indexFile = new RandomAccessFile(file, "rw");
         }
     }
 
-    private HashBin getBin(Object key){
-        int hash=hash(key);
-        int i=indexFor(hash,bins.length);
+    private HashBin getBin(Object key) {
+        int hash = hash(key);
+        int i = indexFor(hash, bins.length);
         return getBin(i);
     }
-    
-    private HashPage getFromCache(long pageId){
-        HashPage result=null;
-        if(enablePageCaching){
-            result=pageCache.get(pageId);
+
+    private HashPage getFromCache(long pageId) {
+        HashPage result = null;
+        if (enablePageCaching) {
+            result = pageCache.get(pageId);
         }
         return result;
     }
-    
-    private void addToCache(HashPage page){
-        if(enablePageCaching){
-            pageCache.put(page.getId(),page);
+
+    private void addToCache(HashPage page) {
+        if (enablePageCaching) {
+            pageCache.put(page.getId(), page);
         }
     }
 
-    private void removeFromCache(HashPage page){
-        if(enablePageCaching){
+    private void removeFromCache(HashPage page) {
+        if (enablePageCaching) {
             pageCache.remove(page.getId());
         }
     }
 
-    static int hash(Object x){
-        int h=x.hashCode();
-        h+=~(h<<9);
-        h^=(h>>>14);
-        h+=(h<<4);
-        h^=(h>>>10);
+    static int hash(Object x) {
+        int h = x.hashCode();
+        h += ~(h << 9);
+        h ^= (h >>> 14);
+        h += (h << 4);
+        h ^= (h >>> 10);
         return h;
     }
 
-    static int indexFor(int h,int length){
-        return h&(length-1);
+    static int indexFor(int h, int length) {
+        return h & (length - 1);
     }
-    static{
-        DEFAULT_PAGE_SIZE=Integer.parseInt(System.getProperty("defaultPageSize","16384"));
-        DEFAULT_KEY_SIZE=Integer.parseInt(System.getProperty("defaultKeySize","96"));
+
+    static {
+        DEFAULT_PAGE_SIZE = Integer.parseInt(System.getProperty("defaultPageSize", "16384"));
+        DEFAULT_KEY_SIZE = Integer.parseInt(System.getProperty("defaultKeySize", "96"));
     }
 }

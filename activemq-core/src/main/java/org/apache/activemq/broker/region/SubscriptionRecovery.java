@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,33 +16,30 @@
  */
 package org.apache.activemq.broker.region;
 
-
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.ActiveMQDestination;
 
 /**
- * An interface for recoverying transient messages held by the broker
- * for retractive recovery for subscribers
+ * An interface for recoverying transient messages held by the broker for
+ * retractive recovery for subscribers
  * 
  * @version $Revision$
  */
-public interface SubscriptionRecovery  {
-    
-    
+public interface SubscriptionRecovery {
+
     /**
      * Add a message to the SubscriptionRecovery
+     * 
      * @param context
      * @param message
      * @return true if the message is accepted
      * @throws Exception
      */
     boolean addRecoveredMessage(ConnectionContext context, MessageReference message) throws Exception;
-    
-    
+
     /**
      * @return the Destination associated with this Subscription
      */
     ActiveMQDestination getActiveMQDestination();
-    
+
 }

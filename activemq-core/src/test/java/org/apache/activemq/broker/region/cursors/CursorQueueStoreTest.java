@@ -29,29 +29,28 @@ import org.apache.activemq.broker.region.policy.StorePendingQueueMessageStorageP
 /**
  * @version $Revision: 1.3 $
  */
-public  class CursorQueueStoreTest extends CursorSupport{
+public class CursorQueueStoreTest extends CursorSupport {
 
-    protected Destination getDestination(Session session) throws JMSException{
-        String queueName="QUEUE" + getClass().getName();
+    protected Destination getDestination(Session session) throws JMSException {
+        String queueName = "QUEUE" + getClass().getName();
         return session.createQueue(queueName);
     }
 
-    protected Connection getConsumerConnection(ConnectionFactory fac) throws JMSException{
-        Connection connection=fac.createConnection();
+    protected Connection getConsumerConnection(ConnectionFactory fac) throws JMSException {
+        Connection connection = fac.createConnection();
         connection.setClientID("testConsumer");
         connection.start();
         return connection;
     }
 
-    protected MessageConsumer getConsumer(Connection connection) throws Exception{
-        Session consumerSession=connection.createSession(false,Session.AUTO_ACKNOWLEDGE);
+    protected MessageConsumer getConsumer(Connection connection) throws Exception {
+        Session consumerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Destination dest = getDestination(consumerSession);
-        MessageConsumer consumer=consumerSession.createConsumer(dest);
+        MessageConsumer consumer = consumerSession.createConsumer(dest);
         return consumer;
     }
-    
-    
-    protected void configureBroker(BrokerService answer) throws Exception{
+
+    protected void configureBroker(BrokerService answer) throws Exception {
         PolicyEntry policy = new PolicyEntry();
         policy.setPendingQueuePolicy(new StorePendingQueueMessageStoragePolicy());
         PolicyMap pMap = new PolicyMap();

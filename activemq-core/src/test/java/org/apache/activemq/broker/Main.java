@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,11 +28,11 @@ import javax.jms.Session;
 /**
  * A helper class which can be handy for running a broker in your IDE from the
  * activemq-core module.
- *
+ * 
  * @version $Revision$
  */
 public class Main {
-    protected static boolean createConsumers = false;
+    protected static boolean createConsumers;
 
     /**
      * @param args
@@ -57,15 +56,15 @@ public class Main {
             managementContext.setCreateConnector(false);
 
             broker.setUseJmx(true);
-            //broker.setPlugins(new BrokerPlugin[] { new ConnectionDotFilePlugin(), new UDPTraceBrokerPlugin() });
+            // broker.setPlugins(new BrokerPlugin[] { new
+            // ConnectionDotFilePlugin(), new UDPTraceBrokerPlugin() });
             broker.addConnector("tcp://localhost:61616");
             broker.addConnector("stomp://localhost:61613");
             broker.start();
 
-
             // lets publish some messages so that there is some stuff to browse
-            DefaultQueueSender.main(new String[]{"Prices.Equity.IBM"});
-            DefaultQueueSender.main(new String[]{"Prices.Equity.MSFT"});
+            DefaultQueueSender.main(new String[] {"Prices.Equity.IBM"});
+            DefaultQueueSender.main(new String[] {"Prices.Equity.MSFT"});
 
             // lets create a dummy couple of consumers
             if (createConsumers) {
@@ -76,13 +75,11 @@ public class Main {
                 MessageConsumer consumer2 = session.createConsumer(new ActiveMQQueue("Orders.MSFT"), "price > 100");
                 Session session2 = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
                 MessageConsumer consumer3 = session2.createConsumer(new ActiveMQQueue("Orders.MSFT"), "price > 200");
-            }
-            else {
+            } else {
                 // Lets wait for the broker
                 broker.waitUntilStopped();
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.out.println("Failed: " + e);
             e.printStackTrace();
         }

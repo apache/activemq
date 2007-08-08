@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,34 +17,35 @@
 package org.apache.activemq.command;
 
 /**
- * 
  * @openwire:marshaller code="34"
  * @version $Revision$
  */
 public class IntegerResponse extends Response {
-    
+
     int result;
-    
-    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.INTEGER_RESPONSE;
-    
-    public IntegerResponse() {    
+
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.INTEGER_RESPONSE;
+
+    public IntegerResponse() {
     }
+
     public IntegerResponse(int result) {
-        this.result=result;
+        this.result = result;
     }
 
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
-    
+
     /**
      * @openwire:property version=1
-     */    
+     */
     public int getResult() {
         return result;
     }
+
     public void setResult(int result) {
         this.result = result;
     }
-    
+
 }

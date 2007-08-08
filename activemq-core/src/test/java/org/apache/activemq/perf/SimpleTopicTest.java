@@ -28,76 +28,76 @@ import org.apache.commons.logging.LogFactory;
 /**
  * @version $Revision: 1.3 $
  */
-public class SimpleTopicTest extends TestCase{
+public class SimpleTopicTest extends TestCase {
 
-    private final Log log=LogFactory.getLog(getClass());
+    private final Log log = LogFactory.getLog(getClass());
     protected BrokerService broker;
     // protected String
     // bindAddress="tcp://localhost:61616?wireFormat.cacheEnabled=true&wireFormat.tightEncodingEnabled=true&jms.useAsyncSend=false";
-    //protected String bindAddress="tcp://localhost:61616";
-    protected String bindAddress="tcp://localhost:61616";
-    //protected String bindAddress="vm://localhost?marshal=true";
-    //protected String bindAddress="vm://localhost";
+    // protected String bindAddress="tcp://localhost:61616";
+    protected String bindAddress = "tcp://localhost:61616";
+    // protected String bindAddress="vm://localhost?marshal=true";
+    // protected String bindAddress="vm://localhost";
     protected PerfProducer[] producers;
     protected PerfConsumer[] consumers;
-    protected String DESTINATION_NAME=getClass().getName();
-    protected int SAMPLE_COUNT=10;
-    protected long SAMPLE_INTERVAL=1000;
-    protected int NUMBER_OF_CONSUMERS=10;
-    protected int NUMBER_OF_PRODUCERS=1;
-    protected int PAYLOAD_SIZE=1024;
-    protected byte[] array=null;
+    protected String destinationName = getClass().getName();
+    protected int samepleCount = 10;
+    protected long sampleInternal = 1000;
+    protected int numberOfConsumers = 10;
+    protected int numberofProducers = 1;
+    protected int playloadSize = 1024;
+    protected byte[] array;
     protected ConnectionFactory factory;
     protected Destination destination;
-    protected long CONSUMER_SLEEP_DURATION=0;
+    protected long consumerSleepDuration;
 
     /**
      * Sets up a test where the producer and consumer have their own connection.
      * 
      * @see junit.framework.TestCase#setUp()
      */
-    protected void setUp() throws Exception{
-        if(broker==null){
-            broker=createBroker();
+    protected void setUp() throws Exception {
+        if (broker == null) {
+            broker = createBroker();
         }
-        factory=createConnectionFactory();
-        Connection con=factory.createConnection();
-        Session session=con.createSession(false,Session.AUTO_ACKNOWLEDGE);
-        destination=createDestination(session,DESTINATION_NAME);
-        log.info("Testing against destination: "+destination);
-        log.info("Running "+NUMBER_OF_PRODUCERS+" producer(s) and "+NUMBER_OF_CONSUMERS+" consumer(s)");
+        factory = createConnectionFactory();
+        Connection con = factory.createConnection();
+        Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        destination = createDestination(session, destinationName);
+        log.info("Testing against destination: " + destination);
+        log.info("Running " + numberofProducers + " producer(s) and " + numberOfConsumers + " consumer(s)");
         con.close();
-        producers=new PerfProducer[NUMBER_OF_PRODUCERS];
-        consumers=new PerfConsumer[NUMBER_OF_CONSUMERS];
-        for(int i=0;i<NUMBER_OF_CONSUMERS;i++){
-            consumers[i]=createConsumer(factory,destination,i);
-            consumers[i].setSleepDuration(CONSUMER_SLEEP_DURATION);
+        producers = new PerfProducer[numberofProducers];
+        consumers = new PerfConsumer[numberOfConsumers];
+        for (int i = 0; i < numberOfConsumers; i++) {
+            consumers[i] = createConsumer(factory, destination, i);
+            consumers[i].setSleepDuration(consumerSleepDuration);
         }
-        for(int i=0;i<NUMBER_OF_PRODUCERS;i++){
-            array=new byte[PAYLOAD_SIZE];
-            for(int j=i;j<array.length;j++){
-                array[j]=(byte)j;
+        for (int i = 0; i < numberofProducers; i++) {
+            array = new byte[playloadSize];
+            for (int j = i; j < array.length; j++) {
+                array[j] = (byte)j;
             }
-            producers[i]=createProducer(factory,destination,i,array);
+            producers[i] = createProducer(factory, destination, i, array);
         }
         super.setUp();
     }
 
-    protected void tearDown() throws Exception{
+    protected void tearDown() throws Exception {
         super.tearDown();
-        for(int i=0;i<NUMBER_OF_CONSUMERS;i++){
+        for (int i = 0; i < numberOfConsumers; i++) {
             consumers[i].shutDown();
         }
-        for(int i=0;i<NUMBER_OF_PRODUCERS;i++){
+        for (int i = 0; i < numberofProducers; i++) {
             producers[i].shutDown();
         }
-        if(broker!=null){
+        if (broker != null) {
             broker.stop();
-            broker=null;
+            broker = null;
         }
     }
 
-    protected Destination createDestination(Session s,String destinationName) throws JMSException{
+    protected Destination createDestination(Session s, String destinationName) throws JMSException {
         return s.createTopic(destinationName);
     }
 
@@ -106,75 +106,74 @@ public class SimpleTopicTest extends TestCase{
      * 
      * @throws Exception
      */
-    protected BrokerService createBroker() throws Exception{
-        BrokerService answer=new BrokerService();
+    protected BrokerService createBroker() throws Exception {
+        BrokerService answer = new BrokerService();
         configureBroker(answer);
         answer.start();
         return answer;
     }
 
-    protected PerfProducer createProducer(ConnectionFactory fac,Destination dest,int number,byte[] payload)
-            throws JMSException{
-        return new PerfProducer(fac,dest,payload);
+    protected PerfProducer createProducer(ConnectionFactory fac, Destination dest, int number, byte[] payload) throws JMSException {
+        return new PerfProducer(fac, dest, payload);
     }
 
-    protected PerfConsumer createConsumer(ConnectionFactory fac,Destination dest,int number) throws JMSException{
-        return new PerfConsumer(fac,dest);
+    protected PerfConsumer createConsumer(ConnectionFactory fac, Destination dest, int number) throws JMSException {
+        return new PerfConsumer(fac, dest);
     }
 
-    protected void configureBroker(BrokerService answer) throws Exception{
+    protected void configureBroker(BrokerService answer) throws Exception {
         answer.addConnector(bindAddress);
         answer.setDeleteAllMessagesOnStartup(true);
     }
 
-    protected ActiveMQConnectionFactory createConnectionFactory() throws Exception{
+    protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         return new ActiveMQConnectionFactory(bindAddress);
     }
 
-    public void testPerformance() throws JMSException,InterruptedException{
-        for(int i=0;i<NUMBER_OF_CONSUMERS;i++){
+    public void testPerformance() throws JMSException, InterruptedException {
+        for (int i = 0; i < numberOfConsumers; i++) {
             consumers[i].start();
         }
-        for(int i=0;i<NUMBER_OF_PRODUCERS;i++){
+        for (int i = 0; i < numberofProducers; i++) {
             producers[i].start();
         }
-        log.info("Sampling performance "+SAMPLE_COUNT+" times at a "+SAMPLE_INTERVAL+" ms interval.");
-        for(int i=0;i<SAMPLE_COUNT;i++){
-            Thread.sleep(SAMPLE_INTERVAL);
+        log.info("Sampling performance " + samepleCount + " times at a " + sampleInternal + " ms interval.");
+        for (int i = 0; i < samepleCount; i++) {
+            Thread.sleep(sampleInternal);
             dumpProducerRate();
             dumpConsumerRate();
         }
-        for(int i=0;i<NUMBER_OF_PRODUCERS;i++){
+        for (int i = 0; i < numberofProducers; i++) {
             producers[i].stop();
         }
-        for(int i=0;i<NUMBER_OF_CONSUMERS;i++){
+        for (int i = 0; i < numberOfConsumers; i++) {
             consumers[i].stop();
         }
     }
 
-    protected void dumpProducerRate(){
-        int totalRate=0;
-        int totalCount=0;
-        for(int i=0;i<producers.length;i++){
-            PerfRate rate=producers[i].getRate().cloneAndReset();
-            totalRate+=rate.getRate();
-            totalCount+=rate.getTotalCount();
+    protected void dumpProducerRate() {
+        int totalRate = 0;
+        int totalCount = 0;
+        for (int i = 0; i < producers.length; i++) {
+            PerfRate rate = producers[i].getRate().cloneAndReset();
+            totalRate += rate.getRate();
+            totalCount += rate.getTotalCount();
         }
-        int avgRate=totalRate/producers.length;
-        log.info("Avg producer rate = "+avgRate+" msg/sec | Total rate = "+totalRate+", sent = "+totalCount);
+        int avgRate = totalRate / producers.length;
+        log.info("Avg producer rate = " + avgRate + " msg/sec | Total rate = " + totalRate + ", sent = " + totalCount);
     }
 
-    protected void dumpConsumerRate(){
-        int totalRate=0;
-        int totalCount=0;
-        for(int i=0;i<consumers.length;i++){
-            PerfRate rate=consumers[i].getRate().cloneAndReset();
-            totalRate+=rate.getRate();
-            totalCount+=rate.getTotalCount();
+    protected void dumpConsumerRate() {
+        int totalRate = 0;
+        int totalCount = 0;
+        for (int i = 0; i < consumers.length; i++) {
+            PerfRate rate = consumers[i].getRate().cloneAndReset();
+            totalRate += rate.getRate();
+            totalCount += rate.getTotalCount();
         }
-        if(consumers!=null&&consumers.length>0){
-            int avgRate=totalRate/consumers.length;
-            log.info("Avg consumer rate = "+avgRate+" msg/sec | Total rate = "+totalRate+", received = "+totalCount);
+        if (consumers != null && consumers.length > 0) {
+            int avgRate = totalRate / consumers.length;
+            log.info("Avg consumer rate = " + avgRate + " msg/sec | Total rate = " + totalRate + ", received = " + totalCount);
         }
     }
 }

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,7 +26,6 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 
 /**
- * 
  * @version $Revision$
  */
 public class BooleanStreamTest extends TestCase {
@@ -63,7 +61,7 @@ public class BooleanStreamTest extends TestCase {
             }
         });
     }
-    
+
     public void testBooleanMarshallingUsingEvenAlternateTrueFalse() throws Exception {
         testBooleanStream(numberOfBytes, new BooleanValueSet() {
             public boolean getBooleanValueFor(int index, int count) {
@@ -77,7 +75,7 @@ public class BooleanStreamTest extends TestCase {
             try {
                 assertMarshalBooleans(i, valueSet);
             } catch (Throwable e) {
-                throw (AssertionFailedError) new AssertionFailedError("Iteration failed at: "+i).initCause(e);
+                throw (AssertionFailedError)new AssertionFailedError("Iteration failed at: " + i).initCause(e);
             }
         }
     }
@@ -100,8 +98,7 @@ public class BooleanStreamTest extends TestCase {
         bs = new BooleanStream();
         try {
             bs.unmarshal(dis);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             fail("Failed to unmarshal: " + count + " booleans: " + e);
         }
@@ -114,8 +111,7 @@ public class BooleanStreamTest extends TestCase {
             try {
                 boolean actual = bs.readBoolean();
                 assertEquals("value of object: " + i + " was: " + actual, expected, actual);
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
                 fail("Failed to parse boolean: " + i + " out of: " + count + " due to: " + e);
             }
@@ -127,8 +123,7 @@ public class BooleanStreamTest extends TestCase {
         try {
             byte value = dis.readByte();
             fail("Should have reached the end of the stream");
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             // worked!
         }
     }

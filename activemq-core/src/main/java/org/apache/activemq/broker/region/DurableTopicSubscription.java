@@ -31,69 +31,69 @@ import org.apache.activemq.util.SubscriptionKey;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class DurableTopicSubscription extends PrefetchSubscription implements UsageListener{
+public class DurableTopicSubscription extends PrefetchSubscription implements UsageListener {
 
-    static private final Log log=LogFactory.getLog(PrefetchSubscription.class);
-    private final ConcurrentHashMap redeliveredMessages=new ConcurrentHashMap();
-    private final ConcurrentHashMap destinations=new ConcurrentHashMap();
+    private static final Log LOG = LogFactory.getLog(PrefetchSubscription.class);
+    private final ConcurrentHashMap redeliveredMessages = new ConcurrentHashMap();
+    private final ConcurrentHashMap destinations = new ConcurrentHashMap();
     private final SubscriptionKey subscriptionKey;
     private final boolean keepDurableSubsActive;
     private final UsageManager usageManager;
-    private boolean active=false;
+    private boolean active;
 
-    public DurableTopicSubscription(Broker broker,UsageManager usageManager,ConnectionContext context,
-            ConsumerInfo info,boolean keepDurableSubsActive) throws InvalidSelectorException{
-        super(broker,context,info,new StoreDurableSubscriberCursor(context.getClientId(),info.getSubscriptionName(),
-                broker.getTempDataStore(),info.getPrefetchSize()));
-        this.usageManager=usageManager;
-        this.keepDurableSubsActive=keepDurableSubsActive;
-        subscriptionKey=new SubscriptionKey(context.getClientId(),info.getSubscriptionName());
+    public DurableTopicSubscription(Broker broker, UsageManager usageManager, ConnectionContext context, ConsumerInfo info, boolean keepDurableSubsActive)
+        throws InvalidSelectorException {
+        super(broker, context, info, new StoreDurableSubscriberCursor(context.getClientId(), info.getSubscriptionName(), broker.getTempDataStore(), info.getPrefetchSize()));
+        this.usageManager = usageManager;
+        this.keepDurableSubsActive = keepDurableSubsActive;
+        subscriptionKey = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
     }
 
-    synchronized public boolean isActive(){
+    synchronized public boolean isActive() {
         return active;
     }
 
-    protected synchronized boolean isFull(){
-        return !active||super.isFull();
+    protected synchronized boolean isFull() {
+        return !active || super.isFull();
     }
 
-    synchronized public void gc(){
+    synchronized public void gc() {
     }
 
-    public synchronized void add(ConnectionContext context,Destination destination) throws Exception{
-        super.add(context,destination);
-        destinations.put(destination.getActiveMQDestination(),destination);
-        if(active||keepDurableSubsActive){
-            Topic topic=(Topic)destination;
-            topic.activate(context,this);
-            if(pending.isEmpty(topic)){
-                topic.recoverRetroactiveMessages(context,this);
+    public synchronized void add(ConnectionContext context, Destination destination) throws Exception {
+        super.add(context, destination);
+        destinations.put(destination.getActiveMQDestination(), destination);
+        if (active || keepDurableSubsActive) {
+            Topic topic = (Topic)destination;
+            topic.activate(context, this);
+            if (pending.isEmpty(topic)) {
+                topic.recoverRetroactiveMessages(context, this);
             }
         }
         dispatchMatched();
     }
 
-    public synchronized void activate(UsageManager memoryManager,ConnectionContext context,ConsumerInfo info) throws Exception{
-        log.debug("Activating "+this);
-        if(!active){
-            this.active=true;
-            this.context=context;
-            this.info=info;
-            if(!keepDurableSubsActive){
-                for(Iterator iter=destinations.values().iterator();iter.hasNext();){
-                    Topic topic=(Topic)iter.next();
-                    topic.activate(context,this);
+    public synchronized void activate(UsageManager memoryManager, ConnectionContext context, ConsumerInfo info) throws Exception {
+        LOG.debug("Activating " + this);
+        if (!active) {
+            this.active = true;
+            this.context = context;
+            this.info = info;
+            if (!keepDurableSubsActive) {
+                for (Iterator iter = destinations.values().iterator(); iter.hasNext();) {
+                    Topic topic = (Topic)iter.next();
+                    topic.activate(context, this);
                 }
-            }           
+            }
             pending.setUsageManager(memoryManager);
             pending.start();
-           
-            // If nothing was in the persistent store, then try to use the recovery policy.
-            if(pending.isEmpty()){
-                for(Iterator iter=destinations.values().iterator();iter.hasNext();){
-                    Topic topic=(Topic)iter.next();
-                    topic.recoverRetroactiveMessages(context,this);
+
+            // If nothing was in the persistent store, then try to use the
+            // recovery policy.
+            if (pending.isEmpty()) {
+                for (Iterator iter = destinations.values().iterator(); iter.hasNext();) {
+                    Topic topic = (Topic)iter.next();
+                    topic.recoverRetroactiveMessages(context, this);
                 }
             }
             dispatchMatched();
@@ -101,133 +101,131 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         }
     }
 
-    synchronized public void deactivate(boolean keepDurableSubsActive) throws Exception{
-        active=false;
+    synchronized public void deactivate(boolean keepDurableSubsActive) throws Exception {
+        active = false;
         this.usageManager.removeUsageListener(this);
-        synchronized(pending){
+        synchronized (pending) {
             pending.stop();
         }
-        if(!keepDurableSubsActive){
-            for(Iterator iter=destinations.values().iterator();iter.hasNext();){
-                Topic topic=(Topic)iter.next();
-                topic.deactivate(context,this);
+        if (!keepDurableSubsActive) {
+            for (Iterator iter = destinations.values().iterator(); iter.hasNext();) {
+                Topic topic = (Topic)iter.next();
+                topic.deactivate(context, this);
             }
         }
-        for(Iterator iter=dispatched.iterator();iter.hasNext();){
+        for (Iterator iter = dispatched.iterator(); iter.hasNext();) {
             // Mark the dispatched messages as redelivered for next time.
-            MessageReference node=(MessageReference)iter.next();
-            Integer count=(Integer)redeliveredMessages.get(node.getMessageId());
-            if(count!=null){
-                redeliveredMessages.put(node.getMessageId(),Integer.valueOf(count.intValue()+1));
-            }else{
-                redeliveredMessages.put(node.getMessageId(),Integer.valueOf(1));
+            MessageReference node = (MessageReference)iter.next();
+            Integer count = (Integer)redeliveredMessages.get(node.getMessageId());
+            if (count != null) {
+                redeliveredMessages.put(node.getMessageId(), Integer.valueOf(count.intValue() + 1));
+            } else {
+                redeliveredMessages.put(node.getMessageId(), Integer.valueOf(1));
             }
-            if(keepDurableSubsActive){
-                synchronized(pending){
+            if (keepDurableSubsActive) {
+                synchronized (pending) {
                     pending.addMessageFirst(node);
                 }
-            }else{
+            } else {
                 node.decrementReferenceCount();
             }
             iter.remove();
         }
-        if(!keepDurableSubsActive){
-            synchronized(pending){
-                try{
+        if (!keepDurableSubsActive) {
+            synchronized (pending) {
+                try {
                     pending.reset();
-                    while(pending.hasNext()){
-                        MessageReference node=pending.next();
+                    while (pending.hasNext()) {
+                        MessageReference node = pending.next();
                         node.decrementReferenceCount();
                         pending.remove();
                     }
-                }finally{
+                } finally {
                     pending.release();
                 }
             }
         }
-        prefetchExtension=0;
+        prefetchExtension = 0;
     }
 
-    protected MessageDispatch createMessageDispatch(MessageReference node,Message message){
-        MessageDispatch md=super.createMessageDispatch(node,message);
-        Integer count=(Integer)redeliveredMessages.get(node.getMessageId());
-        if(count!=null){
+    protected MessageDispatch createMessageDispatch(MessageReference node, Message message) {
+        MessageDispatch md = super.createMessageDispatch(node, message);
+        Integer count = (Integer)redeliveredMessages.get(node.getMessageId());
+        if (count != null) {
             md.setRedeliveryCounter(count.intValue());
         }
         return md;
     }
 
-    public synchronized void add(MessageReference node) throws Exception{
-        if(!active&&!keepDurableSubsActive){
+    public synchronized void add(MessageReference node) throws Exception {
+        if (!active && !keepDurableSubsActive) {
             return;
         }
         node.incrementReferenceCount();
         super.add(node);
     }
 
-    protected synchronized void doAddRecoveredMessage(MessageReference message) throws Exception{
+    protected synchronized void doAddRecoveredMessage(MessageReference message) throws Exception {
         pending.addRecoveredMessage(message);
     }
 
-    public synchronized int getPendingQueueSize(){
-        if(active||keepDurableSubsActive){
+    public synchronized int getPendingQueueSize() {
+        if (active || keepDurableSubsActive) {
             return super.getPendingQueueSize();
         }
         // TODO: need to get from store
         return 0;
     }
 
-    public void setSelector(String selector) throws InvalidSelectorException{
-        throw new UnsupportedOperationException(
-                "You cannot dynamically change the selector for durable topic subscriptions");
+    public void setSelector(String selector) throws InvalidSelectorException {
+        throw new UnsupportedOperationException("You cannot dynamically change the selector for durable topic subscriptions");
     }
 
-    protected synchronized boolean canDispatch(MessageReference node){
+    protected synchronized boolean canDispatch(MessageReference node) {
         return active;
     }
 
-    protected synchronized void acknowledge(ConnectionContext context,MessageAck ack,MessageReference node) throws IOException{
-        node.getRegionDestination().acknowledge(context,this,ack,node);
+    protected synchronized void acknowledge(ConnectionContext context, MessageAck ack, MessageReference node) throws IOException {
+        node.getRegionDestination().acknowledge(context, this, ack, node);
         redeliveredMessages.remove(node.getMessageId());
         node.decrementReferenceCount();
     }
 
-    public String getSubscriptionName(){
+    public String getSubscriptionName() {
         return subscriptionKey.getSubscriptionName();
     }
 
-    public synchronized String toString(){
-        return "DurableTopicSubscription:"+" consumer="+info.getConsumerId()+", destinations="+destinations.size()
-                +", total="+enqueueCounter+", pending="+getPendingQueueSize()+", dispatched="+dispatchCounter
-                +", inflight="+dispatched.size()+", prefetchExtension="+this.prefetchExtension;
+    public synchronized String toString() {
+        return "DurableTopicSubscription:" + " consumer=" + info.getConsumerId() + ", destinations=" + destinations.size() + ", total=" + enqueueCounter + ", pending="
+               + getPendingQueueSize() + ", dispatched=" + dispatchCounter + ", inflight=" + dispatched.size() + ", prefetchExtension=" + this.prefetchExtension;
     }
 
-    public String getClientId(){
+    public String getClientId() {
         return subscriptionKey.getClientId();
     }
 
-    public SubscriptionKey getSubscriptionKey(){
+    public SubscriptionKey getSubscriptionKey() {
         return subscriptionKey;
     }
 
     /**
      * Release any references that we are holding.
      */
-    public synchronized void destroy(){
-        try{
-            synchronized(pending){
+    public synchronized void destroy() {
+        try {
+            synchronized (pending) {
                 pending.reset();
-                while(pending.hasNext()){
-                    MessageReference node=pending.next();
+                while (pending.hasNext()) {
+                    MessageReference node = pending.next();
                     node.decrementReferenceCount();
                 }
             }
-        }finally{
+        } finally {
             pending.release();
             pending.clear();
         }
-        for(Iterator iter=dispatched.iterator();iter.hasNext();){
-            MessageReference node=(MessageReference)iter.next();
+        for (Iterator iter = dispatched.iterator(); iter.hasNext();) {
+            MessageReference node = (MessageReference)iter.next();
             node.decrementReferenceCount();
         }
         dispatched.clear();
@@ -237,15 +235,15 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
      * @param memoryManager
      * @param oldPercentUsage
      * @param newPercentUsage
-     * @see org.apache.activemq.memory.UsageListener#onMemoryUseChanged(org.apache.activemq.memory.UsageManager, int,
-     *      int)
+     * @see org.apache.activemq.memory.UsageListener#onMemoryUseChanged(org.apache.activemq.memory.UsageManager,
+     *      int, int)
      */
-    public void onMemoryUseChanged(UsageManager memoryManager,int oldPercentUsage,int newPercentUsage){
-        if(oldPercentUsage>newPercentUsage&&oldPercentUsage>=90){
-            try{
+    public void onMemoryUseChanged(UsageManager memoryManager, int oldPercentUsage, int newPercentUsage) {
+        if (oldPercentUsage > newPercentUsage && oldPercentUsage >= 90) {
+            try {
                 dispatchMatched();
-            }catch(IOException e){
-                log.warn("problem calling dispatchMatched",e);
+            } catch (IOException e) {
+                LOG.warn("problem calling dispatchMatched", e);
             }
         }
     }

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,27 +19,27 @@ package org.apache.activemq.command;
 import org.apache.activemq.util.IntrospectionSupport;
 
 /**
- * 
  * @openwire:marshaller code="53"
  * @version $Revision: 1.6 $
  */
 public class JournalTrace implements DataStructure {
 
-    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.JOURNAL_TRACE;
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.JOURNAL_TRACE;
 
     private String message;
-    
+
     public JournalTrace() {
-    	
+
     }
+
     public JournalTrace(String message) {
-    	this.message = message;
+        this.message = message;
     }
-    
+
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
-    
+
     /**
      * @openwire:property version=1
      */
@@ -53,7 +52,7 @@ public class JournalTrace implements DataStructure {
      */
     public void setMessage(String message) {
         this.message = message;
-    }    
+    }
 
     public boolean isMarshallAware() {
         return false;

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,11 +30,9 @@ import javax.jms.Topic;
  * @version $Revision: 1.4 $
  */
 public class JmsTopicRedeliverTest extends TestSupport {
-    
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-            .getLog(JmsTopicRedeliverTest.class);
-   
-    
+
+    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(JmsTopicRedeliverTest.class);
+
     protected Connection connection;
     protected Session session;
     protected Session consumeSession;
@@ -44,9 +41,9 @@ public class JmsTopicRedeliverTest extends TestSupport {
     protected Destination consumerDestination;
     protected Destination producerDestination;
     protected boolean topic = true;
-    protected boolean durable = false;
-    protected boolean verbose = false;
-    protected long    initRedeliveryDelay = 0;
+    protected boolean durable;
+    protected boolean verbose;
+    protected long initRedeliveryDelay;
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -67,7 +64,7 @@ public class JmsTopicRedeliverTest extends TestSupport {
         log.info("Created session: " + session);
         log.info("Created consumeSession: " + consumeSession);
         producer = session.createProducer(null);
-        //producer.setDeliveryMode(deliveryMode);
+        // producer.setDeliveryMode(deliveryMode);
 
         log.info("Created producer: " + producer);
 
@@ -87,7 +84,6 @@ public class JmsTopicRedeliverTest extends TestSupport {
         log.info("Created connection: " + connection);
     }
 
-    
     protected void tearDown() throws Exception {
         if (connection != null) {
             connection.close();
@@ -95,10 +91,9 @@ public class JmsTopicRedeliverTest extends TestSupport {
         super.tearDown();
     }
 
-
     /**
      * Returns the consumer subject.
-     *
+     * 
      * @return String - consumer subject
      * @see org.apache.activemq.test.TestSupport#getConsumerSubject()
      */
@@ -108,7 +103,7 @@ public class JmsTopicRedeliverTest extends TestSupport {
 
     /**
      * Returns the producer subject.
-     *
+     * 
      * @return String - producer subject
      * @see org.apache.activemq.test.TestSupport#getProducerSubject()
      */
@@ -118,7 +113,7 @@ public class JmsTopicRedeliverTest extends TestSupport {
 
     /**
      * Sends and consumes the messages.
-     *
+     * 
      * @throws Exception
      */
     public void testRecover() throws Exception {
@@ -130,23 +125,23 @@ public class JmsTopicRedeliverTest extends TestSupport {
         }
         producer.send(producerDestination, sendMessage);
 
-        //receive but don't acknowledge
+        // receive but don't acknowledge
         Message unackMessage = consumer.receive(initRedeliveryDelay + 1000);
         assertNotNull(unackMessage);
         String unackId = unackMessage.getJMSMessageID();
-        assertEquals(((TextMessage) unackMessage).getText(), text);
+        assertEquals(((TextMessage)unackMessage).getText(), text);
         assertFalse(unackMessage.getJMSRedelivered());
-        //assertEquals(unackMessage.getIntProperty("JMSXDeliveryCount"),1);
+        // assertEquals(unackMessage.getIntProperty("JMSXDeliveryCount"),1);
 
-        //receive then acknowledge
+        // receive then acknowledge
         consumeSession.recover();
         Message ackMessage = consumer.receive(initRedeliveryDelay + 1000);
         assertNotNull(ackMessage);
         ackMessage.acknowledge();
         String ackId = ackMessage.getJMSMessageID();
-        assertEquals(((TextMessage) ackMessage).getText(), text);
+        assertEquals(((TextMessage)ackMessage).getText(), text);
         assertTrue(ackMessage.getJMSRedelivered());
-        //assertEquals(ackMessage.getIntProperty("JMSXDeliveryCount"),2);
+        // assertEquals(ackMessage.getIntProperty("JMSXDeliveryCount"),2);
         assertEquals(unackId, ackId);
         consumeSession.recover();
         assertNull(consumer.receiveNoWait());
@@ -155,7 +150,7 @@ public class JmsTopicRedeliverTest extends TestSupport {
     protected MessageConsumer createConsumer() throws JMSException {
         if (durable) {
             log.info("Creating durable consumer");
-            return consumeSession.createDurableSubscriber((Topic) consumerDestination, getName());
+            return consumeSession.createDurableSubscriber((Topic)consumerDestination, getName());
         }
         return consumeSession.createConsumer(consumerDestination);
     }

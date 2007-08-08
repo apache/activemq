@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -48,18 +47,18 @@ public class CreateLotsOfTemporaryQueuesTest extends EmbeddedBrokerAndConnection
     }
 
     public void testCreateLotsOfTemporaryQueues() throws Exception {
-        log.info("Creating " + numberToCreate + " temporary queue(s)");
+        LOG.info("Creating " + numberToCreate + " temporary queue(s)");
 
         Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
         for (int i = 0; i < numberToCreate; i++) {
             if (i % 1000 == 0) {
-                log.info("attempt " + i);
+                LOG.info("attempt " + i);
             }
             TemporaryQueue temporaryQueue = session.createTemporaryQueue();
             temporaryQueue.delete();
             Thread.sleep(sleep );
         }
-        log.info("Created " + numberToCreate + " temporary queue(s)");
+        LOG.info("Created " + numberToCreate + " temporary queue(s)");
     }
 
     public static void configure(String[] args) {

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -38,13 +37,13 @@ import org.springframework.jms.core.JmsTemplate;
  */
 public abstract class EmbeddedBrokerTestSupport extends TestCase {
 
-    protected static final Log log = LogFactory.getLog(EmbeddedBrokerTestSupport.class);
+    protected static final Log LOG = LogFactory.getLog(EmbeddedBrokerTestSupport.class);
     
     protected BrokerService broker;
     //protected String bindAddress = "tcp://localhost:61616";
     protected String bindAddress = "vm://localhost";
     protected ConnectionFactory connectionFactory;
-    protected boolean useTopic = false;
+    protected boolean useTopic;
     protected Destination destination;
     protected JmsTemplate template;
     private boolean usePooledConnectionWithTemplate = true;

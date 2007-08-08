@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,7 +34,6 @@ import org.apache.activemq.memory.list.SimpleMessageList;
  * time order.
  * 
  * @org.apache.xbean.XBean
- * 
  * @version $Revision$
  */
 public class FixedSizedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy {
@@ -56,13 +54,13 @@ public class FixedSizedSubscriptionRecoveryPolicy implements SubscriptionRecover
         return true;
     }
 
-    public void recover(ConnectionContext context,Topic topic,SubscriptionRecovery sub) throws Exception{
+    public void recover(ConnectionContext context, Topic topic, SubscriptionRecovery sub) throws Exception {
         // Re-dispatch the messages from the buffer.
-        List copy=buffer.getMessages(sub.getActiveMQDestination());
-        if(!copy.isEmpty()){
-            for(Iterator iter=copy.iterator();iter.hasNext();){
-                MessageReference node=(MessageReference)iter.next();
-                sub.addRecoveredMessage(context,node);
+        List copy = buffer.getMessages(sub.getActiveMQDestination());
+        if (!copy.isEmpty()) {
+            for (Iterator iter = copy.iterator(); iter.hasNext();) {
+                MessageReference node = (MessageReference)iter.next();
+                sub.addRecoveredMessage(context, node);
             }
         }
     }
@@ -103,19 +101,18 @@ public class FixedSizedSubscriptionRecoveryPolicy implements SubscriptionRecover
     public void setUseSharedBuffer(boolean useSharedBuffer) {
         this.useSharedBuffer = useSharedBuffer;
     }
-    
-    public Message[] browse(ActiveMQDestination destination) throws Exception{
+
+    public Message[] browse(ActiveMQDestination destination) throws Exception {
         return buffer.browse(destination);
     }
 
     // Implementation methods
-    
+
     // -------------------------------------------------------------------------
     protected MessageList createMessageList() {
         if (useSharedBuffer) {
             return new SimpleMessageList(maximumSize);
-        }
-        else {
+        } else {
             return new DestinationBasedMessageList(maximumSize);
         }
     }

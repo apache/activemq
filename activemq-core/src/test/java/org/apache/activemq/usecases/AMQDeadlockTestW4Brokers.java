@@ -16,6 +16,23 @@
  */
 package org.apache.activemq.usecases;
 
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.jms.BytesMessage;
+import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageListener;
+import javax.jms.Session;
+
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -32,33 +49,21 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
 import org.springframework.jms.listener.DefaultMessageListenerContainer;
 
-import javax.jms.BytesMessage;
-import javax.jms.ConnectionFactory;
-import javax.jms.DeliveryMode;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageListener;
-import javax.jms.Session;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
 public class AMQDeadlockTestW4Brokers extends TestCase {
     private static final transient Log log = LogFactory.getLog(AMQDeadlockTestW4Brokers.class);
-    
+
     private static final String BROKER_URL1 = "tcp://localhost:61616";
     private static final String BROKER_URL2 = "tcp://localhost:61617";
     private static final String BROKER_URL3 = "tcp://localhost:61618";
     private static final String BROKER_URL4 = "tcp://localhost:61619";
-    private static final String URL1 = "tcp://localhost:61616?wireFormat.cacheEnabled=false&wireFormat.tightEncodingEnabled=false&wireFormat.maxInactivityDuration=30000&wireFormat.tcpNoDelayEnabled=false";
-    private static final String URL2 = "tcp://localhost:61617?wireFormat.cacheEnabled=false&wireFormat.tightEncodingEnabled=false&wireFormat.maxInactivityDuration=30000&wireFormat.tcpNoDelayEnabled=false";
-    private static final String URL3 = "tcp://localhost:61618?wireFormat.cacheEnabled=false&wireFormat.tightEncodingEnabled=false&wireFormat.maxInactivityDuration=30000&wireFormat.tcpNoDelayEnabled=false";
-    private static final String URL4 = "tcp://localhost:61619?wireFormat.cacheEnabled=false&wireFormat.tightEncodingEnabled=false&wireFormat.maxInactivityDuration=30000&wireFormat.tcpNoDelayEnabled=false";
+    private static final String URL1 = "tcp://localhost:61616?wireFormat.cacheEnabled=false"
+                                       + "&wireFormat.tightEncodingEnabled=false&wireFormat.maxInactivityDuration=30000&wireFormat.tcpNoDelayEnabled=false";
+    private static final String URL2 = "tcp://localhost:61617?wireFormat.cacheEnabled=false"
+                                       + "&wireFormat.tightEncodingEnabled=false&wireFormat.maxInactivityDuration=30000&wireFormat.tcpNoDelayEnabled=false";
+    private static final String URL3 = "tcp://localhost:61618?wireFormat.cacheEnabled=false"
+                                       + "&wireFormat.tightEncodingEnabled=false&wireFormat.maxInactivityDuration=30000&wireFormat.tcpNoDelayEnabled=false";
+    private static final String URL4 = "tcp://localhost:61619?wireFormat.cacheEnabled=false"
+                                       + "&wireFormat.tightEncodingEnabled=false&wireFormat.maxInactivityDuration=30000&wireFormat.tcpNoDelayEnabled=false";
     private static final String QUEUE1_NAME = "test.queue.1";
     private static final int MAX_CONSUMERS = 5;
     private static final int NUM_MESSAGE_TO_SEND = 10000;
@@ -92,34 +97,26 @@ public class AMQDeadlockTestW4Brokers extends TestCase {
 
         try {
 
-            //Test with and without queue limits.
-            brokerService1 = createBrokerService("broker1", BROKER_URL1,
-                    BROKER_URL2, BROKER_URL3, BROKER_URL4, 0 /* 10000000 */);
+            // Test with and without queue limits.
+            brokerService1 = createBrokerService("broker1", BROKER_URL1, BROKER_URL2, BROKER_URL3, BROKER_URL4, 0 /* 10000000 */);
             brokerService1.start();
-            brokerService2 = createBrokerService("broker2", BROKER_URL2,
-                    BROKER_URL1, BROKER_URL3, BROKER_URL4, 0/* 40000000 */);
+            brokerService2 = createBrokerService("broker2", BROKER_URL2, BROKER_URL1, BROKER_URL3, BROKER_URL4, 0/* 40000000 */);
             brokerService2.start();
-            brokerService3 = createBrokerService("broker3", BROKER_URL3,
-                    BROKER_URL2, BROKER_URL1, BROKER_URL4, 0/* 10000000 */);
+            brokerService3 = createBrokerService("broker3", BROKER_URL3, BROKER_URL2, BROKER_URL1, BROKER_URL4, 0/* 10000000 */);
             brokerService3.start();
-            brokerService4 = createBrokerService("broker4", BROKER_URL4,
-                    BROKER_URL1, BROKER_URL3, BROKER_URL2, 0/* 10000000 */);
+            brokerService4 = createBrokerService("broker4", BROKER_URL4, BROKER_URL1, BROKER_URL3, BROKER_URL2, 0/* 10000000 */);
             brokerService4.start();
 
-            final String failover1 = "failover:("
-                    + URL1
-                    + ")?initialReconnectDelay=10&maxReconnectDelay=30000&useExponentialBackOff=true&backOffMultiplier=2&maxReconnectAttempts=0&randomize=false";
-            final String failover2 = "failover:("
-                    + URL2
-                    + ")?initialReconnectDelay=10&maxReconnectDelay=30000&useExponentialBackOff=true&backOffMultiplier=2&maxReconnectAttempts=0&randomize=false";
+            final String failover1 = "failover:(" + URL1
+                                     + ")?initialReconnectDelay=10&maxReconnectDelay=30000&useExponentialBackOff=true&backOffMultiplier=2&maxReconnectAttempts=0&randomize=false";
+            final String failover2 = "failover:(" + URL2
+                                     + ")?initialReconnectDelay=10&maxReconnectDelay=30000&useExponentialBackOff=true&backOffMultiplier=2&maxReconnectAttempts=0&randomize=false";
 
-            final String failover3 = "failover:("
-                    + URL3
-                    + ")?initialReconnectDelay=10&maxReconnectDelay=30000&useExponentialBackOff=true&backOffMultiplier=2&maxReconnectAttempts=0&randomize=false";
+            final String failover3 = "failover:(" + URL3
+                                     + ")?initialReconnectDelay=10&maxReconnectDelay=30000&useExponentialBackOff=true&backOffMultiplier=2&maxReconnectAttempts=0&randomize=false";
 
-            final String failover4 = "failover:("
-                    + URL4
-                    + ")?initialReconnectDelay=10&maxReconnectDelay=30000&useExponentialBackOff=true&backOffMultiplier=2&maxReconnectAttempts=0&randomize=false";
+            final String failover4 = "failover:(" + URL4
+                                     + ")?initialReconnectDelay=10&maxReconnectDelay=30000&useExponentialBackOff=true&backOffMultiplier=2&maxReconnectAttempts=0&randomize=false";
 
             acf1 = createConnectionFactory(failover1);
             acf2 = createConnectionFactory(failover2);
@@ -131,8 +128,7 @@ public class AMQDeadlockTestW4Brokers extends TestCase {
             pcf3 = new PooledConnectionFactory(acf3);
             pcf4 = new PooledConnectionFactory(acf4);
 
-            container1 = createDefaultMessageListenerContainer(acf2,
-                    new TestMessageListener1(0), QUEUE1_NAME);
+            container1 = createDefaultMessageListenerContainer(acf2, new TestMessageListener1(0), QUEUE1_NAME);
             container1.afterPropertiesSet();
 
             final PooledProducerTask[] task = new PooledProducerTask[4];
@@ -149,11 +145,9 @@ public class AMQDeadlockTestW4Brokers extends TestCase {
 
             latch.await(15, TimeUnit.SECONDS);
             assertTrue(latch.getCount() == MAX_CONSUMERS * NUM_MESSAGE_TO_SEND);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
-        }
-        finally {
+        } finally {
 
             container1.stop();
             container1.destroy();
@@ -170,9 +164,8 @@ public class AMQDeadlockTestW4Brokers extends TestCase {
         }
     }
 
-    private BrokerService createBrokerService(final String brokerName,
-            final String uri1, final String uri2, final String uri3,
-            final String uri4, final int queueLimit) throws Exception {
+    private BrokerService createBrokerService(final String brokerName, final String uri1, final String uri2, final String uri3, final String uri4, final int queueLimit)
+        throws Exception {
         final BrokerService brokerService = new BrokerService();
 
         brokerService.setBrokerName(brokerName);
@@ -201,8 +194,7 @@ public class AMQDeadlockTestW4Brokers extends TestCase {
         brokerService.addConnector(tConnector);
 
         if (uri2 != null) {
-            final NetworkConnector nc = new DiscoveryNetworkConnector(new URI(
-                    "static:" + uri2 + "," + uri3 + "," + uri4));
+            final NetworkConnector nc = new DiscoveryNetworkConnector(new URI("static:" + uri2 + "," + uri3 + "," + uri4));
             nc.setBridgeTempDestinations(true);
             nc.setBrokerName(brokerName);
 
@@ -215,9 +207,7 @@ public class AMQDeadlockTestW4Brokers extends TestCase {
         return brokerService;
     }
 
-    public DefaultMessageListenerContainer createDefaultMessageListenerContainer(
-            final ConnectionFactory acf, final MessageListener listener,
-            final String queue) {
+    public DefaultMessageListenerContainer createDefaultMessageListenerContainer(final ConnectionFactory acf, final MessageListener listener, final String queue) {
         final DefaultMessageListenerContainer container = new DefaultMessageListenerContainer();
         container.setConnectionFactory(acf);
         container.setDestinationName(queue);
@@ -252,9 +242,11 @@ public class AMQDeadlockTestW4Brokers extends TestCase {
         public void onMessage(Message msg) {
 
             try {
-                /*log.info("Listener1 Consumed message "
-                            + msg.getIntProperty("count") + " from "
-                            + msg.getStringProperty("producerName"));*/
+                /*
+                 * log.info("Listener1 Consumed message " +
+                 * msg.getIntProperty("count") + " from " +
+                 * msg.getStringProperty("producerName"));
+                 */
                 int value = count.incrementAndGet();
                 if (value % 1000 == 0) {
                     log.info("Consumed message: " + value);
@@ -262,10 +254,10 @@ public class AMQDeadlockTestW4Brokers extends TestCase {
 
                 Thread.sleep(waitTime);
                 latch.countDown();
-                /*} catch (JMSException e) {
-                    e.printStackTrace();*/
-            }
-            catch (InterruptedException e) {
+                /*
+                 * } catch (JMSException e) { e.printStackTrace();
+                 */
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
@@ -276,8 +268,7 @@ public class AMQDeadlockTestW4Brokers extends TestCase {
         private final PooledConnectionFactory pcf;
         private final String producerName;
 
-        public PooledProducerTask(final PooledConnectionFactory pcf,
-                final String queueName, final String producerName) {
+        public PooledProducerTask(final PooledConnectionFactory pcf, final String queueName, final String producerName) {
             this.pcf = pcf;
             this.queueName = queueName;
             this.producerName = producerName;
@@ -301,26 +292,23 @@ public class AMQDeadlockTestW4Brokers extends TestCase {
                 for (int i = 0; i < NUM_MESSAGE_TO_SEND; i++) {
                     final int count = i;
                     jmsTemplate.send(queueName, new MessageCreator() {
-                        public Message createMessage(Session session)
-                                throws JMSException {
+                        public Message createMessage(Session session) throws JMSException {
 
-                            final BytesMessage message = session
-                                    .createBytesMessage();
+                            final BytesMessage message = session.createBytesMessage();
 
                             message.writeBytes(bytes);
                             message.setIntProperty("count", count);
-                            message.setStringProperty("producerName",
-                                    producerName);
+                            message.setStringProperty("producerName", producerName);
                             return message;
                         }
                     });
 
-                    //	log.info("PooledProducer " + producerName + " sent message: " + count);
+                    // log.info("PooledProducer " + producerName + " sent
+                    // message: " + count);
 
                     // Thread.sleep(1000);
                 }
-            }
-            catch (final Throwable e) {
+            } catch (final Throwable e) {
                 log.error("Producer 1 is exiting", e);
             }
         }

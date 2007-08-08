@@ -24,97 +24,97 @@ import junit.framework.TestCase;
 
 /**
  * Test a TreeIndex
- * 
  */
-public class TreeTest extends TestCase{
+public class TreeTest extends TestCase {
 
-    private static int COUNT=55;
+    private static int COUNT = 55;
     private TreeIndex tree;
     private File directory;
     private IndexManager indexManager;
-    private boolean dumpTree=false;
+    private boolean dumpTree;
 
     /**
      * @throws java.lang.Exception
      * @see junit.framework.TestCase#setUp()
      */
-    protected void setUp() throws Exception{
+    protected void setUp() throws Exception {
         super.setUp();
-        directory=new File("activemq-data");
+        directory = new File("activemq-data");
         directory.mkdirs();
-        indexManager=new IndexManager(directory,"im-test","rw",null);
-        this.tree=new TreeIndex(directory,"testTree",indexManager);
+        indexManager = new IndexManager(directory, "im-test", "rw", null);
+        this.tree = new TreeIndex(directory, "testTree", indexManager);
         this.tree.setKeyMarshaller(Store.StringMarshaller);
     }
 
-    public void testTreeWithCaching() throws Exception{
+    public void testTreeWithCaching() throws Exception {
         this.tree.setEnablePageCaching(true);
-        //doTest();
+        // doTest();
     }
 
-    public void testTreeWithoutCaching() throws Exception{
+    public void testTreeWithoutCaching() throws Exception {
         this.tree.setEnablePageCaching(false);
-        //doTest();
+        // doTest();
     }
 
-    public void doTest() throws Exception{
+    public void doTest() throws Exception {
         // doTest(300);
         // tree.clear();
         // tree.unload();
-        doTest(600);// count = 55 - this fails
+        // count = 55 - this fails
+        doTest(600);
         // tree.clear();
         // tree.unload();
-         //doTest(1024*16);
+        // doTest(1024*16);
     }
 
-    public void doTest(int pageSize) throws Exception{
-        String keyRoot="key:";
+    public void doTest(int pageSize) throws Exception {
+        String keyRoot = "key:";
         tree.setPageSize(pageSize);
         this.tree.load();
-       // doInsert(keyRoot);
-       // checkRetrieve(keyRoot);
-       // doRemove(keyRoot);
+        // doInsert(keyRoot);
+        // checkRetrieve(keyRoot);
+        // doRemove(keyRoot);
         doInsert(keyRoot);
         doRemoveBackwards(keyRoot);
     }
 
-    void doInsert(String keyRoot) throws Exception{
-        for(int i=0;i<COUNT;i++){
-            IndexItem value=indexManager.createNewIndex();
+    void doInsert(String keyRoot) throws Exception {
+        for (int i = 0; i < COUNT; i++) {
+            IndexItem value = indexManager.createNewIndex();
             indexManager.storeIndex(value);
-            tree.store(keyRoot+i,value);
+            tree.store(keyRoot + i, value);
         }
     }
 
-    void checkRetrieve(String keyRoot) throws IOException{
-        for(int i=0;i<COUNT;i++){
-            IndexItem item=(IndexItem)tree.get(keyRoot+i);
+    void checkRetrieve(String keyRoot) throws IOException {
+        for (int i = 0; i < COUNT; i++) {
+            IndexItem item = (IndexItem)tree.get(keyRoot + i);
             assertNotNull(item);
         }
     }
 
-    void doRemove(String keyRoot) throws Exception{
-        for(int i=0;i<COUNT;i++){
-            tree.remove(keyRoot+i);
-            //System.out.println("Removed " + keyRoot+i);
-           // tree.getRoot().dump();
-            //System.out.println("");
+    void doRemove(String keyRoot) throws Exception {
+        for (int i = 0; i < COUNT; i++) {
+            tree.remove(keyRoot + i);
+            // System.out.println("Removed " + keyRoot+i);
+            // tree.getRoot().dump();
+            // System.out.println("");
         }
-        for(int i=0;i<COUNT;i++){
-            IndexItem item=(IndexItem)tree.get(keyRoot+i);
+        for (int i = 0; i < COUNT; i++) {
+            IndexItem item = (IndexItem)tree.get(keyRoot + i);
             assertNull(item);
         }
     }
 
-    void doRemoveBackwards(String keyRoot) throws Exception{
-        for(int i=COUNT-1;i>=0;i--){
-            tree.remove(keyRoot+i);
-            System.out.println("BACK Removed " + keyRoot+i);
-           tree.getRoot().dump();
-          System.out.println("");
+    void doRemoveBackwards(String keyRoot) throws Exception {
+        for (int i = COUNT - 1; i >= 0; i--) {
+            tree.remove(keyRoot + i);
+            System.out.println("BACK Removed " + keyRoot + i);
+            tree.getRoot().dump();
+            System.out.println("");
         }
-        for(int i=0;i<COUNT;i++){
-            IndexItem item=(IndexItem)tree.get(keyRoot+i);
+        for (int i = 0; i < COUNT; i++) {
+            IndexItem item = (IndexItem)tree.get(keyRoot + i);
             assertNull(item);
         }
     }
@@ -123,10 +123,10 @@ public class TreeTest extends TestCase{
      * @throws java.lang.Exception
      * @see junit.framework.TestCase#tearDown()
      */
-    protected void tearDown() throws Exception{
+    protected void tearDown() throws Exception {
         super.tearDown();
-        File[] files=directory.listFiles();
-        for(File file:files){
+        File[] files = directory.listFiles();
+        for (File file : files) {
             file.delete();
         }
     }

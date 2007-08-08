@@ -38,78 +38,80 @@ import org.apache.activemq.transaction.Synchronization;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class TopicSubscription extends AbstractSubscription{
+public class TopicSubscription extends AbstractSubscription {
 
-    private static final Log log=LogFactory.getLog(TopicSubscription.class);
-    private static final AtomicLong cursorNameCounter=new AtomicLong(0);
+    private static final Log LOG = LogFactory.getLog(TopicSubscription.class);
+    private static final AtomicLong cursorNameCounter = new AtomicLong(0);
     protected PendingMessageCursor matched;
     final protected UsageManager usageManager;
-    protected AtomicLong dispatchedCounter=new AtomicLong();
-    protected AtomicLong prefetchExtension=new AtomicLong();
-    private int maximumPendingMessages=-1;
-    private MessageEvictionStrategy messageEvictionStrategy=new OldestMessageEvictionStrategy();
-    private int discarded=0;
-    private final Object matchedListMutex=new Object();
-    private final AtomicLong enqueueCounter=new AtomicLong(0);
-    private final AtomicLong dequeueCounter=new AtomicLong(0);
-    boolean singleDestination=true;
+    protected AtomicLong dispatchedCounter = new AtomicLong();
+    protected AtomicLong prefetchExtension = new AtomicLong();
+    private int maximumPendingMessages = -1;
+    private MessageEvictionStrategy messageEvictionStrategy = new OldestMessageEvictionStrategy();
+    private int discarded;
+    private final Object matchedListMutex = new Object();
+    private final AtomicLong enqueueCounter = new AtomicLong(0);
+    private final AtomicLong dequeueCounter = new AtomicLong(0);
+    boolean singleDestination = true;
     Destination destination;
-    private int memoryUsageHighWaterMark=95;
+    private int memoryUsageHighWaterMark = 95;
 
-    public TopicSubscription(Broker broker,ConnectionContext context,ConsumerInfo info,UsageManager usageManager)
-            throws Exception{
-        super(broker,context,info);
-        this.usageManager=usageManager;
-        String matchedName="TopicSubscription:"+cursorNameCounter.getAndIncrement()+"["+info.getConsumerId().toString()
-                +"]";
-        this.matched=new FilePendingMessageCursor(matchedName,broker.getTempDataStore());
-       
+    public TopicSubscription(Broker broker, ConnectionContext context, ConsumerInfo info, UsageManager usageManager) throws Exception {
+        super(broker, context, info);
+        this.usageManager = usageManager;
+        String matchedName = "TopicSubscription:" + cursorNameCounter.getAndIncrement() + "[" + info.getConsumerId().toString() + "]";
+        this.matched = new FilePendingMessageCursor(matchedName, broker.getTempDataStore());
+
     }
-    
+
     public void init() throws Exception {
         this.matched.setUsageManager(usageManager);
         this.matched.start();
     }
-    
-    public void add(MessageReference node) throws Exception{
+
+    public void add(MessageReference node) throws Exception {
         enqueueCounter.incrementAndGet();
         node.incrementReferenceCount();
-        if(!isFull()&&!isSlave()){
+        if (!isFull() && !isSlave()) {
             optimizePrefetch();
-            // if maximumPendingMessages is set we will only discard messages which
-            // have not been dispatched (i.e. we allow the prefetch buffer to be filled)
+            // if maximumPendingMessages is set we will only discard messages
+            // which
+            // have not been dispatched (i.e. we allow the prefetch buffer to be
+            // filled)
             dispatch(node);
-        }else{
-            if(maximumPendingMessages!=0){
-                synchronized(matchedListMutex){
+        } else {
+            if (maximumPendingMessages != 0) {
+                synchronized (matchedListMutex) {
                     matched.addMessageLast(node);
                     // NOTE - be careful about the slaveBroker!
-                    if(maximumPendingMessages>0){
-                        // calculate the high water mark from which point we will eagerly evict expired messages
-                        int max=messageEvictionStrategy.getEvictExpiredMessagesHighWatermark();
-                        if(maximumPendingMessages>0&&maximumPendingMessages<max){
-                            max=maximumPendingMessages;
+                    if (maximumPendingMessages > 0) {
+                        // calculate the high water mark from which point we
+                        // will eagerly evict expired messages
+                        int max = messageEvictionStrategy.getEvictExpiredMessagesHighWatermark();
+                        if (maximumPendingMessages > 0 && maximumPendingMessages < max) {
+                            max = maximumPendingMessages;
                         }
-                        if(!matched.isEmpty()&&matched.size()>max){
+                        if (!matched.isEmpty() && matched.size() > max) {
                             removeExpiredMessages();
                         }
                         // lets discard old messages as we are a slow consumer
-                        while(!matched.isEmpty()&&matched.size()>maximumPendingMessages){
-                            int pageInSize=matched.size()-maximumPendingMessages;
-                            // only page in a 1000 at a time - else we could blow da memory
-                            pageInSize=Math.max(1000,pageInSize);
-                            LinkedList list=matched.pageInList(pageInSize);
-                            MessageReference[] oldMessages=messageEvictionStrategy.evictMessages(list);
-                            int messagesToEvict=oldMessages.length;
-                            for(int i=0;i<messagesToEvict;i++){
-                                MessageReference oldMessage=oldMessages[i];
+                        while (!matched.isEmpty() && matched.size() > maximumPendingMessages) {
+                            int pageInSize = matched.size() - maximumPendingMessages;
+                            // only page in a 1000 at a time - else we could
+                            // blow da memory
+                            pageInSize = Math.max(1000, pageInSize);
+                            LinkedList list = matched.pageInList(pageInSize);
+                            MessageReference[] oldMessages = messageEvictionStrategy.evictMessages(list);
+                            int messagesToEvict = oldMessages.length;
+                            for (int i = 0; i < messagesToEvict; i++) {
+                                MessageReference oldMessage = oldMessages[i];
                                 discard(oldMessage);
                             }
-                            // lets avoid an infinite loop if we are given a bad eviction strategy
+                            // lets avoid an infinite loop if we are given a bad
+                            // eviction strategy
                             // for a bad strategy lets just not evict
-                            if(messagesToEvict==0){
-                                log.warn("No messages to evict returned from eviction strategy: "
-                                        +messageEvictionStrategy);
+                            if (messagesToEvict == 0) {
+                                LOG.warn("No messages to evict returned from eviction strategy: " + messageEvictionStrategy);
                                 break;
                             }
                         }
@@ -120,58 +122,59 @@ public class TopicSubscription extends AbstractSubscription{
     }
 
     /**
-     * Discard any expired messages from the matched list. Called from a synchronized block.
+     * Discard any expired messages from the matched list. Called from a
+     * synchronized block.
      * 
      * @throws IOException
      */
-    protected void removeExpiredMessages() throws IOException{
-        try{
+    protected void removeExpiredMessages() throws IOException {
+        try {
             matched.reset();
-            while(matched.hasNext()){
-                MessageReference node=matched.next();
-                if(broker.isExpired(node)){
+            while (matched.hasNext()) {
+                MessageReference node = matched.next();
+                if (broker.isExpired(node)) {
                     matched.remove();
                     dispatchedCounter.incrementAndGet();
                     node.decrementReferenceCount();
-                    broker.messageExpired(getContext(),node);
+                    broker.messageExpired(getContext(), node);
                     break;
                 }
             }
-        }finally{
+        } finally {
             matched.release();
         }
     }
 
-    public void processMessageDispatchNotification(MessageDispatchNotification mdn){
-        synchronized(matchedListMutex){
-            try{
+    public void processMessageDispatchNotification(MessageDispatchNotification mdn) {
+        synchronized (matchedListMutex) {
+            try {
                 matched.reset();
-                while(matched.hasNext()){
-                    MessageReference node=matched.next();
-                    if(node.getMessageId().equals(mdn.getMessageId())){
+                while (matched.hasNext()) {
+                    MessageReference node = matched.next();
+                    if (node.getMessageId().equals(mdn.getMessageId())) {
                         matched.remove();
                         dispatchedCounter.incrementAndGet();
                         node.decrementReferenceCount();
                         break;
                     }
                 }
-            }finally{
+            } finally {
                 matched.release();
             }
         }
     }
 
-    synchronized public void acknowledge(final ConnectionContext context,final MessageAck ack) throws Exception{
+    synchronized public void acknowledge(final ConnectionContext context, final MessageAck ack) throws Exception {
         // Handle the standard acknowledgment case.
-        boolean wasFull=isFull();
-        if(ack.isStandardAck()||ack.isPoisonAck()){
-            if(context.isInTransaction()){
-            	prefetchExtension.addAndGet(ack.getMessageCount());
-                context.getTransaction().addSynchronization(new Synchronization(){
+        boolean wasFull = isFull();
+        if (ack.isStandardAck() || ack.isPoisonAck()) {
+            if (context.isInTransaction()) {
+                prefetchExtension.addAndGet(ack.getMessageCount());
+                context.getTransaction().addSynchronization(new Synchronization() {
 
-                    public void afterCommit() throws Exception{
-                        synchronized(TopicSubscription.this){
-                        	if( singleDestination && destination!=null) {
+                    public void afterCommit() throws Exception {
+                        synchronized (TopicSubscription.this) {
+                            if (singleDestination && destination != null) {
                                 destination.getDestinationStatistics().getDequeues().add(ack.getMessageCount());
                             }
                         }
@@ -179,148 +182,151 @@ public class TopicSubscription extends AbstractSubscription{
                         prefetchExtension.addAndGet(ack.getMessageCount());
                     }
                 });
-            }else{
-            	if( singleDestination && destination!=null) {
+            } else {
+                if (singleDestination && destination != null) {
                     destination.getDestinationStatistics().getDequeues().add(ack.getMessageCount());
                 }
                 dequeueCounter.addAndGet(ack.getMessageCount());
                 prefetchExtension.addAndGet(ack.getMessageCount());
             }
-            if(wasFull&&!isFull()){
+            if (wasFull && !isFull()) {
                 dispatchMatched();
             }
             return;
-        }else if(ack.isDeliveredAck()){
-            // Message was delivered but not acknowledged: update pre-fetch counters.
-        	prefetchExtension.addAndGet(ack.getMessageCount());
-            if(wasFull&&!isFull()){
+        } else if (ack.isDeliveredAck()) {
+            // Message was delivered but not acknowledged: update pre-fetch
+            // counters.
+            prefetchExtension.addAndGet(ack.getMessageCount());
+            if (wasFull && !isFull()) {
                 dispatchMatched();
             }
             return;
         }
-        throw new JMSException("Invalid acknowledgment: "+ack);
+        throw new JMSException("Invalid acknowledgment: " + ack);
     }
 
-    public Response pullMessage(ConnectionContext context,MessagePull pull) throws Exception{
+    public Response pullMessage(ConnectionContext context, MessagePull pull) throws Exception {
         // not supported for topics
         return null;
     }
 
-    public int getPendingQueueSize(){
+    public int getPendingQueueSize() {
         return matched();
     }
 
-    public int getDispatchedQueueSize(){
-    	return (int)(dispatchedCounter.get()-dequeueCounter.get());
+    public int getDispatchedQueueSize() {
+        return (int)(dispatchedCounter.get() - dequeueCounter.get());
     }
 
-    public int getMaximumPendingMessages(){
+    public int getMaximumPendingMessages() {
         return maximumPendingMessages;
     }
 
-    public long getDispatchedCounter(){
-    	return dispatchedCounter.get();
+    public long getDispatchedCounter() {
+        return dispatchedCounter.get();
     }
 
-    public long getEnqueueCounter(){
+    public long getEnqueueCounter() {
         return enqueueCounter.get();
     }
 
-    public long getDequeueCounter(){
+    public long getDequeueCounter() {
         return dequeueCounter.get();
     }
 
     /**
      * @return the number of messages discarded due to being a slow consumer
      */
-    public int discarded(){
-        synchronized(matchedListMutex){
+    public int discarded() {
+        synchronized (matchedListMutex) {
             return discarded;
         }
     }
 
     /**
-     * @return the number of matched messages (messages targeted for the subscription but not yet able to be dispatched
-     *         due to the prefetch buffer being full).
+     * @return the number of matched messages (messages targeted for the
+     *         subscription but not yet able to be dispatched due to the
+     *         prefetch buffer being full).
      */
-    public int matched(){
-        synchronized(matchedListMutex){
+    public int matched() {
+        synchronized (matchedListMutex) {
             return matched.size();
         }
     }
 
     /**
-     * Sets the maximum number of pending messages that can be matched against this consumer before old messages are
-     * discarded.
+     * Sets the maximum number of pending messages that can be matched against
+     * this consumer before old messages are discarded.
      */
-    public void setMaximumPendingMessages(int maximumPendingMessages){
-        this.maximumPendingMessages=maximumPendingMessages;
+    public void setMaximumPendingMessages(int maximumPendingMessages) {
+        this.maximumPendingMessages = maximumPendingMessages;
     }
 
-    public MessageEvictionStrategy getMessageEvictionStrategy(){
+    public MessageEvictionStrategy getMessageEvictionStrategy() {
         return messageEvictionStrategy;
     }
 
     /**
-     * Sets the eviction strategy used to decide which message to evict when the slow consumer needs to discard messages
+     * Sets the eviction strategy used to decide which message to evict when the
+     * slow consumer needs to discard messages
      */
-    public void setMessageEvictionStrategy(MessageEvictionStrategy messageEvictionStrategy){
-        this.messageEvictionStrategy=messageEvictionStrategy;
+    public void setMessageEvictionStrategy(MessageEvictionStrategy messageEvictionStrategy) {
+        this.messageEvictionStrategy = messageEvictionStrategy;
     }
 
     // Implementation methods
     // -------------------------------------------------------------------------
-    private boolean isFull(){
-    	return getDispatchedQueueSize()-prefetchExtension.get()>=info.getPrefetchSize();
+    private boolean isFull() {
+        return getDispatchedQueueSize() - prefetchExtension.get() >= info.getPrefetchSize();
     }
 
     /**
      * @return true when 60% or more room is left for dispatching messages
      */
-    public boolean isLowWaterMark(){
-    	return (getDispatchedQueueSize()-prefetchExtension.get()) <= (info.getPrefetchSize() *.4);
+    public boolean isLowWaterMark() {
+        return (getDispatchedQueueSize() - prefetchExtension.get()) <= (info.getPrefetchSize() * .4);
     }
 
     /**
      * @return true when 10% or less room is left for dispatching messages
      */
-    public boolean isHighWaterMark(){
-    	return (getDispatchedQueueSize()-prefetchExtension.get()) >= (info.getPrefetchSize() *.9);
+    public boolean isHighWaterMark() {
+        return (getDispatchedQueueSize() - prefetchExtension.get()) >= (info.getPrefetchSize() * .9);
     }
 
     /**
      * @param memoryUsageHighWaterMark the memoryUsageHighWaterMark to set
      */
-    public void setMemoryUsageHighWaterMark(int memoryUsageHighWaterMark){
-        this.memoryUsageHighWaterMark=memoryUsageHighWaterMark;
+    public void setMemoryUsageHighWaterMark(int memoryUsageHighWaterMark) {
+        this.memoryUsageHighWaterMark = memoryUsageHighWaterMark;
     }
 
     /**
      * @return the memoryUsageHighWaterMark
      */
-    public int getMemoryUsageHighWaterMark(){
+    public int getMemoryUsageHighWaterMark() {
         return this.memoryUsageHighWaterMark;
     }
 
     /**
      * @return the usageManager
      */
-    public UsageManager getUsageManager(){
+    public UsageManager getUsageManager() {
         return this.usageManager;
     }
-    
+
     /**
      * @return the matched
      */
-    public PendingMessageCursor getMatched(){
+    public PendingMessageCursor getMatched() {
         return this.matched;
     }
 
     /**
      * @param matched the matched to set
      */
-    public void setMatched(PendingMessageCursor matched){
-        this.matched=matched;
+    public void setMatched(PendingMessageCursor matched) {
+        this.matched = matched;
     }
 
     /**
@@ -328,9 +334,9 @@ public class TopicSubscription extends AbstractSubscription{
      * 
      * @param newPrefetch
      */
-    public void updateConsumerPrefetch(int newPrefetch){
-        if(context!=null&&context.getConnection()!=null&&context.getConnection().isManageable()){
-            ConsumerControl cc=new ConsumerControl();
+    public void updateConsumerPrefetch(int newPrefetch) {
+        if (context != null && context.getConnection() != null && context.getConnection().isManageable()) {
+            ConsumerControl cc = new ConsumerControl();
             cc.setConsumerId(info.getConsumerId());
             cc.setPrefetch(newPrefetch);
             context.getConnection().dispatchAsync(cc);
@@ -339,105 +345,107 @@ public class TopicSubscription extends AbstractSubscription{
 
     /**
      * optimize message consumer prefetch if the consumer supports it
-     * 
      */
-    public void optimizePrefetch(){
+    public void optimizePrefetch() {
         /*
          * if(info!=null&&info.isOptimizedAcknowledge()&&context!=null&&context.getConnection()!=null
-         * &&context.getConnection().isManageable()){ if(info.getCurrentPrefetchSize()!=info.getPrefetchSize() &&
-         * isLowWaterMark()){ info.setCurrentPrefetchSize(info.getPrefetchSize());
+         * &&context.getConnection().isManageable()){
+         * if(info.getCurrentPrefetchSize()!=info.getPrefetchSize() &&
+         * isLowWaterMark()){
+         * info.setCurrentPrefetchSize(info.getPrefetchSize());
          * updateConsumerPrefetch(info.getPrefetchSize()); }else
-         * if(info.getCurrentPrefetchSize()==info.getPrefetchSize() && isHighWaterMark()){ // want to purge any
-         * outstanding acks held by the consumer info.setCurrentPrefetchSize(1); updateConsumerPrefetch(1); } }
+         * if(info.getCurrentPrefetchSize()==info.getPrefetchSize() &&
+         * isHighWaterMark()){ // want to purge any outstanding acks held by the
+         * consumer info.setCurrentPrefetchSize(1); updateConsumerPrefetch(1); } }
          */
     }
 
-    private void dispatchMatched() throws IOException{
-        synchronized(matchedListMutex){
-            try{
+    private void dispatchMatched() throws IOException {
+        synchronized (matchedListMutex) {
+            try {
                 matched.reset();
-                while(matched.hasNext()&&!isFull()){
-                    MessageReference message=(MessageReference)matched.next();
+                while (matched.hasNext() && !isFull()) {
+                    MessageReference message = (MessageReference)matched.next();
                     matched.remove();
                     // Message may have been sitting in the matched list a while
                     // waiting for the consumer to ak the message.
-                    if(broker.isExpired(message)){
+                    if (broker.isExpired(message)) {
                         message.decrementReferenceCount();
-                        broker.messageExpired(getContext(),message);
+                        broker.messageExpired(getContext(), message);
                         dequeueCounter.incrementAndGet();
                         continue; // just drop it.
                     }
                     dispatch(message);
                 }
-            }finally{
+            } finally {
                 matched.release();
             }
         }
     }
 
-    private void dispatch(final MessageReference node) throws IOException{
-        Message message=(Message)node;
+    private void dispatch(final MessageReference node) throws IOException {
+        Message message = (Message)node;
         // Make sure we can dispatch a message.
-        MessageDispatch md=new MessageDispatch();
+        MessageDispatch md = new MessageDispatch();
         md.setMessage(message);
         md.setConsumerId(info.getConsumerId());
         md.setDestination(node.getRegionDestination().getActiveMQDestination());
         dispatchedCounter.incrementAndGet();
-        // Keep track if this subscription is receiving messages from a single destination.
-        if(singleDestination){
-            if(destination==null){
-                destination=node.getRegionDestination();
-            }else{
-                if(destination!=node.getRegionDestination()){
-                    singleDestination=false;
+        // Keep track if this subscription is receiving messages from a single
+        // destination.
+        if (singleDestination) {
+            if (destination == null) {
+                destination = node.getRegionDestination();
+            } else {
+                if (destination != node.getRegionDestination()) {
+                    singleDestination = false;
                 }
             }
         }
-        if(info.isDispatchAsync()){
-            md.setTransmitCallback(new Runnable(){
+        if (info.isDispatchAsync()) {
+            md.setTransmitCallback(new Runnable() {
 
-                public void run(){
+                public void run() {
                     node.getRegionDestination().getDestinationStatistics().getDispatched().increment();
                     node.decrementReferenceCount();
                 }
             });
             context.getConnection().dispatchAsync(md);
-        }else{
+        } else {
             context.getConnection().dispatchSync(md);
             node.getRegionDestination().getDestinationStatistics().getDispatched().increment();
             node.decrementReferenceCount();
         }
     }
-    
+
     private void discard(MessageReference message) {
         message.decrementReferenceCount();
         matched.remove(message);
         discarded++;
         dequeueCounter.incrementAndGet();
-        if(log.isDebugEnabled()){
-            log.debug("Discarding message "+message);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Discarding message " + message);
         }
-        broker.getRoot().sendToDeadLetterQueue(getContext(),message);
+        broker.getRoot().sendToDeadLetterQueue(getContext(), message);
     }
 
-    public String toString(){
-        return "TopicSubscription:"+" consumer="+info.getConsumerId()+", destinations="+destinations.size()
-                +", dispatched="+getDispatchedQueueSize()+", delivered="+getDequeueCounter()+", matched="+matched()
-                +", discarded="+discarded();
+    public String toString() {
+        return "TopicSubscription:" + " consumer=" + info.getConsumerId() + ", destinations=" + destinations.size() + ", dispatched=" + getDispatchedQueueSize() + ", delivered="
+               + getDequeueCounter() + ", matched=" + matched() + ", discarded=" + discarded();
     }
 
-    public void destroy(){
-        synchronized(matchedListMutex){
-            try{
+    public void destroy() {
+        synchronized (matchedListMutex) {
+            try {
                 matched.destroy();
-            }catch(Exception e){
-               log.warn("Failed to destroy cursor",e);
+            } catch (Exception e) {
+                LOG.warn("Failed to destroy cursor", e);
             }
         }
     }
 
     public int getPrefetchSize() {
-        return (int) (info.getPrefetchSize() + prefetchExtension.get());
-    }    
-    
+        return (int)(info.getPrefetchSize() + prefetchExtension.get());
+    }
+
 }

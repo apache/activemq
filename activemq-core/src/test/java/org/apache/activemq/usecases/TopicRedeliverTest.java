@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,25 +33,26 @@ import org.apache.activemq.util.IdGenerator;
  * @version $Revision: 1.1.1.1 $
  */
 public class TopicRedeliverTest extends TestSupport {
-    
+
     private static final int RECEIVE_TIMEOUT = 10000;
     private IdGenerator idGen = new IdGenerator();
     protected int deliveryMode = DeliveryMode.PERSISTENT;
-    public TopicRedeliverTest(){       
+
+    public TopicRedeliverTest() {
     }
-    
-    public TopicRedeliverTest(String n){
+
+    public TopicRedeliverTest(String n) {
         super(n);
     }
-    
-    protected void setUp() throws Exception{
+
+    protected void setUp() throws Exception {
         super.setUp();
         topic = true;
     }
-    
-    
+
     /**
      * test messages are acknowledged and recovered properly
+     * 
      * @throws Exception
      */
     public void testClientAcknowledge() throws Exception {
@@ -65,32 +65,32 @@ public class TopicRedeliverTest extends TestSupport {
         Session producerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = producerSession.createProducer(destination);
         producer.setDeliveryMode(deliveryMode);
-        
-        //send some messages
-        
+
+        // send some messages
+
         TextMessage sent1 = producerSession.createTextMessage();
         sent1.setText("msg1");
         producer.send(sent1);
-        
+
         TextMessage sent2 = producerSession.createTextMessage();
         sent1.setText("msg2");
         producer.send(sent2);
-        
+
         TextMessage sent3 = producerSession.createTextMessage();
         sent1.setText("msg3");
         producer.send(sent3);
-        
+
         Message rec1 = consumer.receive(RECEIVE_TIMEOUT);
         Message rec2 = consumer.receive(RECEIVE_TIMEOUT);
         Message rec3 = consumer.receive(RECEIVE_TIMEOUT);
-        
-        //ack rec2
+
+        // ack rec2
         rec2.acknowledge();
-        
+
         TextMessage sent4 = producerSession.createTextMessage();
         sent4.setText("msg4");
         producer.send(sent4);
-        
+
         Message rec4 = consumer.receive(RECEIVE_TIMEOUT);
         assertTrue(rec4.equals(sent4));
         consumerSession.recover();
@@ -99,11 +99,12 @@ public class TopicRedeliverTest extends TestSupport {
         assertTrue(rec4.getJMSRedelivered());
         rec4.acknowledge();
         connection.close();
-        
+
     }
-    
+
     /**
      * Test redelivered flag is set on rollbacked transactions
+     * 
      * @throws Exception
      */
     public void testRedilveredFlagSetOnRollback() throws Exception {
@@ -113,20 +114,20 @@ public class TopicRedeliverTest extends TestSupport {
         connection.start();
         Session consumerSession = connection.createSession(true, Session.CLIENT_ACKNOWLEDGE);
         MessageConsumer consumer = null;
-        if (topic){
+        if (topic) {
             consumer = consumerSession.createDurableSubscriber((Topic)destination, "TESTRED");
-        }else{
-        consumer = consumerSession.createConsumer(destination);
+        } else {
+            consumer = consumerSession.createConsumer(destination);
         }
         Session producerSession = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = producerSession.createProducer(destination);
         producer.setDeliveryMode(deliveryMode);
-        
+
         TextMessage sentMsg = producerSession.createTextMessage();
         sentMsg.setText("msg1");
         producer.send(sentMsg);
         producerSession.commit();
-        
+
         Message recMsg = consumer.receive(RECEIVE_TIMEOUT);
         assertTrue(recMsg.getJMSRedelivered() == false);
         recMsg = consumer.receive(RECEIVE_TIMEOUT);
@@ -139,9 +140,9 @@ public class TopicRedeliverTest extends TestSupport {
         connection.close();
     }
 
-
     /**
      * Check a session is rollbacked on a Session close();
+     * 
      * @throws Exception
      */
 
@@ -152,27 +153,27 @@ public class TopicRedeliverTest extends TestSupport {
         connection.start();
         Session consumerSession = connection.createSession(true, Session.CLIENT_ACKNOWLEDGE);
         MessageConsumer consumer = null;
-        if (topic){
+        if (topic) {
             consumer = consumerSession.createDurableSubscriber((Topic)destination, "TESTRED");
-        }else{
-        consumer = consumerSession.createConsumer(destination);
+        } else {
+            consumer = consumerSession.createConsumer(destination);
         }
         Session producerSession = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = producerSession.createProducer(destination);
         producer.setDeliveryMode(deliveryMode);
-        
+
         TextMessage sentMsg = producerSession.createTextMessage();
         sentMsg.setText("msg1");
         producer.send(sentMsg);
-      
+
         producerSession.commit();
-        
+
         Message recMsg = consumer.receive(RECEIVE_TIMEOUT);
         assertTrue(recMsg.getJMSRedelivered() == false);
         consumerSession.close();
         consumerSession = connection.createSession(true, Session.CLIENT_ACKNOWLEDGE);
         consumer = consumerSession.createConsumer(destination);
-        
+
         recMsg = consumer.receive(RECEIVE_TIMEOUT);
         consumerSession.commit();
         assertTrue(recMsg.equals(sentMsg));
@@ -181,6 +182,7 @@ public class TopicRedeliverTest extends TestSupport {
 
     /**
      * check messages are actuallly sent on a tx rollback
+     * 
      * @throws Exception
      */
 
@@ -194,31 +196,31 @@ public class TopicRedeliverTest extends TestSupport {
         Session producerSession = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = producerSession.createProducer(destination);
         producer.setDeliveryMode(deliveryMode);
-        
+
         TextMessage sentMsg = producerSession.createTextMessage();
         sentMsg.setText("msg1");
         producer.send(sentMsg);
         producerSession.commit();
-        
+
         Message recMsg = consumer.receive(RECEIVE_TIMEOUT);
         consumerSession.commit();
         assertTrue(recMsg.equals(sentMsg));
-        
+
         sentMsg = producerSession.createTextMessage();
         sentMsg.setText("msg2");
         producer.send(sentMsg);
         producerSession.rollback();
-        
+
         sentMsg = producerSession.createTextMessage();
         sentMsg.setText("msg3");
         producer.send(sentMsg);
         producerSession.commit();
-        
+
         recMsg = consumer.receive(RECEIVE_TIMEOUT);
         assertTrue(recMsg.equals(sentMsg));
         consumerSession.commit();
-        
+
         connection.close();
     }
-   
+
 }

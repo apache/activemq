@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,7 +29,6 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.JMXSupport;
 
 /**
- * 
  * @version $Revision: 1.1 $
  */
 public class ManagementContextXBeanConfigTest extends TestCase {
@@ -41,10 +39,9 @@ public class ManagementContextXBeanConfigTest extends TestCase {
 
         assertEquals(2011, brokerService.getManagementContext().getConnectorPort());
         assertEquals("test.domain", brokerService.getManagementContext().getJmxDomainName());
-        
+
         MBeanServer beanServer = brokerService.getManagementContext().getMBeanServer();
-        
-        
+
         // Make sure the broker is registered in the right jmx domain.
         Hashtable map = new Hashtable();
         map.put("Type", "Broker");
@@ -68,7 +65,7 @@ public class ManagementContextXBeanConfigTest extends TestCase {
 
     protected BrokerService createBroker() throws Exception {
         String uri = "org/apache/activemq/xbean/management-context-test.xml";
-        return BrokerFactory.createBroker(new URI("xbean:"+uri));
+        return BrokerFactory.createBroker(new URI("xbean:" + uri));
     }
 
 }

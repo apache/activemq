@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -48,8 +47,8 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
         junit.textui.TestRunner.run(suite());
     }
 
-    public static final int MESSAGE_COUNT  = 100;
-    public static final int BROKER_COUNT   = 2;
+    public static final int MESSAGE_COUNT = 100;
+    public static final int BROKER_COUNT = 2;
     public static final int CONSUMER_COUNT = 20;
 
     private BrokerService[] brokers;
@@ -62,7 +61,7 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
 
     public void tearDown() throws Exception {
         if (brokers != null) {
-            for (int i=0; i<BROKER_COUNT; i++) {
+            for (int i = 0; i < BROKER_COUNT; i++) {
                 if (brokers[i] != null) {
                     brokers[i].stop();
                 }
@@ -98,18 +97,14 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
         ConnectionFactory recvFactory = createConnectionFactory(recvUri);
         assertEquals(MESSAGE_COUNT, receiveMessages(createConnection(recvFactory), dest, 0));
 
-        for (int i=0; i<(CONSUMER_COUNT-1); i++) {
+        for (int i = 0; i < (CONSUMER_COUNT - 1); i++) {
             assertEquals(0, receiveMessages(createConnection(recvFactory), dest, 200));
         }
     }
 
     public void initCombosForTestSendReceive() {
-        addCombinationValues("sendUri", new Object[] {
-            "tcp://localhost:61616", "tcp://localhost:61617"
-        });
-        addCombinationValues("recvUri", new Object[] {
-            "tcp://localhost:61616", "tcp://localhost:61617"
-        });
+        addCombinationValues("sendUri", new Object[] {"tcp://localhost:61616", "tcp://localhost:61617"});
+        addCombinationValues("recvUri", new Object[] {"tcp://localhost:61616", "tcp://localhost:61617"});
     }
 
     public void testSendReceive() throws Exception {
@@ -118,12 +113,8 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
     }
 
     public void initCombosForTestMultipleConsumersConnect() {
-        addCombinationValues("sendUri", new Object[] {
-            "tcp://localhost:61616", "tcp://localhost:61617",
-        });
-        addCombinationValues("recvUri", new Object[] {
-            "tcp://localhost:61616", "tcp://localhost:61617"
-        });
+        addCombinationValues("sendUri", new Object[] {"tcp://localhost:61616", "tcp://localhost:61617"});
+        addCombinationValues("recvUri", new Object[] {"tcp://localhost:61616", "tcp://localhost:61617"});
     }
 
     public void testMultipleConsumersConnect() throws Exception {
@@ -174,7 +165,7 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
     }
 
     public void testSendReceiveUsingAutoAssignDiscovery() throws Exception {
-		sendUri = "discovery:multicast://default";
+        sendUri = "discovery:multicast://default";
         recvUri = "discovery:multicast://default";
         createAutoAssignMulticastBrokerNetwork();
         doSendReceiveTest();
@@ -190,8 +181,8 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
     protected void createMulticastBrokerNetwork() throws Exception {
 
         brokers = new BrokerService[BROKER_COUNT];
-        for (int i=0; i<BROKER_COUNT; i++) {
-            brokers[i] = createBroker("org/apache/activemq/usecases/multicast-broker-" + (i+1)+ ".xml");
+        for (int i = 0; i < BROKER_COUNT; i++) {
+            brokers[i] = createBroker("org/apache/activemq/usecases/multicast-broker-" + (i + 1) + ".xml");
             brokers[i].start();
         }
 
@@ -201,7 +192,7 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
 
     protected void createAutoAssignMulticastBrokerNetwork() throws Exception {
         brokers = new BrokerService[BROKER_COUNT];
-        for (int i=0; i<BROKER_COUNT; i++) {
+        for (int i = 0; i < BROKER_COUNT; i++) {
             brokers[i] = createBroker("org/apache/activemq/usecases/multicast-broker-auto.xml");
             brokers[i].start();
         }
@@ -246,7 +237,7 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer prod = sess.createProducer(dest);
 
-        for (int i=0; i<count; i++) {
+        for (int i = 0; i < count; i++) {
             prod.send(createTextMessage(sess, "Message " + i, 1024));
         }
 
@@ -263,7 +254,7 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
             String str = new String(data);
             msg.setText(initText + str);
 
-        // Do not pad message text
+            // Do not pad message text
         } else {
             msg.setText(initText);
         }

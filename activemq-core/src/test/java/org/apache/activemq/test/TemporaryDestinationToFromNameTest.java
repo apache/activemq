@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,7 +31,7 @@ public class TemporaryDestinationToFromNameTest extends EmbeddedBrokerAndConnect
 
         Queue tempQueue = session.createTemporaryQueue();
         String name = tempQueue.getQueueName();
-        log.info("Created queue named: " + name);
+        LOG.info("Created queue named: " + name);
 
         Queue createdQueue = session.createQueue(name);
 
@@ -44,7 +43,7 @@ public class TemporaryDestinationToFromNameTest extends EmbeddedBrokerAndConnect
 
         Topic tempTopic = session.createTemporaryTopic();
         String name = tempTopic.getTopicName();
-        log.info("Created topic named: " + name);
+        LOG.info("Created topic named: " + name);
 
         Topic createdTopic = session.createTopic(name);
 

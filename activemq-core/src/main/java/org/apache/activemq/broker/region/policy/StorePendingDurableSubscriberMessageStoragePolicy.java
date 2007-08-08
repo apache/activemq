@@ -19,14 +19,15 @@ import org.apache.activemq.broker.region.cursors.StoreDurableSubscriberCursor;
 import org.apache.activemq.kaha.Store;
 
 /**
- * Creates a PendingMessageCursor that access the persistent store to retrieve messages
- *  
- * @org.apache.xbean.XBean element="storeDurableSubscriberCursor" description="Pending messages for a durable subscriber
- *                         are referenced from the Store"
+ * Creates a PendingMessageCursor that access the persistent store to retrieve
+ * messages
  * 
+ * @org.apache.xbean.XBean element="storeDurableSubscriberCursor"
+ *                         description="Pending messages for a durable
+ *                         subscriber are referenced from the Store"
  * @version $Revision$
  */
-public class StorePendingDurableSubscriberMessageStoragePolicy implements PendingDurableSubscriberMessageStoragePolicy{
+public class StorePendingDurableSubscriberMessageStoragePolicy implements PendingDurableSubscriberMessageStoragePolicy {
 
     /**
      * Retrieve the configured pending message storage cursor;
@@ -37,8 +38,7 @@ public class StorePendingDurableSubscriberMessageStoragePolicy implements Pendin
      * @param maxBatchSize
      * @return the Pending Message cursor
      */
-    public PendingMessageCursor getSubscriberPendingMessageCursor(String clientId,String name,Store tmpStorage,
-            int maxBatchSize){
-        return new StoreDurableSubscriberCursor(clientId,name,tmpStorage,maxBatchSize);
+    public PendingMessageCursor getSubscriberPendingMessageCursor(String clientId, String name, Store tmpStorage, int maxBatchSize) {
+        return new StoreDurableSubscriberCursor(clientId, name, tmpStorage, maxBatchSize);
     }
 }

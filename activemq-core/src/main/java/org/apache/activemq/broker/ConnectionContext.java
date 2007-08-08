@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -38,7 +37,7 @@ import java.io.IOException;
  * @version $Revision: 1.5 $
  */
 public class ConnectionContext {
-    
+
     private Connection connection;
     private Connector connector;
     private Broker broker;
@@ -52,17 +51,17 @@ public class ConnectionContext {
     private boolean haAware;
     private WireFormatInfo wireFormatInfo;
     private Object longTermStoreContext;
-    private boolean producerFlowControl=true;
+    private boolean producerFlowControl = true;
     private MessageAuthorizationPolicy messageAuthorizationPolicy;
     private boolean networkConnection;
     private final AtomicBoolean stopping = new AtomicBoolean();
     private final MessageEvaluationContext messageEvaluationContext = new MessageEvaluationContext();
-	private boolean dontSendReponse;
-    private boolean clientMaster=true;
-    
+    private boolean dontSendReponse;
+    private boolean clientMaster = true;
+
     public ConnectionContext() {
     }
-    
+
     public ConnectionContext(ConnectionInfo info) {
         setClientId(info.getClientId());
         setUserName(info.getUserName());
@@ -102,21 +101,21 @@ public class ConnectionContext {
     public Connection getConnection() {
         return connection;
     }
-    
+
     /**
      * @param connection being used
      */
     public void setConnection(Connection connection) {
         this.connection = connection;
     }
-    
+
     /**
      * @return the transaction being used.
      */
     public Transaction getTransaction() {
         return transaction;
     }
-    
+
     /**
      * @param transaction being used.
      */
@@ -138,14 +137,13 @@ public class ConnectionContext {
         this.connector = connector;
     }
 
-    
     public MessageAuthorizationPolicy getMessageAuthorizationPolicy() {
         return messageAuthorizationPolicy;
     }
 
     /**
-     * Sets the policy used to decide if the current connection is authorized to consume
-     * a given message
+     * Sets the policy used to decide if the current connection is authorized to
+     * consume a given message
      */
     public void setMessageAuthorizationPolicy(MessageAuthorizationPolicy messageAuthorizationPolicy) {
         this.messageAuthorizationPolicy = messageAuthorizationPolicy;
@@ -165,13 +163,13 @@ public class ConnectionContext {
     public ConcurrentHashMap getTransactions() {
         return transactions;
     }
-    
+
     public void setTransactions(ConcurrentHashMap transactions) {
         this.transactions = transactions;
     }
 
     public boolean isInTransaction() {
-        return transaction!=null;
+        return transaction != null;
     }
 
     public String getClientId() {
@@ -240,47 +238,45 @@ public class ConnectionContext {
         }
         return true;
     }
-	public synchronized boolean isNetworkConnection() {
-		return networkConnection;
-	}
 
-	public synchronized void setNetworkConnection(boolean networkConnection) {
-		this.networkConnection = networkConnection;
-	}	
-	
-	public AtomicBoolean getStopping() {
-		return stopping;
-	}
+    public synchronized boolean isNetworkConnection() {
+        return networkConnection;
+    }
 
-	public void setDontSendReponse(boolean b) {
-		this.dontSendReponse=b;		
-	}
+    public synchronized void setNetworkConnection(boolean networkConnection) {
+        this.networkConnection = networkConnection;
+    }
 
-	public boolean isDontSendReponse() {
-		return dontSendReponse;
-	}
+    public AtomicBoolean getStopping() {
+        return stopping;
+    }
 
-    
+    public void setDontSendReponse(boolean b) {
+        this.dontSendReponse = b;
+    }
+
+    public boolean isDontSendReponse() {
+        return dontSendReponse;
+    }
+
     /**
      * @return the slave
      */
-    public boolean isSlave(){
-        return (this.broker!=null&&this.broker.getBrokerService().isSlave())||!this.clientMaster;
+    public boolean isSlave() {
+        return (this.broker != null && this.broker.getBrokerService().isSlave()) || !this.clientMaster;
     }
 
-    
     /**
      * @return the clientMaster
      */
-    public boolean isClientMaster(){
+    public boolean isClientMaster() {
         return this.clientMaster;
     }
 
-    
     /**
      * @param clientMaster the clientMaster to set
      */
-    public void setClientMaster(boolean clientMaster){
-        this.clientMaster=clientMaster;
-    }	
+    public void setClientMaster(boolean clientMaster) {
+        this.clientMaster = clientMaster;
+    }
 }

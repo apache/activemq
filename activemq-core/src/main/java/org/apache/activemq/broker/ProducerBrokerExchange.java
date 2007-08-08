@@ -23,81 +23,81 @@ import org.apache.activemq.state.ProducerState;
  * 
  * @version $Revision: 1.8 $
  */
-public class ProducerBrokerExchange{
+public class ProducerBrokerExchange {
 
     private ConnectionContext connectionContext;
     private Destination regionDestination;
     private Region region;
     private ProducerState producerState;
-    private boolean mutable=true;
+    private boolean mutable = true;
 
     /**
      * @return the connectionContext
      */
-    public ConnectionContext getConnectionContext(){
+    public ConnectionContext getConnectionContext() {
         return this.connectionContext;
     }
 
     /**
      * @param connectionContext the connectionContext to set
      */
-    public void setConnectionContext(ConnectionContext connectionContext){
-        this.connectionContext=connectionContext;
+    public void setConnectionContext(ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
     }
 
     /**
      * @return the mutable
      */
-    public boolean isMutable(){
+    public boolean isMutable() {
         return this.mutable;
     }
 
     /**
      * @param mutable the mutable to set
      */
-    public void setMutable(boolean mutable){
-        this.mutable=mutable;
+    public void setMutable(boolean mutable) {
+        this.mutable = mutable;
     }
 
     /**
      * @return the regionDestination
      */
-    public Destination getRegionDestination(){
+    public Destination getRegionDestination() {
         return this.regionDestination;
     }
 
     /**
      * @param regionDestination the regionDestination to set
      */
-    public void setRegionDestination(Destination regionDestination){
-        this.regionDestination=regionDestination;
+    public void setRegionDestination(Destination regionDestination) {
+        this.regionDestination = regionDestination;
     }
 
     /**
      * @return the region
      */
-    public Region getRegion(){
+    public Region getRegion() {
         return this.region;
     }
 
     /**
      * @param region the region to set
      */
-    public void setRegion(Region region){
-        this.region=region;
+    public void setRegion(Region region) {
+        this.region = region;
     }
 
     /**
      * @return the producerState
      */
-    public ProducerState getProducerState(){
+    public ProducerState getProducerState() {
         return this.producerState;
     }
 
     /**
      * @param producerState the producerState to set
      */
-    public void setProducerState(ProducerState producerState){
-        this.producerState=producerState;
+    public void setProducerState(ProducerState producerState) {
+        this.producerState = producerState;
     }
 }

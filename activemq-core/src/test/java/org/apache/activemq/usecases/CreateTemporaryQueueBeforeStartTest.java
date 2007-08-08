@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +16,7 @@
  */
 
 package org.apache.activemq.usecases;
+
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -57,7 +57,7 @@ public class CreateTemporaryQueueBeforeStartTest extends TestCase {
         QueueConnection queueConnection = factory.createQueueConnection();
         this.connection = queueConnection;
         QueueSession session = queueConnection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
-        QueueSender sender = session.createSender(null); //Unidentified
+        QueueSender sender = session.createSender(null); // Unidentified
         Queue receiverQueue = session.createTemporaryQueue();
         QueueReceiver receiver = session.createReceiver(receiverQueue);
         queueConnection.start();
@@ -66,7 +66,7 @@ public class CreateTemporaryQueueBeforeStartTest extends TestCase {
     public void testTemporaryQueueConsumer() throws Exception {
         final int NUMBER = 20;
         final AtomicInteger count = new AtomicInteger(0);
-        for (int i = 0;i < NUMBER;i++) {
+        for (int i = 0; i < NUMBER; i++) {
             Thread thread = new Thread(new Runnable() {
                 public void run() {
                     try {
@@ -75,15 +75,13 @@ public class CreateTemporaryQueueBeforeStartTest extends TestCase {
                         Queue queue = session.createTemporaryQueue();
                         QueueReceiver consumer = session.createReceiver(queue);
                         connection.start();
-                        
-                        
-                        if (count.incrementAndGet() >= NUMBER){
-                            synchronized(count){
+
+                        if (count.incrementAndGet() >= NUMBER) {
+                            synchronized (count) {
                                 count.notify();
                             }
                         }
-                    }
-                    catch (Exception ex) {
+                    } catch (Exception ex) {
                         ex.printStackTrace();
                     }
                 }
@@ -97,8 +95,7 @@ public class CreateTemporaryQueueBeforeStartTest extends TestCase {
             while (count.get() < NUMBER) {
                 if (waitTime <= 0) {
                     break;
-                }
-                else {
+                } else {
                     count.wait(waitTime);
                     waitTime = maxWaitTime - (System.currentTimeMillis() - start);
                 }

@@ -24,43 +24,39 @@ import org.apache.activemq.util.IOHelper;
 
 /**
  * Test a HashIndex
- * 
  */
-public class HashTest extends TestCase{
+public class HashTest extends TestCase {
 
-    private static int COUNT=1000;
+    private static int COUNT = 1000;
     private HashIndex hashIndex;
     private File directory;
     private IndexManager indexManager;
-   
 
     /**
      * @throws java.lang.Exception
      * @see junit.framework.TestCase#setUp()
      */
-    protected void setUp() throws Exception{
+    protected void setUp() throws Exception {
         super.setUp();
-        directory=new File(IOHelper.getDefaultDataDirectory());
+        directory = new File(IOHelper.getDefaultDataDirectory());
         directory.mkdirs();
-        indexManager=new IndexManager(directory,"im-hash-test","rw",null);
-        this.hashIndex=new HashIndex(directory,"testHash",indexManager);
+        indexManager = new IndexManager(directory, "im-hash-test", "rw", null);
+        this.hashIndex = new HashIndex(directory, "testHash", indexManager);
         this.hashIndex.setKeyMarshaller(Store.StringMarshaller);
     }
 
-   
-    
-    public void testHashIndex() throws Exception{
+    public void testHashIndex() throws Exception {
         doTest(300);
         hashIndex.clear();
         hashIndex.unload();
         doTest(600);
         hashIndex.clear();
         hashIndex.unload();
-        doTest(1024*4);
+        doTest(1024 * 4);
     }
 
-    public void doTest(int pageSize) throws Exception{
-        String keyRoot="key:";
+    public void doTest(int pageSize) throws Exception {
+        String keyRoot = "key:";
         hashIndex.setPageSize(pageSize);
         this.hashIndex.load();
         doInsert(keyRoot);
@@ -70,38 +66,38 @@ public class HashTest extends TestCase{
         doRemoveBackwards(keyRoot);
     }
 
-    void doInsert(String keyRoot) throws Exception{
-        for(int i=0;i<COUNT;i++){
-            IndexItem value=indexManager.createNewIndex();
+    void doInsert(String keyRoot) throws Exception {
+        for (int i = 0; i < COUNT; i++) {
+            IndexItem value = indexManager.createNewIndex();
             indexManager.storeIndex(value);
-            hashIndex.store(keyRoot+i,value);
-           
+            hashIndex.store(keyRoot + i, value);
+
         }
     }
 
-    void checkRetrieve(String keyRoot) throws IOException{
-        for(int i=0;i<COUNT;i++){
-            IndexItem item=(IndexItem)hashIndex.get(keyRoot+i);
+    void checkRetrieve(String keyRoot) throws IOException {
+        for (int i = 0; i < COUNT; i++) {
+            IndexItem item = (IndexItem)hashIndex.get(keyRoot + i);
             assertNotNull(item);
         }
     }
 
-    void doRemove(String keyRoot) throws Exception{
-        for(int i=0;i<COUNT;i++){
-            hashIndex.remove(keyRoot+i);
+    void doRemove(String keyRoot) throws Exception {
+        for (int i = 0; i < COUNT; i++) {
+            hashIndex.remove(keyRoot + i);
         }
-        for(int i=0;i<COUNT;i++){
-            IndexItem item=(IndexItem)hashIndex.get(keyRoot+i);
+        for (int i = 0; i < COUNT; i++) {
+            IndexItem item = (IndexItem)hashIndex.get(keyRoot + i);
             assertNull(item);
         }
     }
 
-    void doRemoveBackwards(String keyRoot) throws Exception{
-        for(int i=COUNT-1;i>=0;i--){
-            hashIndex.remove(keyRoot+i);
+    void doRemoveBackwards(String keyRoot) throws Exception {
+        for (int i = COUNT - 1; i >= 0; i--) {
+            hashIndex.remove(keyRoot + i);
         }
-        for(int i=0;i<COUNT;i++){
-            IndexItem item=(IndexItem)hashIndex.get(keyRoot+i);
+        for (int i = 0; i < COUNT; i++) {
+            IndexItem item = (IndexItem)hashIndex.get(keyRoot + i);
             assertNull(item);
         }
     }
@@ -110,10 +106,10 @@ public class HashTest extends TestCase{
      * @throws java.lang.Exception
      * @see junit.framework.TestCase#tearDown()
      */
-    protected void tearDown() throws Exception{
+    protected void tearDown() throws Exception {
         super.tearDown();
-        File[] files=directory.listFiles();
-        for(File file:files){
+        File[] files = directory.listFiles();
+        for (File file : files) {
             file.delete();
         }
     }

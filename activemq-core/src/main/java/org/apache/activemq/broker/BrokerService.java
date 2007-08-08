@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -86,17 +85,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Manages the lifecycle of an ActiveMQ Broker. A BrokerService consists of a number of transport
- * connectors, network connectors and a bunch of properties which can be used to
- * configure the broker as its lazily created.
- *
+ * Manages the lifecycle of an ActiveMQ Broker. A BrokerService consists of a
+ * number of transport connectors, network connectors and a bunch of properties
+ * which can be used to configure the broker as its lazily created.
+ * 
  * @version $Revision: 1.1 $
  */
 public class BrokerService implements Service {
 
-   
-
-    private static final Log log = LogFactory.getLog(BrokerService.class);
+    private static final Log LOG = LogFactory.getLog(BrokerService.class);
     private static final long serialVersionUID = 7353129142305630237L;
     public static final String DEFAULT_PORT = "61616";
     static final String DEFAULT_BROKER_NAME = "localhost";
@@ -105,10 +102,10 @@ public class BrokerService implements Service {
     private boolean useJmx = true;
     private boolean enableStatistics = true;
     private boolean persistent = true;
-    private boolean populateJMSXUserID = false;
+    private boolean populateJMSXUserID;
     private boolean useShutdownHook = true;
-    private boolean useLoggingForShutdownErrors = false;
-    private boolean shutdownOnMasterFailure = false;
+    private boolean useLoggingForShutdownErrors;
+    private boolean shutdownOnMasterFailure;
     private String brokerName = DEFAULT_BROKER_NAME;
     private File dataDirectoryFile;
     private File tmpDataDirectory;
@@ -136,7 +133,9 @@ public class BrokerService implements Service {
     private transient Thread shutdownHook;
     private String[] transportConnectorURIs;
     private String[] networkConnectorURIs;
-    private JmsConnector[] jmsBridgeConnectors; //these are Jms to Jms bridges to other jms messaging systems
+    private JmsConnector[] jmsBridgeConnectors; // these are Jms to Jms bridges
+    // to other jms messaging
+    // systems
     private boolean deleteAllMessagesOnStartup;
     private boolean advisorySupport = true;
     private URI vmConnectorURI;
@@ -144,24 +143,24 @@ public class BrokerService implements Service {
     private AtomicBoolean started = new AtomicBoolean(false);
     private AtomicBoolean stopped = new AtomicBoolean(false);
     private BrokerPlugin[] plugins;
-    private boolean keepDurableSubsActive=true;
-    private boolean useVirtualTopics=true;
+    private boolean keepDurableSubsActive = true;
+    private boolean useVirtualTopics = true;
     private BrokerId brokerId;
     private DestinationInterceptor[] destinationInterceptors;
     private ActiveMQDestination[] destinations;
     private Store tempDataStore;
     private int persistenceThreadPriority = Thread.MAX_PRIORITY;
-    private boolean useLocalHostBrokerName = false;
+    private boolean useLocalHostBrokerName;
     private CountDownLatch stoppedLatch = new CountDownLatch(1);
-    private boolean supportFailOver = false;
-    private boolean clustered = false;
+    private boolean supportFailOver;
+    private boolean clustered;
 
-    static{
+    static {
         String localHostName = "localhost";
-        try{
-            localHostName=java.net.InetAddress.getLocalHost().getHostName();
-        }catch(UnknownHostException e){
-            log.error("Failed to resolve localhost");
+        try {
+            localHostName = java.net.InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            LOG.error("Failed to resolve localhost");
         }
         LOCAL_HOST_NAME = localHostName;
     }
@@ -173,7 +172,7 @@ public class BrokerService implements Service {
 
     /**
      * Adds a new transport connector for the given bind address
-     *
+     * 
      * @return the newly created and added transport connector
      * @throws Exception
      */
@@ -183,7 +182,7 @@ public class BrokerService implements Service {
 
     /**
      * Adds a new transport connector for the given bind address
-     *
+     * 
      * @return the newly created and added transport connector
      * @throws Exception
      */
@@ -193,7 +192,7 @@ public class BrokerService implements Service {
 
     /**
      * Adds a new transport connector for the given TransportServer transport
-     *
+     * 
      * @return the newly created and added transport connector
      * @throws Exception
      */
@@ -203,17 +202,16 @@ public class BrokerService implements Service {
 
     /**
      * Adds a new transport connector
-     *
+     * 
      * @return the transport connector
      * @throws Exception
      */
     public TransportConnector addConnector(TransportConnector connector) throws Exception {
-        
+
         transportConnectors.add(connector);
 
         return connector;
     }
-
 
     /**
      * Stops and removes a transport connector from the broker.
@@ -222,28 +220,28 @@ public class BrokerService implements Service {
      * @return true if the connector has been previously added to the broker
      * @throws Exception
      */
-    public boolean removeConnector(TransportConnector connector) throws Exception {        
+    public boolean removeConnector(TransportConnector connector) throws Exception {
         boolean rc = transportConnectors.remove(connector);
-        if( rc ) {
-           unregisterConnectorMBean(connector);
+        if (rc) {
+            unregisterConnectorMBean(connector);
         }
         return rc;
-        
+
     }
 
     /**
      * Adds a new network connector using the given discovery address
-     *
+     * 
      * @return the newly created and added network connector
      * @throws Exception
      */
     public NetworkConnector addNetworkConnector(String discoveryAddress) throws Exception {
         return addNetworkConnector(new URI(discoveryAddress));
     }
-    
+
     /**
      * Adds a new proxy connector using the given bind address
-     *
+     * 
      * @return the newly created and added network connector
      * @throws Exception
      */
@@ -253,23 +251,23 @@ public class BrokerService implements Service {
 
     /**
      * Adds a new network connector using the given discovery address
-     *
+     * 
      * @return the newly created and added network connector
      * @throws Exception
      */
-    public NetworkConnector addNetworkConnector(URI discoveryAddress) throws Exception{
-        NetworkConnector connector=new DiscoveryNetworkConnector(discoveryAddress);
+    public NetworkConnector addNetworkConnector(URI discoveryAddress) throws Exception {
+        NetworkConnector connector = new DiscoveryNetworkConnector(discoveryAddress);
         return addNetworkConnector(connector);
     }
 
     /**
      * Adds a new proxy connector using the given bind address
-     *
+     * 
      * @return the newly created and added network connector
      * @throws Exception
      */
-    public ProxyConnector addProxyConnector(URI bindAddress) throws Exception{
-        ProxyConnector connector=new ProxyConnector();
+    public ProxyConnector addProxyConnector(URI bindAddress) throws Exception {
+        ProxyConnector connector = new ProxyConnector();
         connector.setBind(bindAddress);
         connector.setRemote(new URI("fanout:multicast://default"));
         return addProxyConnector(connector);
@@ -280,22 +278,23 @@ public class BrokerService implements Service {
      * network
      */
     public NetworkConnector addNetworkConnector(NetworkConnector connector) throws Exception {
-    	connector.setBrokerService(this);
+        connector.setBrokerService(this);
         URI uri = getVmConnectorURI();
         HashMap map = new HashMap(URISupport.parseParamters(uri));
         map.put("network", "true");
-        map.put("async","false");
+        map.put("async", "false");
         uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
         connector.setLocalUri(uri);
-        
-        // Set a connection filter so that the connector does not establish loop back connections.
+
+        // Set a connection filter so that the connector does not establish loop
+        // back connections.
         connector.setConnectionFilter(new ConnectionFilter() {
             public boolean connectTo(URI location) {
                 List transportConnectors = getTransportConnectors();
                 for (Iterator iter = transportConnectors.iterator(); iter.hasNext();) {
                     try {
-                        TransportConnector tc = (TransportConnector) iter.next();
-                        if( location.equals(tc.getConnectUri()) ) {
+                        TransportConnector tc = (TransportConnector)iter.next();
+                        if (location.equals(tc.getConnectUri())) {
                             return false;
                         }
                     } catch (Throwable e) {
@@ -304,17 +303,17 @@ public class BrokerService implements Service {
                 return true;
             }
         });
-        
+
         networkConnectors.add(connector);
         if (isUseJmx()) {
             registerNetworkConnectorMBean(connector);
         }
         return connector;
     }
-    
+
     /**
-     * Removes the given network connector without stopping it.
-     * The caller should call {@link NetworkConnector#stop()} to close the connector
+     * Removes the given network connector without stopping it. The caller
+     * should call {@link NetworkConnector#stop()} to close the connector
      */
     public boolean removeNetworkConnector(NetworkConnector connector) {
         boolean answer = networkConnectors.remove(connector);
@@ -323,7 +322,7 @@ public class BrokerService implements Service {
         }
         return answer;
     }
-    
+
     public ProxyConnector addProxyConnector(ProxyConnector connector) throws Exception {
         URI uri = getVmConnectorURI();
         connector.setLocalUri(uri);
@@ -333,8 +332,8 @@ public class BrokerService implements Service {
         }
         return connector;
     }
-    
-    public JmsConnector addJmsConnector(JmsConnector connector) throws Exception{
+
+    public JmsConnector addJmsConnector(JmsConnector connector) throws Exception {
         connector.setBrokerService(this);
         jmsConnectors.add(connector);
         if (isUseJmx()) {
@@ -342,78 +341,79 @@ public class BrokerService implements Service {
         }
         return connector;
     }
-    
-    public JmsConnector removeJmsConnector(JmsConnector connector){
-        if (jmsConnectors.remove(connector)){
+
+    public JmsConnector removeJmsConnector(JmsConnector connector) {
+        if (jmsConnectors.remove(connector)) {
             return connector;
         }
         return null;
     }
-    
+
     /**
      * @return Returns the masterConnectorURI.
      */
-    public String getMasterConnectorURI(){
+    public String getMasterConnectorURI() {
         return masterConnectorURI;
     }
 
     /**
      * @param masterConnectorURI The masterConnectorURI to set.
      */
-    public void setMasterConnectorURI(String masterConnectorURI){
-        this.masterConnectorURI=masterConnectorURI;
+    public void setMasterConnectorURI(String masterConnectorURI) {
+        this.masterConnectorURI = masterConnectorURI;
     }
 
     /**
      * @return true if this Broker is a slave to a Master
      */
-    public synchronized boolean isSlave(){
+    public synchronized boolean isSlave() {
         return masterConnector != null && masterConnector.isSlave();
     }
-    
-    public void masterFailed(){
-        if (shutdownOnMasterFailure){
-            log.fatal("The Master has failed ... shutting down");
+
+    public void masterFailed() {
+        if (shutdownOnMasterFailure) {
+            LOG.fatal("The Master has failed ... shutting down");
             try {
-            stop();
-            }catch(Exception e){
-                log.error("Failed to stop for master failure",e);
+                stop();
+            } catch (Exception e) {
+                LOG.error("Failed to stop for master failure", e);
             }
-        }else {
-            log.warn("Master Failed - starting all connectors");
-            try{
+        } else {
+            LOG.warn("Master Failed - starting all connectors");
+            try {
                 startAllConnectors();
-            }catch(Exception e){
-               log.error("Failed to startAllConnectors");
+            } catch (Exception e) {
+                LOG.error("Failed to startAllConnectors");
             }
         }
     }
-    
+
     public boolean isStarted() {
         return started.get();
     }
-    
+
     // Service interface
     // -------------------------------------------------------------------------
     public void start() throws Exception {
-        if (! started.compareAndSet(false, true)) {
+        if (!started.compareAndSet(false, true)) {
             // lets just ignore redundant start() calls
-            // as its way too easy to not be completely sure if start() has been 
-            // called or not with the gazillion of different configuration mechanisms
-            
-            //throw new IllegalStateException("Allready started.");
+            // as its way too easy to not be completely sure if start() has been
+            // called or not with the gazillion of different configuration
+            // mechanisms
+
+            // throw new IllegalStateException("Allready started.");
             return;
         }
-        
+
         try {
             processHelperProperties();
 
             BrokerRegistry.getInstance().bind(getBrokerName(), this);
 
             startDestinations();
-            
+
             addShutdownHook();
-            log.info("Using Persistence Adapter: " + getPersistenceAdapter());
+            LOG.info("Using Persistence Adapter: " + getPersistenceAdapter());
             if (deleteAllMessagesOnStartup) {
                 deleteAllMessages();
             }
@@ -425,59 +425,55 @@ public class BrokerService implements Service {
             getBroker().start();
 
             /*
-            if(isUseJmx()){
-                // yes - this is order dependent!
-                // register all destination in persistence store including inactive destinations as mbeans
-                this.startDestinationsInPersistenceStore(broker);
-            }
-            */
+             * if(isUseJmx()){ // yes - this is order dependent! // register all
+             * destination in persistence store including inactive destinations
+             * as mbeans this.startDestinationsInPersistenceStore(broker); }
+             */
             startAllConnectors();
-            
+
             if (isUseJmx() && masterConnector != null) {
                 registerFTConnectorMBean(masterConnector);
             }
-     
+
             brokerId = broker.getBrokerId();
-            log.info("ActiveMQ JMS Message Broker (" + getBrokerName()+", "+brokerId+") started");
+            LOG.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ", " + brokerId + ") started");
             getBroker().brokerServiceStarted();
-        }
-        catch (Exception e) {
-            log.error("Failed to start ActiveMQ JMS Message Broker. Reason: " + e, e);
+        } catch (Exception e) {
+            LOG.error("Failed to start ActiveMQ JMS Message Broker. Reason: " + e, e);
             throw e;
         }
     }
 
-    
-    public void stop() throws Exception{
-        if(!started.compareAndSet(true,false)){
+    public void stop() throws Exception {
+        if (!started.compareAndSet(true, false)) {
             return;
         }
-        log.info("ActiveMQ Message Broker ("+getBrokerName()+", "+brokerId+") is shutting down");
+        LOG.info("ActiveMQ Message Broker (" + getBrokerName() + ", " + brokerId + ") is shutting down");
         removeShutdownHook();
-        ServiceStopper stopper=new ServiceStopper();
-        if(services!=null){
-            for(int i=0;i<services.length;i++){
-                Service service=services[i];
+        ServiceStopper stopper = new ServiceStopper();
+        if (services != null) {
+            for (int i = 0; i < services.length; i++) {
+                Service service = services[i];
                 stopper.stop(service);
             }
         }
         stopAllConnectors(stopper);
         stopper.stop(persistenceAdapter);
-        if(broker!=null){
+        if (broker != null) {
             stopper.stop(broker);
         }
-        if(tempDataStore!=null){
+        if (tempDataStore != null) {
             tempDataStore.close();
         }
-        if(isUseJmx()){
-            MBeanServer mbeanServer=getManagementContext().getMBeanServer();
-            if(mbeanServer!=null){
-                for(Iterator iter=registeredMBeanNames.iterator();iter.hasNext();){
-                    ObjectName name=(ObjectName)iter.next();
-                    try{
+        if (isUseJmx()) {
+            MBeanServer mbeanServer = getManagementContext().getMBeanServer();
+            if (mbeanServer != null) {
+                for (Iterator iter = registeredMBeanNames.iterator(); iter.hasNext();) {
+                    ObjectName name = (ObjectName)iter.next();
+                    try {
                         mbeanServer.unregisterMBean(name);
-                    }catch(Exception e){
-                        stopper.onException(mbeanServer,e);
+                    } catch (Exception e) {
+                        stopper.onException(mbeanServer, e);
                     }
                 }
             }
@@ -490,46 +486,43 @@ public class BrokerService implements Service {
         VMTransportFactory.stopped(getBrokerName());
         stopped.set(true);
         stoppedLatch.countDown();
-        log.info("ActiveMQ JMS Message Broker ("+getBrokerName()+", "+brokerId+") stopped");
+        LOG.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ", " + brokerId + ") stopped");
         stopper.throwFirstException();
     }
 
     /**
-     * A helper method to block the caller thread until the broker has been stopped
+     * A helper method to block the caller thread until the broker has been
+     * stopped
      */
     public void waitUntilStopped() {
         while (!stopped.get()) {
             try {
                 stoppedLatch.await();
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 // ignore
             }
         }
     }
 
-
     // Properties
     // -------------------------------------------------------------------------
-    
+
     /**
      * Returns the message broker
      */
     public Broker getBroker() throws Exception {
         if (broker == null) {
-            log.info("ActiveMQ " + ActiveMQConnectionMetaData.PROVIDER_VERSION + " JMS Message Broker ("
-                    + getBrokerName() + ") is starting");
-            log.info("For help or more information please see: http://activemq.apache.org/");
+            LOG.info("ActiveMQ " + ActiveMQConnectionMetaData.PROVIDER_VERSION + " JMS Message Broker (" + getBrokerName() + ") is starting");
+            LOG.info("For help or more information please see: http://activemq.apache.org/");
             broker = createBroker();
         }
         return broker;
     }
 
-    
     /**
-     * Returns the administration view of the broker; used to create and destroy resources such as queues and topics.
-     * 
-     * Note this method returns null if JMX is disabled.
+     * Returns the administration view of the broker; used to create and destroy
+     * resources such as queues and topics. Note this method returns null if JMX
+     * is disabled.
      */
     public BrokerView getAdminView() throws Exception {
         if (adminView == null) {
@@ -549,7 +542,8 @@ public class BrokerService implements Service {
 
     /**
      * Sets the name of this broker; which must be unique in the network
-     * @param brokerName 
+     * 
+     * @param brokerName
      */
     public void setBrokerName(String brokerName) {
         if (brokerName == null) {
@@ -557,10 +551,10 @@ public class BrokerService implements Service {
         }
         String str = brokerName.replaceAll("[^a-zA-Z0-9\\.\\_\\-\\:]", "_");
         if (!str.equals(brokerName)) {
-            log.error("Broker Name: " + brokerName + " contained illegal characters - replaced with " + str);
+            LOG.error("Broker Name: " + brokerName + " contained illegal characters - replaced with " + str);
         }
         this.brokerName = str.trim();
-        
+
     }
 
     public PersistenceAdapterFactory getPersistenceFactory() {
@@ -582,24 +576,21 @@ public class BrokerService implements Service {
         return new File(getDataDirectoryFile(), brokerDir);
     }
 
-
     /**
      * Sets the directory in which the data files will be stored by default for
      * the JDBC and Journal persistence adaptors.
-     *
-     * @param dataDirectory
-     *            the directory to store data files
+     * 
+     * @param dataDirectory the directory to store data files
      */
     public void setDataDirectory(String dataDirectory) {
         setDataDirectoryFile(new File(dataDirectory));
     }
-    
+
     /**
      * Sets the directory in which the data files will be stored by default for
      * the JDBC and Journal persistence adaptors.
-     *
-     * @param dataDirectoryFile
-     *            the directory to store data files
+     * 
+     * @param dataDirectoryFile the directory to store data files
      */
     public void setDataDirectoryFile(File dataDirectoryFile) {
         this.dataDirectoryFile = dataDirectoryFile;
@@ -608,7 +599,7 @@ public class BrokerService implements Service {
     /**
      * @return the tmpDataDirectory
      */
-    public File getTmpDataDirectory(){
+    public File getTmpDataDirectory() {
         if (tmpDataDirectory == null) {
             tmpDataDirectory = new File(getBrokerDataDirectory(), "tmp_storage");
         }
@@ -618,10 +609,9 @@ public class BrokerService implements Service {
     /**
      * @param tmpDataDirectory the tmpDataDirectory to set
      */
-    public void setTmpDataDirectory(File tmpDataDirectory){
-        this.tmpDataDirectory=tmpDataDirectory;
+    public void setTmpDataDirectory(File tmpDataDirectory) {
+        this.tmpDataDirectory = tmpDataDirectory;
     }
-    
 
     public void setPersistenceFactory(PersistenceAdapterFactory persistenceFactory) {
         this.persistenceFactory = persistenceFactory;
@@ -661,49 +651,45 @@ public class BrokerService implements Service {
         }
         return usageManager;
     }
-       
 
     public void setMemoryManager(UsageManager memoryManager) {
         this.usageManager = memoryManager;
     }
-    
+
     /**
      * @return the consumerUsageManager
      */
-    public UsageManager getConsumerUsageManager(){
-        if (consumerUsageManager==null) {
-            consumerUsageManager = new UsageManager(getMemoryManager(),"Consumer",0.5f);
+    public UsageManager getConsumerUsageManager() {
+        if (consumerUsageManager == null) {
+            consumerUsageManager = new UsageManager(getMemoryManager(), "Consumer", 0.5f);
         }
         return consumerUsageManager;
     }
 
-    
     /**
      * @param consumerUsageManager the consumerUsageManager to set
      */
-    public void setConsumerUsageManager(UsageManager consumerUsageManager){
-        this.consumerUsageManager=consumerUsageManager;
+    public void setConsumerUsageManager(UsageManager consumerUsageManager) {
+        this.consumerUsageManager = consumerUsageManager;
     }
 
-    
     /**
      * @return the producerUsageManager
      */
-    public UsageManager getProducerUsageManager(){
-        if (producerUsageManager==null) {
-            producerUsageManager = new UsageManager(getMemoryManager(),"Producer",0.45f);
+    public UsageManager getProducerUsageManager() {
+        if (producerUsageManager == null) {
+            producerUsageManager = new UsageManager(getMemoryManager(), "Producer", 0.45f);
         }
         return producerUsageManager;
     }
-    
+
     /**
      * @param producerUsageManager the producerUsageManager to set
      */
-    public void setProducerUsageManager(UsageManager producerUsageManager){
-        this.producerUsageManager=producerUsageManager;
-    }    
+    public void setProducerUsageManager(UsageManager producerUsageManager) {
+        this.producerUsageManager = producerUsageManager;
+    }
 
-   
     public PersistenceAdapter getPersistenceAdapter() throws IOException {
         if (persistenceAdapter == null) {
             persistenceAdapter = createPersistenceAdapter();
@@ -729,36 +715,33 @@ public class BrokerService implements Service {
     public void setTaskRunnerFactory(TaskRunnerFactory taskRunnerFactory) {
         this.taskRunnerFactory = taskRunnerFactory;
     }
-    
-    
-    public TaskRunnerFactory getPersistenceTaskRunnerFactory(){
+
+    public TaskRunnerFactory getPersistenceTaskRunnerFactory() {
         if (taskRunnerFactory == null) {
             persistenceTaskRunnerFactory = new TaskRunnerFactory("Persistence Adaptor Task", persistenceThreadPriority, true, 1000);
         }
         return persistenceTaskRunnerFactory;
     }
 
-   
-    public void setPersistenceTaskRunnerFactory(TaskRunnerFactory persistenceTaskRunnerFactory){
-        this.persistenceTaskRunnerFactory=persistenceTaskRunnerFactory;
+    public void setPersistenceTaskRunnerFactory(TaskRunnerFactory persistenceTaskRunnerFactory) {
+        this.persistenceTaskRunnerFactory = persistenceTaskRunnerFactory;
     }
 
     public boolean isUseJmx() {
         return useJmx;
     }
-    
+
     public boolean isEnableStatistics() {
         return enableStatistics;
-    }    
+    }
 
     /**
-     * Sets whether or not the Broker's services enable statistics or
-     * not.
+     * Sets whether or not the Broker's services enable statistics or not.
      */
     public void setEnableStatistics(boolean enableStatistics) {
         this.enableStatistics = enableStatistics;
-    }    
-    
+    }
+
     /**
      * Sets whether or not the Broker's services should be exposed into JMX or
      * not.
@@ -811,15 +794,15 @@ public class BrokerService implements Service {
     /**
      * @return Returns the jmsBridgeConnectors.
      */
-    public JmsConnector[] getJmsBridgeConnectors(){
+    public JmsConnector[] getJmsBridgeConnectors() {
         return jmsBridgeConnectors;
     }
 
     /**
      * @param jmsConnectors The jmsBridgeConnectors to set.
      */
-    public void setJmsBridgeConnectors(JmsConnector[] jmsConnectors){
-        this.jmsBridgeConnectors=jmsConnectors;
+    public void setJmsBridgeConnectors(JmsConnector[] jmsConnectors) {
+        this.jmsBridgeConnectors = jmsConnectors;
     }
 
     public Service[] getServices() {
@@ -827,20 +810,21 @@ public class BrokerService implements Service {
     }
 
     /**
-     * Sets the services associated with this broker such as a {@link MasterConnector}
+     * Sets the services associated with this broker such as a
+     * {@link MasterConnector}
      */
     public void setServices(Service[] services) {
         this.services = services;
     }
 
     /**
-     * Adds a new service so that it will be started as part of the broker lifecycle
+     * Adds a new service so that it will be started as part of the broker
+     * lifecycle
      */
     public void addService(Service service) {
         if (services == null) {
-            services = new Service[] { service };
-        }
-        else {
+            services = new Service[] {service};
+        } else {
             int length = services.length;
             Service[] temp = new Service[length + 1];
             System.arraycopy(services, 1, temp, 1, length);
@@ -848,7 +832,6 @@ public class BrokerService implements Service {
             services = temp;
         }
     }
-
 
     public boolean isUseLoggingForShutdownErrors() {
         return useLoggingForShutdownErrors;
@@ -874,13 +857,14 @@ public class BrokerService implements Service {
     public void setUseShutdownHook(boolean useShutdownHook) {
         this.useShutdownHook = useShutdownHook;
     }
-    
+
     public boolean isAdvisorySupport() {
         return advisorySupport;
     }
 
     /**
-     * Allows the support of advisory messages to be disabled for performance reasons.
+     * Allows the support of advisory messages to be disabled for performance
+     * reasons.
      */
     public void setAdvisorySupport(boolean advisorySupport) {
         this.advisorySupport = advisorySupport;
@@ -898,7 +882,7 @@ public class BrokerService implements Service {
      */
     public void setTransportConnectors(List transportConnectors) throws Exception {
         for (Iterator iter = transportConnectors.iterator(); iter.hasNext();) {
-            TransportConnector connector = (TransportConnector) iter.next();
+            TransportConnector connector = (TransportConnector)iter.next();
             addConnector(connector);
         }
     }
@@ -919,7 +903,7 @@ public class BrokerService implements Service {
      */
     public void setNetworkConnectors(List networkConnectors) throws Exception {
         for (Iterator iter = networkConnectors.iterator(); iter.hasNext();) {
-            NetworkConnector connector = (NetworkConnector) iter.next();
+            NetworkConnector connector = (NetworkConnector)iter.next();
             addNetworkConnector(connector);
         }
     }
@@ -930,11 +914,11 @@ public class BrokerService implements Service {
      */
     public void setProxyConnectors(List proxyConnectors) throws Exception {
         for (Iterator iter = proxyConnectors.iterator(); iter.hasNext();) {
-            ProxyConnector connector = (ProxyConnector) iter.next();
+            ProxyConnector connector = (ProxyConnector)iter.next();
             addProxyConnector(connector);
         }
     }
-    
+
     public PolicyMap getDestinationPolicy() {
         return destinationPolicy;
     }
@@ -952,19 +936,20 @@ public class BrokerService implements Service {
     }
 
     /**
-     * Sets a number of broker plugins to install such as for security authentication or authorization
+     * Sets a number of broker plugins to install such as for security
+     * authentication or authorization
      */
     public void setPlugins(BrokerPlugin[] plugins) {
         this.plugins = plugins;
     }
-    
+
     public MessageAuthorizationPolicy getMessageAuthorizationPolicy() {
         return messageAuthorizationPolicy;
     }
 
     /**
-     * Sets the policy used to decide if the current connection is authorized to consume
-     * a given message
+     * Sets the policy used to decide if the current connection is authorized to
+     * consume a given message
      */
     public void setMessageAuthorizationPolicy(MessageAuthorizationPolicy messageAuthorizationPolicy) {
         this.messageAuthorizationPolicy = messageAuthorizationPolicy;
@@ -972,9 +957,10 @@ public class BrokerService implements Service {
 
     /**
      * Delete all messages from the persistent store
+     * 
      * @throws IOException
      */
-    public void deleteAllMessages() throws IOException{
+    public void deleteAllMessages() throws IOException {
         getPersistenceAdapter().deleteAllMessages();
     }
 
@@ -994,9 +980,8 @@ public class BrokerService implements Service {
         if (vmConnectorURI == null) {
             try {
                 vmConnectorURI = new URI("vm://" + getBrokerName().replaceAll("[^a-zA-Z0-9\\.\\_\\-]", "_"));
-            }
-            catch (URISyntaxException e) {
-                log.error("Badly formed URI from " + getBrokerName(),e);
+            } catch (URISyntaxException e) {
+                LOG.error("Badly formed URI from " + getBrokerName(), e);
             }
         }
         return vmConnectorURI;
@@ -1009,15 +994,15 @@ public class BrokerService implements Service {
     /**
      * @return Returns the shutdownOnMasterFailure.
      */
-    public boolean isShutdownOnMasterFailure(){
+    public boolean isShutdownOnMasterFailure() {
         return shutdownOnMasterFailure;
     }
 
     /**
      * @param shutdownOnMasterFailure The shutdownOnMasterFailure to set.
      */
-    public void setShutdownOnMasterFailure(boolean shutdownOnMasterFailure){
-        this.shutdownOnMasterFailure=shutdownOnMasterFailure;
+    public void setShutdownOnMasterFailure(boolean shutdownOnMasterFailure) {
+        this.shutdownOnMasterFailure = shutdownOnMasterFailure;
     }
 
     public boolean isKeepDurableSubsActive() {
@@ -1027,20 +1012,21 @@ public class BrokerService implements Service {
     public void setKeepDurableSubsActive(boolean keepDurableSubsActive) {
         this.keepDurableSubsActive = keepDurableSubsActive;
     }
-    
+
     public boolean isUseVirtualTopics() {
         return useVirtualTopics;
     }
 
     /**
-     * Sets whether or not
-     * <a href="http://activemq.apache.org/virtual-destinations.html">Virtual Topics</a>
-     * should be supported by default if they have not been explicitly configured.
+     * Sets whether or not <a
+     * href="http://activemq.apache.org/virtual-destinations.html">Virtual
+     * Topics</a> should be supported by default if they have not been
+     * explicitly configured.
      */
     public void setUseVirtualTopics(boolean useVirtualTopics) {
         this.useVirtualTopics = useVirtualTopics;
     }
-    
+
     public DestinationInterceptor[] getDestinationInterceptors() {
         return destinationInterceptors;
     }
@@ -1051,7 +1037,7 @@ public class BrokerService implements Service {
     public void setDestinationInterceptors(DestinationInterceptor[] destinationInterceptors) {
         this.destinationInterceptors = destinationInterceptors;
     }
-    
+
     public ActiveMQDestination[] getDestinations() {
         return destinations;
     }
@@ -1062,34 +1048,34 @@ public class BrokerService implements Service {
     public void setDestinations(ActiveMQDestination[] destinations) {
         this.destinations = destinations;
     }
-    
+
     /**
      * @return the tempDataStore
      */
-    public synchronized Store getTempDataStore(){
-        if(tempDataStore==null){
-            boolean result=true;
-            boolean empty=true;
-            try{
-                File directory=getTmpDataDirectory();
-                if(directory.exists()&&directory.isDirectory()){
-                    File[] files=directory.listFiles();
-                    if(files!=null&&files.length>0){
-                        empty=false;
-                        for(int i=0;i<files.length;i++){
-                            File file=files[i];
-                            if(!file.isDirectory()){
-                                result&=file.delete();
+    public synchronized Store getTempDataStore() {
+        if (tempDataStore == null) {
+            boolean result = true;
+            boolean empty = true;
+            try {
+                File directory = getTmpDataDirectory();
+                if (directory.exists() && directory.isDirectory()) {
+                    File[] files = directory.listFiles();
+                    if (files != null && files.length > 0) {
+                        empty = false;
+                        for (int i = 0; i < files.length; i++) {
+                            File file = files[i];
+                            if (!file.isDirectory()) {
+                                result &= file.delete();
                             }
                         }
                     }
                 }
-                if(!empty){
-                    String str=result?"Successfully deleted":"Failed to delete";
-                    log.info(str+" temporary storage");
+                if (!empty) {
+                    String str = result ? "Successfully deleted" : "Failed to delete";
+                    LOG.info(str + " temporary storage");
                 }
-                tempDataStore=StoreFactory.open(getTmpDataDirectory().getPath(),"rw");
-            }catch(IOException e){
+                tempDataStore = StoreFactory.open(getTmpDataDirectory().getPath(), "rw");
+            } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -1099,61 +1085,61 @@ public class BrokerService implements Service {
     /**
      * @param tempDataStore the tempDataStore to set
      */
-    public void setTempDataStore(Store tempDataStore){
-        this.tempDataStore=tempDataStore;
-    }   
-    
-    public int getPersistenceThreadPriority(){
+    public void setTempDataStore(Store tempDataStore) {
+        this.tempDataStore = tempDataStore;
+    }
+
+    public int getPersistenceThreadPriority() {
         return persistenceThreadPriority;
     }
 
-    public void setPersistenceThreadPriority(int persistenceThreadPriority){
-        this.persistenceThreadPriority=persistenceThreadPriority;
+    public void setPersistenceThreadPriority(int persistenceThreadPriority) {
+        this.persistenceThreadPriority = persistenceThreadPriority;
     }
-        
+
     /**
      * @return the useLocalHostBrokerName
      */
-    public boolean isUseLocalHostBrokerName(){
+    public boolean isUseLocalHostBrokerName() {
         return this.useLocalHostBrokerName;
     }
 
     /**
      * @param useLocalHostBrokerName the useLocalHostBrokerName to set
      */
-    public void setUseLocalHostBrokerName(boolean useLocalHostBrokerName){
-        this.useLocalHostBrokerName=useLocalHostBrokerName;
-        if(useLocalHostBrokerName&&!started.get()&&brokerName==null||brokerName==DEFAULT_BROKER_NAME){
-            brokerName=LOCAL_HOST_NAME;
+    public void setUseLocalHostBrokerName(boolean useLocalHostBrokerName) {
+        this.useLocalHostBrokerName = useLocalHostBrokerName;
+        if (useLocalHostBrokerName && !started.get() && brokerName == null || brokerName == DEFAULT_BROKER_NAME) {
+            brokerName = LOCAL_HOST_NAME;
         }
     }
-    
+
     /**
      * @return the supportFailOver
      */
-    public boolean isSupportFailOver(){
+    public boolean isSupportFailOver() {
         return this.supportFailOver;
     }
 
     /**
      * @param supportFailOver the supportFailOver to set
      */
-    public void setSupportFailOver(boolean supportFailOver){
-        this.supportFailOver=supportFailOver;
-    }    
-    
+    public void setSupportFailOver(boolean supportFailOver) {
+        this.supportFailOver = supportFailOver;
+    }
+
     /**
      * @return the clustered
      */
-    public boolean isClustered(){
+    public boolean isClustered() {
         return this.clustered;
     }
 
     /**
      * @param clustered the clustered to set
      */
-    public void setClustered(boolean clustered){
-        this.clustered=clustered;
+    public void setClustered(boolean clustered) {
+        this.clustered = clustered;
     }
 
     // Implementation methods
@@ -1161,7 +1147,7 @@ public class BrokerService implements Service {
     /**
      * Handles any lazy-creation helper properties which are added to make
      * things easier to configure inside environments such as Spring
-     *
+     * 
      * @throws Exception
      */
     protected void processHelperProperties() throws Exception {
@@ -1177,17 +1163,16 @@ public class BrokerService implements Service {
                 addNetworkConnector(uri);
             }
         }
-               
-        if (jmsBridgeConnectors != null){
-            for (int i = 0; i < jmsBridgeConnectors.length; i++){
+
+        if (jmsBridgeConnectors != null) {
+            for (int i = 0; i < jmsBridgeConnectors.length; i++) {
                 addJmsConnector(jmsBridgeConnectors[i]);
             }
         }
         if (masterConnectorURI != null) {
             if (masterConnector != null) {
                 throw new IllegalStateException("Cannot specify masterConnectorURI when a masterConnector is already registered via the services property");
-            }
-            else {
+            } else {
                 addService(new MasterConnector(masterConnectorURI));
             }
         }
@@ -1195,73 +1180,67 @@ public class BrokerService implements Service {
 
     protected void stopAllConnectors(ServiceStopper stopper) {
 
-		for (Iterator iter = getNetworkConnectors().iterator(); iter.hasNext();) {
-            NetworkConnector connector = (NetworkConnector) iter.next();
+        for (Iterator iter = getNetworkConnectors().iterator(); iter.hasNext();) {
+            NetworkConnector connector = (NetworkConnector)iter.next();
             unregisterNetworkConnectorMBean(connector);
             stopper.stop(connector);
         }
 
         for (Iterator iter = getProxyConnectors().iterator(); iter.hasNext();) {
-            ProxyConnector connector = (ProxyConnector) iter.next();
+            ProxyConnector connector = (ProxyConnector)iter.next();
             stopper.stop(connector);
         }
 
         for (Iterator iter = jmsConnectors.iterator(); iter.hasNext();) {
-            JmsConnector connector = (JmsConnector) iter.next();
+            JmsConnector connector = (JmsConnector)iter.next();
             stopper.stop(connector);
         }
 
         for (Iterator iter = getTransportConnectors().iterator(); iter.hasNext();) {
-            TransportConnector connector = (TransportConnector) iter.next();
+            TransportConnector connector = (TransportConnector)iter.next();
             stopper.stop(connector);
         }
-	}
+    }
 
-    protected TransportConnector registerConnectorMBean(TransportConnector connector) throws IOException  {
+    protected TransportConnector registerConnectorMBean(TransportConnector connector) throws IOException {
         MBeanServer mbeanServer = getManagementContext().getMBeanServer();
         if (mbeanServer != null) {
 
             try {
                 ObjectName objectName = createConnectorObjectName(connector);
                 connector = connector.asManagedConnector(getManagementContext().getMBeanServer(), objectName);
-                ConnectorViewMBean view = new ConnectorView(connector);            
+                ConnectorViewMBean view = new ConnectorView(connector);
                 mbeanServer.registerMBean(view, objectName);
                 registeredMBeanNames.add(objectName);
                 return connector;
-            }
-            catch (Throwable e) {
+            } catch (Throwable e) {
                 throw IOExceptionSupport.create("Transport Connector could not be registered in JMX: " + e.getMessage(), e);
             }
         }
         return connector;
     }
-    
+
     protected void unregisterConnectorMBean(TransportConnector connector) throws IOException {
         if (isUseJmx()) {
-	        MBeanServer mbeanServer = getManagementContext().getMBeanServer();
-	        if (mbeanServer != null) {
-	            try {
-	                ObjectName objectName = createConnectorObjectName(connector);
-	
-	                if( registeredMBeanNames.remove(objectName) ) {
-	                       mbeanServer.unregisterMBean(objectName);
-	                }
-	            }
-	            catch (Throwable e) {
-	                throw IOExceptionSupport.create("Transport Connector could not be registered in JMX: " + e.getMessage(), e);
-	            }
-	        }
+            MBeanServer mbeanServer = getManagementContext().getMBeanServer();
+            if (mbeanServer != null) {
+                try {
+                    ObjectName objectName = createConnectorObjectName(connector);
+
+                    if (registeredMBeanNames.remove(objectName)) {
+                        mbeanServer.unregisterMBean(objectName);
+                    }
+                } catch (Throwable e) {
+                    throw IOExceptionSupport.create("Transport Connector could not be registered in JMX: " + e.getMessage(), e);
+                }
+            }
         }
     }
 
-	private ObjectName createConnectorObjectName(TransportConnector connector) throws MalformedObjectNameException {
-		return new ObjectName(
-		        managementContext.getJmxDomainName()+":"+
-		        "BrokerName="+JMXSupport.encodeObjectNamePart(getBrokerName())+","+
-		        "Type=Connector,"+
-		        "ConnectorName="+JMXSupport.encodeObjectNamePart(connector.getName())
-		        );
-	}    
+    private ObjectName createConnectorObjectName(TransportConnector connector) throws MalformedObjectNameException {
+        return new ObjectName(managementContext.getJmxDomainName() + ":" + "BrokerName=" + JMXSupport.encodeObjectNamePart(getBrokerName()) + "," + "Type=Connector,"
+                              + "ConnectorName=" + JMXSupport.encodeObjectNamePart(connector.getName()));
+    }
 
     protected void registerNetworkConnectorMBean(NetworkConnector connector) throws IOException {
         MBeanServer mbeanServer = getManagementContext().getMBeanServer();
@@ -1272,17 +1251,15 @@ public class BrokerService implements Service {
                 connector.setObjectName(objectName);
                 mbeanServer.registerMBean(view, objectName);
                 registeredMBeanNames.add(objectName);
-            }
-            catch (Throwable e) {
+            } catch (Throwable e) {
                 throw IOExceptionSupport.create("Network Connector could not be registered in JMX: " + e.getMessage(), e);
             }
         }
     }
 
     protected ObjectName createNetworkConnectorObjectName(NetworkConnector connector) throws MalformedObjectNameException {
-        return new ObjectName(managementContext.getJmxDomainName() + ":" + "BrokerName="
-                + JMXSupport.encodeObjectNamePart(getBrokerName()) + "," + "Type=NetworkConnector," + "NetworkConnectorName="
-                + JMXSupport.encodeObjectNamePart(connector.getName()));
+        return new ObjectName(managementContext.getJmxDomainName() + ":" + "BrokerName=" + JMXSupport.encodeObjectNamePart(getBrokerName()) + "," + "Type=NetworkConnector,"
+                              + "NetworkConnectorName=" + JMXSupport.encodeObjectNamePart(connector.getName()));
     }
 
     protected void unregisterNetworkConnectorMBean(NetworkConnector connector) {
@@ -1294,26 +1271,23 @@ public class BrokerService implements Service {
                     if (registeredMBeanNames.remove(objectName)) {
                         mbeanServer.unregisterMBean(objectName);
                     }
-                }
-                catch (Exception e) {
-                    log.error("Network Connector could not be unregistered from JMX: " + e, e);
+                } catch (Exception e) {
+                    LOG.error("Network Connector could not be unregistered from JMX: " + e, e);
                 }
             }
         }
     }
-    
+
     protected void registerProxyConnectorMBean(ProxyConnector connector) throws IOException {
         MBeanServer mbeanServer = getManagementContext().getMBeanServer();
         if (mbeanServer != null) {
             ProxyConnectorView view = new ProxyConnectorView(connector);
             try {
-                ObjectName objectName = new ObjectName(managementContext.getJmxDomainName() + ":" + "BrokerName="
-                        + JMXSupport.encodeObjectNamePart(getBrokerName()) + "," + "Type=ProxyConnector," + "ProxyConnectorName="
-                        + JMXSupport.encodeObjectNamePart(connector.getName()));
+                ObjectName objectName = new ObjectName(managementContext.getJmxDomainName() + ":" + "BrokerName=" + JMXSupport.encodeObjectNamePart(getBrokerName()) + ","
+                                                       + "Type=ProxyConnector," + "ProxyConnectorName=" + JMXSupport.encodeObjectNamePart(connector.getName()));
                 mbeanServer.registerMBean(view, objectName);
                 registeredMBeanNames.add(objectName);
-            }
-            catch (Throwable e) {
+            } catch (Throwable e) {
                 throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
             }
         }
@@ -1324,12 +1298,11 @@ public class BrokerService implements Service {
         if (mbeanServer != null) {
             FTConnectorView view = new FTConnectorView(connector);
             try {
-                ObjectName objectName = new ObjectName(managementContext.getJmxDomainName() + ":" + "BrokerName="
-                        + JMXSupport.encodeObjectNamePart(getBrokerName()) + "," + "Type=MasterConnector");
+                ObjectName objectName = new ObjectName(managementContext.getJmxDomainName() + ":" + "BrokerName=" + JMXSupport.encodeObjectNamePart(getBrokerName()) + ","
+                                                       + "Type=MasterConnector");
                 mbeanServer.registerMBean(view, objectName);
                 registeredMBeanNames.add(objectName);
-            }
-            catch (Throwable e) {
+            } catch (Throwable e) {
                 throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
             }
         }
@@ -1340,23 +1313,20 @@ public class BrokerService implements Service {
         if (mbeanServer != null) {
             JmsConnectorView view = new JmsConnectorView(connector);
             try {
-                ObjectName objectName = new ObjectName(managementContext.getJmxDomainName() + ":" + "BrokerName="
-                        + JMXSupport.encodeObjectNamePart(getBrokerName()) + "," + "Type=JmsConnector," + "JmsConnectorName="
-                        + JMXSupport.encodeObjectNamePart(connector.getName()));
+                ObjectName objectName = new ObjectName(managementContext.getJmxDomainName() + ":" + "BrokerName=" + JMXSupport.encodeObjectNamePart(getBrokerName()) + ","
+                                                       + "Type=JmsConnector," + "JmsConnectorName=" + JMXSupport.encodeObjectNamePart(connector.getName()));
                 mbeanServer.registerMBean(view, objectName);
                 registeredMBeanNames.add(objectName);
-            }
-            catch (Throwable e) {
+            } catch (Throwable e) {
                 throw IOExceptionSupport.create("Broker could not be registered in JMX: " + e.getMessage(), e);
             }
         }
     }
-    
+
     /**
      * Factory method to create a new broker
-     *
+     * 
      * @throws Exception
-     *
      * @throws
      * @throws
      */
@@ -1367,7 +1337,7 @@ public class BrokerService implements Service {
         // Add a filter that will stop access to the broker once stopped
         broker = new MutableBrokerFilter(broker) {
             public void stop() throws Exception {
-                setNext(new ErrorBroker("Broker has been stopped: "+this) {
+                setNext(new ErrorBroker("Broker has been stopped: " + this) {
                     // Just ignore additional stop actions.
                     public void stop() throws Exception {
                     }
@@ -1375,14 +1345,12 @@ public class BrokerService implements Service {
                 super.stop();
             }
         };
-        
-        RegionBroker rBroker = (RegionBroker) regionBroker;
+
+        RegionBroker rBroker = (RegionBroker)regionBroker;
         rBroker.getDestinationStatistics().setEnabled(enableStatistics);
-        
-        
 
         if (isUseJmx()) {
-            ManagedRegionBroker managedBroker = (ManagedRegionBroker) regionBroker;
+            ManagedRegionBroker managedBroker = (ManagedRegionBroker)regionBroker;
             managedBroker.setContextBroker(broker);
             adminView = new BrokerView(this, managedBroker);
             MBeanServer mbeanServer = getManagementContext().getMBeanServer();
@@ -1392,7 +1360,6 @@ public class BrokerService implements Service {
                 registeredMBeanNames.add(objectName);
             }
         }
-        
 
         return broker;
 
@@ -1401,7 +1368,7 @@ public class BrokerService implements Service {
     /**
      * Factory method to create the core region broker onto which interceptors
      * are added
-     *
+     * 
      * @throws Exception
      */
     protected Broker createRegionBroker() throws Exception {
@@ -1409,55 +1376,53 @@ public class BrokerService implements Service {
         // broker
         getPersistenceAdapter().setUsageManager(getProducerUsageManager());
         getPersistenceAdapter().setBrokerName(getBrokerName());
-        if(this.deleteAllMessagesOnStartup){
+        if (this.deleteAllMessagesOnStartup) {
             getPersistenceAdapter().deleteAllMessages();
         }
         getPersistenceAdapter().start();
-        
+
         DestinationInterceptor destinationInterceptor = null;
         if (destinationInterceptors != null) {
             destinationInterceptor = new CompositeDestinationInterceptor(destinationInterceptors);
-        }
-        else {
+        } else {
             destinationInterceptor = createDefaultDestinationInterceptor();
         }
-	RegionBroker regionBroker = null;
-	if (destinationFactory == null) {
+        RegionBroker regionBroker = null;
+        if (destinationFactory == null) {
             destinationFactory = new DestinationFactoryImpl(getProducerUsageManager(), getTaskRunnerFactory(), getPersistenceAdapter());
         }
         if (isUseJmx()) {
             MBeanServer mbeanServer = getManagementContext().getMBeanServer();
-            regionBroker = new ManagedRegionBroker(this, mbeanServer, getBrokerObjectName(), getTaskRunnerFactory(), getConsumerUsageManager(),
-                    destinationFactory, destinationInterceptor);
-        }
-        else {
-            regionBroker = new RegionBroker(this,getTaskRunnerFactory(), getConsumerUsageManager(), destinationFactory, destinationInterceptor);
+            regionBroker = new ManagedRegionBroker(this, mbeanServer, getBrokerObjectName(), getTaskRunnerFactory(), getConsumerUsageManager(), destinationFactory,
+                                                   destinationInterceptor);
+        } else {
+            regionBroker = new RegionBroker(this, getTaskRunnerFactory(), getConsumerUsageManager(), destinationFactory, destinationInterceptor);
         }
         destinationFactory.setRegionBroker(regionBroker);
-        
+
         regionBroker.setKeepDurableSubsActive(keepDurableSubsActive);
-		regionBroker.setBrokerName(getBrokerName());
-		return regionBroker;
-	}
+        regionBroker.setBrokerName(getBrokerName());
+        return regionBroker;
+    }
 
     /**
      * Create the default destination interceptor
      */
     protected DestinationInterceptor createDefaultDestinationInterceptor() {
-        if (! isUseVirtualTopics()) {
+        if (!isUseVirtualTopics()) {
             return null;
         }
         VirtualDestinationInterceptor answer = new VirtualDestinationInterceptor();
         VirtualTopic virtualTopic = new VirtualTopic();
         virtualTopic.setName("VirtualTopic.>");
-        VirtualDestination[] virtualDestinations = { virtualTopic };
+        VirtualDestination[] virtualDestinations = {virtualTopic};
         answer.setVirtualDestinations(virtualDestinations);
         return answer;
     }
 
     /**
      * Strategy method to add interceptors to the broker
-     *
+     * 
      * @throws IOException
      */
     protected Broker addInterceptors(Broker broker) throws Exception {
@@ -1481,8 +1446,7 @@ public class BrokerService implements Service {
     protected PersistenceAdapter createPersistenceAdapter() throws IOException {
         if (isPersistent()) {
             return getPersistenceFactory().createPersistenceAdapter();
-        }
-        else {
+        } else {
             return new MemoryPersistenceAdapter();
         }
     }
@@ -1497,19 +1461,14 @@ public class BrokerService implements Service {
 
     protected ObjectName createBrokerObjectName() throws IOException {
         try {
-            return new ObjectName(
-            		getManagementContext().getJmxDomainName()+":"+
-            		"BrokerName="+JMXSupport.encodeObjectNamePart(getBrokerName())+","+
-            		"Type=Broker"
-            		);
-        }
-        catch (Throwable e) {
+            return new ObjectName(getManagementContext().getJmxDomainName() + ":" + "BrokerName=" + JMXSupport.encodeObjectNamePart(getBrokerName()) + "," + "Type=Broker");
+        } catch (Throwable e) {
             throw IOExceptionSupport.create("Invalid JMX broker name: " + brokerName, e);
         }
     }
 
     protected TransportConnector createTransportConnector(Broker broker, URI brokerURI) throws Exception {
-        TransportServer transport = TransportFactory.bind(getBrokerName(),brokerURI);
+        TransportServer transport = TransportFactory.bind(getBrokerName(), brokerURI);
         return new TransportConnector(broker, transport);
     }
 
@@ -1520,7 +1479,7 @@ public class BrokerService implements Service {
         Object port = options.get("port");
         if (port == null) {
             port = DEFAULT_PORT;
-            log.warn("No port specified so defaulting to: " + port);
+            LOG.warn("No port specified so defaulting to: " + port);
         }
         return port;
     }
@@ -1540,9 +1499,8 @@ public class BrokerService implements Service {
         if (shutdownHook != null) {
             try {
                 Runtime.getRuntime().removeShutdownHook(shutdownHook);
-            }
-            catch (Exception e) {
-                log.debug("Caught exception, must be shutting down: " + e);
+            } catch (Exception e) {
+                LOG.debug("Caught exception, must be shutting down: " + e);
             }
         }
     }
@@ -1553,51 +1511,46 @@ public class BrokerService implements Service {
     protected void containerShutdown() {
         try {
             stop();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             Throwable linkedException = e.getCause();
             if (linkedException != null) {
                 logError("Failed to shut down: " + e + ". Reason: " + linkedException, linkedException);
-            }
-            else {
+            } else {
                 logError("Failed to shut down: " + e, e);
             }
             if (!useLoggingForShutdownErrors) {
                 e.printStackTrace(System.err);
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             logError("Failed to shut down: " + e, e);
         }
     }
 
     protected void logError(String message, Throwable e) {
         if (useLoggingForShutdownErrors) {
-            log.error("Failed to shut down: " + e);
-        }
-        else {
+            LOG.error("Failed to shut down: " + e);
+        } else {
             System.err.println("Failed to shut down: " + e);
         }
     }
 
     /**
      * Starts any configured destinations on startup
-     *
      */
     protected void startDestinations() throws Exception {
         if (destinations != null) {
             ConnectionContext adminConnectionContext = getAdminConnectionContext();
-            
+
             for (int i = 0; i < destinations.length; i++) {
                 ActiveMQDestination destination = destinations[i];
                 getBroker().addDestination(adminConnectionContext, destination);
             }
         }
     }
-    
+
     /**
-     * Returns the broker's administration connection context used for configuring the broker
-     * at startup
+     * Returns the broker's administration connection context used for
+     * configuring the broker at startup
      */
     public ConnectionContext getAdminConnectionContext() throws Exception {
         ConnectionContext adminConnectionContext = getBroker().getAdminConnectionContext();
@@ -1607,11 +1560,12 @@ public class BrokerService implements Service {
         }
         return adminConnectionContext;
     }
-    
+
     /**
-     * Factory method to create the new administration connection context object.
-     * Note this method is here rather than inside a default broker implementation to
-     * ensure that the broker reference inside it is the outer most interceptor
+     * Factory method to create the new administration connection context
+     * object. Note this method is here rather than inside a default broker
+     * implementation to ensure that the broker reference inside it is the outer
+     * most interceptor
      */
     protected ConnectionContext createAdminConnectionContext() throws Exception {
         ConnectionContext context = new ConnectionContext();
@@ -1620,51 +1574,51 @@ public class BrokerService implements Service {
         return context;
     }
 
-
-    
     /**
      * Start all transport and network connections, proxies and bridges
+     * 
      * @throws Exception
      */
-    protected void startAllConnectors() throws Exception{
-        if (!isSlave()){
-        	
-        	ArrayList al = new ArrayList();
+    protected void startAllConnectors() throws Exception {
+        if (!isSlave()) {
+
+            ArrayList al = new ArrayList();
 
             for (Iterator iter = getTransportConnectors().iterator(); iter.hasNext();) {
-                TransportConnector connector = (TransportConnector) iter.next();
+                TransportConnector connector = (TransportConnector)iter.next();
                 al.add(startTransportConnector(connector));
             }
- 
-            if (al.size()>0) {
-            	//let's clear the transportConnectors list and replace it with the started transportConnector instances 
-            	this.transportConnectors.clear();
-            	setTransportConnectors(al);
+
+            if (al.size() > 0) {
+                // let's clear the transportConnectors list and replace it with
+                // the started transportConnector instances
+                this.transportConnectors.clear();
+                setTransportConnectors(al);
             }
             URI uri = getVmConnectorURI();
             HashMap map = new HashMap(URISupport.parseParamters(uri));
             map.put("network", "true");
-            map.put("async","false");
+            map.put("async", "false");
             uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
 
             for (Iterator iter = getNetworkConnectors().iterator(); iter.hasNext();) {
-                NetworkConnector connector = (NetworkConnector) iter.next();
+                NetworkConnector connector = (NetworkConnector)iter.next();
                 connector.setLocalUri(uri);
                 connector.setBrokerName(getBrokerName());
                 connector.setDurableDestinations(getBroker().getDurableDestinations());
                 connector.start();
             }
-            
+
             for (Iterator iter = getProxyConnectors().iterator(); iter.hasNext();) {
-                ProxyConnector connector = (ProxyConnector) iter.next();
+                ProxyConnector connector = (ProxyConnector)iter.next();
                 connector.start();
             }
-            
+
             for (Iterator iter = jmsConnectors.iterator(); iter.hasNext();) {
-                JmsConnector connector = (JmsConnector) iter.next();
+                JmsConnector connector = (JmsConnector)iter.next();
                 connector.start();
             }
-            
+
             if (services != null) {
                 for (int i = 0; i < services.length; i++) {
                     Service service = services[i];
@@ -1683,15 +1637,15 @@ public class BrokerService implements Service {
         if (policy != null) {
             connector.setMessageAuthorizationPolicy(policy);
         }
-        
+
         if (isUseJmx()) {
             connector = registerConnectorMBean(connector);
-        }        
-        
-       	connector.getStatistics().setEnabled(enableStatistics);
-        
+        }
+
+        connector.getStatistics().setEnabled(enableStatistics);
+
         connector.start();
-        
+
         return connector;
     }
 
@@ -1700,18 +1654,18 @@ public class BrokerService implements Service {
      */
     protected void configureService(Object service) {
         if (service instanceof BrokerServiceAware) {
-            BrokerServiceAware serviceAware = (BrokerServiceAware) service;
+            BrokerServiceAware serviceAware = (BrokerServiceAware)service;
             serviceAware.setBrokerService(this);
         }
         if (service instanceof MasterConnector) {
-            masterConnector = (MasterConnector) service;
-            supportFailOver=true;
+            masterConnector = (MasterConnector)service;
+            supportFailOver = true;
         }
     }
 
-   
     /**
-     * Starts all destiantions in persistence store. This includes all inactive destinations
+     * Starts all destiantions in persistence store. This includes all inactive
+     * destinations
      */
     protected void startDestinationsInPersistenceStore(Broker broker) throws Exception {
         Set destinations = destinationFactory.getDestinations();
@@ -1726,11 +1680,10 @@ public class BrokerService implements Service {
                 broker.setAdminConnectionContext(adminConnectionContext);
             }
 
-
             while (iter.hasNext()) {
-                ActiveMQDestination destination = (ActiveMQDestination) iter.next();
+                ActiveMQDestination destination = (ActiveMQDestination)iter.next();
                 broker.addDestination(adminConnectionContext, destination);
             }
         }
-    }   
+    }
 }

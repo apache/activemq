@@ -25,7 +25,7 @@ import java.util.List;
 
 /**
  * A Page within a HashPage
- *
+ * 
  * @version $Revision: 1.1.1.1 $
  */
 class HashPage {
@@ -34,7 +34,7 @@ class HashPage {
     private int maximumEntries;
     private long id;
     private int binId;
-    private int persistedSize = 0;
+    private int persistedSize;
     private List<HashEntry> hashIndexEntries;
     /*
      * for persistence only
@@ -44,7 +44,7 @@ class HashPage {
 
     /**
      * Constructor
-     *
+     * 
      * @param hashIndex
      * @param id
      * @param parentId
@@ -58,7 +58,7 @@ class HashPage {
 
     /**
      * Constructor
-     *
+     * 
      * @param maximumEntries
      */
     public HashPage(int maximumEntries) {
@@ -73,14 +73,14 @@ class HashPage {
     public boolean equals(Object o) {
         boolean result = false;
         if (o instanceof HashPage) {
-            HashPage other = (HashPage) o;
+            HashPage other = (HashPage)o;
             result = other.id == id;
         }
         return result;
     }
 
     public int hashCode() {
-        return (int) id;
+        return (int)id;
     }
 
     boolean isActive() {
@@ -186,8 +186,8 @@ class HashPage {
     }
 
     void addHashEntry(int index, HashEntry entry) throws IOException {
-        //index = index >= 0 ? index : 0;
-        //index = (index == 0 || index< size()) ? index : size()-1;
+        // index = index >= 0 ? index : 0;
+        // index = (index == 0 || index< size()) ? index : size()-1;
         hashIndexEntries.add(index, entry);
     }
 
@@ -229,7 +229,7 @@ class HashPage {
         str.append(toString());
         str.append(": ");
         for (HashEntry entry : hashIndexEntries) {
-            str .append(entry);
+            str.append(entry);
             str.append(",");
         }
         log.info(str);

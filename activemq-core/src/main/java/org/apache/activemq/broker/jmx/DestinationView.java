@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -54,12 +53,11 @@ public class DestinationView implements DestinationViewMBean {
     protected final Destination destination;
     protected final ManagedRegionBroker broker;
 
-    public DestinationView(ManagedRegionBroker broker, Destination destination){
+    public DestinationView(ManagedRegionBroker broker, Destination destination) {
         this.broker = broker;
-        this.destination=destination;
+        this.destination = destination;
     }
 
-    
     public void gc() {
         destination.gc();
     }
@@ -79,10 +77,10 @@ public class DestinationView implements DestinationViewMBean {
     public long getDequeueCount() {
         return destination.getDestinationStatistics().getDequeues().getCount();
     }
-    
+
     public long getDispatchCount() {
         return destination.getDestinationStatistics().getDispatched().getCount();
-    }    
+    }
 
     public long getConsumerCount() {
         return destination.getDestinationStatistics().getConsumers().getCount();
@@ -105,23 +103,22 @@ public class DestinationView implements DestinationViewMBean {
     }
 
     public void setMemoryLimit(long limit) {
-       destination.getUsageManager().setLimit(limit);
+        destination.getUsageManager().setLimit(limit);
     }
-    
-    public double getAverageEnqueueTime(){
+
+    public double getAverageEnqueueTime() {
         return destination.getDestinationStatistics().getProcessTime().getAverageTime();
     }
 
-    public long getMaxEnqueueTime(){
+    public long getMaxEnqueueTime() {
         return destination.getDestinationStatistics().getProcessTime().getMaxTime();
     }
 
-    public long getMinEnqueueTime(){
+    public long getMinEnqueueTime() {
         return destination.getDestinationStatistics().getProcessTime().getMinTime();
     }
 
-
-    public CompositeData[] browse() throws OpenDataException{
+    public CompositeData[] browse() throws OpenDataException {
         try {
             return browse(null);
         } catch (InvalidSelectorException e) {
@@ -129,46 +126,47 @@ public class DestinationView implements DestinationViewMBean {
             throw new RuntimeException(e);
         }
     }
-    
-    public CompositeData[] browse(String selector) throws OpenDataException, InvalidSelectorException{
-        Message[] messages=destination.browse();
+
+    public CompositeData[] browse(String selector) throws OpenDataException, InvalidSelectorException {
+        Message[] messages = destination.browse();
         ArrayList c = new ArrayList();
-        
+
         MessageEvaluationContext ctx = new MessageEvaluationContext();
         ctx.setDestination(destination.getActiveMQDestination());
-        BooleanExpression selectorExpression = selector==null ? null : new SelectorParser().parse(selector);
-        
-        for(int i=0;i<messages.length;i++){
-            try{
-                
-                if( selectorExpression==null ) {
+        BooleanExpression selectorExpression = selector == null ? null : new SelectorParser().parse(selector);
+
+        for (int i = 0; i < messages.length; i++) {
+            try {
+
+                if (selectorExpression == null) {
                     c.add(OpenTypeSupport.convert(messages[i]));
                 } else {
                     ctx.setMessageReference(messages[i]);
-                    if ( selectorExpression.matches(ctx) ) {
+                    if (selectorExpression.matches(ctx)) {
                         c.add(OpenTypeSupport.convert(messages[i]));
                     }
                 }
-                
-            } catch(Throwable e) {
-                log.warn("exception browsing destination",e);
+
+            } catch (Throwable e) {
+                log.warn("exception browsing destination", e);
             }
         }
-        
-        CompositeData rc[]=new CompositeData[c.size()];
+
+        CompositeData rc[] = new CompositeData[c.size()];
         c.toArray(rc);
         return rc;
     }
-    
+
     /**
      * Browses the current destination returning a list of messages
      */
     public List browseMessages() throws InvalidSelectorException {
         return browseMessages(null);
-    }    
-    
+    }
+
     /**
-     * Browses the current destination with the given selector returning a list of messages
+     * Browses the current destination with the given selector returning a list
+     * of messages
      */
     public List browseMessages(String selector) throws InvalidSelectorException {
         Message[] messages = destination.browse();
@@ -183,94 +181,91 @@ public class DestinationView implements DestinationViewMBean {
                 Message message = messages[i];
                 if (selectorExpression == null) {
                     answer.add(OpenTypeSupport.convert(message));
-                }
-                else {
+                } else {
                     ctx.setMessageReference(message);
                     if (selectorExpression.matches(ctx)) {
                         answer.add(message);
                     }
                 }
 
-            }
-            catch (Throwable e) {
-                log.warn("exception browsing destination",e);
+            } catch (Throwable e) {
+                log.warn("exception browsing destination", e);
             }
         }
         return answer;
     }
 
-    public TabularData browseAsTable() throws OpenDataException{
+    public TabularData browseAsTable() throws OpenDataException {
         try {
             return browseAsTable(null);
         } catch (InvalidSelectorException e) {
             throw new RuntimeException(e);
         }
     }
-    
-    public TabularData browseAsTable(String selector) throws OpenDataException, InvalidSelectorException{
-        OpenTypeFactory factory=OpenTypeSupport.getFactory(ActiveMQMessage.class);
-        Message[] messages=destination.browse();
-        CompositeType ct=factory.getCompositeType();
-        TabularType tt=new TabularType("MessageList","MessageList",ct,new String[] { "JMSMessageID" });
-        TabularDataSupport rc=new TabularDataSupport(tt);
-        
-        
+
+    public TabularData browseAsTable(String selector) throws OpenDataException, InvalidSelectorException {
+        OpenTypeFactory factory = OpenTypeSupport.getFactory(ActiveMQMessage.class);
+        Message[] messages = destination.browse();
+        CompositeType ct = factory.getCompositeType();
+        TabularType tt = new TabularType("MessageList", "MessageList", ct, new String[] {"JMSMessageID"});
+        TabularDataSupport rc = new TabularDataSupport(tt);
+
         MessageEvaluationContext ctx = new MessageEvaluationContext();
         ctx.setDestination(destination.getActiveMQDestination());
-        BooleanExpression selectorExpression = selector==null ? null : new SelectorParser().parse(selector);
-        
-        for(int i=0;i<messages.length;i++){
+        BooleanExpression selectorExpression = selector == null ? null : new SelectorParser().parse(selector);
+
+        for (int i = 0; i < messages.length; i++) {
             try {
-                if( selectorExpression==null ) {
-                    rc.put(new CompositeDataSupport(ct,factory.getFields(messages[i])));
+                if (selectorExpression == null) {
+                    rc.put(new CompositeDataSupport(ct, factory.getFields(messages[i])));
                 } else {
                     ctx.setMessageReference(messages[i]);
-                    if ( selectorExpression.matches(ctx) ) {
-                        rc.put(new CompositeDataSupport(ct,factory.getFields(messages[i])));
+                    if (selectorExpression.matches(ctx)) {
+                        rc.put(new CompositeDataSupport(ct, factory.getFields(messages[i])));
                     }
                 }
-            } catch(Throwable e) {
-                log.warn("exception browsing destination",e);
+            } catch (Throwable e) {
+                log.warn("exception browsing destination", e);
             }
         }
-        
+
         return rc;
     }
-    
+
     public String sendTextMessage(String body) throws Exception {
-    	return sendTextMessage(Collections.EMPTY_MAP, body);
+        return sendTextMessage(Collections.EMPTY_MAP, body);
     }
-    
+
     public String sendTextMessage(Map headers, String body) throws Exception {
-    	
-    	String brokerUrl = "vm://"+broker.getBrokerName();
-    	ActiveMQDestination dest = destination.getActiveMQDestination();
-    	
-    	ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(brokerUrl);
-    	Connection connection = null;
-    	try {
-    		
-    		connection = cf.createConnection();
-			Session session = connection.createSession(false,Session.AUTO_ACKNOWLEDGE);
-			MessageProducer producer = session.createProducer(dest);
-			ActiveMQTextMessage msg = (ActiveMQTextMessage) session.createTextMessage(body);
-			
-			for (Iterator iter = headers.entrySet().iterator(); iter.hasNext();) {
-				Map.Entry entry = (Map.Entry) iter.next();
-				msg.setObjectProperty((String) entry.getKey(), entry.getValue());
-			}
-			
-			producer.setDeliveryMode(msg.getJMSDeliveryMode());
-			producer.setPriority(msg.getPriority());
-			long ttl = msg.getExpiration() - System.currentTimeMillis();
-			producer.setTimeToLive(ttl > 0 ? ttl : 0);
-	    	producer.send(msg);
-	    	
-	    	return msg.getJMSMessageID();
-	    	
-    	} finally {
-    		connection.close();
-    	}
-    	
+
+        String brokerUrl = "vm://" + broker.getBrokerName();
+        ActiveMQDestination dest = destination.getActiveMQDestination();
+
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(brokerUrl);
+        Connection connection = null;
+        try {
+
+            connection = cf.createConnection();
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            MessageProducer producer = session.createProducer(dest);
+            ActiveMQTextMessage msg = (ActiveMQTextMessage)session.createTextMessage(body);
+
+            for (Iterator iter = headers.entrySet().iterator(); iter.hasNext();) {
+                Map.Entry entry = (Map.Entry)iter.next();
+                msg.setObjectProperty((String)entry.getKey(), entry.getValue());
+            }
+
+            producer.setDeliveryMode(msg.getJMSDeliveryMode());
+            producer.setPriority(msg.getPriority());
+            long ttl = msg.getExpiration() - System.currentTimeMillis();
+            producer.setTimeToLive(ttl > 0 ? ttl : 0);
+            producer.send(msg);
+
+            return msg.getJMSMessageID();
+
+        } finally {
+            connection.close();
+        }
+
     }
 }

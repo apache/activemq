@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,43 +36,41 @@ public class MessageDispatchChannel {
     }
 
     public void enqueue(MessageDispatch message) {
-        synchronized(mutex) {
+        synchronized (mutex) {
             list.addLast(message);
             mutex.notify();
         }
     }
 
     public void enqueueFirst(MessageDispatch message) {
-        synchronized(mutex) {
+        synchronized (mutex) {
             list.addFirst(message);
             mutex.notify();
         }
     }
 
     public boolean isEmpty() {
-        synchronized(mutex) {
+        synchronized (mutex) {
             return list.isEmpty();
         }
     }
 
     /**
-     * Used to get an enqueued message. 
-     * The amount of time this method blocks is based on the timeout value. 
-     * - if timeout==-1 then it blocks until a message is received. 
-     * - if timeout==0 then it it tries to not block at all, it returns a message if it is available 
-     * - if timeout>0 then it blocks up to timeout amount of time.
+     * Used to get an enqueued message. The amount of time this method blocks is
+     * based on the timeout value. - if timeout==-1 then it blocks until a
+     * message is received. - if timeout==0 then it it tries to not block at
+     * all, it returns a message if it is available - if timeout>0 then it
+     * blocks up to timeout amount of time. Expired messages will consumed by
+     * this method.
      * 
-     * Expired messages will consumed by this method.  
-     * 
-     * @throws JMSException 
-     * 
+     * @throws JMSException
      * @return null if we timeout or if the consumer is closed.
-     * @throws InterruptedException 
+     * @throws InterruptedException
      */
     public MessageDispatch dequeue(long timeout) throws InterruptedException {
         synchronized (mutex) {
             // Wait until the consumer is ready to deliver messages.
-            while(timeout != 0 && !closed && (list.isEmpty() || !running)) {
+            while (timeout != 0 && !closed && (list.isEmpty() || !running)) {
                 if (timeout == -1) {
                     mutex.wait();
                 } else {
@@ -87,7 +84,7 @@ public class MessageDispatchChannel {
             return list.removeFirst();
         }
     }
-    
+
     public MessageDispatch dequeueNoWait() {
         synchronized (mutex) {
             if (closed || !running || list.isEmpty()) {
@@ -96,7 +93,7 @@ public class MessageDispatchChannel {
             return list.removeFirst();
         }
     }
-    
+
     public MessageDispatch peek() {
         synchronized (mutex) {
             if (closed || !running || list.isEmpty()) {
@@ -131,7 +128,7 @@ public class MessageDispatchChannel {
     }
 
     public void clear() {
-        synchronized(mutex) {
+        synchronized (mutex) {
             list.clear();
         }
     }
@@ -141,7 +138,7 @@ public class MessageDispatchChannel {
     }
 
     public int size() {
-        synchronized(mutex) {
+        synchronized (mutex) {
             return list.size();
         }
     }
@@ -155,15 +152,15 @@ public class MessageDispatchChannel {
     }
 
     public List<MessageDispatch> removeAll() {
-        synchronized(mutex) {
-            ArrayList <MessageDispatch>rc = new ArrayList<MessageDispatch>(list);
+        synchronized (mutex) {
+            ArrayList<MessageDispatch> rc = new ArrayList<MessageDispatch>(list);
             list.clear();
             return rc;
         }
     }
 
     public String toString() {
-        synchronized(mutex) {
+        synchronized (mutex) {
             return list.toString();
         }
     }

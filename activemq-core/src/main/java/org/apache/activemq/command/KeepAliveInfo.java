@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,7 +25,7 @@ import org.apache.activemq.util.IntrospectionSupport;
  */
 public class KeepAliveInfo extends BaseCommand {
 
-    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.KEEP_ALIVE_INFO;
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.KEEP_ALIVE_INFO;
 
     private transient Endpoint from;
     private transient Endpoint to;
@@ -42,7 +41,7 @@ public class KeepAliveInfo extends BaseCommand {
     public boolean isMessageDispatch() {
         return false;
     }
-    
+
     public boolean isMessage() {
         return false;
     }
@@ -71,7 +70,8 @@ public class KeepAliveInfo extends BaseCommand {
     }
 
     /**
-     * The endpoint within the transport where this message is going to - null means all endpoints.
+     * The endpoint within the transport where this message is going to - null
+     * means all endpoints.
      */
     public Endpoint getTo() {
         return to;
@@ -80,21 +80,20 @@ public class KeepAliveInfo extends BaseCommand {
     public void setTo(Endpoint to) {
         this.to = to;
     }
-    
-    
+
     public Response visit(CommandVisitor visitor) throws Exception {
-        return visitor.processKeepAlive( this );
+        return visitor.processKeepAlive(this);
     }
 
     public boolean isMarshallAware() {
         return false;
     }
 
-    public boolean isMessageDispatchNotification(){
+    public boolean isMessageDispatchNotification() {
         return false;
     }
-    
-    public boolean isShutdownInfo(){
+
+    public boolean isShutdownInfo() {
         return false;
     }
 

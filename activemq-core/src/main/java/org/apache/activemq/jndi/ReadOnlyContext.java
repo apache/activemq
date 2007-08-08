@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,36 +27,36 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * A read-only Context
- * <p/>
- * This version assumes it and all its subcontext are read-only and any attempt
- * to modify (e.g. through bind) will result in an OperationNotSupportedException.
- * Each Context in the tree builds a cache of the entries in all sub-contexts
- * to optimise the performance of lookup.
+ * A read-only Context <p/> This version assumes it and all its subcontext are
+ * read-only and any attempt to modify (e.g. through bind) will result in an
+ * OperationNotSupportedException. Each Context in the tree builds a cache of
+ * the entries in all sub-contexts to optimise the performance of lookup.
  * </p>
- * <p>This implementation is intended to optimise the performance of lookup(String)
+ * <p>
+ * This implementation is intended to optimise the performance of lookup(String)
  * to about the level of a HashMap get. It has been observed that the scheme
  * resolution phase performed by the JVM takes considerably longer, so for
- * optimum performance lookups should be coded like:</p>
+ * optimum performance lookups should be coded like:
+ * </p>
  * <code>
  * Context componentContext = (Context)new InitialContext().lookup("java:comp");
  * String envEntry = (String) componentContext.lookup("env/myEntry");
  * String envEntry2 = (String) componentContext.lookup("env/myEntry2");
  * </code>
- *
+ * 
  * @version $Revision: 1.2 $ $Date: 2005/08/27 03:52:39 $
  */
 public class ReadOnlyContext implements Context, Serializable {
     private static final long serialVersionUID = -5754338187296859149L;
     protected static final NameParser nameParser = new NameParserImpl();
-
-    protected final Hashtable environment;        // environment for this context
-    protected final Map bindings;         // bindings at my level
-    protected final Map treeBindings;     // all bindings under me
-
-    private boolean frozen = false;
-    private String nameInNamespace = "";
     public static final String SEPARATOR = "/";
+
+    protected final Hashtable environment; // environment for this context
+    protected final Map bindings; // bindings at my level
+    protected final Map treeBindings; // all bindings under me
+
+    private boolean frozen;
+    private String nameInNamespace = "";
 
     public ReadOnlyContext() {
         environment = new Hashtable();
@@ -68,8 +67,7 @@ public class ReadOnlyContext implements Context, Serializable {
     public ReadOnlyContext(Hashtable env) {
         if (env == null) {
             this.environment = new Hashtable();
-        }
-        else {
+        } else {
             this.environment = new Hashtable(env);
         }
         this.bindings = Collections.EMPTY_MAP;
@@ -79,8 +77,7 @@ public class ReadOnlyContext implements Context, Serializable {
     public ReadOnlyContext(Hashtable environment, Map bindings) {
         if (environment == null) {
             this.environment = new Hashtable();
-        }
-        else {
+        } else {
             this.environment = new Hashtable(environment);
         }
         this.bindings = bindings;
@@ -113,13 +110,15 @@ public class ReadOnlyContext implements Context, Serializable {
     }
 
     /**
-     * internalBind is intended for use only during setup or possibly by suitably synchronized superclasses.
-     * It binds every possible lookup into a map in each context.  To do this, each context
-     * strips off one name segment and if necessary creates a new context for it. Then it asks that context
-     * to bind the remaining name.  It returns a map containing all the bindings from the next context, plus
-     * the context it just created (if it in fact created it). (the names are suitably extended by the segment
-     * originally lopped off).
-     *
+     * internalBind is intended for use only during setup or possibly by
+     * suitably synchronized superclasses. It binds every possible lookup into a
+     * map in each context. To do this, each context strips off one name segment
+     * and if necessary creates a new context for it. Then it asks that context
+     * to bind the remaining name. It returns a map containing all the bindings
+     * from the next context, plus the context it just created (if it in fact
+     * created it). (the names are suitably extended by the segment originally
+     * lopped off).
+     * 
      * @param name
      * @param value
      * @return
@@ -137,8 +136,7 @@ public class ReadOnlyContext implements Context, Serializable {
             }
             bindings.put(name, value);
             newBindings.put(name, value);
-        }
-        else {
+        } else {
             String segment = name.substring(0, pos);
             assert segment != null;
             assert !segment.equals("");
@@ -148,16 +146,15 @@ public class ReadOnlyContext implements Context, Serializable {
                 treeBindings.put(segment, o);
                 bindings.put(segment, o);
                 newBindings.put(segment, o);
-            }
-            else if (!(o instanceof ReadOnlyContext)) {
+            } else if (!(o instanceof ReadOnlyContext)) {
                 throw new NamingException("Something already bound where a subcontext should go");
             }
-            ReadOnlyContext readOnlyContext = (ReadOnlyContext) o;
+            ReadOnlyContext readOnlyContext = (ReadOnlyContext)o;
             String remainder = name.substring(pos + 1);
             Map subBindings = readOnlyContext.internalBind(remainder, value);
             for (Iterator iterator = subBindings.entrySet().iterator(); iterator.hasNext();) {
-                Map.Entry entry = (Map.Entry) iterator.next();
-                String subName = segment + "/" + (String) entry.getKey();
+                Map.Entry entry = (Map.Entry)iterator.next();
+                String subName = segment + "/" + (String)entry.getKey();
                 Object bound = entry.getValue();
                 treeBindings.put(subName, bound);
                 newBindings.put(subName, bound);
@@ -175,7 +172,7 @@ public class ReadOnlyContext implements Context, Serializable {
     }
 
     public Hashtable getEnvironment() throws NamingException {
-        return (Hashtable) environment.clone();
+        return (Hashtable)environment.clone();
     }
 
     public Object removeFromEnvironment(String propName) throws NamingException {
@@ -199,23 +196,20 @@ public class ReadOnlyContext implements Context, Serializable {
                     throw new NamingException("scheme " + scheme + " not recognized");
                 }
                 return ctx.lookup(name);
-            }
-            else {
+            } else {
                 // Split out the first name of the path
                 // and look for it in the bindings map.
                 CompositeName path = new CompositeName(name);
 
                 if (path.size() == 0) {
                     return this;
-                }
-                else {
+                } else {
                     String first = path.get(0);
                     Object obj = bindings.get(first);
                     if (obj == null) {
                         throw new NameNotFoundException(name);
-                    }
-                    else if (obj instanceof Context && path.size() > 1) {
-                        Context subContext = (Context) obj;
+                    } else if (obj instanceof Context && path.size() > 1) {
+                        Context subContext = (Context)obj;
                         obj = subContext.lookup(path.getSuffix(1));
                     }
                     return obj;
@@ -223,18 +217,16 @@ public class ReadOnlyContext implements Context, Serializable {
             }
         }
         if (result instanceof LinkRef) {
-            LinkRef ref = (LinkRef) result;
+            LinkRef ref = (LinkRef)result;
             result = lookup(ref.getLinkName());
         }
         if (result instanceof Reference) {
             try {
                 result = NamingManager.getObjectInstance(result, null, null, this.environment);
-            }
-            catch (NamingException e) {
+            } catch (NamingException e) {
                 throw e;
-            }
-            catch (Exception e) {
-                throw (NamingException) new NamingException("could not look up : " + name).initCause(e);
+            } catch (Exception e) {
+                throw (NamingException)new NamingException("could not look up : " + name).initCause(e);
             }
         }
         if (result instanceof ReadOnlyContext) {
@@ -242,7 +234,7 @@ public class ReadOnlyContext implements Context, Serializable {
             if (prefix.length() > 0) {
                 prefix = prefix + SEPARATOR;
             }
-            result = new ReadOnlyContext((ReadOnlyContext) result, environment, prefix + name);
+            result = new ReadOnlyContext((ReadOnlyContext)result, environment, prefix + name);
         }
         return result;
     }
@@ -256,7 +248,7 @@ public class ReadOnlyContext implements Context, Serializable {
     }
 
     public Name composeName(Name name, Name prefix) throws NamingException {
-        Name result = (Name) prefix.clone();
+        Name result = (Name)prefix.clone();
         result.addAll(name);
         return result;
     }
@@ -271,11 +263,9 @@ public class ReadOnlyContext implements Context, Serializable {
         Object o = lookup(name);
         if (o == this) {
             return new ListEnumeration();
-        }
-        else if (o instanceof Context) {
-            return ((Context) o).list("");
-        }
-        else {
+        } else if (o instanceof Context) {
+            return ((Context)o).list("");
+        } else {
             throw new NotContextException();
         }
     }
@@ -284,11 +274,9 @@ public class ReadOnlyContext implements Context, Serializable {
         Object o = lookup(name);
         if (o == this) {
             return new ListBindingEnumeration();
-        }
-        else if (o instanceof Context) {
-            return ((Context) o).listBindings("");
-        }
-        else {
+        } else if (o instanceof Context) {
+            return ((Context)o).listBindings("");
+        } else {
             throw new NotContextException();
         }
     }
@@ -381,7 +369,7 @@ public class ReadOnlyContext implements Context, Serializable {
         }
 
         protected Map.Entry getNext() {
-            return (Map.Entry) i.next();
+            return (Map.Entry)i.next();
         }
 
         public void close() throws NamingException {
@@ -389,27 +377,30 @@ public class ReadOnlyContext implements Context, Serializable {
     }
 
     private class ListEnumeration extends LocalNamingEnumeration {
-        ListEnumeration(){}
+        ListEnumeration() {
+        }
+
         public Object next() throws NamingException {
             return nextElement();
         }
 
         public Object nextElement() {
             Map.Entry entry = getNext();
-            return new NameClassPair((String) entry.getKey(), entry.getValue().getClass().getName());
+            return new NameClassPair((String)entry.getKey(), entry.getValue().getClass().getName());
         }
     }
 
     private class ListBindingEnumeration extends LocalNamingEnumeration {
-        ListBindingEnumeration(){
+        ListBindingEnumeration() {
         }
+
         public Object next() throws NamingException {
             return nextElement();
         }
 
         public Object nextElement() {
             Map.Entry entry = getNext();
-            return new Binding((String) entry.getKey(), entry.getValue());
+            return new Binding((String)entry.getKey(), entry.getValue());
         }
     }
 }

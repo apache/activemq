@@ -34,24 +34,23 @@ import javax.net.SocketFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-
 public class InactivityMonitorTest extends CombinationTestSupport implements TransportAcceptListener {
-    
+
     private TransportServer server;
     private Transport clientTransport;
     private Transport serverTransport;
-    
+
     private final AtomicInteger clientReceiveCount = new AtomicInteger(0);
     private final AtomicInteger clientErrorCount = new AtomicInteger(0);
     private final AtomicInteger serverReceiveCount = new AtomicInteger(0);
     private final AtomicInteger serverErrorCount = new AtomicInteger(0);
-    
+
     private final AtomicBoolean ignoreClientError = new AtomicBoolean(false);
     private final AtomicBoolean ignoreServerError = new AtomicBoolean(false);
-    
+
     public Runnable serverRunOnCommand;
     public Runnable clientRunOnCommand;
-    
+
     protected void setUp() throws Exception {
         super.setUp();
         startTransportServer();
@@ -66,21 +65,25 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
         clientTransport.setTransportListener(new TransportListener() {
             public void onCommand(Object command) {
                 clientReceiveCount.incrementAndGet();
-                if( clientRunOnCommand !=null ) {
+                if (clientRunOnCommand != null) {
                     clientRunOnCommand.run();
                 }
             }
+
             public void onException(IOException error) {
-                if( !ignoreClientError.get() ) {
+                if (!ignoreClientError.get()) {
                     log.info("Client transport error:");
                     error.printStackTrace();
                     clientErrorCount.incrementAndGet();
                 }
             }
+
             public void transportInterupted() {
             }
+
             public void transportResumed() {
-            }});
+            }
+        });
         clientTransport.start();
     }
 
@@ -94,45 +97,49 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
         server.setAcceptListener(this);
         server.start();
     }
-    
+
     protected void tearDown() throws Exception {
         ignoreClientError.set(true);
         ignoreServerError.set(true);
         try {
-            if( clientTransport!=null )
+            if (clientTransport != null)
                 clientTransport.stop();
-            if( serverTransport!=null )
+            if (serverTransport != null)
                 serverTransport.stop();
-            if( server!=null )
+            if (server != null)
                 server.stop();
         } catch (Throwable e) {
             e.printStackTrace();
         }
         super.tearDown();
     }
-    
+
     public void onAccept(Transport transport) {
         try {
-            log.info("["+getName()+"] Server Accepted a Connection");
+            log.info("[" + getName() + "] Server Accepted a Connection");
             serverTransport = transport;
             serverTransport.setTransportListener(new TransportListener() {
                 public void onCommand(Object command) {
                     serverReceiveCount.incrementAndGet();
-                    if( serverRunOnCommand !=null ) {
+                    if (serverRunOnCommand != null) {
                         serverRunOnCommand.run();
                     }
                 }
+
                 public void onException(IOException error) {
-                    if( !ignoreClientError.get() ) {
+                    if (!ignoreClientError.get()) {
                         log.info("Server transport error:");
                         error.printStackTrace();
                         serverErrorCount.incrementAndGet();
                     }
                 }
+
                 public void transportInterupted() {
                 }
+
                 public void transportResumed() {
-                }});
+                }
+            });
             serverTransport.start();
         } catch (Exception e) {
             e.printStackTrace();
@@ -144,88 +151,95 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
     }
 
     public void testClientHang() throws Exception {
-        
+
         // 
-        // Manually create a client transport so that it does not send KeepAlive packets.
+        // Manually create a client transport so that it does not send KeepAlive
+        // packets.
         // this should simulate a client hang.
         clientTransport = new TcpTransport(new OpenWireFormat(), SocketFactory.getDefault(), new URI("tcp://localhost:61616"), null);
         clientTransport.setTransportListener(new TransportListener() {
             public void onCommand(Object command) {
                 clientReceiveCount.incrementAndGet();
-                if( clientRunOnCommand !=null ) {
+                if (clientRunOnCommand != null) {
                     clientRunOnCommand.run();
                 }
             }
+
             public void onException(IOException error) {
-                if( !ignoreClientError.get() ) {
+                if (!ignoreClientError.get()) {
                     log.info("Client transport error:");
                     error.printStackTrace();
                     clientErrorCount.incrementAndGet();
                 }
             }
+
             public void transportInterupted() {
             }
+
             public void transportResumed() {
-            }});
+            }
+        });
         clientTransport.start();
         WireFormatInfo info = new WireFormatInfo();
         info.seMaxInactivityDuration(1000);
         clientTransport.oneway(info);
-        
+
         assertEquals(0, serverErrorCount.get());
         assertEquals(0, clientErrorCount.get());
-        
-        // Server should consider the client timed out right away since the client is not hart beating fast enough.
+
+        // Server should consider the client timed out right away since the
+        // client is not hart beating fast enough.
         Thread.sleep(3000);
-        
+
         assertEquals(0, clientErrorCount.get());
-        assertTrue(serverErrorCount.get()>0);
+        assertTrue(serverErrorCount.get() > 0);
     }
-    
+
     public void testNoClientHang() throws Exception {
         startClient();
-        
+
         assertEquals(0, serverErrorCount.get());
         assertEquals(0, clientErrorCount.get());
-        
+
         Thread.sleep(4000);
-        
-    	assertEquals(0, clientErrorCount.get());
-    	assertEquals(0, serverErrorCount.get());
+
+        assertEquals(0, clientErrorCount.get());
+        assertEquals(0, serverErrorCount.get());
     }
 
     /**
-     * Used to test when a operation blocks.  This should
-     * not cause transport to get disconnected.
-     * @throws Exception 
-     * @throws URISyntaxException 
+     * Used to test when a operation blocks. This should not cause transport to
+     * get disconnected.
+     * 
+     * @throws Exception
+     * @throws URISyntaxException
      */
     public void initCombosForTestNoClientHangWithServerBlock() throws Exception {
-        
+
         startClient();
 
-        addCombinationValues("clientInactivityLimit", new Object[] { Long.valueOf(1000)});
-        addCombinationValues("serverInactivityLimit", new Object[] { Long.valueOf(1000)});
-        addCombinationValues("serverRunOnCommand", new Object[] { new Runnable() {
-                public void run() {
-                    try {
-                        log.info("Sleeping");
-                        Thread.sleep(4000);
-                    } catch (InterruptedException e) {
-                    }
+        addCombinationValues("clientInactivityLimit", new Object[] {Long.valueOf(1000)});
+        addCombinationValues("serverInactivityLimit", new Object[] {Long.valueOf(1000)});
+        addCombinationValues("serverRunOnCommand", new Object[] {new Runnable() {
+            public void run() {
+                try {
+                    log.info("Sleeping");
+                    Thread.sleep(4000);
+                } catch (InterruptedException e) {
                 }
-            }});
+            }
+        }});
     }
-    
+
     public void testNoClientHangWithServerBlock() throws Exception {
-        
+
         startClient();
 
         assertEquals(0, serverErrorCount.get());
         assertEquals(0, clientErrorCount.get());
-        
+
         Thread.sleep(4000);
-        
+
         assertEquals(0, clientErrorCount.get());
         assertEquals(0, serverErrorCount.get());
     }
