@@ -222,11 +222,12 @@ public class MasterConnector implements Service,BrokerServiceAware{
             }else{
                 boolean responseRequired=command.isResponseRequired();
                 int commandId=command.getCommandId();
-                localBroker.oneway(command);
                 if(responseRequired){
-                    Response response=new Response();
+                    Response response = (Response)localBroker.request(command);
                     response.setCorrelationId(commandId);
                     remoteBroker.oneway(response);
+                } else {
+                    localBroker.oneway(command);                    
                 }
             }
         }catch(IOException e){
