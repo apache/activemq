@@ -16,42 +16,34 @@
  */
 package org.apache.activemq.openwire.v1;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import org.apache.activemq.openwire.*;
-import org.apache.activemq.command.*;
-
+import org.apache.activemq.command.DiscoveryEvent;
+import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
 
 /**
  * Test case for the OpenWire marshalling for DiscoveryEvent
- *
- *
- * NOTE!: This file is auto generated - do not modify!
- *        if you need to make a change, please see the modify the groovy scripts in the
- *        under src/gram/script and then use maven openwire:generate to regenerate 
- *        this file.
- *
+ * 
+ * 
+ * NOTE!: This file is auto generated - do not modify! if you need to make a
+ * change, please see the modify the groovy scripts in the under src/gram/script
+ * and then use maven openwire:generate to regenerate this file.
+ * 
  * @version $Revision$
  */
 public class DiscoveryEventTest extends DataFileGeneratorTestSupport {
 
-
     public static DiscoveryEventTest SINGLETON = new DiscoveryEventTest();
 
     public Object createObject() throws Exception {
-    		DiscoveryEvent info = new DiscoveryEvent();
-    		populateObject(info);
-    		return info;
+        DiscoveryEvent info = new DiscoveryEvent();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		DiscoveryEvent info = (DiscoveryEvent) object;
+        super.populateObject(object);
+        DiscoveryEvent info = (DiscoveryEvent)object;
         info.setServiceName("ServiceName:1");
         info.setBrokerName("BrokerName:2");
 
-            }
-        }
+    }
+}

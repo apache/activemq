@@ -37,27 +37,20 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * Poor mans way of getting JUnit to run a test case through a few different
- * combinations of options.
- * 
- * 
- * Usage: If you have a test case called testFoo what you want to run through a
- * few combinations, of of values for the attributes age and color, you would
- * something like: <code>
+ * combinations of options. Usage: If you have a test case called testFoo what
+ * you want to run through a few combinations, of of values for the attributes
+ * age and color, you would something like: <code>
  *    public void initCombosForTestFoo() {    
  *        addCombinationValues( "age", new Object[]{ new Integer(21), new Integer(30) } );
  *        addCombinationValues( "color", new Object[]{"blue", "green"} );
  *    }
  * </code>
- * 
  * The testFoo test case would be run for each possible combination of age and
- * color that you setup in the initCombosForTestFoo method. Before each combination is
- * run, the age and color fields of the test class are set to one of the values
- * defined. This is done before the normal setUp method is called.
- * 
+ * color that you setup in the initCombosForTestFoo method. Before each
+ * combination is run, the age and color fields of the test class are set to one
+ * of the values defined. This is done before the normal setUp method is called.
  * If you want the test combinations to show up as separate test runs in the
- * JUnit reports, add a suite method to your test case similar to:
- * 
- * <code>
+ * JUnit reports, add a suite method to your test case similar to: <code>
  *     public static Test suite() {
  *         return suite(FooTest.class);
  *     }
@@ -68,7 +61,7 @@ import org.apache.commons.logging.LogFactory;
 public abstract class CombinationTestSupport extends AutoFailTestSupport {
 
     protected static final Log log = LogFactory.getLog(CombinationTestSupport.class);
-    
+
     private HashMap comboOptions = new HashMap();
     private boolean combosEvaluated;
     private Map options;
@@ -84,7 +77,7 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
     }
 
     public void addCombinationValues(String attribute, Object[] options) {
-        ComboOption co = (ComboOption) this.comboOptions.get(attribute);
+        ComboOption co = (ComboOption)this.comboOptions.get(attribute);
         if (co == null) {
             this.comboOptions.put(attribute, new ComboOption(attribute, Arrays.asList(options)));
         } else {
@@ -99,8 +92,8 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
             CombinationTestSupport[] combinations = getCombinations();
             for (int i = 0; i < combinations.length; i++) {
                 CombinationTestSupport test = combinations[i];
-                if( getName()==null || getName().equals( test.getName()) ) {  
-                	test.runBare();
+                if (getName() == null || getName().equals(test.getName())) {
+                    test.runBare();
                 }
             }
         }
@@ -109,14 +102,13 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
     private void setOptions(Map options) throws NoSuchFieldException, IllegalAccessException {
         this.options = options;
         for (Iterator iterator = options.keySet().iterator(); iterator.hasNext();) {
-            String attribute = (String) iterator.next();
+            String attribute = (String)iterator.next();
             Object value = options.get(attribute);
             try {
                 Field field = getClass().getField(attribute);
                 field.set(this, value);
             } catch (Throwable e) {
-                log.info("Could not set field '" + attribute + "' to value '" + value
-                        + "', make sure the field exists and is public.");
+                log.info("Could not set field '" + attribute + "' to value '" + value + "', make sure the field exists and is public.");
             }
         }
     }
@@ -127,8 +119,8 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
             method.invoke(this, null);
         } catch (Throwable e) {
         }
-        
-        String name = getName().split(" ")[0];        
+
+        String name = getName().split(" ")[0];
         String comboSetupMethodName = "initCombosFor" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
         try {
             Method method = getClass().getMethod(comboSetupMethodName, null);
@@ -139,28 +131,28 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
         try {
             ArrayList expandedOptions = new ArrayList();
             expandCombinations(new ArrayList(comboOptions.values()), expandedOptions);
-    
+
             if (expandedOptions.isEmpty()) {
                 combosEvaluated = true;
-                return new CombinationTestSupport[] { this };
+                return new CombinationTestSupport[] {this};
             } else {
-    
+
                 ArrayList result = new ArrayList();
                 // Run the test case for each possible combination
                 for (Iterator iter = expandedOptions.iterator(); iter.hasNext();) {
-                    CombinationTestSupport combo = (CombinationTestSupport) TestSuite.createTest(getClass(), name);
+                    CombinationTestSupport combo = (CombinationTestSupport)TestSuite.createTest(getClass(), name);
                     combo.combosEvaluated = true;
-                    combo.setOptions((Map) iter.next());
+                    combo.setOptions((Map)iter.next());
                     result.add(combo);
                 }
-    
+
                 CombinationTestSupport rc[] = new CombinationTestSupport[result.size()];
                 result.toArray(rc);
                 return rc;
             }
         } catch (Throwable e) {
             combosEvaluated = true;
-            return new CombinationTestSupport[] { this };
+            return new CombinationTestSupport[] {this};
         }
 
     }
@@ -172,14 +164,14 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
                 map = new HashMap();
                 expandedCombos.add(map);
             } else {
-                map = (HashMap) expandedCombos.get(expandedCombos.size() - 1);
+                map = (HashMap)expandedCombos.get(expandedCombos.size() - 1);
             }
 
             LinkedList l = new LinkedList(optionsLeft);
-            ComboOption comboOption = (ComboOption) l.removeLast();
+            ComboOption comboOption = (ComboOption)l.removeLast();
             int i = 0;
             for (Iterator iter = comboOption.values.iterator(); iter.hasNext();) {
-                Object value = (Object) iter.next();
+                Object value = (Object)iter.next();
                 if (i != 0) {
                     map = new HashMap(map);
                     expandedCombos.add(map);
@@ -203,7 +195,7 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
             names.add(name);
             Test test = TestSuite.createTest(clazz, name);
             if (test instanceof CombinationTestSupport) {
-                CombinationTestSupport[] combinations = ((CombinationTestSupport) test).getCombinations();
+                CombinationTestSupport[] combinations = ((CombinationTestSupport)test).getCombinations();
                 for (int j = 0; j < combinations.length; j++) {
                     suite.addTest(combinations[j]);
                 }

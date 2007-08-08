@@ -23,11 +23,12 @@ import org.apache.activemq.kaha.StoreEntry;
  * 
  * @version $Revision: 1.2 $
  */
-public interface Index{
+public interface Index {
 
     /**
-     * clear the index 
-     * @throws IOException 
+     * clear the index
+     * 
+     * @throws IOException
      * 
      */
     public void clear() throws IOException;
@@ -35,7 +36,7 @@ public interface Index{
     /**
      * @param key
      * @return true if it contains the key
-     * @throws IOException 
+     * @throws IOException
      */
     public boolean containsKey(Object key) throws IOException;
 
@@ -44,7 +45,7 @@ public interface Index{
      * 
      * @param key
      * @return StoreEntry removed
-     * @throws IOException 
+     * @throws IOException
      */
     public StoreEntry remove(Object key) throws IOException;
 
@@ -53,15 +54,14 @@ public interface Index{
      * 
      * @param key
      * @param entry
-     * @throws IOException 
+     * @throws IOException
      */
-    public void store(Object key,StoreEntry entry) throws IOException;
-    
-    
+    public void store(Object key, StoreEntry entry) throws IOException;
+
     /**
      * @param key
      * @return the entry
-     * @throws IOException 
+     * @throws IOException
      */
     public StoreEntry get(Object key) throws IOException;
 
@@ -69,22 +69,22 @@ public interface Index{
      * @return true if the index is transient
      */
     public boolean isTransient();
-    
+
     /**
      * load indexes
      */
     public void load();
-    
+
     /**
      * unload indexes
-     * @throws IOException 
+     * 
+     * @throws IOException
      */
     public void unload() throws IOException;
-    
-    
-    
+
     /**
      * Set the marshaller for key objects
+     * 
      * @param marshaller
      */
     public void setKeyMarshaller(Marshaller marshaller);

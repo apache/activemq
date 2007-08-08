@@ -50,17 +50,19 @@ public class AdvisorySupport {
     }
 
     public static ActiveMQTopic getConsumerAdvisoryTopic(ActiveMQDestination destination) {
-        if (destination.isQueue())
+        if (destination.isQueue()) {
             return new ActiveMQTopic(QUEUE_CONSUMER_ADVISORY_TOPIC_PREFIX + destination.getPhysicalName());
-        else
+        } else {
             return new ActiveMQTopic(TOPIC_CONSUMER_ADVISORY_TOPIC_PREFIX + destination.getPhysicalName());
+        }
     }
 
     public static ActiveMQTopic getProducerAdvisoryTopic(ActiveMQDestination destination) {
-        if (destination.isQueue())
+        if (destination.isQueue()) {
             return new ActiveMQTopic(QUEUE_PRODUCER_ADVISORY_TOPIC_PREFIX + destination.getPhysicalName());
-        else
+        } else {
             return new ActiveMQTopic(TOPIC_PRODUCER_ADVISORY_TOPIC_PREFIX + destination.getPhysicalName());
+        }
     }
 
     public static ActiveMQTopic getExpiredMessageTopic(ActiveMQDestination destination) {

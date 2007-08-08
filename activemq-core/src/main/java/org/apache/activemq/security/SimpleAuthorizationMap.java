@@ -36,7 +36,7 @@ public class SimpleAuthorizationMap implements AuthorizationMap {
     private DestinationMap adminACLs;
 
     private TempDestinationAuthorizationEntry tempDestinationAuthorizationEntry;
-    
+
     public SimpleAuthorizationMap() {
     }
 
@@ -47,41 +47,43 @@ public class SimpleAuthorizationMap implements AuthorizationMap {
     }
 
     /*
-     * Need to think how to retrieve the ACLs for temporary destinations since they are not map 
-     * to a specific destination. For now we'll just retrieve it from a TempDestinationAuthorizationEntry 
-     * same way as the DefaultAuthorizationMap. The ACLs retrieved here will be map to all temp destinations
+     * Need to think how to retrieve the ACLs for temporary destinations since
+     * they are not map to a specific destination. For now we'll just retrieve
+     * it from a TempDestinationAuthorizationEntry same way as the
+     * DefaultAuthorizationMap. The ACLs retrieved here will be map to all temp
+     * destinations
      */
-    
-    public void setTempDestinationAuthorizationEntry(TempDestinationAuthorizationEntry tempDestinationAuthorizationEntry) {
+
+    public void setTempDestinationAuthorizationEntry(
+                                                     TempDestinationAuthorizationEntry tempDestinationAuthorizationEntry) {
         this.tempDestinationAuthorizationEntry = tempDestinationAuthorizationEntry;
-    }    
-    
+    }
+
     public TempDestinationAuthorizationEntry getTempDestinationAuthorizationEntry() {
         return this.tempDestinationAuthorizationEntry;
-    }    
+    }
 
-    
     public Set getTempDestinationAdminACLs() {
-        if(tempDestinationAuthorizationEntry != null)    
-        	return tempDestinationAuthorizationEntry.getAdminACLs();
+        if (tempDestinationAuthorizationEntry != null)
+            return tempDestinationAuthorizationEntry.getAdminACLs();
         else
-        	return null;
+            return null;
     }
-    
+
     public Set getTempDestinationReadACLs() {
-    	if(tempDestinationAuthorizationEntry != null)  
-           	return tempDestinationAuthorizationEntry.getReadACLs();
-    	else
-    		return null;
+        if (tempDestinationAuthorizationEntry != null)
+            return tempDestinationAuthorizationEntry.getReadACLs();
+        else
+            return null;
     }
-    
+
     public Set getTempDestinationWriteACLs() {
-    	if(tempDestinationAuthorizationEntry != null)
-           	return tempDestinationAuthorizationEntry.getWriteACLs();
-    	else
-    		return null;
-    }       
-        
+        if (tempDestinationAuthorizationEntry != null)
+            return tempDestinationAuthorizationEntry.getWriteACLs();
+        else
+            return null;
+    }
+
     public Set getAdminACLs(ActiveMQDestination destination) {
         return adminACLs.get(destination);
     }

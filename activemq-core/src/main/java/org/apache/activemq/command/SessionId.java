@@ -21,62 +21,61 @@ package org.apache.activemq.command;
  * @openwire:marshaller code="121"
  * @version $Revision$
  */
-public class SessionId implements DataStructure  {
+public class SessionId implements DataStructure {
 
-    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.SESSION_ID;
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.SESSION_ID;
 
     protected String connectionId;
     protected long value;
-    
+
     protected transient int hashCode;
     protected transient String key;
     protected transient ConnectionId parentId;
-    
-    public SessionId() {        
+
+    public SessionId() {
     }
-        
+
     public SessionId(ConnectionId connectionId, long sessionId) {
         this.connectionId = connectionId.getValue();
-        this.value=sessionId;
+        this.value = sessionId;
     }
-    
+
     public SessionId(SessionId id) {
         this.connectionId = id.getConnectionId();
-        this.value=id.getValue();
+        this.value = id.getValue();
     }
 
     public SessionId(ProducerId id) {
         this.connectionId = id.getConnectionId();
-        this.value=id.getSessionId();
+        this.value = id.getSessionId();
     }
-    
+
     public SessionId(ConsumerId id) {
         this.connectionId = id.getConnectionId();
-        this.value=id.getSessionId();
+        this.value = id.getSessionId();
     }
-    
+
     public ConnectionId getParentId() {
-        if( parentId == null ) {
+        if (parentId == null) {
             parentId = new ConnectionId(this);
         }
         return parentId;
     }
 
     public int hashCode() {
-        if( hashCode == 0 ) {
+        if (hashCode == 0) {
             hashCode = connectionId.hashCode() ^ (int)value;
         }
         return hashCode;
     }
-    
+
     public boolean equals(Object o) {
-        if( this == o )
+        if (this == o)
             return true;
-        if( o == null || o.getClass()!=SessionId.class )
+        if (o == null || o.getClass() != SessionId.class)
             return false;
-        SessionId id = (SessionId) o;
-        return value==id.value 
-               && connectionId.equals(id.connectionId);
+        SessionId id = (SessionId)o;
+        return value == id.value && connectionId.equals(id.connectionId);
     }
 
     public byte getDataStructureType() {
@@ -88,7 +87,8 @@ public class SessionId implements DataStructure  {
      */
     public String getConnectionId() {
         return connectionId;
-    }    
+    }
+
     public void setConnectionId(String connectionId) {
         this.connectionId = connectionId;
     }
@@ -99,13 +99,14 @@ public class SessionId implements DataStructure  {
     public long getValue() {
         return value;
     }
+
     public void setValue(long sessionId) {
         this.value = sessionId;
     }
-    
+
     public String toString() {
-        if( key==null ) {
-            key = connectionId+":"+value;
+        if (key == null) {
+            key = connectionId + ":" + value;
         }
         return key;
     }

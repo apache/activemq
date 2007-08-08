@@ -28,95 +28,96 @@ import org.apache.commons.logging.LogFactory;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Adds the incrementing sequence number to commands along with performing the corelation of responses to requests to
- * create a blocking request-response semantics.
+ * Adds the incrementing sequence number to commands along with performing the
+ * corelation of responses to requests to create a blocking request-response
+ * semantics.
  * 
  * @version $Revision: 1.4 $
  */
-public class ResponseCorrelator extends TransportFilter{
+public class ResponseCorrelator extends TransportFilter {
 
-    private static final Log log=LogFactory.getLog(ResponseCorrelator.class);
-    private final Map requestMap=new HashMap();
+    private static final Log LOG = LogFactory.getLog(ResponseCorrelator.class);
+    private final Map requestMap = new HashMap();
     private IntSequenceGenerator sequenceGenerator;
-    private final boolean debug=log.isDebugEnabled();
+    private final boolean debug = LOG.isDebugEnabled();
 
-    public ResponseCorrelator(Transport next){
-        this(next,new IntSequenceGenerator());
+    public ResponseCorrelator(Transport next) {
+        this(next, new IntSequenceGenerator());
     }
 
-    public ResponseCorrelator(Transport next,IntSequenceGenerator sequenceGenerator){
+    public ResponseCorrelator(Transport next, IntSequenceGenerator sequenceGenerator) {
         super(next);
-        this.sequenceGenerator=sequenceGenerator;
+        this.sequenceGenerator = sequenceGenerator;
     }
 
-    public void oneway(Object o) throws IOException{
-        Command command=(Command)o;
+    public void oneway(Object o) throws IOException {
+        Command command = (Command)o;
         command.setCommandId(sequenceGenerator.getNextSequenceId());
         command.setResponseRequired(false);
         next.oneway(command);
     }
 
-    public FutureResponse asyncRequest(Object o,ResponseCallback responseCallback) throws IOException{
-        Command command=(Command)o;
+    public FutureResponse asyncRequest(Object o, ResponseCallback responseCallback) throws IOException {
+        Command command = (Command)o;
         command.setCommandId(sequenceGenerator.getNextSequenceId());
         command.setResponseRequired(true);
-        FutureResponse future=new FutureResponse(responseCallback);
-        synchronized(requestMap){
-            requestMap.put(new Integer(command.getCommandId()),future);
+        FutureResponse future = new FutureResponse(responseCallback);
+        synchronized (requestMap) {
+            requestMap.put(new Integer(command.getCommandId()), future);
         }
         next.oneway(command);
         return future;
     }
 
-    public Object request(Object command) throws IOException{
-        FutureResponse response=asyncRequest(command,null);
+    public Object request(Object command) throws IOException {
+        FutureResponse response = asyncRequest(command, null);
         return response.getResult();
     }
 
-    public Object request(Object command,int timeout) throws IOException{
-        FutureResponse response=asyncRequest(command,null);
+    public Object request(Object command, int timeout) throws IOException {
+        FutureResponse response = asyncRequest(command, null);
         return response.getResult(timeout);
     }
 
-    public void onCommand(Object o){
-        Command command=(Command)o;
-        if(command.isResponse()){
-            Response response=(Response)command;
-            FutureResponse future=null;
-            synchronized(requestMap){
-                future=(FutureResponse)requestMap.remove(Integer.valueOf(response.getCorrelationId()));
+    public void onCommand(Object o) {
+        Command command = (Command)o;
+        if (command.isResponse()) {
+            Response response = (Response)command;
+            FutureResponse future = null;
+            synchronized (requestMap) {
+                future = (FutureResponse)requestMap.remove(Integer.valueOf(response.getCorrelationId()));
             }
-            if(future!=null){
+            if (future != null) {
                 future.set(response);
-            }else{
-                if(debug)
-                    log.debug("Received unexpected response for command id: "+response.getCorrelationId());
+            } else {
+                if (debug)
+                    LOG.debug("Received unexpected response for command id: " + response.getCorrelationId());
             }
-        }else{
+        } else {
             getTransportListener().onCommand(command);
         }
     }
 
     /**
-     * If an async exception occurs, then assume no responses will arrive for any of current requests. Lets let them
-     * know of the problem.
+     * If an async exception occurs, then assume no responses will arrive for
+     * any of current requests. Lets let them know of the problem.
      */
-    public void onException(IOException error){
+    public void onException(IOException error) {
         // Copy and Clear the request Map
-        ArrayList requests=new ArrayList(requestMap.values());
+        ArrayList requests = new ArrayList(requestMap.values());
         requestMap.clear();
-        for(Iterator iter=requests.iterator();iter.hasNext();){
-            FutureResponse fr=(FutureResponse)iter.next();
+        for (Iterator iter = requests.iterator(); iter.hasNext();) {
+            FutureResponse fr = (FutureResponse)iter.next();
             fr.set(new ExceptionResponse(error));
         }
         super.onException(error);
     }
 
-    public IntSequenceGenerator getSequenceGenerator(){
+    public IntSequenceGenerator getSequenceGenerator() {
         return sequenceGenerator;
     }
 
-    public String toString(){
+    public String toString() {
         return next.toString();
     }
 }

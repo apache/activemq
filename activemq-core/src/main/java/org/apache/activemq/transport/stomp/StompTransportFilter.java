@@ -28,16 +28,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * The StompTransportFilter normally sits on top of a TcpTransport
- * that has been configured with the StompWireFormat and is used to
- * convert STOMP commands to ActiveMQ commands.
- *
- * All of the coversion work is done by delegating to the ProtocolConverter.
- *
+ * The StompTransportFilter normally sits on top of a TcpTransport that has been
+ * configured with the StompWireFormat and is used to convert STOMP commands to
+ * ActiveMQ commands. All of the coversion work is done by delegating to the
+ * ProtocolConverter.
+ * 
  * @author <a href="http://hiramchirino.com">chirino</a>
  */
 public class StompTransportFilter extends TransportFilter {
-	static final private Log log = LogFactory.getLog(StompTransportFilter.class);
+    static final private Log log = LogFactory.getLog(StompTransportFilter.class);
     private final ProtocolConverter protocolConverter;
 
     private final Object sendToActiveMQMutex = new Object();
@@ -46,60 +45,59 @@ public class StompTransportFilter extends TransportFilter {
     private final FrameTranslator frameTranslator;
 
     private boolean trace;
-    
+
     public StompTransportFilter(Transport next, FrameTranslator translator) {
-		super(next);
+        super(next);
         this.frameTranslator = translator;
         this.protocolConverter = new ProtocolConverter(this, translator);
     }
 
-	public void oneway(Object o) throws IOException {
+    public void oneway(Object o) throws IOException {
         try {
-        	final Command command = (Command) o;
-        	protocolConverter.onActiveMQCommad(command);
-		} catch (JMSException e) {
-			throw IOExceptionSupport.create(e);
-		}
-	}
+            final Command command = (Command)o;
+            protocolConverter.onActiveMQCommad(command);
+        } catch (JMSException e) {
+            throw IOExceptionSupport.create(e);
+        }
+    }
 
-	public void onCommand(Object command) {
+    public void onCommand(Object command) {
         try {
-    		if( trace ) {
-    			log.trace("Received: \n"+command);
-    		}
-        	protocolConverter.onStompCommad((StompFrame) command);
-		} catch (IOException e) {
-			onException(e);
-		} catch (JMSException e) {
-			onException(IOExceptionSupport.create(e));
-		}
-	}
+            if (trace) {
+                log.trace("Received: \n" + command);
+            }
+            protocolConverter.onStompCommad((StompFrame)command);
+        } catch (IOException e) {
+            onException(e);
+        } catch (JMSException e) {
+            onException(IOExceptionSupport.create(e));
+        }
+    }
 
-	public void sendToActiveMQ(Command command) {
-		synchronized(sendToActiveMQMutex) {
-			transportListener.onCommand(command);
-		}
-	}
+    public void sendToActiveMQ(Command command) {
+        synchronized (sendToActiveMQMutex) {
+            transportListener.onCommand(command);
+        }
+    }
 
-	public void sendToStomp(StompFrame command) throws IOException {
-		if( trace ) {
-			log.trace("Sending: \n"+command);
-		}
-		synchronized(sendToStompMutex) {
-			next.oneway(command);
-		}
-	}
+    public void sendToStomp(StompFrame command) throws IOException {
+        if (trace) {
+            log.trace("Sending: \n" + command);
+        }
+        synchronized (sendToStompMutex) {
+            next.oneway(command);
+        }
+    }
 
-    public FrameTranslator getFrameTranslator()
-    {
+    public FrameTranslator getFrameTranslator() {
         return frameTranslator;
     }
 
-	public boolean isTrace() {
-		return trace;
-	}
+    public boolean isTrace() {
+        return trace;
+    }
 
-	public void setTrace(boolean trace) {
-		this.trace = trace;
-	}
+    public void setTrace(boolean trace) {
+        this.trace = trace;
+    }
 }

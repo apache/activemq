@@ -49,7 +49,7 @@ public class JmsTestSupport extends CombinationTestSupport {
     protected ConnectionFactory factory;
     protected ActiveMQConnection connection;
     protected BrokerService broker;
-    
+
     protected List connections = Collections.synchronizedList(new ArrayList());
 
     // /////////////////////////////////////////////////////////////////
@@ -60,13 +60,13 @@ public class JmsTestSupport extends CombinationTestSupport {
     protected ActiveMQDestination createDestination(Session session, byte type) throws JMSException {
         switch (type) {
         case ActiveMQDestination.QUEUE_TYPE:
-            return (ActiveMQDestination) session.createQueue("TEST");
+            return (ActiveMQDestination)session.createQueue("TEST");
         case ActiveMQDestination.TOPIC_TYPE:
-            return (ActiveMQDestination) session.createTopic("TEST");
+            return (ActiveMQDestination)session.createTopic("TEST");
         case ActiveMQDestination.TEMP_QUEUE_TYPE:
-            return (ActiveMQDestination) session.createTemporaryQueue();
+            return (ActiveMQDestination)session.createTemporaryQueue();
         case ActiveMQDestination.TEMP_TOPIC_TYPE:
-            return (ActiveMQDestination) session.createTemporaryTopic();
+            return (ActiveMQDestination)session.createTemporaryTopic();
         }
         throw new IllegalArgumentException("type: " + type);
     }
@@ -88,7 +88,7 @@ public class JmsTestSupport extends CombinationTestSupport {
     protected void sendMessages(Session session, Destination destination, int count) throws JMSException {
         MessageProducer producer = session.createProducer(destination);
         for (int i = 0; i < count; i++) {
-            producer.send(session.createTextMessage(""+i));
+            producer.send(session.createTextMessage("" + i));
         }
         producer.close();
     }
@@ -104,21 +104,21 @@ public class JmsTestSupport extends CombinationTestSupport {
     protected void setUp() throws Exception {
         super.setUp();
 
-    	if(System.getProperty("basedir")==null){
-            File file=new File(".");
-            System.setProperty("basedir",file.getAbsolutePath());
+        if (System.getProperty("basedir") == null) {
+            File file = new File(".");
+            System.setProperty("basedir", file.getAbsolutePath());
         }
 
         broker = createBroker();
         broker.start();
         factory = createConnectionFactory();
-        connection = (ActiveMQConnection) factory.createConnection(userName, password);
+        connection = (ActiveMQConnection)factory.createConnection(userName, password);
         connections.add(connection);
     }
 
     protected void tearDown() throws Exception {
         for (Iterator iter = connections.iterator(); iter.hasNext();) {
-            Connection conn= (Connection) iter.next();
+            Connection conn = (Connection)iter.next();
             try {
                 conn.close();
             } catch (Throwable e) {
@@ -127,7 +127,7 @@ public class JmsTestSupport extends CombinationTestSupport {
         broker.stop();
         super.tearDown();
     }
-    
+
     protected void safeClose(Connection c) {
         try {
             c.close();
@@ -155,17 +155,17 @@ public class JmsTestSupport extends CombinationTestSupport {
         } catch (Throwable e) {
         }
     }
-    
+
     protected void profilerPause(String prompt) throws IOException {
-        if( System.getProperty("profiler")!=null ) {
+        if (System.getProperty("profiler") != null) {
             pause(prompt);
         }
     }
-    
+
     protected void pause(String prompt) throws IOException {
         System.out.println();
-        System.out.println(prompt+"> Press enter to continue: ");
-        while( System.in.read()!='\n' ) {            
+        System.out.println(prompt + "> Press enter to continue: ");
+        while (System.in.read() != '\n') {
         }
     }
 

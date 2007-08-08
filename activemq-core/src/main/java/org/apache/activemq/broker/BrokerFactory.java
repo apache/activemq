@@ -23,26 +23,28 @@ import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.IOExceptionSupport;
 
 /**
- * A helper class to create a fully configured broker service using a URI.
- * The list of currently supported URI syntaxes is described
- * <a href="http://activemq.apache.org/how-do-i-embed-a-broker-inside-a-connection.html">here</a>
+ * A helper class to create a fully configured broker service using a URI. The
+ * list of currently supported URI syntaxes is described <a
+ * href="http://activemq.apache.org/how-do-i-embed-a-broker-inside-a-connection.html">here</a>
  * 
  * @version $Revision$
  */
 public class BrokerFactory {
 
-    static final private FactoryFinder brokerFactoryHandlerFinder = new FactoryFinder("META-INF/services/org/apache/activemq/broker/");
+    static final private FactoryFinder brokerFactoryHandlerFinder = new FactoryFinder(
+                                                                                      "META-INF/services/org/apache/activemq/broker/");
 
     public static BrokerFactoryHandler createBrokerFactoryHandler(String type) throws IOException {
         try {
             return (BrokerFactoryHandler)brokerFactoryHandlerFinder.newInstance(type);
         } catch (Throwable e) {
-            throw IOExceptionSupport.create("Could load "+type+" factory:"+e, e);
+            throw IOExceptionSupport.create("Could load " + type + " factory:" + e, e);
         }
     }
 
     /**
      * Creates a broker from a URI configuration
+     * 
      * @param brokerURI the URI scheme to configure the broker
      * @throws Exception
      */
@@ -52,14 +54,17 @@ public class BrokerFactory {
 
     /**
      * Creates a broker from a URI configuration
+     * 
      * @param brokerURI the URI scheme to configure the broker
-     * @param startBroker whether or not the broker should have its {@link BrokerService#start()} method called after construction
+     * @param startBroker whether or not the broker should have its
+     *                {@link BrokerService#start()} method called after
+     *                construction
      * @throws Exception
      */
     public static BrokerService createBroker(URI brokerURI, boolean startBroker) throws Exception {
-        if( brokerURI.getScheme() == null )
-            throw new IllegalArgumentException("Invalid broker URI, no scheme specified: "+brokerURI);
-        
+        if (brokerURI.getScheme() == null) {
+            throw new IllegalArgumentException("Invalid broker URI, no scheme specified: " + brokerURI);
+        }
         BrokerFactoryHandler handler = createBrokerFactoryHandler(brokerURI.getScheme());
         BrokerService broker = handler.createBroker(brokerURI);
         if (startBroker) {
@@ -68,9 +73,9 @@ public class BrokerFactory {
         return broker;
     }
 
-
     /**
      * Creates a broker from a URI configuration
+     * 
      * @param brokerURI the URI scheme to configure the broker
      * @throws Exception
      */
@@ -78,16 +83,17 @@ public class BrokerFactory {
         return createBroker(new URI(brokerURI));
     }
 
-
     /**
      * Creates a broker from a URI configuration
+     * 
      * @param brokerURI the URI scheme to configure the broker
-     * @param startBroker whether or not the broker should have its {@link BrokerService#start()} method called after construction
+     * @param startBroker whether or not the broker should have its
+     *                {@link BrokerService#start()} method called after
+     *                construction
      * @throws Exception
      */
     public static BrokerService createBroker(String brokerURI, boolean startBroker) throws Exception {
         return createBroker(new URI(brokerURI), startBroker);
     }
-
 
 }

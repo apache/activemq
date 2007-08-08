@@ -16,6 +16,10 @@
  */
 package org.apache.activemq.transport.reliable;
 
+import java.io.IOException;
+import java.net.DatagramSocket;
+import java.net.SocketAddress;
+
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.udp.CommandDatagramSocket;
 import org.apache.activemq.transport.udp.DatagramHeaderMarshaller;
@@ -23,12 +27,7 @@ import org.apache.activemq.transport.udp.UdpTransport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.IOException;
-import java.net.DatagramSocket;
-import java.net.SocketAddress;
-
 /**
- * 
  * @version $Revision: $
  */
 public class UnreliableCommandDatagramSocket extends CommandDatagramSocket {
@@ -36,15 +35,13 @@ public class UnreliableCommandDatagramSocket extends CommandDatagramSocket {
 
     private DropCommandStrategy dropCommandStrategy;
 
-    public UnreliableCommandDatagramSocket(UdpTransport transport, OpenWireFormat wireFormat, int datagramSize,
-            SocketAddress targetAddress, DatagramHeaderMarshaller headerMarshaller, DatagramSocket channel,
-            DropCommandStrategy strategy) {
+    public UnreliableCommandDatagramSocket(UdpTransport transport, OpenWireFormat wireFormat, int datagramSize, SocketAddress targetAddress,
+                                           DatagramHeaderMarshaller headerMarshaller, DatagramSocket channel, DropCommandStrategy strategy) {
         super(transport, wireFormat, datagramSize, targetAddress, headerMarshaller, channel);
         this.dropCommandStrategy = strategy;
     }
 
-    protected void sendWriteBuffer(int commandId, SocketAddress address, byte[] data, boolean redelivery)
-            throws IOException {
+    protected void sendWriteBuffer(int commandId, SocketAddress address, byte[] data, boolean redelivery) throws IOException {
         if (dropCommandStrategy.shouldDropCommand(commandId, address, redelivery)) {
             log.info("Dropping datagram with command: " + commandId);
 
@@ -53,8 +50,7 @@ public class UnreliableCommandDatagramSocket extends CommandDatagramSocket {
             if (bufferCache != null && !redelivery) {
                 bufferCache.addBuffer(commandId, data);
             }
-        }
-        else {
+        } else {
             super.sendWriteBuffer(commandId, address, data, redelivery);
         }
     }

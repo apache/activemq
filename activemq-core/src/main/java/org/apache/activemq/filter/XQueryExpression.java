@@ -34,9 +34,9 @@ public final class XQueryExpression implements BooleanExpression {
     }
 
     public String toString() {
-        return "XQUERY "+ConstantExpression.encodeString(xpath);
+        return "XQUERY " + ConstantExpression.encodeString(xpath);
     }
-    
+
     /**
      * @param message
      * @return true if the expression evaluates to Boolean.TRUE.
@@ -44,7 +44,7 @@ public final class XQueryExpression implements BooleanExpression {
      */
     public boolean matches(MessageEvaluationContext message) throws JMSException {
         Object object = evaluate(message);
-        return object!=null && object==Boolean.TRUE;            
+        return object != null && object == Boolean.TRUE;
     }
 
 }

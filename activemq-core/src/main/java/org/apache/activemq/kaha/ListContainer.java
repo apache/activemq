@@ -18,16 +18,17 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 /**
- * Represents a container of persistent objects in the store Acts as a map, but values can be retrieved in insertion
- * order
+ * Represents a container of persistent objects in the store Acts as a map, but
+ * values can be retrieved in insertion order
  * 
  * @version $Revision: 1.2 $
  */
-public interface ListContainer<V> extends List<V>{
+public interface ListContainer<V> extends List<V> {
 
     /**
-     * The container is created or retrieved in an unloaded state. load populates the container will all the indexes
-     * used etc and should be called before any operations on the container
+     * The container is created or retrieved in an unloaded state. load
+     * populates the container will all the indexes used etc and should be
+     * called before any operations on the container
      */
     public void load();
 
@@ -43,7 +44,8 @@ public interface ListContainer<V> extends List<V>{
     public boolean isLoaded();
 
     /**
-     * For homogenous containers can set a custom marshaller for loading values The default uses Object serialization
+     * For homogenous containers can set a custom marshaller for loading values
+     * The default uses Object serialization
      * 
      * @param marshaller
      */
@@ -67,8 +69,8 @@ public interface ListContainer<V> extends List<V>{
     public void addFirst(V o);
 
     /**
-     * Appends the given element to the end of this list. (Identical in function to the <tt>add</tt> method; included
-     * only for consistency.)
+     * Appends the given element to the end of this list. (Identical in function
+     * to the <tt>add</tt> method; included only for consistency.)
      * 
      * @param o the element to be inserted at the end of this list.
      */
@@ -91,7 +93,8 @@ public interface ListContainer<V> extends List<V>{
     public V removeLast();
 
     /**
-     * remove an objecr from the list without retrieving the old value from the store
+     * remove an objecr from the list without retrieving the old value from the
+     * store
      * 
      * @param position
      * @return true if successful
@@ -107,7 +110,8 @@ public interface ListContainer<V> extends List<V>{
     public StoreEntry placeLast(V object);
 
     /**
-     * insert an Object in first position int the list but get a StoreEntry of its position
+     * insert an Object in first position int the list but get a StoreEntry of
+     * its position
      * 
      * @param object
      * @return the location in the Store
@@ -115,12 +119,13 @@ public interface ListContainer<V> extends List<V>{
     public StoreEntry placeFirst(V object);
 
     /**
-     * Advanced feature = must ensure the object written doesn't overwrite other objects in the container
+     * Advanced feature = must ensure the object written doesn't overwrite other
+     * objects in the container
      * 
      * @param entry
      * @param object
      */
-    public void update(StoreEntry entry,V object);
+    public void update(StoreEntry entry, V object);
 
     /**
      * Retrieve an Object from the Store by its location
@@ -167,10 +172,11 @@ public interface ListContainer<V> extends List<V>{
      * @return true if successful
      */
     public boolean remove(StoreEntry entry);
-    
+
     /**
-     * It's possible that a StoreEntry could be come stale
-     * this will return an upto date entry for the StoreEntry position
+     * It's possible that a StoreEntry could be come stale this will return an
+     * upto date entry for the StoreEntry position
+     * 
      * @param entry old entry
      * @return a refreshed StoreEntry
      */

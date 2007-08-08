@@ -44,7 +44,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
 
     private DiscoveryAgent discoveryAgent;
     private ConcurrentHashMap bridges = new ConcurrentHashMap();
-    
+
     public DiscoveryNetworkConnector() {
     }
 
@@ -56,74 +56,74 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
         setDiscoveryAgent(DiscoveryAgentFactory.createDiscoveryAgent(discoveryURI));
     }
 
-    public void onServiceAdd(DiscoveryEvent event){
-        String localURIName=localURI.getScheme() + "://" + localURI.getHost();
+    public void onServiceAdd(DiscoveryEvent event) {
+        String localURIName = localURI.getScheme() + "://" + localURI.getHost();
         // Ignore events once we start stopping.
-        if(serviceSupport.isStopped()||serviceSupport.isStopping())
+        if (serviceSupport.isStopped() || serviceSupport.isStopping())
             return;
-        String url=event.getServiceName();
-        if(url!=null){
+        String url = event.getServiceName();
+        if (url != null) {
             URI uri;
-            try{
-                uri=new URI(url);
-            }catch(URISyntaxException e){
-                log.warn("Could not connect to remote URI: "+url+" due to bad URI syntax: "+e,e);
+            try {
+                uri = new URI(url);
+            } catch (URISyntaxException e) {
+                log.warn("Could not connect to remote URI: " + url + " due to bad URI syntax: " + e, e);
                 return;
             }
             // Should we try to connect to that URI?
-            if(bridges.containsKey(uri)||localURI.equals(uri)
-                    ||(connectionFilter!=null&&!connectionFilter.connectTo(uri)))
+            if (bridges.containsKey(uri) || localURI.equals(uri)
+                || (connectionFilter != null && !connectionFilter.connectTo(uri)))
                 return;
-            URI connectUri=uri;
-            log.info("Establishing network connection between from "+localURIName+" to "+connectUri);
+            URI connectUri = uri;
+            log.info("Establishing network connection between from " + localURIName + " to " + connectUri);
             Transport remoteTransport;
-            try{
-                remoteTransport=TransportFactory.connect(connectUri);
-            }catch(Exception e){
-                log.warn("Could not connect to remote URI: "+localURIName+": "+e.getMessage());
-                log.debug("Connection failure exception: "+e,e);
+            try {
+                remoteTransport = TransportFactory.connect(connectUri);
+            } catch (Exception e) {
+                log.warn("Could not connect to remote URI: " + localURIName + ": " + e.getMessage());
+                log.debug("Connection failure exception: " + e, e);
                 return;
             }
             Transport localTransport;
-            try{
-                localTransport=createLocalTransport();
-            }catch(Exception e){
+            try {
+                localTransport = createLocalTransport();
+            } catch (Exception e) {
                 ServiceSupport.dispose(remoteTransport);
-                log.warn("Could not connect to local URI: "+localURIName+": "+e.getMessage());
-                log.debug("Connection failure exception: "+e,e);
+                log.warn("Could not connect to local URI: " + localURIName + ": " + e.getMessage());
+                log.debug("Connection failure exception: " + e, e);
                 return;
             }
-            NetworkBridge bridge=createBridge(localTransport,remoteTransport,event);
-            bridges.put(uri,bridge);
-            try{
+            NetworkBridge bridge = createBridge(localTransport, remoteTransport, event);
+            bridges.put(uri, bridge);
+            try {
                 bridge.start();
-            }catch(Exception e){
+            } catch (Exception e) {
                 ServiceSupport.dispose(localTransport);
                 ServiceSupport.dispose(remoteTransport);
-                log.warn("Could not start network bridge between: "+localURIName+" and: "+uri+" due to: "+e);
-                log.debug("Start failure exception: "+e,e);
-                try{
+                log.warn("Could not start network bridge between: " + localURIName + " and: " + uri
+                         + " due to: " + e);
+                log.debug("Start failure exception: " + e, e);
+                try {
                     discoveryAgent.serviceFailed(event);
-                }catch(IOException e1){
+                } catch (IOException e1) {
                 }
                 return;
             }
         }
     }
-    
+
     public void onServiceRemove(DiscoveryEvent event) {
         String url = event.getServiceName();
         if (url != null) {
             URI uri;
             try {
                 uri = new URI(url);
-            }
-            catch (URISyntaxException e) {
+            } catch (URISyntaxException e) {
                 log.warn("Could not connect to remote URI: " + url + " due to bad URI syntax: " + e, e);
                 return;
             }
 
-            NetworkBridge bridge = (NetworkBridge) bridges.remove(uri);
+            NetworkBridge bridge = (NetworkBridge)bridges.remove(uri);
             if (bridge == null)
                 return;
 
@@ -153,55 +153,52 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
 
     protected void handleStop(ServiceStopper stopper) throws Exception {
         for (Iterator i = bridges.values().iterator(); i.hasNext();) {
-            NetworkBridge bridge = (NetworkBridge) i.next();
+            NetworkBridge bridge = (NetworkBridge)i.next();
             try {
                 bridge.stop();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 stopper.onException(this, e);
             }
         }
         try {
             this.discoveryAgent.stop();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             stopper.onException(this, e);
         }
 
         super.handleStop(stopper);
     }
 
-    protected NetworkBridge createBridge(Transport localTransport, Transport remoteTransport, final DiscoveryEvent event) {
+    protected NetworkBridge createBridge(Transport localTransport, Transport remoteTransport,
+                                         final DiscoveryEvent event) {
         NetworkBridgeListener listener = new NetworkBridgeListener() {
 
-            public void bridgeFailed(){
-                if( !serviceSupport.isStopped() ) {
+            public void bridgeFailed() {
+                if (!serviceSupport.isStopped()) {
                     try {
                         discoveryAgent.serviceFailed(event);
                     } catch (IOException e) {
                     }
                 }
-                
+
             }
 
-			public void onStart(NetworkBridge bridge) {
-				 registerNetworkBridgeMBean(bridge);
-			}
+            public void onStart(NetworkBridge bridge) {
+                registerNetworkBridgeMBean(bridge);
+            }
 
-			public void onStop(NetworkBridge bridge) {
-				unregisterNetworkBridgeMBean(bridge);
-			}
+            public void onStop(NetworkBridge bridge) {
+                unregisterNetworkBridgeMBean(bridge);
+            }
 
-            
         };
-        DemandForwardingBridge result = NetworkBridgeFactory.createBridge(this,localTransport,remoteTransport,listener);
+        DemandForwardingBridge result = NetworkBridgeFactory.createBridge(this, localTransport,
+                                                                          remoteTransport, listener);
         return configureBridge(result);
     }
 
     public String getName() {
         return discoveryAgent.toString();
     }
-
-   
 
 }

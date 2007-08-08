@@ -22,10 +22,10 @@ import org.apache.activemq.kaha.impl.index.IndexLinkedList;
 /**
  * @version $Revision: 1.2 $
  */
-public class ContainerListIterator extends ContainerValueCollectionIterator implements ListIterator{
+public class ContainerListIterator extends ContainerValueCollectionIterator implements ListIterator {
 
-    protected ContainerListIterator(ListContainerImpl container,IndexLinkedList list,IndexItem start){
-        super(container,list,start);
+    protected ContainerListIterator(ListContainerImpl container, IndexLinkedList list, IndexItem start) {
+        super(container, list, start);
     }
 
     /*
@@ -33,10 +33,10 @@ public class ContainerListIterator extends ContainerValueCollectionIterator impl
      * 
      * @see java.util.ListIterator#hasPrevious()
      */
-    public boolean hasPrevious(){
-        synchronized(container){
-            nextItem=(IndexItem)list.refreshEntry(nextItem);
-            return list.getPrevEntry(nextItem)!=null;
+    public boolean hasPrevious() {
+        synchronized (container) {
+            nextItem = (IndexItem)list.refreshEntry(nextItem);
+            return list.getPrevEntry(nextItem) != null;
         }
     }
 
@@ -45,11 +45,11 @@ public class ContainerListIterator extends ContainerValueCollectionIterator impl
      * 
      * @see java.util.ListIterator#previous()
      */
-    public Object previous(){
-        synchronized(container){
-            nextItem=(IndexItem)list.refreshEntry(nextItem);
-            nextItem=list.getPrevEntry(nextItem);
-            return nextItem!=null?container.getValue(nextItem):null;
+    public Object previous() {
+        synchronized (container) {
+            nextItem = (IndexItem)list.refreshEntry(nextItem);
+            nextItem = list.getPrevEntry(nextItem);
+            return nextItem != null ? container.getValue(nextItem) : null;
         }
     }
 
@@ -58,14 +58,14 @@ public class ContainerListIterator extends ContainerValueCollectionIterator impl
      * 
      * @see java.util.ListIterator#nextIndex()
      */
-    public int nextIndex(){
-        int result=-1;
-        if(nextItem!=null){
-            synchronized(container){
-                nextItem=(IndexItem)list.refreshEntry(nextItem);
-                StoreEntry next=list.getNextEntry(nextItem);
-                if(next!=null){
-                    result=container.getInternalList().indexOf(next);
+    public int nextIndex() {
+        int result = -1;
+        if (nextItem != null) {
+            synchronized (container) {
+                nextItem = (IndexItem)list.refreshEntry(nextItem);
+                StoreEntry next = list.getNextEntry(nextItem);
+                if (next != null) {
+                    result = container.getInternalList().indexOf(next);
                 }
             }
         }
@@ -77,14 +77,14 @@ public class ContainerListIterator extends ContainerValueCollectionIterator impl
      * 
      * @see java.util.ListIterator#previousIndex()
      */
-    public int previousIndex(){
-        int result=-1;
-        if(nextItem!=null){
-            synchronized(container){
-                nextItem=(IndexItem)list.refreshEntry(nextItem);
-                StoreEntry prev=list.getPrevEntry(nextItem);
-                if(prev!=null){
-                    result=container.getInternalList().indexOf(prev);
+    public int previousIndex() {
+        int result = -1;
+        if (nextItem != null) {
+            synchronized (container) {
+                nextItem = (IndexItem)list.refreshEntry(nextItem);
+                StoreEntry prev = list.getPrevEntry(nextItem);
+                if (prev != null) {
+                    result = container.getInternalList().indexOf(prev);
                 }
             }
         }
@@ -96,9 +96,9 @@ public class ContainerListIterator extends ContainerValueCollectionIterator impl
      * 
      * @see java.util.ListIterator#set(E)
      */
-    public void set(Object o){
-        IndexItem item=((ListContainerImpl)container).internalSet(previousIndex()+1,o);
-        nextItem=item;
+    public void set(Object o) {
+        IndexItem item = ((ListContainerImpl)container).internalSet(previousIndex() + 1, o);
+        nextItem = item;
     }
 
     /*
@@ -106,8 +106,8 @@ public class ContainerListIterator extends ContainerValueCollectionIterator impl
      * 
      * @see java.util.ListIterator#add(E)
      */
-    public void add(Object o){
-        IndexItem item=((ListContainerImpl)container).internalAdd(previousIndex()+1,o);
-        nextItem=item;
+    public void add(Object o) {
+        IndexItem item = ((ListContainerImpl)container).internalAdd(previousIndex() + 1, o);
+        nextItem = item;
     }
 }

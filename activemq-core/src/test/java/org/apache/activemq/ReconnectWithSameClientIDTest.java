@@ -37,18 +37,18 @@ public class ReconnectWithSameClientIDTest extends EmbeddedBrokerTestSupport {
 
         // now lets create another which should fail
         for (int i = 1; i < 11; i++) {
-        Connection connection2 = connectionFactory.createConnection();
-        try {
-            useConnection(connection2);
-            fail("Should have thrown InvalidClientIDException on attempt" + i);
-        }
-        catch (InvalidClientIDException e) {
-            connection2.close();
-            LOG.info("Caught expected: " + e);
-        }
+            Connection connection2 = connectionFactory.createConnection();
+            try {
+                useConnection(connection2);
+                fail("Should have thrown InvalidClientIDException on attempt" + i);
+            } catch (InvalidClientIDException e) {
+                connection2.close();
+                LOG.info("Caught expected: " + e);
+            }
         }
 
-        // now lets try closing the original connection and creating a new connection with the same ID
+        // now lets try closing the original connection and creating a new
+        // connection with the same ID
         connection.close();
         connection = connectionFactory.createConnection();
         useConnection(connection);

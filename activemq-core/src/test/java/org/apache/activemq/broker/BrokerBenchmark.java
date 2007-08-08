@@ -16,8 +16,10 @@
  */
 package org.apache.activemq.broker;
 
-import junit.framework.Test;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import junit.framework.Test;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -29,9 +31,6 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * BrokerBenchmark is used to get an idea of the raw performance of a broker.
@@ -55,18 +54,18 @@ public class BrokerBenchmark extends BrokerTestSupport {
     public boolean deliveryMode;
 
     public void initCombosForTestPerformance() {
-        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST")});
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"),
+                                                          new ActiveMQTopic("TEST")});
         addCombinationValues("PRODUCER_COUNT", new Object[] {new Integer("1"), new Integer("10")});
         addCombinationValues("CONSUMER_COUNT", new Object[] {new Integer("1"), new Integer("10")});
         addCombinationValues("CONSUMER_COUNT", new Object[] {new Integer("1"), new Integer("10")});
-        addCombinationValues("deliveryMode", new Object[] {
-        // Boolean.FALSE,
-                             Boolean.TRUE});
+        addCombinationValues("deliveryMode", new Object[] {Boolean.TRUE});
     }
 
     public void testPerformance() throws Exception {
 
-        log.info("Running Benchmark for destination=" + destination + ", producers=" + PRODUCER_COUNT + ", consumers=" + CONSUMER_COUNT + ", deliveryMode=" + deliveryMode);
+        log.info("Running Benchmark for destination=" + destination + ", producers=" + PRODUCER_COUNT
+                 + ", consumers=" + CONSUMER_COUNT + ", deliveryMode=" + deliveryMode);
         final int CONSUME_COUNT = destination.isTopic() ? CONSUMER_COUNT * PRODUCE_COUNT : PRODUCE_COUNT;
 
         final Semaphore consumersStarted = new Semaphore(1 - (CONSUMER_COUNT));
@@ -122,7 +121,8 @@ public class BrokerBenchmark extends BrokerTestSupport {
                             }
 
                             if (msg != null) {
-                                connection.send(createAck(consumerInfo, msg, counter, MessageAck.STANDARD_ACK_TYPE));
+                                connection.send(createAck(consumerInfo, msg, counter,
+                                                          MessageAck.STANDARD_ACK_TYPE));
                             } else if (receiveCounter.get() < CONSUME_COUNT) {
                                 log.info("Consumer stall, waiting for message #" + receiveCounter.get() + 1);
                             }
@@ -179,7 +179,8 @@ public class BrokerBenchmark extends BrokerTestSupport {
         consumersFinished.acquire();
         long end2 = System.currentTimeMillis();
 
-        log.info("Results for destination=" + destination + ", producers=" + PRODUCER_COUNT + ", consumers=" + CONSUMER_COUNT + ", deliveryMode=" + deliveryMode);
+        log.info("Results for destination=" + destination + ", producers=" + PRODUCER_COUNT + ", consumers="
+                 + CONSUMER_COUNT + ", deliveryMode=" + deliveryMode);
         log.info("Produced at messages/sec: " + (PRODUCE_COUNT * 1000.0 / (end1 - start)));
         log.info("Consumed at messages/sec: " + (CONSUME_COUNT * 1000.0 / (end2 - start)));
         profilerPause("Benchmark done.  Stop profiler ");

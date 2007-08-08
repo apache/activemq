@@ -28,14 +28,13 @@ import java.util.concurrent.TimeUnit;
  */
 public class Scheduler {
 
-    
-    public static final ScheduledThreadPoolExecutor clockDaemon = new ScheduledThreadPoolExecutor(5, new ThreadFactory(){
-            public Thread newThread(Runnable runnable) {
-                Thread thread = new Thread(runnable,"ActiveMQ Scheduler");
-                thread.setDaemon(true);
-                return thread;
-            }
-        });
+    public static final ScheduledThreadPoolExecutor clockDaemon = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
+        public Thread newThread(Runnable runnable) {
+            Thread thread = new Thread(runnable, "ActiveMQ Scheduler");
+            thread.setDaemon(true);
+            return thread;
+        }
+    });
     static {
         clockDaemon.setKeepAliveTime(5, TimeUnit.SECONDS);
     }
@@ -47,12 +46,12 @@ public class Scheduler {
     }
 
     synchronized static public void cancel(Runnable task) {
-        ScheduledFuture ticket = (ScheduledFuture) clockTickets.remove(task);
-        if( ticket!=null ) {
+        ScheduledFuture ticket = (ScheduledFuture)clockTickets.remove(task);
+        if (ticket != null) {
             ticket.cancel(false);
 
             if (ticket instanceof Runnable)
-            	clockDaemon.remove((Runnable) ticket);            
+                clockDaemon.remove((Runnable)ticket);
         }
     }
 

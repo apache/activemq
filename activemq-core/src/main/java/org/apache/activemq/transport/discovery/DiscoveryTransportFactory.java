@@ -35,17 +35,17 @@ public class DiscoveryTransportFactory extends FailoverTransportFactory {
     public Transport createTransport(CompositeData compositData) throws IOException {
         Map parameters = new HashMap(compositData.getParameters());
         DiscoveryTransport transport = new DiscoveryTransport(createTransport(parameters));
-        
+
         DiscoveryAgent discoveryAgent = DiscoveryAgentFactory.createDiscoveryAgent(compositData.getComponents()[0]);
         transport.setDiscoveryAgent(discoveryAgent);
-        IntrospectionSupport.setProperties(transport,parameters);
+        IntrospectionSupport.setProperties(transport, parameters);
 
         return transport;
     }
 
-    public TransportServer doBind(String brokerId,URI location) throws IOException{
-        throw new IOException("Invalid server URI: "+location);
-//        try{
+    public TransportServer doBind(String brokerId, URI location) throws IOException {
+        throw new IOException("Invalid server URI: " + location);
+// try{
 //            CompositeData compositData=URISupport.parseComposite(location);
 //            URI[] components=compositData.getComponents();
 //            if(components.length!=1){

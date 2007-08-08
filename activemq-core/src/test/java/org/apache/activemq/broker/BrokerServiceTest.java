@@ -16,61 +16,61 @@
  */
 package org.apache.activemq.broker;
 
+import junit.framework.TestCase;
 import org.apache.activemq.network.NetworkConnector;
 
-import junit.framework.TestCase;
-
 /**
- * Tests for the BrokerService class 
+ * Tests for the BrokerService class
+ * 
  * @author chirino
  */
 public class BrokerServiceTest extends TestCase {
 
-	public void testAddRemoveTransportsWithJMX() throws Exception {
-		BrokerService service = new BrokerService();
-		service.setUseJmx(true);
-		service.setPersistent(false);
-		TransportConnector connector = service.addConnector("tcp://localhost:0");
-		service.start();
-		
-		service.removeConnector(connector);
-		connector.stop();
-		service.stop();
-	}
-	
-	public void testAddRemoveTransportsWithoutJMX() throws Exception {
-		BrokerService service = new BrokerService();
-		service.setPersistent(false);
-		service.setUseJmx(false);
-		TransportConnector connector = service.addConnector("tcp://localhost:0");
-		service.start();
-		
-		service.removeConnector(connector);
-		connector.stop();
-		service.stop();
-	}
-	
-	public void testAddRemoveNetworkWithJMX() throws Exception {
-		BrokerService service = new BrokerService();
-		service.setPersistent(false);
-		service.setUseJmx(true);
-		NetworkConnector connector = service.addNetworkConnector("multicast://default");
-		service.start();
-		
-		service.removeNetworkConnector(connector);
-		connector.stop();
-		service.stop();
-	}
-	
-	public void testAddRemoveNetworkWithoutJMX() throws Exception {
-		BrokerService service = new BrokerService();
-		service.setPersistent(false);
-		service.setUseJmx(false);
-		NetworkConnector connector = service.addNetworkConnector("multicast://default");
-		service.start();
-		
-		service.removeNetworkConnector(connector);
-		connector.stop();
-		service.stop();
-	}
+    public void testAddRemoveTransportsWithJMX() throws Exception {
+        BrokerService service = new BrokerService();
+        service.setUseJmx(true);
+        service.setPersistent(false);
+        TransportConnector connector = service.addConnector("tcp://localhost:0");
+        service.start();
+
+        service.removeConnector(connector);
+        connector.stop();
+        service.stop();
+    }
+
+    public void testAddRemoveTransportsWithoutJMX() throws Exception {
+        BrokerService service = new BrokerService();
+        service.setPersistent(false);
+        service.setUseJmx(false);
+        TransportConnector connector = service.addConnector("tcp://localhost:0");
+        service.start();
+
+        service.removeConnector(connector);
+        connector.stop();
+        service.stop();
+    }
+
+    public void testAddRemoveNetworkWithJMX() throws Exception {
+        BrokerService service = new BrokerService();
+        service.setPersistent(false);
+        service.setUseJmx(true);
+        NetworkConnector connector = service.addNetworkConnector("multicast://default");
+        service.start();
+
+        service.removeNetworkConnector(connector);
+        connector.stop();
+        service.stop();
+    }
+
+    public void testAddRemoveNetworkWithoutJMX() throws Exception {
+        BrokerService service = new BrokerService();
+        service.setPersistent(false);
+        service.setUseJmx(false);
+        NetworkConnector connector = service.addNetworkConnector("multicast://default");
+        service.start();
+
+        service.removeNetworkConnector(connector);
+        connector.stop();
+        service.stop();
+    }
 }

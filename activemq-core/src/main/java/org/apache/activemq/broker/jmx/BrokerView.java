@@ -31,16 +31,16 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 
 public class BrokerView implements BrokerViewMBean {
-    
+
     final ManagedRegionBroker broker;
-	private final BrokerService brokerService;
+    private final BrokerService brokerService;
     private final AtomicInteger sessionIdCounter = new AtomicInteger(0);
 
     public BrokerView(BrokerService brokerService, ManagedRegionBroker managedBroker) throws Exception {
         this.brokerService = brokerService;
-		this.broker = managedBroker;
+        this.broker = managedBroker;
     }
-    
+
     public ManagedRegionBroker getBroker() {
         return broker;
     }
@@ -48,31 +48,35 @@ public class BrokerView implements BrokerViewMBean {
     public String getBrokerId() {
         return broker.getBrokerId().toString();
     }
-    
+
     public void gc() throws Exception {
-    	brokerService.getBroker().gc();
+        brokerService.getBroker().gc();
     }
 
     public void start() throws Exception {
-    	brokerService.start();
+        brokerService.start();
     }
-    
+
     public void stop() throws Exception {
-    	brokerService.stop();
+        brokerService.stop();
     }
-    
+
     public long getTotalEnqueueCount() {
-        return broker.getDestinationStatistics().getEnqueues().getCount();    
+        return broker.getDestinationStatistics().getEnqueues().getCount();
     }
+
     public long getTotalDequeueCount() {
         return broker.getDestinationStatistics().getDequeues().getCount();
     }
+
     public long getTotalConsumerCount() {
         return broker.getDestinationStatistics().getConsumers().getCount();
     }
+
     public long getTotalMessageCount() {
         return broker.getDestinationStatistics().getMessages().getCount();
-    }    
+    }
+
     public long getTotalMessagesCached() {
         return broker.getDestinationStatistics().getMessagesCached().getCount();
     }
@@ -80,71 +84,72 @@ public class BrokerView implements BrokerViewMBean {
     public int getMemoryPercentageUsed() {
         return brokerService.getMemoryManager().getPercentUsage();
     }
+
     public long getMemoryLimit() {
         return brokerService.getMemoryManager().getLimit();
     }
+
     public void setMemoryLimit(long limit) {
-    	brokerService.getMemoryManager().setLimit(limit);
+        brokerService.getMemoryManager().setLimit(limit);
     }
-    
+
     public void resetStatistics() {
         broker.getDestinationStatistics().reset();
     }
-    
+
     public void enableStatistics() {
         broker.getDestinationStatistics().setEnabled(true);
-    }    
-    
+    }
+
     public void disableStatistics() {
         broker.getDestinationStatistics().setEnabled(false);
-    }   
-    
-    public boolean isStatisticsEnabled() {
-    	return broker.getDestinationStatistics().isEnabled();
     }
-    
+
+    public boolean isStatisticsEnabled() {
+        return broker.getDestinationStatistics().isEnabled();
+    }
 
     public void terminateJVM(int exitCode) {
         System.exit(exitCode);
     }
 
-    public ObjectName[] getTopics(){
+    public ObjectName[] getTopics() {
         return broker.getTopics();
     }
 
-    public ObjectName[] getQueues(){
+    public ObjectName[] getQueues() {
         return broker.getQueues();
     }
 
-    public ObjectName[] getTemporaryTopics(){
+    public ObjectName[] getTemporaryTopics() {
         return broker.getTemporaryTopics();
     }
 
-    public ObjectName[] getTemporaryQueues(){
+    public ObjectName[] getTemporaryQueues() {
         return broker.getTemporaryQueues();
     }
 
-    public ObjectName[] getTopicSubscribers(){
-      return broker.getTemporaryTopicSubscribers();
-    }
-
-    public ObjectName[] getDurableTopicSubscribers(){
-        return broker.getDurableTopicSubscribers();
-    }
-
-    public ObjectName[] getQueueSubscribers(){
-       return broker.getQueueSubscribers();
-    }
-
-    public ObjectName[] getTemporaryTopicSubscribers(){
+    public ObjectName[] getTopicSubscribers() {
         return broker.getTemporaryTopicSubscribers();
     }
 
-    public ObjectName[] getTemporaryQueueSubscribers(){
+    public ObjectName[] getDurableTopicSubscribers() {
+        return broker.getDurableTopicSubscribers();
+    }
+
+    public ObjectName[] getQueueSubscribers() {
+        return broker.getQueueSubscribers();
+    }
+
+    public ObjectName[] getTemporaryTopicSubscribers() {
+        return broker.getTemporaryTopicSubscribers();
+    }
+
+    public ObjectName[] getTemporaryQueueSubscribers() {
         return broker.getTemporaryQueueSubscribers();
     }
-    
-    public ObjectName[] getInactiveDurableTopicSubscribers(){
+
+    public ObjectName[] getInactiveDurableTopicSubscribers() {
         return broker.getInactiveDurableTopicSubscribers();
     }
 
@@ -157,14 +162,17 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     public void removeTopic(String name) throws Exception {
-        broker.removeDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQTopic(name), 1000);
+        broker.removeDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQTopic(name),
+                                 1000);
     }
 
     public void removeQueue(String name) throws Exception {
-        broker.removeDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQQueue(name), 1000);
+        broker.removeDestination(getConnectionContext(broker.getContextBroker()), new ActiveMQQueue(name),
+                                 1000);
     }
-    
-    public ObjectName createDurableSubscriber(String clientId, String subscriberName, String topicName, String selector) throws Exception {
+
+    public ObjectName createDurableSubscriber(String clientId, String subscriberName, String topicName,
+                                              String selector) throws Exception {
         ConnectionContext context = new ConnectionContext();
         context.setBroker(broker);
         context.setClientId(clientId);
@@ -194,11 +202,10 @@ public class BrokerView implements BrokerViewMBean {
         context.setClientId(clientId);
         broker.removeSubscription(context, info);
     }
-    
-    
+
     /**
-     * Returns the broker's administration connection context used for configuring the broker
-     * at startup
+     * Returns the broker's administration connection context used for
+     * configuring the broker at startup
      */
     public static ConnectionContext getConnectionContext(Broker broker) {
         ConnectionContext adminConnectionContext = broker.getAdminConnectionContext();
@@ -208,11 +215,12 @@ public class BrokerView implements BrokerViewMBean {
         }
         return adminConnectionContext;
     }
-    
+
     /**
-     * Factory method to create the new administration connection context object.
-     * Note this method is here rather than inside a default broker implementation to
-     * ensure that the broker reference inside it is the outer most interceptor
+     * Factory method to create the new administration connection context
+     * object. Note this method is here rather than inside a default broker
+     * implementation to ensure that the broker reference inside it is the outer
+     * most interceptor
      */
     protected static ConnectionContext createAdminConnectionContext(Broker broker) {
         ConnectionContext context = new ConnectionContext();

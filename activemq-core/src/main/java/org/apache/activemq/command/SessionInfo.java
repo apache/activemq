@@ -25,22 +25,22 @@ import org.apache.activemq.state.CommandVisitor;
  */
 public class SessionInfo extends BaseCommand {
 
-    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.SESSION_INFO;
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.SESSION_INFO;
 
     protected SessionId sessionId;
-    
+
     public SessionInfo() {
         sessionId = new SessionId();
     }
-    
+
     public SessionInfo(ConnectionInfo connectionInfo, long sessionId) {
         this.sessionId = new SessionId(connectionInfo.getConnectionId(), sessionId);
     }
-    
+
     public SessionInfo(SessionId sessionId) {
         this.sessionId = sessionId;
     }
-    
+
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
@@ -50,11 +50,12 @@ public class SessionInfo extends BaseCommand {
      */
     public SessionId getSessionId() {
         return sessionId;
-    }    
+    }
+
     public void setSessionId(SessionId sessionId) {
         this.sessionId = sessionId;
     }
-    
+
     public RemoveInfo createRemoveCommand() {
         RemoveInfo command = new RemoveInfo(getSessionId());
         command.setResponseRequired(isResponseRequired());
@@ -62,7 +63,7 @@ public class SessionInfo extends BaseCommand {
     }
 
     public Response visit(CommandVisitor visitor) throws Exception {
-        return visitor.processAddSession( this);
+        return visitor.processAddSession(this);
     }
 
 }

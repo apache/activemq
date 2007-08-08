@@ -26,20 +26,19 @@ import javax.jms.TemporaryTopic;
 public class ActiveMQTempTopic extends ActiveMQTempDestination implements TemporaryTopic {
 
     private static final long serialVersionUID = -4325596784597300253L;
-    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.ACTIVEMQ_TEMP_TOPIC;
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_TEMP_TOPIC;
 
     public ActiveMQTempTopic() {
     }
-    
+
     public ActiveMQTempTopic(String name) {
         super(name);
     }
-    
+
     public ActiveMQTempTopic(ConnectionId connectionId, long sequenceId) {
         super(connectionId.getValue(), sequenceId);
     }
 
-    
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }

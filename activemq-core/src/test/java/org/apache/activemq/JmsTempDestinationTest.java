@@ -56,10 +56,9 @@ public class JmsTempDestinationTest extends TestCase {
         }
     }
 
-
     /**
      * Make sure Temp destination can only be consumed by local connection
-     *
+     * 
      * @throws JMSException
      */
     public void testTempDestOnlyConsumedByLocalConn() throws JMSException {
@@ -72,7 +71,7 @@ public class JmsTempDestinationTest extends TestCase {
         TextMessage message = tempSession.createTextMessage("First");
         producer.send(message);
 
-        //temp destination should not be consume  when using another connection
+        // temp destination should not be consume when using another connection
         Connection otherConnection = factory.createConnection();
         Session otherSession = otherConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         TemporaryQueue otherQueue = otherSession.createTemporaryQueue();
@@ -80,20 +79,19 @@ public class JmsTempDestinationTest extends TestCase {
         Message msg = consumer.receive(3000);
         assertNull(msg);
 
-        //should throw InvalidDestinationException when consuming a temp destination from another connection
-        try{
-             consumer = otherSession.createConsumer(queue);
-             fail("Send should fail since temp destination should be used from another connection");
-        }catch(InvalidDestinationException e){
-              assertTrue("failed to throw an exception",true);
+        // should throw InvalidDestinationException when consuming a temp
+        // destination from another connection
+        try {
+            consumer = otherSession.createConsumer(queue);
+            fail("Send should fail since temp destination should be used from another connection");
+        } catch (InvalidDestinationException e) {
+            assertTrue("failed to throw an exception", true);
         }
 
-
-        //should be able to consume temp destination from the same connection
+        // should be able to consume temp destination from the same connection
         consumer = tempSession.createConsumer(queue);
         msg = consumer.receive(3000);
         assertNotNull(msg);
-
 
     }
 
@@ -117,8 +115,7 @@ public class JmsTempDestinationTest extends TestCase {
         Message message2 = consumer.receive(1000);
         assertNotNull(message2);
         assertTrue("Expected message to be a TextMessage", message2 instanceof TextMessage);
-        assertTrue("Expected message to be a '" + message.getText() + "'", 
-                ((TextMessage) message2).getText().equals(message.getText()));
+        assertTrue("Expected message to be a '" + message.getText() + "'", ((TextMessage)message2).getText().equals(message.getText()));
     }
 
     /**
@@ -141,95 +138,100 @@ public class JmsTempDestinationTest extends TestCase {
         Message message2 = consumer.receive(3000);
         assertNotNull(message2);
         assertTrue("Expected message to be a TextMessage", message2 instanceof TextMessage);
-        assertTrue("Expected message to be a '" + message.getText() + "'", 
-                ((TextMessage) message2).getText().equals(message.getText()));
+        assertTrue("Expected message to be a '" + message.getText() + "'", ((TextMessage)message2).getText().equals(message.getText()));
 
     }
-    
+
     /**
      * Test temp queue works under load
+     * 
      * @throws JMSException
      */
     public void testTmpQueueWorksUnderLoad() throws JMSException {
         int count = 500;
         int dataSize = 1024;
-        
+
         ArrayList list = new ArrayList(count);
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = session.createTemporaryQueue();
         MessageProducer producer = session.createProducer(queue);
         producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-      
+
         byte[] data = new byte[dataSize];
-        for (int i =0; i < count; i++){
+        for (int i = 0; i < count; i++) {
             BytesMessage message = session.createBytesMessage();
             message.writeBytes(data);
             producer.send(message);
             list.add(message);
         }
-        
 
         connection.start();
         MessageConsumer consumer = session.createConsumer(queue);
-        for (int i =0; i < count; i++){
+        for (int i = 0; i < count; i++) {
             Message message2 = consumer.receive(2000);
-            
+
             assertTrue(message2 != null);
             assertTrue(message2.equals(list.get(i)));
         }
     }
-    
+
     /**
-     * Make sure you cannot publish to a temp destination that does not exist anymore.
+     * Make sure you cannot publish to a temp destination that does not exist
+     * anymore.
      * 
      * @throws JMSException
-     * @throws InterruptedException 
+     * @throws InterruptedException
      */
     public void testPublishFailsForClosedConnection() throws JMSException, InterruptedException {
-        
+
         Connection tempConnection = factory.createConnection();
-        Session tempSession = tempConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);        
+        Session tempSession = tempConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         TemporaryQueue queue = tempSession.createTemporaryQueue();
-        
+
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        connection.start();        
-        
-        // This message delivery should work since the temp connection is still open.
+        connection.start();
+
+        // This message delivery should work since the temp connection is still
+        // open.
         MessageProducer producer = session.createProducer(queue);
         producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         TextMessage message = session.createTextMessage("First");
         producer.send(message);
 
-        // Closing the connection should destroy the temp queue that was created.
+        // Closing the connection should destroy the temp queue that was
+        // created.
         tempConnection.close();
         Thread.sleep(1000); // Wait a little bit to let the delete take effect.
-        
-        // This message delivery NOT should work since the temp connection is now closed.
+
+        // This message delivery NOT should work since the temp connection is
+        // now closed.
         try {
             message = session.createTextMessage("Hello");
             producer.send(message);
             fail("Send should fail since temp destination should not exist anymore.");
-        } catch ( JMSException e ) {      
-            assertTrue("failed to throw an exception",true);
+        } catch (JMSException e) {
+            assertTrue("failed to throw an exception", true);
         }
     }
-    
+
     /**
-     * Make sure you cannot publish to a temp destination that does not exist anymore.
+     * Make sure you cannot publish to a temp destination that does not exist
+     * anymore.
      * 
      * @throws JMSException
-     * @throws InterruptedException 
+     * @throws InterruptedException
      */
     public void testPublishFailsForDestoryedTempDestination() throws JMSException, InterruptedException {
-        
+
         Connection tempConnection = factory.createConnection();
-        Session tempSession = tempConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);        
+        Session tempSession = tempConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         TemporaryQueue queue = tempSession.createTemporaryQueue();
-        
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);        
-        connection.start();        
-        
-        // This message delivery should work since the temp connection is still open.
+
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        connection.start();
+
+        // This message delivery should work since the temp connection is still
+        // open.
         MessageProducer producer = session.createProducer(queue);
         producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         TextMessage message = session.createTextMessage("First");
@@ -238,36 +240,39 @@ public class JmsTempDestinationTest extends TestCase {
         // deleting the Queue will cause sends to fail
         queue.delete();
         Thread.sleep(1000); // Wait a little bit to let the delete take effect.
-        
-        // This message delivery NOT should work since the temp connection is now closed.
+
+        // This message delivery NOT should work since the temp connection is
+        // now closed.
         try {
             message = session.createTextMessage("Hello");
             producer.send(message);
             fail("Send should fail since temp destination should not exist anymore.");
-        } catch ( JMSException e ) {      
-            assertTrue("failed to throw an exception",true);
+        } catch (JMSException e) {
+            assertTrue("failed to throw an exception", true);
         }
     }
-    
+
     /**
      * Test you can't delete a Destination with Active Subscribers
+     * 
      * @throws JMSException
      */
     public void testDeleteDestinationWithSubscribersFails() throws JMSException {
         Connection connection = factory.createConnection();
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);        
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         TemporaryQueue queue = session.createTemporaryQueue();
-          
-        connection.start();        
-        
+
+        connection.start();
+
         session.createConsumer(queue);
-        
-        // This message delivery should NOT work since the temp connection is now closed.
+
+        // This message delivery should NOT work since the temp connection is
+        // now closed.
         try {
             queue.delete();
             fail("Should fail as Subscribers are active");
-        } catch ( JMSException e ) {      
-            assertTrue("failed to throw an exception",true);
+        } catch (JMSException e) {
+            assertTrue("failed to throw an exception", true);
         }
     }
 }

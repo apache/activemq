@@ -22,40 +22,37 @@ import org.apache.activemq.command.ConsumerInfo;
 
 import javax.jms.InvalidSelectorException;
 
-
-
 /**
  * @version $Revision: 1.5 $
  */
 public class SubscriptionView implements SubscriptionViewMBean {
-    
-    
+
     protected final Subscription subscription;
     protected final String clientId;
-    
-    
+
     /**
      * Constructor
+     * 
      * @param subs
      */
-    public SubscriptionView(String clientId,Subscription subs){
+    public SubscriptionView(String clientId, Subscription subs) {
         this.clientId = clientId;
         this.subscription = subs;
     }
-    
+
     /**
      * @return the clientId
      */
-    public String getClientId(){
+    public String getClientId() {
         return clientId;
     }
-    
+
     /**
      * @return the id of the Connection the Subscription is on
      */
-    public String getConnectionId(){
+    public String getConnectionId() {
         ConsumerInfo info = getConsumerInfo();
-        if (info != null){
+        if (info != null) {
             return info.getConsumerId().getConnectionId();
         }
         return "NOTSET";
@@ -64,9 +61,9 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return the id of the Session the subscription is on
      */
-    public long getSessionId(){
+    public long getSessionId() {
         ConsumerInfo info = getConsumerInfo();
-        if (info != null){
+        if (info != null) {
             return info.getConsumerId().getSessionId();
         }
         return 0;
@@ -75,9 +72,9 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return the id of the Subscription
      */
-    public long getSubcriptionId(){
+    public long getSubcriptionId() {
         ConsumerInfo info = getConsumerInfo();
-        if (info != null){
+        if (info != null) {
             return info.getConsumerId().getValue();
         }
         return 0;
@@ -86,9 +83,9 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return the destination name
      */
-    public String getDestinationName(){
+    public String getDestinationName() {
         ConsumerInfo info = getConsumerInfo();
-        if (info != null){
+        if (info != null) {
             ActiveMQDestination dest = info.getDestination();
             return dest.getPhysicalName();
         }
@@ -105,8 +102,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
     public void setSelector(String selector) throws InvalidSelectorException, UnsupportedOperationException {
         if (subscription != null) {
             subscription.setSelector(selector);
-        }
-        else {
+        } else {
             throw new UnsupportedOperationException("No subscription object");
         }
     }
@@ -114,9 +110,9 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return true if the destination is a Queue
      */
-    public boolean isDestinationQueue(){
+    public boolean isDestinationQueue() {
         ConsumerInfo info = getConsumerInfo();
-        if (info != null){
+        if (info != null) {
             ActiveMQDestination dest = info.getDestination();
             return dest.isQueue();
         }
@@ -126,9 +122,9 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return true of the destination is a Topic
      */
-    public boolean isDestinationTopic(){
+    public boolean isDestinationTopic() {
         ConsumerInfo info = getConsumerInfo();
-        if (info != null){
+        if (info != null) {
             ActiveMQDestination dest = info.getDestination();
             return dest.isTopic();
         }
@@ -138,32 +134,32 @@ public class SubscriptionView implements SubscriptionViewMBean {
     /**
      * @return true if the destination is temporary
      */
-    public boolean isDestinationTemporary(){
+    public boolean isDestinationTemporary() {
         ConsumerInfo info = getConsumerInfo();
-        if (info != null){
+        if (info != null) {
             ActiveMQDestination dest = info.getDestination();
             return dest.isTemporary();
         }
         return false;
     }
-    
+
     /**
      * @return true if the subscriber is active
      */
-    public boolean isActive(){
+    public boolean isActive() {
         return true;
     }
 
     /**
-     * The subscription should release as may references as it can to help the garbage collector
-     * reclaim memory.
+     * The subscription should release as may references as it can to help the
+     * garbage collector reclaim memory.
      */
-    public void gc(){
-        if (subscription != null){
-        subscription.gc();
+    public void gc() {
+        if (subscription != null) {
+            subscription.gc();
         }
     }
-    
+
     /**
      * @return whether or not the subscriber is retroactive or not
      */
@@ -171,7 +167,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
         ConsumerInfo info = getConsumerInfo();
         return info != null ? info.isRetroactive() : false;
     }
-    
+
     /**
      * @return whether or not the subscriber is an exclusive consumer
      */
@@ -179,8 +175,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
         ConsumerInfo info = getConsumerInfo();
         return info != null ? info.isExclusive() : false;
     }
-    
-    
+
     /**
      * @return whether or not the subscriber is durable (persistent)
      */
@@ -188,7 +183,7 @@ public class SubscriptionView implements SubscriptionViewMBean {
         ConsumerInfo info = getConsumerInfo();
         return info != null ? info.isDurable() : false;
     }
-    
+
     /**
      * @return whether or not the subscriber ignores local messages
      */
@@ -196,17 +191,18 @@ public class SubscriptionView implements SubscriptionViewMBean {
         ConsumerInfo info = getConsumerInfo();
         return info != null ? info.isNoLocal() : false;
     }
-    
-    
+
     /**
-     * @return the maximum number of pending messages allowed in addition to the prefetch size. If enabled
-     * to a non-zero value then this will perform eviction of messages for slow consumers on non-durable topics.
+     * @return the maximum number of pending messages allowed in addition to the
+     *         prefetch size. If enabled to a non-zero value then this will
+     *         perform eviction of messages for slow consumers on non-durable
+     *         topics.
      */
     public int getMaximumPendingMessageLimit() {
         ConsumerInfo info = getConsumerInfo();
         return info != null ? info.getMaximumPendingMessageLimit() : 0;
     }
-    
+
     /**
      * @return the consumer priority
      */
@@ -214,29 +210,30 @@ public class SubscriptionView implements SubscriptionViewMBean {
         ConsumerInfo info = getConsumerInfo();
         return info != null ? info.getPriority() : 0;
     }
-    
+
     /**
-     * @return the name of the consumer which is only used for durable consumers.
+     * @return the name of the consumer which is only used for durable
+     *         consumers.
      */
     public String getSubcriptionName() {
         ConsumerInfo info = getConsumerInfo();
         return info != null ? info.getSubscriptionName() : null;
     }
-    
+
     /**
      * @return number of messages pending delivery
      */
-    public int getPendingQueueSize(){
+    public int getPendingQueueSize() {
         return subscription != null ? subscription.getPendingQueueSize() : 0;
     }
-    
+
     /**
      * @return number of messages dispatched
      */
-    public int getDispatchedQueueSize(){
+    public int getDispatchedQueueSize() {
         return subscription != null ? subscription.getDispatchedQueueSize() : 0;
     }
-        
+
     /**
      * @return number of messages that matched the subscription
      */
@@ -258,15 +255,15 @@ public class SubscriptionView implements SubscriptionViewMBean {
         return subscription != null ? subscription.getDequeueCounter() : 0;
     }
 
-    protected ConsumerInfo getConsumerInfo(){
+    protected ConsumerInfo getConsumerInfo() {
         return subscription != null ? subscription.getConsumerInfo() : null;
     }
-    
+
     /**
-     *@return pretty print
+     * @return pretty print
      */
-    public String toString(){
-        return "SubscriptionView: " + getClientId()  + ":" +  getConnectionId();
+    public String toString() {
+        return "SubscriptionView: " + getClientId() + ":" + getConnectionId();
     }
 
     /**

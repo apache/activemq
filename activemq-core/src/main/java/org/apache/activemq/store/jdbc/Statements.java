@@ -97,16 +97,17 @@ public class Statements {
 
     public String[] getDropSchemaStatements() {
         if (dropSchemaStatements == null) {
-            dropSchemaStatements = new String[] { "DROP TABLE " + getFullAckTableName() + "",
-                    "DROP TABLE " + getFullMessageTableName() + "", };
+            dropSchemaStatements = new String[] {"DROP TABLE " + getFullAckTableName() + "",
+                                                 "DROP TABLE " + getFullMessageTableName() + "",};
         }
         return dropSchemaStatements;
     }
 
     public String getAddMessageStatement() {
         if (addMessageStatement == null) {
-            addMessageStatement = "INSERT INTO " + getFullMessageTableName()
-                    + "(ID, MSGID_PROD, MSGID_SEQ, CONTAINER, EXPIRATION, MSG) VALUES (?, ?, ?, ?, ?, ?)";
+            addMessageStatement = "INSERT INTO "
+                                  + getFullMessageTableName()
+                                  + "(ID, MSGID_PROD, MSGID_SEQ, CONTAINER, EXPIRATION, MSG) VALUES (?, ?, ?, ?, ?, ?)";
         }
         return addMessageStatement;
     }
@@ -128,7 +129,7 @@ public class Statements {
     public String getFindMessageSequenceIdStatement() {
         if (findMessageSequenceIdStatement == null) {
             findMessageSequenceIdStatement = "SELECT ID FROM " + getFullMessageTableName()
-                    + " WHERE MSGID_PROD=? AND MSGID_SEQ=?";
+                                             + " WHERE MSGID_PROD=? AND MSGID_SEQ=?";
         }
         return findMessageSequenceIdStatement;
     }
@@ -143,7 +144,7 @@ public class Statements {
     public String getFindAllMessagesStatement() {
         if (findAllMessagesStatement == null) {
             findAllMessagesStatement = "SELECT ID, MSG FROM " + getFullMessageTableName()
-                    + " WHERE CONTAINER=? ORDER BY ID";
+                                       + " WHERE CONTAINER=? ORDER BY ID";
         }
         return findAllMessagesStatement;
     }
@@ -164,8 +165,10 @@ public class Statements {
 
     public String getCreateDurableSubStatement() {
         if (createDurableSubStatement == null) {
-            createDurableSubStatement = "INSERT INTO " + getFullAckTableName()
-                    + "(CONTAINER, CLIENT_ID, SUB_NAME, SELECTOR, LAST_ACKED_ID, SUB_DEST) " + "VALUES (?, ?, ?, ?, ?, ?)";
+            createDurableSubStatement = "INSERT INTO "
+                                        + getFullAckTableName()
+                                        + "(CONTAINER, CLIENT_ID, SUB_NAME, SELECTOR, LAST_ACKED_ID, SUB_DEST) "
+                                        + "VALUES (?, ?, ?, ?, ?, ?)";
         }
         return createDurableSubStatement;
     }
@@ -173,15 +176,15 @@ public class Statements {
     public String getFindDurableSubStatement() {
         if (findDurableSubStatement == null) {
             findDurableSubStatement = "SELECT SELECTOR, SUB_DEST " + "FROM " + getFullAckTableName()
-                    + " WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?";
+                                      + " WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?";
         }
         return findDurableSubStatement;
     }
 
     public String getFindAllDurableSubsStatement() {
         if (findAllDurableSubsStatement == null) {
-            findAllDurableSubsStatement = "SELECT SELECTOR, SUB_NAME, CLIENT_ID, SUB_DEST" + " FROM " + getFullAckTableName()
-                    + " WHERE CONTAINER=?";
+            findAllDurableSubsStatement = "SELECT SELECTOR, SUB_NAME, CLIENT_ID, SUB_DEST" + " FROM "
+                                          + getFullAckTableName() + " WHERE CONTAINER=?";
         }
         return findAllDurableSubsStatement;
     }
@@ -189,7 +192,7 @@ public class Statements {
     public String getUpdateLastAckOfDurableSubStatement() {
         if (updateLastAckOfDurableSubStatement == null) {
             updateLastAckOfDurableSubStatement = "UPDATE " + getFullAckTableName() + " SET LAST_ACKED_ID=?"
-                    + " WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?";
+                                                 + " WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?";
         }
         return updateLastAckOfDurableSubStatement;
     }
@@ -197,62 +200,76 @@ public class Statements {
     public String getDeleteSubscriptionStatement() {
         if (deleteSubscriptionStatement == null) {
             deleteSubscriptionStatement = "DELETE FROM " + getFullAckTableName()
-                    + " WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?";
+                                          + " WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?";
         }
         return deleteSubscriptionStatement;
     }
 
     public String getFindAllDurableSubMessagesStatement() {
         if (findAllDurableSubMessagesStatement == null) {
-            findAllDurableSubMessagesStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName() + " M, "
-                    + getFullAckTableName() + " D " + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
-                    + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID" + " ORDER BY M.ID";
+            findAllDurableSubMessagesStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName()
+                                                 + " M, " + getFullAckTableName() + " D "
+                                                 + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+                                                 + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID"
+                                                 + " ORDER BY M.ID";
         }
         return findAllDurableSubMessagesStatement;
     }
-    
-    public String getFindDurableSubMessagesStatement(){
-        if(findDurableSubMessagesStatement==null){
-            findDurableSubMessagesStatement="SELECT M.ID, M.MSG FROM " + getFullMessageTableName() + " M, "
-            + getFullAckTableName() + " D " + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
-            + " AND M.CONTAINER=D.CONTAINER AND M.ID > ?" + " ORDER BY M.ID";
+
+    public String getFindDurableSubMessagesStatement() {
+        if (findDurableSubMessagesStatement == null) {
+            findDurableSubMessagesStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName() + " M, "
+                                              + getFullAckTableName() + " D "
+                                              + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+                                              + " AND M.CONTAINER=D.CONTAINER AND M.ID > ?"
+                                              + " ORDER BY M.ID";
         }
         return findDurableSubMessagesStatement;
     }
-    
+
     public String findAllDurableSubMessagesStatement() {
         if (findAllDurableSubMessagesStatement == null) {
-            findAllDurableSubMessagesStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName() + " M, "
-                    + getFullAckTableName() + " D " + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
-                    + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID" + " ORDER BY M.ID";
+            findAllDurableSubMessagesStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName()
+                                                 + " M, " + getFullAckTableName() + " D "
+                                                 + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+                                                 + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID"
+                                                 + " ORDER BY M.ID";
         }
         return findAllDurableSubMessagesStatement;
     }
-    
-    public String getNextDurableSubscriberMessageStatement(){
-        if (nextDurableSubscriberMessageStatement == null){
-            nextDurableSubscriberMessageStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName() + " M, "
-            + getFullAckTableName() + " D " + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
-            + " AND M.CONTAINER=D.CONTAINER AND M.ID > ?" + " ORDER BY M.ID ";
+
+    public String getNextDurableSubscriberMessageStatement() {
+        if (nextDurableSubscriberMessageStatement == null) {
+            nextDurableSubscriberMessageStatement = "SELECT M.ID, M.MSG FROM "
+                                                    + getFullMessageTableName()
+                                                    + " M, "
+                                                    + getFullAckTableName()
+                                                    + " D "
+                                                    + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+                                                    + " AND M.CONTAINER=D.CONTAINER AND M.ID > ?"
+                                                    + " ORDER BY M.ID ";
         }
         return nextDurableSubscriberMessageStatement;
     }
-    
+
     /**
      * @return the durableSubscriberMessageCountStatement
      */
-    
-    
-    public String getDurableSubscriberMessageCountStatement(){
-        if (durableSubscriberMessageCountStatement==null){
-            durableSubscriberMessageCountStatement =  "SELECT COUNT(*) FROM " + getFullMessageTableName() + " M, "
-            + getFullAckTableName() + " D " + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
-            + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID";
+
+    public String getDurableSubscriberMessageCountStatement() {
+        if (durableSubscriberMessageCountStatement == null) {
+            durableSubscriberMessageCountStatement = "SELECT COUNT(*) FROM "
+                                                     + getFullMessageTableName()
+                                                     + " M, "
+                                                     + getFullAckTableName()
+                                                     + " D "
+                                                     + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+                                                     + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID";
         }
         return durableSubscriberMessageCountStatement;
     }
-    
-   public String getFindAllDestinationsStatement() {
+
+    public String getFindAllDestinationsStatement() {
         if (findAllDestinationsStatement == null) {
             findAllDestinationsStatement = "SELECT DISTINCT CONTAINER FROM " + getFullMessageTableName();
         }
@@ -276,13 +293,15 @@ public class Statements {
     public String getDeleteOldMessagesStatement() {
         if (deleteOldMessagesStatement == null) {
             deleteOldMessagesStatement = "DELETE FROM " + getFullMessageTableName()
-            + " WHERE ( EXPIRATION<>0 AND EXPIRATION<?) OR ID <= " + "( SELECT min(" + getFullAckTableName()
-            + ".LAST_ACKED_ID) " + "FROM " + getFullAckTableName() + " WHERE " + getFullAckTableName()
-            + ".CONTAINER=" + getFullMessageTableName() + ".CONTAINER)";
+                                         + " WHERE ( EXPIRATION<>0 AND EXPIRATION<?) OR ID <= "
+                                         + "( SELECT min(" + getFullAckTableName() + ".LAST_ACKED_ID) "
+                                         + "FROM " + getFullAckTableName() + " WHERE "
+                                         + getFullAckTableName() + ".CONTAINER=" + getFullMessageTableName()
+                                         + ".CONTAINER)";
         }
         return deleteOldMessagesStatement;
     }
-    
+
     public String getLockCreateStatement() {
         if (lockCreateStatement == null) {
             lockCreateStatement = "SELECT * FROM " + getFullLockTableName();
@@ -293,21 +312,21 @@ public class Statements {
         }
         return lockCreateStatement;
     }
-    
+
     public String getLockUpdateStatement() {
         if (lockUpdateStatement == null) {
             lockUpdateStatement = "UPDATE " + getFullLockTableName() + " SET time = ? WHERE ID = 1";
         }
         return lockUpdateStatement;
     }
-    
+
     /**
      * @return the destinationMessageCountStatement
      */
-    public String getDestinationMessageCountStatement(){
-        if (destinationMessageCountStatement==null) {
-            destinationMessageCountStatement= "SELECT COUNT(*) FROM " + getFullMessageTableName()
-            + " WHERE CONTAINER=?";
+    public String getDestinationMessageCountStatement() {
+        if (destinationMessageCountStatement == null) {
+            destinationMessageCountStatement = "SELECT COUNT(*) FROM " + getFullMessageTableName()
+                                               + " WHERE CONTAINER=?";
         }
         return destinationMessageCountStatement;
     }
@@ -315,26 +334,25 @@ public class Statements {
     /**
      * @return the findNextMessagesStatement
      */
-    public String getFindNextMessagesStatement(){
-        if(findNextMessagesStatement == null) {            
-            findNextMessagesStatement="SELECT ID, MSG FROM " + getFullMessageTableName()
-            + " WHERE CONTAINER=? AND ID > ? ORDER BY ID";
+    public String getFindNextMessagesStatement() {
+        if (findNextMessagesStatement == null) {
+            findNextMessagesStatement = "SELECT ID, MSG FROM " + getFullMessageTableName()
+                                        + " WHERE CONTAINER=? AND ID > ? ORDER BY ID";
         }
         return findNextMessagesStatement;
     }
-    
+
     /**
      * @return the lastAckedDurableSubscriberMessageStatement
      */
-    public String getLastAckedDurableSubscriberMessageStatement(){
-        if(lastAckedDurableSubscriberMessageStatement==null) {
-            lastAckedDurableSubscriberMessageStatement = "SELECT MAX(LAST_ACKED_ID) FROM " + getFullAckTableName()
-            + " WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?";
+    public String getLastAckedDurableSubscriberMessageStatement() {
+        if (lastAckedDurableSubscriberMessageStatement == null) {
+            lastAckedDurableSubscriberMessageStatement = "SELECT MAX(LAST_ACKED_ID) FROM "
+                                                         + getFullAckTableName()
+                                                         + " WHERE CONTAINER=? AND CLIENT_ID=? AND SUB_NAME=?";
         }
         return lastAckedDurableSubscriberMessageStatement;
     }
-
-
 
     public String getFullMessageTableName() {
         return getTablePrefix() + getMessageTableName();
@@ -343,12 +361,11 @@ public class Statements {
     public String getFullAckTableName() {
         return getTablePrefix() + getDurableSubAcksTableName();
     }
-    
+
     public String getFullLockTableName() {
         return getTablePrefix() + getLockTableName();
     }
 
-    
     /**
      * @return Returns the containerNameDataType.
      */
@@ -357,8 +374,7 @@ public class Statements {
     }
 
     /**
-     * @param containerNameDataType
-     *            The containerNameDataType to set.
+     * @param containerNameDataType The containerNameDataType to set.
      */
     public void setContainerNameDataType(String containerNameDataType) {
         this.containerNameDataType = containerNameDataType;
@@ -372,8 +388,7 @@ public class Statements {
     }
 
     /**
-     * @param messageDataType
-     *            The messageDataType to set.
+     * @param messageDataType The messageDataType to set.
      */
     public void setBinaryDataType(String messageDataType) {
         this.binaryDataType = messageDataType;
@@ -387,8 +402,7 @@ public class Statements {
     }
 
     /**
-     * @param messageTableName
-     *            The messageTableName to set.
+     * @param messageTableName The messageTableName to set.
      */
     public void setMessageTableName(String messageTableName) {
         this.messageTableName = messageTableName;
@@ -402,8 +416,7 @@ public class Statements {
     }
 
     /**
-     * @param msgIdDataType
-     *            The msgIdDataType to set.
+     * @param msgIdDataType The msgIdDataType to set.
      */
     public void setMsgIdDataType(String msgIdDataType) {
         this.msgIdDataType = msgIdDataType;
@@ -417,8 +430,7 @@ public class Statements {
     }
 
     /**
-     * @param sequenceDataType
-     *            The sequenceDataType to set.
+     * @param sequenceDataType The sequenceDataType to set.
      */
     public void setSequenceDataType(String sequenceDataType) {
         this.sequenceDataType = sequenceDataType;
@@ -432,8 +444,7 @@ public class Statements {
     }
 
     /**
-     * @param tablePrefix
-     *            The tablePrefix to set.
+     * @param tablePrefix The tablePrefix to set.
      */
     public void setTablePrefix(String tablePrefix) {
         this.tablePrefix = tablePrefix;
@@ -447,13 +458,12 @@ public class Statements {
     }
 
     /**
-     * @param durableSubAcksTableName
-     *            The durableSubAcksTableName to set.
+     * @param durableSubAcksTableName The durableSubAcksTableName to set.
      */
     public void setDurableSubAcksTableName(String durableSubAcksTableName) {
         this.durableSubAcksTableName = durableSubAcksTableName;
     }
-    
+
     public String getLockTableName() {
         return lockTableName;
     }
@@ -583,52 +593,47 @@ public class Statements {
     }
 
     /**
-     * @param findDurableSubMessagesStatement the findDurableSubMessagesStatement to set
+     * @param findDurableSubMessagesStatement the
+     *                findDurableSubMessagesStatement to set
      */
-    public void setFindDurableSubMessagesStatement(String findDurableSubMessagesStatement){
-        this.findDurableSubMessagesStatement=findDurableSubMessagesStatement;
+    public void setFindDurableSubMessagesStatement(String findDurableSubMessagesStatement) {
+        this.findDurableSubMessagesStatement = findDurableSubMessagesStatement;
     }
 
     /**
      * @param nextDurableSubscriberMessageStatement the nextDurableSubscriberMessageStatement to set
      */
-    public void setNextDurableSubscriberMessageStatement(String nextDurableSubscriberMessageStatement){
-        this.nextDurableSubscriberMessageStatement=nextDurableSubscriberMessageStatement;
+    public void setNextDurableSubscriberMessageStatement(String nextDurableSubscriberMessageStatement) {
+        this.nextDurableSubscriberMessageStatement = nextDurableSubscriberMessageStatement;
     }
-
 
     /**
      * @param durableSubscriberMessageCountStatement the durableSubscriberMessageCountStatement to set
      */
-    public void setDurableSubscriberMessageCountStatement(String durableSubscriberMessageCountStatement){
-        this.durableSubscriberMessageCountStatement=durableSubscriberMessageCountStatement;
-    }    
-    
+    public void setDurableSubscriberMessageCountStatement(String durableSubscriberMessageCountStatement) {
+        this.durableSubscriberMessageCountStatement = durableSubscriberMessageCountStatement;
+    }
+
     /**
      * @param findNextMessagesStatement the findNextMessagesStatement to set
      */
-    public void setFindNextMessagesStatement(String findNextMessagesStatement){
-        this.findNextMessagesStatement=findNextMessagesStatement;
+    public void setFindNextMessagesStatement(String findNextMessagesStatement) {
+        this.findNextMessagesStatement = findNextMessagesStatement;
     }
 
     /**
      * @param destinationMessageCountStatement the destinationMessageCountStatement to set
      */
-    public void setDestinationMessageCountStatement(String destinationMessageCountStatement){
-        this.destinationMessageCountStatement=destinationMessageCountStatement;
+    public void setDestinationMessageCountStatement(String destinationMessageCountStatement) {
+        this.destinationMessageCountStatement = destinationMessageCountStatement;
     }
 
-    
-    
-    
     /**
      * @param lastAckedDurableSubscriberMessageStatement the lastAckedDurableSubscriberMessageStatement to set
      */
-    public void setLastAckedDurableSubscriberMessageStatement(String lastAckedDurableSubscriberMessageStatement){
-        this.lastAckedDurableSubscriberMessageStatement=lastAckedDurableSubscriberMessageStatement;
+    public void setLastAckedDurableSubscriberMessageStatement(
+                                                              String lastAckedDurableSubscriberMessageStatement) {
+        this.lastAckedDurableSubscriberMessageStatement = lastAckedDurableSubscriberMessageStatement;
     }
-    
-    
-    
-   
+
 }

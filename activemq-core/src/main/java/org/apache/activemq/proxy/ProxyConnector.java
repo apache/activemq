@@ -47,20 +47,19 @@ public class ProxyConnector implements Service {
     private URI remote;
     private URI localUri;
     private String name;
-    
+
     CopyOnWriteArrayList connections = new CopyOnWriteArrayList();
-       
+
     public void start() throws Exception {
-        
+
         this.getServer().setAcceptListener(new TransportAcceptListener() {
             public void onAccept(Transport localTransport) {
                 try {
                     Transport remoteTransport = createRemoteTransport();
                     ProxyConnection connection = new ProxyConnection(localTransport, remoteTransport);
                     connections.add(connection);
-                    connection.start();                    
-                }
-                catch (Exception e) {
+                    connection.start();
+                } catch (Exception e) {
                     onAcceptError(e);
                 }
             }
@@ -70,7 +69,7 @@ public class ProxyConnector implements Service {
             }
         });
         getServer().start();
-        log.info("Proxy Connector "+getName()+" Started");
+        log.info("Proxy Connector " + getName() + " Started");
 
     }
 
@@ -81,15 +80,15 @@ public class ProxyConnector implements Service {
         }
         for (Iterator iter = connections.iterator(); iter.hasNext();) {
             log.info("Connector stopped: Stopping proxy.");
-            ss.stop((Service) iter.next());
+            ss.stop((Service)iter.next());
         }
         ss.throwFirstException();
         log.info("Proxy Connector " + getName() + " Stopped");
     }
-    
+
     // Properties
     // -------------------------------------------------------------------------
-    
+
     public URI getLocalUri() {
         return localUri;
     }
@@ -120,7 +119,7 @@ public class ProxyConnector implements Service {
         }
         return server;
     }
-    
+
     public void setServer(TransportServer server) {
         this.server = server;
     }
@@ -134,25 +133,25 @@ public class ProxyConnector implements Service {
 
     private Transport createRemoteTransport() throws Exception {
         Transport transport = TransportFactory.compositeConnect(remote);
-        CompositeTransport ct = (CompositeTransport) transport.narrow(CompositeTransport.class);
-        if( ct !=null && localUri!=null ) {
-            ct.add(new URI[]{localUri});
+        CompositeTransport ct = (CompositeTransport)transport.narrow(CompositeTransport.class);
+        if (ct != null && localUri != null) {
+            ct.add(new URI[] {localUri});
         }
-        
+
         // Add a transport filter so that can track the transport life cycle
         transport = new TransportFilter(transport) {
-        	public void stop() throws Exception {
-        		log.info("Stopping proxy.");
-        		super.stop();
-        		connections.remove(this);
-        	}
+            public void stop() throws Exception {
+                log.info("Stopping proxy.");
+                super.stop();
+                connections.remove(this);
+            }
         };
         return transport;
     }
 
     public String getName() {
-        if( name == null ) {
-            if( server!=null ) {
+        if (name == null) {
+            if (server != null) {
                 name = server.getConnectURI().toString();
             } else {
                 name = "proxy";

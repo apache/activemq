@@ -19,18 +19,20 @@ package org.apache.activemq.state;
 
 import org.apache.activemq.command.ProducerInfo;
 
-public class ProducerState {        
+public class ProducerState {
     final ProducerInfo info;
-	private long lastSequenceId=-1;  
-    
+    private long lastSequenceId = -1;
+
     public ProducerState(ProducerInfo info) {
         this.info = info;
-    }        
+    }
+
     public String toString() {
         return info.toString();
     }
+
     public ProducerInfo getInfo() {
         return info;
     }
-	       
+
 }

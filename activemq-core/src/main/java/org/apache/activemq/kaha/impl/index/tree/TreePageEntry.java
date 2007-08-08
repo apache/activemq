@@ -15,81 +15,77 @@
 package org.apache.activemq.kaha.impl.index.tree;
 
 /**
-* A conglomarate used for return results from a tree lookup
-* 
-* @version $Revision: 1.1.1.1 $
-*/
-class TreePageEntry{
+ * A conglomarate used for return results from a tree lookup
+ * 
+ * @version $Revision: 1.1.1.1 $
+ */
+class TreePageEntry {
 
     private TreeEntry treeEntry;
     private TreePage treePage;
     private TreePage.Flavour flavour;
     private int index = -1;
 
-    TreePageEntry(TreeEntry treeEntry,TreePage treePage,TreePage.Flavour flavour, int index){
+    TreePageEntry(TreeEntry treeEntry, TreePage treePage, TreePage.Flavour flavour, int index) {
         this.treeEntry = treeEntry;
-        this.treePage=treePage;
-        this.flavour=flavour;
+        this.treePage = treePage;
+        this.flavour = flavour;
         this.index = index;
     }
 
     /**
      * @return the flavour
      */
-    TreePage.Flavour getFlavour(){
+    TreePage.Flavour getFlavour() {
         return this.flavour;
     }
 
     /**
      * @param flavour the flavour to set
      */
-    void setFlavour(TreePage.Flavour flavour){
-        this.flavour=flavour;
+    void setFlavour(TreePage.Flavour flavour) {
+        this.flavour = flavour;
     }
 
     /**
      * @return the treePage
      */
-    TreePage getTreePage(){
+    TreePage getTreePage() {
         return this.treePage;
     }
 
     /**
      * @param treePage the treePage to set
      */
-    void setTreePage(TreePage treePage){
-        this.treePage=treePage;
+    void setTreePage(TreePage treePage) {
+        this.treePage = treePage;
     }
 
-    
     /**
      * @return the index
      */
-    public int getIndex(){
+    public int getIndex() {
         return this.index;
     }
 
-    
     /**
      * @param index the index to set
      */
-    public void setIndex(int index){
-        this.index=index;
+    public void setIndex(int index) {
+        this.index = index;
     }
 
-    
     /**
      * @return the treeEntry
      */
-    public TreeEntry getTreeEntry(){
+    public TreeEntry getTreeEntry() {
         return this.treeEntry;
     }
 
-    
     /**
      * @param treeEntry the treeEntry to set
      */
-    public void setTreeEntry(TreeEntry treeEntry){
-        this.treeEntry=treeEntry;
+    public void setTreeEntry(TreeEntry treeEntry) {
+        this.treeEntry = treeEntry;
     }
 }

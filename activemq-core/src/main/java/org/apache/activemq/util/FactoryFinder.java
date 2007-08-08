@@ -20,9 +20,7 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
-
 import java.util.concurrent.ConcurrentHashMap;
-
 
 public class FactoryFinder {
 
@@ -35,24 +33,21 @@ public class FactoryFinder {
 
     /**
      * Creates a new instance of the given key
-     *
-     * @param key is the key to add to the path to find a text file
-     *            containing the factory name
+     * 
+     * @param key is the key to add to the path to find a text file containing
+     *                the factory name
      * @return a newly created instance
      */
-    public Object newInstance(String key)
-            throws IllegalAccessException, InstantiationException, IOException, ClassNotFoundException
-    {
+    public Object newInstance(String key) throws IllegalAccessException, InstantiationException, IOException, ClassNotFoundException {
         return newInstance(key, null);
     }
 
-    public Object newInstance(String key, String propertyPrefix)
-            throws IllegalAccessException, InstantiationException, IOException, ClassNotFoundException
-    {
-        if (propertyPrefix == null)
+    public Object newInstance(String key, String propertyPrefix) throws IllegalAccessException, InstantiationException, IOException, ClassNotFoundException {
+        if (propertyPrefix == null) {
             propertyPrefix = "";
+        }
 
-        Class clazz = (Class) classMap.get(propertyPrefix + key);
+        Class clazz = (Class)classMap.get(propertyPrefix + key);
         if (clazz == null) {
             clazz = newInstance(doFindFactoryProperies(key), propertyPrefix);
             classMap.put(propertyPrefix + key, clazz);
@@ -71,8 +66,7 @@ public class FactoryFinder {
         if (loader != null) {
             try {
                 clazz = loader.loadClass(className);
-            }
-            catch (ClassNotFoundException e) {
+            } catch (ClassNotFoundException e) {
                 // ignore
             }
         }
@@ -88,7 +82,8 @@ public class FactoryFinder {
 
         // lets try the thread context class loader first
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        if (classLoader == null) classLoader = getClass().getClassLoader();
+        if (classLoader == null)
+            classLoader = getClass().getClassLoader();
         InputStream in = classLoader.getResourceAsStream(uri);
         if (in == null) {
             in = FactoryFinder.class.getClassLoader().getResourceAsStream(uri);

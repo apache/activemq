@@ -27,32 +27,29 @@ import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.filter.MessageEvaluationContext;
 
 public class QueueBrowserSubscription extends QueueSubscription {
-        
+
     boolean browseDone;
-    
-    public QueueBrowserSubscription(Broker broker,ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
-        super(broker,context, info);
+
+    public QueueBrowserSubscription(Broker broker, ConnectionContext context, ConsumerInfo info)
+        throws InvalidSelectorException {
+        super(broker, context, info);
     }
-        
+
     protected boolean canDispatch(MessageReference node) {
         return !((QueueMessageReference)node).isAcked();
     }
-    
+
     public synchronized String toString() {
-        return 
-            "QueueBrowserSubscription:" +
-            " consumer="+info.getConsumerId()+
-            ", destinations="+destinations.size()+
-            ", dispatched="+dispatched.size()+
-            ", delivered="+this.prefetchExtension+
-            ", pending="+getPendingQueueSize();
+        return "QueueBrowserSubscription:" + " consumer=" + info.getConsumerId() + ", destinations="
+               + destinations.size() + ", dispatched=" + dispatched.size() + ", delivered="
+               + this.prefetchExtension + ", pending=" + getPendingQueueSize();
     }
 
     public void browseDone() throws Exception {
         browseDone = true;
         add(QueueMessageReference.NULL_MESSAGE);
     }
-    
+
     public boolean matches(MessageReference node, MessageEvaluationContext context) throws IOException {
         return !browseDone && super.matches(node, context);
     }
@@ -60,7 +57,8 @@ public class QueueBrowserSubscription extends QueueSubscription {
     /**
      * Since we are a browser we don't really remove the message from the queue.
      */
-    protected void acknowledge(ConnectionContext context, final MessageAck ack, final MessageReference n) throws IOException {
+    protected void acknowledge(ConnectionContext context, final MessageAck ack, final MessageReference n)
+        throws IOException {
     }
 
 }

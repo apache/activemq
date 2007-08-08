@@ -16,6 +16,13 @@
  */
 package org.apache.activemq.security;
 
+import javax.jms.Connection;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.JmsTestSupport;
 import org.apache.activemq.broker.BrokerService;
@@ -23,13 +30,6 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-
-import javax.jms.Connection;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.Session;
-import javax.jms.TextMessage;
 
 /**
  * 
@@ -59,8 +59,7 @@ public class SecurityTestSupport extends JmsTestSupport {
             connections.add(c);
             c.start();
             fail("Expected exception.");
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
         }
 
         try {
@@ -69,8 +68,7 @@ public class SecurityTestSupport extends JmsTestSupport {
             connections.add(c);
             c.start();
             fail("Expected exception.");
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
         }
 
         try {
@@ -79,8 +77,7 @@ public class SecurityTestSupport extends JmsTestSupport {
             connections.add(c);
             c.start();
             fail("Expected exception.");
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
         }
     }
 
@@ -131,8 +128,7 @@ public class SecurityTestSupport extends JmsTestSupport {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         try {
             sendMessages(session, destination, 1);
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             // If test is expected to fail, the cause must only be a
             // SecurityException
             // otherwise rethrow the exception
@@ -146,7 +142,7 @@ public class SecurityTestSupport extends JmsTestSupport {
             assertNull(m);
         else {
             assertNotNull(m);
-            assertEquals("0", ((TextMessage) m).getText());
+            assertEquals("0", ((TextMessage)m).getText());
             assertNull(consumer.receiveNoWait());
         }
         return m;
@@ -164,8 +160,7 @@ public class SecurityTestSupport extends JmsTestSupport {
             consumer = session.createConsumer(destination);
             if (fail)
                 fail("Expected failure due to security constraint.");
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             if (fail && e.getCause() instanceof SecurityException)
                 return null;
             throw e;
@@ -178,7 +173,7 @@ public class SecurityTestSupport extends JmsTestSupport {
 
         Message m = consumer.receive(1000);
         assertNotNull(m);
-        assertEquals("0", ((TextMessage) m).getText());
+        assertEquals("0", ((TextMessage)m).getText());
         assertNull(consumer.receiveNoWait());
         return m;
 
@@ -188,83 +183,95 @@ public class SecurityTestSupport extends JmsTestSupport {
      * @see {@link CombinationTestSupport}
      */
     public void initCombosForTestUserReceiveFails() {
-        addCombinationValues("userName", new Object[] { "user" });
-        addCombinationValues("password", new Object[] { "password" });
-        addCombinationValues("destination", new Object[] { new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"), new ActiveMQQueue("GUEST.BAR"),
-                new ActiveMQTopic("GUEST.BAR"), });
+        addCombinationValues("userName", new Object[] {"user"});
+        addCombinationValues("password", new Object[] {"password"});
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"),
+                                                          new ActiveMQTopic("TEST"),
+                                                          new ActiveMQQueue("GUEST.BAR"),
+                                                          new ActiveMQTopic("GUEST.BAR"),});
     }
 
     /**
      * @see {@link CombinationTestSupport}
      */
     public void initCombosForTestInvalidAuthentication() {
-        addCombinationValues("userName", new Object[] { "user" });
-        addCombinationValues("password", new Object[] { "password" });
+        addCombinationValues("userName", new Object[] {"user"});
+        addCombinationValues("password", new Object[] {"password"});
     }
 
     /**
      * @see {@link CombinationTestSupport}
      */
     public void initCombosForTestUserReceiveSucceeds() {
-        addCombinationValues("userName", new Object[] { "user" });
-        addCombinationValues("password", new Object[] { "password" });
-        addCombinationValues("destination", new Object[] { new ActiveMQQueue("USERS.FOO"), new ActiveMQTopic("USERS.FOO"), });
+        addCombinationValues("userName", new Object[] {"user"});
+        addCombinationValues("password", new Object[] {"password"});
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("USERS.FOO"),
+                                                          new ActiveMQTopic("USERS.FOO"),});
     }
 
     /**
      * @see {@link CombinationTestSupport}
      */
     public void initCombosForTestGuestReceiveSucceeds() {
-        addCombinationValues("userName", new Object[] { "guest" });
-        addCombinationValues("password", new Object[] { "password" });
-        addCombinationValues("destination", new Object[] { new ActiveMQQueue("GUEST.BAR"), new ActiveMQTopic("GUEST.BAR"), });
+        addCombinationValues("userName", new Object[] {"guest"});
+        addCombinationValues("password", new Object[] {"password"});
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("GUEST.BAR"),
+                                                          new ActiveMQTopic("GUEST.BAR"),});
     }
 
     /**
      * @see {@link CombinationTestSupport}
      */
     public void initCombosForTestGuestReceiveFails() {
-        addCombinationValues("userName", new Object[] { "guest" });
-        addCombinationValues("password", new Object[] { "password" });
-        addCombinationValues("destination", new Object[] { new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"), new ActiveMQQueue("USERS.FOO"),
-                new ActiveMQTopic("USERS.FOO"), });
+        addCombinationValues("userName", new Object[] {"guest"});
+        addCombinationValues("password", new Object[] {"password"});
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"),
+                                                          new ActiveMQTopic("TEST"),
+                                                          new ActiveMQQueue("USERS.FOO"),
+                                                          new ActiveMQTopic("USERS.FOO"),});
     }
 
     /**
      * @see {@link CombinationTestSupport}
      */
     public void initCombosForTestUserSendSucceeds() {
-        addCombinationValues("userName", new Object[] { "user" });
-        addCombinationValues("password", new Object[] { "password" });
-        addCombinationValues("destination", new Object[] { new ActiveMQQueue("USERS.FOO"), new ActiveMQQueue("GUEST.BAR"), new ActiveMQTopic("USERS.FOO"),
-                new ActiveMQTopic("GUEST.BAR"), });
+        addCombinationValues("userName", new Object[] {"user"});
+        addCombinationValues("password", new Object[] {"password"});
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("USERS.FOO"),
+                                                          new ActiveMQQueue("GUEST.BAR"),
+                                                          new ActiveMQTopic("USERS.FOO"),
+                                                          new ActiveMQTopic("GUEST.BAR"),});
     }
 
     /**
      * @see {@link CombinationTestSupport}
      */
     public void initCombosForTestUserSendFails() {
-        addCombinationValues("userName", new Object[] { "user" });
-        addCombinationValues("password", new Object[] { "password" });
-        addCombinationValues("destination", new Object[] { new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"), });
+        addCombinationValues("userName", new Object[] {"user"});
+        addCombinationValues("password", new Object[] {"password"});
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"),
+                                                          new ActiveMQTopic("TEST"),});
     }
 
     /**
      * @see {@link CombinationTestSupport}
      */
     public void initCombosForTestGuestSendFails() {
-        addCombinationValues("userName", new Object[] { "guest" });
-        addCombinationValues("password", new Object[] { "password" });
-        addCombinationValues("destination", new Object[] { new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"), new ActiveMQQueue("USERS.FOO"),
-                new ActiveMQTopic("USERS.FOO"), });
+        addCombinationValues("userName", new Object[] {"guest"});
+        addCombinationValues("password", new Object[] {"password"});
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"),
+                                                          new ActiveMQTopic("TEST"),
+                                                          new ActiveMQQueue("USERS.FOO"),
+                                                          new ActiveMQTopic("USERS.FOO")});
     }
 
     /**
      * @see {@link CombinationTestSupport}
      */
     public void initCombosForTestGuestSendSucceeds() {
-        addCombinationValues("userName", new Object[] { "guest" });
-        addCombinationValues("password", new Object[] { "password" });
-        addCombinationValues("destination", new Object[] { new ActiveMQQueue("GUEST.BAR"), new ActiveMQTopic("GUEST.BAR"), });
+        addCombinationValues("userName", new Object[] {"guest"});
+        addCombinationValues("password", new Object[] {"password"});
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("GUEST.BAR"),
+                                                          new ActiveMQTopic("GUEST.BAR"),});
     }
 }

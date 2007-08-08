@@ -22,26 +22,27 @@ import org.apache.activemq.state.CommandVisitor;
 
 /**
  * Removes a consumer, producer, session or connection.
- *  
+ * 
  * @openwire:marshaller code="12"
  * @version $Revision$
  */
 public class RemoveInfo extends BaseCommand {
-    
-    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.REMOVE_INFO;
+
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.REMOVE_INFO;
 
     protected DataStructure objectId;
 
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
-    }    
+    }
 
-    public RemoveInfo() {        
+    public RemoveInfo() {
     }
+
     public RemoveInfo(DataStructure objectId) {
-        this.objectId=objectId;
+        this.objectId = objectId;
     }
-    
+
     /**
      * @openwire:property version=1 cache=true
      */
@@ -56,32 +57,32 @@ public class RemoveInfo extends BaseCommand {
     public Response visit(CommandVisitor visitor) throws Exception {
         switch (objectId.getDataStructureType()) {
         case ConnectionId.DATA_STRUCTURE_TYPE:
-            return visitor.processRemoveConnection((ConnectionId) objectId);
+            return visitor.processRemoveConnection((ConnectionId)objectId);
         case SessionId.DATA_STRUCTURE_TYPE:
-            return visitor.processRemoveSession((SessionId) objectId);
+            return visitor.processRemoveSession((SessionId)objectId);
         case ConsumerId.DATA_STRUCTURE_TYPE:
-            return visitor.processRemoveConsumer((ConsumerId) objectId);
+            return visitor.processRemoveConsumer((ConsumerId)objectId);
         case ProducerId.DATA_STRUCTURE_TYPE:
-            return visitor.processRemoveProducer((ProducerId) objectId);
+            return visitor.processRemoveProducer((ProducerId)objectId);
         default:
-            throw new IOException("Unknown remove command type: "+ objectId.getDataStructureType());
+            throw new IOException("Unknown remove command type: " + objectId.getDataStructureType());
         }
     }
-    
+
     /**
      * Returns true if this event is for a removed connection
      */
     public boolean isConnectionRemove() {
         return objectId.getDataStructureType() == ConnectionId.DATA_STRUCTURE_TYPE;
     }
-    
+
     /**
      * Returns true if this event is for a removed session
      */
     public boolean isSessionRemove() {
         return objectId.getDataStructureType() == SessionId.DATA_STRUCTURE_TYPE;
     }
-    
+
     /**
      * Returns true if this event is for a removed consumer
      */

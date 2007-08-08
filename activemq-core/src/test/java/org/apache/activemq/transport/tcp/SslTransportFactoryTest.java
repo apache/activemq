@@ -17,15 +17,15 @@
 
 package org.apache.activemq.transport.tcp;
 
-import junit.framework.TestCase;
-import org.apache.activemq.openwire.OpenWireFormat;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+
+import junit.framework.TestCase;
+import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class SslTransportFactoryTest extends TestCase {
     private static final transient Log log = LogFactory.getLog(SslTransportFactoryTest.class);
@@ -49,50 +49,46 @@ public class SslTransportFactoryTest extends TestCase {
             final boolean wantClientAuth = ((i & 0x1) == 1);
             final boolean needClientAuth = ((i & 0x2) == 1);
 
-            String options = "wantClientAuth=" + (wantClientAuth ? "true" : "false") +
-                    "&needClientAuth=" + (needClientAuth ? "true" : "false");
+            String options = "wantClientAuth=" + (wantClientAuth ? "true" : "false") + "&needClientAuth="
+                             + (needClientAuth ? "true" : "false");
 
             try {
-                sslTransportServer = (SslTransportServer)
-                        factory.doBind("brokerId", new URI("ssl://localhost:61616?" + options));
-            }
-            catch (Exception e) {
+                sslTransportServer = (SslTransportServer)factory.doBind("brokerId", new URI(
+                                                                                            "ssl://localhost:61616?"
+                                                                                                + options));
+            } catch (Exception e) {
                 fail("Unable to bind to address: " + e.getMessage());
             }
 
             assertEquals("Created ServerSocket did not have correct wantClientAuth status.",
-                    sslTransportServer.getWantClientAuth(), wantClientAuth);
+                         sslTransportServer.getWantClientAuth(), wantClientAuth);
 
             assertEquals("Created ServerSocket did not have correct needClientAuth status.",
-                    sslTransportServer.getNeedClientAuth(), needClientAuth);
+                         sslTransportServer.getNeedClientAuth(), needClientAuth);
 
             try {
                 sslTransportServer.stop();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 fail("Unable to stop TransportServer: " + e.getMessage());
             }
         }
     }
 
     private int getMthNaryDigit(int number, int digitIdx, int numBase) {
-        return (number / ((int) Math.pow(numBase, digitIdx))) % numBase;
+        return (number / ((int)Math.pow(numBase, digitIdx))) % numBase;
     }
 
     public void testCompositeConfigure() throws IOException {
         // The 5 options being tested.
         int optionSettings[] = new int[5];
 
-        String optionNames[] = {
-                "wantClientAuth",
-                "needClientAuth",
-                "socket.wantClientAuth",
-                "socket.needClientAuth",
-                "socket.useClientMode"
-        };
+        String optionNames[] = {"wantClientAuth", "needClientAuth", "socket.wantClientAuth",
+                                "socket.needClientAuth", "socket.useClientMode"};
 
-        // Using a trinary interpretation of i to set all possible values of stub options for socket and transport.
-        // 2 transport options, 3 socket options, 3 settings for each option => 3^5 = 243 combos.
+        // Using a trinary interpretation of i to set all possible values of
+        // stub options for socket and transport.
+        // 2 transport options, 3 socket options, 3 settings for each option =>
+        // 3^5 = 243 combos.
         for (int i = 0; i < 243; ++i) {
             Map options = new HashMap();
 
@@ -110,8 +106,7 @@ public class SslTransportFactoryTest extends TestCase {
 
             try {
                 transport = new StubSslTransport(null, socketStub);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 fail("Unable to create StubSslTransport: " + e.getMessage());
             }
 
@@ -129,8 +124,7 @@ public class SslTransportFactoryTest extends TestCase {
             // lets start the transport to force the introspection
             try {
                 transport.start();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 // ignore bad connection
             }
 
@@ -138,16 +132,16 @@ public class SslTransportFactoryTest extends TestCase {
                 log.info("sheiite");
             }
 
-            assertEquals("wantClientAuth was not properly set for iteration: " + i,
-                    optionSettings[0], transport.getWantClientAuthStatus());
-            assertEquals("needClientAuth was not properly set for iteration: " + i,
-                    optionSettings[1], transport.getNeedClientAuthStatus());
-            assertEquals("socket.wantClientAuth was not properly set for iteration: " + i,
-                    optionSettings[2], socketStub.getWantClientAuthStatus());
-            assertEquals("socket.needClientAuth was not properly set for iteration: " + i,
-                    optionSettings[3], socketStub.getNeedClientAuthStatus());
-            assertEquals("socket.useClientMode was not properly set for iteration: " + i,
-                    optionSettings[4], socketStub.getUseClientModeStatus());
+            assertEquals("wantClientAuth was not properly set for iteration: " + i, optionSettings[0],
+                         transport.getWantClientAuthStatus());
+            assertEquals("needClientAuth was not properly set for iteration: " + i, optionSettings[1],
+                         transport.getNeedClientAuthStatus());
+            assertEquals("socket.wantClientAuth was not properly set for iteration: " + i, optionSettings[2],
+                         socketStub.getWantClientAuthStatus());
+            assertEquals("socket.needClientAuth was not properly set for iteration: " + i, optionSettings[3],
+                         socketStub.getNeedClientAuthStatus());
+            assertEquals("socket.useClientMode was not properly set for iteration: " + i, optionSettings[4],
+                         socketStub.getUseClientModeStatus());
         }
     }
 }

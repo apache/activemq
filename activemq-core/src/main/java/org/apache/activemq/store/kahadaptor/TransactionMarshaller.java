@@ -29,22 +29,24 @@ import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * Marshall a Transaction
+ * 
  * @version $Revision: 1.10 $
  */
-public class TransactionMarshaller implements Marshaller{
-    
+public class TransactionMarshaller implements Marshaller {
+
     private WireFormat wireFormat;
-    public TransactionMarshaller(WireFormat wireFormat){
+
+    public TransactionMarshaller(WireFormat wireFormat) {
         this.wireFormat = wireFormat;
-      
+
     }
-    
-    public void writePayload(Object object,DataOutput dataOut) throws IOException{
-        KahaTransaction kt = (KahaTransaction) object;
+
+    public void writePayload(Object object, DataOutput dataOut) throws IOException {
+        KahaTransaction kt = (KahaTransaction)object;
         List list = kt.getList();
         dataOut.writeInt(list.size());
-        for (int i = 0; i < list.size(); i++){
-            TxCommand tx = (TxCommand) list.get(i);
+        for (int i = 0; i < list.size(); i++) {
+            TxCommand tx = (TxCommand)list.get(i);
             Object key = tx.getMessageStoreKey();
             ByteSequence packet = wireFormat.marshal(key);
             dataOut.writeInt(packet.length);
@@ -53,31 +55,30 @@ public class TransactionMarshaller implements Marshaller{
             packet = wireFormat.marshal(command);
             dataOut.writeInt(packet.length);
             dataOut.write(packet.data, packet.offset, packet.length);
-            
-        }
-       }
 
-   
-    public Object readPayload(DataInput dataIn) throws IOException{
+        }
+    }
+
+    public Object readPayload(DataInput dataIn) throws IOException {
         KahaTransaction result = new KahaTransaction();
         List list = new ArrayList();
         result.setList(list);
-        int number=dataIn.readInt();
-        for (int i = 0; i < number; i++){
+        int number = dataIn.readInt();
+        for (int i = 0; i < number; i++) {
             TxCommand command = new TxCommand();
             int size = dataIn.readInt();
-            byte[] data=new byte[size];
+            byte[] data = new byte[size];
             dataIn.readFully(data);
-            Object key =  wireFormat.unmarshal(new ByteSequence(data));
+            Object key = wireFormat.unmarshal(new ByteSequence(data));
             command.setMessageStoreKey(key);
             size = dataIn.readInt();
-            data=new byte[size];
+            data = new byte[size];
             dataIn.readFully(data);
-            BaseCommand bc =  (BaseCommand) wireFormat.unmarshal(new ByteSequence(data));
+            BaseCommand bc = (BaseCommand)wireFormat.unmarshal(new ByteSequence(data));
             command.setCommand(bc);
             list.add(command);
         }
         return result;
-       
+
     }
 }

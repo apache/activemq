@@ -121,24 +121,21 @@ public class MulticastNetworkConnector extends NetworkConnector {
         if (bridge != null) {
             try {
                 bridge.stop();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 stopper.onException(this, e);
             }
         }
         if (remoteTransport != null) {
             try {
                 remoteTransport.stop();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 stopper.onException(this, e);
             }
         }
         if (localTransport != null) {
             try {
                 localTransport.stop();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 stopper.onException(this, e);
             }
         }
@@ -149,7 +146,7 @@ public class MulticastNetworkConnector extends NetworkConnector {
     }
 
     protected DemandForwardingBridgeSupport createBridge(Transport local, Transport remote) {
-        return new CompositeDemandForwardingBridge(this,local, remote);
+        return new CompositeDemandForwardingBridge(this, local, remote);
     }
 
 }

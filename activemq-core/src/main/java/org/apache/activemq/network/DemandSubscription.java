@@ -29,92 +29,93 @@ import java.util.Set;
  * 
  * @version $Revision: 1.1 $
  */
-public class DemandSubscription{
+public class DemandSubscription {
     private ConsumerInfo remoteInfo;
     private ConsumerInfo localInfo;
     private Set remoteSubsIds = new CopyOnWriteArraySet();
     private AtomicInteger dispatched = new AtomicInteger(0);
 
-    DemandSubscription(ConsumerInfo info){
-        remoteInfo=info;
-        localInfo=info.copy();
+    DemandSubscription(ConsumerInfo info) {
+        remoteInfo = info;
+        localInfo = info.copy();
         localInfo.setBrokerPath(info.getBrokerPath());
         remoteSubsIds.add(info.getConsumerId());
-    } 
+    }
 
     /**
      * Increment the consumers associated with this subscription
+     * 
      * @param id
      * @return true if added
      */
-    public boolean add(ConsumerId id){
+    public boolean add(ConsumerId id) {
         return remoteSubsIds.add(id);
     }
-    
+
     /**
      * Increment the consumers associated with this subscription
+     * 
      * @param id
      * @return true if added
      */
-    public boolean remove(ConsumerId id){
+    public boolean remove(ConsumerId id) {
         return remoteSubsIds.remove(id);
     }
-    
+
     /**
      * @return true if there are no interested consumers
      */
-    public boolean isEmpty(){
+    public boolean isEmpty() {
         return remoteSubsIds.isEmpty();
     }
-    
-    
+
     /**
      * @return Returns the dispatched.
      */
-    public int getDispatched(){
+    public int getDispatched() {
         return dispatched.get();
     }
 
     /**
      * @param dispatched The dispatched to set.
      */
-    public void setDispatched(int dispatched){
+    public void setDispatched(int dispatched) {
         this.dispatched.set(dispatched);
     }
-    
+
     /**
      * @return dispatched count after incremented
      */
-    public int incrementDispatched(){
+    public int incrementDispatched() {
         return dispatched.incrementAndGet();
     }
 
     /**
      * @return Returns the localInfo.
      */
-    public ConsumerInfo getLocalInfo(){
+    public ConsumerInfo getLocalInfo() {
         return localInfo;
     }
 
     /**
      * @param localInfo The localInfo to set.
      */
-    public void setLocalInfo(ConsumerInfo localInfo){
-        this.localInfo=localInfo;
+    public void setLocalInfo(ConsumerInfo localInfo) {
+        this.localInfo = localInfo;
     }
 
     /**
      * @return Returns the remoteInfo.
      */
-    public ConsumerInfo getRemoteInfo(){
+    public ConsumerInfo getRemoteInfo() {
         return remoteInfo;
     }
 
     /**
      * @param remoteInfo The remoteInfo to set.
      */
-    public void setRemoteInfo(ConsumerInfo remoteInfo){
-        this.remoteInfo=remoteInfo;
+    public void setRemoteInfo(ConsumerInfo remoteInfo) {
+        this.remoteInfo = remoteInfo;
     }
-    
+
 }

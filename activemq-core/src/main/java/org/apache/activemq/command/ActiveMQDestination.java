@@ -41,7 +41,8 @@ import java.util.StringTokenizer;
  * @openwire:marshaller
  * @version $Revision: 1.10 $
  */
-abstract public class ActiveMQDestination extends JNDIBaseStorable implements DataStructure, Destination, Externalizable, Comparable {
+abstract public class ActiveMQDestination extends JNDIBaseStorable implements DataStructure, Destination,
+    Externalizable, Comparable {
 
     private static final long serialVersionUID = -3885260014960795889L;
 
@@ -196,7 +197,8 @@ abstract public class ActiveMQDestination extends JNDIBaseStorable implements Da
 
     public void setPhysicalName(String physicalName) {
         final int len = physicalName.length();
-        int p = -1;// options offset
+        // options offset
+        int p = -1;
         boolean composite = false;
         for (int i = 0; i < len; i++) {
             char c = physicalName.charAt(i);
@@ -219,7 +221,8 @@ abstract public class ActiveMQDestination extends JNDIBaseStorable implements Da
             try {
                 options = URISupport.parseQuery(optstring);
             } catch (URISyntaxException e) {
-                throw new IllegalArgumentException("Invalid destination name: " + physicalName + ", it's options are not encoded properly: " + e);
+                throw new IllegalArgumentException("Invalid destination name: " + physicalName
+                                                   + ", it's options are not encoded properly: " + e);
             }
         }
         this.physicalName = physicalName;

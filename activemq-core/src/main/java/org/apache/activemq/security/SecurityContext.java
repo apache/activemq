@@ -40,7 +40,7 @@ abstract public class SecurityContext {
     };
 
     final String userName;
-    
+
     final ConcurrentHashMap authorizedReadDests = new ConcurrentHashMap();
     final ConcurrentHashMap authorizedWriteDests = new ConcurrentHashMap();
 
@@ -51,11 +51,11 @@ abstract public class SecurityContext {
     public boolean isInOneOf(Set allowedPrincipals) {
         HashSet set = new HashSet(getPrincipals());
         set.retainAll(allowedPrincipals);
-        return set.size()>0;
+        return set.size() > 0;
     }
 
     abstract public Set getPrincipals();
-    
+
     public String getUserName() {
         return userName;
     }

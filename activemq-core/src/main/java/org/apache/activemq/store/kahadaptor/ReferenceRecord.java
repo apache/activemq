@@ -16,52 +16,48 @@ package org.apache.activemq.store.kahadaptor;
 
 import org.apache.activemq.store.ReferenceStore.ReferenceData;
 
-public class ReferenceRecord{
+public class ReferenceRecord {
 
     private String messageId;
     private ReferenceData data;
 
-    public ReferenceRecord(){
+    public ReferenceRecord() {
     }
 
-    public ReferenceRecord(String messageId,ReferenceData data){
-        this.messageId=messageId;
-        this.data=data;
+    public ReferenceRecord(String messageId, ReferenceData data) {
+        this.messageId = messageId;
+        this.data = data;
     }
 
-    
     /**
      * @return the data
      */
-    public ReferenceData getData(){
+    public ReferenceData getData() {
         return this.data;
     }
 
-    
     /**
      * @param data the data to set
      */
-    public void setData(ReferenceData data){
-        this.data=data;
+    public void setData(ReferenceData data) {
+        this.data = data;
     }
 
-    
     /**
      * @return the messageId
      */
-    public String getMessageId(){
+    public String getMessageId() {
         return this.messageId;
     }
 
-    
     /**
      * @param messageId the messageId to set
      */
-    public void setMessageId(String messageId){
-        this.messageId=messageId;
+    public void setMessageId(String messageId) {
+        this.messageId = messageId;
     }
-    
+
     public String toString() {
-        return "ReferenceRecord(id=" + messageId + ",data=" + data +")";
+        return "ReferenceRecord(id=" + messageId + ",data=" + data + ")";
     }
 }

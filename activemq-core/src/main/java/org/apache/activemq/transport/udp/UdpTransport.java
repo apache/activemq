@@ -52,8 +52,8 @@ import java.nio.channels.DatagramChannel;
 public class UdpTransport extends TransportThreadSupport implements Transport, Service, Runnable {
     private static final Log log = LogFactory.getLog(UdpTransport.class);
 
-	private static final int MAX_BIND_ATTEMPTS = 50;
-	private static final long BIND_ATTEMPT_DELAY = 100;
+    private static final int MAX_BIND_ATTEMPTS = 50;
+    private static final long BIND_ATTEMPT_DELAY = 100;
 
     private CommandChannel commandChannel;
     private OpenWireFormat wireFormat;
@@ -98,12 +98,11 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         this.description = getProtocolName() + "Server@";
     }
 
-
     /**
      * Creates a replayer for working with the reliable transport
      */
     public Replayer createReplayer() throws IOException {
-        if (replayEnabled ) {
+        if (replayEnabled) {
             return getCommandChannel();
         }
         return null;
@@ -124,7 +123,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
             log.debug("Sending oneway from: " + this + " to target: " + targetAddress + " command: " + command);
         }
         checkStarted();
-        commandChannel.write((Command) command, address);
+        commandChannel.write((Command)command, address);
     }
 
     /**
@@ -133,8 +132,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     public String toString() {
         if (description != null) {
             return description + port;
-        }
-        else {
+        } else {
             return getProtocolUriScheme() + targetAddress + "@" + port;
         }
     }
@@ -148,47 +146,38 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
             try {
                 Command command = commandChannel.read();
                 doConsume(command);
-            }
-            catch (AsynchronousCloseException e) {
+            } catch (AsynchronousCloseException e) {
                 // DatagramChannel closed
                 try {
                     stop();
-                }
-                catch (Exception e2) {
+                } catch (Exception e2) {
                     log.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
                 }
-            }
-            catch (SocketException e) {
+            } catch (SocketException e) {
                 // DatagramSocket closed
                 log.debug("Socket closed: " + e, e);
                 try {
                     stop();
-                }
-                catch (Exception e2) {
+                } catch (Exception e2) {
                     log.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
                 }
-            }
-            catch (EOFException e) {
+            } catch (EOFException e) {
                 // DataInputStream closed
                 log.debug("Socket closed: " + e, e);
                 try {
                     stop();
-                }
-                catch (Exception e2) {
+                } catch (Exception e2) {
                     log.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 try {
                     stop();
-                }
-                catch (Exception e2) {
+                } catch (Exception e2) {
                     log.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
                 }
                 if (e instanceof IOException) {
-                    onException((IOException) e);
-                }
-                else {
+                    onException((IOException)e);
+                } else {
                     log.error("Caught: " + e, e);
                     e.printStackTrace();
                 }
@@ -204,7 +193,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
      */
     public void setTargetEndpoint(Endpoint newTarget) {
         if (newTarget instanceof DatagramEndpoint) {
-            DatagramEndpoint endpoint = (DatagramEndpoint) newTarget;
+            DatagramEndpoint endpoint = (DatagramEndpoint)newTarget;
             SocketAddress address = endpoint.getAddress();
             if (address != null) {
                 if (originalTargetAddress == null) {
@@ -305,14 +294,15 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     public void setSequenceGenerator(IntSequenceGenerator sequenceGenerator) {
         this.sequenceGenerator = sequenceGenerator;
     }
-    
+
     public boolean isReplayEnabled() {
         return replayEnabled;
     }
 
     /**
-     * Sets whether or not replay should be enabled when using the reliable transport.
-     * i.e. should we maintain a buffer of messages that can be replayed?
+     * Sets whether or not replay should be enabled when using the reliable
+     * transport. i.e. should we maintain a buffer of messages that can be
+     * replayed?
      */
     public void setReplayEnabled(boolean replayEnabled) {
         this.replayEnabled = replayEnabled;
@@ -328,7 +318,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     public void setBufferPool(ByteBufferPool bufferPool) {
         this.bufferPool = bufferPool;
     }
-    
+
     public ReplayBuffer getReplayBuffer() {
         return replayBuffer;
     }
@@ -338,7 +328,6 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         getCommandChannel().setReplayBuffer(replayBuffer);
     }
 
-    
     // Implementation methods
     // -------------------------------------------------------------------------
 
@@ -391,26 +380,28 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
         if (log.isDebugEnabled()) {
             log.debug("Binding to address: " + localAddress);
         }
-        
+
         //
-        // We have noticed that on some platfoms like linux, after you close down
-        // a previously bound socket, it can take a little while before we can bind it again.
+        // We have noticed that on some platfoms like linux, after you close
+        // down
+        // a previously bound socket, it can take a little while before we can
+        // bind it again.
         // 
-        for(int i=0; i < MAX_BIND_ATTEMPTS; i++){
-			try {
-				socket.bind(localAddress);
-				return;
-			} catch (BindException e) {
-				if ( i+1 == MAX_BIND_ATTEMPTS )
-					throw e;
-				try {
-					Thread.sleep(BIND_ATTEMPT_DELAY);
-				} catch (InterruptedException e1) {
+        for (int i = 0; i < MAX_BIND_ATTEMPTS; i++) {
+            try {
+                socket.bind(localAddress);
+                return;
+            } catch (BindException e) {
+                if (i + 1 == MAX_BIND_ATTEMPTS)
+                    throw e;
+                try {
+                    Thread.sleep(BIND_ATTEMPT_DELAY);
+                } catch (InterruptedException e1) {
                     Thread.currentThread().interrupt();
-					throw e;
-				}
-			}			
-    	}
+                    throw e;
+                }
+            }
+        }
 
     }
 
@@ -457,17 +448,17 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     }
 
     public InetSocketAddress getLocalSocketAddress() {
-        if( channel==null ) {
+        if (channel == null) {
             return null;
         } else {
             return (InetSocketAddress)channel.socket().getLocalSocketAddress();
         }
     }
 
-	public String getRemoteAddress() {
-		if(targetAddress != null){
-			return "" + targetAddress;
-		}
-		return null;
-	}
+    public String getRemoteAddress() {
+        if (targetAddress != null) {
+            return "" + targetAddress;
+        }
+        return null;
+    }
 }

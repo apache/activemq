@@ -17,9 +17,6 @@
 
 package org.apache.activemq.command;
 
-
-
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.ByteArrayOutputStream;
@@ -40,17 +37,21 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
 /**
- * An <CODE>ObjectMessage</CODE> object is used to send a message that contains a serializable object in the Java
- * programming language ("Java object"). It inherits from the <CODE>Message</CODE> interface and adds a body containing
- * a single reference to an object. Only <CODE>Serializable</CODE> Java objects can be used.
- * <p/>
- * <P>If a collection of Java objects must be sent, one of the <CODE>Collection</CODE> classes provided since JDK 1.2
- * can be used.
- * <p/>
- * <P>When a client receives an <CODE>ObjectMessage</CODE>, it is in read-only mode. If a client attempts to write to
- * the message at this point, a <CODE>MessageNotWriteableException</CODE> is thrown. If <CODE>clearBody</CODE> is
- * called, the message can now be both read from and written to.
- *
+ * An <CODE>ObjectMessage</CODE> object is used to send a message that
+ * contains a serializable object in the Java programming language ("Java
+ * object"). It inherits from the <CODE>Message</CODE> interface and adds a
+ * body containing a single reference to an object. Only
+ * <CODE>Serializable</CODE> Java objects can be used. <p/>
+ * <P>
+ * If a collection of Java objects must be sent, one of the
+ * <CODE>Collection</CODE> classes provided since JDK 1.2 can be used. <p/>
+ * <P>
+ * When a client receives an <CODE>ObjectMessage</CODE>, it is in read-only
+ * mode. If a client attempts to write to the message at this point, a
+ * <CODE>MessageNotWriteableException</CODE> is thrown. If
+ * <CODE>clearBody</CODE> is called, the message can now be both read from and
+ * written to.
+ * 
  * @openwire:marshaller code="26"
  * @see javax.jms.Session#createObjectMessage()
  * @see javax.jms.Session#createObjectMessage(Serializable)
@@ -61,7 +62,9 @@ import java.util.zip.InflaterInputStream;
  * @see javax.jms.TextMessage
  */
 public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMessage {
-    static final ClassLoader ACTIVEMQ_CLASSLOADER = ActiveMQObjectMessage.class.getClassLoader(); //TODO verify classloader
+    static final ClassLoader ACTIVEMQ_CLASSLOADER = ActiveMQObjectMessage.class.getClassLoader(); // TODO
+                                                                                                    // verify
+                                                                                                    // classloader
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_OBJECT_MESSAGE;
 
     protected transient Serializable object;
@@ -75,9 +78,9 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
     private void copy(ActiveMQObjectMessage copy) {
         storeContent();
         super.copy(copy);
-        copy.object=null;
+        copy.object = null;
     }
-        
+
     public void storeContent() {
         ByteSequence bodyAsBytes = getContent();
         if (bodyAsBytes == null && object != null) {
@@ -85,7 +88,7 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
                 ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
                 OutputStream os = bytesOut;
                 ActiveMQConnection connection = getConnection();
-                if (connection!=null && connection.isUseCompression()) {
+                if (connection != null && connection.isUseCompression()) {
                     compressed = true;
                     os = new DeflaterOutputStream(os);
                 }
@@ -110,14 +113,16 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
         return "jms/object-message";
     }
 
-
     /**
-     * Clears out the message body. Clearing a message's body does not clear its header values or property entries.
-     * <p/>
-     * <P>If this message body was read-only, calling this method leaves the message body in the same state as an empty
-     * body in a newly created message.
-     *
-     * @throws JMSException if the JMS provider fails to clear the message body due to some internal error.
+     * Clears out the message body. Clearing a message's body does not clear its
+     * header values or property entries. <p/>
+     * <P>
+     * If this message body was read-only, calling this method leaves the
+     * message body in the same state as an empty body in a newly created
+     * message.
+     * 
+     * @throws JMSException if the JMS provider fails to clear the message body
+     *                 due to some internal error.
      */
 
     public void clearBody() throws JMSException {
@@ -126,16 +131,18 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
     }
 
     /**
-     * Sets the serializable object containing this message's data. It is important to note that an
-     * <CODE>ObjectMessage</CODE> contains a snapshot of the object at the time <CODE>setObject()</CODE> is called;
-     * subsequent modifications of the object will have no effect on the <CODE>ObjectMessage</CODE> body.
-     *
+     * Sets the serializable object containing this message's data. It is
+     * important to note that an <CODE>ObjectMessage</CODE> contains a
+     * snapshot of the object at the time <CODE>setObject()</CODE> is called;
+     * subsequent modifications of the object will have no effect on the
+     * <CODE>ObjectMessage</CODE> body.
+     * 
      * @param newObject the message's data
-     * @throws JMSException if the JMS provider fails to set the object due to some internal error.
-     * @throws javax.jms.MessageFormatException
-     *                      if object serialization fails.
-     * @throws javax.jms.MessageNotWriteableException
-     *                      if the message is in read-only mode.
+     * @throws JMSException if the JMS provider fails to set the object due to
+     *                 some internal error.
+     * @throws javax.jms.MessageFormatException if object serialization fails.
+     * @throws javax.jms.MessageNotWriteableException if the message is in
+     *                 read-only mode.
      */
 
     public void setObject(Serializable newObject) throws JMSException {
@@ -143,30 +150,30 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
         this.object = newObject;
         setContent(null);
         ActiveMQConnection connection = getConnection();
-        if( connection==null || !connection.isObjectMessageSerializationDefered() ) {
+        if (connection == null || !connection.isObjectMessageSerializationDefered()) {
             storeContent();
         }
     }
 
-
     /**
-     * Gets the serializable object containing this message's data. The default value is null.
-     *
+     * Gets the serializable object containing this message's data. The default
+     * value is null.
+     * 
      * @return the serializable object containing this message's data
      * @throws JMSException
      */
     public Serializable getObject() throws JMSException {
-        if (object == null && getContent()!=null ) {
+        if (object == null && getContent() != null) {
             try {
                 ByteSequence content = getContent();
                 InputStream is = new ByteArrayInputStream(content);
-                if( isCompressed() ) {
+                if (isCompressed()) {
                     is = new InflaterInputStream(is);
                 }
                 DataInputStream dataIn = new DataInputStream(is);
                 ClassLoadingAwareObjectInputStream objIn = new ClassLoadingAwareObjectInputStream(dataIn);
                 try {
-                    object = (Serializable) objIn.readObject();
+                    object = (Serializable)objIn.readObject();
                 } catch (ClassNotFoundException ce) {
                     throw new IOException(ce.getMessage());
                 }
@@ -180,8 +187,9 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
 
     public void onMessageRolledBack() {
         super.onMessageRolledBack();
-        
-        // lets force the object to be deserialized again - as we could have changed the object
+
+        // lets force the object to be deserialized again - as we could have
+        // changed the object
         object = null;
     }
 

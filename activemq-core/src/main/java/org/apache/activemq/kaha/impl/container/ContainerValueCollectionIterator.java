@@ -23,38 +23,38 @@ import org.apache.activemq.kaha.impl.index.IndexLinkedList;
  * 
  * @version $Revision: 1.2 $
  */
-public class ContainerValueCollectionIterator implements Iterator{
+public class ContainerValueCollectionIterator implements Iterator {
 
     protected BaseContainerImpl container;
     protected IndexLinkedList list;
     protected IndexItem nextItem;
     protected IndexItem currentItem;
 
-    ContainerValueCollectionIterator(BaseContainerImpl container,IndexLinkedList list,IndexItem start){
-        this.container=container;
-        this.list=list;
-        this.currentItem=start;
-        this.nextItem=list.getNextEntry((IndexItem)list.refreshEntry(start));
+    ContainerValueCollectionIterator(BaseContainerImpl container, IndexLinkedList list, IndexItem start) {
+        this.container = container;
+        this.list = list;
+        this.currentItem = start;
+        this.nextItem = list.getNextEntry((IndexItem)list.refreshEntry(start));
     }
 
-    public boolean hasNext(){
-        return nextItem!=null;
+    public boolean hasNext() {
+        return nextItem != null;
     }
 
-    public Object next(){
-        synchronized(container){
-            nextItem=(IndexItem)list.refreshEntry(nextItem);
-            currentItem=nextItem;
-            Object result=container.getValue(nextItem);
-            nextItem=list.getNextEntry(nextItem);
+    public Object next() {
+        synchronized (container) {
+            nextItem = (IndexItem)list.refreshEntry(nextItem);
+            currentItem = nextItem;
+            Object result = container.getValue(nextItem);
+            nextItem = list.getNextEntry(nextItem);
             return result;
         }
     }
 
-    public void remove(){
-        synchronized(container){
-            if(currentItem!=null){
-                currentItem=(IndexItem)list.refreshEntry(currentItem);
+    public void remove() {
+        synchronized (container) {
+            if (currentItem != null) {
+                currentItem = (IndexItem)list.refreshEntry(currentItem);
                 container.remove(currentItem);
             }
         }

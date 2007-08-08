@@ -18,7 +18,6 @@ package org.apache.activemq.command;
 
 import org.apache.activemq.state.CommandVisitor;
 
-
 /**
  * 
  * @openwire:marshaller code="16"
@@ -26,38 +25,39 @@ import org.apache.activemq.state.CommandVisitor;
  */
 public class ConnectionError extends BaseCommand {
 
-    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.CONNECTION_ERROR;
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.CONNECTION_ERROR;
 
     protected ConnectionId connectionId;
     Throwable exception;
-    
+
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
-       
+
     public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processConnectionError(this);
     }
 
     /**
      * @openwire:property version=1
-     */    
+     */
     public Throwable getException() {
         return exception;
     }
-    
+
     public void setException(Throwable exception) {
         this.exception = exception;
     }
 
     /**
      * @openwire:property version=1
-     */    
+     */
     public ConnectionId getConnectionId() {
         return connectionId;
     }
+
     public void setConnectionId(ConnectionId connectionId) {
         this.connectionId = connectionId;
     }
-    
+
 }

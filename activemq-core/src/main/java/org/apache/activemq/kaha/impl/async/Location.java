@@ -27,121 +27,124 @@ import java.util.concurrent.CountDownLatch;
  * @version $Revision: 1.2 $
  */
 public final class Location implements Comparable<Location> {
-    
-    public static final byte MARK_TYPE=-1;
-    public static final byte USER_TYPE=1;    
-    public static final byte NOT_SET_TYPE=0;    
-    public static final int NOT_SET=-1;
 
-    private int dataFileId=NOT_SET;
-    private int offset=NOT_SET;
-    private int size=NOT_SET;
-    private byte type=NOT_SET_TYPE;
+    public static final byte MARK_TYPE = -1;
+    public static final byte USER_TYPE = 1;
+    public static final byte NOT_SET_TYPE = 0;
+    public static final int NOT_SET = -1;
+
+    private int dataFileId = NOT_SET;
+    private int offset = NOT_SET;
+    private int size = NOT_SET;
+    private byte type = NOT_SET_TYPE;
     private CountDownLatch latch;
 
-    public Location(){}
-    
+    public Location() {
+    }
+
     Location(Location item) {
         this.dataFileId = item.dataFileId;
         this.offset = item.offset;
         this.size = item.size;
         this.type = item.type;
     }
-    
-    boolean isValid(){
+
+    boolean isValid() {
         return dataFileId != NOT_SET;
     }
 
     /**
      * @return the size of the data record including the header.
      */
-    public int getSize(){
+    public int getSize() {
         return size;
     }
 
     /**
      * @param size the size of the data record including the header.
      */
-    public void setSize(int size){
-        this.size=size;
+    public void setSize(int size) {
+        this.size = size;
     }
 
     /**
      * @return the size of the payload of the record.
      */
     public int getPaylodSize() {
-        return size-AsyncDataManager.ITEM_HEAD_FOOT_SPACE;
-    }  
-    
-    public int getOffset(){
-        return offset;
-    }
-    public void setOffset(int offset){
-        this.offset=offset;
+        return size - AsyncDataManager.ITEM_HEAD_FOOT_SPACE;
     }
 
-    public int getDataFileId(){
+    public int getOffset() {
+        return offset;
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
+    }
+
+    public int getDataFileId() {
         return dataFileId;
     }
 
-    public void setDataFileId(int file){
-        this.dataFileId=file;
+    public void setDataFileId(int file) {
+        this.dataFileId = file;
     }
 
-	public byte getType() {
-		return type;
-	}
+    public byte getType() {
+        return type;
+    }
 
-	public void setType(byte type) {
-		this.type = type;
-	}
+    public void setType(byte type) {
+        this.type = type;
+    }
 
-	public String toString(){
-        String result="offset = "+offset+", file = " + dataFileId + ", size = "+size + ", type = "+type;
+    public String toString() {
+        String result = "offset = " + offset + ", file = " + dataFileId + ", size = " + size + ", type = "
+                        + type;
         return result;
     }
 
-	public void writeExternal(DataOutput dos) throws IOException {
-		dos.writeInt(dataFileId);
-		dos.writeInt(offset);
-		dos.writeInt(size);
-		dos.writeByte(type);
-	}
+    public void writeExternal(DataOutput dos) throws IOException {
+        dos.writeInt(dataFileId);
+        dos.writeInt(offset);
+        dos.writeInt(size);
+        dos.writeByte(type);
+    }
 
-	public void readExternal(DataInput dis) throws IOException {
-		dataFileId = dis.readInt();
-		offset = dis.readInt();
-		size = dis.readInt();
-		type = dis.readByte();
-	}
+    public void readExternal(DataInput dis) throws IOException {
+        dataFileId = dis.readInt();
+        offset = dis.readInt();
+        size = dis.readInt();
+        type = dis.readByte();
+    }
 
-	public CountDownLatch getLatch() {
-		return latch;
-	}
-	public void setLatch(CountDownLatch latch) {
-		this.latch = latch;
-	}
+    public CountDownLatch getLatch() {
+        return latch;
+    }
 
-	public int compareTo(Location o) {
-		Location l = (Location)o;
-		if( dataFileId == l.dataFileId ) {
-			int rc = offset-l.offset;
-			return rc;
-		}
-		return dataFileId - l.dataFileId;
-	}
-    
+    public void setLatch(CountDownLatch latch) {
+        this.latch = latch;
+    }
+
+    public int compareTo(Location o) {
+        Location l = (Location)o;
+        if (dataFileId == l.dataFileId) {
+            int rc = offset - l.offset;
+            return rc;
+        }
+        return dataFileId - l.dataFileId;
+    }
+
     public boolean equals(Object o) {
         boolean result = false;
         if (o instanceof Location) {
-            result = compareTo((Location)o)==0;
+            result = compareTo((Location)o) == 0;
         }
         return result;
     }
-    
+
     public int hashCode() {
         return dataFileId ^ offset;
     }
-
 
 }

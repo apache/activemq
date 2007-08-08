@@ -32,13 +32,13 @@ import org.apache.activemq.util.ClassLoadingAwareObjectInputStream;
 
 /**
  * A simple implementation which uses Object Stream serialization.
- *
+ * 
  * @version $Revision: 1.1 $
  */
 public class ObjectStreamWireFormat implements WireFormat {
 
     public ByteSequence marshal(Object command) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();        
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream ds = new DataOutputStream(baos);
         marshal(command, ds);
         ds.close();
@@ -64,7 +64,7 @@ public class ObjectStreamWireFormat implements WireFormat {
             in.close();
             return command;
         } catch (ClassNotFoundException e) {
-            throw (IOException)new IOException("unmarshal failed: "+e).initCause(e);
+            throw (IOException)new IOException("unmarshal failed: " + e).initCause(e);
         }
     }
 

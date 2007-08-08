@@ -31,9 +31,8 @@ import org.apache.activemq.test.JmsTopicSendReceiveTest;
  * @version $Revision: 1.5 $
  */
 public class JmsDurableTopicSendReceiveTest extends JmsTopicSendReceiveTest {
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-            .getLog(JmsDurableTopicSendReceiveTest.class);
-    
+    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(JmsDurableTopicSendReceiveTest.class);
+
     protected Connection connection2;
     protected Session session2;
     protected Session consumeSession2;
@@ -41,9 +40,10 @@ public class JmsDurableTopicSendReceiveTest extends JmsTopicSendReceiveTest {
     protected MessageProducer producer2;
     protected Destination consumerDestination2;
     protected Destination producerDestination2;
+
     /**
      * Set up a durable suscriber test.
-     *
+     * 
      * @see junit.framework.TestCase#setUp()
      */
     protected void setUp() throws Exception {
@@ -53,7 +53,7 @@ public class JmsDurableTopicSendReceiveTest extends JmsTopicSendReceiveTest {
 
     /**
      * Test if all the messages sent are being received.
-     *
+     * 
      * @throws Exception
      */
     public void testSendWhileClosed() throws Exception {
@@ -63,23 +63,23 @@ public class JmsDurableTopicSendReceiveTest extends JmsTopicSendReceiveTest {
         session2 = connection2.createSession(false, Session.AUTO_ACKNOWLEDGE);
         producer2 = session2.createProducer(null);
         producer2.setDeliveryMode(deliveryMode);
-        producerDestination2 = session2.createTopic(getProducerSubject()+"2");
+        producerDestination2 = session2.createTopic(getProducerSubject() + "2");
         Thread.sleep(1000);
 
         consumeSession2 = connection2.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        consumerDestination2 = session2.createTopic(getConsumerSubject()+"2");
+        consumerDestination2 = session2.createTopic(getConsumerSubject() + "2");
         consumer2 = consumeSession2.createDurableSubscriber((Topic)consumerDestination2, getName());
         Thread.sleep(1000);
         consumer2.close();
         TextMessage message = session2.createTextMessage("test");
-        message.setStringProperty("test","test");
+        message.setStringProperty("test", "test");
         message.setJMSType("test");
         producer2.send(producerDestination2, message);
         log.info("Creating durable consumer");
         consumer2 = consumeSession2.createDurableSubscriber((Topic)consumerDestination2, getName());
         Message msg = consumer2.receive(1000);
         assertNotNull(msg);
-        assertEquals(((TextMessage) msg).getText(), "test");
+        assertEquals(((TextMessage)msg).getText(), "test");
         assertEquals(msg.getJMSType(), "test");
         assertEquals(msg.getStringProperty("test"), "test");
         connection2.stop();

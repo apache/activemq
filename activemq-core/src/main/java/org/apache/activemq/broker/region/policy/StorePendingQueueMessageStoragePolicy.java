@@ -19,25 +19,25 @@ import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.StoreQueueCursor;
 import org.apache.activemq.kaha.Store;
 
-
 /**
- * Creates a StoreQueueCursor
- *  *
- * @org.apache.xbean.XBean element="storeCursor" description="Pending messages paged in from the Store"
+ * Creates a StoreQueueCursor *
+ * 
+ * @org.apache.xbean.XBean element="storeCursor" description="Pending messages
+ *                         paged in from the Store"
  * 
  * @version $Revision$
  */
-public class StorePendingQueueMessageStoragePolicy implements PendingQueueMessageStoragePolicy{
+public class StorePendingQueueMessageStoragePolicy implements PendingQueueMessageStoragePolicy {
 
     /**
      * @param queue
      * @param tmpStore
      * @return the cursor
-     * @see org.apache.activemq.broker.region.policy.PendingQueueMessageStoragePolicy#getQueuePendingMessageCursor(org.apache.openjpa.lib.util.concurrent.Queue, org.apache.activemq.kaha.Store)
+     * @see org.apache.activemq.broker.region.policy.PendingQueueMessageStoragePolicy#getQueuePendingMessageCursor(org.apache.openjpa.lib.util.concurrent.Queue,
+     *      org.apache.activemq.kaha.Store)
      */
-    public PendingMessageCursor getQueuePendingMessageCursor(Queue queue,Store tmpStore){
-        return new StoreQueueCursor(queue,tmpStore);
+    public PendingMessageCursor getQueuePendingMessageCursor(Queue queue, Store tmpStore) {
+        return new StoreQueueCursor(queue, tmpStore);
     }
 
-    
 }

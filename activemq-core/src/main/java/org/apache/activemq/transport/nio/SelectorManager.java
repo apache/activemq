@@ -34,75 +34,78 @@ import java.util.concurrent.ThreadFactory;
  */
 final public class SelectorManager {
 
-	static final public SelectorManager singleton = new SelectorManager();
-	static SelectorManager getInstance() { 
-		return singleton;
-	}
-	
-	public interface Listener {
-		public void onSelect(SelectorSelection selector);
-		public void onError(SelectorSelection selection, Throwable error);
-	}
-	
-	private Executor selectorExecutor = Executors.newCachedThreadPool(new ThreadFactory(){
-		public Thread newThread(Runnable r) {
-			Thread rc = new Thread(r);
-			rc.setName("NIO Transport Thread");
-			return rc;
-		}});
-	private Executor channelExecutor = selectorExecutor;
-	private LinkedList<SelectorWorker> freeWorkers = new LinkedList<SelectorWorker>();
-	private int maxChannelsPerWorker = 64;
-	
-	public synchronized SelectorSelection register(SocketChannel socketChannel, Listener listener)
-	 	throws IOException {
+    static final public SelectorManager singleton = new SelectorManager();
 
-		SelectorWorker worker = null;
-		if (freeWorkers.size() > 0) {
-			worker = freeWorkers.getFirst();
-		} else {
-			worker = new SelectorWorker(this);
-			freeWorkers.addFirst(worker);
-		}
+    static SelectorManager getInstance() {
+        return singleton;
+    }
 
-		SelectorSelection selection = new SelectorSelection(worker, socketChannel, listener);				
-		return selection;
-	}
+    public interface Listener {
+        public void onSelect(SelectorSelection selector);
 
-	synchronized void onWorkerFullEvent(SelectorWorker worker) {
-		freeWorkers.remove(worker);
-	}
+        public void onError(SelectorSelection selection, Throwable error);
+    }
 
-	synchronized public void onWorkerEmptyEvent(SelectorWorker worker) {
-		freeWorkers.remove(worker);
-	}
+    private Executor selectorExecutor = Executors.newCachedThreadPool(new ThreadFactory() {
+        public Thread newThread(Runnable r) {
+            Thread rc = new Thread(r);
+            rc.setName("NIO Transport Thread");
+            return rc;
+        }
+    });
+    private Executor channelExecutor = selectorExecutor;
+    private LinkedList<SelectorWorker> freeWorkers = new LinkedList<SelectorWorker>();
+    private int maxChannelsPerWorker = 64;
 
-	synchronized public void onWorkerNotFullEvent(SelectorWorker worker) {
-		freeWorkers.add(worker);
-	}
+    public synchronized SelectorSelection register(SocketChannel socketChannel, Listener listener)
+        throws IOException {
 
-	public Executor getChannelExecutor() {
-		return channelExecutor;
-	}
+        SelectorWorker worker = null;
+        if (freeWorkers.size() > 0) {
+            worker = freeWorkers.getFirst();
+        } else {
+            worker = new SelectorWorker(this);
+            freeWorkers.addFirst(worker);
+        }
 
-	public void setChannelExecutor(Executor channelExecutor) {
-		this.channelExecutor = channelExecutor;
-	}
+        SelectorSelection selection = new SelectorSelection(worker, socketChannel, listener);
+        return selection;
+    }
 
-	public int getMaxChannelsPerWorker() {
-		return maxChannelsPerWorker;
-	}
+    synchronized void onWorkerFullEvent(SelectorWorker worker) {
+        freeWorkers.remove(worker);
+    }
 
-	public void setMaxChannelsPerWorker(int maxChannelsPerWorker) {
-		this.maxChannelsPerWorker = maxChannelsPerWorker;
-	}
+    synchronized public void onWorkerEmptyEvent(SelectorWorker worker) {
+        freeWorkers.remove(worker);
+    }
 
-	public Executor getSelectorExecutor() {
-		return selectorExecutor;
-	}
+    synchronized public void onWorkerNotFullEvent(SelectorWorker worker) {
+        freeWorkers.add(worker);
+    }
 
-	public void setSelectorExecutor(Executor selectorExecutor) {
-		this.selectorExecutor = selectorExecutor;
-	}
+    public Executor getChannelExecutor() {
+        return channelExecutor;
+    }
+
+    public void setChannelExecutor(Executor channelExecutor) {
+        this.channelExecutor = channelExecutor;
+    }
+
+    public int getMaxChannelsPerWorker() {
+        return maxChannelsPerWorker;
+    }
+
+    public void setMaxChannelsPerWorker(int maxChannelsPerWorker) {
+        this.maxChannelsPerWorker = maxChannelsPerWorker;
+    }
+
+    public Executor getSelectorExecutor() {
+        return selectorExecutor;
+    }
+
+    public void setSelectorExecutor(Executor selectorExecutor) {
+        this.selectorExecutor = selectorExecutor;
+    }
 
 }

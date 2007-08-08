@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.security;
 
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ActiveMQTempQueue;
-import org.apache.activemq.jaas.GroupPrincipal;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import junit.framework.TestCase;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.jaas.GroupPrincipal;
 
 /**
  * 
@@ -41,7 +41,7 @@ public class AuthorizationMapTest extends TestCase {
         assertEquals("set size: " + readACLs, 2, readACLs.size());
         assertTrue("Contains users group", readACLs.contains(admins));
         assertTrue("Contains users group", readACLs.contains(users));
-        
+
     }
 
     public void testAuthorizationMapWithTempDest() {
@@ -51,13 +51,13 @@ public class AuthorizationMapTest extends TestCase {
         assertEquals("set size: " + readACLs, 2, readACLs.size());
         assertTrue("Contains users group", readACLs.contains(admins));
         assertTrue("Contains users group", readACLs.contains(users));
-        
+
         Set tempAdminACLs = map.getTempDestinationAdminACLs();
         assertEquals("set size: " + tempAdminACLs, 1, tempAdminACLs.size());
         assertTrue("Contains users group", tempAdminACLs.contains(tempDestinationAdmins));
-              
-    }    
-    
+
+    }
+
     protected AuthorizationMap createAuthorizationMap() {
         DefaultAuthorizationMap answer = new DefaultAuthorizationMap();
 
@@ -67,20 +67,19 @@ public class AuthorizationMapTest extends TestCase {
         entry.setGroupClass("org.apache.activemq.jaas.GroupPrincipal");
         entry.setQueue(">");
         try {
-        	entry.setRead("admins");
+            entry.setRead("admins");
         } catch (Exception e) {
-        	fail(e.toString());
+            fail(e.toString());
         }
-        
-        
+
         entries.add(entry);
-        // entry using default org.apache.activemq.jaas.GroupPrincipal class  
+        // entry using default org.apache.activemq.jaas.GroupPrincipal class
         entry = new AuthorizationEntry();
         entry.setQueue("USERS.>");
         try {
-        	entry.setRead("users");
+            entry.setRead("users");
         } catch (Exception e) {
-        	fail(e.toString());
+            fail(e.toString());
         }
         entries.add(entry);
 
@@ -88,7 +87,7 @@ public class AuthorizationMapTest extends TestCase {
 
         return answer;
     }
-    
+
     protected AuthorizationMap createAuthorizationMapWithTempDest() {
         DefaultAuthorizationMap answer = new DefaultAuthorizationMap();
 
@@ -97,34 +96,34 @@ public class AuthorizationMapTest extends TestCase {
         AuthorizationEntry entry = new AuthorizationEntry();
         entry.setQueue(">");
         try {
-        	entry.setRead("admins");
+            entry.setRead("admins");
         } catch (Exception e) {
-        	fail(e.toString());
+            fail(e.toString());
         }
         entries.add(entry);
 
         entry = new AuthorizationEntry();
         entry.setQueue("USERS.>");
         try {
-        	entry.setRead("users");
+            entry.setRead("users");
         } catch (Exception e) {
-        	fail(e.toString());
+            fail(e.toString());
         }
         entries.add(entry);
 
         answer.setAuthorizationEntries(entries);
-        
-        //create entry for temporary queue
+
+        // create entry for temporary queue
         TempDestinationAuthorizationEntry tEntry = new TempDestinationAuthorizationEntry();
         try {
-        	tEntry.setAdmin("tempDestAdmins");
+            tEntry.setAdmin("tempDestAdmins");
         } catch (Exception e) {
-        	fail(e.toString());
-        }        
-        
+            fail(e.toString());
+        }
+
         answer.setTempDestinationAuthorizationEntry(tEntry);
 
         return answer;
-    }    
+    }
 
 }

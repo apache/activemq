@@ -48,137 +48,144 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.codehaus.groovy.antlr.treewalker.PreOrderTraversal;
 
-public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements ReferenceStoreAdapter{
+public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements ReferenceStoreAdapter {
 
-    private static final Log log=LogFactory.getLog(KahaPersistenceAdapter.class);
-    private static final String STORE_STATE="store-state";
-    private static final String RECORD_REFERENCES="record-references";
-    private static final String TRANSACTIONS="transactions-state";
+    private static final Log log = LogFactory.getLog(KahaPersistenceAdapter.class);
+    private static final String STORE_STATE = "store-state";
+    private static final String RECORD_REFERENCES = "record-references";
+    private static final String TRANSACTIONS = "transactions-state";
     private MapContainer stateMap;
     private MapContainer preparedTransactions;
-    private Map<Integer,AtomicInteger> recordReferences=new HashMap<Integer,AtomicInteger>();
+    private Map<Integer, AtomicInteger> recordReferences = new HashMap<Integer, AtomicInteger>();
     private ListContainer durableSubscribers;
     private boolean storeValid;
     private Store stateStore;
 
-    public synchronized MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException{
+    public synchronized MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {
         throw new RuntimeException("Use createQueueReferenceStore instead");
     }
 
-    public synchronized TopicMessageStore createTopicMessageStore(ActiveMQTopic destination) throws IOException{
+    public synchronized TopicMessageStore createTopicMessageStore(ActiveMQTopic destination)
+        throws IOException {
         throw new RuntimeException("Use createTopicReferenceStore instead");
     }
 
-    @Override public synchronized void start() throws Exception{
+    @Override
+    public synchronized void start() throws Exception {
         super.start();
-        Store store=getStateStore();
-        boolean empty=store.getMapContainerIds().isEmpty();
-        stateMap=store.getMapContainer("state",STORE_STATE);
+        Store store = getStateStore();
+        boolean empty = store.getMapContainerIds().isEmpty();
+        stateMap = store.getMapContainer("state", STORE_STATE);
         stateMap.load();
-        if(!empty){
-            AtomicBoolean status=(AtomicBoolean)stateMap.get(STORE_STATE);
-            if(status!=null){
-                storeValid=status.get();
+        if (!empty) {
+            AtomicBoolean status = (AtomicBoolean)stateMap.get(STORE_STATE);
+            if (status != null) {
+                storeValid = status.get();
             }
-            if(storeValid){
-                if(stateMap.containsKey(RECORD_REFERENCES)){
-                    recordReferences=(Map<Integer,AtomicInteger>)stateMap.get(RECORD_REFERENCES);
+            if (storeValid) {
+                if (stateMap.containsKey(RECORD_REFERENCES)) {
+                    recordReferences = (Map<Integer, AtomicInteger>)stateMap.get(RECORD_REFERENCES);
                 }
             }
         }
-        stateMap.put(STORE_STATE,new AtomicBoolean());
-        durableSubscribers=store.getListContainer("durableSubscribers");
+        stateMap.put(STORE_STATE, new AtomicBoolean());
+        durableSubscribers = store.getListContainer("durableSubscribers");
         durableSubscribers.setMarshaller(new CommandMarshaller());
-        preparedTransactions=store.getMapContainer("transactions",TRANSACTIONS,false);
-        //need to set the Marshallers here
+        preparedTransactions = store.getMapContainer("transactions", TRANSACTIONS, false);
+        // need to set the Marshallers here
         preparedTransactions.setKeyMarshaller(Store.CommandMarshaller);
         preparedTransactions.setValueMarshaller(new AMQTxMarshaller(wireFormat));
     }
 
-    @Override public synchronized void stop() throws Exception{
-        stateMap.put(RECORD_REFERENCES,recordReferences);
-        stateMap.put(STORE_STATE,new AtomicBoolean(true));
-        if(this.stateStore!=null){
+    @Override
+    public synchronized void stop() throws Exception {
+        stateMap.put(RECORD_REFERENCES, recordReferences);
+        stateMap.put(STORE_STATE, new AtomicBoolean(true));
+        if (this.stateStore != null) {
             this.stateStore.close();
-            this.stateStore=null;
-            this.stateMap=null;
+            this.stateStore = null;
+            this.stateMap = null;
         }
         super.stop();
     }
 
-    public boolean isStoreValid(){
+    public boolean isStoreValid() {
         return storeValid;
     }
 
-    public ReferenceStore createQueueReferenceStore(ActiveMQQueue destination) throws IOException{
-        ReferenceStore rc=(ReferenceStore)queues.get(destination);
-        if(rc==null){
-            rc=new KahaReferenceStore(this,getMapReferenceContainer(destination,"queue-data"),destination);
-            messageStores.put(destination,rc);
-            //            if(transactionStore!=null){
-            //                rc=transactionStore.proxy(rc);
-            //            }
-            queues.put(destination,rc);
+    public ReferenceStore createQueueReferenceStore(ActiveMQQueue destination) throws IOException {
+        ReferenceStore rc = (ReferenceStore)queues.get(destination);
+        if (rc == null) {
+            rc = new KahaReferenceStore(this, getMapReferenceContainer(destination, "queue-data"),
+                                        destination);
+            messageStores.put(destination, rc);
+            // if(transactionStore!=null){
+            // rc=transactionStore.proxy(rc);
+            // }
+            queues.put(destination, rc);
         }
         return rc;
     }
 
-    public TopicReferenceStore createTopicReferenceStore(ActiveMQTopic destination) throws IOException{
-        TopicReferenceStore rc=(TopicReferenceStore)topics.get(destination);
-        if(rc==null){
-            Store store=getStore();
-            MapContainer messageContainer=getMapReferenceContainer(destination,"topic-data");
-            MapContainer subsContainer=getSubsMapContainer(destination.toString()+"-Subscriptions","blob");
-            ListContainer ackContainer=store.getListContainer(destination.toString(),"topic-acks");
+    public TopicReferenceStore createTopicReferenceStore(ActiveMQTopic destination) throws IOException {
+        TopicReferenceStore rc = (TopicReferenceStore)topics.get(destination);
+        if (rc == null) {
+            Store store = getStore();
+            MapContainer messageContainer = getMapReferenceContainer(destination, "topic-data");
+            MapContainer subsContainer = getSubsMapContainer(destination.toString() + "-Subscriptions",
+                                                             "blob");
+            ListContainer ackContainer = store.getListContainer(destination.toString(), "topic-acks");
             ackContainer.setMarshaller(new TopicSubAckMarshaller());
-            rc=new KahaTopicReferenceStore(store,this,messageContainer,ackContainer,subsContainer,destination);
-            messageStores.put(destination,rc);
-            //            if(transactionStore!=null){
-            //                rc=transactionStore.proxy(rc);
-            //            }
-            topics.put(destination,rc);
+            rc = new KahaTopicReferenceStore(store, this, messageContainer, ackContainer, subsContainer,
+                                             destination);
+            messageStores.put(destination, rc);
+            // if(transactionStore!=null){
+            // rc=transactionStore.proxy(rc);
+            // }
+            topics.put(destination, rc);
         }
         return rc;
     }
 
-    public void buildReferenceFileIdsInUse() throws IOException{
-        recordReferences=new HashMap<Integer,AtomicInteger>();
-        Set<ActiveMQDestination> destinations=getDestinations();
-        for(ActiveMQDestination destination:destinations){
-            if(destination.isQueue()){
-                KahaReferenceStore store=(KahaReferenceStore)createQueueReferenceStore((ActiveMQQueue)destination);
+    public void buildReferenceFileIdsInUse() throws IOException {
+        recordReferences = new HashMap<Integer, AtomicInteger>();
+        Set<ActiveMQDestination> destinations = getDestinations();
+        for (ActiveMQDestination destination : destinations) {
+            if (destination.isQueue()) {
+                KahaReferenceStore store = (KahaReferenceStore)createQueueReferenceStore((ActiveMQQueue)destination);
                 store.addReferenceFileIdsInUse();
-            }else{
-                KahaTopicReferenceStore store=(KahaTopicReferenceStore)createTopicReferenceStore((ActiveMQTopic)destination);
+            } else {
+                KahaTopicReferenceStore store = (KahaTopicReferenceStore)createTopicReferenceStore((ActiveMQTopic)destination);
                 store.addReferenceFileIdsInUse();
             }
         }
     }
 
-    protected MapContainer<MessageId,ReferenceRecord> getMapReferenceContainer(Object id,String containerName)
-            throws IOException{
-        Store store=getStore();
-        MapContainer<MessageId,ReferenceRecord> container=store.getMapContainer(id,containerName);
+    protected MapContainer<MessageId, ReferenceRecord> getMapReferenceContainer(Object id,
+                                                                                String containerName)
+        throws IOException {
+        Store store = getStore();
+        MapContainer<MessageId, ReferenceRecord> container = store.getMapContainer(id, containerName);
         container.setKeyMarshaller(new MessageIdMarshaller());
         container.setValueMarshaller(new ReferenceRecordMarshaller());
         container.load();
         return container;
     }
 
-    synchronized void addInterestInRecordFile(int recordNumber){
-        Integer key=Integer.valueOf(recordNumber);
-        AtomicInteger rr=recordReferences.get(key);
-        if(rr==null){
-            rr=new AtomicInteger();
-            recordReferences.put(key,rr);
+    synchronized void addInterestInRecordFile(int recordNumber) {
+        Integer key = Integer.valueOf(recordNumber);
+        AtomicInteger rr = recordReferences.get(key);
+        if (rr == null) {
+            rr = new AtomicInteger();
+            recordReferences.put(key, rr);
         }
         rr.incrementAndGet();
     }
 
-    synchronized void removeInterestInRecordFile(int recordNumber){
-        Integer key=Integer.valueOf(recordNumber);
-        AtomicInteger rr=recordReferences.get(key);
-        if(rr!=null&&rr.decrementAndGet()<=0){
+    synchronized void removeInterestInRecordFile(int recordNumber) {
+        Integer key = Integer.valueOf(recordNumber);
+        AtomicInteger rr = recordReferences.get(key);
+        if (rr != null && rr.decrementAndGet() <= 0) {
             recordReferences.remove(key);
         }
     }
@@ -188,99 +195,97 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
      * @throws IOException
      * @see org.apache.activemq.store.ReferenceStoreAdapter#getReferenceFileIdsInUse()
      */
-    public Set<Integer> getReferenceFileIdsInUse() throws IOException{
+    public Set<Integer> getReferenceFileIdsInUse() throws IOException {
         return recordReferences.keySet();
     }
 
     /**
      * 
-     * @throws IOException 
+     * @throws IOException
      * @see org.apache.activemq.store.ReferenceStoreAdapter#clearMessages()
      */
-    public void clearMessages() throws IOException{
+    public void clearMessages() throws IOException {
         deleteAllMessages();
     }
 
     /**
      * 
-     * @throws IOException 
+     * @throws IOException
      * @see org.apache.activemq.store.ReferenceStoreAdapter#recoverState()
      */
-    public void recoverState() throws IOException{
-        for(Iterator i=durableSubscribers.iterator();i.hasNext();){
-            SubscriptionInfo info=(SubscriptionInfo)i.next();
-            TopicReferenceStore ts=createTopicReferenceStore((ActiveMQTopic)info.getDestination());
-            ts.addSubsciption(info,false);
+    public void recoverState() throws IOException {
+        for (Iterator i = durableSubscribers.iterator(); i.hasNext();) {
+            SubscriptionInfo info = (SubscriptionInfo)i.next();
+            TopicReferenceStore ts = createTopicReferenceStore((ActiveMQTopic)info.getDestination());
+            ts.addSubsciption(info, false);
         }
     }
 
-    public Map<TransactionId,AMQTx> retrievePreparedState() throws IOException{
-        Map<TransactionId,AMQTx> result=new HashMap<TransactionId,AMQTx>();
+    public Map<TransactionId, AMQTx> retrievePreparedState() throws IOException {
+        Map<TransactionId, AMQTx> result = new HashMap<TransactionId, AMQTx>();
         preparedTransactions.load();
-        for(Iterator i=preparedTransactions.keySet().iterator();i.hasNext();){
-            TransactionId key=(TransactionId)i.next();
-            AMQTx value=(AMQTx)preparedTransactions.get(key);
-            result.put(key,value);
+        for (Iterator i = preparedTransactions.keySet().iterator(); i.hasNext();) {
+            TransactionId key = (TransactionId)i.next();
+            AMQTx value = (AMQTx)preparedTransactions.get(key);
+            result.put(key, value);
         }
         return result;
     }
 
-    public void savePreparedState(Map<TransactionId,AMQTx> map) throws IOException{
+    public void savePreparedState(Map<TransactionId, AMQTx> map) throws IOException {
         preparedTransactions.clear();
-        for(Iterator<Map.Entry<TransactionId,AMQTx>> iter=map.entrySet().iterator();iter.hasNext();){
-            Map.Entry<TransactionId,AMQTx> entry=iter.next();
-            preparedTransactions.put(entry.getKey(),entry.getValue());
+        for (Iterator<Map.Entry<TransactionId, AMQTx>> iter = map.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry<TransactionId, AMQTx> entry = iter.next();
+            preparedTransactions.put(entry.getKey(), entry.getValue());
         }
     }
 
-    @Override public synchronized void setDirectory(File directory){
-        File file=new File(directory,"data");
+    @Override
+    public synchronized void setDirectory(File directory) {
+        File file = new File(directory, "data");
         super.setDirectory(file);
-        this.stateStore=createStateStore(directory);
+        this.stateStore = createStateStore(directory);
     }
 
-    protected synchronized Store getStateStore() throws IOException{
-        if(this.stateStore==null){
-            File stateDirectory=new File(getDirectory(),"kr-state");
+    protected synchronized Store getStateStore() throws IOException {
+        if (this.stateStore == null) {
+            File stateDirectory = new File(getDirectory(), "kr-state");
             stateDirectory.mkdirs();
-            this.stateStore=createStateStore(getDirectory());
+            this.stateStore = createStateStore(getDirectory());
         }
         return this.stateStore;
     }
 
-    public void deleteAllMessages() throws IOException{
-    	super.deleteAllMessages();
-        if(stateStore!=null){
-            if(stateStore.isInitialized()){
-            	stateStore.clear();
-            }else{
-            	stateStore.delete();
+    public void deleteAllMessages() throws IOException {
+        super.deleteAllMessages();
+        if (stateStore != null) {
+            if (stateStore.isInitialized()) {
+                stateStore.clear();
+            } else {
+                stateStore.delete();
             }
-        }else{
-            File stateDirectory=new File(getDirectory(),"kr-state");
+        } else {
+            File stateDirectory = new File(getDirectory(), "kr-state");
             StoreFactory.delete(stateDirectory.getAbsolutePath());
         }
     }
 
-    private Store createStateStore(File directory){
-        File stateDirectory=new File(directory,"state");
+    private Store createStateStore(File directory) {
+        File stateDirectory = new File(directory, "state");
         stateDirectory.mkdirs();
-        try{
-            return StoreFactory.open(stateDirectory.getAbsolutePath(),"rw");
-        }catch(IOException e){
-            log.error("Failed to create the state store",e);
+        try {
+            return StoreFactory.open(stateDirectory.getAbsolutePath(), "rw");
+        } catch (IOException e) {
+            log.error("Failed to create the state store", e);
         }
         return null;
     }
 
-    protected void addSubscriberState(SubscriptionInfo info) throws IOException{
+    protected void addSubscriberState(SubscriptionInfo info) throws IOException {
         durableSubscribers.add(info);
     }
 
-    protected void removeSubscriberState(SubscriptionInfo info){
+    protected void removeSubscriberState(SubscriptionInfo info) {
         durableSubscribers.remove(info);
     }
 }
-    
-	
-

@@ -24,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.DataStructure;
@@ -51,78 +52,82 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.14 $
  */
-public class AMQMessageStore implements MessageStore{
+public class AMQMessageStore implements MessageStore {
 
-    private static final Log log=LogFactory.getLog(AMQMessageStore.class);
+    private static final Log LOG = LogFactory.getLog(AMQMessageStore.class);
     protected final AMQPersistenceAdapter peristenceAdapter;
     protected final AMQTransactionStore transactionStore;
     protected final ReferenceStore referenceStore;
     protected final ActiveMQDestination destination;
     protected final TransactionTemplate transactionTemplate;
-    private LinkedHashMap<MessageId,ReferenceData> messages=new LinkedHashMap<MessageId,ReferenceData>();
-    private ArrayList<MessageAck> messageAcks=new ArrayList<MessageAck>();
+    private LinkedHashMap<MessageId, ReferenceData> messages = new LinkedHashMap<MessageId, ReferenceData>();
+    private ArrayList<MessageAck> messageAcks = new ArrayList<MessageAck>();
     /** A MessageStore that we can use to retrieve messages quickly. */
-    private LinkedHashMap<MessageId,ReferenceData> cpAddedMessageIds;
+    private LinkedHashMap<MessageId, ReferenceData> cpAddedMessageIds;
     protected Location lastLocation;
     protected Location lastWrittenLocation;
-    protected HashSet<Location> inFlightTxLocations=new HashSet<Location>();
+    protected HashSet<Location> inFlightTxLocations = new HashSet<Location>();
     protected final TaskRunner asyncWriteTask;
     protected CountDownLatch flushLatch;
-    private final boolean debug=log.isDebugEnabled();
-    private final AtomicReference<Location> mark=new AtomicReference<Location>();
-    
-    public AMQMessageStore(AMQPersistenceAdapter adapter,ReferenceStore referenceStore,ActiveMQDestination destination){
-        this.peristenceAdapter=adapter;
-        this.transactionStore=adapter.getTransactionStore();
-        this.referenceStore=referenceStore;
-        this.destination=destination;
-        this.transactionTemplate=new TransactionTemplate(adapter,new ConnectionContext());
-        asyncWriteTask=adapter.getTaskRunnerFactory().createTaskRunner(new Task(){
+    private final boolean debug = LOG.isDebugEnabled();
+    private final AtomicReference<Location> mark = new AtomicReference<Location>();
 
-            public boolean iterate(){
+    public AMQMessageStore(AMQPersistenceAdapter adapter, ReferenceStore referenceStore, ActiveMQDestination destination) {
+        this.peristenceAdapter = adapter;
+        this.transactionStore = adapter.getTransactionStore();
+        this.referenceStore = referenceStore;
+        this.destination = destination;
+        this.transactionTemplate = new TransactionTemplate(adapter, new ConnectionContext());
+        asyncWriteTask = adapter.getTaskRunnerFactory().createTaskRunner(new Task() {
+
+            public boolean iterate() {
                 asyncWrite();
                 return false;
             }
-        },"Checkpoint: "+destination);
+        }, "Checkpoint: " + destination);
     }
 
-    public void setUsageManager(UsageManager usageManager){
+    public void setUsageManager(UsageManager usageManager) {
         referenceStore.setUsageManager(usageManager);
     }
 
     /**
-     * Not synchronized since the Journal has better throughput if you increase the number of concurrent writes that it
-     * is doing.
+     * Not synchronized since the Journal has better throughput if you increase
+     * the number of concurrent writes that it is doing.
      */
-    public void addMessage(ConnectionContext context,final Message message) throws IOException{
-        final MessageId id=message.getMessageId();
-        final Location location=peristenceAdapter.writeCommand(message,message.isResponseRequired());
-        if(!context.isInTransaction()){
-            if(debug)
-                log.debug("Journalled message add for: "+id+", at: "+location);
-            addMessage(message,location);
-        }else{
-            if(debug)
-                log.debug("Journalled transacted message add for: "+id+", at: "+location);
-            synchronized(this){
+    public void addMessage(ConnectionContext context, final Message message) throws IOException {
+        final MessageId id = message.getMessageId();
+        final Location location = peristenceAdapter.writeCommand(message, message.isResponseRequired());
+        if (!context.isInTransaction()) {
+            if (debug) {
+                LOG.debug("Journalled message add for: " + id + ", at: " + location);
+            }
+            addMessage(message, location);
+        } else {
+            if (debug) {
+                LOG.debug("Journalled transacted message add for: " + id + ", at: " + location);
+            }
+            synchronized (this) {
                 inFlightTxLocations.add(location);
             }
-            transactionStore.addMessage(this,message,location);
-            context.getTransaction().addSynchronization(new Synchronization(){
+            transactionStore.addMessage(this, message, location);
+            context.getTransaction().addSynchronization(new Synchronization() {
 
-                public void afterCommit() throws Exception{
-                    if(debug)
-                        log.debug("Transacted message add commit for: "+id+", at: "+location);
-                    synchronized(AMQMessageStore.this){
+                public void afterCommit() throws Exception {
+                    if (debug) {
+                        LOG.debug("Transacted message add commit for: " + id + ", at: " + location);
+                    }
+                    synchronized (AMQMessageStore.this) {
                         inFlightTxLocations.remove(location);
-                        addMessage(message,location);
+                        addMessage(message, location);
                     }
                 }
 
-                public void afterRollback() throws Exception{
-                    if(debug)
-                        log.debug("Transacted message add rollback for: "+id+", at: "+location);
-                    synchronized(AMQMessageStore.this){
+                public void afterRollback() throws Exception {
+                    if (debug) {
+                        LOG.debug("Transacted message add rollback for: " + id + ", at: " + location);
+                    }
+                    synchronized (AMQMessageStore.this) {
                         inFlightTxLocations.remove(location);
                     }
                 }
@@ -130,74 +135,78 @@ public class AMQMessageStore implements MessageStore{
         }
     }
 
-    void addMessage(final Message message,final Location location) throws InterruptedIOException{
-        ReferenceData data=new ReferenceData();
+    void addMessage(final Message message, final Location location) throws InterruptedIOException {
+        ReferenceData data = new ReferenceData();
         data.setExpiration(message.getExpiration());
         data.setFileId(location.getDataFileId());
         data.setOffset(location.getOffset());
-        synchronized(this){
-            lastLocation=location;
-            messages.put(message.getMessageId(),data);
+        synchronized (this) {
+            lastLocation = location;
+            messages.put(message.getMessageId(), data);
         }
-        try{
+        try {
             asyncWriteTask.wakeup();
-        }catch(InterruptedException e){
+        } catch (InterruptedException e) {
             throw new InterruptedIOException();
         }
     }
 
-    public boolean replayAddMessage(ConnectionContext context,Message message,Location location){
-        MessageId id=message.getMessageId();
-        try{
+    public boolean replayAddMessage(ConnectionContext context, Message message, Location location) {
+        MessageId id = message.getMessageId();
+        try {
             // Only add the message if it has not already been added.
-            ReferenceData data=referenceStore.getMessageReference(id);
-            if(data==null){
-                data=new ReferenceData();
+            ReferenceData data = referenceStore.getMessageReference(id);
+            if (data == null) {
+                data = new ReferenceData();
                 data.setExpiration(message.getExpiration());
                 data.setFileId(location.getDataFileId());
                 data.setOffset(location.getOffset());
-                referenceStore.addMessageReference(context,id,data);
+                referenceStore.addMessageReference(context, id, data);
                 return true;
             }
-        }catch(Throwable e){
-            log.warn("Could not replay add for message '"+id+"'.  Message may have already been added. reason: "+e,e);
+        } catch (Throwable e) {
+            LOG.warn("Could not replay add for message '" + id + "'.  Message may have already been added. reason: " + e, e);
         }
         return false;
     }
 
     /**
      */
-    public void removeMessage(ConnectionContext context,final MessageAck ack) throws IOException{
-        JournalQueueAck remove=new JournalQueueAck();
+    public void removeMessage(ConnectionContext context, final MessageAck ack) throws IOException {
+        JournalQueueAck remove = new JournalQueueAck();
         remove.setDestination(destination);
         remove.setMessageAck(ack);
-        final Location location=peristenceAdapter.writeCommand(remove,ack.isResponseRequired());
-        if(!context.isInTransaction()){
-            if(debug)
-                log.debug("Journalled message remove for: "+ack.getLastMessageId()+", at: "+location);
-            removeMessage(ack,location);
-        }else{
-            if(debug)
-                log.debug("Journalled transacted message remove for: "+ack.getLastMessageId()+", at: "+location);
-            synchronized(this){
+        final Location location = peristenceAdapter.writeCommand(remove, ack.isResponseRequired());
+        if (!context.isInTransaction()) {
+            if (debug) {
+                LOG.debug("Journalled message remove for: " + ack.getLastMessageId() + ", at: " + location);
+            }
+            removeMessage(ack, location);
+        } else {
+            if (debug) {
+                LOG.debug("Journalled transacted message remove for: " + ack.getLastMessageId() + ", at: " + location);
+            }
+            synchronized (this) {
                 inFlightTxLocations.add(location);
             }
-            transactionStore.removeMessage(this,ack,location);
-            context.getTransaction().addSynchronization(new Synchronization(){
+            transactionStore.removeMessage(this, ack, location);
+            context.getTransaction().addSynchronization(new Synchronization() {
 
-                public void afterCommit() throws Exception{
-                    if(debug)
-                        log.debug("Transacted message remove commit for: "+ack.getLastMessageId()+", at: "+location);
-                    synchronized(AMQMessageStore.this){
+                public void afterCommit() throws Exception {
+                    if (debug) {
+                        LOG.debug("Transacted message remove commit for: " + ack.getLastMessageId() + ", at: " + location);
+                    }
+                    synchronized (AMQMessageStore.this) {
                         inFlightTxLocations.remove(location);
-                        removeMessage(ack,location);
+                        removeMessage(ack, location);
                     }
                 }
 
-                public void afterRollback() throws Exception{
-                    if(debug)
-                        log.debug("Transacted message remove rollback for: "+ack.getLastMessageId()+", at: "+location);
-                    synchronized(AMQMessageStore.this){
+                public void afterRollback() throws Exception {
+                    if (debug) {
+                        LOG.debug("Transacted message remove rollback for: " + ack.getLastMessageId() + ", at: " + location);
+                    }
+                    synchronized (AMQMessageStore.this) {
                         inFlightTxLocations.remove(location);
                     }
                 }
@@ -205,36 +214,35 @@ public class AMQMessageStore implements MessageStore{
         }
     }
 
-    final void removeMessage(final MessageAck ack,final Location location) throws InterruptedIOException{
+    final void removeMessage(final MessageAck ack, final Location location) throws InterruptedIOException {
         ReferenceData data;
-        synchronized(this){
-            lastLocation=location;
-            MessageId id=ack.getLastMessageId();
-            data=messages.remove(id);
-            if(data==null){
+        synchronized (this) {
+            lastLocation = location;
+            MessageId id = ack.getLastMessageId();
+            data = messages.remove(id);
+            if (data == null) {
                 messageAcks.add(ack);
             }
         }
-        if(data==null){
-            try{
+        if (data == null) {
+            try {
                 asyncWriteTask.wakeup();
-            }catch(InterruptedException e){
+            } catch (InterruptedException e) {
                 throw new InterruptedIOException();
             }
         }
     }
 
-    public boolean replayRemoveMessage(ConnectionContext context,MessageAck messageAck){
-        try{
+    public boolean replayRemoveMessage(ConnectionContext context, MessageAck messageAck) {
+        try {
             // Only remove the message if it has not already been removed.
-            ReferenceData t=referenceStore.getMessageReference(messageAck.getLastMessageId());
-            if(t!=null){
-                referenceStore.removeMessage(context,messageAck);
+            ReferenceData t = referenceStore.getMessageReference(messageAck.getLastMessageId());
+            if (t != null) {
+                referenceStore.removeMessage(context, messageAck);
                 return true;
             }
-        }catch(Throwable e){
-            log.warn("Could not replay acknowledge for message '"+messageAck.getLastMessageId()
-                    +"'.  Message may have already been acknowledged. reason: "+e);
+        } catch (Throwable e) {
+            LOG.warn("Could not replay acknowledge for message '" + messageAck.getLastMessageId() + "'.  Message may have already been acknowledged. reason: " + e);
         }
         return false;
     }
@@ -244,28 +252,28 @@ public class AMQMessageStore implements MessageStore{
      * 
      * @throws InterruptedIOException
      */
-    public void flush() throws InterruptedIOException{
-        if(log.isDebugEnabled()){
-            log.debug("flush starting ...");
+    public void flush() throws InterruptedIOException {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("flush starting ...");
         }
         CountDownLatch countDown;
-        synchronized(this){
-            if(lastWrittenLocation==lastLocation){
+        synchronized (this) {
+            if (lastWrittenLocation == lastLocation) {
                 return;
             }
-            if(flushLatch==null){
-                flushLatch=new CountDownLatch(1);
+            if (flushLatch == null) {
+                flushLatch = new CountDownLatch(1);
             }
-            countDown=flushLatch;
+            countDown = flushLatch;
         }
-        try{
+        try {
             asyncWriteTask.wakeup();
             countDown.await();
-        }catch(InterruptedException e){
+        } catch (InterruptedException e) {
             throw new InterruptedIOException();
         }
-        if(log.isDebugEnabled()){
-            log.debug("flush finished");
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("flush finished");
         }
     }
 
@@ -273,19 +281,19 @@ public class AMQMessageStore implements MessageStore{
      * @return
      * @throws IOException
      */
-    void asyncWrite(){
-        try{
+    void asyncWrite() {
+        try {
             CountDownLatch countDown;
-            synchronized(this){
-                countDown=flushLatch;
-                flushLatch=null;
+            synchronized (this) {
+                countDown = flushLatch;
+                flushLatch = null;
             }
             mark.set(doAsyncWrite());
-            if(countDown!=null){
+            if (countDown != null) {
                 countDown.countDown();
             }
-        }catch(IOException e){
-            log.error("Checkpoint failed: "+e,e);
+        } catch (IOException e) {
+            LOG.error("Checkpoint failed: " + e, e);
         }
     }
 
@@ -293,67 +301,67 @@ public class AMQMessageStore implements MessageStore{
      * @return
      * @throws IOException
      */
-    protected Location doAsyncWrite() throws IOException{
+    protected Location doAsyncWrite() throws IOException {
         final ArrayList<MessageAck> cpRemovedMessageLocations;
         final ArrayList<Location> cpActiveJournalLocations;
-        final int maxCheckpointMessageAddSize=peristenceAdapter.getMaxCheckpointMessageAddSize();
+        final int maxCheckpointMessageAddSize = peristenceAdapter.getMaxCheckpointMessageAddSize();
         final Location lastLocation;
         // swap out the message hash maps..
-        synchronized(this){
-            cpAddedMessageIds=this.messages;
-            cpRemovedMessageLocations=this.messageAcks;
-            cpActiveJournalLocations=new ArrayList<Location>(inFlightTxLocations);
-            this.messages=new LinkedHashMap<MessageId,ReferenceData>();
-            this.messageAcks=new ArrayList<MessageAck>();
-            lastLocation=this.lastLocation;
+        synchronized (this) {
+            cpAddedMessageIds = this.messages;
+            cpRemovedMessageLocations = this.messageAcks;
+            cpActiveJournalLocations = new ArrayList<Location>(inFlightTxLocations);
+            this.messages = new LinkedHashMap<MessageId, ReferenceData>();
+            this.messageAcks = new ArrayList<MessageAck>();
+            lastLocation = this.lastLocation;
         }
-        if(log.isDebugEnabled())
-            log.debug("Doing batch update... adding: "+cpAddedMessageIds.size()+" removing: "
-                    +cpRemovedMessageLocations.size()+" ");
-        transactionTemplate.run(new Callback(){
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Doing batch update... adding: " + cpAddedMessageIds.size() + " removing: " + cpRemovedMessageLocations.size() + " ");
+        }
+        transactionTemplate.run(new Callback() {
 
-            public void execute() throws Exception{
-                int size=0;
-                PersistenceAdapter persitanceAdapter=transactionTemplate.getPersistenceAdapter();
-                ConnectionContext context=transactionTemplate.getContext();
+            public void execute() throws Exception {
+                int size = 0;
+                PersistenceAdapter persitanceAdapter = transactionTemplate.getPersistenceAdapter();
+                ConnectionContext context = transactionTemplate.getContext();
                 // Checkpoint the added messages.
-                Iterator<Entry<MessageId,ReferenceData>> iterator=cpAddedMessageIds.entrySet().iterator();
-                while(iterator.hasNext()){
-                    Entry<MessageId,ReferenceData> entry=iterator.next();
-                    try{
-                        referenceStore.addMessageReference(context,entry.getKey(),entry.getValue());
-                    }catch(Throwable e){
-                        log.warn("Message could not be added to long term store: "+e.getMessage(),e);
+                Iterator<Entry<MessageId, ReferenceData>> iterator = cpAddedMessageIds.entrySet().iterator();
+                while (iterator.hasNext()) {
+                    Entry<MessageId, ReferenceData> entry = iterator.next();
+                    try {
+                        referenceStore.addMessageReference(context, entry.getKey(), entry.getValue());
+                    } catch (Throwable e) {
+                        LOG.warn("Message could not be added to long term store: " + e.getMessage(), e);
                     }
                     size++;
                     // Commit the batch if it's getting too big
-                    if(size>=maxCheckpointMessageAddSize){
+                    if (size >= maxCheckpointMessageAddSize) {
                         persitanceAdapter.commitTransaction(context);
                         persitanceAdapter.beginTransaction(context);
-                        size=0;
+                        size = 0;
                     }
                 }
                 persitanceAdapter.commitTransaction(context);
                 persitanceAdapter.beginTransaction(context);
                 // Checkpoint the removed messages.
-                for(MessageAck ack:cpRemovedMessageLocations){
-                    try{
-                        referenceStore.removeMessage(transactionTemplate.getContext(),ack);
-                    }catch(Throwable e){
-                        log.warn("Message could not be removed from long term store: "+e.getMessage(),e);
+                for (MessageAck ack : cpRemovedMessageLocations) {
+                    try {
+                        referenceStore.removeMessage(transactionTemplate.getContext(), ack);
+                    } catch (Throwable e) {
+                        LOG.warn("Message could not be removed from long term store: " + e.getMessage(), e);
                     }
                 }
             }
         });
-        log.debug("Batch update done.");
-        synchronized(this){
-            cpAddedMessageIds=null;
-            lastWrittenLocation=lastLocation;
+        LOG.debug("Batch update done.");
+        synchronized (this) {
+            cpAddedMessageIds = null;
+            lastWrittenLocation = lastLocation;
         }
-        if(cpActiveJournalLocations.size()>0){
+        if (cpActiveJournalLocations.size() > 0) {
             Collections.sort(cpActiveJournalLocations);
             return cpActiveJournalLocations.get(0);
-        }else{
+        } else {
             return lastLocation;
         }
     }
@@ -361,50 +369,50 @@ public class AMQMessageStore implements MessageStore{
     /**
      * 
      */
-    public Message getMessage(MessageId identity) throws IOException{
-        ReferenceData data=null;
-        synchronized(this){
+    public Message getMessage(MessageId identity) throws IOException {
+        ReferenceData data = null;
+        synchronized (this) {
             // Is it still in flight???
-            data=messages.get(identity);
-            if(data==null&&cpAddedMessageIds!=null){
-                data=cpAddedMessageIds.get(identity);
+            data = messages.get(identity);
+            if (data == null && cpAddedMessageIds != null) {
+                data = cpAddedMessageIds.get(identity);
             }
         }
-        if(data==null){
-            data=referenceStore.getMessageReference(identity);
-            if(data==null){
+        if (data == null) {
+            data = referenceStore.getMessageReference(identity);
+            if (data == null) {
                 return null;
             }
         }
-        Location location=new Location();
+        Location location = new Location();
         location.setDataFileId(data.getFileId());
         location.setOffset(data.getOffset());
-        DataStructure rc=peristenceAdapter.readCommand(location);
-        try{
+        DataStructure rc = peristenceAdapter.readCommand(location);
+        try {
             return (Message)rc;
-        }catch(ClassCastException e){
-            throw new IOException("Could not read message "+identity+" at location "+location
-                    +", expected a message, but got: "+rc);
+        } catch (ClassCastException e) {
+            throw new IOException("Could not read message " + identity + " at location " + location + ", expected a message, but got: " + rc);
         }
     }
 
     /**
-     * Replays the referenceStore first as those messages are the oldest ones, then messages are replayed from the
-     * transaction log and then the cache is updated.
+     * Replays the referenceStore first as those messages are the oldest ones,
+     * then messages are replayed from the transaction log and then the cache is
+     * updated.
      * 
      * @param listener
      * @throws Exception
      */
-    public void recover(final MessageRecoveryListener listener) throws Exception{
+    public void recover(final MessageRecoveryListener listener) throws Exception {
         flush();
-        referenceStore.recover(new RecoveryListenerAdapter(this,listener));
+        referenceStore.recover(new RecoveryListenerAdapter(this, listener));
     }
 
-    public void start() throws Exception{
+    public void start() throws Exception {
         referenceStore.start();
     }
 
-    public void stop() throws Exception{
+    public void stop() throws Exception {
         flush();
         asyncWriteTask.shutdown();
         referenceStore.stop();
@@ -413,28 +421,27 @@ public class AMQMessageStore implements MessageStore{
     /**
      * @return Returns the longTermStore.
      */
-    public ReferenceStore getReferenceStore(){
+    public ReferenceStore getReferenceStore() {
         return referenceStore;
     }
 
     /**
      * @see org.apache.activemq.store.MessageStore#removeAllMessages(ConnectionContext)
      */
-    public void removeAllMessages(ConnectionContext context) throws IOException{
+    public void removeAllMessages(ConnectionContext context) throws IOException {
         flush();
         referenceStore.removeAllMessages(context);
     }
 
-    public ActiveMQDestination getDestination(){
+    public ActiveMQDestination getDestination() {
         return destination;
     }
 
-    public void addMessageReference(ConnectionContext context,MessageId messageId,long expirationTime,String messageRef)
-            throws IOException{
+    public void addMessageReference(ConnectionContext context, MessageId messageId, long expirationTime, String messageRef) throws IOException {
         throw new IOException("The journal does not support message references.");
     }
 
-    public String getMessageReference(MessageId identity) throws IOException{
+    public String getMessageReference(MessageId identity) throws IOException {
         throw new IOException("The journal does not support message references.");
     }
 
@@ -443,61 +450,54 @@ public class AMQMessageStore implements MessageStore{
      * @throws IOException
      * @see org.apache.activemq.store.MessageStore#getMessageCount()
      */
-    public int getMessageCount() throws IOException{
+    public int getMessageCount() throws IOException {
         flush();
         return referenceStore.getMessageCount();
     }
 
-    public void recoverNextMessages(int maxReturned,MessageRecoveryListener listener) throws Exception{
+    public void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception {
         /*
-        RecoveryListenerAdapter recoveryListener=new RecoveryListenerAdapter(this,listener);
-        if(referenceStore.supportsExternalBatchControl()){
-            synchronized(this){
-                referenceStore.recoverNextMessages(maxReturned,recoveryListener);
-                if(recoveryListener.size()==0&&recoveryListener.hasSpace()){
-                    // check for inflight messages
-                    int count=0;
-                    Iterator<Entry<MessageId,ReferenceData>> iterator=messages.entrySet().iterator();
-                    while(iterator.hasNext()&&count<maxReturned&&recoveryListener.hasSpace()){
-                        Entry<MessageId,ReferenceData> entry=iterator.next();
-                        ReferenceData data=entry.getValue();
-                        Message message=getMessage(data);
-                        recoveryListener.recoverMessage(message);
-                        count++;
-                    }
-                    referenceStore.setBatch(recoveryListener.getLastRecoveredMessageId());
-                }
-            }
-        }else{
+         * RecoveryListenerAdapter recoveryListener=new
+         * RecoveryListenerAdapter(this,listener);
+         * if(referenceStore.supportsExternalBatchControl()){
+         * synchronized(this){
+         * referenceStore.recoverNextMessages(maxReturned,recoveryListener);
+         * if(recoveryListener.size()==0&&recoveryListener.hasSpace()){ // check
+         * for inflight messages int count=0; Iterator<Entry<MessageId,ReferenceData>>
+         * iterator=messages.entrySet().iterator();
+         * while(iterator.hasNext()&&count<maxReturned&&recoveryListener.hasSpace()){
+         * Entry<MessageId,ReferenceData> entry=iterator.next(); ReferenceData
+         * data=entry.getValue(); Message message=getMessage(data);
+         * recoveryListener.recoverMessage(message); count++; }
+         * referenceStore.setBatch(recoveryListener.getLastRecoveredMessageId()); } }
+         * }else{ flush();
+         * referenceStore.recoverNextMessages(maxReturned,recoveryListener); }
+         */
+        RecoveryListenerAdapter recoveryListener = new RecoveryListenerAdapter(this, listener);
+        referenceStore.recoverNextMessages(maxReturned, recoveryListener);
+        if (recoveryListener.size() == 0 && recoveryListener.hasSpace()) {
             flush();
-            referenceStore.recoverNextMessages(maxReturned,recoveryListener);
-        }
-        */
-        RecoveryListenerAdapter recoveryListener=new RecoveryListenerAdapter(this,listener);
-        referenceStore.recoverNextMessages(maxReturned,recoveryListener);
-        if(recoveryListener.size()==0&&recoveryListener.hasSpace()){
-            flush();
-            referenceStore.recoverNextMessages(maxReturned,recoveryListener);
+            referenceStore.recoverNextMessages(maxReturned, recoveryListener);
         }
     }
 
-    Message getMessage(ReferenceData data) throws IOException{
-        Location location=new Location();
+    Message getMessage(ReferenceData data) throws IOException {
+        Location location = new Location();
         location.setDataFileId(data.getFileId());
         location.setOffset(data.getOffset());
-        DataStructure rc=peristenceAdapter.readCommand(location);
-        try{
+        DataStructure rc = peristenceAdapter.readCommand(location);
+        try {
             return (Message)rc;
-        }catch(ClassCastException e){
-            throw new IOException("Could not read message  at location "+location+", expected a message, but got: "+rc);
+        } catch (ClassCastException e) {
+            throw new IOException("Could not read message  at location " + location + ", expected a message, but got: " + rc);
         }
     }
 
-    public void resetBatching(){
+    public void resetBatching() {
         referenceStore.resetBatching();
     }
 
-    public Location getMark(){
+    public Location getMark() {
         return mark.get();
     }
 }

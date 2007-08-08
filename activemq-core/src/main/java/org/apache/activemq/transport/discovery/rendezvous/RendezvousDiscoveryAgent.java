@@ -41,7 +41,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * A {@link DiscoveryAgent} using <a href="http://www.zeroconf.org/">Zeroconf</a>
  * via the <a href="http://jmdns.sf.net/">jmDNS</a> library
- *
+ * 
  * @version $Revision$
  */
 public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener {
@@ -60,7 +60,7 @@ public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener
     private final CopyOnWriteArrayList serviceInfos = new CopyOnWriteArrayList();
 
     // DiscoveryAgent interface
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     public void start() throws Exception {
         if (group == null) {
             throw new IOException("You must specify a group to discover");
@@ -73,23 +73,22 @@ public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener
         try {
             // force lazy construction
             getJmdns();
-            if (listener!=null) {
-                log.info("Discovering service of type: " +type);
+            if (listener != null) {
+                log.info("Discovering service of type: " + type);
                 jmdns.addServiceListener(type, this);
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             JMSExceptionSupport.create("Failed to start JmDNS service: " + e, e);
         }
     }
 
     public void stop() {
-        if( jmdns!=null ) {
+        if (jmdns != null) {
             for (Iterator iter = serviceInfos.iterator(); iter.hasNext();) {
-                ServiceInfo si = (ServiceInfo) iter.next();
+                ServiceInfo si = (ServiceInfo)iter.next();
                 jmdns.unregisterService(si);
             }
-            
+
             // Close it down async since this could block for a while.
             final JmDNS closeTarget = jmdns;
             Thread thread = new Thread() {
@@ -97,28 +96,27 @@ public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener
                     closeTarget.close();
                 }
             };
-            
+
             thread.setDaemon(true);
             thread.start();
-            
-            jmdns=null;
+
+            jmdns = null;
         }
     }
-    
+
     public void registerService(String name) throws IOException {
         ServiceInfo si = createServiceInfo(name, new HashMap());
         serviceInfos.add(si);
         getJmdns().registerService(si);
     }
 
-
     // ServiceListener interface
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     public void addService(JmDNS jmDNS, String type, String name) {
         if (log.isDebugEnabled()) {
             log.debug("addService with type: " + type + " name: " + name);
         }
-        if( listener!=null ) 
+        if (listener != null)
             listener.onServiceAdd(new DiscoveryEvent(name));
         jmDNS.requestServiceInfo(type, name);
     }
@@ -127,18 +125,21 @@ public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener
         if (log.isDebugEnabled()) {
             log.debug("removeService with type: " + type + " name: " + name);
         }
-        if( listener!=null )
+        if (listener != null)
             listener.onServiceRemove(new DiscoveryEvent(name));
     }
 
-	public void serviceAdded(ServiceEvent event) {
-		addService(event.getDNS(), event.getType(), event.getName());
-	}
-	public void serviceRemoved(ServiceEvent event) {
-		removeService(event.getDNS(), event.getType(), event.getName());
-	}
+    public void serviceAdded(ServiceEvent event) {
+        addService(event.getDNS(), event.getType(), event.getName());
+    }
+
+    public void serviceRemoved(ServiceEvent event) {
+        removeService(event.getDNS(), event.getType(), event.getName());
+    }
+
     public void serviceResolved(ServiceEvent event) {
     }
+
     public void resolveService(JmDNS jmDNS, String type, String name, ServiceInfo serviceInfo) {
     }
 
@@ -169,7 +170,6 @@ public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener
         this.jmdns = jmdns;
     }
 
-
     public InetAddress getLocalAddress() throws UnknownHostException {
         if (localAddress == null) {
             localAddress = createLocalAddress();
@@ -190,7 +190,7 @@ public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener
     }
 
     // Implementation methods
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     protected ServiceInfo createServiceInfo(String name, Map map) {
         int port = MapHelper.getInt(map, "port", 0);
 
@@ -199,7 +199,7 @@ public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener
         if (log.isDebugEnabled()) {
             log.debug("Registering service type: " + type + " name: " + name + " details: " + map);
         }
-        return new ServiceInfo(type, name+"."+type, port, weight, priority, "");
+        return new ServiceInfo(type, name + "." + type, port, weight, priority, "");
     }
 
     protected JmDNS createJmDNS() throws IOException {
@@ -222,11 +222,11 @@ public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener
     }
 
     public void setGroup(String group) {
-        this.group=group;
+        this.group = group;
     }
 
     public String getType() {
-        return "_" + group+"."+TYPE_SUFFIX;
+        return "_" + group + "." + TYPE_SUFFIX;
     }
 
     public void serviceFailed(DiscoveryEvent event) throws IOException {
@@ -237,8 +237,8 @@ public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener
      * @param brokerName
      * @see org.apache.activemq.transport.discovery.DiscoveryAgent#setBrokerName(java.lang.String)
      */
-    public void setBrokerName(String brokerName){
+    public void setBrokerName(String brokerName) {
         // implementation of interface
-        
+
     }
 }

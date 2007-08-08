@@ -19,32 +19,34 @@ package org.apache.activemq.transport.stomp;
 import java.io.IOException;
 
 /**
- * 
- * @author <a href="http://hiramchirino.com">chirino</a> 
+ * @author <a href="http://hiramchirino.com">chirino</a>
  */
 public class ProtocolException extends IOException {
 
-	private static final long serialVersionUID = -2869735532997332242L;
-	
-	private final boolean fatal;
+    private static final long serialVersionUID = -2869735532997332242L;
 
-	public ProtocolException() {
-		this(null);
-	}
-	public ProtocolException(String s) {
-		this(s, false);
-	}
-	public ProtocolException(String s, boolean fatal) {
-		this(s,fatal, null);
-	}
-	public ProtocolException(String s, boolean fatal, Throwable cause) {
-		super(s);
-		this.fatal = fatal;
-		initCause(cause);
-	}
-	
-	public boolean isFatal() {
-		return fatal;
-	}
+    private final boolean fatal;
+
+    public ProtocolException() {
+        this(null);
+    }
+
+    public ProtocolException(String s) {
+        this(s, false);
+    }
+
+    public ProtocolException(String s, boolean fatal) {
+        this(s, fatal, null);
+    }
+
+    public ProtocolException(String s, boolean fatal, Throwable cause) {
+        super(s);
+        this.fatal = fatal;
+        initCause(cause);
+    }
+
+    public boolean isFatal() {
+        return fatal;
+    }
 
 }

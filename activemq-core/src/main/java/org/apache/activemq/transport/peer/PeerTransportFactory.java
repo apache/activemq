@@ -43,10 +43,9 @@ public class PeerTransportFactory extends TransportFactory {
     final public static ConcurrentHashMap connectors = new ConcurrentHashMap();
 
     final public static ConcurrentHashMap servers = new ConcurrentHashMap();
-  
+
     private IdGenerator idGenerator = new IdGenerator("peer-");
 
-    
     public Transport doConnect(URI location) throws Exception {
         VMTransportFactory vmTransportFactory = createTransportFactory(location);
         return vmTransportFactory.doConnect(location);
@@ -66,50 +65,50 @@ public class PeerTransportFactory extends TransportFactory {
         try {
             String group = location.getHost();
             String broker = URISupport.stripPrefix(location.getPath(), "/");
-            
-            if( group == null ) {
+
+            if (group == null) {
                 group = "default";
             }
-            if (broker == null || broker.length()==0){
+            if (broker == null || broker.length() == 0) {
                 broker = idGenerator.generateSanitizedId();
             }
-            
+
             final Map brokerOptions = new HashMap(URISupport.parseParamters(location));
-            if (!brokerOptions.containsKey("persistent")){
+            if (!brokerOptions.containsKey("persistent")) {
                 brokerOptions.put("persistent", "false");
             }
-                        
-            final URI finalLocation = new URI("vm://"+broker);
+
+            final URI finalLocation = new URI("vm://" + broker);
             final String finalBroker = broker;
             final String finalGroup = group;
             VMTransportFactory rc = new VMTransportFactory() {
                 public Transport doConnect(URI ignore) throws Exception {
                     return super.doConnect(finalLocation);
                 };
+
                 public Transport doCompositeConnect(URI ignore) throws Exception {
                     return super.doCompositeConnect(finalLocation);
                 };
             };
-            rc.setBrokerFactoryHandler(new BrokerFactoryHandler(){
+            rc.setBrokerFactoryHandler(new BrokerFactoryHandler() {
                 public BrokerService createBroker(URI brokerURI) throws Exception {
                     BrokerService service = new BrokerService();
                     IntrospectionSupport.setProperties(service, brokerOptions);
                     service.setBrokerName(finalBroker);
                     TransportConnector c = service.addConnector("tcp://localhost:0");
-                    c.setDiscoveryUri(new URI("multicast://"+finalGroup));
-                    service.addNetworkConnector("multicast://"+finalGroup);
+                    c.setDiscoveryUri(new URI("multicast://" + finalGroup));
+                    service.addNetworkConnector("multicast://" + finalGroup);
                     return service;
                 }
             });
             return rc;
-            
+
         } catch (URISyntaxException e) {
             throw IOExceptionSupport.create(e);
         }
     }
 
-
-    public TransportServer doBind(String brokerId,URI location) throws IOException {
+    public TransportServer doBind(String brokerId, URI location) throws IOException {
         throw new IOException("This protocol does not support being bound.");
     }
 

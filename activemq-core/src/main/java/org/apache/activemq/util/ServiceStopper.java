@@ -37,11 +37,10 @@ public class ServiceStopper {
      */
     public void stop(Service service) {
         try {
-            if( service!=null ) {
+            if (service != null) {
                 service.stop();
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             onException(service, e);
         }
     }
@@ -53,8 +52,7 @@ public class ServiceStopper {
     public void run(Callback stopClosure) {
         try {
             stopClosure.execute();
-        }
-        catch (Throwable e) {
+        } catch (Throwable e) {
             onException(stopClosure, e);
         }
     }
@@ -64,7 +62,7 @@ public class ServiceStopper {
      */
     public void stopServices(List services) {
         for (Iterator iter = services.iterator(); iter.hasNext();) {
-            Service service = (Service) iter.next();
+            Service service = (Service)iter.next();
             stop(service);
         }
     }
@@ -82,14 +80,12 @@ public class ServiceStopper {
     public void throwFirstException() throws Exception {
         if (firstException != null) {
             if (firstException instanceof Exception) {
-                Exception e = (Exception) firstException;
+                Exception e = (Exception)firstException;
                 throw e;
-            }
-            else if (firstException instanceof RuntimeException) {
-                RuntimeException e = (RuntimeException) firstException;
+            } else if (firstException instanceof RuntimeException) {
+                RuntimeException e = (RuntimeException)firstException;
                 throw e;
-            }
-            else {
+            } else {
                 throw new RuntimeException("Unknown type of exception: " + firstException, firstException);
             }
         }

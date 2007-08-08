@@ -20,24 +20,42 @@ import org.apache.activemq.Service;
 
 public interface NetworkConnectorViewMBean extends Service {
 
-      public String getName();
-      public int getNetworkTTL();
-      public int getPrefetchSize();
-      public String getUserName();
-      public boolean isBridgeTempDestinations();
-      public boolean isConduitSubscriptions();
-      public boolean isDecreaseNetworkConsumerPriority();
-      public boolean isDispatchAsync();
-      public boolean isDynamicOnly();
-      public void setBridgeTempDestinations(boolean bridgeTempDestinations);
-      public void setConduitSubscriptions(boolean conduitSubscriptions);
-      public void setDispatchAsync(boolean dispatchAsync);
-      public void setDynamicOnly(boolean dynamicOnly);
-      public void setNetworkTTL(int networkTTL);
-      public void setPassword(String password);
-      public void setPrefetchSize(int prefetchSize);
-      public void setUserName(String userName);
-      public String getPassword();
-      public void setDecreaseNetworkConsumerPriority(boolean decreaseNetworkConsumerPriority);
+    public String getName();
+
+    public int getNetworkTTL();
+
+    public int getPrefetchSize();
+
+    public String getUserName();
+
+    public boolean isBridgeTempDestinations();
+
+    public boolean isConduitSubscriptions();
+
+    public boolean isDecreaseNetworkConsumerPriority();
+
+    public boolean isDispatchAsync();
+
+    public boolean isDynamicOnly();
+
+    public void setBridgeTempDestinations(boolean bridgeTempDestinations);
+
+    public void setConduitSubscriptions(boolean conduitSubscriptions);
+
+    public void setDispatchAsync(boolean dispatchAsync);
+
+    public void setDynamicOnly(boolean dynamicOnly);
+
+    public void setNetworkTTL(int networkTTL);
+
+    public void setPassword(String password);
+
+    public void setPrefetchSize(int prefetchSize);
+
+    public void setUserName(String userName);
+
+    public String getPassword();
+
+    public void setDecreaseNetworkConsumerPriority(boolean decreaseNetworkConsumerPriority);
 
 }

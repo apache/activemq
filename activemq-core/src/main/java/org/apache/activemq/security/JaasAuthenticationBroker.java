@@ -31,7 +31,6 @@ import org.apache.activemq.jaas.JassCredentialCallbackHandler;
 
 import java.util.concurrent.CopyOnWriteArrayList;
 
-
 /**
  * Logs a user in using JAAS.
  * 
@@ -46,7 +45,7 @@ public class JaasAuthenticationBroker extends BrokerFilter {
         super(next);
         this.jassConfiguration = jassConfiguration;
     }
-    
+
     static class JaasSecurityContext extends SecurityContext {
 
         private final Subject subject;
@@ -59,28 +58,31 @@ public class JaasAuthenticationBroker extends BrokerFilter {
         public Set getPrincipals() {
             return subject.getPrincipals();
         }
-        
+
     }
-    
+
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
 
-        if( context.getSecurityContext()==null ) {
-            // Set the TCCL since it seems JAAS needs it to find the login module classes.
+        if (context.getSecurityContext() == null) {
+            // Set the TCCL since it seems JAAS needs it to find the login
+            // module classes.
             ClassLoader original = Thread.currentThread().getContextClassLoader();
             Thread.currentThread().setContextClassLoader(JaasAuthenticationBroker.class.getClassLoader());
             try {
                 // Do the login.
                 try {
-                    JassCredentialCallbackHandler callback = new JassCredentialCallbackHandler(info.getUserName(), info.getPassword());
+                    JassCredentialCallbackHandler callback = new JassCredentialCallbackHandler(info
+                        .getUserName(), info.getPassword());
                     LoginContext lc = new LoginContext(jassConfiguration, callback);
                     lc.login();
                     Subject subject = lc.getSubject();
-                    
+
                     SecurityContext s = new JaasSecurityContext(info.getUserName(), subject);
                     context.setSecurityContext(s);
                     securityContexts.add(s);
                 } catch (Exception e) {
-                    throw (SecurityException)new SecurityException("User name or password is invalid.").initCause(e);
+                    throw (SecurityException)new SecurityException("User name or password is invalid.")
+                        .initCause(e);
                 }
             } finally {
                 Thread.currentThread().setContextClassLoader(original);
@@ -88,21 +90,22 @@ public class JaasAuthenticationBroker extends BrokerFilter {
         }
         super.addConnection(context, info);
     }
-    
-    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
+
+    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error)
+        throws Exception {
         super.removeConnection(context, info, error);
-        if( securityContexts.remove(context.getSecurityContext()) ) {
+        if (securityContexts.remove(context.getSecurityContext())) {
             context.setSecurityContext(null);
         }
     }
-    
+
     /**
-     * Previously logged in users may no longer have the same access anymore.  Refresh
-     * all the logged into users. 
+     * Previously logged in users may no longer have the same access anymore.
+     * Refresh all the logged into users.
      */
     public void refresh() {
         for (Iterator iter = securityContexts.iterator(); iter.hasNext();) {
-            SecurityContext sc = (SecurityContext) iter.next();
+            SecurityContext sc = (SecurityContext)iter.next();
             sc.getAuthorizedReadDests().clear();
             sc.getAuthorizedWriteDests().clear();
         }

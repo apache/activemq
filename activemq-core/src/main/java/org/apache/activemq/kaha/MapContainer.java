@@ -21,47 +21,48 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- *Represents a container of persistent objects in the store
- *Acts as a map, but values can be retrieved in insertion order
+ * Represents a container of persistent objects in the store Acts as a map, but
+ * values can be retrieved in insertion order
  * 
  * @version $Revision: 1.2 $
  */
-public interface MapContainer<K, V> extends Map<K, V>{
-    
-    
+public interface MapContainer<K, V> extends Map<K, V> {
+
     /**
-     * The container is created or retrieved in 
-     * an unloaded state.
-     * load populates the container will all the indexes used etc
-     * and should be called before any operations on the container
+     * The container is created or retrieved in an unloaded state. load
+     * populates the container will all the indexes used etc and should be
+     * called before any operations on the container
      */
     public void load();
-    
+
     /**
      * unload indexes from the container
-     *
+     * 
      */
     public void unload();
-    
+
     /**
      * @return true if the indexes are loaded
      */
     public boolean isLoaded();
-    
+
     /**
      * For homogenous containers can set a custom marshaller for loading keys
      * The default uses Object serialization
+     * 
      * @param keyMarshaller
      */
     public void setKeyMarshaller(Marshaller<K> keyMarshaller);
-    
+
     /**
      * For homogenous containers can set a custom marshaller for loading values
      * The default uses Object serialization
-     * @param valueMarshaller 
-   
+     * 
+     * @param valueMarshaller
+     * 
      */
     public void setValueMarshaller(Marshaller<V> valueMarshaller);
+
     /**
      * @return the id the MapContainer was create with
      */
@@ -78,30 +79,31 @@ public interface MapContainer<K, V> extends Map<K, V>{
     public boolean isEmpty();
 
     /**
-     * @param key 
+     * @param key
      * @return true if the container contains the key
      */
     public boolean containsKey(K key);
 
     /**
      * Get the value associated with the key
-     * @param key 
+     * 
+     * @param key
      * @return the value associated with the key from the store
      */
     public V get(K key);
 
-    
     /**
-     * @param o 
+     * @param o
      * @return true if the MapContainer contains the value o
      */
     public boolean containsValue(K o);
 
     /**
      * Add add entries in the supplied Map
+     * 
      * @param map
      */
-    public void putAll(Map<K,V> map);
+    public void putAll(Map<K, V> map);
 
     /**
      * @return a Set of all the keys
@@ -109,30 +111,30 @@ public interface MapContainer<K, V> extends Map<K, V>{
     public Set<K> keySet();
 
     /**
-     * @return a collection of all the values - the values will be lazily pulled out of the
-     * store if iterated etc.
+     * @return a collection of all the values - the values will be lazily pulled
+     *         out of the store if iterated etc.
      */
     public Collection<V> values();
 
     /**
-     * @return a Set of all the Map.Entry instances - the values will be lazily pulled out of the
-     * store if iterated etc.
+     * @return a Set of all the Map.Entry instances - the values will be lazily
+     *         pulled out of the store if iterated etc.
      */
-    public Set<Map.Entry<K,V>> entrySet();
+    public Set<Map.Entry<K, V>> entrySet();
 
-   
     /**
      * Add an entry
+     * 
      * @param key
      * @param value
      * @return the old value for the key
      */
-    public V put(K key,V value);
-
+    public V put(K key, V value);
 
     /**
      * remove an entry associated with the key
-     * @param key 
+     * 
+     * @param key
      * @return the old value assocaited with the key or null
      */
     public V remove(K key);
@@ -141,77 +143,83 @@ public interface MapContainer<K, V> extends Map<K, V>{
      * empty the container
      */
     public void clear();
-    
+
     /**
      * Add an entry to the Store Map
+     * 
      * @param key
      * @param Value
      * @return the StoreEntry associated with the entry
      */
     public StoreEntry place(K key, V Value);
-    
+
     /**
      * Remove an Entry from ther Map
+     * 
      * @param entry
      */
     public void remove(StoreEntry entry);
-    
+
     /**
      * Get the Key object from it's location
+     * 
      * @param keyLocation
      * @return the key for the entry
      */
     public K getKey(StoreEntry keyLocation);
-    
+
     /**
      * Get the value from it's location
+     * 
      * @param Valuelocation
      * @return the Object
      */
     public V getValue(StoreEntry Valuelocation);
-    
-    /** Get the StoreEntry for the first value in the Map
-    * 
-    * @return the first StoreEntry or null if the map is empty
-    */
-   public StoreEntry getFirst();
 
-   /**
-    * Get the StoreEntry for the last value item of the Map
-    * 
-    * @return the last StoreEntry or null if the list is empty
-    */
-   public StoreEntry getLast();
+    /**
+     * Get the StoreEntry for the first value in the Map
+     * 
+     * @return the first StoreEntry or null if the map is empty
+     */
+    public StoreEntry getFirst();
 
-   /**
-    * Get the next StoreEntry value from the map
-    * 
-    * @param entry
-    * @return the next StoreEntry or null
-    */
-   public StoreEntry getNext(StoreEntry entry);
+    /**
+     * Get the StoreEntry for the last value item of the Map
+     * 
+     * @return the last StoreEntry or null if the list is empty
+     */
+    public StoreEntry getLast();
 
-   /**
-    * Get the previous StoreEntry from the map
-    * 
-    * @param entry
-    * @return the previous store entry or null
-    */
-   public StoreEntry getPrevious(StoreEntry entry);
+    /**
+     * Get the next StoreEntry value from the map
+     * 
+     * @param entry
+     * @return the next StoreEntry or null
+     */
+    public StoreEntry getNext(StoreEntry entry);
 
-   
-   /**
-    * It's possible that a StoreEntry could be come stale
-    * this will return an upto date entry for the StoreEntry position
-    * @param entry old entry
-    * @return a refreshed StoreEntry
-    */
-   public StoreEntry refresh(StoreEntry entry);
-   
-   /**
-    * Get the StoreEntry associated with the key
-    * @param key
-    * @return the StoreEntry
-    */
-   public StoreEntry getEntry(K key);
+    /**
+     * Get the previous StoreEntry from the map
+     * 
+     * @param entry
+     * @return the previous store entry or null
+     */
+    public StoreEntry getPrevious(StoreEntry entry);
+
+    /**
+     * It's possible that a StoreEntry could be come stale this will return an
+     * upto date entry for the StoreEntry position
+     * 
+     * @param entry old entry
+     * @return a refreshed StoreEntry
+     */
+    public StoreEntry refresh(StoreEntry entry);
+
+    /**
+     * Get the StoreEntry associated with the key
+     * 
+     * @param key
+     * @return the StoreEntry
+     */
+    public StoreEntry getEntry(K key);
 }

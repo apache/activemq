@@ -81,122 +81,120 @@ public class FailoverTransport implements CompositeTransport {
     private Exception connectionFailure;
 
     private final TransportListener myTransportListener = createTransportListener();
-    
+
     TransportListener createTransportListener() {
-    	return new TransportListener() {
-	        public void onCommand(Object o) {
-            	Command command = (Command) o;
-	            if (command == null) {
-	                return;
-	            }
-	            if (command.isResponse()) {
-                    Object object = requestMap.remove(Integer.valueOf(((Response) command).getCorrelationId()));
-                    if( object!=null && object.getClass() == Tracked.class ) {
-                	   ((Tracked)object).onResponses();
+        return new TransportListener() {
+            public void onCommand(Object o) {
+                Command command = (Command)o;
+                if (command == null) {
+                    return;
+                }
+                if (command.isResponse()) {
+                    Object object = requestMap.remove(Integer.valueOf(((Response)command).getCorrelationId()));
+                    if (object != null && object.getClass() == Tracked.class) {
+                        ((Tracked)object).onResponses();
                     }
-	            }
-	            if (!initialized){
-	                if (command.isBrokerInfo()){
-	                    BrokerInfo info = (BrokerInfo)command;
-	                    BrokerInfo[] peers = info.getPeerBrokerInfos();
-	                    if (peers!= null){
-	                        for (int i =0; i < peers.length;i++){
-	                            String brokerString = peers[i].getBrokerURL();
-	                            add(brokerString);
-	                        }
-	                    }
-	                initialized = true;
-	                }
-	                
-	            }
-	            if (transportListener != null) {
-	                transportListener.onCommand(command);
-	            }
-	        }
-	
-	        public void onException(IOException error) {
-	            try {
-	                handleTransportFailure(error);
-	            }
-	            catch (InterruptedException e) {
-	                Thread.currentThread().interrupt();
-	                transportListener.onException(new InterruptedIOException());
-	            }
-	        }
-	        
-	        public void transportInterupted(){
-	            if (transportListener != null){
-	                transportListener.transportInterupted();
-	            }
-	        }
-	
-	        public void transportResumed(){
-	            if(transportListener != null){
-	                transportListener.transportResumed();
-	            }
-	        }
-	    };
+                }
+                if (!initialized) {
+                    if (command.isBrokerInfo()) {
+                        BrokerInfo info = (BrokerInfo)command;
+                        BrokerInfo[] peers = info.getPeerBrokerInfos();
+                        if (peers != null) {
+                            for (int i = 0; i < peers.length; i++) {
+                                String brokerString = peers[i].getBrokerURL();
+                                add(brokerString);
+                            }
+                        }
+                        initialized = true;
+                    }
+
+                }
+                if (transportListener != null) {
+                    transportListener.onCommand(command);
+                }
+            }
+
+            public void onException(IOException error) {
+                try {
+                    handleTransportFailure(error);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    transportListener.onException(new InterruptedIOException());
+                }
+            }
+
+            public void transportInterupted() {
+                if (transportListener != null) {
+                    transportListener.transportInterupted();
+                }
+            }
+
+            public void transportResumed() {
+                if (transportListener != null) {
+                    transportListener.transportResumed();
+                }
+            }
+        };
     }
-    
+
     public FailoverTransport() throws InterruptedIOException {
 
-    	stateTracker.setTrackTransactions(true);
-    	
+        stateTracker.setTrackTransactions(true);
+
         // Setup a task that is used to reconnect the a connection async.
         reconnectTask = DefaultThreadPools.getDefaultTaskRunnerFactory().createTaskRunner(new Task() {
 
             public boolean iterate() {
 
-                Exception failure=null;
+                Exception failure = null;
                 synchronized (reconnectMutex) {
 
-                    if (disposed || connectionFailure!=null) {
+                    if (disposed || connectionFailure != null) {
                         reconnectMutex.notifyAll();
                     }
 
-                    if (connectedTransport != null || disposed || connectionFailure!=null) {
+                    if (connectedTransport != null || disposed || connectionFailure != null) {
                         return false;
                     } else {
                         ArrayList connectList = getConnectList();
-                        if( connectList.isEmpty() ) {
+                        if (connectList.isEmpty()) {
                             failure = new IOException("No uris available to connect to.");
                         } else {
-                            if (!useExponentialBackOff){
+                            if (!useExponentialBackOff) {
                                 reconnectDelay = initialReconnectDelay;
                             }
                             Iterator iter = connectList.iterator();
                             for (int i = 0; iter.hasNext() && connectedTransport == null && !disposed; i++) {
-                                URI uri = (URI) iter.next();
+                                URI uri = (URI)iter.next();
                                 try {
                                     log.debug("Attempting connect to: " + uri);
                                     Transport t = TransportFactory.compositeConnect(uri);
                                     t.setTransportListener(myTransportListener);
                                     t.start();
-                                    
+
                                     if (started) {
                                         restoreTransport(t);
                                     }
-                                    
+
                                     log.debug("Connection established");
                                     reconnectDelay = initialReconnectDelay;
                                     connectedTransportURI = uri;
                                     connectedTransport = t;
                                     reconnectMutex.notifyAll();
                                     connectFailures = 0;
-                                    if (transportListener != null){
+                                    if (transportListener != null) {
                                         transportListener.transportResumed();
                                     }
                                     log.info("Successfully reconnected to " + uri);
                                     return false;
-                                }
-                                catch (Exception e) {
+                                } catch (Exception e) {
                                     failure = e;
                                     log.debug("Connect fail to: " + uri + ", reason: " + e);
                                 }
                             }
                         }
                     }
-                    
+
                     if (maxReconnectAttempts > 0 && ++connectFailures >= maxReconnectAttempts) {
                         log.error("Failed to connect to transport after: " + connectFailures + " attempt(s)");
                         connectionFailure = failure;
@@ -205,33 +203,32 @@ public class FailoverTransport implements CompositeTransport {
                     }
                 }
 
-                if(!disposed){
-                    
-                        log.debug("Waiting "+reconnectDelay+" ms before attempting connection. ");
-                        synchronized(sleepMutex){
-                            try{
-                                sleepMutex.wait(reconnectDelay);
-                            }catch(InterruptedException e){
-                               Thread.currentThread().interrupt();
-                            }
+                if (!disposed) {
+
+                    log.debug("Waiting " + reconnectDelay + " ms before attempting connection. ");
+                    synchronized (sleepMutex) {
+                        try {
+                            sleepMutex.wait(reconnectDelay);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
                         }
-                        
-                    
-                    if(useExponentialBackOff){
+                    }
+
+                    if (useExponentialBackOff) {
                         // Exponential increment of reconnect delay.
-                        reconnectDelay*=backOffMultiplier;
-                        if(reconnectDelay>maxReconnectDelay)
-                            reconnectDelay=maxReconnectDelay;
+                        reconnectDelay *= backOffMultiplier;
+                        if (reconnectDelay > maxReconnectDelay)
+                            reconnectDelay = maxReconnectDelay;
                     }
                 }
                 return !disposed;
             }
 
-        }, "ActiveMQ Failover Worker: "+System.identityHashCode(this));
+        }, "ActiveMQ Failover Worker: " + System.identityHashCode(this));
     }
 
     final void handleTransportFailure(IOException e) throws InterruptedException {
-        if (transportListener != null){
+        if (transportListener != null) {
             transportListener.transportInterupted();
         }
         synchronized (reconnectMutex) {
@@ -268,11 +265,11 @@ public class FailoverTransport implements CompositeTransport {
 
             if (connectedTransport != null) {
                 connectedTransport.stop();
-                connectedTransport=null;
+                connectedTransport = null;
             }
             reconnectMutex.notifyAll();
         }
-        synchronized(sleepMutex){
+        synchronized (sleepMutex) {
             sleepMutex.notifyAll();
         }
         reconnectTask.shutdown();
@@ -329,45 +326,44 @@ public class FailoverTransport implements CompositeTransport {
     /**
      * @return Returns the randomize.
      */
-    public boolean isRandomize(){
+    public boolean isRandomize() {
         return randomize;
     }
 
     /**
      * @param randomize The randomize to set.
      */
-    public void setRandomize(boolean randomize){
-        this.randomize=randomize;
+    public void setRandomize(boolean randomize) {
+        this.randomize = randomize;
     }
 
     public void oneway(Object o) throws IOException {
-    	Command command = (Command) o;
+        Command command = (Command)o;
         Exception error = null;
         try {
 
             synchronized (reconnectMutex) {
                 // Keep trying until the message is sent.
-                for (int i = 0;!disposed; i++) {
+                for (int i = 0; !disposed; i++) {
                     try {
 
                         // Wait for transport to be connected.
-                        while (connectedTransport == null && !disposed && connectionFailure==null ) {
+                        while (connectedTransport == null && !disposed && connectionFailure == null) {
                             log.trace("Waiting for transport to reconnect.");
                             try {
                                 reconnectMutex.wait(1000);
-                            }
-                            catch (InterruptedException e) {
+                            } catch (InterruptedException e) {
                                 Thread.currentThread().interrupt();
                                 log.debug("Interupted: " + e, e);
                             }
                         }
 
-                        if( connectedTransport==null ) {
+                        if (connectedTransport == null) {
                             // Previous loop may have exited due to use being
                             // disposed.
                             if (disposed) {
                                 error = new IOException("Transport disposed.");
-                            } else if (connectionFailure!=null) {
+                            } else if (connectionFailure != null) {
                                 error = connectionFailure;
                             } else {
                                 error = new IOException("Unexpected failure.");
@@ -380,51 +376,53 @@ public class FailoverTransport implements CompositeTransport {
                         // then hold it in the requestMap so that we can replay
                         // it later.
                         Tracked tracked = stateTracker.track(command);
-                        if( tracked!=null && tracked.isWaitingForResponse() ) {
+                        if (tracked != null && tracked.isWaitingForResponse()) {
                             requestMap.put(Integer.valueOf(command.getCommandId()), tracked);
-                        } else if ( tracked==null && command.isResponseRequired()) {
+                        } else if (tracked == null && command.isResponseRequired()) {
                             requestMap.put(Integer.valueOf(command.getCommandId()), command);
                         }
-                                                
+
                         // Send the message.
                         try {
                             connectedTransport.oneway(command);
                         } catch (IOException e) {
-                        	
-                        	// If the command was not tracked.. we will retry in this method
-                        	if( tracked==null ) {
-                        		
-                        		// since we will retry in this method.. take it out of the request
-                        		// map so that it is not sent 2 times on recovery
-                            	if( command.isResponseRequired() ) {
-                            		requestMap.remove(Integer.valueOf(command.getCommandId()));
-                            	}
-                            	
-                                // Rethrow the exception so it will handled by the outer catch
+
+                            // If the command was not tracked.. we will retry in
+                            // this method
+                            if (tracked == null) {
+
+                                // since we will retry in this method.. take it
+                                // out of the request
+                                // map so that it is not sent 2 times on
+                                // recovery
+                                if (command.isResponseRequired()) {
+                                    requestMap.remove(Integer.valueOf(command.getCommandId()));
+                                }
+
+                                // Rethrow the exception so it will handled by
+                                // the outer catch
                                 throw e;
-                        	}
-                        	
+                            }
+
                         }
-                        
+
                         return;
 
-                    }
-                    catch (IOException e) {
+                    } catch (IOException e) {
                         log.debug("Send oneway attempt: " + i + " failed.");
                         handleTransportFailure(e);
                     }
                 }
             }
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             // Some one may be trying to stop our thread.
             Thread.currentThread().interrupt();
             throw new InterruptedIOException();
         }
-        if(!disposed){
-            if(error!=null){
-                if(error instanceof IOException)
-                    throw (IOException) error;
+        if (!disposed) {
+            if (error != null) {
+                if (error instanceof IOException)
+                    throw (IOException)error;
                 throw IOExceptionSupport.create(error);
             }
         }
@@ -437,14 +435,14 @@ public class FailoverTransport implements CompositeTransport {
     public Object request(Object command) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
-    
-    public Object request(Object command,int timeout) throws IOException {
+
+    public Object request(Object command, int timeout) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
 
     public void add(URI u[]) {
         for (int i = 0; i < u.length; i++) {
-            if( !uris.contains(u[i]) )
+            if (!uris.contains(u[i]))
                 uris.add(u[i]);
         }
         reconnect();
@@ -456,19 +454,18 @@ public class FailoverTransport implements CompositeTransport {
         }
         reconnect();
     }
-    
-    public void add(String u){
-        try {
-        URI uri = new URI(u);
-        if (!uris.contains(uri))
-            uris.add(uri);
 
-        reconnect();
-        }catch(Exception e){
+    public void add(String u) {
+        try {
+            URI uri = new URI(u);
+            if (!uris.contains(uri))
+                uris.add(uri);
+
+            reconnect();
+        } catch (Exception e) {
             log.error("Failed to parse URI: " + u);
         }
     }
-
 
     public void reconnect() {
         log.debug("Waking up reconnect task");
@@ -479,17 +476,17 @@ public class FailoverTransport implements CompositeTransport {
         }
     }
 
-    private ArrayList getConnectList(){
-        ArrayList l=new ArrayList(uris);
-        if (randomize){
+    private ArrayList getConnectList() {
+        ArrayList l = new ArrayList(uris);
+        if (randomize) {
             // Randomly, reorder the list by random swapping
-            Random r=new Random();
+            Random r = new Random();
             r.setSeed(System.currentTimeMillis());
-            for (int i=0;i<l.size();i++){
-                int p=r.nextInt(l.size());
-                Object t=l.get(p);
-                l.set(p,l.get(i));
-                l.set(i,t);
+            for (int i = 0; i < l.size(); i++) {
+                int p = r.nextInt(l.size());
+                Object t = l.get(p);
+                l.set(p, l.get(i));
+                l.set(i, t);
             }
         }
         return l;
@@ -521,7 +518,7 @@ public class FailoverTransport implements CompositeTransport {
         t.start();
         stateTracker.restore(t);
         for (Iterator iter2 = requestMap.values().iterator(); iter2.hasNext();) {
-            Command command = (Command) iter2.next();
+            Command command = (Command)iter2.next();
             t.oneway(command);
         }
     }
@@ -535,17 +532,17 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     public String toString() {
-        return connectedTransportURI==null ? "unconnected" : connectedTransportURI.toString();
+        return connectedTransportURI == null ? "unconnected" : connectedTransportURI.toString();
     }
 
-	public String getRemoteAddress() {
-		if(connectedTransport != null){
-			return connectedTransport.getRemoteAddress();
-		}
-		return null;
-	}
-    
-    public boolean isFaultTolerant(){
+    public String getRemoteAddress() {
+        if (connectedTransport != null) {
+            return connectedTransport.getRemoteAddress();
+        }
+        return null;
+    }
+
+    public boolean isFaultTolerant() {
         return true;
     }
 

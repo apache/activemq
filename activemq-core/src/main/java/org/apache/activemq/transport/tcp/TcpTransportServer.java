@@ -49,7 +49,7 @@ import javax.net.ServerSocketFactory;
  */
 
 public class TcpTransportServer extends TransportServerThreadSupport {
-	
+
     private static final Log log = LogFactory.getLog(TcpTransportServer.class);
     protected ServerSocket serverSocket;
     protected int backlog = 5000;
@@ -60,16 +60,16 @@ public class TcpTransportServer extends TransportServerThreadSupport {
     protected boolean trace;
     protected Map transportOptions;
     protected final ServerSocketFactory serverSocketFactory;
-    
+
     public TcpTransportServer(TcpTransportFactory transportFactory, URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
         super(location);
-        this.transportFactory=transportFactory;
-		this.serverSocketFactory = serverSocketFactory;
+        this.transportFactory = transportFactory;
+        this.serverSocketFactory = serverSocketFactory;
     }
 
     public void bind() throws IOException {
-    	URI bind = getBindLocation();
-    	
+        URI bind = getBindLocation();
+
         String host = bind.getHost();
         host = (host == null || host.length() == 0) ? "localhost" : host;
         InetAddress addr = InetAddress.getByName(host);
@@ -77,31 +77,29 @@ public class TcpTransportServer extends TransportServerThreadSupport {
         try {
             if (host.trim().equals("localhost") || addr.equals(InetAddress.getLocalHost())) {
                 this.serverSocket = serverSocketFactory.createServerSocket(bind.getPort(), backlog);
-            }
-            else {
+            } else {
                 this.serverSocket = serverSocketFactory.createServerSocket(bind.getPort(), backlog, addr);
             }
             this.serverSocket.setSoTimeout(2000);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw IOExceptionSupport.create("Failed to bind to server socket: " + bind + " due to: " + e, e);
         }
         try {
-			setConnectURI(new URI(bind.getScheme(), bind.getUserInfo(), resolveHostName(bind.getHost()), serverSocket.getLocalPort(), bind.getPath(),
-					bind.getQuery(), bind.getFragment()));
-		} catch (URISyntaxException e) {
+            setConnectURI(new URI(bind.getScheme(), bind.getUserInfo(), resolveHostName(bind.getHost()), serverSocket.getLocalPort(), bind.getPath(), bind.getQuery(), bind
+                .getFragment()));
+        } catch (URISyntaxException e) {
 
-            // it could be that the host name contains invalid characters such as _ on unix platforms
+            // it could be that the host name contains invalid characters such
+            // as _ on unix platforms
             // so lets try use the IP address instead
             try {
-                setConnectURI(new URI(bind.getScheme(), bind.getUserInfo(), addr.getHostAddress(), serverSocket.getLocalPort(), bind.getPath(),
-                        bind.getQuery(), bind.getFragment()));
+                setConnectURI(new URI(bind.getScheme(), bind.getUserInfo(), addr.getHostAddress(), serverSocket.getLocalPort(), bind.getPath(), bind.getQuery(), bind.getFragment()));
             } catch (URISyntaxException e2) {
                 throw IOExceptionSupport.create(e2);
             }
         }
     }
-    
+
     /**
      * @return Returns the wireFormatFactory.
      */
@@ -110,8 +108,7 @@ public class TcpTransportServer extends TransportServerThreadSupport {
     }
 
     /**
-     * @param wireFormatFactory
-     *            The wireFormatFactory to set.
+     * @param wireFormatFactory The wireFormatFactory to set.
      */
     public void setWireFormatFactory(WireFormatFactory wireFormatFactory) {
         this.wireFormatFactory = wireFormatFactory;
@@ -161,8 +158,7 @@ public class TcpTransportServer extends TransportServerThreadSupport {
                 if (socket != null) {
                     if (isStopped() || getAcceptListener() == null) {
                         socket.close();
-                    }
-                    else {
+                    } else {
                         HashMap options = new HashMap();
                         options.put("maxInactivityDuration", Long.valueOf(maxInactivityDuration));
                         options.put("minmumWireFormatVersion", Integer.valueOf(minmumWireFormatVersion));
@@ -174,13 +170,11 @@ public class TcpTransportServer extends TransportServerThreadSupport {
                         getAcceptListener().onAccept(configuredTransport);
                     }
                 }
-            }
-            catch (SocketTimeoutException ste) {
+            } catch (SocketTimeoutException ste) {
                 // expect this to happen
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 if (!isStopping()) {
-                    onAcceptError(e); 
+                    onAcceptError(e);
                 } else if (!isStopped()) {
                     log.warn("run()", e);
                     onAcceptError(e);
@@ -190,25 +184,26 @@ public class TcpTransportServer extends TransportServerThreadSupport {
     }
 
     /**
-     * Allow derived classes to override the Transport implementation that this transport server creates.
+     * Allow derived classes to override the Transport implementation that this
+     * transport server creates.
+     * 
      * @param socket
      * @param format
      * @return
      * @throws IOException
      */
-	protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
-		return new TcpTransport(format, socket);
-	}
+    protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
+        return new TcpTransport(format, socket);
+    }
 
     /**
      * @return pretty print of this
      */
     public String toString() {
-        return ""+getBindLocation();
+        return "" + getBindLocation();
     }
 
     /**
-     * 
      * @param hostName
      * @return real hostName
      * @throws UnknownHostException

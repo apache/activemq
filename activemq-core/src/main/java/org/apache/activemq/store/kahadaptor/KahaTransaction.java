@@ -26,78 +26,79 @@ import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.store.MessageStore;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 /**
  * Stores a messages/acknowledgements for a transaction
  * 
  * @version $Revision: 1.4 $
  */
-class KahaTransaction{
-    private static final Log log=LogFactory.getLog(KahaTransaction.class);
-    protected List list=new ArrayList();
+class KahaTransaction {
+    private static final Log log = LogFactory.getLog(KahaTransaction.class);
+    protected List list = new ArrayList();
 
-    
-     void add(KahaMessageStore store,BaseCommand command){
-        TxCommand tx=new TxCommand();
+    void add(KahaMessageStore store, BaseCommand command) {
+        TxCommand tx = new TxCommand();
         tx.setCommand(command);
         tx.setMessageStoreKey(store.getId());
         list.add(tx);
     }
 
-    Message[] getMessages(){
-        List result=new ArrayList();
-        for(int i=0;i<list.size();i++){
-            TxCommand command=(TxCommand) list.get(i);
-            if(command.isAdd()){
+    Message[] getMessages() {
+        List result = new ArrayList();
+        for (int i = 0; i < list.size(); i++) {
+            TxCommand command = (TxCommand)list.get(i);
+            if (command.isAdd()) {
                 result.add(command.getCommand());
             }
         }
-        Message[] messages=new Message[result.size()];
-        return (Message[]) result.toArray(messages);
+        Message[] messages = new Message[result.size()];
+        return (Message[])result.toArray(messages);
     }
 
-    MessageAck[] getAcks(){
-        List result=new ArrayList();
-        for(int i=0;i<list.size();i++){
-            TxCommand command=(TxCommand) list.get(i);
-            if(command.isRemove()){
+    MessageAck[] getAcks() {
+        List result = new ArrayList();
+        for (int i = 0; i < list.size(); i++) {
+            TxCommand command = (TxCommand)list.get(i);
+            if (command.isRemove()) {
                 result.add(command.getCommand());
             }
         }
-        MessageAck[] acks=new MessageAck[result.size()];
-        return (MessageAck[]) result.toArray(acks);
+        MessageAck[] acks = new MessageAck[result.size()];
+        return (MessageAck[])result.toArray(acks);
     }
 
-    void prepare(){}
+    void prepare() {
+    }
 
-    void rollback(){
+    void rollback() {
         list.clear();
     }
 
     /**
      * @throws IOException
      */
-    void commit(KahaTransactionStore transactionStore) throws IOException{
-        for(int i=0;i<list.size();i++){
-            TxCommand command=(TxCommand) list.get(i);
-            MessageStore ms=transactionStore.getStoreById(command.getMessageStoreKey());
-            if(command.isAdd()){
-                ms.addMessage(null,(Message) command.getCommand());
+    void commit(KahaTransactionStore transactionStore) throws IOException {
+        for (int i = 0; i < list.size(); i++) {
+            TxCommand command = (TxCommand)list.get(i);
+            MessageStore ms = transactionStore.getStoreById(command.getMessageStoreKey());
+            if (command.isAdd()) {
+                ms.addMessage(null, (Message)command.getCommand());
             }
         }
-        for(int i=0;i<list.size();i++){
-            TxCommand command=(TxCommand) list.get(i);
-            MessageStore ms=transactionStore.getStoreById(command.getMessageStoreKey());
-            if(command.isRemove()){
-                ms.removeMessage(null,(MessageAck) command.getCommand());
+        for (int i = 0; i < list.size(); i++) {
+            TxCommand command = (TxCommand)list.get(i);
+            MessageStore ms = transactionStore.getStoreById(command.getMessageStoreKey());
+            if (command.isRemove()) {
+                ms.removeMessage(null, (MessageAck)command.getCommand());
             }
         }
     }
-    
-    List getList(){
+
+    List getList() {
         return new ArrayList(list);
     }
-    
-    void setList(List list){
+
+    void setList(List list) {
         this.list = list;
     }
 }

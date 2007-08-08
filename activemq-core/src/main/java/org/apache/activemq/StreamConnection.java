@@ -27,27 +27,31 @@ import javax.jms.JMSException;
 import javax.jms.Topic;
 
 /**
- * The StreamConnection interface allows you to send and receive 
- * data from a Destination in using standard java InputStream and OutputStream
- * objects.  It's best use case is to send and receive large amounts of data
- * that would be to large to hold in a single JMS message.
+ * The StreamConnection interface allows you to send and receive data from a
+ * Destination in using standard java InputStream and OutputStream objects. It's
+ * best use case is to send and receive large amounts of data that would be to
+ * large to hold in a single JMS message.
  * 
  * @version $Revision$
  */
 public interface StreamConnection extends Connection {
 
-	public InputStream createInputStream(Destination dest) throws JMSException;
+    public InputStream createInputStream(Destination dest) throws JMSException;
+
     public InputStream createInputStream(Destination dest, String messageSelector) throws JMSException;
+
     public InputStream createInputStream(Destination dest, String messageSelector, boolean noLocal) throws JMSException;
-    
+
     public InputStream createDurableInputStream(Topic dest, String name) throws JMSException;
+
     public InputStream createDurableInputStream(Topic dest, String name, String messageSelector) throws JMSException;
+
     public InputStream createDurableInputStream(Topic dest, String name, String messageSelector, boolean noLocal) throws JMSException;
 
     public OutputStream createOutputStream(Destination dest) throws JMSException;
-    public OutputStream createOutputStream(Destination dest, Map streamProperties, int deliveryMode,
-            int priority, long timeToLive) throws JMSException;
- 
+
+    public OutputStream createOutputStream(Destination dest, Map streamProperties, int deliveryMode, int priority, long timeToLive) throws JMSException;
+
     /**
      * Unsubscribes a durable subscription that has been created by a client.
      * <P>
@@ -55,17 +59,16 @@ public interface StreamConnection extends Connection {
      * subscriber by its provider.
      * <P>
      * It is erroneous for a client to delete a durable subscription while there
-     * is an active <CODE>MessageConsumer </CODE> or <CODE>TopicSubscriber</CODE>
-     * for the subscription, or while a consumed message is part of a pending
-     * transaction or has not been acknowledged in the session.
+     * is an active <CODE>MessageConsumer </CODE> or
+     * <CODE>TopicSubscriber</CODE> for the subscription, or while a consumed
+     * message is part of a pending transaction or has not been acknowledged in
+     * the session.
      * 
-     * @param name
-     *            the name used to identify this subscription
-     * @throws JMSException
-     *             if the session fails to unsubscribe to the durable
-     *             subscription due to some internal error.
-     * @throws InvalidDestinationException
-     *             if an invalid subscription name is specified.
+     * @param name the name used to identify this subscription
+     * @throws JMSException if the session fails to unsubscribe to the durable
+     *                 subscription due to some internal error.
+     * @throws InvalidDestinationException if an invalid subscription name is
+     *                 specified.
      * @since 1.1
      */
     public void unsubscribe(String name) throws JMSException;

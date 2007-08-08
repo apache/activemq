@@ -28,19 +28,18 @@ import java.util.concurrent.TimeUnit;
 
 public class FutureResponse {
     private static final Log log = LogFactory.getLog(FutureResponse.class);
-           
+
     private final ResponseCallback responseCallback;
     private final ArrayBlockingQueue responseSlot = new ArrayBlockingQueue(1);
-    
+
     public FutureResponse(ResponseCallback responseCallback) {
         this.responseCallback = responseCallback;
     }
 
     public Response getResult() throws IOException {
         try {
-            return (Response) responseSlot.take();
-        }
-        catch (InterruptedException e) {
+            return (Response)responseSlot.take();
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             if (log.isDebugEnabled()) {
                 log.debug("Operation interupted: " + e, e);
@@ -48,20 +47,20 @@ public class FutureResponse {
             throw new InterruptedIOException("Interrupted.");
         }
     }
-    
+
     public Response getResult(int timeout) throws IOException {
         try {
-            return (Response) responseSlot.poll(timeout,TimeUnit.MILLISECONDS);
+            return (Response)responseSlot.poll(timeout, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             throw new InterruptedIOException("Interrupted.");
         }
     }
-    
+
     public void set(Response result) {
-        if( responseSlot.offer(result) ) {
-            if( responseCallback !=null ) {
+        if (responseSlot.offer(result)) {
+            if (responseCallback != null) {
                 responseCallback.onCompletion(this);
-            }        
+            }
         }
     }
 }

@@ -33,36 +33,34 @@ public class ConnectionView implements ConnectionViewMBean {
     public void stop() throws Exception {
         connection.stop();
     }
-    
+
     /**
      * @return true if the Connection is slow
      */
     public boolean isSlow() {
         return connection.isSlow();
     }
-    
+
     /**
      * @return if after being marked, the Connection is still writing
      */
     public boolean isBlocked() {
         return connection.isBlocked();
     }
-    
-    
+
     /**
      * @return true if the Connection is connected
      */
     public boolean isConnected() {
         return connection.isConnected();
     }
-    
+
     /**
      * @return true if the Connection is active
      */
     public boolean isActive() {
         return connection.isActive();
     }
-    
 
     /**
      * Returns the number of messages to be dispatched to this connection
@@ -70,7 +68,7 @@ public class ConnectionView implements ConnectionViewMBean {
     public int getDispatchQueueSize() {
         return connection.getDispatchQueueSize();
     }
-    
+
     /**
      * Resets the statistics
      */
@@ -85,7 +83,7 @@ public class ConnectionView implements ConnectionViewMBean {
      */
     public long getEnqueueCount() {
         return connection.getStatistics().getEnqueues().getCount();
-    
+
     }
 
     /**
@@ -97,12 +95,12 @@ public class ConnectionView implements ConnectionViewMBean {
         return connection.getStatistics().getDequeues().getCount();
     }
 
-	public String getRemoteAddress() {
-		return connection.getRemoteAddress();
-	}
+    public String getRemoteAddress() {
+        return connection.getRemoteAddress();
+    }
 
-	public String getConnectionId() {
-		return connection.getConnectionId();
-	}	
+    public String getConnectionId() {
+        return connection.getConnectionId();
+    }
 
 }

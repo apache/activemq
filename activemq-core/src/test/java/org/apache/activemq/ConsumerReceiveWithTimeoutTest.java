@@ -24,11 +24,10 @@ import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
 
-
 /**
  * @version $Revision: 1.1.1.1 $
  */
-public class ConsumerReceiveWithTimeoutTest  extends TestSupport {
+public class ConsumerReceiveWithTimeoutTest extends TestSupport {
 
     private Connection connection;
 
@@ -49,8 +48,9 @@ public class ConsumerReceiveWithTimeoutTest  extends TestSupport {
     }
 
     /**
-     * Test to check if consumer thread wakes up inside a receive(timeout) after a message is dispatched to the consumer
-     *
+     * Test to check if consumer thread wakes up inside a receive(timeout) after
+     * a message is dispatched to the consumer
+     * 
      * @throws javax.jms.JMSException
      */
     public void testConsumerReceiveBeforeMessageDispatched() throws JMSException {
@@ -61,15 +61,18 @@ public class ConsumerReceiveWithTimeoutTest  extends TestSupport {
         final Queue queue = session.createQueue("test");
 
         Thread t = new Thread() {
-               public void run(){
-                  try {
-                     //wait for 10 seconds to allow consumer.receive to be run first
-                     Thread.sleep(10000);
-                     MessageProducer producer = session.createProducer(queue);
-                     producer.send(session.createTextMessage("Hello"));
-                  }catch(Exception e){e.printStackTrace();}
-               }
-           };
+            public void run() {
+                try {
+                    // wait for 10 seconds to allow consumer.receive to be run
+                    // first
+                    Thread.sleep(10000);
+                    MessageProducer producer = session.createProducer(queue);
+                    producer.send(session.createTextMessage("Hello"));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
 
         t.start();
 
@@ -80,9 +83,5 @@ public class ConsumerReceiveWithTimeoutTest  extends TestSupport {
         session.close();
 
     }
-
-
-
-
 
 }

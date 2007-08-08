@@ -34,34 +34,34 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * Factory class that can create PersistenceAdapter objects.
- *
+ * 
  * @version $Revision: 1.4 $
  */
 public class JournalPersistenceAdapterFactory extends DataSourceSupport implements PersistenceAdapterFactory {
-    
-    private static final int JOURNAL_LOCKED_WAIT_DELAY = 10*1000;
+
+    private static final int JOURNAL_LOCKED_WAIT_DELAY = 10 * 1000;
 
     private static final Log log = LogFactory.getLog(JournalPersistenceAdapterFactory.class);
-    
-    private int journalLogFileSize = 1024*1024*20;
+
+    private int journalLogFileSize = 1024 * 1024 * 20;
     private int journalLogFiles = 2;
     private TaskRunnerFactory taskRunnerFactory;
     private Journal journal;
-    private boolean useJournal=true;
-    private boolean useQuickJournal=false;
+    private boolean useJournal = true;
+    private boolean useQuickJournal = false;
     private File journalArchiveDirectory;
-    private boolean failIfJournalIsLocked=false;
+    private boolean failIfJournalIsLocked = false;
     private int journalThreadPriority = Thread.MAX_PRIORITY;
     private JDBCPersistenceAdapter jdbcPersistenceAdapter = new JDBCPersistenceAdapter();
-    
+
     public PersistenceAdapter createPersistenceAdapter() throws IOException {
         jdbcPersistenceAdapter.setDataSource(getDataSource());
-        
-        if( !useJournal ) {
+
+        if (!useJournal) {
             return jdbcPersistenceAdapter;
         }
         return new JournalPersistenceAdapter(getJournal(), jdbcPersistenceAdapter, getTaskRunnerFactory());
-        
+
     }
 
     public int getJournalLogFiles() {
@@ -81,13 +81,13 @@ public class JournalPersistenceAdapterFactory extends DataSourceSupport implemen
 
     /**
      * Sets the size of the journal log files
-     *
+     * 
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryIntPropertyEditor"
      */
     public void setJournalLogFileSize(int journalLogFileSize) {
         this.journalLogFileSize = journalLogFileSize;
     }
-    
+
     public JDBCPersistenceAdapter getJdbcAdapter() {
         return jdbcPersistenceAdapter;
     }
@@ -101,8 +101,9 @@ public class JournalPersistenceAdapterFactory extends DataSourceSupport implemen
     }
 
     /**
-     * Enables or disables the use of the journal. The default is to use the journal
-     *
+     * Enables or disables the use of the journal. The default is to use the
+     * journal
+     * 
      * @param useJournal
      */
     public void setUseJournal(boolean useJournal) {
@@ -110,8 +111,9 @@ public class JournalPersistenceAdapterFactory extends DataSourceSupport implemen
     }
 
     public TaskRunnerFactory getTaskRunnerFactory() {
-        if( taskRunnerFactory == null ) {
-            taskRunnerFactory = new TaskRunnerFactory("Persistence Adaptor Task", journalThreadPriority, true, 1000);
+        if (taskRunnerFactory == null) {
+            taskRunnerFactory = new TaskRunnerFactory("Persistence Adaptor Task", journalThreadPriority,
+                                                      true, 1000);
         }
         return taskRunnerFactory;
     }
@@ -121,7 +123,7 @@ public class JournalPersistenceAdapterFactory extends DataSourceSupport implemen
     }
 
     public Journal getJournal() throws IOException {
-        if( journal == null ) {
+        if (journal == null) {
             createJournal();
         }
         return journal;
@@ -132,7 +134,7 @@ public class JournalPersistenceAdapterFactory extends DataSourceSupport implemen
     }
 
     public File getJournalArchiveDirectory() {
-        if( journalArchiveDirectory == null && useQuickJournal ) {
+        if (journalArchiveDirectory == null && useQuickJournal) {
             journalArchiveDirectory = new File(getDataDirectoryFile(), "journal");
         }
         return journalArchiveDirectory;
@@ -142,15 +144,14 @@ public class JournalPersistenceAdapterFactory extends DataSourceSupport implemen
         this.journalArchiveDirectory = journalArchiveDirectory;
     }
 
-
     public boolean isUseQuickJournal() {
         return useQuickJournal;
     }
 
     /**
-     * Enables or disables the use of quick journal, which keeps messages in the journal and just
-     * stores a reference to the messages in JDBC. Defaults to false so that messages actually reside
-     * long term in the JDBC database.
+     * Enables or disables the use of quick journal, which keeps messages in the
+     * journal and just stores a reference to the messages in JDBC. Defaults to
+     * false so that messages actually reside long term in the JDBC database.
      */
     public void setUseQuickJournal(boolean useQuickJournal) {
         this.useQuickJournal = useQuickJournal;
@@ -167,6 +168,7 @@ public class JournalPersistenceAdapterFactory extends DataSourceSupport implemen
     public Statements getStatements() {
         return jdbcPersistenceAdapter.getStatements();
     }
+
     public void setStatements(Statements statements) {
         jdbcPersistenceAdapter.setStatements(statements);
     }
@@ -176,7 +178,8 @@ public class JournalPersistenceAdapterFactory extends DataSourceSupport implemen
     }
 
     /**
-     * Sets whether or not an exclusive database lock should be used to enable JDBC Master/Slave. Enabled by default.
+     * Sets whether or not an exclusive database lock should be used to enable
+     * JDBC Master/Slave. Enabled by default.
      */
     public void setUseDatabaseLock(boolean useDatabaseLock) {
         jdbcPersistenceAdapter.setUseDatabaseLock(useDatabaseLock);
@@ -192,16 +195,16 @@ public class JournalPersistenceAdapterFactory extends DataSourceSupport implemen
     public void setCreateTablesOnStartup(boolean createTablesOnStartup) {
         jdbcPersistenceAdapter.setCreateTablesOnStartup(createTablesOnStartup);
     }
-    
-    public int getJournalThreadPriority(){
+
+    public int getJournalThreadPriority() {
         return journalThreadPriority;
     }
 
     /**
      * Sets the thread priority of the journal thread
      */
-    public void setJournalThreadPriority(int journalThreadPriority){
-        this.journalThreadPriority=journalThreadPriority;
+    public void setJournalThreadPriority(int journalThreadPriority) {
+        this.journalThreadPriority = journalThreadPriority;
     }
 
     /**
@@ -209,15 +212,18 @@ public class JournalPersistenceAdapterFactory extends DataSourceSupport implemen
      */
     protected void createJournal() throws IOException {
         File journalDir = new File(getDataDirectoryFile(), "journal").getCanonicalFile();
-        if( failIfJournalIsLocked ) {
-            journal = new JournalImpl(journalDir, journalLogFiles, journalLogFileSize, getJournalArchiveDirectory());
+        if (failIfJournalIsLocked) {
+            journal = new JournalImpl(journalDir, journalLogFiles, journalLogFileSize,
+                                      getJournalArchiveDirectory());
         } else {
-            while( true ) {
+            while (true) {
                 try {
-                    journal = new JournalImpl(journalDir, journalLogFiles, journalLogFileSize, getJournalArchiveDirectory());
+                    journal = new JournalImpl(journalDir, journalLogFiles, journalLogFileSize,
+                                              getJournalArchiveDirectory());
                     break;
                 } catch (JournalLockedException e) {
-                    log.info("Journal is locked... waiting "+(JOURNAL_LOCKED_WAIT_DELAY/1000)+" seconds for the journal to be unlocked.");
+                    log.info("Journal is locked... waiting " + (JOURNAL_LOCKED_WAIT_DELAY / 1000)
+                             + " seconds for the journal to be unlocked.");
                     try {
                         Thread.sleep(JOURNAL_LOCKED_WAIT_DELAY);
                     } catch (InterruptedException e1) {
@@ -226,7 +232,5 @@ public class JournalPersistenceAdapterFactory extends DataSourceSupport implemen
             }
         }
     }
-
-    
 
 }

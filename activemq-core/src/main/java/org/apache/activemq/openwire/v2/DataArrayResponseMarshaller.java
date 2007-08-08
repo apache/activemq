@@ -24,29 +24,27 @@ import java.io.IOException;
 import org.apache.activemq.openwire.*;
 import org.apache.activemq.command.*;
 
-
-
 /**
  * Marshalling code for Open Wire Format for DataArrayResponseMarshaller
- *
- *
- * NOTE!: This file is auto generated - do not modify!
- *        if you need to make a change, please see the modify the groovy scripts in the
- *        under src/gram/script and then use maven openwire:generate to regenerate 
- *        this file.
- *
+ * 
+ * 
+ * NOTE!: This file is auto generated - do not modify! if you need to make a
+ * change, please see the modify the groovy scripts in the under src/gram/script
+ * and then use maven openwire:generate to regenerate this file.
+ * 
  * @version $Revision$
  */
 public class DataArrayResponseMarshaller extends ResponseMarshaller {
 
     /**
      * Return the type of Data Structure we marshal
+     * 
      * @return short representation of the type data structure
      */
     public byte getDataStructureType() {
         return DataArrayResponse.DATA_STRUCTURE_TYPE;
     }
-    
+
     /**
      * @return a new object instance
      */
@@ -56,12 +54,13 @@ public class DataArrayResponseMarshaller extends ResponseMarshaller {
 
     /**
      * Un-marshal an object instance from the data input stream
-     *
+     * 
      * @param o the object to un-marshal
      * @param dataIn the data input stream to build the object from
      * @throws IOException
      */
-    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInput dataIn, BooleanStream bs) throws IOException {
+    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInput dataIn, BooleanStream bs)
+        throws IOException {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         DataArrayResponse info = (DataArrayResponse)o;
@@ -69,17 +68,16 @@ public class DataArrayResponseMarshaller extends ResponseMarshaller {
         if (bs.readBoolean()) {
             short size = dataIn.readShort();
             org.apache.activemq.command.DataStructure value[] = new org.apache.activemq.command.DataStructure[size];
-            for( int i=0; i < size; i++ ) {
-                value[i] = (org.apache.activemq.command.DataStructure) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
+            for (int i = 0; i < size; i++) {
+                value[i] = (org.apache.activemq.command.DataStructure)tightUnmarsalNestedObject(wireFormat,
+                                                                                                dataIn, bs);
             }
             info.setData(value);
-        }
-        else {
+        } else {
             info.setData(null);
         }
 
     }
-
 
     /**
      * Write the booleans that this object uses to a BooleanStream
@@ -96,12 +94,13 @@ public class DataArrayResponseMarshaller extends ResponseMarshaller {
 
     /**
      * Write a object instance to data output stream
-     *
+     * 
      * @param o the instance to be marshaled
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
      */
-    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutput dataOut, BooleanStream bs) throws IOException {
+    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutput dataOut, BooleanStream bs)
+        throws IOException {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         DataArrayResponse info = (DataArrayResponse)o;
@@ -111,7 +110,7 @@ public class DataArrayResponseMarshaller extends ResponseMarshaller {
 
     /**
      * Un-marshal an object instance from the data input stream
-     *
+     * 
      * @param o the object to un-marshal
      * @param dataIn the data input stream to build the object from
      * @throws IOException
@@ -124,17 +123,16 @@ public class DataArrayResponseMarshaller extends ResponseMarshaller {
         if (dataIn.readBoolean()) {
             short size = dataIn.readShort();
             org.apache.activemq.command.DataStructure value[] = new org.apache.activemq.command.DataStructure[size];
-            for( int i=0; i < size; i++ ) {
-                value[i] = (org.apache.activemq.command.DataStructure) looseUnmarsalNestedObject(wireFormat,dataIn);
+            for (int i = 0; i < size; i++) {
+                value[i] = (org.apache.activemq.command.DataStructure)looseUnmarsalNestedObject(wireFormat,
+                                                                                                dataIn);
             }
             info.setData(value);
-        }
-        else {
+        } else {
             info.setData(null);
         }
 
     }
-
 
     /**
      * Write the booleans that this object uses to a BooleanStream

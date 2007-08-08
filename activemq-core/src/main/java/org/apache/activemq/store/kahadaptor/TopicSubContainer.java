@@ -21,13 +21,13 @@ import java.util.Iterator;
 
 /**
  * Holds information for the subscriber
- *
+ * 
  * @version $Revision: 1.10 $
  */
 public class TopicSubContainer {
     private transient ListContainer listContainer;
     private transient StoreEntry batchEntry;
-    
+
     public TopicSubContainer(ListContainer container) {
         this.listContainer = container;
     }
@@ -40,10 +40,10 @@ public class TopicSubContainer {
     }
 
     /**
-     * @param id 
+     * @param id
      * @param batchEntry the batchEntry to set
      */
-    public void setBatchEntry(String id,StoreEntry batchEntry) {
+    public void setBatchEntry(String id, StoreEntry batchEntry) {
         this.batchEntry = batchEntry;
     }
 
@@ -59,28 +59,28 @@ public class TopicSubContainer {
         return listContainer.placeLast(ref);
     }
 
-    public ConsumerMessageRef remove(MessageId id){
-        ConsumerMessageRef result=null;
-        if(!listContainer.isEmpty()){
-            StoreEntry entry=listContainer.getFirst();
-            while(entry!=null){
-                ConsumerMessageRef ref=(ConsumerMessageRef)listContainer.get(entry);
+    public ConsumerMessageRef remove(MessageId id) {
+        ConsumerMessageRef result = null;
+        if (!listContainer.isEmpty()) {
+            StoreEntry entry = listContainer.getFirst();
+            while (entry != null) {
+                ConsumerMessageRef ref = (ConsumerMessageRef)listContainer.get(entry);
                 listContainer.remove(entry);
-                if(listContainer!=null&&batchEntry!=null&&(listContainer.isEmpty()||batchEntry.equals(entry))){
+                if (listContainer != null && batchEntry != null && (listContainer.isEmpty() || batchEntry.equals(entry))) {
                     reset();
                 }
-                if(ref!=null&&ref.getMessageId().equals(id)){
-                    result=ref;
+                if (ref != null && ref.getMessageId().equals(id)) {
+                    result = ref;
                     break;
                 }
-                entry=listContainer.getFirst();
+                entry = listContainer.getFirst();
             }
         }
         return result;
     }
 
     public ConsumerMessageRef get(StoreEntry entry) {
-        return (ConsumerMessageRef) listContainer.get(entry);
+        return (ConsumerMessageRef)listContainer.get(entry);
     }
 
     public StoreEntry getEntry() {

@@ -23,25 +23,26 @@ import java.io.IOException;
  * 
  * @version $Revision: 1.2 $
  */
-public class BadMagicException extends IOException{
+public class BadMagicException extends IOException {
     /**
      * 
      */
-    private static final long serialVersionUID=-570930196733067056L;
+    private static final long serialVersionUID = -570930196733067056L;
 
     /**
      * Default Constructor
-     *
+     * 
      */
-    public BadMagicException(){
+    public BadMagicException() {
         super();
     }
 
     /**
      * Construct an Exception with a reason
+     * 
      * @param s
      */
-    public BadMagicException(String s){
+    public BadMagicException(String s) {
         super(s);
     }
 }

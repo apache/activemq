@@ -32,9 +32,9 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.4 $
  */
 public class XATransaction extends Transaction {
-    
+
     private static final Log log = LogFactory.getLog(XATransaction.class);
-    
+
     private final TransactionStore transactionStore;
     private final XATransactionId xid;
     private final TransactionBroker broker;
@@ -46,32 +46,32 @@ public class XATransaction extends Transaction {
     }
 
     public void commit(boolean onePhase) throws XAException, IOException {
-    	if(log.isDebugEnabled())
-    		log.debug("XA Transaction commit: "+xid);
+        if (log.isDebugEnabled())
+            log.debug("XA Transaction commit: " + xid);
 
         switch (getState()) {
-            case START_STATE:
-                // 1 phase commit, no work done.
-                checkForPreparedState(onePhase);
-                setStateFinished();
-                break;
-            case IN_USE_STATE:
-                // 1 phase commit, work done.
-                checkForPreparedState(onePhase);
-                doPrePrepare();
-                setStateFinished();
-                transactionStore.commit(getTransactionId(), false);
-                doPostCommit();
-                break;
-            case PREPARED_STATE:
-                // 2 phase commit, work done.
-                // We would record commit here.
-                setStateFinished();
-                transactionStore.commit(getTransactionId(), true);
-                doPostCommit();
-                break;
-            default:
-                illegalStateTransition("commit");
+        case START_STATE:
+            // 1 phase commit, no work done.
+            checkForPreparedState(onePhase);
+            setStateFinished();
+            break;
+        case IN_USE_STATE:
+            // 1 phase commit, work done.
+            checkForPreparedState(onePhase);
+            doPrePrepare();
+            setStateFinished();
+            transactionStore.commit(getTransactionId(), false);
+            doPostCommit();
+            break;
+        case PREPARED_STATE:
+            // 2 phase commit, work done.
+            // We would record commit here.
+            setStateFinished();
+            transactionStore.commit(getTransactionId(), true);
+            doPostCommit();
+            break;
+        default:
+            illegalStateTransition("commit");
         }
     }
 
@@ -107,9 +107,8 @@ public class XATransaction extends Transaction {
     private void doPostCommit() throws XAException {
         try {
             fireAfterCommit();
-        }
-        catch (Throwable e) {
-            // I guess this could happen.  Post commit task failed
+        } catch (Throwable e) {
+            // I guess this could happen. Post commit task failed
             // to execute properly.
             log.warn("POST COMMIT FAILED: ", e);
             XAException xae = new XAException("POST COMMIT FAILED");
@@ -120,27 +119,27 @@ public class XATransaction extends Transaction {
     }
 
     public void rollback() throws XAException, IOException {
-    	
-    	if(log.isDebugEnabled())
-    		log.debug("XA Transaction rollback: "+xid);
+
+        if (log.isDebugEnabled())
+            log.debug("XA Transaction rollback: " + xid);
 
         switch (getState()) {
-            case START_STATE:
-                // 1 phase rollback no work done.
-                setStateFinished();
-                break;
-            case IN_USE_STATE:
-                // 1 phase rollback work done.
-                setStateFinished();
-                transactionStore.rollback(getTransactionId());
-                doPostRollback();
-                break;
-            case PREPARED_STATE:
-                // 2 phase rollback work done.
-                setStateFinished();
-                transactionStore.rollback(getTransactionId());
-                doPostRollback();
-                break;
+        case START_STATE:
+            // 1 phase rollback no work done.
+            setStateFinished();
+            break;
+        case IN_USE_STATE:
+            // 1 phase rollback work done.
+            setStateFinished();
+            transactionStore.rollback(getTransactionId());
+            doPostRollback();
+            break;
+        case PREPARED_STATE:
+            // 2 phase rollback work done.
+            setStateFinished();
+            transactionStore.rollback(getTransactionId());
+            doPostRollback();
+            break;
         }
 
     }
@@ -148,9 +147,8 @@ public class XATransaction extends Transaction {
     private void doPostRollback() throws XAException {
         try {
             fireAfterRollback();
-        }
-        catch (Throwable e) {
-            // I guess this could happen.  Post commit task failed
+        } catch (Throwable e) {
+            // I guess this could happen. Post commit task failed
             // to execute properly.
             log.warn("POST ROLLBACK FAILED: ", e);
             XAException xae = new XAException("POST ROLLBACK FAILED");
@@ -161,23 +159,23 @@ public class XATransaction extends Transaction {
     }
 
     public int prepare() throws XAException, IOException {
-    	if(log.isDebugEnabled())
-    		log.debug("XA Transaction prepare: "+xid);
-    	
+        if (log.isDebugEnabled())
+            log.debug("XA Transaction prepare: " + xid);
+
         switch (getState()) {
-            case START_STATE:
-                // No work done.. no commit/rollback needed.
-                setStateFinished();
-                return XAResource.XA_RDONLY;
-            case IN_USE_STATE:
-                // We would record prepare here.
-                doPrePrepare();
-                setState(Transaction.PREPARED_STATE);
-                transactionStore.prepare(getTransactionId());
-                return XAResource.XA_OK;
-            default :
-                illegalStateTransition("prepare");
-                return XAResource.XA_RDONLY;
+        case START_STATE:
+            // No work done.. no commit/rollback needed.
+            setStateFinished();
+            return XAResource.XA_RDONLY;
+        case IN_USE_STATE:
+            // We would record prepare here.
+            doPrePrepare();
+            setState(Transaction.PREPARED_STATE);
+            transactionStore.prepare(getTransactionId());
+            return XAResource.XA_OK;
+        default:
+            illegalStateTransition("prepare");
+            return XAResource.XA_RDONLY;
         }
     }
 

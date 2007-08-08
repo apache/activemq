@@ -16,8 +16,6 @@
  */
 package org.apache.activemq.security;
 
-import org.apache.activemq.filter.DestinationMapEntry;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Collections;
@@ -25,13 +23,14 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.apache.activemq.filter.DestinationMapEntry;
+
 /**
  * Represents an entry in a {@link DefaultAuthorizationMap} for assigning
  * different operations (read, write, admin) of user roles to a specific
  * destination or a hierarchical wildcard area of destinations.
  * 
  * @org.apache.xbean.XBean
- * 
  * @version $Revision$
  */
 public class AuthorizationEntry extends DestinationMapEntry {
@@ -39,20 +38,20 @@ public class AuthorizationEntry extends DestinationMapEntry {
     private Set readACLs = Collections.EMPTY_SET;
     private Set writeACLs = Collections.EMPTY_SET;
     private Set adminACLs = Collections.EMPTY_SET;
-    
+
     private String adminRoles = null;
     private String readRoles = null;
     private String writeRoles = null;
-    
+
     private String groupClass = "org.apache.activemq.jaas.GroupPrincipal";
-        
+
     public String getGroupClass() {
-    	return groupClass;
+        return groupClass;
     }
-     
+
     public void setGroupClass(String groupClass) {
         this.groupClass = groupClass;
-    }    
+    }
 
     public Set getAdminACLs() {
         return adminACLs;
@@ -79,23 +78,26 @@ public class AuthorizationEntry extends DestinationMapEntry {
     }
 
     // helper methods for easier configuration in Spring
-    // ACLs are already set in the afterPropertiesSet method to ensure that  groupClass is set first before
-    // calling parceACLs() on any of the roles. We still need to add  the call to parceACLs inside the helper
-    // methods for instances where we configure security programatically without using xbean
+    // ACLs are already set in the afterPropertiesSet method to ensure that
+    // groupClass is set first before
+    // calling parceACLs() on any of the roles. We still need to add the call to
+    // parceACLs inside the helper
+    // methods for instances where we configure security programatically without
+    // using xbean
     // -------------------------------------------------------------------------
     public void setAdmin(String roles) throws Exception {
-    	adminRoles = roles;
-    	setAdminACLs(parseACLs(adminRoles));
+        adminRoles = roles;
+        setAdminACLs(parseACLs(adminRoles));
     }
 
     public void setRead(String roles) throws Exception {
-    	readRoles = roles;
-    	setReadACLs(parseACLs(readRoles));
+        readRoles = roles;
+        setReadACLs(parseACLs(readRoles));
     }
 
     public void setWrite(String roles) throws Exception {
-    	writeRoles = roles;
-    	setWriteACLs(parseACLs(writeRoles));
+        writeRoles = roles;
+        setWriteACLs(parseACLs(writeRoles));
     }
 
     protected Set parseACLs(String roles) throws Exception {
@@ -105,58 +107,63 @@ public class AuthorizationEntry extends DestinationMapEntry {
             String name = iter.nextToken().trim();
             Class[] paramClass = new Class[1];
             paramClass[0] = String.class;
-            
+
             Object[] param = new Object[1];
             param[0] = name;
 
             try {
-            	Class cls = Class.forName(groupClass);
-            	
-            	Constructor[] constructors = cls.getConstructors();
-            	int i;
-            	for (i=0; i<constructors.length; i++) {
-            		Class[] paramTypes = constructors[i].getParameterTypes(); 
-            		if (paramTypes.length!=0 && paramTypes[0].equals(paramClass[0])) break;
-            	}
-            	if (i < constructors.length) {
-            		Object instance = constructors[i].newInstance(param);
-                	answer.add(instance);
-            	}
-            	else {
-            		Object instance = cls.newInstance();
-            		Method[] methods = cls.getMethods();
-            		i=0;
-            		for (i=0; i<methods.length; i++) {
-            			Class[] paramTypes = methods[i].getParameterTypes();
-            			if (paramTypes.length!=0 && methods[i].getName().equals("setName") && paramTypes[0].equals(paramClass[0])) break;
-            		}
-                		
-                	if (i < methods.length) {
-                		methods[i].invoke(instance, param);
-                    	answer.add(instance);
-                	}
-                	else throw new NoSuchMethodException();
-            	}
+                Class cls = Class.forName(groupClass);
+
+                Constructor[] constructors = cls.getConstructors();
+                int i;
+                for (i = 0; i < constructors.length; i++) {
+                    Class[] paramTypes = constructors[i].getParameterTypes();
+                    if (paramTypes.length != 0 && paramTypes[0].equals(paramClass[0])) {
+                        break;
+                    }
+                }
+                if (i < constructors.length) {
+                    Object instance = constructors[i].newInstance(param);
+                    answer.add(instance);
+                } else {
+                    Object instance = cls.newInstance();
+                    Method[] methods = cls.getMethods();
+                    i = 0;
+                    for (i = 0; i < methods.length; i++) {
+                        Class[] paramTypes = methods[i].getParameterTypes();
+                        if (paramTypes.length != 0 && methods[i].getName().equals("setName") && paramTypes[0].equals(paramClass[0])) {
+                            break;
+                        }
+                    }
+
+                    if (i < methods.length) {
+                        methods[i].invoke(instance, param);
+                        answer.add(instance);
+                    } else {
+                        throw new NoSuchMethodException();
+                    }
+                }
+            } catch (Exception e) {
+                throw e;
             }
-            catch (Exception e) { throw e; }
         }
         return answer;
     }
-    
+
     public void afterPropertiesSet() throws Exception {
         super.afterPropertiesSet();
-        
-        if(adminRoles!=null) {
-        	setAdminACLs(parseACLs(adminRoles));
+
+        if (adminRoles != null) {
+            setAdminACLs(parseACLs(adminRoles));
         }
 
-        if(writeRoles!=null) {
-        	setWriteACLs(parseACLs(writeRoles));
+        if (writeRoles != null) {
+            setWriteACLs(parseACLs(writeRoles));
         }
-        
-        if(readRoles!=null) {
-        	setReadACLs(parseACLs(readRoles));
+
+        if (readRoles != null) {
+            setReadACLs(parseACLs(readRoles));
         }
-        
-    }    
+
+    }
 }

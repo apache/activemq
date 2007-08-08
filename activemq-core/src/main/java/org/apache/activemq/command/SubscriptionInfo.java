@@ -18,7 +18,6 @@ package org.apache.activemq.command;
 
 import org.apache.activemq.util.IntrospectionSupport;
 
-
 /**
  * Used to represent a durable subscription.
  * 
@@ -27,14 +26,14 @@ import org.apache.activemq.util.IntrospectionSupport;
  */
 public class SubscriptionInfo implements DataStructure {
 
-    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.DURABLE_SUBSCRIPTION_INFO;
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.DURABLE_SUBSCRIPTION_INFO;
 
     protected ActiveMQDestination subscribedDestination;
     protected ActiveMQDestination destination;
     protected String clientId;
     protected String subscriptionName;
     protected String selector;
-    
+
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
@@ -51,8 +50,8 @@ public class SubscriptionInfo implements DataStructure {
     }
 
     /**
-     * This is the a resolved destination that the subscription is receiving messages from.
-     * This will never be a pattern or a composite destination.
+     * This is the a resolved destination that the subscription is receiving
+     * messages from. This will never be a pattern or a composite destination.
      * 
      * @openwire:property version=1 cache=true
      */
@@ -84,13 +83,13 @@ public class SubscriptionInfo implements DataStructure {
     }
 
     /**
-     * @param subscriptionName
-     *  * @deprecated
+     * @param subscriptionName *
+     * @deprecated
      */
     public void setSubcriptionName(String subscriptionName) {
         this.subscriptionName = subscriptionName;
     }
-    
+
     public String getSubscriptionName() {
         return subscriptionName;
     }
@@ -102,46 +101,51 @@ public class SubscriptionInfo implements DataStructure {
     public boolean isMarshallAware() {
         return false;
     }
-    
+
     public String toString() {
         return IntrospectionSupport.toString(this);
     }
-    
+
     public int hashCode() {
-        int h1 = clientId != null ? clientId.hashCode():-1;
-        int h2 = subscriptionName != null ? subscriptionName.hashCode():-1;
+        int h1 = clientId != null ? clientId.hashCode() : -1;
+        int h2 = subscriptionName != null ? subscriptionName.hashCode() : -1;
         return h1 ^ h2;
     }
-    
-    public boolean equals(Object obj){
-        boolean result=false;
-        if(obj instanceof SubscriptionInfo){
-            SubscriptionInfo other=(SubscriptionInfo)obj;
-            result=(clientId==null&&other.clientId==null||clientId!=null&&other.clientId!=null
-                    &&clientId.equals(other.clientId))
-                    &&(subscriptionName==null&&other.subscriptionName==null||subscriptionName!=null
-                            &&other.subscriptionName!=null&&subscriptionName.equals(other.subscriptionName));
+
+    public boolean equals(Object obj) {
+        boolean result = false;
+        if (obj instanceof SubscriptionInfo) {
+            SubscriptionInfo other = (SubscriptionInfo)obj;
+            result = (clientId == null && other.clientId == null || clientId != null
+                                                                    && other.clientId != null
+                                                                    && clientId.equals(other.clientId))
+                     && (subscriptionName == null && other.subscriptionName == null || subscriptionName != null
+                                                                                       && other.subscriptionName != null
+                                                                                       && subscriptionName
+                                                                                           .equals(other.subscriptionName));
         }
         return result;
     }
 
     /**
-     * The destination the client originally subscribed to.. This may not match the {@see getDestination} method
-     * if the subscribed destination uses patterns or composites.
-     *  
-     *  If the subscribed destinationis not set, this just ruturns the desitination.
-     *  
+     * The destination the client originally subscribed to.. This may not match
+     * the {@see getDestination} method if the subscribed destination uses
+     * patterns or composites.
+     * 
+     * If the subscribed destinationis not set, this just ruturns the
+     * desitination.
+     * 
      * @openwire:property version=3
      */
-	public ActiveMQDestination getSubscribedDestination() {
-		if( subscribedDestination == null ) {
-			return getDestination();
-		}
-		return subscribedDestination;
-	}
+    public ActiveMQDestination getSubscribedDestination() {
+        if (subscribedDestination == null) {
+            return getDestination();
+        }
+        return subscribedDestination;
+    }
 
-	public void setSubscribedDestination(ActiveMQDestination subscribedDestination) {
-		this.subscribedDestination = subscribedDestination;
-	}
+    public void setSubscribedDestination(ActiveMQDestination subscribedDestination) {
+        this.subscribedDestination = subscribedDestination;
+    }
 
 }

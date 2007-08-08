@@ -18,27 +18,27 @@ package org.apache.activemq.kaha.impl.data;
 
 import org.apache.activemq.kaha.StoreLocation;
 
-
 /**
  * A a wrapper for a data in the store
  * 
  * @version $Revision: 1.2 $
  */
-public final class DataItem implements Item, StoreLocation{
-    
-    private int file=(int) POSITION_NOT_SET;
-    private long offset=POSITION_NOT_SET;
+public final class DataItem implements Item, StoreLocation {
+
+    private int file = (int)POSITION_NOT_SET;
+    private long offset = POSITION_NOT_SET;
     private int size;
 
-    public DataItem(){}
-    
+    public DataItem() {
+    }
+
     DataItem(DataItem item) {
         this.file = item.file;
         this.offset = item.offset;
         this.size = item.size;
     }
-    
-    boolean isValid(){
+
+    boolean isValid() {
         return file != POSITION_NOT_SET;
     }
 
@@ -46,52 +46,52 @@ public final class DataItem implements Item, StoreLocation{
      * @return
      * @see org.apache.activemq.kaha.StoreLocation#getSize()
      */
-    public int getSize(){
+    public int getSize() {
         return size;
     }
 
     /**
      * @param size The size to set.
      */
-    public void setSize(int size){
-        this.size=size;
+    public void setSize(int size) {
+        this.size = size;
     }
 
     /**
      * @return
      * @see org.apache.activemq.kaha.StoreLocation#getOffset()
      */
-    public long getOffset(){
+    public long getOffset() {
         return offset;
     }
 
     /**
      * @param offset The offset to set.
      */
-    public void setOffset(long offset){
-        this.offset=offset;
+    public void setOffset(long offset) {
+        this.offset = offset;
     }
 
     /**
      * @return
      * @see org.apache.activemq.kaha.StoreLocation#getFile()
      */
-    public int getFile(){
+    public int getFile() {
         return file;
     }
 
     /**
      * @param file The file to set.
      */
-    public void setFile(int file){
-        this.file=file;
+    public void setFile(int file) {
+        this.file = file;
     }
 
     /**
      * @return a pretty print
      */
-    public String toString(){
-        String result="offset = "+offset+", file = " + file + ", size = "+size;
+    public String toString() {
+        String result = "offset = " + offset + ", file = " + file + ", size = " + size;
         return result;
     }
 

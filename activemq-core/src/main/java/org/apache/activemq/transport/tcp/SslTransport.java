@@ -33,13 +33,13 @@ import javax.net.ssl.SSLSocketFactory;
 
 /**
  * A Transport class that uses SSL and client-side certificate authentication.
- *
- * Client-side certificate authentication must be enabled through the constructor.
- * By default, this class will have the same client authentication behavior as the socket it is passed.
- * This class will set ConnectionInfo's transportContext to the SSL certificates of the client.
- * NOTE: Accessor method for needClientAuth was not provided on purpose. This is because needClientAuth's value must be
- *      set before the socket is connected. Otherwise, unexpected situations may occur.
- * 
+ * Client-side certificate authentication must be enabled through the
+ * constructor. By default, this class will have the same client authentication
+ * behavior as the socket it is passed. This class will set ConnectionInfo's
+ * transportContext to the SSL certificates of the client. NOTE: Accessor method
+ * for needClientAuth was not provided on purpose. This is because
+ * needClientAuth's value must be set before the socket is connected. Otherwise,
+ * unexpected situations may occur.
  */
 public class SslTransport extends TcpTransport {
     /**
@@ -47,11 +47,11 @@ public class SslTransport extends TcpTransport {
      * 
      * @param wireFormat The WireFormat to be used.
      * @param socketFactory The socket factory to be used. Forcing SSLSockets
-     *      for obvious reasons.
+     *                for obvious reasons.
      * @param remoteLocation The remote location.
      * @param localLocation The local location.
      * @param needClientAuth If set to true, the underlying socket will need
-     *      client certificate authentication.
+     *                client certificate authentication.
      * @throws UnknownHostException If TcpTransport throws.
      * @throws IOException If TcpTransport throws.
      */
@@ -61,12 +61,10 @@ public class SslTransport extends TcpTransport {
             ((SSLSocket)this.socket).setNeedClientAuth(needClientAuth);
         }
     }
-    
+
     /**
-     * Initialize from a ServerSocket.
-     * 
-     * No access to needClientAuth is given since it is already set within the
-     *      provided socket.
+     * Initialize from a ServerSocket. No access to needClientAuth is given
+     * since it is already set within the provided socket.
      * 
      * @param wireFormat The WireFormat to be used.
      * @param socket The Socket to be used. Forcing SSL.
@@ -75,31 +73,31 @@ public class SslTransport extends TcpTransport {
     public SslTransport(WireFormat wireFormat, SSLSocket socket) throws IOException {
         super(wireFormat, socket);
     }
-    
+
     /**
-     * Overriding in order to add the client's certificates to ConnectionInfo Commmands. 
+     * Overriding in order to add the client's certificates to ConnectionInfo
+     * Commmands.
      * 
      * @param command The Command coming in.
      */
     public void doConsume(Command command) {
         // The instanceof can be avoided, but that would require modifying the
-        //      Command clas tree and that would require too much effort right
-        //      now.
-        if ( command instanceof ConnectionInfo ) {
+        // Command clas tree and that would require too much effort right
+        // now.
+        if (command instanceof ConnectionInfo) {
             ConnectionInfo connectionInfo = (ConnectionInfo)command;
-            
+
             SSLSocket sslSocket = (SSLSocket)this.socket;
-            
+
             SSLSession sslSession = sslSocket.getSession();
-            
+
             X509Certificate[] clientCertChain;
             try {
-                clientCertChain =
-                    (X509Certificate[]) sslSession.getPeerCertificates();
-            } catch(SSLPeerUnverifiedException e) {
+                clientCertChain = (X509Certificate[])sslSession.getPeerCertificates();
+            } catch (SSLPeerUnverifiedException e) {
                 clientCertChain = null;
             }
-            
+
             connectionInfo.setTransportContext(clientCertChain);
         }
 
@@ -110,8 +108,7 @@ public class SslTransport extends TcpTransport {
      * @return pretty print of 'this'
      */
     public String toString() {
-        return "ssl://"+socket.getInetAddress()+":"+socket.getPort();
+        return "ssl://" + socket.getInetAddress() + ":" + socket.getPort();
     }
 
 }
-

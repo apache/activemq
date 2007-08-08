@@ -16,9 +16,9 @@
  */
 package org.apache.activemq.transport;
 
-import org.apache.activemq.util.ServiceSupport;
-
 import java.net.URI;
+
+import org.apache.activemq.util.ServiceSupport;
 
 /**
  * A useful base class for implementations of {@link TransportServer}
@@ -28,7 +28,7 @@ import java.net.URI;
 public abstract class TransportServerSupport extends ServiceSupport implements TransportServer {
 
     private URI connectURI;
-	private URI bindLocation;
+    private URI bindLocation;
     private TransportAcceptListener acceptListener;
 
     public TransportServerSupport() {
@@ -63,8 +63,7 @@ public abstract class TransportServerSupport extends ServiceSupport implements T
     }
 
     /**
-     * @param location
-     *            The location to set.
+     * @param location The location to set.
      */
     public void setConnectURI(URI location) {
         this.connectURI = location;
@@ -76,11 +75,11 @@ public abstract class TransportServerSupport extends ServiceSupport implements T
         }
     }
 
-	public URI getBindLocation() {
-		return bindLocation;
-	}
+    public URI getBindLocation() {
+        return bindLocation;
+    }
 
-	public void setBindLocation(URI bindLocation) {
-		this.bindLocation = bindLocation;
-	}
+    public void setBindLocation(URI bindLocation) {
+        this.bindLocation = bindLocation;
+    }
 }

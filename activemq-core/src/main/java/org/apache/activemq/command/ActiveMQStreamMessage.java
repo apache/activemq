@@ -1130,8 +1130,9 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
         checkWriteOnlyBody();
         if (this.dataIn == null) {
             ByteSequence data = getContent();
-            if (data == null)
+            if (data == null) {
                 data = new ByteSequence(new byte[] {}, 0, 0);
+            }
             InputStream is = new ByteArrayInputStream(data);
             if (isCompressed()) {
                 is = new InflaterInputStream(is);

@@ -87,24 +87,24 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
 
     public synchronized Connection createConnection(String userName, String password) throws JMSException {
         ConnectionKey key = new ConnectionKey(userName, password);
-        LinkedList pools = (LinkedList) cache.get(key);
-        
-        if (pools ==  null) {
+        LinkedList pools = (LinkedList)cache.get(key);
+
+        if (pools == null) {
             pools = new LinkedList();
             cache.put(key, pools);
         }
 
         ConnectionPool connection = null;
         if (pools.size() == maxConnections) {
-            connection = (ConnectionPool) pools.removeFirst();
+            connection = (ConnectionPool)pools.removeFirst();
         }
-        
-        // Now.. we might get a connection, but it might be that we need to 
+
+        // Now.. we might get a connection, but it might be that we need to
         // dump it..
-        if( connection!=null && connection.expiredCheck() ) {
-        	connection=null;
+        if (connection != null && connection.expiredCheck()) {
+            connection = null;
         }
-        
+
         if (connection == null) {
             ActiveMQConnection delegate = createConnection(key);
             connection = createConnectionPool(delegate);
@@ -112,17 +112,17 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
         pools.add(connection);
         return new PooledConnection(connection);
     }
-    
+
     protected ConnectionPool createConnectionPool(ActiveMQConnection connection) {
         return new ConnectionPool(connection, getPoolFactory(), transactionManager);
     }
 
     protected ActiveMQConnection createConnection(ConnectionKey key) throws JMSException {
         if (key.getUserName() == null && key.getPassword() == null) {
-            return (ActiveMQConnection) connectionFactory.createConnection();
-        }
-        else {
-            return (ActiveMQConnection) connectionFactory.createConnection(key.getUserName(), key.getPassword());
+            return (ActiveMQConnection)connectionFactory.createConnection();
+        } else {
+            return (ActiveMQConnection)connectionFactory.createConnection(key.getUserName(), key
+                .getPassword());
         }
     }
 
@@ -132,17 +132,16 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
     public void start() {
         try {
             createConnection();
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             IOExceptionSupport.create(e);
         }
     }
 
-    public void stop() throws Exception{
-        for(Iterator iter=cache.values().iterator();iter.hasNext();){
-            LinkedList list=(LinkedList)iter.next();
-            for(Iterator i=list.iterator();i.hasNext();){
-                ConnectionPool connection=(ConnectionPool)i.next();
+    public void stop() throws Exception {
+        for (Iterator iter = cache.values().iterator(); iter.hasNext();) {
+            LinkedList list = (LinkedList)iter.next();
+            for (Iterator i = list.iterator(); i.hasNext();) {
+                ConnectionPool connection = (ConnectionPool)i.next();
                 connection.close();
             }
         }

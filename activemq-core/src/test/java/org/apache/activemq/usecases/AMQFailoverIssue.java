@@ -66,7 +66,7 @@ public class AMQFailoverIssue extends TestCase {
 
     // This should fail with incubator-activemq-fuse-4.1.0.5
     public void testFailoverIssue() throws Exception {
-        BrokerService brokerService1=null;
+        BrokerService brokerService1 = null;
         ActiveMQConnectionFactory acf;
         PooledConnectionFactory pcf;
         DefaultMessageListenerContainer container1 = null;

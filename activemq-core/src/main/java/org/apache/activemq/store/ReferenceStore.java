@@ -23,59 +23,65 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.MessageId;
 
 /**
- * Represents a message store which is used by the persistent 
- * implementations
+ * Represents a message store which is used by the persistent implementations
  * 
  * @version $Revision: 1.5 $
  */
 public interface ReferenceStore extends MessageStore {
 
-	public class ReferenceData {
-		long expiration;
-		int fileId;
-		int offset;
-		
-		public long getExpiration() {
-			return expiration;
-		}
-		public void setExpiration(long expiration) {
-			this.expiration = expiration;
-		}
-		public int getFileId() {
-			return fileId;
-		}
-		public void setFileId(int file) {
-			this.fileId = file;
-		}
-		public int getOffset() {
-			return offset;
-		}
-		public void setOffset(int offset) {
-			this.offset = offset;
-		}
-		
-		@Override
-		public String toString() {
-			return "ReferenceData fileId="+fileId+", offset="+offset+", expiration="+expiration;
-		}
-	}
-	
+    public class ReferenceData {
+        long expiration;
+        int fileId;
+        int offset;
+
+        public long getExpiration() {
+            return expiration;
+        }
+
+        public void setExpiration(long expiration) {
+            this.expiration = expiration;
+        }
+
+        public int getFileId() {
+            return fileId;
+        }
+
+        public void setFileId(int file) {
+            this.fileId = file;
+        }
+
+        public int getOffset() {
+            return offset;
+        }
+
+        public void setOffset(int offset) {
+            this.offset = offset;
+        }
+
+        @Override
+        public String toString() {
+            return "ReferenceData fileId=" + fileId + ", offset=" + offset + ", expiration=" + expiration;
+        }
+    }
+
     /**
      * Adds a message reference to the message store
      */
-    public void addMessageReference(ConnectionContext context, MessageId messageId, ReferenceData data) throws IOException;
+    public void addMessageReference(ConnectionContext context, MessageId messageId, ReferenceData data)
+        throws IOException;
 
     /**
-     * Looks up a message using either the String messageID or the messageNumber. Implementations are encouraged to fill
-     * in the missing key if its easy to do so.
+     * Looks up a message using either the String messageID or the
+     * messageNumber. Implementations are encouraged to fill in the missing key
+     * if its easy to do so.
      */
     public ReferenceData getMessageReference(MessageId identity) throws IOException;
-    
+
     /**
      * @return true if it supports external batch control
      */
     public boolean supportsExternalBatchControl();
-    
+
     public void setBatch(MessageId startAfter);
-    
+
 }

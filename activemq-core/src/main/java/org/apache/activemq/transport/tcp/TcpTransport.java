@@ -45,7 +45,7 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * An implementation of the {@link Transport} interface using raw tcp/ip
- *
+ * 
  * @version $Revision$
  */
 public class TcpTransport extends TransportThreadSupport implements Transport, Service, Runnable {
@@ -74,12 +74,11 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
 
     /**
      * Connect to a remote Node - e.g. a Broker
-     *
+     * 
      * @param wireFormat
      * @param socketFactory
      * @param remoteLocation
-     * @param localLocation  -
-     *                       e.g. local InetAddress and local port
+     * @param localLocation - e.g. local InetAddress and local port
      * @throws IOException
      * @throws UnknownHostException
      */
@@ -88,8 +87,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         this.socketFactory = socketFactory;
         try {
             this.socket = socketFactory.createSocket();
-        }
-        catch (SocketException e) {
+        } catch (SocketException e) {
             this.socket = null;
         }
         this.remoteLocation = remoteLocation;
@@ -97,10 +95,9 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         setDaemon(false);
     }
 
-
     /**
      * Initialize from a server Socket
-     *
+     * 
      * @param wireFormat
      * @param socket
      * @throws IOException
@@ -135,28 +132,25 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     public void run() {
         log.trace("TCP consumer thread starting");
         try {
-	        while (!isStopped()) {
-	            doRun();
-	        }
+            while (!isStopped()) {
+                doRun();
+            }
         } catch (IOException e) {
-        	stoppedLatch.get().countDown();
+            stoppedLatch.get().countDown();
             onException(e);
         } finally {
-        	stoppedLatch.get().countDown();
+            stoppedLatch.get().countDown();
         }
     }
 
-
-	protected void doRun() throws IOException {
-		try {
-		    Object command = readCommand();
-		    doConsume(command);
-		}
-		catch (SocketTimeoutException e) {
-		}
-		catch (InterruptedIOException e) {
-		}
-	}
+    protected void doRun() throws IOException {
+        try {
+            Object command = readCommand();
+            doConsume(command);
+        } catch (SocketTimeoutException e) {
+        } catch (InterruptedIOException e) {
+        }
+    }
 
     protected Object readCommand() throws IOException {
         return wireFormat.unmarshal(dataIn);
@@ -248,21 +242,20 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     public void setTcpNoDelay(Boolean tcpNoDelay) {
         this.tcpNoDelay = tcpNoDelay;
     }
-    
+
     /**
      * @return the ioBufferSize
      */
-    public int getIoBufferSize(){
+    public int getIoBufferSize() {
         return this.ioBufferSize;
     }
 
     /**
      * @param ioBufferSize the ioBufferSize to set
      */
-    public void setIoBufferSize(int ioBufferSize){
-        this.ioBufferSize=ioBufferSize;
+    public void setIoBufferSize(int ioBufferSize) {
+        this.ioBufferSize = ioBufferSize;
     }
-
 
     // Implementation methods
     // -------------------------------------------------------------------------
@@ -278,7 +271,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
 
     /**
      * Configures the socket for use
-     *
+     * 
      * @param sock
      * @throws SocketException
      */
@@ -290,8 +283,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         try {
             sock.setReceiveBufferSize(socketBufferSize);
             sock.setSendBufferSize(socketBufferSize);
-        }
-        catch (SocketException se) {
+        } catch (SocketException se) {
             log.warn("Cannot set socket buffer size = " + socketBufferSize);
             log.debug("Cannot set socket buffer size. Reason: " + se, se);
         }
@@ -340,20 +332,17 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
             if (remoteAddress != null) {
                 if (connectionTimeout >= 0) {
                     socket.connect(remoteAddress, connectionTimeout);
-                }
-                else {
+                } else {
                     socket.connect(remoteAddress);
                 }
             }
 
-        }
-        else {
+        } else {
             // For SSL sockets.. you can't create an unconnected socket :(
             // This means the timout option are not supported either.
             if (localAddress != null) {
                 socket = socketFactory.createSocket(remoteAddress.getAddress(), remoteAddress.getPort(), localAddress.getAddress(), localAddress.getPort());
-            }
-            else {
+            } else {
                 socket = socketFactory.createSocket(remoteAddress.getAddress(), remoteAddress.getPort());
             }
         }
@@ -362,7 +351,6 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         initializeStreams();
     }
 
-    
     protected void doStop(ServiceStopper stopper) throws Exception {
         if (log.isDebugEnabled()) {
             log.debug("Stopping transport " + this);
@@ -375,18 +363,17 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
             socket.close();
         }
     }
-    
-    
+
     /**
      * Override so that stop() blocks until the run thread is no longer running.
      */
     @Override
     public void stop() throws Exception {
-    	super.stop();
-    	CountDownLatch countDownLatch = stoppedLatch.get();
-    	if( countDownLatch!=null ) {
-    		countDownLatch.await();
-    	}
+        super.stop();
+        CountDownLatch countDownLatch = stoppedLatch.get();
+        if (countDownLatch != null) {
+            countDownLatch.await();
+        }
     }
 
     protected void initializeStreams() throws Exception {
@@ -416,7 +403,4 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         return null;
     }
 
-
-    
-  
 }

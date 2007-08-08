@@ -27,107 +27,110 @@ import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 
 /**
- * An implementation of {@link org.apache.activemq.store.MessageStore} which uses a JPS Container
+ * An implementation of {@link org.apache.activemq.store.MessageStore} which
+ * uses a JPS Container
  * 
  * @version $Revision: 1.7 $
  */
-public class KahaMessageStore implements MessageStore{
+public class KahaMessageStore implements MessageStore {
 
     protected final ActiveMQDestination destination;
-    protected final MapContainer<MessageId,Message> messageContainer;
-    protected StoreEntry batchEntry=null;
+    protected final MapContainer<MessageId, Message> messageContainer;
+    protected StoreEntry batchEntry = null;
 
-    public KahaMessageStore(MapContainer<MessageId,Message> container,ActiveMQDestination destination)
-            throws IOException{
-        this.messageContainer=container;
-        this.destination=destination;
+    public KahaMessageStore(MapContainer<MessageId, Message> container, ActiveMQDestination destination)
+        throws IOException {
+        this.messageContainer = container;
+        this.destination = destination;
     }
 
-    protected MessageId getMessageId(Object object){
+    protected MessageId getMessageId(Object object) {
         return ((Message)object).getMessageId();
     }
 
-    public Object getId(){
+    public Object getId() {
         return messageContainer.getId();
     }
 
-    public synchronized void addMessage(ConnectionContext context,Message message) throws IOException{
-        messageContainer.put(message.getMessageId(),message);
-        // TODO: we should do the following but it is not need if the message is being added within a persistence
+    public synchronized void addMessage(ConnectionContext context, Message message) throws IOException {
+        messageContainer.put(message.getMessageId(), message);
+        // TODO: we should do the following but it is not need if the message is
+        // being added within a persistence
         // transaction
-        // but since I can't tell if one is running right now.. I'll leave this out for now.
+        // but since I can't tell if one is running right now.. I'll leave this
+        // out for now.
         // if( message.isResponseRequired() ) {
         // messageContainer.force();
         // }
     }
 
-    public synchronized Message getMessage(MessageId identity) throws IOException{
-        Message result=messageContainer.get(identity);
+    public synchronized Message getMessage(MessageId identity) throws IOException {
+        Message result = messageContainer.get(identity);
         return result;
     }
 
-    protected boolean recoverMessage(MessageRecoveryListener listener,Message msg) throws Exception{
-        if(listener.hasSpace()){
+    protected boolean recoverMessage(MessageRecoveryListener listener, Message msg) throws Exception {
+        if (listener.hasSpace()) {
             listener.recoverMessage(msg);
             return true;
         }
         return false;
     }
 
-    public void removeMessage(ConnectionContext context,MessageAck ack) throws IOException{
+    public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
         removeMessage(ack.getLastMessageId());
     }
 
-    
-    
-    public synchronized void removeMessage(MessageId msgId) throws IOException{
-        StoreEntry entry=messageContainer.getEntry(msgId);
-        if(entry!=null){
+    public synchronized void removeMessage(MessageId msgId) throws IOException {
+        StoreEntry entry = messageContainer.getEntry(msgId);
+        if (entry != null) {
             messageContainer.remove(entry);
-            if(messageContainer.isEmpty()||(batchEntry!=null&&batchEntry.equals(entry))){
+            if (messageContainer.isEmpty() || (batchEntry != null && batchEntry.equals(entry))) {
                 resetBatching();
             }
         }
     }
 
-    public synchronized void recover(MessageRecoveryListener listener) throws Exception{
-        for(StoreEntry entry=messageContainer.getFirst();entry!=null;entry=messageContainer.getNext(entry)){
-            Message msg=(Message)messageContainer.getValue(entry);
-            if(!recoverMessage(listener,msg)) {
+    public synchronized void recover(MessageRecoveryListener listener) throws Exception {
+        for (StoreEntry entry = messageContainer.getFirst(); entry != null; entry = messageContainer
+            .getNext(entry)) {
+            Message msg = (Message)messageContainer.getValue(entry);
+            if (!recoverMessage(listener, msg)) {
                 break;
             }
         }
     }
 
-    public void start(){
+    public void start() {
     }
 
-    public void stop(){
+    public void stop() {
     }
 
-    public synchronized void removeAllMessages(ConnectionContext context) throws IOException{
+    public synchronized void removeAllMessages(ConnectionContext context) throws IOException {
         messageContainer.clear();
     }
 
-    public ActiveMQDestination getDestination(){
+    public ActiveMQDestination getDestination() {
         return destination;
     }
 
-    public synchronized void delete(){
+    public synchronized void delete() {
         messageContainer.clear();
     }
 
     /**
-     * @param usageManager The UsageManager that is controlling the destination's memory usage.
+     * @param usageManager The UsageManager that is controlling the
+     *                destination's memory usage.
      */
-    public void setUsageManager(UsageManager usageManager){
+    public void setUsageManager(UsageManager usageManager) {
     }
 
     /**
      * @return the number of messages held by this destination
      * @see org.apache.activemq.store.MessageStore#getMessageCount()
      */
-    public int getMessageCount(){
+    public int getMessageCount() {
         return messageContainer.size();
     }
 
@@ -137,7 +140,7 @@ public class KahaMessageStore implements MessageStore{
      * @throws Exception
      * @see org.apache.activemq.store.MessageStore#getPreviousMessageIdToDeliver(org.apache.activemq.command.MessageId)
      */
-    public MessageId getPreviousMessageIdToDeliver(MessageId id) throws Exception{
+    public MessageId getPreviousMessageIdToDeliver(MessageId id) throws Exception {
         return null;
     }
 
@@ -146,31 +149,32 @@ public class KahaMessageStore implements MessageStore{
      * @param maxReturned
      * @param listener
      * @throws Exception
-     * @see org.apache.activemq.store.MessageStore#recoverNextMessages(org.apache.activemq.command.MessageId, int,
-     *      org.apache.activemq.store.MessageRecoveryListener)
+     * @see org.apache.activemq.store.MessageStore#recoverNextMessages(org.apache.activemq.command.MessageId,
+     *      int, org.apache.activemq.store.MessageRecoveryListener)
      */
-    public synchronized void recoverNextMessages(int maxReturned,MessageRecoveryListener listener) throws Exception{
-        StoreEntry entry=batchEntry;
-        if(entry==null){
-            entry=messageContainer.getFirst();
-        }else{
-            entry=messageContainer.refresh(entry);
-            entry=messageContainer.getNext(entry);
-            if(entry==null){
-                batchEntry=null;
+    public synchronized void recoverNextMessages(int maxReturned, MessageRecoveryListener listener)
+        throws Exception {
+        StoreEntry entry = batchEntry;
+        if (entry == null) {
+            entry = messageContainer.getFirst();
+        } else {
+            entry = messageContainer.refresh(entry);
+            entry = messageContainer.getNext(entry);
+            if (entry == null) {
+                batchEntry = null;
             }
         }
-        if(entry!=null){
-            int count=0;
-            do{
-                Message msg=messageContainer.getValue(entry);
-                if(msg!=null){
-                    recoverMessage(listener,msg);
+        if (entry != null) {
+            int count = 0;
+            do {
+                Message msg = messageContainer.getValue(entry);
+                if (msg != null) {
+                    recoverMessage(listener, msg);
                     count++;
                 }
-                batchEntry=entry;
-                entry=messageContainer.getNext(entry);
-            }while(entry!=null&&count<maxReturned&&listener.hasSpace());
+                batchEntry = entry;
+                entry = messageContainer.getNext(entry);
+            } while (entry != null && count < maxReturned && listener.hasSpace());
         }
     }
 
@@ -178,14 +182,14 @@ public class KahaMessageStore implements MessageStore{
      * @param nextToDispatch
      * @see org.apache.activemq.store.MessageStore#resetBatching(org.apache.activemq.command.MessageId)
      */
-    public synchronized void resetBatching(){
-        batchEntry=null;
+    public synchronized void resetBatching() {
+        batchEntry = null;
     }
 
     /**
      * @return true if the store supports cursors
      */
-    public boolean isSupportForCursors(){
+    public boolean isSupportForCursors() {
         return true;
     }
 }

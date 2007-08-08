@@ -30,85 +30,88 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.network.NetworkTestSupport;
 
 public class FailoverConsumerTest extends NetworkTestSupport {
-    
+
     private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-            .getLog(FailoverConsumerTest.class);
-    
+        .getLog(FailoverConsumerTest.class);
+
     public static final int MSG_COUNT = 100;
-    
+
     public void testPublisherFailsOver() throws Exception {
-    	// Uncomment this if you want to use remote broker created by NetworkTestSupport.
-    	// But it doesn't work. See comments below.
-//        URI failoverURI = new URI("failover://"+remoteConnector.getServer().getConnectURI());
+        // Uncomment this if you want to use remote broker created by
+        // NetworkTestSupport.
+        // But it doesn't work. See comments below.
+        // URI failoverURI = new
+        // URI("failover://"+remoteConnector.getServer().getConnectURI());
         URI failoverURI = new URI("failover://tcp://localhost:61616");
 
-		ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(failoverURI);
-		ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
-		
-		// Prefetch size must be less than messages in the queue!!
-		prefetchPolicy.setQueuePrefetch(MSG_COUNT - 10);
-		factory.setPrefetchPolicy(prefetchPolicy);
-		Connection connection = factory.createConnection();
-		Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-		MessageProducer producer = session.createProducer(new ActiveMQQueue("Test"));
-		for (int idx = 0; idx < MSG_COUNT; ++idx) {
-			producer.send(session.createTextMessage("Test"));
-		}
-		producer.close();
-		session.close();
-		int count = 0;
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(failoverURI);
+        ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
 
-		Session consumerSession = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-		MessageConsumer consumer = consumerSession.createConsumer(new ActiveMQQueue("Test"));
-		connection.start();
-		Message msg = consumer.receive(3000);
-		
-		// restartRemoteBroker() doesn't work (you won't get received any messages
-		// after restart, javadoc says, that messages should be received though).
-		// So we must use external broker ant restart it manually.
-		log.info("You should restart remote broker now and press enter!");
-		System.in.read();
-//		Thread.sleep(20000);
-		restartRemoteBroker();
-		msg.acknowledge();
-		++count;
-		
-		for (int idx = 1; idx < MSG_COUNT; ++idx) {
-			msg = consumer.receive(3000);
-			if (msg == null) {
-				log.error("No messages received! Received:" + count);
-				break;
-			}
-			msg.acknowledge();
-			++count;
-		}
-		assertEquals(count, MSG_COUNT);
-		consumer.close();
-		consumerSession.close();
-		connection.close();
-		
-		connection = factory.createConnection();
-		consumerSession = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-		consumer = consumerSession.createConsumer(new ActiveMQQueue("Test"));
-		connection.start();
+        // Prefetch size must be less than messages in the queue!!
+        prefetchPolicy.setQueuePrefetch(MSG_COUNT - 10);
+        factory.setPrefetchPolicy(prefetchPolicy);
+        Connection connection = factory.createConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageProducer producer = session.createProducer(new ActiveMQQueue("Test"));
+        for (int idx = 0; idx < MSG_COUNT; ++idx) {
+            producer.send(session.createTextMessage("Test"));
+        }
+        producer.close();
+        session.close();
+        int count = 0;
 
-		count = 0;
-		do {
-			msg = consumer.receive(1000);
-			if (msg != null) {
-				msg.acknowledge();
-				++count;
-			}
-		}
-		while (msg != null);
-		
-		assertEquals(count, 0);
-		
-		consumer.close();
-		consumerSession.close();
-		connection.close();
+        Session consumerSession = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        MessageConsumer consumer = consumerSession.createConsumer(new ActiveMQQueue("Test"));
+        connection.start();
+        Message msg = consumer.receive(3000);
+
+        // restartRemoteBroker() doesn't work (you won't get received any
+        // messages
+        // after restart, javadoc says, that messages should be received
+        // though).
+        // So we must use external broker ant restart it manually.
+        log.info("You should restart remote broker now and press enter!");
+        System.in.read();
+        // Thread.sleep(20000);
+        restartRemoteBroker();
+        msg.acknowledge();
+        ++count;
+
+        for (int idx = 1; idx < MSG_COUNT; ++idx) {
+            msg = consumer.receive(3000);
+            if (msg == null) {
+                log.error("No messages received! Received:" + count);
+                break;
+            }
+            msg.acknowledge();
+            ++count;
+        }
+        assertEquals(count, MSG_COUNT);
+        consumer.close();
+        consumerSession.close();
+        connection.close();
+
+        connection = factory.createConnection();
+        consumerSession = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        consumer = consumerSession.createConsumer(new ActiveMQQueue("Test"));
+        connection.start();
+
+        count = 0;
+        do {
+            msg = consumer.receive(1000);
+            if (msg != null) {
+                msg.acknowledge();
+                ++count;
+            }
+        } while (msg != null);
+
+        assertEquals(count, 0);
+
+        consumer.close();
+        consumerSession.close();
+        connection.close();
     }
-    
+
     protected String getRemoteURI() {
         return "tcp://localhost:55555";
     }

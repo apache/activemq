@@ -27,7 +27,7 @@ import javax.jms.Session;
 /**
  * @version $Revision: 1.2 $
  */
-public class JmsAutoAckListenerTest extends TestSupport implements MessageListener{
+public class JmsAutoAckListenerTest extends TestSupport implements MessageListener {
 
     private Connection connection;
 
@@ -46,7 +46,7 @@ public class JmsAutoAckListenerTest extends TestSupport implements MessageListen
         }
         super.tearDown();
     }
-    
+
     /**
      * Tests if acknowleged messages are being consumed.
      * 
@@ -70,14 +70,11 @@ public class JmsAutoAckListenerTest extends TestSupport implements MessageListen
         Message msg = consumer.receive(1000);
         assertNull(msg);
 
-
         session.close();
-     }
+    }
 
-
-   public void onMessage(Message message){
+    public void onMessage(Message message) {
         assertNotNull(message);
 
-
-   }
+    }
 }

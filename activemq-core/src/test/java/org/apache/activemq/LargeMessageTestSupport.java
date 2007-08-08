@@ -41,8 +41,7 @@ import org.apache.activemq.util.IdGenerator;
  */
 public class LargeMessageTestSupport extends ClientTestSupport implements MessageListener {
 
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-        .getLog(LargeMessageTestSupport.class);
+    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(LargeMessageTestSupport.class);
 
     protected static final int LARGE_MESSAGE_SIZE = 128 * 1024;
     protected static final int MESSAGE_COUNT = 100;
@@ -97,7 +96,8 @@ public class LargeMessageTestSupport extends ClientTestSupport implements Messag
         }
 
         try {
-            Thread.sleep(1000);// allow the broker to start
+            // allow the broker to start
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             throw new JMSException(e.getMessage());
         }
@@ -185,8 +185,7 @@ public class LargeMessageTestSupport extends ClientTestSupport implements Messag
             }
         }
         log.info("Finished count = " + messageCount);
-        assertTrue("Not enough messages - expected " + MESSAGE_COUNT + " but got " + messageCount,
-                   messageCount.get() == MESSAGE_COUNT);
+        assertTrue("Not enough messages - expected " + MESSAGE_COUNT + " but got " + messageCount, messageCount.get() == MESSAGE_COUNT);
         assertTrue("received messages are not valid", validMessageConsumption);
         Thread.sleep(1000);
         log.info("FINAL count = " + messageCount);

@@ -32,125 +32,124 @@ import org.apache.activemq.util.DataByteArrayOutputStream;
  */
 public final class DataManagerFacade implements org.apache.activemq.kaha.impl.DataManager {
 
-	private static class StoreLocationFacade implements StoreLocation {
-		private final Location location;
+    private static class StoreLocationFacade implements StoreLocation {
+        private final Location location;
 
-		public StoreLocationFacade(Location location) {
-			this.location = location;
-		}
+        public StoreLocationFacade(Location location) {
+            this.location = location;
+        }
 
-		public int getFile() {
-			return location.getDataFileId();
-		}
+        public int getFile() {
+            return location.getDataFileId();
+        }
 
-		public long getOffset() {
-			return location.getOffset();
-		}
+        public long getOffset() {
+            return location.getOffset();
+        }
 
-		public int getSize() {
-			return location.getSize();
-		}
+        public int getSize() {
+            return location.getSize();
+        }
 
-		public Location getLocation() {
-			return location;
-		}
-	}
+        public Location getLocation() {
+            return location;
+        }
+    }
 
-	static private StoreLocation convertToStoreLocation(Location location) {
-		if(location==null)
-			return null;
-		return new StoreLocationFacade(location);
-	}
-	
-	static private Location convertFromStoreLocation(StoreLocation location) {
-		
-		if(location==null)
-			return null;
-		
-		if( location.getClass()== StoreLocationFacade.class )
-			return ((StoreLocationFacade)location).getLocation();
-		
-		Location l = new Location();
-		l.setOffset((int) location.getOffset());
-		l.setSize(location.getSize());
-		l.setDataFileId(location.getFile());
-		return l;
-	}
+    static private StoreLocation convertToStoreLocation(Location location) {
+        if (location == null)
+            return null;
+        return new StoreLocationFacade(location);
+    }
 
-	static final private ByteSequence FORCE_COMMAND = new ByteSequence(new byte[]{'F', 'O', 'R', 'C', 'E'});
-	
-	AsyncDataManager dataManager;
-	private final String name;
-	private Marshaller redoMarshaller;
-	
-	
-	public DataManagerFacade(AsyncDataManager dataManager, String name) {
-		this.dataManager=dataManager;
-		this.name = name;
-	}
-	
-	public Object readItem(Marshaller marshaller, StoreLocation location) throws IOException {
-		ByteSequence sequence = dataManager.read(convertFromStoreLocation(location));
-		DataByteArrayInputStream dataIn = new DataByteArrayInputStream(sequence);
+    static private Location convertFromStoreLocation(StoreLocation location) {
+
+        if (location == null)
+            return null;
+
+        if (location.getClass() == StoreLocationFacade.class)
+            return ((StoreLocationFacade)location).getLocation();
+
+        Location l = new Location();
+        l.setOffset((int)location.getOffset());
+        l.setSize(location.getSize());
+        l.setDataFileId(location.getFile());
+        return l;
+    }
+
+    static final private ByteSequence FORCE_COMMAND = new ByteSequence(new byte[] {'F', 'O', 'R', 'C', 'E'});
+
+    AsyncDataManager dataManager;
+    private final String name;
+    private Marshaller redoMarshaller;
+
+    public DataManagerFacade(AsyncDataManager dataManager, String name) {
+        this.dataManager = dataManager;
+        this.name = name;
+    }
+
+    public Object readItem(Marshaller marshaller, StoreLocation location) throws IOException {
+        ByteSequence sequence = dataManager.read(convertFromStoreLocation(location));
+        DataByteArrayInputStream dataIn = new DataByteArrayInputStream(sequence);
         return marshaller.readPayload(dataIn);
-	}
+    }
 
+    public StoreLocation storeDataItem(Marshaller marshaller, Object payload) throws IOException {
+        final DataByteArrayOutputStream buffer = new DataByteArrayOutputStream();
+        marshaller.writePayload(payload, buffer);
+        ByteSequence data = buffer.toByteSequence();
+        return convertToStoreLocation(dataManager.write(data, (byte)1, false));
+    }
 
-	public StoreLocation storeDataItem(Marshaller marshaller, Object payload) throws IOException {
-    	final DataByteArrayOutputStream buffer = new DataByteArrayOutputStream();
-        marshaller.writePayload(payload,buffer);	
-		ByteSequence data = buffer.toByteSequence();		
-		return convertToStoreLocation(dataManager.write(data, (byte)1, false));
-	}
+    public void force() throws IOException {
+        dataManager.write(FORCE_COMMAND, (byte)2, true);
+    }
 
+    public void updateItem(StoreLocation location, Marshaller marshaller, Object payload) throws IOException {
+        final DataByteArrayOutputStream buffer = new DataByteArrayOutputStream();
+        marshaller.writePayload(payload, buffer);
+        ByteSequence data = buffer.toByteSequence();
+        dataManager.update(convertFromStoreLocation(location), data, false);
+    }
 
-	public void force() throws IOException {
-		dataManager.write(FORCE_COMMAND, (byte)2, true);
-	}
+    public void close() throws IOException {
+        dataManager.close();
+    }
 
-	public void updateItem(StoreLocation location, Marshaller marshaller, Object payload) throws IOException {
-    	final DataByteArrayOutputStream buffer = new DataByteArrayOutputStream();
-        marshaller.writePayload(payload,buffer);	
-		ByteSequence data = buffer.toByteSequence();		
-		dataManager.update(convertFromStoreLocation(location), data, false);
-	}
-	
-	public void close() throws IOException {
-		dataManager.close();
-	}
+    public void consolidateDataFiles() throws IOException {
+        dataManager.consolidateDataFiles();
+    }
 
-	public void consolidateDataFiles() throws IOException {
-		dataManager.consolidateDataFiles();
-	}
+    public boolean delete() throws IOException {
+        return dataManager.delete();
+    }
 
-	public boolean delete() throws IOException {
-		return dataManager.delete();
-	}
- 	
-	public void addInterestInFile(int file) throws IOException {
-		dataManager.addInterestInFile(file);
-	}
-	public void removeInterestInFile(int file) throws IOException {
-		dataManager.removeInterestInFile(file);
-	}
+    public void addInterestInFile(int file) throws IOException {
+        dataManager.addInterestInFile(file);
+    }
 
-	public void recoverRedoItems(RedoListener listener) throws IOException {
-		throw new RuntimeException("Not Implemented..");
-	}
-	public StoreLocation storeRedoItem(Object payload) throws IOException {
-		throw new RuntimeException("Not Implemented..");
-	}
+    public void removeInterestInFile(int file) throws IOException {
+        dataManager.removeInterestInFile(file);
+    }
 
-	public Marshaller getRedoMarshaller() {
-		return redoMarshaller;
-	}	
-	public void setRedoMarshaller(Marshaller redoMarshaller) {
-		this.redoMarshaller = redoMarshaller;
-	}
+    public void recoverRedoItems(RedoListener listener) throws IOException {
+        throw new RuntimeException("Not Implemented..");
+    }
 
-	public String getName() {
-		return name;
-	}
+    public StoreLocation storeRedoItem(Object payload) throws IOException {
+        throw new RuntimeException("Not Implemented..");
+    }
 
-	
+    public Marshaller getRedoMarshaller() {
+        return redoMarshaller;
+    }
+
+    public void setRedoMarshaller(Marshaller redoMarshaller) {
+        this.redoMarshaller = redoMarshaller;
+    }
+
+    public String getName() {
+        return name;
+    }
+
 }

@@ -23,7 +23,7 @@ import javax.management.j2ee.statistics.CountStatistic;
 
 /**
  * A count statistic implementation
- *
+ * 
  * @version $Revision$
  */
 public class PollCountStatisticImpl extends StatisticImpl implements CountStatistic {
@@ -49,61 +49,63 @@ public class PollCountStatisticImpl extends StatisticImpl implements CountStatis
     }
 
     public void setParent(PollCountStatisticImpl parent) {
-        if( this.parent !=null ) {
+        if (this.parent != null) {
             this.parent.removeChild(this);
         }
         this.parent = parent;
-        if( this.parent !=null ) {
+        if (this.parent != null) {
             this.parent.addChild(this);
         }
     }
 
     synchronized private void removeChild(PollCountStatisticImpl child) {
-        if( children!=null )
+        if (children != null)
             children.remove(child);
     }
 
     synchronized private void addChild(PollCountStatisticImpl child) {
-        if( children==null )
+        if (children == null)
             children = new ArrayList();
         children.add(child);
     }
 
     synchronized public long getCount() {
-        if ( children == null )
+        if (children == null)
             return 0;
-        long count=0;
+        long count = 0;
         for (Iterator iter = children.iterator(); iter.hasNext();) {
-            PollCountStatisticImpl child = (PollCountStatisticImpl) iter.next();
+            PollCountStatisticImpl child = (PollCountStatisticImpl)iter.next();
             count += child.getCount();
         }
         return count;
     }
-    
+
     protected void appendFieldDescription(StringBuffer buffer) {
         buffer.append(" count: ");
         buffer.append(Long.toString(getCount()));
         super.appendFieldDescription(buffer);
     }
-    
+
     /**
-     * @return the average time period that elapses between counter increments since the last reset.
+     * @return the average time period that elapses between counter increments
+     *         since the last reset.
      */
     public double getPeriod() {
         double count = getCount();
-        if( count == 0 )
+        if (count == 0)
             return 0;
         double time = (System.currentTimeMillis() - getStartTime());
-        return (time/(count*1000.0));
+        return (time / (count * 1000.0));
     }
-    
+
     /**
-     * @return the number of times per second that the counter is incrementing since the last reset.
+     * @return the number of times per second that the counter is incrementing
+     *         since the last reset.
      */
     public double getFrequency() {
         double count = getCount();
         double time = (System.currentTimeMillis() - getStartTime());
-        return (count*1000.0/time);
+        return (count * 1000.0 / time);
     }
 
 }

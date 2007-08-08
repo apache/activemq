@@ -16,40 +16,29 @@
  */
 package org.apache.activemq.openwire.v1;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import org.apache.activemq.openwire.*;
-import org.apache.activemq.command.*;
-
+import org.apache.activemq.command.ActiveMQQueue;
 
 /**
- * Test case for the OpenWire marshalling for ActiveMQQueue
- *
- *
- * NOTE!: This file is auto generated - do not modify!
- *        if you need to make a change, please see the modify the groovy scripts in the
- *        under src/gram/script and then use maven openwire:generate to regenerate 
- *        this file.
- *
+ * Test case for the OpenWire marshalling for ActiveMQQueue NOTE!: This file is
+ * auto generated - do not modify! if you need to make a change, please see the
+ * modify the groovy scripts in the under src/gram/script and then use maven
+ * openwire:generate to regenerate this file.
+ * 
  * @version $Revision$
  */
 public class ActiveMQQueueTest extends ActiveMQDestinationTestSupport {
 
-
     public static ActiveMQQueueTest SINGLETON = new ActiveMQQueueTest();
 
     public Object createObject() throws Exception {
-    		ActiveMQQueue info = new ActiveMQQueue();
-    		populateObject(info);
-    		return info;
+        ActiveMQQueue info = new ActiveMQQueue();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		ActiveMQQueue info = (ActiveMQQueue) object;
+        super.populateObject(object);
+        ActiveMQQueue info = (ActiveMQQueue)object;
 
-            }
-        }
+    }
+}

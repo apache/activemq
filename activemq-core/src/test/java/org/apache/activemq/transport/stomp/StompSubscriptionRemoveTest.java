@@ -27,7 +27,6 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 
 import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -35,7 +34,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- *
+ * 
  * @version $Revision$
  */
 public class StompSubscriptionRemoveTest extends TestCase {
@@ -45,7 +44,7 @@ public class StompSubscriptionRemoveTest extends TestCase {
     private static final int STOMP_PORT = 61613;
 
     private StompConnection stompConnection = new StompConnection();
-    
+
     public void testRemoveSubscriber() throws Exception {
         BrokerService broker = new BrokerService();
         broker.setPersistent(false);
@@ -75,7 +74,7 @@ public class StompSubscriptionRemoveTest extends TestCase {
         stompConnection.receiveFrame();
         String frame = "SUBSCRIBE\n" + "destination:/queue/" + getDestinationName() + "\n" + "ack:client\n\n";
         stompConnection.sendFrame(frame);
-        
+
         int messagesCount = 0;
         int count = 0;
         while (count < 2) {
@@ -111,12 +110,11 @@ public class StompSubscriptionRemoveTest extends TestCase {
                 String messageId = getHeaderValue(receiveFrame, HEADER_MESSAGE_ID);
                 String ackmessage = "ACK\n" + HEADER_MESSAGE_ID + ":" + messageId.trim() + "\n\n";
                 stompConnection.sendFrame(ackmessage);
-                //Thread.sleep(1000);
+                // Thread.sleep(1000);
                 ++messagesCount;
                 ++count;
             }
-        }
-        catch (IOException ex) {
+        } catch (IOException ex) {
             ex.printStackTrace();
         }
 
@@ -127,7 +125,8 @@ public class StompSubscriptionRemoveTest extends TestCase {
         log.info("Total messages received: " + messagesCount);
         assertTrue("Messages received after connection loss: " + messagesCount, messagesCount >= 2000);
 
-        // The first ack messages has no chance complete, so we receiving more messages
+        // The first ack messages has no chance complete, so we receiving more
+        // messages
 
         // Don't know how to list subscriptions for the broker. Currently you
         // can check using JMX console. You'll see
@@ -140,28 +139,28 @@ public class StompSubscriptionRemoveTest extends TestCase {
 
     // These two methods could move to a utility class
     protected String getCommand(String frame) {
-    	return frame.substring(0, frame.indexOf('\n') + 1).trim();
+        return frame.substring(0, frame.indexOf('\n') + 1).trim();
     }
 
-    protected String getHeaderValue (String frame, String header) throws IOException {
+    protected String getHeaderValue(String frame, String header) throws IOException {
         DataInput input = new DataInputStream(new ByteArrayInputStream(frame.getBytes()));
         String line;
-        for (int idx = 0; /*forever, sort of*/; ++idx) {
+        for (int idx = 0; /* forever, sort of */; ++idx) {
             line = input.readLine();
             if (line == null) {
-            	// end of message, no headers
-            	return null;
-            } 
+                // end of message, no headers
+                return null;
+            }
             line = line.trim();
             if (line.length() == 0) {
-            	// start body, no headers from here on
-            	return null;
-            } 
-            if (idx > 0) {     // Ignore command line
-            	int pos = line.indexOf(':');
-            	if (header.equals(line.substring(0, pos))) {
-            		return line.substring(pos + 1).trim();
-            	}
+                // start body, no headers from here on
+                return null;
+            }
+            if (idx > 0) { // Ignore command line
+                int pos = line.indexOf(':');
+                if (header.equals(line.substring(0, pos))) {
+                    return line.substring(pos + 1).trim();
+                }
             }
         }
     }

@@ -8,35 +8,32 @@ import org.apache.activemq.kaha.impl.data.RedoListener;
 
 public interface DataManager {
 
-	String getName();
+    String getName();
 
-	Object readItem(Marshaller marshaller, StoreLocation item)
-			throws IOException;
+    Object readItem(Marshaller marshaller, StoreLocation item) throws IOException;
 
-	StoreLocation storeDataItem(Marshaller marshaller, Object payload)
-			throws IOException;
+    StoreLocation storeDataItem(Marshaller marshaller, Object payload) throws IOException;
 
-	StoreLocation storeRedoItem(Object payload) throws IOException;
+    StoreLocation storeRedoItem(Object payload) throws IOException;
 
-	void updateItem(StoreLocation location, Marshaller marshaller,
-			Object payload) throws IOException;
+    void updateItem(StoreLocation location, Marshaller marshaller, Object payload) throws IOException;
 
-	void recoverRedoItems(RedoListener listener) throws IOException;
+    void recoverRedoItems(RedoListener listener) throws IOException;
 
-	void close() throws IOException;
+    void close() throws IOException;
 
-	void force() throws IOException;
+    void force() throws IOException;
 
-	boolean delete() throws IOException;
+    boolean delete() throws IOException;
 
-	void addInterestInFile(int file) throws IOException;
+    void addInterestInFile(int file) throws IOException;
 
-	void removeInterestInFile(int file) throws IOException;
+    void removeInterestInFile(int file) throws IOException;
 
-	void consolidateDataFiles() throws IOException;
+    void consolidateDataFiles() throws IOException;
 
-	Marshaller getRedoMarshaller();
+    Marshaller getRedoMarshaller();
 
-	void setRedoMarshaller(Marshaller redoMarshaller);
+    void setRedoMarshaller(Marshaller redoMarshaller);
 
 }

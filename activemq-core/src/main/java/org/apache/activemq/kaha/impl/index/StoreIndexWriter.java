@@ -21,13 +21,14 @@ import java.io.RandomAccessFile;
 
 import org.apache.activemq.kaha.impl.DataManager;
 import org.apache.activemq.util.DataByteArrayOutputStream;
+
 /**
  * Optimized Store writer
  * 
  * @version $Revision: 1.1.1.1 $
  */
-class StoreIndexWriter{
-    
+class StoreIndexWriter {
+
     protected final DataByteArrayOutputStream dataOut = new DataByteArrayOutputStream();
     protected final RandomAccessFile file;
     protected final String name;
@@ -38,46 +39,46 @@ class StoreIndexWriter{
      * 
      * @param file
      */
-    StoreIndexWriter(RandomAccessFile file){
+    StoreIndexWriter(RandomAccessFile file) {
         this(file, null, null);
     }
 
     public StoreIndexWriter(RandomAccessFile file, String indexName, DataManager redoLog) {
-        this.file=file;
+        this.file = file;
         this.name = indexName;
         this.redoLog = redoLog;
     }
 
-    void storeItem(IndexItem indexItem) throws IOException{
-        
-        if( redoLog!=null ) {
+    void storeItem(IndexItem indexItem) throws IOException {
+
+        if (redoLog != null) {
             RedoStoreIndexItem redo = new RedoStoreIndexItem(name, indexItem.getOffset(), indexItem);
             redoLog.storeRedoItem(redo);
         }
-        
+
         dataOut.reset();
         indexItem.write(dataOut);
         file.seek(indexItem.getOffset());
-        file.write(dataOut.getData(),0,IndexItem.INDEX_SIZE);
+        file.write(dataOut.getData(), 0, IndexItem.INDEX_SIZE);
     }
-    
-    void updateIndexes(IndexItem indexItem) throws IOException{
-        if( redoLog!=null ) {
+
+    void updateIndexes(IndexItem indexItem) throws IOException {
+        if (redoLog != null) {
             RedoStoreIndexItem redo = new RedoStoreIndexItem(name, indexItem.getOffset(), indexItem);
             redoLog.storeRedoItem(redo);
         }
-        
+
         dataOut.reset();
         indexItem.updateIndexes(dataOut);
         file.seek(indexItem.getOffset());
-        file.write(dataOut.getData(),0,IndexItem.INDEXES_ONLY_SIZE);
+        file.write(dataOut.getData(), 0, IndexItem.INDEXES_ONLY_SIZE);
     }
 
     public void redoStoreItem(RedoStoreIndexItem redo) throws IOException {
         dataOut.reset();
         redo.getIndexItem().write(dataOut);
         file.seek(redo.getOffset());
-        file.write(dataOut.getData(),0,IndexItem.INDEX_SIZE);
+        file.write(dataOut.getData(), 0, IndexItem.INDEX_SIZE);
     }
-    
+
 }

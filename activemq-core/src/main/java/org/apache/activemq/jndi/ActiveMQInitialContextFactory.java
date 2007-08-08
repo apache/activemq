@@ -40,18 +40,19 @@ import org.apache.activemq.command.ActiveMQTopic;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * A factory of the ActiveMQ InitialContext which contains {@link ConnectionFactory}
- * instances as well as a child context called <i>destinations</i> which contain all of the
- * current active destinations, in child context depending on the QoS such as
- * transient or durable and queue or topic.
- *
+ * A factory of the ActiveMQ InitialContext which contains
+ * {@link ConnectionFactory} instances as well as a child context called
+ * <i>destinations</i> which contain all of the current active destinations, in
+ * child context depending on the QoS such as transient or durable and queue or
+ * topic.
+ * 
  * @version $Revision: 1.2 $
  */
 public class ActiveMQInitialContextFactory implements InitialContextFactory {
 
-    private static final String[] defaultConnectionFactoryNames = {
-        "ConnectionFactory", "QueueConnectionFactory", "TopicConnectionFactory"
-    };
+    private static final String[] defaultConnectionFactoryNames = {"ConnectionFactory",
+                                                                   "QueueConnectionFactory",
+                                                                   "TopicConnectionFactory"};
 
     private String connectionPrefix = "connection.";
     private String queuePrefix = "queue.";
@@ -62,34 +63,29 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
         Map data = new ConcurrentHashMap();
         String[] names = getConnectionFactoryNames(environment);
         for (int i = 0; i < names.length; i++) {
-            ActiveMQConnectionFactory factory =null;
+            ActiveMQConnectionFactory factory = null;
             String name = names[i];
 
-            try{
-             factory = createConnectionFactory(name, environment);
-            }catch(Exception e){
+            try {
+                factory = createConnectionFactory(name, environment);
+            } catch (Exception e) {
                 throw new NamingException("Invalid broker URL");
 
             }
-       /*     if( broker==null ) {
-                try {
-                    broker = factory.getEmbeddedBroker();
-                }
-                catch (JMSException e) {
-                    log.warn("Failed to get embedded broker", e);
-                }
-            }
-       */
-            data.put(name,factory);
+            /*
+             * if( broker==null ) { try { broker = factory.getEmbeddedBroker(); }
+             * catch (JMSException e) { log.warn("Failed to get embedded
+             * broker", e); } }
+             */
+            data.put(name, factory);
         }
 
         createQueues(data, environment);
         createTopics(data, environment);
         /*
-        if (broker != null) {
-            data.put("destinations", broker.getDestinationContext(environment));
-        }
-        */
+         * if (broker != null) { data.put("destinations",
+         * broker.getDestinationContext(environment)); }
+         */
         data.put("dynamicQueues", new LazyCreateContext() {
             private static final long serialVersionUID = 6503881346214855588L;
 
@@ -109,7 +105,7 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
     }
 
     // Properties
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     public String getTopicPrefix() {
         return topicPrefix;
     }
@@ -127,19 +123,20 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
     }
 
     // Implementation methods
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
     protected ReadOnlyContext createContext(Hashtable environment, Map data) {
         return new ReadOnlyContext(environment, data);
     }
 
-    protected ActiveMQConnectionFactory createConnectionFactory(String name, Hashtable environment)   throws URISyntaxException {
+    protected ActiveMQConnectionFactory createConnectionFactory(String name, Hashtable environment)
+        throws URISyntaxException {
         Hashtable temp = new Hashtable(environment);
-        String prefix = connectionPrefix+name+".";
+        String prefix = connectionPrefix + name + ".";
         for (Iterator iter = environment.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry) iter.next();
-            String key = (String) entry.getKey();
-            if( key.startsWith(prefix) ) {
+            Map.Entry entry = (Map.Entry)iter.next();
+            String key = (String)entry.getKey();
+            if (key.startsWith(prefix)) {
                 // Rename the key...
                 temp.remove(key);
                 key = key.substring(prefix.length());
@@ -150,10 +147,11 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
     }
 
     protected String[] getConnectionFactoryNames(Map environment) {
-        String factoryNames = (String) environment.get("connectionFactoryNames");
+        String factoryNames = (String)environment.get("connectionFactoryNames");
         if (factoryNames != null) {
             List list = new ArrayList();
-            for (StringTokenizer enumeration = new StringTokenizer(factoryNames, ","); enumeration.hasMoreTokens();) {
+            for (StringTokenizer enumeration = new StringTokenizer(factoryNames, ","); enumeration
+                .hasMoreTokens();) {
                 list.add(enumeration.nextToken().trim());
             }
             int size = list.size();
@@ -168,7 +166,7 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
 
     protected void createQueues(Map data, Hashtable environment) {
         for (Iterator iter = environment.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry) iter.next();
+            Map.Entry entry = (Map.Entry)iter.next();
             String key = entry.getKey().toString();
             if (key.startsWith(queuePrefix)) {
                 String jndiName = key.substring(queuePrefix.length());
@@ -179,7 +177,7 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
 
     protected void createTopics(Map data, Hashtable environment) {
         for (Iterator iter = environment.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry) iter.next();
+            Map.Entry entry = (Map.Entry)iter.next();
             String key = entry.getKey().toString();
             if (key.startsWith(topicPrefix)) {
                 String jndiName = key.substring(topicPrefix.length());
@@ -201,11 +199,13 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
     protected Topic createTopic(String name) {
         return new ActiveMQTopic(name);
     }
-	
+
     /**
-     * Factory method to create a new connection factory from the given environment
+     * Factory method to create a new connection factory from the given
+     * environment
      */
-    protected ActiveMQConnectionFactory createConnectionFactory(Hashtable environment) throws URISyntaxException {
+    protected ActiveMQConnectionFactory createConnectionFactory(Hashtable environment)
+        throws URISyntaxException {
         ActiveMQConnectionFactory answer = new ActiveMQConnectionFactory();
         Properties properties = new Properties();
         properties.putAll(environment);
@@ -216,10 +216,9 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
     public String getConnectionPrefix() {
         return connectionPrefix;
     }
-    
 
     public void setConnectionPrefix(String connectionPrefix) {
         this.connectionPrefix = connectionPrefix;
     }
-    
+
 }

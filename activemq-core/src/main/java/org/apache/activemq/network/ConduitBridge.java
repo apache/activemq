@@ -28,70 +28,74 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-
 /**
  * Consolidates subscriptions
  * 
  * @version $Revision: 1.1 $
  */
-public class ConduitBridge extends DemandForwardingBridge{
-    static final private Log log=LogFactory.getLog(ConduitBridge.class);
+public class ConduitBridge extends DemandForwardingBridge {
+    static final private Log log = LogFactory.getLog(ConduitBridge.class);
+
     /**
      * Constructor
+     * 
      * @param localBroker
      * @param remoteBroker
      */
-    public ConduitBridge(NetworkBridgeConfiguration configuration,Transport localBroker,Transport remoteBroker){
-        super(configuration,localBroker,remoteBroker);
+    public ConduitBridge(NetworkBridgeConfiguration configuration, Transport localBroker,
+                         Transport remoteBroker) {
+        super(configuration, localBroker, remoteBroker);
     }
-    
-    protected DemandSubscription createDemandSubscription(ConsumerInfo info) throws IOException{
-        
-        if (addToAlreadyInterestedConsumers(info)){
-            return null; //don't want this subscription added
+
+    protected DemandSubscription createDemandSubscription(ConsumerInfo info) throws IOException {
+
+        if (addToAlreadyInterestedConsumers(info)) {
+            return null; // don't want this subscription added
         }
         return doCreateDemandSubscription(info);
     }
-    
-    protected boolean addToAlreadyInterestedConsumers(ConsumerInfo info){
-    	    	
-    	if( info.getSelector()!=null )
-    		return false;
-    	
-        //search through existing subscriptions and see if we have a match
+
+    protected boolean addToAlreadyInterestedConsumers(ConsumerInfo info) {
+
+        if (info.getSelector() != null)
+            return false;
+
+        // search through existing subscriptions and see if we have a match
         boolean matched = false;
-        DestinationFilter filter=DestinationFilter.parseFilter(info.getDestination());
-        for (Iterator i = subscriptionMapByLocalId.values().iterator(); i.hasNext();){
+        DestinationFilter filter = DestinationFilter.parseFilter(info.getDestination());
+        for (Iterator i = subscriptionMapByLocalId.values().iterator(); i.hasNext();) {
             DemandSubscription ds = (DemandSubscription)i.next();
-            if (filter.matches(ds.getLocalInfo().getDestination())){
-                //add the interest in the subscription
-                //ds.add(ds.getRemoteInfo().getConsumerId());
+            if (filter.matches(ds.getLocalInfo().getDestination())) {
+                // add the interest in the subscription
+                // ds.add(ds.getRemoteInfo().getConsumerId());
                 ds.add(info.getConsumerId());
                 matched = true;
-                //continue - we want interest to any existing DemandSubscriptions
+                // continue - we want interest to any existing
+                // DemandSubscriptions
             }
         }
         return matched;
     }
-    
-    protected void removeDemandSubscription(ConsumerId id) throws IOException{
+
+    protected void removeDemandSubscription(ConsumerId id) throws IOException {
         List tmpList = new ArrayList();
-    
-        for (Iterator i = subscriptionMapByLocalId.values().iterator(); i.hasNext();){
+
+        for (Iterator i = subscriptionMapByLocalId.values().iterator(); i.hasNext();) {
             DemandSubscription ds = (DemandSubscription)i.next();
             ds.remove(id);
-            if (ds.isEmpty()){
+            if (ds.isEmpty()) {
                 tmpList.add(ds);
             }
         }
-        for (Iterator i = tmpList.iterator(); i.hasNext();){
-            DemandSubscription ds = (DemandSubscription) i.next();
+        for (Iterator i = tmpList.iterator(); i.hasNext();) {
+            DemandSubscription ds = (DemandSubscription)i.next();
             subscriptionMapByLocalId.remove(ds.getRemoteInfo().getConsumerId());
             removeSubscription(ds);
-            if(log.isTraceEnabled())
-                log.trace("removing sub on "+localBroker+" from "+remoteBrokerName+" :  "+ds.getRemoteInfo());
+            if (log.isTraceEnabled())
+                log.trace("removing sub on " + localBroker + " from " + remoteBrokerName + " :  "
+                          + ds.getRemoteInfo());
         }
-       
+
     }
 
 }

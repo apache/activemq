@@ -27,32 +27,37 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.MessageStore;
-import org.apache.activemq.store.TopicMessageStore;
 
 /**
- * 
  * @version $Revision: 1.12 $
  */
 public interface Destination extends Service {
 
     void addSubscription(ConnectionContext context, Subscription sub) throws Exception;
+
     void removeSubscription(ConnectionContext context, Subscription sub) throws Exception;
-    
+
     void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception;
+
     boolean lock(MessageReference node, LockOwner lockOwner);
+
     void acknowledge(ConnectionContext context, Subscription sub, final MessageAck ack, final MessageReference node) throws IOException;
-    
+
     void gc();
- 
+
     ActiveMQDestination getActiveMQDestination();
+
     UsageManager getUsageManager();
 
     void dispose(ConnectionContext context) throws IOException;
-    
+
     DestinationStatistics getDestinationStatistics();
+
     DeadLetterStrategy getDeadLetterStrategy();
-    
+
     public Message[] browse();
+
     public String getName();
-	public MessageStore getMessageStore();
+
+    public MessageStore getMessageStore();
 }

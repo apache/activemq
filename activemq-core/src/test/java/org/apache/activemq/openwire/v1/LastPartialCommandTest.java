@@ -16,40 +16,31 @@
  */
 package org.apache.activemq.openwire.v1;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import org.apache.activemq.openwire.*;
-import org.apache.activemq.command.*;
-
+import org.apache.activemq.command.LastPartialCommand;
 
 /**
  * Test case for the OpenWire marshalling for LastPartialCommand
- *
- *
- * NOTE!: This file is auto generated - do not modify!
- *        if you need to make a change, please see the modify the groovy scripts in the
- *        under src/gram/script and then use maven openwire:generate to regenerate 
- *        this file.
- *
+ * 
+ * 
+ * NOTE!: This file is auto generated - do not modify! if you need to make a
+ * change, please see the modify the groovy scripts in the under src/gram/script
+ * and then use maven openwire:generate to regenerate this file.
+ * 
  * @version $Revision$
  */
 public class LastPartialCommandTest extends PartialCommandTest {
 
-
     public static LastPartialCommandTest SINGLETON = new LastPartialCommandTest();
 
     public Object createObject() throws Exception {
-    		LastPartialCommand info = new LastPartialCommand();
-    		populateObject(info);
-    		return info;
+        LastPartialCommand info = new LastPartialCommand();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		LastPartialCommand info = (LastPartialCommand) object;
+        super.populateObject(object);
+        LastPartialCommand info = (LastPartialCommand)object;
 
-            }
-        }
+    }
+}

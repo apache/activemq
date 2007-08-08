@@ -24,103 +24,102 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 
 /**
- * Only used by the {@link QueueMessageReference#NULL_MESSAGE} 
+ * Only used by the {@link QueueMessageReference#NULL_MESSAGE}
  */
-final class NullMessageReference implements
-		QueueMessageReference {
+final class NullMessageReference implements QueueMessageReference {
 
-	private ActiveMQMessage message = new ActiveMQMessage();
-	private volatile int references;
-	
-	public void drop() {
-		throw new RuntimeException("not implemented");
-	}
+    private ActiveMQMessage message = new ActiveMQMessage();
+    private volatile int references;
 
-	public LockOwner getLockOwner() {
-		throw new RuntimeException("not implemented");
-	}
+    public void drop() {
+        throw new RuntimeException("not implemented");
+    }
 
-	public boolean isAcked() {
-		return false;
-	}
+    public LockOwner getLockOwner() {
+        throw new RuntimeException("not implemented");
+    }
 
-	public boolean isDropped() {
-		throw new RuntimeException("not implemented");
-	}
+    public boolean isAcked() {
+        return false;
+    }
 
-	public boolean lock(LockOwner subscription) {
-		return true;
-	}
+    public boolean isDropped() {
+        throw new RuntimeException("not implemented");
+    }
 
-	public void setAcked(boolean b) {
-		throw new RuntimeException("not implemented");
-	}
+    public boolean lock(LockOwner subscription) {
+        return true;
+    }
 
-	public void unlock() {
-	}
+    public void setAcked(boolean b) {
+        throw new RuntimeException("not implemented");
+    }
 
-	public int decrementReferenceCount() {
-		return --references;
-	}
+    public void unlock() {
+    }
 
-	public long getExpiration() {
-		throw new RuntimeException("not implemented");
-	}
+    public int decrementReferenceCount() {
+        return --references;
+    }
 
-	public String getGroupID() {
-		return null;
-	}
+    public long getExpiration() {
+        throw new RuntimeException("not implemented");
+    }
 
-	public int getGroupSequence() {
-		return 0;
-	}
+    public String getGroupID() {
+        return null;
+    }
 
-	public Message getMessage() throws IOException {
-		return message;
-	}
+    public int getGroupSequence() {
+        return 0;
+    }
 
-	public Message getMessageHardRef() {
-		throw new RuntimeException("not implemented");
-	}
+    public Message getMessage() throws IOException {
+        return message;
+    }
 
-	public MessageId getMessageId() {
-		return message.getMessageId();
-	}
+    public Message getMessageHardRef() {
+        throw new RuntimeException("not implemented");
+    }
 
-	public int getRedeliveryCounter() {
-		throw new RuntimeException("not implemented");
-	}
+    public MessageId getMessageId() {
+        return message.getMessageId();
+    }
 
-	public int getReferenceCount() {
-		return references;
-	}
+    public int getRedeliveryCounter() {
+        throw new RuntimeException("not implemented");
+    }
 
-	public Destination getRegionDestination() {
-		return null;
-	}
+    public int getReferenceCount() {
+        return references;
+    }
 
-	public int getSize() {
-		throw new RuntimeException("not implemented");
-	}
+    public Destination getRegionDestination() {
+        return null;
+    }
 
-	public ConsumerId getTargetConsumerId() {
-		throw new RuntimeException("not implemented");
-	}
+    public int getSize() {
+        throw new RuntimeException("not implemented");
+    }
 
-	public void incrementRedeliveryCounter() {
-		throw new RuntimeException("not implemented");
-	}
+    public ConsumerId getTargetConsumerId() {
+        throw new RuntimeException("not implemented");
+    }
 
-	public int incrementReferenceCount() {
-		return ++references;
-	}
+    public void incrementRedeliveryCounter() {
+        throw new RuntimeException("not implemented");
+    }
 
-	public boolean isExpired() {
-		throw new RuntimeException("not implemented");
-	}
+    public int incrementReferenceCount() {
+        return ++references;
+    }
 
-	public boolean isPersistent() {
-		throw new RuntimeException("not implemented");
-	}
+    public boolean isExpired() {
+        throw new RuntimeException("not implemented");
+    }
+
+    public boolean isPersistent() {
+        throw new RuntimeException("not implemented");
+    }
 
 }

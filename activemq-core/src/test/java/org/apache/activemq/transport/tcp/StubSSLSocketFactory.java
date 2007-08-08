@@ -20,33 +20,30 @@ package org.apache.activemq.transport.tcp;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
-import java.net.Socket;
 
 import javax.net.ssl.SSLServerSocketFactory;
 
 public class StubSSLSocketFactory extends SSLServerSocketFactory {
-    
+
     private final ServerSocket retServerSocket;
-    
+
     public StubSSLSocketFactory(ServerSocket returnServerSocket) {
         retServerSocket = returnServerSocket;
     }
-    
+
     public ServerSocket createServerSocket(int arg0) throws IOException {
         return retServerSocket;
     }
 
-    public ServerSocket createServerSocket(int arg0, int arg1)
-            throws IOException {
+    public ServerSocket createServerSocket(int arg0, int arg1) throws IOException {
         return retServerSocket;
     }
-    
-    public ServerSocket createServerSocket(int arg0, int arg1, InetAddress arg2)
-    throws IOException {
+
+    public ServerSocket createServerSocket(int arg0, int arg1, InetAddress arg2) throws IOException {
         return retServerSocket;
     }
-    
-    // --- Stubbed Methods --- 
+
+    // --- Stubbed Methods ---
 
     public String[] getDefaultCipherSuites() {
         return null;

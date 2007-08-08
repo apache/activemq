@@ -32,7 +32,6 @@ import javax.jms.TemporaryTopic;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 
-
 import org.apache.activemq.command.ActiveMQBytesMessage;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMapMessage;
@@ -46,65 +45,66 @@ import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 
 /**
- * A helper class for converting normal JMS interfaces into ActiveMQ specific ones.
+ * A helper class for converting normal JMS interfaces into ActiveMQ specific
+ * ones.
  * 
  * @version $Revision: 1.1 $
  */
 public class ActiveMQMessageTransformation {
 
-	/**
+    /**
      * Creates a an available JMS message from another provider.
-	 * 
-	 * @param destination -  Destination to be converted into ActiveMQ's implementation.
-	 * @return ActiveMQDestination - ActiveMQ's implementation of the destination.
-	 * @throws JMSException if an error occurs
-	 */
-	public static ActiveMQDestination transformDestination(Destination destination) throws JMSException {
+     * 
+     * @param destination - Destination to be converted into ActiveMQ's
+     *                implementation.
+     * @return ActiveMQDestination - ActiveMQ's implementation of the
+     *         destination.
+     * @throws JMSException if an error occurs
+     */
+    public static ActiveMQDestination transformDestination(Destination destination) throws JMSException {
         ActiveMQDestination activeMQDestination = null;
-        
+
         if (destination != null) {
             if (destination instanceof ActiveMQDestination) {
-            	return (ActiveMQDestination) destination;
-            	
-            }
-            else {
+                return (ActiveMQDestination)destination;
+
+            } else {
                 if (destination instanceof TemporaryQueue) {
-                	activeMQDestination = new ActiveMQTempQueue(((Queue) destination).getQueueName());
-                }
-                else if (destination instanceof TemporaryTopic) {
-                	activeMQDestination = new ActiveMQTempTopic(((Topic) destination).getTopicName());
-                }
-                else if (destination instanceof Queue) {
-                	activeMQDestination = new ActiveMQQueue(((Queue) destination).getQueueName());
-                }
-                else if (destination instanceof Topic) {
-                	activeMQDestination = new ActiveMQTopic(((Topic) destination).getTopicName());
+                    activeMQDestination = new ActiveMQTempQueue(((Queue)destination).getQueueName());
+                } else if (destination instanceof TemporaryTopic) {
+                    activeMQDestination = new ActiveMQTempTopic(((Topic)destination).getTopicName());
+                } else if (destination instanceof Queue) {
+                    activeMQDestination = new ActiveMQQueue(((Queue)destination).getQueueName());
+                } else if (destination instanceof Topic) {
+                    activeMQDestination = new ActiveMQTopic(((Topic)destination).getTopicName());
                 }
             }
         }
 
-        return activeMQDestination;		
-	}
-	
-	
+        return activeMQDestination;
+    }
+
     /**
-     * Creates a fast shallow copy of the current ActiveMQMessage or creates a whole new
-     * message instance from an available JMS message from another provider.
-     *
+     * Creates a fast shallow copy of the current ActiveMQMessage or creates a
+     * whole new message instance from an available JMS message from another
+     * provider.
+     * 
      * @param message - Message to be converted into ActiveMQ's implementation.
-     * @param connection 
-     * @return ActiveMQMessage -  ActiveMQ's implementation object of the message.
+     * @param connection
+     * @return ActiveMQMessage - ActiveMQ's implementation object of the
+     *         message.
      * @throws JMSException if an error occurs
      */
-	public static final ActiveMQMessage transformMessage(Message message, ActiveMQConnection connection) throws JMSException {
+    public static final ActiveMQMessage transformMessage(Message message, ActiveMQConnection connection)
+        throws JMSException {
         if (message instanceof ActiveMQMessage) {
-            return (ActiveMQMessage) message;
+            return (ActiveMQMessage)message;
 
         } else {
             ActiveMQMessage activeMessage = null;
 
             if (message instanceof BytesMessage) {
-                BytesMessage bytesMsg = (BytesMessage) message;
+                BytesMessage bytesMsg = (BytesMessage)message;
                 bytesMsg.reset();
                 ActiveMQBytesMessage msg = new ActiveMQBytesMessage();
                 msg.setConnection(connection);
@@ -121,7 +121,7 @@ public class ActiveMQMessageTransformation {
 
                 activeMessage = msg;
             } else if (message instanceof MapMessage) {
-                MapMessage mapMsg = (MapMessage) message;
+                MapMessage mapMsg = (MapMessage)message;
                 ActiveMQMapMessage msg = new ActiveMQMapMessage();
                 msg.setConnection(connection);
                 Enumeration iter = mapMsg.getMapNames();
@@ -133,14 +133,14 @@ public class ActiveMQMessageTransformation {
 
                 activeMessage = msg;
             } else if (message instanceof ObjectMessage) {
-                ObjectMessage objMsg = (ObjectMessage) message;
+                ObjectMessage objMsg = (ObjectMessage)message;
                 ActiveMQObjectMessage msg = new ActiveMQObjectMessage();
                 msg.setConnection(connection);
                 msg.setObject(objMsg.getObject());
                 msg.storeContent();
                 activeMessage = msg;
             } else if (message instanceof StreamMessage) {
-                StreamMessage streamMessage = (StreamMessage) message;
+                StreamMessage streamMessage = (StreamMessage)message;
                 streamMessage.reset();
                 ActiveMQStreamMessage msg = new ActiveMQStreamMessage();
                 msg.setConnection(connection);
@@ -157,7 +157,7 @@ public class ActiveMQMessageTransformation {
 
                 activeMessage = msg;
             } else if (message instanceof TextMessage) {
-                TextMessage textMsg = (TextMessage) message;
+                TextMessage textMsg = (TextMessage)message;
                 ActiveMQTextMessage msg = new ActiveMQTextMessage();
                 msg.setConnection(connection);
                 msg.setText(textMsg.getText());
@@ -174,8 +174,9 @@ public class ActiveMQMessageTransformation {
     }
 
     /**
-     * Copies the standard JMS and user defined properties from the givem message to the specified message
-     *
+     * Copies the standard JMS and user defined properties from the givem
+     * message to the specified message
+     * 
      * @param fromMessage the message to take the properties from
      * @param toMesage the message to add the properties to
      * @throws JMSException

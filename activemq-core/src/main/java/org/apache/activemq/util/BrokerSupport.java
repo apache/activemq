@@ -24,7 +24,7 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.state.ProducerState;
 
 public class BrokerSupport {
-    
+
     /**
      * @param context
      * @param message
@@ -32,14 +32,16 @@ public class BrokerSupport {
      * @throws Exception
      */
     static public void resend(final ConnectionContext context, Message message, ActiveMQDestination deadLetterDestination) throws Exception {
-        if(message.getOriginalDestination()!=null)
+        if (message.getOriginalDestination() != null) {
             message.setOriginalDestination(message.getDestination());
-        if(message.getOriginalTransactionId()!=null)
-            message.setOriginalTransactionId(message.getTransactionId());                            
+        }
+        if (message.getOriginalTransactionId() != null) {
+            message.setOriginalTransactionId(message.getTransactionId());
+        }
         message.setDestination(deadLetterDestination);
         message.setTransactionId(null);
-        boolean originalFlowControl=context.isProducerFlowControl();
-        try{
+        boolean originalFlowControl = context.isProducerFlowControl();
+        try {
             context.setProducerFlowControl(false);
             ProducerInfo info = new ProducerInfo();
             ProducerState state = new ProducerState(info);
@@ -47,8 +49,8 @@ public class BrokerSupport {
             producerExchange.setProducerState(state);
             producerExchange.setMutable(true);
             producerExchange.setConnectionContext(context);
-            context.getBroker().send(producerExchange,message);
-        }finally{
+            context.getBroker().send(producerExchange, message);
+        } finally {
             context.setProducerFlowControl(originalFlowControl);
         }
     }

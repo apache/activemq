@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.network.jms;
 
-
 /**
  * Create an Outbound Queue Bridge
  * 
@@ -24,54 +23,56 @@ package org.apache.activemq.network.jms;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-public class OutboundQueueBridge extends QueueBridge{
-       
+public class OutboundQueueBridge extends QueueBridge {
+
     String outboundQueueName;
     String localQueueName;
+
     /**
      * Constructor that takes a foreign destination as an argument
+     * 
      * @param outboundQueueName
      */
-    public  OutboundQueueBridge(String  outboundQueueName){
+    public OutboundQueueBridge(String outboundQueueName) {
         this.outboundQueueName = outboundQueueName;
         this.localQueueName = outboundQueueName;
     }
-    
+
     /**
      * Default Contructor
      */
-    public  OutboundQueueBridge(){
+    public OutboundQueueBridge() {
     }
 
     /**
      * @return Returns the outboundQueueName.
      */
-    public String getOutboundQueueName(){
+    public String getOutboundQueueName() {
         return outboundQueueName;
     }
 
     /**
      * @param outboundQueueName The outboundQueueName to set.
      */
-    public void setOutboundQueueName(String outboundQueueName){
-        this.outboundQueueName=outboundQueueName;
-        if (this.localQueueName==null){
-            this.localQueueName=outboundQueueName;
+    public void setOutboundQueueName(String outboundQueueName) {
+        this.outboundQueueName = outboundQueueName;
+        if (this.localQueueName == null) {
+            this.localQueueName = outboundQueueName;
         }
     }
 
     /**
      * @return the localQueueName
      */
-    public String getLocalQueueName(){
+    public String getLocalQueueName() {
         return localQueueName;
     }
 
     /**
      * @param localQueueName the localQueueName to set
      */
-    public void setLocalQueueName(String localQueueName){
-        this.localQueueName=localQueueName;
+    public void setLocalQueueName(String localQueueName) {
+        this.localQueueName = localQueueName;
     }
-    
+
 }

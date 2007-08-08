@@ -39,37 +39,37 @@ public class FanoutTransportFactory extends TransportFactory {
     public Transport doConnect(URI location) throws IOException {
         try {
             Transport transport = createTransport(location);
-            transport =  new MutexTransport(transport);
+            transport = new MutexTransport(transport);
             transport = new ResponseCorrelator(transport);
             return transport;
         } catch (URISyntaxException e) {
-            throw new IOException("Invalid location: "+location);
+            throw new IOException("Invalid location: " + location);
         }
     }
-    
+
     public Transport doCompositeConnect(URI location) throws IOException {
         try {
             return createTransport(location);
         } catch (URISyntaxException e) {
-            throw new IOException("Invalid location: "+location);
+            throw new IOException("Invalid location: " + location);
         }
     }
 
     /**
      * @param location
-     * @return 
+     * @return
      * @throws IOException
-     * @throws URISyntaxException 
+     * @throws URISyntaxException
      */
     public Transport createTransport(URI location) throws IOException, URISyntaxException {
-        
+
         CompositeData compositData = URISupport.parseComposite(location);
         Map parameters = new HashMap(compositData.getParameters());
         DiscoveryTransport transport = new DiscoveryTransport(createTransport(parameters));
-        
+
         DiscoveryAgent discoveryAgent = DiscoveryAgentFactory.createDiscoveryAgent(compositData.getComponents()[0]);
         transport.setDiscoveryAgent(discoveryAgent);
-        
+
         return transport;
 
     }
@@ -80,8 +80,8 @@ public class FanoutTransportFactory extends TransportFactory {
         return transport;
     }
 
-    public TransportServer doBind(String brokerId,URI location) throws IOException {
-        throw new IOException("Invalid server URI: "+location);
+    public TransportServer doBind(String brokerId, URI location) throws IOException {
+        throw new IOException("Invalid server URI: " + location);
     }
 
 }

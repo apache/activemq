@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.network.jms;
 
-
 /**
  * Create an Outbound Topic Bridge
  * 
@@ -24,54 +23,56 @@ package org.apache.activemq.network.jms;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-public class OutboundTopicBridge extends TopicBridge{
-       
+public class OutboundTopicBridge extends TopicBridge {
+
     String outboundTopicName;
     String localTopicName;
+
     /**
      * Constructor that takes a foreign destination as an argument
+     * 
      * @param outboundTopicName
      */
-    public  OutboundTopicBridge(String  outboundTopicName){
+    public OutboundTopicBridge(String outboundTopicName) {
         this.outboundTopicName = outboundTopicName;
         this.localTopicName = outboundTopicName;
     }
-    
+
     /**
      * Default Contructor
      */
-    public  OutboundTopicBridge(){
+    public OutboundTopicBridge() {
     }
 
     /**
      * @return Returns the outboundTopicName.
      */
-    public String getOutboundTopicName(){
+    public String getOutboundTopicName() {
         return outboundTopicName;
     }
 
     /**
      * @param outboundTopicName The outboundTopicName to set.
      */
-    public void setOutboundTopicName(String outboundTopicName){
-        this.outboundTopicName=outboundTopicName;
-        if(this.localTopicName==null){
-            this.localTopicName=outboundTopicName;
+    public void setOutboundTopicName(String outboundTopicName) {
+        this.outboundTopicName = outboundTopicName;
+        if (this.localTopicName == null) {
+            this.localTopicName = outboundTopicName;
         }
     }
 
     /**
      * @return the localTopicName
      */
-    public String getLocalTopicName(){
+    public String getLocalTopicName() {
         return localTopicName;
     }
 
     /**
      * @param localTopicName the localTopicName to set
      */
-    public void setLocalTopicName(String localTopicName){
-        this.localTopicName=localTopicName;
+    public void setLocalTopicName(String localTopicName) {
+        this.localTopicName = localTopicName;
     }
-    
+
 }

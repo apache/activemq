@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.network.jms;
 
-
 /**
  * Create an Inbound Queue Bridge
  * 
@@ -24,38 +23,40 @@ package org.apache.activemq.network.jms;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-public class InboundQueueBridge extends QueueBridge{
-       
+public class InboundQueueBridge extends QueueBridge {
+
     String inboundQueueName;
     String localQueueName;
+
     /**
      * Constructor that takes a foriegn destination as an argument
+     * 
      * @param inboundQueueName
      */
-    public  InboundQueueBridge(String inboundQueueName){
-       this.inboundQueueName = inboundQueueName;
-       this.localQueueName = inboundQueueName;
+    public InboundQueueBridge(String inboundQueueName) {
+        this.inboundQueueName = inboundQueueName;
+        this.localQueueName = inboundQueueName;
     }
-    
+
     /**
      * Default Contructor
      */
-    public  InboundQueueBridge(){
+    public InboundQueueBridge() {
     }
 
     /**
      * @return Returns the inboundQueueName.
      */
-    public String getInboundQueueName(){
+    public String getInboundQueueName() {
         return inboundQueueName;
     }
 
     /**
      * @param inboundQueueName The inboundQueueName to set.
      */
-    public void setInboundQueueName(String inboundQueueName){
-        this.inboundQueueName=inboundQueueName;
-        if (this.localQueueName == null){
+    public void setInboundQueueName(String inboundQueueName) {
+        this.inboundQueueName = inboundQueueName;
+        if (this.localQueueName == null) {
             this.localQueueName = inboundQueueName;
         }
     }
@@ -63,15 +64,15 @@ public class InboundQueueBridge extends QueueBridge{
     /**
      * @return the localQueueName
      */
-    public String getLocalQueueName(){
+    public String getLocalQueueName() {
         return localQueueName;
     }
 
     /**
      * @param localQueueName the localQueueName to set
      */
-    public void setLocalQueueName(String localQueueName){
-        this.localQueueName=localQueueName;
+    public void setLocalQueueName(String localQueueName) {
+        this.localQueueName = localQueueName;
     }
-    
+
 }

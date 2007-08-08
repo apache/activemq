@@ -22,15 +22,16 @@ package org.apache.activemq.command;
  * @version $Revision$
  */
 public class DataResponse extends Response {
-    
+
     DataStructure data;
-    
-    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.DATA_RESPONSE;
-    
-    public DataResponse() {    
+
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.DATA_RESPONSE;
+
+    public DataResponse() {
     }
+
     public DataResponse(DataStructure data) {
-        this.data=data;
+        this.data = data;
     }
 
     public byte getDataStructureType() {
@@ -39,12 +40,13 @@ public class DataResponse extends Response {
 
     /**
      * @openwire:property version=1
-     */    
+     */
     public DataStructure getData() {
         return data;
     }
+
     public void setData(DataStructure data) {
         this.data = data;
     }
-    
+
 }

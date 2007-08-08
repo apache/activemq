@@ -25,29 +25,29 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.io.Resource;
 
 /**
- * Used to share a single broker even if you have multiple broker bean definitions.
- * 
- * A use case is where you have multiple web applications that want to start an embedded broker
- * but only the first one to deploy should actually start it.
+ * Used to share a single broker even if you have multiple broker bean
+ * definitions. A use case is where you have multiple web applications that want
+ * to start an embedded broker but only the first one to deploy should actually
+ * start it.
  * 
  * @version $Revision$
  */
 public class PooledBrokerFactoryBean implements FactoryBean, InitializingBean, DisposableBean {
 
     static final HashMap sharedBrokerMap = new HashMap();
-    
+
     private boolean start;
     private Resource config;
-    
+
     static class SharedBroker {
         BrokerFactoryBean factory;
         int refCount;
     }
-    
+
     public void afterPropertiesSet() throws Exception {
-        synchronized( sharedBrokerMap ) {
-            SharedBroker sharedBroker = (SharedBroker) sharedBrokerMap.get(config.getFilename());
-            if( sharedBroker == null ) {
+        synchronized (sharedBrokerMap) {
+            SharedBroker sharedBroker = (SharedBroker)sharedBrokerMap.get(config.getFilename());
+            if (sharedBroker == null) {
                 sharedBroker = new SharedBroker();
                 sharedBroker.factory = new BrokerFactoryBean();
                 sharedBroker.factory.setConfig(config);
@@ -60,11 +60,11 @@ public class PooledBrokerFactoryBean implements FactoryBean, InitializingBean, D
     }
 
     public void destroy() throws Exception {
-        synchronized( sharedBrokerMap ) {
-            SharedBroker sharedBroker = (SharedBroker) sharedBrokerMap.get(config.getFilename());
-            if( sharedBroker != null ) {
+        synchronized (sharedBrokerMap) {
+            SharedBroker sharedBroker = (SharedBroker)sharedBrokerMap.get(config.getFilename());
+            if (sharedBroker != null) {
                 sharedBroker.refCount--;
-                if( sharedBroker.refCount==0 ) {
+                if (sharedBroker.refCount == 0) {
                     sharedBroker.factory.destroy();
                     sharedBrokerMap.remove(config.getFilename());
                 }
@@ -77,9 +77,9 @@ public class PooledBrokerFactoryBean implements FactoryBean, InitializingBean, D
     }
 
     public Object getObject() throws Exception {
-        synchronized( sharedBrokerMap ) {
-            SharedBroker sharedBroker = (SharedBroker) sharedBrokerMap.get(config.getFilename());
-            if( sharedBroker != null ) {
+        synchronized (sharedBrokerMap) {
+            SharedBroker sharedBroker = (SharedBroker)sharedBrokerMap.get(config.getFilename());
+            if (sharedBroker != null) {
                 return sharedBroker.factory.getObject();
             }
         }
@@ -103,7 +103,7 @@ public class PooledBrokerFactoryBean implements FactoryBean, InitializingBean, D
     }
 
     public void setStart(boolean start) {
-        this.start=start;
+        this.start = start;
     }
-    
+
 }

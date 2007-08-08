@@ -33,110 +33,109 @@ import org.apache.activemq.command.MessageId;
 
 /**
  * Keeps track of the STOMP susbscription so that acking is correctly done.
- *  
- * @author <a href="http://hiramchirino.com">chirino</a> 
+ * 
+ * @author <a href="http://hiramchirino.com">chirino</a>
  */
 public class StompSubscription {
-    
+
     public static final String AUTO_ACK = Stomp.Headers.Subscribe.AckModeValues.AUTO;
     public static final String CLIENT_ACK = Stomp.Headers.Subscribe.AckModeValues.CLIENT;
 
-	private final ProtocolConverter protocolConverter;
+    private final ProtocolConverter protocolConverter;
     private final String subscriptionId;
     private final ConsumerInfo consumerInfo;
-    
-    private final LinkedHashMap dispatchedMessage = new LinkedHashMap();
-    
-    private String ackMode = AUTO_ACK;
-	private ActiveMQDestination destination;
 
-    
+    private final LinkedHashMap dispatchedMessage = new LinkedHashMap();
+
+    private String ackMode = AUTO_ACK;
+    private ActiveMQDestination destination;
+
     public StompSubscription(ProtocolConverter stompTransport, String subscriptionId, ConsumerInfo consumerInfo) {
         this.protocolConverter = stompTransport;
-		this.subscriptionId = subscriptionId;
+        this.subscriptionId = subscriptionId;
         this.consumerInfo = consumerInfo;
     }
 
     void onMessageDispatch(MessageDispatch md) throws IOException, JMSException {
 
-    	ActiveMQMessage message = (ActiveMQMessage) md.getMessage();
-    	
+        ActiveMQMessage message = (ActiveMQMessage)md.getMessage();
+
         if (ackMode == CLIENT_ACK) {
             synchronized (this) {
-            	dispatchedMessage.put(message.getJMSMessageID(), message.getMessageId());
+                dispatchedMessage.put(message.getJMSMessageID(), message.getMessageId());
             }
         } else if (ackMode == AUTO_ACK) {
             MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
             protocolConverter.getTransportFilter().sendToActiveMQ(ack);
         }
-        
+
         StompFrame command = protocolConverter.convertMessage(message);
-        
-        command.setAction(Stomp.Responses.MESSAGE);        
-        if (subscriptionId!=null) {
+
+        command.setAction(Stomp.Responses.MESSAGE);
+        if (subscriptionId != null) {
             command.getHeaders().put(Stomp.Headers.Message.SUBSCRIPTION, subscriptionId);
         }
-        
+
         protocolConverter.getTransportFilter().sendToStomp(command);
     }
-    
+
     synchronized MessageAck onStompMessageAck(String messageId) {
-    	
-		if( !dispatchedMessage.containsKey(messageId) ) {
-			return null;
-		}
-    	
+
+        if (!dispatchedMessage.containsKey(messageId)) {
+            return null;
+        }
+
         MessageAck ack = new MessageAck();
         ack.setDestination(consumerInfo.getDestination());
         ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
         ack.setConsumerId(consumerInfo.getConsumerId());
-        
-        int count=0;
+
+        int count = 0;
         for (Iterator iter = dispatchedMessage.entrySet().iterator(); iter.hasNext();) {
-            
-        	Map.Entry entry = (Entry) iter.next();
-            String id = (String) entry.getKey();
-            MessageId msgid = (MessageId) entry.getValue();
-            
-            if( ack.getFirstMessageId()==null )
+
+            Map.Entry entry = (Entry)iter.next();
+            String id = (String)entry.getKey();
+            MessageId msgid = (MessageId)entry.getValue();
+
+            if (ack.getFirstMessageId() == null)
                 ack.setFirstMessageId(msgid);
 
             iter.remove();
             count++;
 
-            if( id.equals(messageId)  ) {
+            if (id.equals(messageId)) {
                 ack.setLastMessageId(msgid);
                 break;
             }
-            
+
         }
-        
+
         ack.setMessageCount(count);
         return ack;
     }
 
-	public String getAckMode() {
-		return ackMode;
-	}
+    public String getAckMode() {
+        return ackMode;
+    }
 
-	public void setAckMode(String ackMode) {
-		this.ackMode = ackMode;
-	}
+    public void setAckMode(String ackMode) {
+        this.ackMode = ackMode;
+    }
 
-	public String getSubscriptionId() {
-		return subscriptionId;
-	}
+    public String getSubscriptionId() {
+        return subscriptionId;
+    }
 
-	public void setDestination(ActiveMQDestination destination) {
-		this.destination = destination;
-	}
+    public void setDestination(ActiveMQDestination destination) {
+        this.destination = destination;
+    }
 
-	public ActiveMQDestination getDestination() {
-		return destination;
-	}
+    public ActiveMQDestination getDestination() {
+        return destination;
+    }
 
-	public ConsumerInfo getConsumerInfo() {
-		return consumerInfo;
-	}
+    public ConsumerInfo getConsumerInfo() {
+        return consumerInfo;
+    }
 
 }

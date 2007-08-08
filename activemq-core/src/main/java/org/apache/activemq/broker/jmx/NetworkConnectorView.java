@@ -25,92 +25,92 @@ public class NetworkConnectorView implements NetworkConnectorViewMBean {
     public NetworkConnectorView(NetworkConnector connector) {
         this.connector = connector;
     }
-    
+
     public void start() throws Exception {
         connector.start();
     }
 
     public void stop() throws Exception {
-        connector.stop();       
+        connector.stop();
     }
 
-	public String getName() {
-		return connector.getName();
-	}
+    public String getName() {
+        return connector.getName();
+    }
 
-	public int getNetworkTTL() {
-		return connector.getNetworkTTL();
-	}
+    public int getNetworkTTL() {
+        return connector.getNetworkTTL();
+    }
 
-	public int getPrefetchSize() {
-		return connector.getPrefetchSize();
-	}
+    public int getPrefetchSize() {
+        return connector.getPrefetchSize();
+    }
 
-	public String getUserName() {
-		return connector.getUserName();
-	}
+    public String getUserName() {
+        return connector.getUserName();
+    }
 
-	public boolean isBridgeTempDestinations() {
-		return connector.isBridgeTempDestinations();
-	}
+    public boolean isBridgeTempDestinations() {
+        return connector.isBridgeTempDestinations();
+    }
 
-	public boolean isConduitSubscriptions() {
-		return connector.isConduitSubscriptions();
-	}
+    public boolean isConduitSubscriptions() {
+        return connector.isConduitSubscriptions();
+    }
 
-	public boolean isDecreaseNetworkConsumerPriority() {
-		return connector.isDecreaseNetworkConsumerPriority();
-	}
+    public boolean isDecreaseNetworkConsumerPriority() {
+        return connector.isDecreaseNetworkConsumerPriority();
+    }
 
-	public boolean isDispatchAsync() {
-		return connector.isDispatchAsync();
-	}
+    public boolean isDispatchAsync() {
+        return connector.isDispatchAsync();
+    }
 
-	public boolean isDynamicOnly() {
-		return connector.isDynamicOnly();
-	}
+    public boolean isDynamicOnly() {
+        return connector.isDynamicOnly();
+    }
 
-	public void setBridgeTempDestinations(boolean bridgeTempDestinations) {
-		connector.setBridgeTempDestinations(bridgeTempDestinations);
-	}
+    public void setBridgeTempDestinations(boolean bridgeTempDestinations) {
+        connector.setBridgeTempDestinations(bridgeTempDestinations);
+    }
 
-	public void setConduitSubscriptions(boolean conduitSubscriptions) {
-		connector.setConduitSubscriptions(conduitSubscriptions);
-	}
+    public void setConduitSubscriptions(boolean conduitSubscriptions) {
+        connector.setConduitSubscriptions(conduitSubscriptions);
+    }
 
-	public void setDispatchAsync(boolean dispatchAsync) {
-		connector.setDispatchAsync(dispatchAsync);
-	}
+    public void setDispatchAsync(boolean dispatchAsync) {
+        connector.setDispatchAsync(dispatchAsync);
+    }
 
-	public void setDynamicOnly(boolean dynamicOnly) {
-		connector.setDynamicOnly(dynamicOnly);
-	}
+    public void setDynamicOnly(boolean dynamicOnly) {
+        connector.setDynamicOnly(dynamicOnly);
+    }
 
-	public void setNetworkTTL(int networkTTL) {
-		connector.setNetworkTTL(networkTTL);
-	}
+    public void setNetworkTTL(int networkTTL) {
+        connector.setNetworkTTL(networkTTL);
+    }
 
-	public void setPassword(String password) {
-		connector.setPassword(password);
-	}
+    public void setPassword(String password) {
+        connector.setPassword(password);
+    }
 
-	public void setPrefetchSize(int prefetchSize) {
-		connector.setPrefetchSize(prefetchSize);
-	}
+    public void setPrefetchSize(int prefetchSize) {
+        connector.setPrefetchSize(prefetchSize);
+    }
 
-	public void setUserName(String userName) {
-		connector.setUserName(userName);
-	}
+    public void setUserName(String userName) {
+        connector.setUserName(userName);
+    }
 
-	public String getPassword() {
-		String pw = connector.getPassword();
-		// Hide the password for security reasons.
-		if( pw!= null ) 
-			pw = pw.replaceAll(".", "*");
-		return pw;
-	}
+    public String getPassword() {
+        String pw = connector.getPassword();
+        // Hide the password for security reasons.
+        if (pw != null)
+            pw = pw.replaceAll(".", "*");
+        return pw;
+    }
 
-	public void setDecreaseNetworkConsumerPriority(boolean decreaseNetworkConsumerPriority) {
-		connector.setDecreaseNetworkConsumerPriority(decreaseNetworkConsumerPriority);
-	}
+    public void setDecreaseNetworkConsumerPriority(boolean decreaseNetworkConsumerPriority) {
+        connector.setDecreaseNetworkConsumerPriority(decreaseNetworkConsumerPriority);
+    }
 }

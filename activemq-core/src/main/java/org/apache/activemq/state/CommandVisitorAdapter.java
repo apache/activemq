@@ -46,140 +46,141 @@ import org.apache.activemq.command.WireFormatInfo;
 
 public class CommandVisitorAdapter implements CommandVisitor {
 
-	public Response processAddConnection(ConnectionInfo info) throws Exception {
-		return null;
-	}
+    public Response processAddConnection(ConnectionInfo info) throws Exception {
+        return null;
+    }
 
-	public Response processAddConsumer(ConsumerInfo info) throws Exception {
-		return null;
-	}
+    public Response processAddConsumer(ConsumerInfo info) throws Exception {
+        return null;
+    }
 
-	public Response processAddDestination(DestinationInfo info) throws Exception {
-		return null;
-	}
+    public Response processAddDestination(DestinationInfo info) throws Exception {
+        return null;
+    }
 
-	public Response processAddProducer(ProducerInfo info) throws Exception {
-		return null;
-	}
+    public Response processAddProducer(ProducerInfo info) throws Exception {
+        return null;
+    }
 
-	public Response processAddSession(SessionInfo info) throws Exception {
-		return null;
-	}
+    public Response processAddSession(SessionInfo info) throws Exception {
+        return null;
+    }
 
-	public Response processBeginTransaction(TransactionInfo info) throws Exception {
-		return null;
-	}
+    public Response processBeginTransaction(TransactionInfo info) throws Exception {
+        return null;
+    }
 
-	public Response processBrokerInfo(BrokerInfo info) throws Exception {
-		return null;
-	}
+    public Response processBrokerInfo(BrokerInfo info) throws Exception {
+        return null;
+    }
 
-	public Response processCommitTransactionOnePhase(TransactionInfo info) throws Exception {
-		return null;
-	}
+    public Response processCommitTransactionOnePhase(TransactionInfo info) throws Exception {
+        return null;
+    }
 
-	public Response processCommitTransactionTwoPhase(TransactionInfo info) throws Exception {
-		return null;
-	}
+    public Response processCommitTransactionTwoPhase(TransactionInfo info) throws Exception {
+        return null;
+    }
 
-	public Response processEndTransaction(TransactionInfo info) throws Exception {
-		return null;
-	}
+    public Response processEndTransaction(TransactionInfo info) throws Exception {
+        return null;
+    }
 
-	public Response processFlush(FlushCommand command) throws Exception {
-		return null;
-	}
+    public Response processFlush(FlushCommand command) throws Exception {
+        return null;
+    }
 
-	public Response processForgetTransaction(TransactionInfo info) throws Exception {
-		return null;
-	}
+    public Response processForgetTransaction(TransactionInfo info) throws Exception {
+        return null;
+    }
 
-	public Response processKeepAlive(KeepAliveInfo info) throws Exception {
-		return null;
-	}
+    public Response processKeepAlive(KeepAliveInfo info) throws Exception {
+        return null;
+    }
 
-	public Response processMessage(Message send) throws Exception {
-		return null;
-	}
+    public Response processMessage(Message send) throws Exception {
+        return null;
+    }
 
-	public Response processMessageAck(MessageAck ack) throws Exception {
-		return null;
-	}
+    public Response processMessageAck(MessageAck ack) throws Exception {
+        return null;
+    }
 
-	public Response processMessageDispatchNotification(MessageDispatchNotification notification) throws Exception {
-		return null;
-	}
+    public Response processMessageDispatchNotification(MessageDispatchNotification notification)
+        throws Exception {
+        return null;
+    }
 
-	public Response processMessagePull(MessagePull pull) throws Exception {
-		return null;
-	}
+    public Response processMessagePull(MessagePull pull) throws Exception {
+        return null;
+    }
 
-	public Response processPrepareTransaction(TransactionInfo info) throws Exception {
-		return null;
-	}
+    public Response processPrepareTransaction(TransactionInfo info) throws Exception {
+        return null;
+    }
 
-	public Response processProducerAck(ProducerAck ack) throws Exception {
-		return null;
-	}
+    public Response processProducerAck(ProducerAck ack) throws Exception {
+        return null;
+    }
 
-	public Response processRecoverTransactions(TransactionInfo info) throws Exception {
-		return null;
-	}
+    public Response processRecoverTransactions(TransactionInfo info) throws Exception {
+        return null;
+    }
 
-	public Response processRemoveConnection(ConnectionId id) throws Exception {
-		return null;
-	}
+    public Response processRemoveConnection(ConnectionId id) throws Exception {
+        return null;
+    }
 
-	public Response processRemoveConsumer(ConsumerId id) throws Exception {
-		return null;
-	}
+    public Response processRemoveConsumer(ConsumerId id) throws Exception {
+        return null;
+    }
 
-	public Response processRemoveDestination(DestinationInfo info) throws Exception {
-		return null;
-	}
+    public Response processRemoveDestination(DestinationInfo info) throws Exception {
+        return null;
+    }
 
-	public Response processRemoveProducer(ProducerId id) throws Exception {
-		return null;
-	}
+    public Response processRemoveProducer(ProducerId id) throws Exception {
+        return null;
+    }
 
-	public Response processRemoveSession(SessionId id) throws Exception {
-		return null;
-	}
+    public Response processRemoveSession(SessionId id) throws Exception {
+        return null;
+    }
 
-	public Response processRemoveSubscription(RemoveSubscriptionInfo info) throws Exception {
-		return null;
-	}
+    public Response processRemoveSubscription(RemoveSubscriptionInfo info) throws Exception {
+        return null;
+    }
 
-	public Response processRollbackTransaction(TransactionInfo info) throws Exception {
-		return null;
-	}
+    public Response processRollbackTransaction(TransactionInfo info) throws Exception {
+        return null;
+    }
 
-	public Response processShutdown(ShutdownInfo info) throws Exception {
-		return null;
-	}
+    public Response processShutdown(ShutdownInfo info) throws Exception {
+        return null;
+    }
 
-	public Response processWireFormat(WireFormatInfo info) throws Exception {
-		return null;
-	}
+    public Response processWireFormat(WireFormatInfo info) throws Exception {
+        return null;
+    }
 
-	public Response processMessageDispatch(MessageDispatch dispatch) throws Exception {
-		return null;
-	}
+    public Response processMessageDispatch(MessageDispatch dispatch) throws Exception {
+        return null;
+    }
 
-	public Response processControlCommand(ControlCommand command) throws Exception {
-		return null;
-	}
+    public Response processControlCommand(ControlCommand command) throws Exception {
+        return null;
+    }
 
-	public Response processConnectionControl(ConnectionControl control) throws Exception {
-		return null;
-	}
+    public Response processConnectionControl(ConnectionControl control) throws Exception {
+        return null;
+    }
 
-	public Response processConnectionError(ConnectionError error) throws Exception {
-		return null;
-	}
+    public Response processConnectionError(ConnectionError error) throws Exception {
+        return null;
+    }
 
-	public Response processConsumerControl(ConsumerControl control) throws Exception {
-		return null;
-	}
+    public Response processConsumerControl(ConsumerControl control) throws Exception {
+        return null;
+    }
 
 }

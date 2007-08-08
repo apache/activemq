@@ -16,21 +16,18 @@
  */
 package org.apache.activemq.transport;
 
-
-
 /**
  * @version $Revision$
  */
 public class QueueClusterTest extends TopicClusterTest {
-    
-    
-    protected void setUp() throws Exception{
-       topic = false;
-       super.setUp();
+
+    protected void setUp() throws Exception {
+        topic = false;
+        super.setUp();
     }
-    
-    protected int expectedReceiveCount(){
+
+    protected int expectedReceiveCount() {
         return MESSAGE_COUNT * NUMBER_IN_CLUSTER;
     }
-    
+
 }

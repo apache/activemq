@@ -19,10 +19,9 @@ package org.apache.activemq.util;
 import java.io.IOException;
 import java.io.InputStream;
 
-
 /**
- * Very similar to the java.io.ByteArrayInputStream but this version 
- * is not thread safe.
+ * Very similar to the java.io.ByteArrayInputStream but this version is not
+ * thread safe.
  */
 public class ByteArrayInputStream extends InputStream {
 
@@ -34,19 +33,19 @@ public class ByteArrayInputStream extends InputStream {
     public ByteArrayInputStream(byte data[]) {
         this(data, 0, data.length);
     }
-    
+
     public ByteArrayInputStream(ByteSequence sequence) {
         this(sequence.getData(), sequence.getOffset(), sequence.getLength());
     }
 
     public ByteArrayInputStream(byte data[], int offset, int size) {
         this.buffer = data;
-        this.mark= this.pos = offset;        
-        this.limit = offset+size;
+        this.mark = this.pos = offset;
+        this.limit = offset + size;
     }
-    
+
     public int read() throws IOException {
-        if( pos < limit )
+        if (pos < limit)
             return buffer[pos++] & 0xff;
         else
             return -1;
@@ -55,10 +54,10 @@ public class ByteArrayInputStream extends InputStream {
     public int read(byte[] b) throws IOException {
         return read(b, 0, b.length);
     }
-    
+
     public int read(byte b[], int off, int len) {
         if (pos < limit) {
-            len = Math.min(len, limit-pos);
+            len = Math.min(len, limit - pos);
             if (len > 0) {
                 System.arraycopy(buffer, pos, b, off, len);
                 pos += len;
@@ -71,7 +70,7 @@ public class ByteArrayInputStream extends InputStream {
 
     public long skip(long len) throws IOException {
         if (pos < limit) {
-            len = Math.min(len, limit-pos);
+            len = Math.min(len, limit - pos);
             if (len > 0) {
                 pos += len;
             }
@@ -80,7 +79,7 @@ public class ByteArrayInputStream extends InputStream {
             return -1;
         }
     }
-    
+
     public int available() {
         return limit - pos;
     }
@@ -88,11 +87,11 @@ public class ByteArrayInputStream extends InputStream {
     public boolean markSupported() {
         return true;
     }
-    
+
     public void mark(int markpos) {
         mark = pos;
     }
-    
+
     public void reset() {
         pos = mark;
     }

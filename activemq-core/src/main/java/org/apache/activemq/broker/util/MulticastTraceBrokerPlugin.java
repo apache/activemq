@@ -23,7 +23,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 /**
- * A Broker interceptor which allows you to trace all operations to a Multicast socket.
+ * A Broker interceptor which allows you to trace all operations to a Multicast
+ * socket.
  * 
  * @org.apache.xbean.XBean
  * 
@@ -31,30 +32,30 @@ import java.net.URISyntaxException;
  */
 public class MulticastTraceBrokerPlugin extends UDPTraceBrokerPlugin {
 
-	private int timeToLive = 1;
-	
-	public MulticastTraceBrokerPlugin() {
-		try {
-			destination = new URI("multicast://224.1.2.3:61616");
-		} catch (URISyntaxException wontHappen) {
-		}
-	}
-	
-	protected DatagramSocket createSocket() throws IOException {
+    private int timeToLive = 1;
+
+    public MulticastTraceBrokerPlugin() {
+        try {
+            destination = new URI("multicast://224.1.2.3:61616");
+        } catch (URISyntaxException wontHappen) {
+        }
+    }
+
+    protected DatagramSocket createSocket() throws IOException {
         MulticastSocket s = new MulticastSocket();
-		s.setSendBufferSize(maxTraceDatagramSize);
-		s.setBroadcast(broadcast);
+        s.setSendBufferSize(maxTraceDatagramSize);
+        s.setBroadcast(broadcast);
         s.setLoopbackMode(true);
         s.setTimeToLive(timeToLive);
         return s;
-	}
+    }
 
-	public int getTimeToLive() {
-		return timeToLive;
-	}
+    public int getTimeToLive() {
+        return timeToLive;
+    }
 
-	public void setTimeToLive(int timeToLive) {
-		this.timeToLive = timeToLive;
-	}
+    public void setTimeToLive(int timeToLive) {
+        this.timeToLive = timeToLive;
+    }
 
 }

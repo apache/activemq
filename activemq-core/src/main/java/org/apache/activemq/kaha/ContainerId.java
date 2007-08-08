@@ -20,77 +20,77 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+
 /**
  * Used by RootContainers
  * 
  * @version $Revision: 1.1.1.1 $
  */
-public class ContainerId implements Externalizable{
-    private static final long serialVersionUID=-8883779541021821943L;
+public class ContainerId implements Externalizable {
+    private static final long serialVersionUID = -8883779541021821943L;
     private Object key;
     private String dataContainerName;
 
     public ContainerId() {
     }
-    
-    public ContainerId(Object key,String dataContainerName) {
-        this.key=key;
-        this.dataContainerName=dataContainerName;
+
+    public ContainerId(Object key, String dataContainerName) {
+        this.key = key;
+        this.dataContainerName = dataContainerName;
     }
-    
-    
+
     /**
      * @return Returns the dataContainerPrefix.
      */
-    public String getDataContainerName(){
+    public String getDataContainerName() {
         return dataContainerName;
     }
 
     /**
      * @param dataContainerName The dataContainerPrefix to set.
      */
-    public void setDataContainerName(String dataContainerName){
-        this.dataContainerName=dataContainerName;
+    public void setDataContainerName(String dataContainerName) {
+        this.dataContainerName = dataContainerName;
     }
 
     /**
      * @return Returns the key.
      */
-    public Object getKey(){
+    public Object getKey() {
         return key;
     }
 
     /**
      * @param key The key to set.
      */
-    public void setKey(Object key){
-        this.key=key;
+    public void setKey(Object key) {
+        this.key = key;
     }
-    
-    public int hashCode(){
+
+    public int hashCode() {
         return key.hashCode();
     }
-    
-    public boolean equals(Object obj){
+
+    public boolean equals(Object obj) {
         boolean result = false;
-        if (obj != null && obj instanceof ContainerId){
-            ContainerId other = (ContainerId) obj;
+        if (obj != null && obj instanceof ContainerId) {
+            ContainerId other = (ContainerId)obj;
             result = other.key.equals(this.key);
         }
         return result;
     }
 
-    public void writeExternal(ObjectOutput out) throws IOException{
+    public void writeExternal(ObjectOutput out) throws IOException {
         out.writeUTF(getDataContainerName());
         out.writeObject(key);
     }
 
-    public void readExternal(ObjectInput in) throws IOException,ClassNotFoundException{
-        dataContainerName=in.readUTF();
-        key=in.readObject();
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        dataContainerName = in.readUTF();
+        key = in.readObject();
     }
-    
-    public String toString(){
-        return "CID{"+dataContainerName + ":" + key + "}";
+
+    public String toString() {
+        return "CID{" + dataContainerName + ":" + key + "}";
     }
 }

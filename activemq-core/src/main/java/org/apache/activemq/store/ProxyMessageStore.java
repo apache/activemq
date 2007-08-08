@@ -31,11 +31,11 @@ import org.apache.activemq.memory.UsageManager;
 public class ProxyMessageStore implements MessageStore {
 
     final MessageStore delegate;
-    
+
     public ProxyMessageStore(MessageStore delegate) {
         this.delegate = delegate;
     }
-    
+
     public MessageStore getDelegate() {
         return delegate;
     }
@@ -43,24 +43,31 @@ public class ProxyMessageStore implements MessageStore {
     public void addMessage(ConnectionContext context, Message message) throws IOException {
         delegate.addMessage(context, message);
     }
+
     public Message getMessage(MessageId identity) throws IOException {
         return delegate.getMessage(identity);
     }
+
     public void recover(MessageRecoveryListener listener) throws Exception {
         delegate.recover(listener);
     }
+
     public void removeAllMessages(ConnectionContext context) throws IOException {
         delegate.removeAllMessages(context);
     }
+
     public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
         delegate.removeMessage(context, ack);
     }
+
     public void start() throws Exception {
         delegate.start();
-    }    
+    }
+
     public void stop() throws Exception {
         delegate.stop();
     }
+
     public ActiveMQDestination getDestination() {
         return delegate.getDestination();
     }
@@ -69,19 +76,17 @@ public class ProxyMessageStore implements MessageStore {
         delegate.setUsageManager(usageManager);
     }
 
- 
-    public int getMessageCount() throws IOException{
+    public int getMessageCount() throws IOException {
         return delegate.getMessageCount();
     }
 
+    public void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception {
+        delegate.recoverNextMessages(maxReturned, listener);
 
-    public void recoverNextMessages(int maxReturned,MessageRecoveryListener listener) throws Exception{
-       delegate.recoverNextMessages(maxReturned,listener);
-        
     }
 
-    public void resetBatching(){
+    public void resetBatching() {
         delegate.resetBatching();
-        
+
     }
 }

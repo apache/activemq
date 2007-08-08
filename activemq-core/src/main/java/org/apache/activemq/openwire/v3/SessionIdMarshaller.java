@@ -24,29 +24,27 @@ import java.io.IOException;
 import org.apache.activemq.openwire.*;
 import org.apache.activemq.command.*;
 
-
-
 /**
  * Marshalling code for Open Wire Format for SessionIdMarshaller
- *
- *
- * NOTE!: This file is auto generated - do not modify!
- *        if you need to make a change, please see the modify the groovy scripts in the
- *        under src/gram/script and then use maven openwire:generate to regenerate 
- *        this file.
- *
+ * 
+ * 
+ * NOTE!: This file is auto generated - do not modify! if you need to make a
+ * change, please see the modify the groovy scripts in the under src/gram/script
+ * and then use maven openwire:generate to regenerate this file.
+ * 
  * @version $Revision$
  */
 public class SessionIdMarshaller extends BaseDataStreamMarshaller {
 
     /**
      * Return the type of Data Structure we marshal
+     * 
      * @return short representation of the type data structure
      */
     public byte getDataStructureType() {
         return SessionId.DATA_STRUCTURE_TYPE;
     }
-    
+
     /**
      * @return a new object instance
      */
@@ -56,12 +54,13 @@ public class SessionIdMarshaller extends BaseDataStreamMarshaller {
 
     /**
      * Un-marshal an object instance from the data input stream
-     *
+     * 
      * @param o the object to un-marshal
      * @param dataIn the data input stream to build the object from
      * @throws IOException
      */
-    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInput dataIn, BooleanStream bs) throws IOException {
+    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInput dataIn, BooleanStream bs)
+        throws IOException {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         SessionId info = (SessionId)o;
@@ -69,7 +68,6 @@ public class SessionIdMarshaller extends BaseDataStreamMarshaller {
         info.setValue(tightUnmarshalLong(wireFormat, dataIn, bs));
 
     }
-
 
     /**
      * Write the booleans that this object uses to a BooleanStream
@@ -80,19 +78,20 @@ public class SessionIdMarshaller extends BaseDataStreamMarshaller {
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
         rc += tightMarshalString1(info.getConnectionId(), bs);
-        rc+=tightMarshalLong1(wireFormat, info.getValue(), bs);
+        rc += tightMarshalLong1(wireFormat, info.getValue(), bs);
 
         return rc + 0;
     }
 
     /**
      * Write a object instance to data output stream
-     *
+     * 
      * @param o the instance to be marshaled
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
      */
-    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutput dataOut, BooleanStream bs) throws IOException {
+    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutput dataOut, BooleanStream bs)
+        throws IOException {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         SessionId info = (SessionId)o;
@@ -103,7 +102,7 @@ public class SessionIdMarshaller extends BaseDataStreamMarshaller {
 
     /**
      * Un-marshal an object instance from the data input stream
-     *
+     * 
      * @param o the object to un-marshal
      * @param dataIn the data input stream to build the object from
      * @throws IOException
@@ -116,7 +115,6 @@ public class SessionIdMarshaller extends BaseDataStreamMarshaller {
         info.setValue(looseUnmarshalLong(wireFormat, dataIn));
 
     }
-
 
     /**
      * Write the booleans that this object uses to a BooleanStream

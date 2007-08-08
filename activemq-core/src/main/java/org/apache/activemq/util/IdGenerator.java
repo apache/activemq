@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 package org.apache.activemq.util;
+
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.util.logging.Level;
@@ -24,93 +25,95 @@ import java.util.logging.Logger;
  * Generator for Globally unique Strings.
  */
 
-public class IdGenerator{
+public class IdGenerator {
 
-	private static final Logger log = Logger.getLogger(IdGenerator.class.getName());
-	private static final String UNIQUE_STUB;
-	private static int instanceCount;
+    private static final Logger log = Logger.getLogger(IdGenerator.class.getName());
+    private static final String UNIQUE_STUB;
+    private static int instanceCount;
     private static String hostName;
-	private String seed;
-	private long sequence;
-	
-	static {
-		String stub = "";
-		boolean canAccessSystemProps = true;
-		try{
-			SecurityManager sm = System.getSecurityManager();
-			if(sm != null){
-				sm.checkPropertiesAccess();
-			}
-		}catch(SecurityException se){
-			canAccessSystemProps = false;
-		}
-		
-		if ( canAccessSystemProps) {
-			try {
-				hostName = InetAddress.getLocalHost().getHostName();
-				ServerSocket ss = new ServerSocket(0);
-				stub="-" + ss.getLocalPort() + "-" + System.currentTimeMillis() + "-";
-				Thread.sleep(100);
-				ss.close();
-			}catch(Exception ioe){
-				log.log(Level.WARNING, "could not generate unique stub",ioe);
-			}
-		}else{
-            hostName="localhost";
-			stub = "-1-" +System.currentTimeMillis() +"-";
-		}
-		UNIQUE_STUB = stub;
-	}
-    
+    private String seed;
+    private long sequence;
+
+    static {
+        String stub = "";
+        boolean canAccessSystemProps = true;
+        try {
+            SecurityManager sm = System.getSecurityManager();
+            if (sm != null) {
+                sm.checkPropertiesAccess();
+            }
+        } catch (SecurityException se) {
+            canAccessSystemProps = false;
+        }
+
+        if (canAccessSystemProps) {
+            try {
+                hostName = InetAddress.getLocalHost().getHostName();
+                ServerSocket ss = new ServerSocket(0);
+                stub = "-" + ss.getLocalPort() + "-" + System.currentTimeMillis() + "-";
+                Thread.sleep(100);
+                ss.close();
+            } catch (Exception ioe) {
+                log.log(Level.WARNING, "could not generate unique stub", ioe);
+            }
+        } else {
+            hostName = "localhost";
+            stub = "-1-" + System.currentTimeMillis() + "-";
+        }
+        UNIQUE_STUB = stub;
+    }
+
     /**
-     * As we have to find the hostname as a side-affect of generating
-     * a unique stub, we allow it's easy retrevial here
+     * As we have to find the hostname as a side-affect of generating a unique
+     * stub, we allow it's easy retrevial here
+     * 
      * @return the local host name
      */
-    
-    public static String getHostName(){
+
+    public static String getHostName() {
         return hostName;
     }
-	
-	/**
-	 * Construct an IdGenerator
-	 *
-	 */
-	
-	public IdGenerator(String prefix){
-		synchronized(UNIQUE_STUB){
-			this.seed = prefix + UNIQUE_STUB +(instanceCount++) +":";
-		}
-	}
-    
-    public IdGenerator(){
+
+    /**
+     * Construct an IdGenerator
+     */
+
+    public IdGenerator(String prefix) {
+        synchronized (UNIQUE_STUB) {
+            this.seed = prefix + UNIQUE_STUB + (instanceCount++) + ":";
+        }
+    }
+
+    public IdGenerator() {
         this("ID:" + hostName);
     }
-	
-	/**
-	 * Generate a unqiue id
-	 * @return a unique id
-	 */
-	
-	public synchronized String generateId(){
-		return this.seed + (this.sequence++);
-	}
-    
+
     /**
-     * Generate a unique ID - that is friendly for a URL or file system
+     * Generate a unqiue id
+     * 
      * @return a unique id
      */
-    public String generateSanitizedId(){
+
+    public synchronized String generateId() {
+        return this.seed + (this.sequence++);
+    }
+
+    /**
+     * Generate a unique ID - that is friendly for a URL or file system
+     * 
+     * @return a unique id
+     */
+    public String generateSanitizedId() {
         String result = generateId();
         result = result.replace(':', '-');
         result = result.replace('_', '-');
         result = result.replace('.', '-');
         return result;
     }
-    
+
     /**
      * From a generated id - return the seed (i.e. minus the count)
-     *
+     * 
      * @param id the generated identifer
      * @return the seed
      */
@@ -127,7 +130,7 @@ public class IdGenerator{
 
     /**
      * From a generated id - return the generator count
-     *
+     * 
      * @param id
      * @return the count
      */
@@ -146,7 +149,7 @@ public class IdGenerator{
 
     /**
      * Does a proper compare on the ids
-     *
+     * 
      * @param id1
      * @param id2
      * @return 0 if equal else a positive if id1 is > id2 ...
@@ -161,7 +164,7 @@ public class IdGenerator{
             if (result == 0) {
                 long count1 = IdGenerator.getSequenceFromId(id1);
                 long count2 = IdGenerator.getSequenceFromId(id2);
-                result = (int) (count1 - count2);
+                result = (int)(count1 - count2);
             }
         }
         return result;

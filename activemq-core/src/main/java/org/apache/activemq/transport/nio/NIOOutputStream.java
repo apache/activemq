@@ -25,24 +25,24 @@ import java.nio.channels.WritableByteChannel;
 
 /**
  * An optimized buffered outputstream for Tcp
- *
+ * 
  * @version $Revision: 1.1.1.1 $
  */
 
 public class NIOOutputStream extends OutputStream {
-	
-	private final static int BUFFER_SIZE = 8192;
 
-	private final WritableByteChannel out;
+    private final static int BUFFER_SIZE = 8192;
+
+    private final WritableByteChannel out;
     private final byte[] buffer;
-	private final ByteBuffer byteBuffer;
-    
+    private final ByteBuffer byteBuffer;
+
     private int count;
     private boolean closed;
 
     /**
      * Constructor
-     *
+     * 
      * @param out
      */
     public NIOOutputStream(WritableByteChannel out) {
@@ -50,16 +50,16 @@ public class NIOOutputStream extends OutputStream {
     }
 
     /**
-     * Creates a new buffered output stream to write data to the specified underlying output stream with the specified
-     * buffer size.
-     *
-     * @param out  the underlying output stream.
+     * Creates a new buffered output stream to write data to the specified
+     * underlying output stream with the specified buffer size.
+     * 
+     * @param out the underlying output stream.
      * @param size the buffer size.
      * @throws IllegalArgumentException if size <= 0.
      */
     public NIOOutputStream(WritableByteChannel out, int size) {
         this.out = out;
-		if (size <= 0) {
+        if (size <= 0) {
             throw new IllegalArgumentException("Buffer size <= 0");
         }
         buffer = new byte[size];
@@ -68,7 +68,7 @@ public class NIOOutputStream extends OutputStream {
 
     /**
      * write a byte on to the stream
-     *
+     * 
      * @param b - byte to write
      * @throws IOException
      */
@@ -77,14 +77,13 @@ public class NIOOutputStream extends OutputStream {
         if (availableBufferToWrite() < 1) {
             flush();
         }
-        buffer[count++] = (byte) b;
+        buffer[count++] = (byte)b;
     }
-
 
     /**
      * write a byte array to the stream
-     *
-     * @param b   the byte buffer
+     * 
+     * @param b the byte buffer
      * @param off the offset into the buffer
      * @param len the length of data to write
      * @throws IOException
@@ -97,23 +96,22 @@ public class NIOOutputStream extends OutputStream {
         if (buffer.length >= len) {
             System.arraycopy(b, off, buffer, count, len);
             count += len;
-        }
-        else {
-        	write( ByteBuffer.wrap(b, off, len));
+        } else {
+            write(ByteBuffer.wrap(b, off, len));
         }
     }
 
-	/**
-     * flush the data to the output stream
-     * This doesn't call flush on the underlying outputstream, because
-     * Tcp is particularly efficent at doing this itself ....
-     *
+    /**
+     * flush the data to the output stream This doesn't call flush on the
+     * underlying outputstream, because Tcp is particularly efficent at doing
+     * this itself ....
+     * 
      * @throws IOException
      */
     public void flush() throws IOException {
         if (count > 0 && out != null) {
-        	byteBuffer.position(0);
-        	byteBuffer.limit(count);
+            byteBuffer.position(0);
+            byteBuffer.limit(count);
             write(byteBuffer);
             count = 0;
         }
@@ -121,7 +119,7 @@ public class NIOOutputStream extends OutputStream {
 
     /**
      * close this stream
-     *
+     * 
      * @throws IOException
      */
     public void close() throws IOException {
@@ -129,10 +127,9 @@ public class NIOOutputStream extends OutputStream {
         closed = true;
     }
 
-
     /**
      * Checks that the stream has not been closed
-     *
+     * 
      * @throws IOException
      */
     protected void checkClosed() throws IOException {
@@ -147,35 +144,36 @@ public class NIOOutputStream extends OutputStream {
     private int availableBufferToWrite() {
         return buffer.length - count;
     }
-    
+
     protected void write(ByteBuffer data) throws IOException {
-        int remaining = data.remaining();        
-        int lastRemaining = remaining-1;
-        long delay=1;
-        while( remaining > 0 ) {
-        	
-	        // We may need to do a little bit of sleeping to avoid a busy loop.
-            // Slow down if no data was written out.. 
-	        if( remaining == lastRemaining ) {
-	            try {
+        int remaining = data.remaining();
+        int lastRemaining = remaining - 1;
+        long delay = 1;
+        while (remaining > 0) {
+
+            // We may need to do a little bit of sleeping to avoid a busy loop.
+            // Slow down if no data was written out..
+            if (remaining == lastRemaining) {
+                try {
                     // Use exponential rollback to increase sleep time.
                     Thread.sleep(delay);
                     delay *= 2;
-                    if( delay > 1000 ) {
+                    if (delay > 1000) {
                         delay = 1000;
                     }
                 } catch (InterruptedException e) {
                     throw new InterruptedIOException();
-                }                        
-	        } else {
-	            delay = 1;
-	        }        	        
-	        lastRemaining = remaining;
-	        
-            // Since the write is non-blocking, all the data may not have been written.
-            out.write( data );        
-            remaining = data.remaining();        	        
-        }    
-	}
-    
+                }
+            } else {
+                delay = 1;
+            }
+            lastRemaining = remaining;
+
+            // Since the write is non-blocking, all the data may not have been
+            // written.
+            out.write(data);
+            remaining = data.remaining();
+        }
+    }
+
 }

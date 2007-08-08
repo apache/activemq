@@ -22,59 +22,56 @@ import org.apache.activemq.kaha.StoreEntry;
  * 
  * @version $Revision: 1.10 $
  */
-public class ConsumerMessageRef{
+public class ConsumerMessageRef {
 
     private MessageId messageId;
     private StoreEntry messageEntry;
     private StoreEntry ackEntry;
-    
+
     /**
      * @return the ackEntry
      */
-    public StoreEntry getAckEntry(){
+    public StoreEntry getAckEntry() {
         return this.ackEntry;
     }
-    
+
     /**
      * @param ackEntry the ackEntry to set
      */
-    public void setAckEntry(StoreEntry ackEntry){
-        this.ackEntry=ackEntry;
+    public void setAckEntry(StoreEntry ackEntry) {
+        this.ackEntry = ackEntry;
     }
-    
+
     /**
      * @return the messageEntry
      */
-    public StoreEntry getMessageEntry(){
+    public StoreEntry getMessageEntry() {
         return this.messageEntry;
     }
-    
+
     /**
      * @param messageEntry the messageEntry to set
      */
-    public void setMessageEntry(StoreEntry messageEntry){
-        this.messageEntry=messageEntry;
+    public void setMessageEntry(StoreEntry messageEntry) {
+        this.messageEntry = messageEntry;
     }
 
-    
     /**
      * @return the messageId
      */
-    public MessageId getMessageId(){
+    public MessageId getMessageId() {
         return this.messageId;
     }
 
-    
     /**
      * @param messageId the messageId to set
      */
-    public void setMessageId(MessageId messageId){
-        this.messageId=messageId;
-    }
-    
-    public String toString() {
-        return "ConsumerMessageRef[" + messageId +"]";
+    public void setMessageId(MessageId messageId) {
+        this.messageId = messageId;
     }
 
-       
+    public String toString() {
+        return "ConsumerMessageRef[" + messageId + "]";
+    }
+
 }

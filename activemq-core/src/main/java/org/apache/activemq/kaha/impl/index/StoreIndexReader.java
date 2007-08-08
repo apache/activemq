@@ -20,40 +20,41 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 import org.apache.activemq.util.DataByteArrayInputStream;
+
 /**
  * Optimized Store reader
  * 
  * @version $Revision: 1.1.1.1 $
  */
-class StoreIndexReader{
+class StoreIndexReader {
     protected RandomAccessFile file;
     protected DataByteArrayInputStream dataIn;
-    protected byte[] buffer=new byte[IndexItem.INDEX_SIZE];
+    protected byte[] buffer = new byte[IndexItem.INDEX_SIZE];
 
     /**
      * Construct a Store reader
      * 
      * @param file
      */
-    StoreIndexReader(RandomAccessFile file){
-        this.file=file;
-        this.dataIn=new DataByteArrayInputStream();
+    StoreIndexReader(RandomAccessFile file) {
+        this.file = file;
+        this.dataIn = new DataByteArrayInputStream();
     }
 
-    protected IndexItem readItem(long offset) throws IOException{
+    protected IndexItem readItem(long offset) throws IOException {
         file.seek(offset);
         file.readFully(buffer);
         dataIn.restart(buffer);
-        IndexItem result=new IndexItem();
+        IndexItem result = new IndexItem();
         result.setOffset(offset);
         result.read(dataIn);
         return result;
     }
-    
-    void updateIndexes(IndexItem indexItem) throws IOException{
-        if (indexItem != null){
+
+    void updateIndexes(IndexItem indexItem) throws IOException {
+        if (indexItem != null) {
             file.seek(indexItem.getOffset());
-            file.readFully(buffer,0,IndexItem.INDEXES_ONLY_SIZE);
+            file.readFully(buffer, 0, IndexItem.INDEXES_ONLY_SIZE);
             dataIn.restart(buffer);
             indexItem.readIndexes(dataIn);
         }

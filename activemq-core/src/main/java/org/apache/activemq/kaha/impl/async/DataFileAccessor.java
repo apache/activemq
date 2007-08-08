@@ -23,129 +23,130 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.activemq.kaha.impl.async.DataFileAppender.WriteCommand;
 import org.apache.activemq.kaha.impl.async.DataFileAppender.WriteKey;
 import org.apache.activemq.util.ByteSequence;
+
 /**
- * Optimized Store reader and updater.  Single threaded and synchronous.  Use in conjunction 
- * with the DataFileAccessorPool of concurrent use.
+ * Optimized Store reader and updater. Single threaded and synchronous. Use in
+ * conjunction with the DataFileAccessorPool of concurrent use.
  * 
  * @version $Revision: 1.1.1.1 $
  */
 final class DataFileAccessor {
-    
-	private final DataFile dataFile;
-	private final ConcurrentHashMap<WriteKey, WriteCommand> inflightWrites;
-	private final RandomAccessFile file;
-	private boolean disposed;
-    
+
+    private final DataFile dataFile;
+    private final ConcurrentHashMap<WriteKey, WriteCommand> inflightWrites;
+    private final RandomAccessFile file;
+    private boolean disposed;
+
     /**
      * Construct a Store reader
      * 
      * @param fileId
-     * @throws IOException 
+     * @throws IOException
      */
-    public DataFileAccessor(AsyncDataManager dataManager, DataFile dataFile) throws IOException{
-		this.dataFile = dataFile;
-		this.inflightWrites = dataManager.getInflightWrites();
-		this.file = dataFile.openRandomAccessFile(false);
+    public DataFileAccessor(AsyncDataManager dataManager, DataFile dataFile) throws IOException {
+        this.dataFile = dataFile;
+        this.inflightWrites = dataManager.getInflightWrites();
+        this.file = dataFile.openRandomAccessFile(false);
     }
 
-	public DataFile getDataFile() {
-		return dataFile;
-	}
+    public DataFile getDataFile() {
+        return dataFile;
+    }
 
-	public void dispose() {
-    	if( disposed )
-    		return;
-    	disposed=true;
+    public void dispose() {
+        if (disposed)
+            return;
+        disposed = true;
         try {
-        	dataFile.closeRandomAccessFile(file);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+            dataFile.closeRandomAccessFile(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
-    
+
     public ByteSequence readRecord(Location location) throws IOException {
-    	
-    	if( !location.isValid() )
-    		throw new IOException("Invalid location: "+location);
-    	    	
-    	WriteCommand asyncWrite = (WriteCommand) inflightWrites.get(new WriteKey(location));
-    	if( asyncWrite!= null ) {
-    		return asyncWrite.data;
-    	}
 
-		try {
+        if (!location.isValid())
+            throw new IOException("Invalid location: " + location);
 
-			if( location.getSize()==Location.NOT_SET ) {
-		        file.seek(location.getOffset());
-		        location.setSize(file.readInt());
-				file.seek(location.getOffset()+AsyncDataManager.ITEM_HEAD_SPACE);
-	    	} else {
-				file.seek(location.getOffset()+AsyncDataManager.ITEM_HEAD_SPACE);
-	    	}
-			
-			byte[] data=new byte[location.getSize()-AsyncDataManager.ITEM_HEAD_FOOT_SPACE];
-			file.readFully(data);
-			return new ByteSequence(data, 0, data.length);
+        WriteCommand asyncWrite = (WriteCommand)inflightWrites.get(new WriteKey(location));
+        if (asyncWrite != null) {
+            return asyncWrite.data;
+        }
 
-		} catch (RuntimeException e) {
-			throw new IOException("Invalid location: "+location+", : "+e);
-		}
+        try {
+
+            if (location.getSize() == Location.NOT_SET) {
+                file.seek(location.getOffset());
+                location.setSize(file.readInt());
+                file.seek(location.getOffset() + AsyncDataManager.ITEM_HEAD_SPACE);
+            } else {
+                file.seek(location.getOffset() + AsyncDataManager.ITEM_HEAD_SPACE);
+            }
+
+            byte[] data = new byte[location.getSize() - AsyncDataManager.ITEM_HEAD_FOOT_SPACE];
+            file.readFully(data);
+            return new ByteSequence(data, 0, data.length);
+
+        } catch (RuntimeException e) {
+            throw new IOException("Invalid location: " + location + ", : " + e);
+        }
     }
-    
+
     public void readLocationDetails(Location location) throws IOException {
-    	WriteCommand asyncWrite = (WriteCommand) inflightWrites.get(new WriteKey(location));
-    	if( asyncWrite!= null ) {
-    		location.setSize(asyncWrite.location.getSize());
-    		location.setType(asyncWrite.location.getType());
-    	} else {
-	        file.seek(location.getOffset());
-	        location.setSize(file.readInt());
-	        location.setType(file.readByte());
-    	}
+        WriteCommand asyncWrite = (WriteCommand)inflightWrites.get(new WriteKey(location));
+        if (asyncWrite != null) {
+            location.setSize(asyncWrite.location.getSize());
+            location.setType(asyncWrite.location.getType());
+        } else {
+            file.seek(location.getOffset());
+            location.setSize(file.readInt());
+            location.setType(file.readByte());
+        }
     }
 
-	public boolean readLocationDetailsAndValidate(Location location) {
-    	try {
-        	WriteCommand asyncWrite = (WriteCommand) inflightWrites.get(new WriteKey(location));
-        	if( asyncWrite!= null ) {
-        		location.setSize(asyncWrite.location.getSize());
-        		location.setType(asyncWrite.location.getType());
-        	} else {
-		        file.seek(location.getOffset());
-		        location.setSize(file.readInt());
-		        location.setType(file.readByte());
-				
-				byte data[] = new byte[3];
-				file.seek(location.getOffset()+AsyncDataManager.ITEM_HEAD_OFFSET_TO_SOR);
-				file.readFully(data);
-				if( data[0] != AsyncDataManager.ITEM_HEAD_SOR[0] ||
-					data[1] != AsyncDataManager.ITEM_HEAD_SOR[1] ||
-					data[2] != AsyncDataManager.ITEM_HEAD_SOR[2] ) {
-					return false;
-				}
-				file.seek(location.getOffset()+location.getSize()-AsyncDataManager.ITEM_FOOT_SPACE);
-				file.readFully(data);
-				if( data[0] != AsyncDataManager.ITEM_HEAD_EOR[0] ||
-					data[1] != AsyncDataManager.ITEM_HEAD_EOR[1] ||
-					data[2] != AsyncDataManager.ITEM_HEAD_EOR[2] ) {
-					return false;
-				}
-			}
-		} catch (IOException e) {
-			return false;
-		}
-		return true;
-	}
+    public boolean readLocationDetailsAndValidate(Location location) {
+        try {
+            WriteCommand asyncWrite = (WriteCommand)inflightWrites.get(new WriteKey(location));
+            if (asyncWrite != null) {
+                location.setSize(asyncWrite.location.getSize());
+                location.setType(asyncWrite.location.getType());
+            } else {
+                file.seek(location.getOffset());
+                location.setSize(file.readInt());
+                location.setType(file.readByte());
 
-	public void updateRecord(Location location, ByteSequence data, boolean sync) throws IOException {
-		
-		file.seek(location.getOffset()+AsyncDataManager.ITEM_HEAD_SPACE);
-		int size = Math.min(data.getLength(), location.getSize());
-		file.write(data.getData(), data.getOffset(), size);
-		if( sync ) {
-			file.getFD().sync();
-		}
-        		
-	}
+                byte data[] = new byte[3];
+                file.seek(location.getOffset() + AsyncDataManager.ITEM_HEAD_OFFSET_TO_SOR);
+                file.readFully(data);
+                if (data[0] != AsyncDataManager.ITEM_HEAD_SOR[0]
+                    || data[1] != AsyncDataManager.ITEM_HEAD_SOR[1]
+                    || data[2] != AsyncDataManager.ITEM_HEAD_SOR[2]) {
+                    return false;
+                }
+                file.seek(location.getOffset() + location.getSize() - AsyncDataManager.ITEM_FOOT_SPACE);
+                file.readFully(data);
+                if (data[0] != AsyncDataManager.ITEM_HEAD_EOR[0]
+                    || data[1] != AsyncDataManager.ITEM_HEAD_EOR[1]
+                    || data[2] != AsyncDataManager.ITEM_HEAD_EOR[2]) {
+                    return false;
+                }
+            }
+        } catch (IOException e) {
+            return false;
+        }
+        return true;
+    }
+
+    public void updateRecord(Location location, ByteSequence data, boolean sync) throws IOException {
+
+        file.seek(location.getOffset() + AsyncDataManager.ITEM_HEAD_SPACE);
+        int size = Math.min(data.getLength(), location.getSize());
+        file.write(data.getData(), data.getOffset(), size);
+        if (sync) {
+            file.getFD().sync();
+        }
+
+    }
 
 }

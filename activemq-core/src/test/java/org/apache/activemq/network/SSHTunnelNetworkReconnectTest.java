@@ -40,11 +40,13 @@ public class SSHTunnelNetworkReconnectTest extends NetworkReconnectTest {
     ArrayList processes = new ArrayList();
 
     protected BrokerService createFirstBroker() throws Exception {
-        return BrokerFactory.createBroker(new URI("xbean:org/apache/activemq/network/ssh-reconnect-broker1.xml"));
+        return BrokerFactory
+            .createBroker(new URI("xbean:org/apache/activemq/network/ssh-reconnect-broker1.xml"));
     }
 
     protected BrokerService createSecondBroker() throws Exception {
-        return BrokerFactory.createBroker(new URI("xbean:org/apache/activemq/network/ssh-reconnect-broker2.xml"));
+        return BrokerFactory
+            .createBroker(new URI("xbean:org/apache/activemq/network/ssh-reconnect-broker2.xml"));
     }
 
     protected void setUp() throws Exception {

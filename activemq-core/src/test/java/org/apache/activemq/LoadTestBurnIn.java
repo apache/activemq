@@ -81,7 +81,8 @@ public class LoadTestBurnIn extends JmsTestSupport {
     }
 
     protected ConnectionFactory createConnectionFactory() throws URISyntaxException, IOException {
-        return new ActiveMQConnectionFactory(((TransportConnector)broker.getTransportConnectors().get(0)).getServer().getConnectURI());
+        return new ActiveMQConnectionFactory(((TransportConnector)broker.getTransportConnectors().get(0))
+            .getServer().getConnectURI());
     }
 
     public ActiveMQDestination destination;
@@ -93,18 +94,22 @@ public class LoadTestBurnIn extends JmsTestSupport {
     public int messageSize = 1024;
 
     public void initCombosForTestSendReceive() {
-        addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});
-        addCombinationValues("destinationType", new Object[] {Byte.valueOf(ActiveMQDestination.TOPIC_TYPE),});
-        addCombinationValues("durableConsumer", new Object[] {Boolean.TRUE,});
-        addCombinationValues("messageSize", new Object[] {Integer.valueOf(101), Integer.valueOf(102), Integer.valueOf(103), Integer.valueOf(104), Integer.valueOf(105),
-                                                          Integer.valueOf(106), Integer.valueOf(107), Integer.valueOf(108),});
+        addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT),
+                                                           Integer.valueOf(DeliveryMode.PERSISTENT)});
+        addCombinationValues("destinationType", new Object[] {Byte.valueOf(ActiveMQDestination.TOPIC_TYPE)});
+        addCombinationValues("durableConsumer", new Object[] {Boolean.TRUE});
+        addCombinationValues("messageSize", new Object[] {Integer.valueOf(101), Integer.valueOf(102),
+                                                          Integer.valueOf(103), Integer.valueOf(104),
+                                                          Integer.valueOf(105), Integer.valueOf(106),
+                                                          Integer.valueOf(107), Integer.valueOf(108)});
     }
 
     public void testSendReceive() throws Exception {
 
         // Durable consumer combination is only valid with topics
-        if (durableConsumer && destinationType != ActiveMQDestination.TOPIC_TYPE)
+        if (durableConsumer && destinationType != ActiveMQDestination.TOPIC_TYPE) {
             return;
+        }
 
         connection.setClientID(getName());
         connection.getPrefetchPolicy().setAll(1000);
@@ -114,7 +119,8 @@ public class LoadTestBurnIn extends JmsTestSupport {
         destination = createDestination(session, destinationType);
         MessageConsumer consumer;
         if (durableConsumer) {
-            consumer = session.createDurableSubscriber((Topic)destination, "sub1:" + System.currentTimeMillis());
+            consumer = session.createDurableSubscriber((Topic)destination, "sub1:"
+                                                                           + System.currentTimeMillis());
         } else {
             consumer = session.createConsumer(destination);
         }

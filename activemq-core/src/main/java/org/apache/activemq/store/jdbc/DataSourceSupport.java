@@ -65,7 +65,7 @@ public class DataSourceSupport {
     public DataSource getDataSource() throws IOException {
         if (dataSource == null) {
             dataSource = createDataSource();
-            if (dataSource == null) { 
+            if (dataSource == null) {
                 throw new IllegalArgumentException("No dataSource property has been configured");
             }
         }
@@ -88,9 +88,9 @@ public class DataSourceSupport {
         ds.setCreateDatabase("create");
         return ds;
     }
-    
-    public String toString(){
-        return ""+dataSource;
+
+    public String toString() {
+        return "" + dataSource;
     }
 
 }

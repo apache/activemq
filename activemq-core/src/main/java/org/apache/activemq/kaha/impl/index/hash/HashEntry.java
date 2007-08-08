@@ -24,75 +24,75 @@ import org.apache.activemq.kaha.Marshaller;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-class HashEntry implements Comparable{
+class HashEntry implements Comparable {
 
-    static final int NOT_SET=-1;
+    static final int NOT_SET = -1;
     private Comparable key;
     private long indexOffset;
 
-    public int compareTo(Object o){
-        if(o instanceof HashEntry){
-            HashEntry other=(HashEntry)o;
+    public int compareTo(Object o) {
+        if (o instanceof HashEntry) {
+            HashEntry other = (HashEntry)o;
             return key.compareTo(other.key);
-        }else{
+        } else {
             return key.compareTo(o);
         }
     }
 
-    public boolean equals(Object o){
-        return compareTo(o)==0;
+    public boolean equals(Object o) {
+        return compareTo(o) == 0;
     }
 
-    public int hashCode(){
+    public int hashCode() {
         return key.hashCode();
     }
 
-    public String toString(){
-        return "HashEntry("+key+","+indexOffset+")";
+    public String toString() {
+        return "HashEntry(" + key + "," + indexOffset + ")";
     }
 
-    HashEntry copy(){
-        HashEntry copy=new HashEntry();
-        copy.key=this.key;
-        copy.indexOffset=this.indexOffset;
+    HashEntry copy() {
+        HashEntry copy = new HashEntry();
+        copy.key = this.key;
+        copy.indexOffset = this.indexOffset;
         return copy;
     }
 
     /**
      * @return the key
      */
-    Comparable getKey(){
+    Comparable getKey() {
         return this.key;
     }
 
     /**
      * @param key the key to set
      */
-    void setKey(Comparable key){
-        this.key=key;
+    void setKey(Comparable key) {
+        this.key = key;
     }
 
     /**
      * @return the indexOffset
      */
-    long getIndexOffset(){
+    long getIndexOffset() {
         return this.indexOffset;
     }
 
     /**
      * @param indexOffset the indexOffset to set
      */
-    void setIndexOffset(long indexOffset){
-        this.indexOffset=indexOffset;
+    void setIndexOffset(long indexOffset) {
+        this.indexOffset = indexOffset;
     }
 
-    void write(Marshaller keyMarshaller,DataOutput dataOut) throws IOException{
+    void write(Marshaller keyMarshaller, DataOutput dataOut) throws IOException {
         dataOut.writeLong(indexOffset);
-        keyMarshaller.writePayload(key,dataOut);
+        keyMarshaller.writePayload(key, dataOut);
     }
 
-    void read(Marshaller keyMarshaller,DataInput dataIn) throws IOException{
-        indexOffset=dataIn.readLong();
-        key=(Comparable)keyMarshaller.readPayload(dataIn);
+    void read(Marshaller keyMarshaller, DataInput dataIn) throws IOException {
+        indexOffset = dataIn.readLong();
+        key = (Comparable)keyMarshaller.readPayload(dataIn);
     }
 }

@@ -20,39 +20,38 @@ import java.util.Arrays;
 import javax.transaction.xa.Xid;
 import org.apache.activemq.util.HexSupport;
 
-
 /**
  * @openwire:marshaller code="112"
  * @version $Revision: 1.6 $
  */
-public class XATransactionId extends TransactionId implements Xid, Comparable{
-    
-    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.ACTIVEMQ_XA_TRANSACTION_ID;
+public class XATransactionId extends TransactionId implements Xid, Comparable {
+
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_XA_TRANSACTION_ID;
 
     private int formatId;
     private byte[] branchQualifier;
     private byte[] globalTransactionId;
-    
+
     private transient int hash;
     private transient String transactionKey;
-    
-    public XATransactionId() {        
+
+    public XATransactionId() {
     }
-    
+
     public XATransactionId(Xid xid) {
         this.formatId = xid.getFormatId();
         this.globalTransactionId = xid.getGlobalTransactionId();
         this.branchQualifier = xid.getBranchQualifier();
     }
-    
+
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
-        
-    public synchronized String getTransactionKey(){
-        if(transactionKey==null){
-            transactionKey="XID:"+formatId+":"+HexSupport.toHexFromBytes(globalTransactionId)+":"
-                    +HexSupport.toHexFromBytes(branchQualifier);
+
+    public synchronized String getTransactionKey() {
+        if (transactionKey == null) {
+            transactionKey = "XID:" + formatId + ":" + HexSupport.toHexFromBytes(globalTransactionId) + ":"
+                             + HexSupport.toHexFromBytes(branchQualifier);
         }
         return transactionKey;
     }
@@ -60,7 +59,7 @@ public class XATransactionId extends TransactionId implements Xid, Comparable{
     public String toString() {
         return getTransactionKey();
     }
-    
+
     public boolean isXATransaction() {
         return true;
     }
@@ -92,21 +91,21 @@ public class XATransactionId extends TransactionId implements Xid, Comparable{
 
     public void setBranchQualifier(byte[] branchQualifier) {
         this.branchQualifier = branchQualifier;
-        this.hash=0;
+        this.hash = 0;
     }
 
     public void setFormatId(int formatId) {
         this.formatId = formatId;
-        this.hash=0;
+        this.hash = 0;
     }
 
     public void setGlobalTransactionId(byte[] globalTransactionId) {
         this.globalTransactionId = globalTransactionId;
-        this.hash=0;
+        this.hash = 0;
     }
 
     public int hashCode() {
-        if( hash==0 ) {
+        if (hash == 0) {
             hash = formatId;
             hash = hash(globalTransactionId, hash);
             hash = hash(branchQualifier, hash);
@@ -123,20 +122,20 @@ public class XATransactionId extends TransactionId implements Xid, Comparable{
         }
         return hash;
     }
-    
+
     public boolean equals(Object o) {
-        if( o==null || o.getClass()!=XATransactionId.class )
+        if (o == null || o.getClass() != XATransactionId.class)
             return false;
         XATransactionId xid = (XATransactionId)o;
-        return xid.formatId==formatId && Arrays.equals(xid.globalTransactionId,globalTransactionId)
+        return xid.formatId == formatId && Arrays.equals(xid.globalTransactionId, globalTransactionId)
                && Arrays.equals(xid.branchQualifier, branchQualifier);
     }
 
-    public int compareTo(Object o){
-        if( o==null || o.getClass()!=XATransactionId.class )
+    public int compareTo(Object o) {
+        if (o == null || o.getClass() != XATransactionId.class)
             return -1;
         XATransactionId xid = (XATransactionId)o;
         return getTransactionKey().compareTo(xid.getTransactionKey());
     }
-    
+
 }

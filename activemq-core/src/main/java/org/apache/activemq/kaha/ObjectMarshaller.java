@@ -27,7 +27,7 @@ import java.io.ObjectOutputStream;
  * 
  * @version $Revision: 1.2 $
  */
-public class ObjectMarshaller implements Marshaller{
+public class ObjectMarshaller implements Marshaller {
 
     /**
      * Write the payload of this entry to the RawContainer
@@ -36,12 +36,12 @@ public class ObjectMarshaller implements Marshaller{
      * @param dataOut
      * @throws IOException
      */
-    public void writePayload(Object object,DataOutput dataOut) throws IOException{
-        ByteArrayOutputStream bytesOut=new ByteArrayOutputStream();
-        ObjectOutputStream objectOut=new ObjectOutputStream(bytesOut);
+    public void writePayload(Object object, DataOutput dataOut) throws IOException {
+        ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+        ObjectOutputStream objectOut = new ObjectOutputStream(bytesOut);
         objectOut.writeObject(object);
         objectOut.close();
-        byte[] data=bytesOut.toByteArray();
+        byte[] data = bytesOut.toByteArray();
         dataOut.writeInt(data.length);
         dataOut.write(data);
     }
@@ -53,15 +53,15 @@ public class ObjectMarshaller implements Marshaller{
      * @return unmarshalled object
      * @throws IOException
      */
-    public Object readPayload(DataInput dataIn) throws IOException{
-        int size=dataIn.readInt();
-        byte[] data=new byte[size];
+    public Object readPayload(DataInput dataIn) throws IOException {
+        int size = dataIn.readInt();
+        byte[] data = new byte[size];
         dataIn.readFully(data);
-        ByteArrayInputStream bytesIn=new ByteArrayInputStream(data);
-        ObjectInputStream objectIn=new ObjectInputStream(bytesIn);
-        try{
+        ByteArrayInputStream bytesIn = new ByteArrayInputStream(data);
+        ObjectInputStream objectIn = new ObjectInputStream(bytesIn);
+        try {
             return objectIn.readObject();
-        }catch(ClassNotFoundException e){
+        } catch (ClassNotFoundException e) {
             throw new IOException(e.getMessage());
         }
     }

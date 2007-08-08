@@ -28,35 +28,36 @@ import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * Marshall an AMQTx
+ * 
  * @version $Revision: 1.10 $
  */
-public class AMQTxMarshaller implements Marshaller<AMQTx>{
+public class AMQTxMarshaller implements Marshaller<AMQTx> {
 
     private WireFormat wireFormat;
 
-    public AMQTxMarshaller(WireFormat wireFormat){
-        this.wireFormat=wireFormat;
+    public AMQTxMarshaller(WireFormat wireFormat) {
+        this.wireFormat = wireFormat;
     }
 
-    public AMQTx readPayload(DataInput dataIn) throws IOException{
-        Location location=new Location();
+    public AMQTx readPayload(DataInput dataIn) throws IOException {
+        Location location = new Location();
         location.readExternal(dataIn);
-        AMQTx result=new AMQTx(location);
-        int size=dataIn.readInt();
-        for(int i=0;i<size;i++){
-            AMQTxOperation op=new AMQTxOperation();
-            op.readExternal(wireFormat,dataIn);
+        AMQTx result = new AMQTx(location);
+        int size = dataIn.readInt();
+        for (int i = 0; i < size; i++) {
+            AMQTxOperation op = new AMQTxOperation();
+            op.readExternal(wireFormat, dataIn);
             result.getOperations().add(op);
         }
         return result;
     }
 
-    public void writePayload(AMQTx amqtx,DataOutput dataOut) throws IOException{
+    public void writePayload(AMQTx amqtx, DataOutput dataOut) throws IOException {
         amqtx.getLocation().writeExternal(dataOut);
-        List<AMQTxOperation> list=amqtx.getOperations();
+        List<AMQTxOperation> list = amqtx.getOperations();
         dataOut.writeInt(list.size());
-        for(AMQTxOperation op:list){
-            op.writeExternal(wireFormat,dataOut);
+        for (AMQTxOperation op : list) {
+            op.writeExternal(wireFormat, dataOut);
         }
     }
 }

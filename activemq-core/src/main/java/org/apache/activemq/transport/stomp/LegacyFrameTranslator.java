@@ -14,8 +14,7 @@ import java.io.IOException;
 /**
  * Implements ActiveMQ 4.0 translations
  */
-public class LegacyFrameTranslator implements FrameTranslator
-{
+public class LegacyFrameTranslator implements FrameTranslator {
     public ActiveMQMessage convertFrame(StompFrame command) throws JMSException, ProtocolException {
         final Map headers = command.getHeaders();
         final ActiveMQMessage msg;
@@ -28,8 +27,7 @@ public class LegacyFrameTranslator implements FrameTranslator
             ActiveMQTextMessage text = new ActiveMQTextMessage();
             try {
                 text.setText(new String(command.getContent(), "UTF-8"));
-            }
-            catch (Throwable e) {
+            } catch (Throwable e) {
                 throw new ProtocolException("Text could not bet set: " + e, false, e);
             }
             msg = text;
@@ -40,25 +38,25 @@ public class LegacyFrameTranslator implements FrameTranslator
 
     public StompFrame convertMessage(ActiveMQMessage message) throws IOException, JMSException {
         StompFrame command = new StompFrame();
-		command.setAction(Stomp.Responses.MESSAGE);
+        command.setAction(Stomp.Responses.MESSAGE);
         Map headers = new HashMap(25);
         command.setHeaders(headers);
 
         FrameTranslator.Helper.copyStandardHeadersFromMessageToFrame(message, command, this);
 
-        if( message.getDataStructureType() == ActiveMQTextMessage.DATA_STRUCTURE_TYPE ) {
+        if (message.getDataStructureType() == ActiveMQTextMessage.DATA_STRUCTURE_TYPE) {
 
             ActiveMQTextMessage msg = (ActiveMQTextMessage)message.copy();
             command.setContent(msg.getText().getBytes("UTF-8"));
 
-        } else if( message.getDataStructureType() == ActiveMQBytesMessage.DATA_STRUCTURE_TYPE ) {
+        } else if (message.getDataStructureType() == ActiveMQBytesMessage.DATA_STRUCTURE_TYPE) {
 
-        	ActiveMQBytesMessage msg = (ActiveMQBytesMessage)message.copy();
-        	msg.setReadOnlyBody(true);
+            ActiveMQBytesMessage msg = (ActiveMQBytesMessage)message.copy();
+            msg.setReadOnlyBody(true);
             byte[] data = new byte[(int)msg.getBodyLength()];
             msg.readBytes(data);
 
-            headers.put(Stomp.Headers.CONTENT_LENGTH, ""+data.length);
+            headers.put(Stomp.Headers.CONTENT_LENGTH, "" + data.length);
             command.setContent(data);
         }
         return command;
@@ -68,23 +66,20 @@ public class LegacyFrameTranslator implements FrameTranslator
         if (d == null) {
             return null;
         }
-        ActiveMQDestination amq_d = (ActiveMQDestination) d;
+        ActiveMQDestination amq_d = (ActiveMQDestination)d;
         String p_name = amq_d.getPhysicalName();
 
         StringBuffer buffer = new StringBuffer();
         if (amq_d.isQueue()) {
             if (amq_d.isTemporary()) {
                 buffer.append("/temp-queue/");
-            }
-            else {
+            } else {
                 buffer.append("/queue/");
             }
-        }
-        else {
+        } else {
             if (amq_d.isTemporary()) {
                 buffer.append("/temp-topic/");
-            }
-            else {
+            } else {
                 buffer.append("/topic/");
             }
         }
@@ -95,26 +90,21 @@ public class LegacyFrameTranslator implements FrameTranslator
     public ActiveMQDestination convertDestination(String name) throws ProtocolException {
         if (name == null) {
             return null;
-        }
-        else if (name.startsWith("/queue/")) {
+        } else if (name.startsWith("/queue/")) {
             String q_name = name.substring("/queue/".length(), name.length());
             return ActiveMQDestination.createDestination(q_name, ActiveMQDestination.QUEUE_TYPE);
-        }
-        else if (name.startsWith("/topic/")) {
+        } else if (name.startsWith("/topic/")) {
             String t_name = name.substring("/topic/".length(), name.length());
             return ActiveMQDestination.createDestination(t_name, ActiveMQDestination.TOPIC_TYPE);
-        }
-        else if (name.startsWith("/temp-queue/")) {
+        } else if (name.startsWith("/temp-queue/")) {
             String t_name = name.substring("/temp-queue/".length(), name.length());
             return ActiveMQDestination.createDestination(t_name, ActiveMQDestination.TEMP_QUEUE_TYPE);
-        }
-        else if (name.startsWith("/temp-topic/")) {
+        } else if (name.startsWith("/temp-topic/")) {
             String t_name = name.substring("/temp-topic/".length(), name.length());
             return ActiveMQDestination.createDestination(t_name, ActiveMQDestination.TEMP_TOPIC_TYPE);
-        }
-        else {
-            throw new ProtocolException("Illegal destination name: [" + name + "] -- ActiveMQ STOMP destinations " +
-                                        "must begine with one of: /queue/ /topic/ /temp-queue/ /temp-topic/");
+        } else {
+            throw new ProtocolException("Illegal destination name: [" + name + "] -- ActiveMQ STOMP destinations "
+                                        + "must begine with one of: /queue/ /topic/ /temp-queue/ /temp-topic/");
         }
     }
 }

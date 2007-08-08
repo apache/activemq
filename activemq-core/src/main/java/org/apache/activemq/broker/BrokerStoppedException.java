@@ -17,29 +17,30 @@
 package org.apache.activemq.broker;
 
 /**
- * This exception is thrown by the broker when you try to use it after it has been stopped.
- *  
+ * This exception is thrown by the broker when you try to use it after it has
+ * been stopped.
+ * 
  * @author chirino
  */
 public class BrokerStoppedException extends IllegalStateException {
 
-	private static final long serialVersionUID = -3435230276850902220L;
+    private static final long serialVersionUID = -3435230276850902220L;
 
-	public BrokerStoppedException() {
-		super();
-	}
+    public BrokerStoppedException() {
+        super();
+    }
 
-	public BrokerStoppedException(String message, Throwable cause) {
-		super(message);
-		initCause(cause);
-	}
+    public BrokerStoppedException(String message, Throwable cause) {
+        super(message);
+        initCause(cause);
+    }
 
-	public BrokerStoppedException(String s) {
-		super(s);
-	}
+    public BrokerStoppedException(String s) {
+        super(s);
+    }
 
-	public BrokerStoppedException(Throwable cause) {
-		initCause(cause);
-	}
+    public BrokerStoppedException(Throwable cause) {
+        initCause(cause);
+    }
 
 }

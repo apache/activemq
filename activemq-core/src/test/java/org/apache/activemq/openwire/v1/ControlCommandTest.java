@@ -16,41 +16,32 @@
  */
 package org.apache.activemq.openwire.v1;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import org.apache.activemq.openwire.*;
-import org.apache.activemq.command.*;
-
+import org.apache.activemq.command.ControlCommand;
 
 /**
  * Test case for the OpenWire marshalling for ControlCommand
- *
- *
- * NOTE!: This file is auto generated - do not modify!
- *        if you need to make a change, please see the modify the groovy scripts in the
- *        under src/gram/script and then use maven openwire:generate to regenerate 
- *        this file.
- *
+ * 
+ * 
+ * NOTE!: This file is auto generated - do not modify! if you need to make a
+ * change, please see the modify the groovy scripts in the under src/gram/script
+ * and then use maven openwire:generate to regenerate this file.
+ * 
  * @version $Revision$
  */
 public class ControlCommandTest extends BaseCommandTestSupport {
 
-
     public static ControlCommandTest SINGLETON = new ControlCommandTest();
 
     public Object createObject() throws Exception {
-    		ControlCommand info = new ControlCommand();
-    		populateObject(info);
-    		return info;
+        ControlCommand info = new ControlCommand();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		ControlCommand info = (ControlCommand) object;
+        super.populateObject(object);
+        ControlCommand info = (ControlCommand)object;
         info.setCommand("Command:1");
 
-            }
-        }
+    }
+}

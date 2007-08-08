@@ -19,11 +19,10 @@ package org.apache.activemq.util;
 import org.apache.activemq.command.SubscriptionInfo;
 
 public class SubscriptionKey {
-    
+
     public final String clientId;
     public final String subscriptionName;
     private final int hashValue;
-
 
     public SubscriptionKey(SubscriptionInfo info) {
         this(info.getClientId(), info.getSubscriptionName());
@@ -31,26 +30,25 @@ public class SubscriptionKey {
 
     public SubscriptionKey(String clientId, String subscriptionName) {
         this.clientId = clientId;
-        this.subscriptionName = subscriptionName != null? subscriptionName : "NOT_SET";
-        hashValue = clientId.hashCode()^this.subscriptionName.hashCode();
+        this.subscriptionName = subscriptionName != null ? subscriptionName : "NOT_SET";
+        hashValue = clientId.hashCode() ^ this.subscriptionName.hashCode();
     }
-
 
     public int hashCode() {
         return hashValue;
     }
-    
+
     public boolean equals(Object o) {
         try {
-            SubscriptionKey key = (SubscriptionKey) o;
+            SubscriptionKey key = (SubscriptionKey)o;
             return key.clientId.equals(clientId) && key.subscriptionName.equals(subscriptionName);
         } catch (Throwable e) {
             return false;
         }
     }
-    
+
     public String toString() {
-        return clientId+":"+subscriptionName;
+        return clientId + ":" + subscriptionName;
     }
 
     public String getClientId() {

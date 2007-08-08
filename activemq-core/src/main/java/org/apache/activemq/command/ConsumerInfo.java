@@ -46,14 +46,17 @@ public class ConsumerInfo extends BaseCommand {
     protected byte priority;
     protected BrokerId[] brokerPath;
     protected boolean optimizedAcknowledge;
-    protected transient int currentPrefetchSize;// used by the broker
-    protected boolean noRangeAcks; // if true, the consumer will not send range
-                                    // acks.
+    // used by the broker
+    protected transient int currentPrefetchSize;
+    // if true, the consumer will not send range
+    protected boolean noRangeAcks;
+    // acks.
 
     protected BooleanExpression additionalPredicate;
     protected transient boolean networkSubscription; // this subscription
-                                                        // originated from a
-                                                        // network connection
+
+    // originated from a
+    // network connection
 
     public ConsumerInfo() {
     }

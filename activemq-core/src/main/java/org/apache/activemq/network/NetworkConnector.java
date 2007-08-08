@@ -41,236 +41,231 @@ import org.apache.commons.logging.LogFactory;
 /**
  * @version $Revision$
  */
-public abstract class NetworkConnector extends NetworkBridgeConfiguration implements Service{
+public abstract class NetworkConnector extends NetworkBridgeConfiguration implements Service {
 
-    protected static final Log log=LogFactory.getLog(NetworkConnector.class);
+    protected static final Log log = LogFactory.getLog(NetworkConnector.class);
     protected URI localURI;
     private Set durableDestinations;
-    private List excludedDestinations=new CopyOnWriteArrayList();
-    private List dynamicallyIncludedDestinations=new CopyOnWriteArrayList();
-    private List staticallyIncludedDestinations=new CopyOnWriteArrayList();
+    private List excludedDestinations = new CopyOnWriteArrayList();
+    private List dynamicallyIncludedDestinations = new CopyOnWriteArrayList();
+    private List staticallyIncludedDestinations = new CopyOnWriteArrayList();
     protected ConnectionFilter connectionFilter;
     private BrokerService brokerService;
     private ObjectName objectName;
-    
-    protected ServiceSupport serviceSupport=new ServiceSupport(){
 
-        protected void doStart() throws Exception{
-           handleStart();
+    protected ServiceSupport serviceSupport = new ServiceSupport() {
+
+        protected void doStart() throws Exception {
+            handleStart();
         }
 
-        protected void doStop(ServiceStopper stopper) throws Exception{
+        protected void doStop(ServiceStopper stopper) throws Exception {
             handleStop(stopper);
         }
     };
 
-    public NetworkConnector(){
+    public NetworkConnector() {
     }
 
-    public NetworkConnector(URI localURI){
-        this.localURI=localURI;
+    public NetworkConnector(URI localURI) {
+        this.localURI = localURI;
     }
 
-    public URI getLocalUri() throws URISyntaxException{
+    public URI getLocalUri() throws URISyntaxException {
         return localURI;
     }
 
-    public void setLocalUri(URI localURI){
-        this.localURI=localURI;
+    public void setLocalUri(URI localURI) {
+        this.localURI = localURI;
     }
 
-    
     /**
      * @return Returns the durableDestinations.
      */
-    public Set getDurableDestinations(){
+    public Set getDurableDestinations() {
         return durableDestinations;
     }
 
     /**
      * @param durableDestinations The durableDestinations to set.
      */
-    public void setDurableDestinations(Set durableDestinations){
-        this.durableDestinations=durableDestinations;
+    public void setDurableDestinations(Set durableDestinations) {
+        this.durableDestinations = durableDestinations;
     }
 
     /**
      * @return Returns the excludedDestinations.
      */
-    public List getExcludedDestinations(){
+    public List getExcludedDestinations() {
         return excludedDestinations;
     }
 
     /**
      * @param excludedDestinations The excludedDestinations to set.
      */
-    public void setExcludedDestinations(List excludedDestinations){
-        this.excludedDestinations=excludedDestinations;
+    public void setExcludedDestinations(List excludedDestinations) {
+        this.excludedDestinations = excludedDestinations;
     }
 
-    public void addExcludedDestination(ActiveMQDestination destiantion){
+    public void addExcludedDestination(ActiveMQDestination destiantion) {
         this.excludedDestinations.add(destiantion);
     }
 
     /**
      * @return Returns the staticallyIncludedDestinations.
      */
-    public List getStaticallyIncludedDestinations(){
+    public List getStaticallyIncludedDestinations() {
         return staticallyIncludedDestinations;
     }
 
     /**
-     * @param staticallyIncludedDestinations The staticallyIncludedDestinations to set.
+     * @param staticallyIncludedDestinations The staticallyIncludedDestinations
+     *                to set.
      */
-    public void setStaticallyIncludedDestinations(List staticallyIncludedDestinations){
-        this.staticallyIncludedDestinations=staticallyIncludedDestinations;
+    public void setStaticallyIncludedDestinations(List staticallyIncludedDestinations) {
+        this.staticallyIncludedDestinations = staticallyIncludedDestinations;
     }
 
-    public void addStaticallyIncludedDestination(ActiveMQDestination destiantion){
+    public void addStaticallyIncludedDestination(ActiveMQDestination destiantion) {
         this.staticallyIncludedDestinations.add(destiantion);
     }
 
     /**
      * @return Returns the dynamicallyIncludedDestinations.
      */
-    public List getDynamicallyIncludedDestinations(){
+    public List getDynamicallyIncludedDestinations() {
         return dynamicallyIncludedDestinations;
     }
 
     /**
-     * @param dynamicallyIncludedDestinations The dynamicallyIncludedDestinations to set.
+     * @param dynamicallyIncludedDestinations The
+     *                dynamicallyIncludedDestinations to set.
      */
-    public void setDynamicallyIncludedDestinations(List dynamicallyIncludedDestinations){
-        this.dynamicallyIncludedDestinations=dynamicallyIncludedDestinations;
+    public void setDynamicallyIncludedDestinations(List dynamicallyIncludedDestinations) {
+        this.dynamicallyIncludedDestinations = dynamicallyIncludedDestinations;
     }
 
-    public void addDynamicallyIncludedDestination(ActiveMQDestination destiantion){
+    public void addDynamicallyIncludedDestination(ActiveMQDestination destiantion) {
         this.dynamicallyIncludedDestinations.add(destiantion);
     }
-    
-    public ConnectionFilter getConnectionFilter(){
+
+    public ConnectionFilter getConnectionFilter() {
         return connectionFilter;
     }
 
-    public void setConnectionFilter(ConnectionFilter connectionFilter){
-        this.connectionFilter=connectionFilter;
+    public void setConnectionFilter(ConnectionFilter connectionFilter) {
+        this.connectionFilter = connectionFilter;
     }
-
 
     // Implementation methods
     // -------------------------------------------------------------------------
-    protected NetworkBridge configureBridge(DemandForwardingBridgeSupport result){
-        List destsList=getDynamicallyIncludedDestinations();
-        ActiveMQDestination dests[]=(ActiveMQDestination[])destsList.toArray(new ActiveMQDestination[destsList.size()]);
+    protected NetworkBridge configureBridge(DemandForwardingBridgeSupport result) {
+        List destsList = getDynamicallyIncludedDestinations();
+        ActiveMQDestination dests[] = (ActiveMQDestination[])destsList
+            .toArray(new ActiveMQDestination[destsList.size()]);
         result.setDynamicallyIncludedDestinations(dests);
-        destsList=getExcludedDestinations();
-        dests=(ActiveMQDestination[])destsList.toArray(new ActiveMQDestination[destsList.size()]);
+        destsList = getExcludedDestinations();
+        dests = (ActiveMQDestination[])destsList.toArray(new ActiveMQDestination[destsList.size()]);
         result.setExcludedDestinations(dests);
-        destsList=getStaticallyIncludedDestinations();
-        dests=(ActiveMQDestination[])destsList.toArray(new ActiveMQDestination[destsList.size()]);
+        destsList = getStaticallyIncludedDestinations();
+        dests = (ActiveMQDestination[])destsList.toArray(new ActiveMQDestination[destsList.size()]);
         result.setStaticallyIncludedDestinations(dests);
-        if(durableDestinations!=null){
-            ActiveMQDestination[] dest=new ActiveMQDestination[durableDestinations.size()];
-            dest=(ActiveMQDestination[])durableDestinations.toArray(dest);
+        if (durableDestinations != null) {
+            ActiveMQDestination[] dest = new ActiveMQDestination[durableDestinations.size()];
+            dest = (ActiveMQDestination[])durableDestinations.toArray(dest);
             result.setDurableDestinations(dest);
         }
         return result;
     }
 
-    protected Transport createLocalTransport() throws Exception{
+    protected Transport createLocalTransport() throws Exception {
         return TransportFactory.connect(localURI);
     }
 
-    public void start() throws Exception{
+    public void start() throws Exception {
         serviceSupport.start();
     }
 
-    public void stop() throws Exception{
+    public void stop() throws Exception {
         serviceSupport.stop();
     }
-    
+
     public abstract String getName();
-    
-    protected void handleStart() throws Exception{
-        if(localURI==null){
+
+    protected void handleStart() throws Exception {
+        if (localURI == null) {
             throw new IllegalStateException("You must configure the 'localURI' property");
         }
-        log.info("Network Connector "+getName()+" Started");
+        log.info("Network Connector " + getName() + " Started");
     }
 
-    protected void handleStop(ServiceStopper stopper) throws Exception{
-        log.info("Network Connector "+getName()+" Stopped");
+    protected void handleStop(ServiceStopper stopper) throws Exception {
+        log.info("Network Connector " + getName() + " Stopped");
     }
-    
+
     public ObjectName getObjectName() {
-		return objectName;
-	}
+        return objectName;
+    }
 
-	public void setObjectName(ObjectName objectName) {
-		this.objectName = objectName;
-	}
+    public void setObjectName(ObjectName objectName) {
+        this.objectName = objectName;
+    }
 
-	public BrokerService getBrokerService() {
-		return brokerService;
-	}
+    public BrokerService getBrokerService() {
+        return brokerService;
+    }
 
-	public void setBrokerService(BrokerService brokerService) {
-		this.brokerService = brokerService;
-	}
+    public void setBrokerService(BrokerService brokerService) {
+        this.brokerService = brokerService;
+    }
 
-	protected void registerNetworkBridgeMBean(NetworkBridge bridge) {
-		if (!getBrokerService().isUseJmx())
-			return;
+    protected void registerNetworkBridgeMBean(NetworkBridge bridge) {
+        if (!getBrokerService().isUseJmx())
+            return;
 
-		MBeanServer mbeanServer = getBrokerService().getManagementContext()
-				.getMBeanServer();
-		if (mbeanServer != null) {
-			NetworkBridgeViewMBean view = new NetworkBridgeView(bridge);
-			try {
-				ObjectName objectName = createNetworkBridgeObjectName(bridge);
-				mbeanServer.registerMBean(view, objectName);
-			} catch (Throwable e) {
-				log.debug("Network bridge could not be registered in JMX: "
-						+ e.getMessage(), e);
-			}
-		}
-	}
+        MBeanServer mbeanServer = getBrokerService().getManagementContext().getMBeanServer();
+        if (mbeanServer != null) {
+            NetworkBridgeViewMBean view = new NetworkBridgeView(bridge);
+            try {
+                ObjectName objectName = createNetworkBridgeObjectName(bridge);
+                mbeanServer.registerMBean(view, objectName);
+            } catch (Throwable e) {
+                log.debug("Network bridge could not be registered in JMX: " + e.getMessage(), e);
+            }
+        }
+    }
 
-	protected void unregisterNetworkBridgeMBean(NetworkBridge bridge) {
-		if (!getBrokerService().isUseJmx())
-			return;
+    protected void unregisterNetworkBridgeMBean(NetworkBridge bridge) {
+        if (!getBrokerService().isUseJmx())
+            return;
 
-		MBeanServer mbeanServer = getBrokerService().getManagementContext()
-				.getMBeanServer();
-		if (mbeanServer != null) {
-			try {
-				ObjectName objectName = createNetworkBridgeObjectName(bridge);
-				mbeanServer.unregisterMBean(objectName);
-			} catch (Throwable e) {
-				log.debug("Network bridge could not be unregistered in JMX: "
-						+ e.getMessage(), e);
-			}
-		}
-	}
+        MBeanServer mbeanServer = getBrokerService().getManagementContext().getMBeanServer();
+        if (mbeanServer != null) {
+            try {
+                ObjectName objectName = createNetworkBridgeObjectName(bridge);
+                mbeanServer.unregisterMBean(objectName);
+            } catch (Throwable e) {
+                log.debug("Network bridge could not be unregistered in JMX: " + e.getMessage(), e);
+            }
+        }
+    }
 
-	protected ObjectName createNetworkBridgeObjectName(NetworkBridge bridge)
-			throws MalformedObjectNameException {
-		ObjectName connectorName = getObjectName();
-		Hashtable map = connectorName.getKeyPropertyList();
-		return new ObjectName(connectorName.getDomain()
-				+ ":"
-				+ "BrokerName="
-				+ JMXSupport.encodeObjectNamePart((String) map
-						.get("BrokerName"))
-				+ ","
-				+ "Type=NetworkBridge,"
-				+ "NetworkConnectorName="
-				+ JMXSupport.encodeObjectNamePart((String) map
-						.get("NetworkConnectorName"))
-				+ ","
-				+ "Name="
-				+ JMXSupport.encodeObjectNamePart(JMXSupport
-						.encodeObjectNamePart(bridge.getRemoteAddress())));
-	}
+    protected ObjectName createNetworkBridgeObjectName(NetworkBridge bridge)
+        throws MalformedObjectNameException {
+        ObjectName connectorName = getObjectName();
+        Hashtable map = connectorName.getKeyPropertyList();
+        return new ObjectName(connectorName.getDomain()
+                              + ":"
+                              + "BrokerName="
+                              + JMXSupport.encodeObjectNamePart((String)map.get("BrokerName"))
+                              + ","
+                              + "Type=NetworkBridge,"
+                              + "NetworkConnectorName="
+                              + JMXSupport.encodeObjectNamePart((String)map.get("NetworkConnectorName"))
+                              + ","
+                              + "Name="
+                              + JMXSupport.encodeObjectNamePart(JMXSupport.encodeObjectNamePart(bridge
+                                  .getRemoteAddress())));
+    }
 
 }

@@ -118,8 +118,7 @@ public abstract class TransportFactory {
                 throw new IllegalArgumentException("Invalid connect parameters: " + options);
             }
             return rc;
-        }
-        catch (URISyntaxException e) {
+        } catch (URISyntaxException e) {
             throw IOExceptionSupport.create(e);
         }
     }
@@ -135,16 +134,16 @@ public abstract class TransportFactory {
             }
             return rc;
 
-        }
-        catch (URISyntaxException e) {
+        } catch (URISyntaxException e) {
             throw IOExceptionSupport.create(e);
         }
     }
 
     /**
      * Factory method to create a new transport
-     * @throws IOException 
-     * @throws UnknownHostException 
+     * 
+     * @throws IOException
+     * @throws UnknownHostException
      */
     protected Transport createTransport(URI location, WireFormat wf) throws MalformedURLException, UnknownHostException, IOException {
         throw new IOException("createTransport() method not implemented!");
@@ -157,16 +156,15 @@ public abstract class TransportFactory {
      */
     private static TransportFactory findTransportFactory(URI location) throws IOException {
         String scheme = location.getScheme();
-        if( scheme == null )
+        if (scheme == null)
             throw new IOException("Transport not scheme specified: [" + location + "]");
-        TransportFactory tf = (TransportFactory) transportFactorys.get(scheme);
+        TransportFactory tf = (TransportFactory)transportFactorys.get(scheme);
         if (tf == null) {
             // Try to load if from a META-INF property.
             try {
-                tf = (TransportFactory) transportFactoryFinder.newInstance(scheme);
+                tf = (TransportFactory)transportFactoryFinder.newInstance(scheme);
                 transportFactorys.put(scheme, tf);
-            }
-            catch (Throwable e) {
+            } catch (Throwable e) {
                 throw IOExceptionSupport.create("Transport scheme NOT recognized: [" + scheme + "]", e);
             }
         }
@@ -180,16 +178,15 @@ public abstract class TransportFactory {
     }
 
     protected WireFormatFactory createWireFormatFactory(Map options) throws IOException {
-        String wireFormat = (String) options.get("wireFormat");
+        String wireFormat = (String)options.get("wireFormat");
         if (wireFormat == null)
             wireFormat = getDefaultWireFormatType();
 
         try {
-            WireFormatFactory wff = (WireFormatFactory) wireFormatFactoryFinder.newInstance(wireFormat);
+            WireFormatFactory wff = (WireFormatFactory)wireFormatFactoryFinder.newInstance(wireFormat);
             IntrospectionSupport.setProperties(wff, options, "wireFormat.");
             return wff;
-        }
-        catch (Throwable e) {
+        } catch (Throwable e) {
             throw IOExceptionSupport.create("Could not create wire format factory for: " + wireFormat + ", reason: " + e, e);
         }
     }
@@ -199,8 +196,8 @@ public abstract class TransportFactory {
     }
 
     /**
-     * Fully configures and adds all need transport filters so that the transport
-     * can be used by the JMS client.
+     * Fully configures and adds all need transport filters so that the
+     * transport can be used by the JMS client.
      * 
      * @param transport
      * @param wf
@@ -209,19 +206,19 @@ public abstract class TransportFactory {
      * @throws Exception
      */
     public Transport configure(Transport transport, WireFormat wf, Map options) throws Exception {
-    	transport = compositeConfigure(transport, wf, options);
-    	
+        transport = compositeConfigure(transport, wf, options);
+
         transport = new MutexTransport(transport);
         transport = new ResponseCorrelator(transport);
-        
+
         return transport;
     }
 
     /**
-     * Fully configures and adds all need transport filters so that the transport
-     * can be used by the ActiveMQ message broker.  The main difference between this and the 
-     * configure() method is that the broker does not issue requests to the client so the
-     * ResponseCorrelator is not needed.
+     * Fully configures and adds all need transport filters so that the
+     * transport can be used by the ActiveMQ message broker. The main difference
+     * between this and the configure() method is that the broker does not issue
+     * requests to the client so the ResponseCorrelator is not needed.
      * 
      * @param transport
      * @param format
@@ -229,15 +226,16 @@ public abstract class TransportFactory {
      * @return
      * @throws Exception
      */
-	public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
-    	transport = compositeConfigure(transport, format, options);    	
+    public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
+        transport = compositeConfigure(transport, format, options);
         transport = new MutexTransport(transport);
         return transport;
-	}
-    
+    }
+
     /**
-     * Similar to configure(...) but this avoid adding in the MutexTransport and ResponseCorrelator transport layers
-     * so that the resulting transport can more efficiently be used as part of a composite transport.
+     * Similar to configure(...) but this avoid adding in the MutexTransport and
+     * ResponseCorrelator transport layers so that the resulting transport can
+     * more efficiently be used as part of a composite transport.
      * 
      * @param transport
      * @param format

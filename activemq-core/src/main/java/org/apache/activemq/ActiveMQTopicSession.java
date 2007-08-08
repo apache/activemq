@@ -104,8 +104,9 @@ public class ActiveMQTopicSession implements TopicSession {
      * @throws JMSException
      */
     public MessageConsumer createConsumer(Destination destination) throws JMSException {
-        if (destination instanceof Queue)
+        if (destination instanceof Queue) {
             throw new InvalidDestinationException("Queues are not supported by a TopicSession");
+        }
         return next.createConsumer(destination);
     }
 
@@ -116,8 +117,9 @@ public class ActiveMQTopicSession implements TopicSession {
      * @throws JMSException
      */
     public MessageConsumer createConsumer(Destination destination, String messageSelector) throws JMSException {
-        if (destination instanceof Queue)
+        if (destination instanceof Queue) {
             throw new InvalidDestinationException("Queues are not supported by a TopicSession");
+        }
         return next.createConsumer(destination, messageSelector);
     }
 
@@ -129,8 +131,9 @@ public class ActiveMQTopicSession implements TopicSession {
      * @throws JMSException
      */
     public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean NoLocal) throws JMSException {
-        if (destination instanceof Queue)
+        if (destination instanceof Queue) {
             throw new InvalidDestinationException("Queues are not supported by a TopicSession");
+        }
         return next.createConsumer(destination, messageSelector, NoLocal);
     }
 
@@ -195,8 +198,9 @@ public class ActiveMQTopicSession implements TopicSession {
      * @throws JMSException
      */
     public MessageProducer createProducer(Destination destination) throws JMSException {
-        if (destination instanceof Queue)
+        if (destination instanceof Queue) {
             throw new InvalidDestinationException("Queues are not supported by a TopicSession");
+        }
         return next.createProducer(destination);
     }
 

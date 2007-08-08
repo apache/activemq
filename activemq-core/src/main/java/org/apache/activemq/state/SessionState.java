@@ -29,68 +29,74 @@ import org.apache.activemq.command.SessionInfo;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class SessionState {        
+public class SessionState {
     final SessionInfo info;
-    
+
     public final ConcurrentHashMap producers = new ConcurrentHashMap();
     public final ConcurrentHashMap consumers = new ConcurrentHashMap();
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
-    
+
     public SessionState(SessionInfo info) {
         this.info = info;
-    }        
+    }
+
     public String toString() {
         return info.toString();
     }
-    
+
     public void addProducer(ProducerInfo info) {
-    	checkShutdown();
-        producers.put(info.getProducerId(), new ProducerState(info));            
-    }        
+        checkShutdown();
+        producers.put(info.getProducerId(), new ProducerState(info));
+    }
+
     public ProducerState removeProducer(ProducerId id) {
-        return (ProducerState) producers.remove(id);
+        return (ProducerState)producers.remove(id);
     }
-    
+
     public void addConsumer(ConsumerInfo info) {
-    	checkShutdown();
-        consumers.put(info.getConsumerId(), new ConsumerState(info));            
-    }        
-    public ConsumerState removeConsumer(ConsumerId id) {
-        return (ConsumerState) consumers.remove(id);
+        checkShutdown();
+        consumers.put(info.getConsumerId(), new ConsumerState(info));
     }
-    
+
+    public ConsumerState removeConsumer(ConsumerId id) {
+        return (ConsumerState)consumers.remove(id);
+    }
+
     public SessionInfo getInfo() {
         return info;
     }
-    
+
     public Set getConsumerIds() {
         return consumers.keySet();
-    }                
+    }
+
     public Set getProducerIds() {
         return producers.keySet();
-    }    
+    }
+
     public Collection getProducerStates() {
         return producers.values();
     }
-	public ProducerState getProducerState(ProducerId producerId) {
-		return (ProducerState) producers.get(producerId);
-	}
-    
+
+    public ProducerState getProducerState(ProducerId producerId) {
+        return (ProducerState)producers.get(producerId);
+    }
+
     public Collection getConsumerStates() {
         return consumers.values();
     }
-    
+
     public ConsumerState getConsumerState(ConsumerId consumerId) {
         return (ConsumerState)consumers.get(consumerId);
     }
-    
+
     private void checkShutdown() {
-		if( shutdown.get() )
-			throw new IllegalStateException("Disposed");
-	}
-    
+        if (shutdown.get())
+            throw new IllegalStateException("Disposed");
+    }
+
     public void shutdown() {
-    	shutdown.set(false);
+        shutdown.set(false);
     }
 
 }

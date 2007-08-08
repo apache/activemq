@@ -41,12 +41,11 @@ public abstract class ArithmeticExpression extends BinaryExpression {
         return new ArithmeticExpression(left, right) {
             protected Object evaluate(Object lvalue, Object rvalue) {
                 if (lvalue instanceof String) {
-                    String text = (String) lvalue;
+                    String text = (String)lvalue;
                     String answer = text + rvalue;
                     return answer;
-                }
-                else if (lvalue instanceof Number) {
-                    return plus((Number) lvalue, asNumber(rvalue));
+                } else if (lvalue instanceof Number) {
+                    return plus((Number)lvalue, asNumber(rvalue));
                 }
                 throw new RuntimeException("Cannot call plus operation on: " + lvalue + " and: " + rvalue);
             }
@@ -61,7 +60,7 @@ public abstract class ArithmeticExpression extends BinaryExpression {
         return new ArithmeticExpression(left, right) {
             protected Object evaluate(Object lvalue, Object rvalue) {
                 if (lvalue instanceof Number) {
-                    return minus((Number) lvalue, asNumber(rvalue));
+                    return minus((Number)lvalue, asNumber(rvalue));
                 }
                 throw new RuntimeException("Cannot call minus operation on: " + lvalue + " and: " + rvalue);
             }
@@ -77,7 +76,7 @@ public abstract class ArithmeticExpression extends BinaryExpression {
 
             protected Object evaluate(Object lvalue, Object rvalue) {
                 if (lvalue instanceof Number) {
-                    return multiply((Number) lvalue, asNumber(rvalue));
+                    return multiply((Number)lvalue, asNumber(rvalue));
                 }
                 throw new RuntimeException("Cannot call multiply operation on: " + lvalue + " and: " + rvalue);
             }
@@ -93,7 +92,7 @@ public abstract class ArithmeticExpression extends BinaryExpression {
 
             protected Object evaluate(Object lvalue, Object rvalue) {
                 if (lvalue instanceof Number) {
-                    return divide((Number) lvalue, asNumber(rvalue));
+                    return divide((Number)lvalue, asNumber(rvalue));
                 }
                 throw new RuntimeException("Cannot call divide operation on: " + lvalue + " and: " + rvalue);
             }
@@ -109,7 +108,7 @@ public abstract class ArithmeticExpression extends BinaryExpression {
 
             protected Object evaluate(Object lvalue, Object rvalue) {
                 if (lvalue instanceof Number) {
-                    return mod((Number) lvalue, asNumber(rvalue));
+                    return mod((Number)lvalue, asNumber(rvalue));
                 }
                 throw new RuntimeException("Cannot call mod operation on: " + lvalue + " and: " + rvalue);
             }
@@ -122,34 +121,34 @@ public abstract class ArithmeticExpression extends BinaryExpression {
 
     protected Number plus(Number left, Number right) {
         switch (numberType(left, right)) {
-            case INTEGER:
-                return new Integer(left.intValue() + right.intValue());
-            case LONG:
-                return new Long(left.longValue() + right.longValue());
-            default:
-                return new Double(left.doubleValue() + right.doubleValue());
+        case INTEGER:
+            return new Integer(left.intValue() + right.intValue());
+        case LONG:
+            return new Long(left.longValue() + right.longValue());
+        default:
+            return new Double(left.doubleValue() + right.doubleValue());
         }
     }
 
     protected Number minus(Number left, Number right) {
         switch (numberType(left, right)) {
-            case INTEGER:
-                return new Integer(left.intValue() - right.intValue());
-            case LONG:
-                return new Long(left.longValue() - right.longValue());
-            default:
-                return new Double(left.doubleValue() - right.doubleValue());
+        case INTEGER:
+            return new Integer(left.intValue() - right.intValue());
+        case LONG:
+            return new Long(left.longValue() - right.longValue());
+        default:
+            return new Double(left.doubleValue() - right.doubleValue());
         }
     }
 
     protected Number multiply(Number left, Number right) {
         switch (numberType(left, right)) {
-            case INTEGER:
-                return new Integer(left.intValue() * right.intValue());
-            case LONG:
-                return new Long(left.longValue() * right.longValue());
-            default:
-                return new Double(left.doubleValue() * right.doubleValue());
+        case INTEGER:
+            return new Integer(left.intValue() * right.intValue());
+        case LONG:
+            return new Long(left.longValue() * right.longValue());
+        default:
+            return new Double(left.doubleValue() * right.doubleValue());
         }
     }
 
@@ -164,11 +163,9 @@ public abstract class ArithmeticExpression extends BinaryExpression {
     private int numberType(Number left, Number right) {
         if (isDouble(left) || isDouble(right)) {
             return DOUBLE;
-        }
-        else if (left instanceof Long || right instanceof Long) {
+        } else if (left instanceof Long || right instanceof Long) {
             return LONG;
-        }
-        else {
+        } else {
             return INTEGER;
         }
     }
@@ -179,9 +176,8 @@ public abstract class ArithmeticExpression extends BinaryExpression {
 
     protected Number asNumber(Object value) {
         if (value instanceof Number) {
-            return (Number) value;
-        }
-        else {
+            return (Number)value;
+        } else {
             throw new RuntimeException("Cannot convert value: " + value + " into a number");
         }
     }
@@ -197,7 +193,6 @@ public abstract class ArithmeticExpression extends BinaryExpression {
         }
         return evaluate(lvalue, rvalue);
     }
-
 
     /**
      * @param lvalue

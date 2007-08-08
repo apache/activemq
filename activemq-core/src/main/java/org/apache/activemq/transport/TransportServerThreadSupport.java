@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.transport;
 
-
 import org.apache.activemq.ThreadPriorities;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
@@ -36,7 +35,8 @@ public abstract class TransportServerThreadSupport extends TransportServerSuppor
     private boolean daemon = true;
     private boolean joinOnStop = true;
     private Thread runner;
-    private long stackSize=0;//should be a multiple of 128k
+ // should be a multiple of 128k
+    private long stackSize = 0;
 
     public TransportServerThreadSupport() {
     }
@@ -56,13 +56,13 @@ public abstract class TransportServerThreadSupport extends TransportServerSuppor
         this.daemon = daemon;
     }
 
-    
     public boolean isJoinOnStop() {
         return joinOnStop;
     }
 
     /**
-     * Sets whether the background read thread is joined with (waited for) on a stop
+     * Sets whether the background read thread is joined with (waited for) on a
+     * stop
      */
     public void setJoinOnStop(boolean joinOnStop) {
         this.joinOnStop = joinOnStop;
@@ -70,7 +70,7 @@ public abstract class TransportServerThreadSupport extends TransportServerSuppor
 
     protected void doStart() throws Exception {
         log.info("Listening for connections at: " + getConnectURI());
-        runner = new Thread(null,this, "ActiveMQ Transport Server: "+toString(),stackSize);
+        runner = new Thread(null, this, "ActiveMQ Transport Server: " + toString(), stackSize);
         runner.setDaemon(daemon);
         runner.setPriority(ThreadPriorities.BROKER_MANAGEMENT);
         runner.start();
@@ -83,19 +83,17 @@ public abstract class TransportServerThreadSupport extends TransportServerSuppor
         }
     }
 
-    
     /**
      * @return the stackSize
      */
-    public long getStackSize(){
+    public long getStackSize() {
         return this.stackSize;
     }
 
-    
     /**
      * @param stackSize the stackSize to set
      */
-    public void setStackSize(long stackSize){
-        this.stackSize=stackSize;
+    public void setStackSize(long stackSize) {
+        this.stackSize = stackSize;
     }
 }
