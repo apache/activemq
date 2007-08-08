@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,12 +35,12 @@ public class MultipleTestsWithEmbeddedBrokerTest extends EmbeddedBrokerTestSuppo
     }
 
     protected void setUp() throws Exception {
-        log.info("### starting up the test case: " + getName());
+        LOG.info("### starting up the test case: " + getName());
 
         super.setUp();
         connection = connectionFactory.createConnection();
         connection.start();
-        log.info("### started up the test case: " + getName());
+        LOG.info("### started up the test case: " + getName());
     }
 
     protected void tearDown() throws Exception {
@@ -49,6 +48,6 @@ public class MultipleTestsWithEmbeddedBrokerTest extends EmbeddedBrokerTestSuppo
 
         super.tearDown();
 
-        log.info("### closed down the test case: " + getName());
+        LOG.info("### closed down the test case: " + getName());
     }
 }

@@ -18,11 +18,12 @@ import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.kaha.Store;
 
 /**
- * Abstraction to allow different policies for holding messages awaiting dispatch to active clients
+ * Abstraction to allow different policies for holding messages awaiting
+ * dispatch to active clients
  * 
  * @version $Revision$
  */
-public interface PendingDurableSubscriberMessageStoragePolicy{
+public interface PendingDurableSubscriberMessageStoragePolicy {
 
     /**
      * Retrieve the configured pending message storage cursor;
@@ -33,6 +34,5 @@ public interface PendingDurableSubscriberMessageStoragePolicy{
      * @param maxBatchSize
      * @return the Pending Message cursor
      */
-    public PendingMessageCursor getSubscriberPendingMessageCursor(String clientId,String name,Store tmpStorage,
-            int maxBatchSize);
+    public PendingMessageCursor getSubscriberPendingMessageCursor(String clientId, String name, Store tmpStorage, int maxBatchSize);
 }

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +16,7 @@
  */
 
 package org.apache.activemq.transport.peer;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -56,7 +56,7 @@ public class PeerTransportTest extends TestCase {
     protected MessageIdList messageIdList[];
 
     protected void setUp() throws Exception {
-        
+
         connections = new Connection[NUMBER_IN_CLUSTER];
         producers = new MessageProducer[NUMBER_IN_CLUSTER];
         messageIdList = new MessageIdList[NUMBER_IN_CLUSTER];
@@ -64,8 +64,7 @@ public class PeerTransportTest extends TestCase {
 
         String root = System.getProperty("activemq.store.dir");
 
-        
-        for (int i = 0;i < NUMBER_IN_CLUSTER;i++) {
+        for (int i = 0; i < NUMBER_IN_CLUSTER; i++) {
             connections[i] = createConnection(i);
             connections[i].setClientID("ClusterTest" + i);
             connections[i].start();
@@ -77,35 +76,36 @@ public class PeerTransportTest extends TestCase {
             messageIdList[i] = new MessageIdList();
             consumer.setMessageListener(messageIdList[i]);
         }
-        
+
         log.info("Waiting for cluster to be fully connected");
-        
-        // Each connection should see that NUMBER_IN_CLUSTER consumers get registered on the destination.
+
+        // Each connection should see that NUMBER_IN_CLUSTER consumers get
+        // registered on the destination.
         ActiveMQDestination advisoryDest = AdvisorySupport.getConsumerAdvisoryTopic(destination);
-        for (int i = 0;i < NUMBER_IN_CLUSTER;i++) {
+        for (int i = 0; i < NUMBER_IN_CLUSTER; i++) {
             Session session = connections[i].createSession(false, Session.AUTO_ACKNOWLEDGE);
             MessageConsumer consumer = createMessageConsumer(session, advisoryDest);
-            
-            int j=0;
-            while(j < NUMBER_IN_CLUSTER) {
-                ActiveMQMessage message = (ActiveMQMessage) consumer.receive(1000);
-                if( message == null ) {
-                    fail("Connection "+i+" saw "+j+" consumers, expected: "+NUMBER_IN_CLUSTER);
+
+            int j = 0;
+            while (j < NUMBER_IN_CLUSTER) {
+                ActiveMQMessage message = (ActiveMQMessage)consumer.receive(1000);
+                if (message == null) {
+                    fail("Connection " + i + " saw " + j + " consumers, expected: " + NUMBER_IN_CLUSTER);
                 }
-                if( message.getDataStructure()!=null && message.getDataStructure().getDataStructureType()==ConsumerInfo.DATA_STRUCTURE_TYPE ) {
+                if (message.getDataStructure() != null && message.getDataStructure().getDataStructureType() == ConsumerInfo.DATA_STRUCTURE_TYPE) {
                     j++;
                 }
             }
-            
+
             session.close();
         }
-        
+
         log.info("Cluster is online.");
     }
 
     protected void tearDown() throws Exception {
         if (connections != null) {
-            for (int i = 0;i < connections.length;i++) {
+            for (int i = 0; i < connections.length; i++) {
                 connections[i].close();
             }
         }
@@ -117,7 +117,7 @@ public class PeerTransportTest extends TestCase {
 
     protected Connection createConnection(int i) throws JMSException {
         log.info("creating connection ....");
-        ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory("peer://" + getClass().getName()+"/node"+i);
+        ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory("peer://" + getClass().getName() + "/node" + i);
         return fac.createConnection();
     }
 
@@ -128,30 +128,28 @@ public class PeerTransportTest extends TestCase {
     protected ActiveMQDestination createDestination(String name) {
         if (topic) {
             return new ActiveMQTopic(name);
-        }
-        else {
+        } else {
             return new ActiveMQQueue(name);
         }
     }
-
 
     /**
      * @throws Exception
      */
     public void testSendReceive() throws Exception {
-        for (int i = 0;i < MESSAGE_COUNT;i++) {
-            for (int x = 0;x < producers.length;x++) {
+        for (int i = 0; i < MESSAGE_COUNT; i++) {
+            for (int x = 0; x < producers.length; x++) {
                 TextMessage textMessage = new ActiveMQTextMessage();
                 textMessage.setText("MSG-NO: " + i + " in cluster: " + x);
                 producers[x].send(textMessage);
             }
         }
-        
-        for (int i = 0;i < NUMBER_IN_CLUSTER;i++) {
+
+        for (int i = 0; i < NUMBER_IN_CLUSTER; i++) {
             messageIdList[i].assertMessagesReceived(expectedReceiveCount());
         }
     }
-    
+
     protected int expectedReceiveCount() {
         return MESSAGE_COUNT * NUMBER_IN_CLUSTER;
     }

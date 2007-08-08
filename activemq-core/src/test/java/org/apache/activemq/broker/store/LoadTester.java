@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,29 +39,28 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 
 /**
- * 
  * @version $Revision$
  */
 public class LoadTester extends JmsTestSupport {
 
-	protected int MESSAGE_SIZE=1024*64;
-	protected int PRODUCE_COUNT=10000;
+    protected int MESSAGE_SIZE = 1024 * 64;
+    protected int PRODUCE_COUNT = 10000;
 
     protected BrokerService createBroker() throws Exception {
-         return BrokerFactory.createBroker(new URI("xbean:org/apache/activemq/broker/store/loadtester.xml"));
+        return BrokerFactory.createBroker(new URI("xbean:org/apache/activemq/broker/store/loadtester.xml"));
     }
-    
+
     protected ConnectionFactory createConnectionFactory() throws URISyntaxException, IOException {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(((TransportConnector)broker.getTransportConnectors().get(0)).getServer().getConnectURI());
         factory.setUseAsyncSend(true);
         return factory;
     }
-    
+
     public void testQueueSendThenAddConsumer() throws Exception {
         ProgressPrinter printer = new ProgressPrinter(PRODUCE_COUNT, 20);
-   
+
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
-        
+
         connection.setUseCompression(false);
         connection.getPrefetchPolicy().setAll(10);
         connection.start();
@@ -70,36 +68,36 @@ public class LoadTester extends JmsTestSupport {
         MessageProducer producer = session.createProducer(destination);
         producer.setDeliveryMode(DeliveryMode.PERSISTENT);
 
-        log.info("Sending "+ PRODUCE_COUNT+" messages that are "+(MESSAGE_SIZE/1024.0)+"k large, for a total of "+(PRODUCE_COUNT*MESSAGE_SIZE/(1024.0*1024.0))+" megs of data.");
+        log.info("Sending " + PRODUCE_COUNT + " messages that are " + (MESSAGE_SIZE / 1024.0) + "k large, for a total of " + (PRODUCE_COUNT * MESSAGE_SIZE / (1024.0 * 1024.0))
+                 + " megs of data.");
         // Send a message to the broker.
         long start = System.currentTimeMillis();
-        for( int i=0; i < PRODUCE_COUNT; i++) {
+        for (int i = 0; i < PRODUCE_COUNT; i++) {
             printer.increment();
-            BytesMessage  msg = session.createBytesMessage();
+            BytesMessage msg = session.createBytesMessage();
             msg.writeBytes(new byte[MESSAGE_SIZE]);
             producer.send(msg);
         }
         long end1 = System.currentTimeMillis();
-        
-        log.info("Produced messages/sec: "+ (PRODUCE_COUNT*1000.0/(end1-start)));
-        
+
+        log.info("Produced messages/sec: " + (PRODUCE_COUNT * 1000.0 / (end1 - start)));
+
         printer = new ProgressPrinter(PRODUCE_COUNT, 10);
         start = System.currentTimeMillis();
         MessageConsumer consumer = session.createConsumer(destination);
-        for( int i=0; i < PRODUCE_COUNT; i++) {
+        for (int i = 0; i < PRODUCE_COUNT; i++) {
             printer.increment();
-            assertNotNull("Getting message: "+i,consumer.receive(20000));
+            assertNotNull("Getting message: " + i, consumer.receive(20000));
         }
         end1 = System.currentTimeMillis();
-        log.info("Consumed messages/sec: "+ (PRODUCE_COUNT*1000.0/(end1-start)));
-        
-        
+        log.info("Consumed messages/sec: " + (PRODUCE_COUNT * 1000.0 / (end1 - start)));
+
     }
 
     public static Test suite() {
         return suite(LoadTester.class);
     }
-    
+
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }

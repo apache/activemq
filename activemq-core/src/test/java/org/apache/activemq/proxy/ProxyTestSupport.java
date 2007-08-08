@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,15 +25,14 @@ import org.apache.activemq.broker.BrokerTestSupport;
 import org.apache.activemq.broker.StubConnection;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.memory.UsageManager;
-import org.apache.activemq.proxy.ProxyConnector;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 
 public class ProxyTestSupport extends BrokerTestSupport {
-    
+
     protected ArrayList connections = new ArrayList();
-    
+
     protected TransportConnector connector;
 
     protected PersistenceAdapter remotePersistenceAdapter;
@@ -50,12 +48,12 @@ public class ProxyTestSupport extends BrokerTestSupport {
         service.setPersistent(false);
 
         connector = service.addConnector(getLocalURI());
-        proxyConnector=new ProxyConnector();
+        proxyConnector = new ProxyConnector();
         proxyConnector.setName("proxy");
         proxyConnector.setBind(new URI(getLocalProxyURI()));
-        proxyConnector.setRemote(new URI("fanout:static://"+getRemoteURI()));
+        proxyConnector.setRemote(new URI("fanout:static://" + getRemoteURI()));
         service.addProxyConnector(proxyConnector);
-        
+
         return service;
     }
 
@@ -68,22 +66,21 @@ public class ProxyTestSupport extends BrokerTestSupport {
         remoteProxyConnector = new ProxyConnector();
         remoteProxyConnector.setName("remoteProxy");
         remoteProxyConnector.setBind(new URI(getRemoteProxyURI()));
-        remoteProxyConnector.setRemote(new URI("fanout:static://"+getLocalURI()));
+        remoteProxyConnector.setRemote(new URI("fanout:static://" + getLocalURI()));
         service.addProxyConnector(remoteProxyConnector);
-        
+
         return service;
     }
-    
 
     protected void setUp() throws Exception {
         super.setUp();
         remoteBroker = createRemoteBroker();
         remoteBroker.start();
     }
-    
+
     protected void tearDown() throws Exception {
         for (Iterator iter = connections.iterator(); iter.hasNext();) {
-            StubConnection connection = (StubConnection) iter.next();
+            StubConnection connection = (StubConnection)iter.next();
             connection.stop();
             iter.remove();
         }
@@ -134,5 +131,5 @@ public class ProxyTestSupport extends BrokerTestSupport {
         connections.add(connection);
         return connection;
     }
-    
+
 }

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -20,6 +19,11 @@ package org.apache.activemq;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
@@ -33,8 +37,6 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 
 import junit.framework.Test;
-
-import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
@@ -42,12 +44,6 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Benchmarks the broker by starting many consumer and producers against the
@@ -61,9 +57,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class JmsBenchmark extends JmsTestSupport {
     private static final transient Log log = LogFactory.getLog(JmsBenchmark.class);
 
-    private static final long SAMPLE_DELAY = Integer.parseInt(System.getProperty("SAMPLE_DELAY", "" + 1000 * 5));
+    private static final long SAMPLE_DELAY = Integer.parseInt(System.getProperty("SAMPLE_DELAY",
+                                                                                 "" + 1000 * 5));
     private static final long SAMPLES = Integer.parseInt(System.getProperty("SAMPLES", "10"));
-    private static final long SAMPLE_DURATION = Integer.parseInt(System.getProperty("SAMPLES_DURATION", "" + 1000*60));
+    private static final long SAMPLE_DURATION = Integer.parseInt(System.getProperty("SAMPLES_DURATION",
+                                                                                    "" + 1000 * 60));
     private static final int PRODUCER_COUNT = Integer.parseInt(System.getProperty("PRODUCER_COUNT", "10"));
     private static final int CONSUMER_COUNT = Integer.parseInt(System.getProperty("CONSUMER_COUNT", "10"));
 
@@ -78,10 +76,9 @@ public class JmsBenchmark extends JmsTestSupport {
     }
 
     public void initCombos() {
-        addCombinationValues("destination", new Object[] { 
-//                new ActiveMQTopic("TEST"), 
-                new ActiveMQQueue("TEST"), 
-                });
+        addCombinationValues("destination", new Object[] {
+        // new ActiveMQTopic("TEST"),
+                             new ActiveMQQueue("TEST"),});
     }
 
     protected BrokerService createBroker() throws Exception {
@@ -89,11 +86,12 @@ public class JmsBenchmark extends JmsTestSupport {
     }
 
     protected ConnectionFactory createConnectionFactory() throws URISyntaxException, IOException {
-        return new ActiveMQConnectionFactory(((TransportConnector) broker.getTransportConnectors().get(0)).getServer().getConnectURI());
+        return new ActiveMQConnectionFactory(((TransportConnector)broker.getTransportConnectors().get(0))
+            .getServer().getConnectURI());
     }
 
     /**
-     * @throws Throwable 
+     * @throws Throwable
      */
     public void testConcurrentSendReceive() throws Throwable {
 
@@ -180,27 +178,26 @@ public class JmsBenchmark extends JmsTestSupport {
         log.info(getName() + ": Waiting for Producers and Consumers to startup.");
         connectionsEstablished.acquire();
         log.info("Producers and Consumers are now running.  Waiting for system to reach steady state: "
-                + (SAMPLE_DELAY / 1000.0f) + " seconds");
+                 + (SAMPLE_DELAY / 1000.0f) + " seconds");
         Thread.sleep(1000 * 10);
 
-        log.info("Starting sample: "+SAMPLES+" each lasting "+ (SAMPLE_DURATION / 1000.0f) + " seconds");
-
+        log.info("Starting sample: " + SAMPLES + " each lasting " + (SAMPLE_DURATION / 1000.0f) + " seconds");
 
         long now = System.currentTimeMillis();
-        for( int i=0; i < SAMPLES; i ++) {
-            
+        for (int i = 0; i < SAMPLES; i++) {
+
             long start = System.currentTimeMillis();
             producedMessages.set(0);
             receivedMessages.set(0);
-            
+
             Thread.sleep(SAMPLE_DURATION);
-            
+
             long end = System.currentTimeMillis();
             int r = receivedMessages.get();
             int p = producedMessages.get();
-            
-            log.info("published: " + p + " msgs at "+ (p * 1000f / (end - start)) + " msgs/sec, "+
-                    "consumed: " + r + " msgs at "+ (r * 1000f / (end - start)) + " msgs/sec");
+
+            log.info("published: " + p + " msgs at " + (p * 1000f / (end - start)) + " msgs/sec, "
+                     + "consumed: " + r + " msgs at " + (r * 1000f / (end - start)) + " msgs/sec");
         }
 
         log.info("Sample done.");

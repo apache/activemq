@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,20 +20,19 @@ import javax.jms.JMSException;
 import javax.jms.Topic;
 
 /**
- * 
- * @org.apache.xbean.XBean element="topic" description="An ActiveMQ Topic Destination"
- *                  
+ * @org.apache.xbean.XBean element="topic" description="An ActiveMQ Topic
+ *                         Destination"
  * @openwire:marshaller code="101"
  * @version $Revision: 1.5 $
  */
 public class ActiveMQTopic extends ActiveMQDestination implements Topic {
 
     private static final long serialVersionUID = 7300307405896488588L;
-    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.ACTIVEMQ_TOPIC;
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_TOPIC;
 
     public ActiveMQTopic() {
     }
-    
+
     public ActiveMQTopic(String name) {
         super(name);
     }
@@ -50,7 +48,7 @@ public class ActiveMQTopic extends ActiveMQDestination implements Topic {
     public String getTopicName() throws JMSException {
         return getPhysicalName();
     }
-    
+
     public byte getDestinationType() {
         return TOPIC_TYPE;
     }

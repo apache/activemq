@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,16 +31,16 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.12 $
  */
 public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
-    
-    static final Log log=LogFactory.getLog(NetworkBridgeFilter.class);
-    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.NETWORK_BRIDGE_FILTER;
+
+    static final Log log = LogFactory.getLog(NetworkBridgeFilter.class);
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.NETWORK_BRIDGE_FILTER;
 
     private BrokerId networkBrokerId;
     private int networkTTL;
 
     public NetworkBridgeFilter() {
     }
-    
+
     public NetworkBridgeFilter(BrokerId remoteBrokerPath, int networkTTL) {
         this.networkBrokerId = remoteBrokerPath;
         this.networkTTL = networkTTL;
@@ -55,48 +54,47 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
         return false;
     }
 
-
-    public boolean matches(MessageEvaluationContext mec) throws JMSException{
-        try{
-            //for Queues - the message can be acknowledged and dropped whilst still
-            //in the dispatch loop
-            //so need to get the reference to it
+    public boolean matches(MessageEvaluationContext mec) throws JMSException {
+        try {
+            // for Queues - the message can be acknowledged and dropped whilst
+            // still
+            // in the dispatch loop
+            // so need to get the reference to it
             Message message = mec.getMessage();
-            return message != null &&  matchesForwardingFilter(message);
-        }catch(IOException e){
+            return message != null && matchesForwardingFilter(message);
+        } catch (IOException e) {
             throw JMSExceptionSupport.create(e);
         }
     }
-    
-    public Object evaluate(MessageEvaluationContext message) throws JMSException{
-        return matches(message)?Boolean.TRUE:Boolean.FALSE;
+
+    public Object evaluate(MessageEvaluationContext message) throws JMSException {
+        return matches(message) ? Boolean.TRUE : Boolean.FALSE;
     }
-    
-    protected boolean matchesForwardingFilter(Message message){
-        
-        if ( contains(message.getBrokerPath(), networkBrokerId) ){
-            if (log.isTraceEnabled()){
+
+    protected boolean matchesForwardingFilter(Message message) {
+
+        if (contains(message.getBrokerPath(), networkBrokerId)) {
+            if (log.isTraceEnabled()) {
                 log.trace("Message all ready routed once through this broker - ignoring: " + message);
             }
             return false;
         }
-        
+
         int hops = message.getBrokerPath() == null ? 0 : message.getBrokerPath().length;
-        
-        if(hops >= networkTTL){
-            if (log.isTraceEnabled()){
+
+        if (hops >= networkTTL) {
+            if (log.isTraceEnabled()) {
                 log.trace("Message restricted to " + networkTTL + " network hops ignoring: " + message);
             }
             return false;
         }
-        
+
         // Don't propagate advisory messages about network subscriptions
-        if(message.isAdvisory()&&message.getDataStructure()!=null
-                        &&message.getDataStructure().getDataStructureType()==CommandTypes.CONSUMER_INFO){
-            ConsumerInfo info=(ConsumerInfo) message.getDataStructure();
+        if (message.isAdvisory() && message.getDataStructure() != null && message.getDataStructure().getDataStructureType() == CommandTypes.CONSUMER_INFO) {
+            ConsumerInfo info = (ConsumerInfo)message.getDataStructure();
             hops = info.getBrokerPath() == null ? 0 : info.getBrokerPath().length;
-            if(hops >= networkTTL ){
-                if (log.isTraceEnabled()){
+            if (hops >= networkTTL) {
+                if (log.isTraceEnabled()) {
                     log.trace("ConsumerInfo advisory restricted to " + networkTTL + " network hops ignoring: " + message);
                 }
                 return false;
@@ -104,11 +102,11 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
         }
         return true;
     }
-    
-    public static boolean contains(BrokerId[] brokerPath,BrokerId brokerId){
-        if(brokerPath!=null && brokerId != null){
-            for(int i=0;i<brokerPath.length;i++){
-                if(brokerId.equals(brokerPath[i]))
+
+    public static boolean contains(BrokerId[] brokerPath, BrokerId brokerId) {
+        if (brokerPath != null && brokerId != null) {
+            for (int i = 0; i < brokerPath.length; i++) {
+                if (brokerId.equals(brokerPath[i]))
                     return true;
             }
         }
@@ -121,10 +119,11 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
     public int getNetworkTTL() {
         return networkTTL;
     }
+
     public void setNetworkTTL(int networkTTL) {
         this.networkTTL = networkTTL;
     }
-    
+
     /**
      * @openwire:property version=1 cache=true
      */

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -52,34 +51,33 @@ public class StubBroker implements Broker {
     public class AddConnectionData {
         public final ConnectionContext connectionContext;
         public final ConnectionInfo connectionInfo;
-        
+
         public AddConnectionData(ConnectionContext context, ConnectionInfo info) {
             connectionContext = context;
             connectionInfo = info;
         }
     }
-    
+
     public static class RemoveConnectionData {
         public final ConnectionContext connectionContext;
         public final ConnectionInfo connectionInfo;
         public final Throwable error;
-        
+
         public RemoveConnectionData(ConnectionContext context, ConnectionInfo info, Throwable error) {
             connectionContext = context;
             connectionInfo = info;
             this.error = error;
         }
     }
-    
+
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
         addConnectionData.add(new AddConnectionData(context, info));
     }
-    
+
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
         removeConnectionData.add(new RemoveConnectionData(context, info, error));
     }
 
-    
     // --- Blank Methods, fill in as needed ---
     public void addBroker(Connection connection, BrokerInfo info) {
     }
@@ -153,7 +151,7 @@ public class StubBroker implements Broker {
     public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         return 0;
     }
-    
+
     public void preProcessDispatch(MessageDispatch messageDispatch) {
     }
 
@@ -210,8 +208,7 @@ public class StubBroker implements Broker {
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
     }
 
-    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout)
-        throws Exception {
+    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
     }
 
     public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
@@ -225,41 +222,40 @@ public class StubBroker implements Broker {
 
     public void stop() throws Exception {
     }
-    
+
     public PendingDurableSubscriberMessageStoragePolicy getPendingDurableSubscriberPolicy() {
         return null;
     }
-  
+
     public void setPendingDurableSubscriberPolicy(PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy) {
     }
 
-	public Store getTempDataStore() {
-		return null;
-	}
-    
-    public URI getVmConnectorURI(){
+    public Store getTempDataStore() {
         return null;
     }
 
-    public void brokerServiceStarted(){        
-    }
-
-    
-    public BrokerService getBrokerService(){
+    public URI getVmConnectorURI() {
         return null;
     }
-    
+
+    public void brokerServiceStarted() {
+    }
+
+    public BrokerService getBrokerService() {
+        return null;
+    }
+
     public boolean isExpired(MessageReference messageReference) {
         return false;
     }
 
-    public void messageExpired(ConnectionContext context,MessageReference messageReference){
+    public void messageExpired(ConnectionContext context, MessageReference messageReference) {
     }
 
-    public void sendToDeadLetterQueue(ConnectionContext context,MessageReference messageReference) {
+    public void sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference) {
     }
 
-    public Broker getRoot(){
+    public Broker getRoot() {
         return this;
     }
 }

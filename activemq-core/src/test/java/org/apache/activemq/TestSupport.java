@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -26,18 +25,15 @@ import javax.jms.Message;
 import javax.jms.TextMessage;
 
 import junit.framework.TestCase;
-
-import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-
 /**
  * Useful base class for unit test cases
- *
+ * 
  * @version $Revision: 1.5 $
  */
 public class TestSupport extends TestCase {
@@ -61,8 +57,7 @@ public class TestSupport extends TestCase {
     protected Destination createDestination(String subject) {
         if (topic) {
             return new ActiveMQTopic(subject);
-        }
-        else {
+        } else {
             return new ActiveMQQueue(subject);
         }
     }
@@ -77,20 +72,22 @@ public class TestSupport extends TestCase {
     protected String getDestinationString() {
         return getClass().getName() + "." + getName();
     }
-    
-    
+
     /**
      * @param messsage
      * @param firstSet
      * @param secondSet
      */
-    protected void assertTextMessagesEqual(String messsage, Message[] firstSet, Message[] secondSet) throws JMSException {
+    protected void assertTextMessagesEqual(String messsage, Message[] firstSet, Message[] secondSet)
+        throws JMSException {
         assertEquals("Message count does not match: " + messsage, firstSet.length, secondSet.length);
         for (int i = 0; i < secondSet.length; i++) {
-            TextMessage m1 = (TextMessage) firstSet[i];
-            TextMessage m2 = (TextMessage) secondSet[i];
-            assertFalse("Message " + (i + 1) + " did not match : " + messsage + ": expected {" + m1 + "}, but was {" + m2 + "}", m1 == null ^ m2 == null);
-            assertEquals("Message " + (i + 1) + " did not match: " + messsage + ": expected {" + m1 + "}, but was {" + m2 + "}", m1.getText(), m2.getText());
+            TextMessage m1 = (TextMessage)firstSet[i];
+            TextMessage m2 = (TextMessage)secondSet[i];
+            assertFalse("Message " + (i + 1) + " did not match : " + messsage + ": expected {" + m1
+                        + "}, but was {" + m2 + "}", m1 == null ^ m2 == null);
+            assertEquals("Message " + (i + 1) + " did not match: " + messsage + ": expected {" + m1
+                         + "}, but was {" + m2 + "}", m1.getText(), m2.getText());
         }
     }
 
@@ -124,10 +121,9 @@ public class TestSupport extends TestCase {
     protected String getSubject() {
         return getName();
     }
-    
-    
+
     public static void recursiveDelete(File f) {
-        if( f.isDirectory() ) {
+        if (f.isDirectory()) {
             File[] files = f.listFiles();
             for (int i = 0; i < files.length; i++) {
                 recursiveDelete(files[i]);
@@ -137,10 +133,10 @@ public class TestSupport extends TestCase {
     }
 
     public static void removeMessageStore() {
-        if( System.getProperty("activemq.store.dir")!=null ) {
+        if (System.getProperty("activemq.store.dir") != null) {
             recursiveDelete(new File(System.getProperty("activemq.store.dir")));
         }
-        if( System.getProperty("derby.system.home")!=null ) {
+        if (System.getProperty("derby.system.home") != null) {
             recursiveDelete(new File(System.getProperty("derby.system.home")));
         }
     }

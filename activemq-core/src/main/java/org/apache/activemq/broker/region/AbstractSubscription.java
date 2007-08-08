@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,40 +39,40 @@ import org.apache.commons.logging.LogFactory;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 abstract public class AbstractSubscription implements Subscription {
-    
+
     static private final Log log = LogFactory.getLog(AbstractSubscription.class);
-    
+
     protected Broker broker;
     protected ConnectionContext context;
     protected ConsumerInfo info;
     final protected DestinationFilter destinationFilter;
     private BooleanExpression selectorExpression;
     private ObjectName objectName;
-   
+
     final protected CopyOnWriteArrayList destinations = new CopyOnWriteArrayList();
 
-    public AbstractSubscription(Broker broker,ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {        
+    public AbstractSubscription(Broker broker, ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
         this.broker = broker;
         this.context = context;
         this.info = info;
         this.destinationFilter = DestinationFilter.parseFilter(info.getDestination());
         this.selectorExpression = parseSelector(info);
     }
-    
+
     static private BooleanExpression parseSelector(ConsumerInfo info) throws InvalidSelectorException {
-        BooleanExpression rc=null;
-        if( info.getSelector() !=null ) {
+        BooleanExpression rc = null;
+        if (info.getSelector() != null) {
             rc = new SelectorParser().parse(info.getSelector());
         }
-        if( info.isNoLocal() ) {
-            if( rc == null ) {
+        if (info.isNoLocal()) {
+            if (rc == null) {
                 rc = new NoLocalExpression(info.getConsumerId().getConnectionId());
             } else {
                 rc = LogicExpression.createAND(new NoLocalExpression(info.getConsumerId().getConnectionId()), rc);
             }
         }
-        if( info.getAdditionalPredicate() != null ) {
-            if( rc == null ) {
+        if (info.getAdditionalPredicate() != null) {
+            if (rc == null) {
                 rc = info.getAdditionalPredicate();
             } else {
                 rc = LogicExpression.createAND(info.getAdditionalPredicate(), rc);
@@ -84,8 +83,8 @@ abstract public class AbstractSubscription implements Subscription {
 
     public boolean matches(MessageReference node, MessageEvaluationContext context) throws IOException {
         ConsumerId targetConsumerId = node.getTargetConsumerId();
-        if ( targetConsumerId!=null) {
-            if( !targetConsumerId.equals(info.getConsumerId()) )
+        if (targetConsumerId != null) {
+            if (!targetConsumerId.equals(info.getConsumerId()))
                 return false;
         }
         try {
@@ -95,7 +94,7 @@ abstract public class AbstractSubscription implements Subscription {
             return false;
         }
     }
-    
+
     public boolean matches(ActiveMQDestination destination) {
         return destinationFilter.matches(destination);
     }
@@ -107,15 +106,15 @@ abstract public class AbstractSubscription implements Subscription {
     public void remove(ConnectionContext context, Destination destination) throws Exception {
         destinations.remove(destination);
     }
-    
+
     public ConsumerInfo getConsumerInfo() {
         return info;
     }
-    
-    public void gc() {        
+
+    public void gc() {
     }
-    
-    public boolean isSlave(){
+
+    public boolean isSlave() {
         return getContext().isSlave();
     }
 
@@ -130,11 +129,11 @@ abstract public class AbstractSubscription implements Subscription {
     public BooleanExpression getSelectorExpression() {
         return selectorExpression;
     }
-    
+
     public String getSelector() {
         return info.getSelector();
     }
-    
+
     public void setSelector(String selector) throws InvalidSelectorException {
         ConsumerInfo copy = info.copy();
         copy.setSelector(selector);
@@ -151,36 +150,36 @@ abstract public class AbstractSubscription implements Subscription {
     public void setObjectName(ObjectName objectName) {
         this.objectName = objectName;
     }
-    
+
     public int getPrefetchSize() {
         return info.getPrefetchSize();
     }
-    
-    public boolean isRecoveryRequired(){
+
+    public boolean isRecoveryRequired() {
         return true;
     }
-    
-    public boolean addRecoveredMessage(ConnectionContext context, MessageReference message) throws Exception{
+
+    public boolean addRecoveredMessage(ConnectionContext context, MessageReference message) throws Exception {
         boolean result = false;
         MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
         try {
             msgContext.setDestination(message.getRegionDestination().getActiveMQDestination());
             msgContext.setMessageReference(message);
-            result = matches(message,msgContext);
+            result = matches(message, msgContext);
             if (result) {
                 doAddRecoveredMessage(message);
             }
-            
-        }finally {
+
+        } finally {
             msgContext.clear();
         }
         return result;
     }
-    
-    public  ActiveMQDestination getActiveMQDestination() {
+
+    public ActiveMQDestination getActiveMQDestination() {
         return info != null ? info.getDestination() : null;
     }
-    
+
     protected void doAddRecoveredMessage(MessageReference message) throws Exception {
         add(message);
     }

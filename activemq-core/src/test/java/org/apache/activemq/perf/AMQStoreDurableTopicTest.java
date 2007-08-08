@@ -21,11 +21,10 @@ import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 /**
  * @version $Revision: 1.3 $
  */
-public class AMQStoreDurableTopicTest extends SimpleDurableTopicTest{
+public class AMQStoreDurableTopicTest extends SimpleDurableTopicTest {
 
-   
-    protected void configureBroker(BrokerService answer) throws Exception{
-        File dataFileDir=new File("target/test-amq-data/perfTest/amqdb");
+    protected void configureBroker(BrokerService answer) throws Exception {
+        File dataFileDir = new File("target/test-amq-data/perfTest/amqdb");
         AMQPersistenceAdapter adaptor = new AMQPersistenceAdapter();
         adaptor.setDirectory(dataFileDir);
         answer.setPersistenceAdapter(adaptor);

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,38 +16,45 @@
  */
 package org.apache.activemq;
 
-import javax.jms.*;
-
-import org.apache.activemq.network.DiscoveryNetworkConnector;
-import org.apache.activemq.network.NetworkConnector;
-import org.apache.activemq.util.MessageIdList;
-import org.apache.activemq.util.IdGenerator;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.xbean.BrokerFactoryBean;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.BrokerFactory;
-import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.CombinationTestSupport;
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.ConnectionClosedException;
-import org.springframework.core.io.Resource;
-
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
+import java.net.URI;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Collections;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import java.net.URI;
+
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+import javax.jms.Topic;
+
+import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.network.DiscoveryNetworkConnector;
+import org.apache.activemq.network.NetworkConnector;
+import org.apache.activemq.util.IdGenerator;
+import org.apache.activemq.util.MessageIdList;
+import org.apache.activemq.xbean.BrokerFactoryBean;
+import org.springframework.core.io.Resource;
 
 /**
- * Test case support that allows the easy management and connection of several brokers.
- *
+ * Test case support that allows the easy management and connection of several
+ * brokers.
+ * 
  * @version $Revision$
  */
 public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
@@ -61,37 +67,35 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     protected int messageSize = 1;
 
     protected boolean persistentDelivery = true;
-    protected boolean verbose = false;
+    protected boolean verbose;
 
     protected NetworkConnector bridgeBrokers(String localBrokerName, String remoteBrokerName) throws Exception {
-       return bridgeBrokers(localBrokerName,remoteBrokerName,false,1);
+        return bridgeBrokers(localBrokerName, remoteBrokerName, false, 1);
     }
-    
-    
-    protected void bridgeBrokers(String localBrokerName, String remoteBrokerName,boolean dynamicOnly) throws Exception {
-        BrokerService localBroker  = ((BrokerItem)brokers.get(localBrokerName)).broker;
+
+    protected void bridgeBrokers(String localBrokerName, String remoteBrokerName, boolean dynamicOnly) throws Exception {
+        BrokerService localBroker = ((BrokerItem)brokers.get(localBrokerName)).broker;
         BrokerService remoteBroker = ((BrokerItem)brokers.get(remoteBrokerName)).broker;
 
-        bridgeBrokers(localBroker, remoteBroker,dynamicOnly,1);
+        bridgeBrokers(localBroker, remoteBroker, dynamicOnly, 1);
     }
-    
-    protected NetworkConnector bridgeBrokers(String localBrokerName, String remoteBrokerName,boolean dynamicOnly, int networkTTL) throws Exception {
-        BrokerService localBroker  = ((BrokerItem)brokers.get(localBrokerName)).broker;
+
+    protected NetworkConnector bridgeBrokers(String localBrokerName, String remoteBrokerName, boolean dynamicOnly, int networkTTL) throws Exception {
+        BrokerService localBroker = ((BrokerItem)brokers.get(localBrokerName)).broker;
         BrokerService remoteBroker = ((BrokerItem)brokers.get(remoteBrokerName)).broker;
 
-        return bridgeBrokers(localBroker, remoteBroker,dynamicOnly,networkTTL);
+        return bridgeBrokers(localBroker, remoteBroker, dynamicOnly, networkTTL);
     }
-    
-   
 
     // Overwrite this method to specify how you want to bridge the two brokers
-    // By default, bridge them using add network connector of the local broker and the first connector of the remote broker
-    protected NetworkConnector bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker,boolean dynamicOnly, int networkTTL) throws Exception {
+    // By default, bridge them using add network connector of the local broker
+    // and the first connector of the remote broker
+    protected NetworkConnector bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker, boolean dynamicOnly, int networkTTL) throws Exception {
         List transportConnectors = remoteBroker.getTransportConnectors();
         URI remoteURI;
         if (!transportConnectors.isEmpty()) {
             remoteURI = ((TransportConnector)transportConnectors.get(0)).getConnectUri();
-            NetworkConnector connector=new DiscoveryNetworkConnector(new URI("static:" + remoteURI));
+            NetworkConnector connector = new DiscoveryNetworkConnector(new URI("static:" + remoteURI));
             connector.setDynamicOnly(dynamicOnly);
             connector.setNetworkTTL(networkTTL);
             localBroker.addNetworkConnector(connector);
@@ -110,7 +114,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
 
     protected void bridgeAllBrokers(String groupName) throws Exception {
         Collection brokerList = brokers.values();
-        for (Iterator i=brokerList.iterator(); i.hasNext();) {
+        for (Iterator i = brokerList.iterator(); i.hasNext();) {
             BrokerService broker = ((BrokerItem)i.next()).broker;
             List transportConnectors = broker.getTransportConnectors();
 
@@ -130,7 +134,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
 
     protected void startAllBrokers() throws Exception {
         Collection brokerList = brokers.values();
-        for (Iterator i=brokerList.iterator(); i.hasNext();) {
+        for (Iterator i = brokerList.iterator(); i.hasNext();) {
             BrokerService broker = ((BrokerItem)i.next()).broker;
             broker.start();
         }
@@ -179,10 +183,10 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         return null;
     }
 
-    protected MessageConsumer createConsumer(String brokerName, Destination dest) throws Exception {    	
-    	return createConsumer(brokerName, dest, null);
+    protected MessageConsumer createConsumer(String brokerName, Destination dest) throws Exception {
+        return createConsumer(brokerName, dest, null);
     }
-    
+
     protected MessageConsumer createConsumer(String brokerName, Destination dest, CountDownLatch latch) throws Exception {
         BrokerItem brokerItem = (BrokerItem)brokers.get(brokerName);
         if (brokerItem != null) {
@@ -246,7 +250,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
             String str = new String(data);
             msg.setText(initText + str);
 
-        // Do not pad message text
+            // Do not pad message text
         } else {
             msg.setText(initText);
         }
@@ -287,13 +291,12 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     }
 
     protected void destroyAllBrokers() throws Exception {
-        for (Iterator i=brokers.values().iterator(); i.hasNext();) {
+        for (Iterator i = brokers.values().iterator(); i.hasNext();) {
             BrokerItem brokerItem = (BrokerItem)i.next();
             brokerItem.destroy();
         }
         brokers.clear();
     }
-
 
     // Class to group broker components together
     public class BrokerItem {
@@ -305,7 +308,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
 
         private IdGenerator id;
 
-        public boolean persistent = false;
+        public boolean persistent;
 
         public BrokerItem(BrokerService broker) throws Exception {
             this.broker = broker;
@@ -326,9 +329,9 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         }
 
         public MessageConsumer createConsumer(Destination dest) throws Exception {
-        	return createConsumer(dest, null);
+            return createConsumer(dest, null);
         }
-        
+
         public MessageConsumer createConsumer(Destination dest, CountDownLatch latch) throws Exception {
             Connection c = createConnection();
             c.start();
@@ -337,8 +340,9 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         }
 
         public MessageConsumer createConsumerWithSession(Destination dest, Session sess) throws Exception {
-        	return createConsumerWithSession(dest, sess, null);
+            return createConsumerWithSession(dest, sess, null);
         }
+
         public MessageConsumer createConsumerWithSession(Destination dest, Session sess, CountDownLatch latch) throws Exception {
             MessageConsumer client = sess.createConsumer(dest);
             MessageIdList messageIdList = new MessageIdList();

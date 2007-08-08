@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,25 +38,24 @@ import org.apache.activemq.command.XATransactionId;
  * @version $Revision$
  */
 public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
-        
-    
+
     public void testPreparedTransactionRecoveredOnRestart() throws Exception {
-        
+
         ActiveMQDestination destination = createDestination();
-        
-        // Setup the producer and send the message.  
+
+        // Setup the producer and send the message.
         StubConnection connection = createConnection();
         ConnectionInfo connectionInfo = createConnectionInfo();
         SessionInfo sessionInfo = createSessionInfo(connectionInfo);
         ProducerInfo producerInfo = createProducerInfo(sessionInfo);
         connection.send(connectionInfo);
         connection.send(sessionInfo);
-        connection.send(producerInfo);        
+        connection.send(producerInfo);
         ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
         connection.send(consumerInfo);
-        
+
         // Prepare 4 message sends.
-        for( int i=0; i < 4; i++) {
+        for (int i = 0; i < 4; i++) {
             // Begin the transaction.
             XATransactionId txid = createXATransaction(sessionInfo);
             connection.send(createBeginTransaction(connectionInfo, txid));
@@ -66,7 +64,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
             message.setPersistent(true);
             message.setTransactionId(txid);
             connection.send(message);
-            
+
             // Prepare
             connection.send(createPrepareTransaction(connectionInfo, txid));
         }
@@ -77,7 +75,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
         // restart the broker.
         restartBroker();
-        
+
         // Setup the consumer and receive the message.
         connection = createConnection();
         connectionInfo = createConnectionInfo();
@@ -89,56 +87,56 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
 
         // Since prepared but not committed.. they should not get delivered.
         assertNoMessagesLeft(connection);
-        
-        Response response = connection.request( new TransactionInfo(connectionInfo.getConnectionId(), null, TransactionInfo.RECOVER) );
+
+        Response response = connection.request(new TransactionInfo(connectionInfo.getConnectionId(), null, TransactionInfo.RECOVER));
         assertNotNull(response);
-        DataArrayResponse dar = (DataArrayResponse) response;
+        DataArrayResponse dar = (DataArrayResponse)response;
         assertEquals(4, dar.getData().length);
-        
+
         // Commit the prepared transactions.
-        for( int i=0; i < dar.getData().length ;i ++ ) {
-            connection.send( createCommitTransaction2Phase(connectionInfo, (TransactionId)dar.getData()[i]) );
+        for (int i = 0; i < dar.getData().length; i++) {
+            connection.send(createCommitTransaction2Phase(connectionInfo, (TransactionId)dar.getData()[i]));
         }
 
         // We should not get the committed transactions.
-        for( int i=0; i < 4 ;i ++ ) {
+        for (int i = 0; i < 4; i++) {
             Message m = receiveMessage(connection);
             assertNotNull(m);
         }
-        
+
         assertNoMessagesLeft(connection);
     }
 
     public void testQueuePersistentCommitedMessagesNotLostOnRestart() throws Exception {
-        
+
         ActiveMQDestination destination = createDestination();
-        
-        // Setup the producer and send the message.  
+
+        // Setup the producer and send the message.
         StubConnection connection = createConnection();
         ConnectionInfo connectionInfo = createConnectionInfo();
         SessionInfo sessionInfo = createSessionInfo(connectionInfo);
         ProducerInfo producerInfo = createProducerInfo(sessionInfo);
         connection.send(connectionInfo);
         connection.send(sessionInfo);
-        connection.send(producerInfo);        
-        
+        connection.send(producerInfo);
+
         // Begin the transaction.
         XATransactionId txid = createXATransaction(sessionInfo);
         connection.send(createBeginTransaction(connectionInfo, txid));
 
-        for( int i=0; i < 4; i++) {
+        for (int i = 0; i < 4; i++) {
             Message message = createMessage(producerInfo, destination);
             message.setPersistent(true);
             message.setTransactionId(txid);
             connection.send(message);
         }
-        
+
         // Commit
         connection.send(createCommitTransaction1Phase(connectionInfo, txid));
         connection.request(closeConnectionInfo(connectionInfo));
         // restart the broker.
         restartBroker();
-        
+
         // Setup the consumer and receive the message.
         connection = createConnection();
         connectionInfo = createConnectionInfo();
@@ -148,33 +146,33 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
         connection.send(consumerInfo);
 
-        for( int i=0; i < 4 ;i ++ ) {
+        for (int i = 0; i < 4; i++) {
             Message m = receiveMessage(connection);
             assertNotNull(m);
         }
-        
+
         assertNoMessagesLeft(connection);
     }
-    
+
     public void testQueuePersistentCommitedAcksNotLostOnRestart() throws Exception {
-        
+
         ActiveMQDestination destination = createDestination();
-        
-        // Setup the producer and send the message.  
+
+        // Setup the producer and send the message.
         StubConnection connection = createConnection();
         ConnectionInfo connectionInfo = createConnectionInfo();
         SessionInfo sessionInfo = createSessionInfo(connectionInfo);
         ProducerInfo producerInfo = createProducerInfo(sessionInfo);
         connection.send(connectionInfo);
         connection.send(sessionInfo);
-        connection.send(producerInfo);        
-        
-        for( int i=0; i < 4; i++) {
+        connection.send(producerInfo);
+
+        for (int i = 0; i < 4; i++) {
             Message message = createMessage(producerInfo, destination);
             message.setPersistent(true);
             connection.send(message);
         }
-        
+
         // Setup the consumer and receive the message.
         ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
         connection.send(consumerInfo);
@@ -182,19 +180,19 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         // Begin the transaction.
         XATransactionId txid = createXATransaction(sessionInfo);
         connection.send(createBeginTransaction(connectionInfo, txid));
-        for( int i=0; i < 4 ;i ++ ) {
+        for (int i = 0; i < 4; i++) {
             Message m = receiveMessage(connection);
             assertNotNull(m);
             MessageAck ack = createAck(consumerInfo, m, 1, MessageAck.STANDARD_ACK_TYPE);
             ack.setTransactionId(txid);
             connection.send(ack);
-        }        
+        }
         // Commit
         connection.request(createCommitTransaction1Phase(connectionInfo, txid));
-        
+
         // restart the broker.
         restartBroker();
-        
+
         // Setup the consumer and receive the message.
         connection = createConnection();
         connectionInfo = createConnectionInfo();
@@ -212,24 +210,24 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
     }
 
     public void testQueuePersistentUncommittedAcksLostOnRestart() throws Exception {
-        
+
         ActiveMQDestination destination = createDestination();
-        
-        // Setup the producer and send the message.  
+
+        // Setup the producer and send the message.
         StubConnection connection = createConnection();
         ConnectionInfo connectionInfo = createConnectionInfo();
         SessionInfo sessionInfo = createSessionInfo(connectionInfo);
         ProducerInfo producerInfo = createProducerInfo(sessionInfo);
         connection.send(connectionInfo);
         connection.send(sessionInfo);
-        connection.send(producerInfo);        
-        
-        for( int i=0; i < 4; i++) {
+        connection.send(producerInfo);
+
+        for (int i = 0; i < 4; i++) {
             Message message = createMessage(producerInfo, destination);
             message.setPersistent(true);
             connection.send(message);
         }
-        
+
         // Setup the consumer and receive the message.
         ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
         connection.send(consumerInfo);
@@ -237,18 +235,18 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         // Begin the transaction.
         XATransactionId txid = createXATransaction(sessionInfo);
         connection.send(createBeginTransaction(connectionInfo, txid));
-        for( int i=0; i < 4 ;i ++ ) {
+        for (int i = 0; i < 4; i++) {
             Message m = receiveMessage(connection);
             assertNotNull(m);
             MessageAck ack = createAck(consumerInfo, m, 1, MessageAck.STANDARD_ACK_TYPE);
             ack.setTransactionId(txid);
             connection.send(ack);
-        }        
+        }
         // Don't commit
-        
+
         // restart the broker.
         restartBroker();
-        
+
         // Setup the consumer and receive the message.
         connection = createConnection();
         connectionInfo = createConnectionInfo();
@@ -259,18 +257,18 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         connection.send(consumerInfo);
 
         // All messages should be re-delivered.
-        for( int i=0; i < 4 ;i ++ ) {
+        for (int i = 0; i < 4; i++) {
             Message m = receiveMessage(connection);
             assertNotNull(m);
         }
-        
+
         assertNoMessagesLeft(connection);
     }
 
     public static Test suite() {
         return suite(XARecoveryBrokerTest.class);
     }
-    
+
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
@@ -278,5 +276,5 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
     protected ActiveMQDestination createDestination() {
         return new ActiveMQQueue(getClass().getName() + "." + getName());
     }
-    
+
 }

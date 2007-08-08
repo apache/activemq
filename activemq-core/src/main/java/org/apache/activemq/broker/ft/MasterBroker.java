@@ -49,11 +49,11 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.8 $
  */
-public class MasterBroker extends InsertableMutableBrokerFilter{
+public class MasterBroker extends InsertableMutableBrokerFilter {
 
-    private static final Log log=LogFactory.getLog(MasterBroker.class);
+    private static final Log log = LogFactory.getLog(MasterBroker.class);
     private Transport slave;
-    private AtomicBoolean started=new AtomicBoolean(false);
+    private AtomicBoolean started = new AtomicBoolean(false);
 
     /**
      * Constructor
@@ -61,33 +61,32 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * @param parent
      * @param transport
      */
-    public MasterBroker(MutableBrokerFilter parent,Transport transport){
+    public MasterBroker(MutableBrokerFilter parent, Transport transport) {
         super(parent);
-        this.slave=transport;
-        this.slave=new MutexTransport(slave);
-        this.slave=new ResponseCorrelator(slave);
+        this.slave = transport;
+        this.slave = new MutexTransport(slave);
+        this.slave = new ResponseCorrelator(slave);
         this.slave.setTransportListener(transport.getTransportListener());
     }
 
     /**
      * start processing this broker
-     * 
      */
-    public void startProcessing(){
+    public void startProcessing() {
         started.set(true);
-        try{
-            Connection[] connections=getClients();
-            ConnectionControl command=new ConnectionControl();
+        try {
+            Connection[] connections = getClients();
+            ConnectionControl command = new ConnectionControl();
             command.setFaultTolerant(true);
-            if(connections!=null){
-                for(int i=0;i<connections.length;i++){
-                    if(connections[i].isActive()&&connections[i].isManageable()){
+            if (connections != null) {
+                for (int i = 0; i < connections.length; i++) {
+                    if (connections[i].isActive() && connections[i].isManageable()) {
                         connections[i].dispatchAsync(command);
                     }
                 }
             }
-        }catch(Exception e){
-            log.error("Failed to get Connections",e);
+        } catch (Exception e) {
+            log.error("Failed to get Connections", e);
         }
     }
 
@@ -96,17 +95,16 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * 
      * @throws Exception
      */
-    public void stop() throws Exception{
+    public void stop() throws Exception {
         super.stop();
         stopProcessing();
     }
 
     /**
      * stop processing this broker
-     * 
      */
-    public void stopProcessing(){
-        if(started.compareAndSet(true,false)){
+    public void stopProcessing() {
+        if (started.compareAndSet(true, false)) {
             remove();
         }
     }
@@ -118,8 +116,8 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * @param info
      * @throws Exception
      */
-    public void addConnection(ConnectionContext context,ConnectionInfo info) throws Exception{
-        super.addConnection(context,info);
+    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
+        super.addConnection(context, info);
         sendAsyncToSlave(info);
     }
 
@@ -128,11 +126,12 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * 
      * @param context the environment the operation is being executed under.
      * @param info
-     * @param error null if the client requested the disconnect or the error that caused the client to disconnect.
+     * @param error null if the client requested the disconnect or the error
+     *                that caused the client to disconnect.
      * @throws Exception
      */
-    public void removeConnection(ConnectionContext context,ConnectionInfo info,Throwable error) throws Exception{
-        super.removeConnection(context,info,error);
+    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
+        super.removeConnection(context, info, error);
         sendAsyncToSlave(new RemoveInfo(info.getConnectionId()));
     }
 
@@ -143,8 +142,8 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * @param info
      * @throws Exception
      */
-    public void addSession(ConnectionContext context,SessionInfo info) throws Exception{
-        super.addSession(context,info);
+    public void addSession(ConnectionContext context, SessionInfo info) throws Exception {
+        super.addSession(context, info);
         sendAsyncToSlave(info);
     }
 
@@ -155,8 +154,8 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * @param info
      * @throws Exception
      */
-    public void removeSession(ConnectionContext context,SessionInfo info) throws Exception{
-        super.removeSession(context,info);
+    public void removeSession(ConnectionContext context, SessionInfo info) throws Exception {
+        super.removeSession(context, info);
         sendAsyncToSlave(new RemoveInfo(info.getSessionId()));
     }
 
@@ -167,8 +166,8 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * @param info
      * @throws Exception
      */
-    public void addProducer(ConnectionContext context,ProducerInfo info) throws Exception{
-        super.addProducer(context,info);
+    public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
+        super.addProducer(context, info);
         sendAsyncToSlave(info);
     }
 
@@ -179,8 +178,8 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * @param info
      * @throws Exception
      */
-    public void removeProducer(ConnectionContext context,ProducerInfo info) throws Exception{
-        super.removeProducer(context,info);
+    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
+        super.removeProducer(context, info);
         sendAsyncToSlave(new RemoveInfo(info.getProducerId()));
     }
 
@@ -192,9 +191,9 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * @return the assocated subscription
      * @throws Exception
      */
-    public Subscription addConsumer(ConnectionContext context,ConsumerInfo info) throws Exception{
+    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         sendAsyncToSlave(info);
-        Subscription answer=super.addConsumer(context,info);
+        Subscription answer = super.addConsumer(context, info);
         return answer;
     }
 
@@ -205,8 +204,8 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * @param info
      * @throws Exception
      */
-    public void removeSubscription(ConnectionContext context,RemoveSubscriptionInfo info) throws Exception{
-        super.removeSubscription(context,info);
+    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
+        super.removeSubscription(context, info);
         sendAsyncToSlave(info);
     }
 
@@ -217,10 +216,10 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * @param xid
      * @throws Exception
      */
-    public void beginTransaction(ConnectionContext context,TransactionId xid) throws Exception{
-        TransactionInfo info=new TransactionInfo(context.getConnectionId(),xid,TransactionInfo.BEGIN);
+    public void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception {
+        TransactionInfo info = new TransactionInfo(context.getConnectionId(), xid, TransactionInfo.BEGIN);
         sendAsyncToSlave(info);
-        super.beginTransaction(context,xid);
+        super.beginTransaction(context, xid);
     }
 
     /**
@@ -231,10 +230,10 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * @return the state
      * @throws Exception
      */
-    public int prepareTransaction(ConnectionContext context,TransactionId xid) throws Exception{
-        TransactionInfo info=new TransactionInfo(context.getConnectionId(),xid,TransactionInfo.PREPARE);
+    public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception {
+        TransactionInfo info = new TransactionInfo(context.getConnectionId(), xid, TransactionInfo.PREPARE);
         sendAsyncToSlave(info);
-        int result=super.prepareTransaction(context,xid);
+        int result = super.prepareTransaction(context, xid);
         return result;
     }
 
@@ -245,10 +244,10 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * @param xid
      * @throws Exception
      */
-    public void rollbackTransaction(ConnectionContext context,TransactionId xid) throws Exception{
-        TransactionInfo info=new TransactionInfo(context.getConnectionId(),xid,TransactionInfo.ROLLBACK);
+    public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Exception {
+        TransactionInfo info = new TransactionInfo(context.getConnectionId(), xid, TransactionInfo.ROLLBACK);
         sendAsyncToSlave(info);
-        super.rollbackTransaction(context,xid);
+        super.rollbackTransaction(context, xid);
     }
 
     /**
@@ -259,10 +258,10 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * @param onePhase
      * @throws Exception
      */
-    public void commitTransaction(ConnectionContext context,TransactionId xid,boolean onePhase) throws Exception{
-        TransactionInfo info=new TransactionInfo(context.getConnectionId(),xid,TransactionInfo.COMMIT_ONE_PHASE);
+    public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Exception {
+        TransactionInfo info = new TransactionInfo(context.getConnectionId(), xid, TransactionInfo.COMMIT_ONE_PHASE);
         sendSyncToSlave(info);
-        super.commitTransaction(context,xid,onePhase);
+        super.commitTransaction(context, xid, onePhase);
     }
 
     /**
@@ -272,10 +271,10 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * @param xid
      * @throws Exception
      */
-    public void forgetTransaction(ConnectionContext context,TransactionId xid) throws Exception{
-        TransactionInfo info=new TransactionInfo(context.getConnectionId(),xid,TransactionInfo.FORGET);
+    public void forgetTransaction(ConnectionContext context, TransactionId xid) throws Exception {
+        TransactionInfo info = new TransactionInfo(context.getConnectionId(), xid, TransactionInfo.FORGET);
         sendAsyncToSlave(info);
-        super.forgetTransaction(context,xid);
+        super.forgetTransaction(context, xid);
     }
 
     /**
@@ -283,13 +282,13 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * 
      * @param messageDispatch
      */
-    public void postProcessDispatch(MessageDispatch messageDispatch){
-        MessageDispatchNotification mdn=new MessageDispatchNotification();
+    public void postProcessDispatch(MessageDispatch messageDispatch) {
+        MessageDispatchNotification mdn = new MessageDispatchNotification();
         mdn.setConsumerId(messageDispatch.getConsumerId());
         mdn.setDeliverySequenceId(messageDispatch.getDeliverySequenceId());
         mdn.setDestination(messageDispatch.getDestination());
-        if(messageDispatch.getMessage()!=null){
-            Message msg=messageDispatch.getMessage();
+        if (messageDispatch.getMessage() != null) {
+            Message msg = messageDispatch.getMessage();
             mdn.setMessageId(msg.getMessageId());
             sendAsyncToSlave(mdn);
         }
@@ -300,66 +299,65 @@ public class MasterBroker extends InsertableMutableBrokerFilter{
      * @param context
      * @param message
      * @throws Exception
-     * 
      */
-    public void send(ProducerBrokerExchange producerExchange,Message message) throws Exception{
+    public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
         /**
-         * A message can be dispatched before the super.send() method returns so - here the order is switched to avoid
-         * problems on the slave with receiving acks for messages not received yey
+         * A message can be dispatched before the super.send() method returns so -
+         * here the order is switched to avoid problems on the slave with
+         * receiving acks for messages not received yey
          */
         sendToSlave(message);
-        super.send(producerExchange,message);
+        super.send(producerExchange, message);
     }
 
     /**
      * @param context
      * @param ack
      * @throws Exception
-     * 
      */
-    public void acknowledge(ConsumerBrokerExchange consumerExchange,MessageAck ack) throws Exception{
+    public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
         sendToSlave(ack);
-        super.acknowledge(consumerExchange,ack);
+        super.acknowledge(consumerExchange, ack);
     }
 
-    public boolean isFaultTolerantConfiguration(){
+    public boolean isFaultTolerantConfiguration() {
         return true;
     }
 
-    protected void sendToSlave(Message message){
-        if(message.isResponseRequired()){
+    protected void sendToSlave(Message message) {
+        if (message.isResponseRequired()) {
             sendSyncToSlave(message);
-        }else{
+        } else {
             sendAsyncToSlave(message);
         }
     }
 
-    protected void sendToSlave(MessageAck ack){
-        if(ack.isResponseRequired()){
+    protected void sendToSlave(MessageAck ack) {
+        if (ack.isResponseRequired()) {
             sendAsyncToSlave(ack);
-        }else{
+        } else {
             sendSyncToSlave(ack);
         }
     }
 
-    protected void sendAsyncToSlave(Command command){
-        try{
+    protected void sendAsyncToSlave(Command command) {
+        try {
             slave.oneway(command);
-        }catch(Throwable e){
-            log.error("Slave Failed",e);
+        } catch (Throwable e) {
+            log.error("Slave Failed", e);
             stopProcessing();
         }
     }
 
-    protected void sendSyncToSlave(Command command){
-        try{
-            Response response=(Response)slave.request(command);
-            if(response.isException()){
-                ExceptionResponse er=(ExceptionResponse)response;
-                log.error("Slave Failed",er.getException());
+    protected void sendSyncToSlave(Command command) {
+        try {
+            Response response = (Response)slave.request(command);
+            if (response.isException()) {
+                ExceptionResponse er = (ExceptionResponse)response;
+                log.error("Slave Failed", er.getException());
             }
-        }catch(Throwable e){
-            log.error("Slave Failed",e);
+        } catch (Throwable e) {
+            log.error("Slave Failed", e);
         }
     }
 }

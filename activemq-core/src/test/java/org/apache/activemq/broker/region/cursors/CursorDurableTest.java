@@ -29,7 +29,7 @@ import org.apache.activemq.broker.BrokerService;
 public class CursorDurableTest extends CursorSupport{
 
     protected Destination getDestination(Session session) throws JMSException{
-        String topicName=getClass().getName();
+        String topicName = getClass().getName();
         return session.createTopic(topicName);
     }
 

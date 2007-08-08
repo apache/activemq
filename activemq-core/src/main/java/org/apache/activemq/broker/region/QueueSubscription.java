@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,71 +32,71 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class QueueSubscription extends PrefetchSubscription implements LockOwner {
-    
+
     private static final Log log = LogFactory.getLog(QueueSubscription.class);
-    
-    public QueueSubscription(Broker broker,ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
-        super(broker,context, info);
+
+    public QueueSubscription(Broker broker, ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
+        super(broker, context, info);
     }
-        
+
     /**
-     * In the queue case, mark the node as dropped and then a gc cycle will remove it from 
-     * the queue.
-     * @throws IOException 
+     * In the queue case, mark the node as dropped and then a gc cycle will
+     * remove it from the queue.
+     * 
+     * @throws IOException
      */
     protected void acknowledge(ConnectionContext context, final MessageAck ack, final MessageReference n) throws IOException {
-        
-
 
         final Destination q = n.getRegionDestination();
         q.acknowledge(context, this, ack, n);
 
-        final QueueMessageReference node = (QueueMessageReference) n;
+        final QueueMessageReference node = (QueueMessageReference)n;
         final Queue queue = (Queue)q;
-        if( !ack.isInTransaction() ) {
-            node.drop();            
+        if (!ack.isInTransaction()) {
+            node.drop();
             queue.dropEvent();
         } else {
             node.setAcked(true);
-            context.getTransaction().addSynchronization(new Synchronization(){
-                public void afterCommit() throws Exception {                    
-                    node.drop();            
+            context.getTransaction().addSynchronization(new Synchronization() {
+                public void afterCommit() throws Exception {
+                    node.drop();
                     queue.dropEvent();
                 }
+
                 public void afterRollback() throws Exception {
                     node.setAcked(false);
                 }
             });
         }
     }
-    
+
     protected boolean canDispatch(MessageReference n) throws IOException {
-        QueueMessageReference node = (QueueMessageReference) n;
-        if( node.isAcked())
+        QueueMessageReference node = (QueueMessageReference)n;
+        if (node.isAcked())
             return false;
         // Keep message groups together.
         String groupId = node.getGroupID();
         int sequence = node.getGroupSequence();
-        if( groupId!=null ) {
-            MessageGroupMap messageGroupOwners = ((Queue)node.getRegionDestination()).getMessageGroupOwners();            
-            
+        if (groupId != null) {
+            MessageGroupMap messageGroupOwners = ((Queue)node.getRegionDestination()).getMessageGroupOwners();
+
             // If we can own the first, then no-one else should own the rest.
-            if( sequence == 1 ) {
-                if( node.lock(this) ) {
+            if (sequence == 1) {
+                if (node.lock(this)) {
                     assignGroupToMe(messageGroupOwners, n, groupId);
                     return true;
                 } else {
                     return false;
                 }
             }
-            
-            // Make sure that the previous owner is still valid, we may 
+
+            // Make sure that the previous owner is still valid, we may
             // need to become the new owner.
             ConsumerId groupOwner;
-            synchronized(node) {
+            synchronized (node) {
                 groupOwner = messageGroupOwners.get(groupId);
-                if( groupOwner==null ) {
-                    if( node.lock(this) ) {
+                if (groupOwner == null) {
+                    if (node.lock(this)) {
                         assignGroupToMe(messageGroupOwners, n, groupId);
                         return true;
                     } else {
@@ -105,48 +104,42 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
                     }
                 }
             }
-            
-            if( groupOwner.equals(info.getConsumerId()) ) {
+
+            if (groupOwner.equals(info.getConsumerId())) {
                 // A group sequence < 1 is an end of group signal.
-                if ( sequence < 0 ) {
+                if (sequence < 0) {
                     messageGroupOwners.removeGroup(groupId);
                 }
                 return true;
             }
-            
+
             return false;
-            
+
         } else {
             return node.lock(this);
         }
     }
 
     /**
-     * Assigns the message group to this subscription and set the flag on the message that it is the first message
-     * to be dispatched.
+     * Assigns the message group to this subscription and set the flag on the
+     * message that it is the first message to be dispatched.
      */
     protected void assignGroupToMe(MessageGroupMap messageGroupOwners, MessageReference n, String groupId) throws IOException {
         messageGroupOwners.put(groupId, info.getConsumerId());
         Message message = n.getMessage();
         if (message instanceof ActiveMQMessage) {
-            ActiveMQMessage activeMessage = (ActiveMQMessage) message;
+            ActiveMQMessage activeMessage = (ActiveMQMessage)message;
             try {
                 activeMessage.setBooleanProperty("JMSXGroupFirstForConsumer", true, false);
-            }
-            catch (JMSException e) {
+            } catch (JMSException e) {
                 log.warn("Failed to set boolean header: " + e, e);
             }
         }
     }
-    
+
     public synchronized String toString() {
-        return 
-            "QueueSubscription:" +
-            " consumer="+info.getConsumerId()+
-            ", destinations="+destinations.size()+
-            ", dispatched="+dispatched.size()+
-            ", delivered="+this.prefetchExtension+
-            ", pending="+getPendingQueueSize();
+        return "QueueSubscription:" + " consumer=" + info.getConsumerId() + ", destinations=" + destinations.size() + ", dispatched=" + dispatched.size() + ", delivered="
+               + this.prefetchExtension + ", pending=" + getPendingQueueSize();
     }
 
     public int getLockPriority() {
@@ -158,9 +151,9 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
     }
 
     /**
-     * Override so that the message ref count is > 0 only when the message is being dispatched
-     * to a client.  Keeping it at 0 when it is in the pending list allows the message to be swapped out
-     * to disk.
+     * Override so that the message ref count is > 0 only when the message is
+     * being dispatched to a client. Keeping it at 0 when it is in the pending
+     * list allows the message to be swapped out to disk.
      * 
      * @return true if the message was dispatched.
      */
@@ -171,9 +164,11 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
         try {
             rc = super.dispatch(node);
         } finally {
-            // If the message was dispatched, it could be getting dispatched async, so we
-            // can only drop the reference count when that completes @see onDispatch
-            if( !rc ) {
+            // If the message was dispatched, it could be getting dispatched
+            // async, so we
+            // can only drop the reference count when that completes @see
+            // onDispatch
+            if (!rc) {
                 node.decrementReferenceCount();
             }
         }
@@ -183,32 +178,34 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
     /**
      * OK Message was transmitted, we can now drop the reference count.
      * 
-     * @see org.apache.activemq.broker.region.PrefetchSubscription#onDispatch(org.apache.activemq.broker.region.MessageReference, org.apache.activemq.command.Message)
+     * @see org.apache.activemq.broker.region.PrefetchSubscription#onDispatch(org.apache.activemq.broker.region.MessageReference,
+     *      org.apache.activemq.command.Message)
      */
     protected void onDispatch(MessageReference node, Message message) {
-        // Now that the message has been sent over the wire to the client, 
+        // Now that the message has been sent over the wire to the client,
         // we can let it get swapped out.
         node.decrementReferenceCount();
         super.onDispatch(node, message);
     }
-    
+
     /**
-     * Sending a message to the DQL will require us to increment the ref count so we can get at the content.
+     * Sending a message to the DQL will require us to increment the ref count
+     * so we can get at the content.
      */
     protected void sendToDLQ(ConnectionContext context, MessageReference node) throws IOException, Exception {
         // This brings the message into memory if it was swapped out.
         node.incrementReferenceCount();
-        try{
+        try {
             super.sendToDLQ(context, node);
         } finally {
             // This let's the message be swapped out of needed.
             node.decrementReferenceCount();
         }
     }
-    
+
     /**
      */
-    public void destroy() {        
+    public void destroy() {
     }
 
 }

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -45,18 +44,17 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @org.apache.xbean.XBean
- * 
  * @version $Revision: 1.6 $
  */
 public class TransportConnector implements Connector {
 
-    private static final Log log = LogFactory.getLog(TransportConnector.class);
+    private static final Log LOG = LogFactory.getLog(TransportConnector.class);
 
     private Broker broker;
     private TransportServer server;
     private URI uri;
     private BrokerInfo brokerInfo = new BrokerInfo();
-    private TaskRunnerFactory taskRunnerFactory = null;
+    private TaskRunnerFactory taskRunnerFactory;
     private MessageAuthorizationPolicy messageAuthorizationPolicy;
     private DiscoveryAgent discoveryAgent;
     protected CopyOnWriteArrayList connections = new CopyOnWriteArrayList();
@@ -65,39 +63,38 @@ public class TransportConnector implements Connector {
     private URI discoveryUri;
     private URI connectUri;
     private String name;
-    private boolean disableAsyncDispatch=false;
+    private boolean disableAsyncDispatch;
     private boolean enableStatusMonitor = true;
-
 
     /**
      * @return Returns the connections.
      */
-    public CopyOnWriteArrayList getConnections(){
+    public CopyOnWriteArrayList getConnections() {
         return connections;
     }
 
-    public TransportConnector(){
+    public TransportConnector() {
     }
-    
 
-    public TransportConnector(Broker broker,TransportServer server){
+    public TransportConnector(Broker broker, TransportServer server) {
         this();
         setBroker(broker);
         setServer(server);
-        if (server!=null&&server.getConnectURI()!=null){
+        if (server != null && server.getConnectURI() != null) {
             URI uri = server.getConnectURI();
-            if (uri != null && uri.getScheme().equals("vm")){
+            if (uri != null && uri.getScheme().equals("vm")) {
                 setEnableStatusMonitor(false);
             }
         }
-        
+
     }
 
     /**
-     * Factory method to create a JMX managed version of this transport connector
+     * Factory method to create a JMX managed version of this transport
+     * connector
      */
     public ManagedTransportConnector asManagedConnector(MBeanServer mbeanServer, ObjectName connectorName) throws IOException, URISyntaxException {
-        ManagedTransportConnector rc = new ManagedTransportConnector(mbeanServer, connectorName,  getBroker(), getServer());
+        ManagedTransportConnector rc = new ManagedTransportConnector(mbeanServer, connectorName, getBroker(), getServer());
         rc.setTaskRunnerFactory(getTaskRunnerFactory());
         rc.setUri(uri);
         rc.setConnectUri(connectUri);
@@ -108,7 +105,7 @@ public class TransportConnector implements Connector {
         rc.setBrokerInfo(brokerInfo);
         return rc;
     }
-    
+
     public BrokerInfo getBrokerInfo() {
         return brokerInfo;
     }
@@ -134,7 +131,7 @@ public class TransportConnector implements Connector {
         brokerInfo.setPeerBrokerInfos(broker.getPeerBrokerInfos());
         brokerInfo.setFaultTolerantConfiguration(broker.isFaultTolerantConfiguration());
     }
-	
+
     public void setBrokerName(String brokerName) {
         brokerInfo.setBrokerName(brokerName);
     }
@@ -145,44 +142,41 @@ public class TransportConnector implements Connector {
         this.server.setAcceptListener(new TransportAcceptListener() {
             public void onAccept(final Transport transport) {
                 try {
-                	// Starting the connection could block due to 
-                	// wireformat negotiation, so start it in an async thread.
-                	Thread startThread = new Thread("ActiveMQ Transport Initiator: "+transport.getRemoteAddress()) {
-                		public void run() {
+                    // Starting the connection could block due to
+                    // wireformat negotiation, so start it in an async thread.
+                    Thread startThread = new Thread("ActiveMQ Transport Initiator: " + transport.getRemoteAddress()) {
+                        public void run() {
                             try {
-								Connection connection = createConnection(transport);
-								connection.start();
-							} catch (Exception e) {
-			                	ServiceSupport.dispose(transport);
-			                    onAcceptError(e);
-							}
-                		}
-                	};
-                	startThread.setPriority(4);
-                	startThread.start();
-                }
-                catch (Exception e) {
+                                Connection connection = createConnection(transport);
+                                connection.start();
+                            } catch (Exception e) {
+                                ServiceSupport.dispose(transport);
+                                onAcceptError(e);
+                            }
+                        }
+                    };
+                    startThread.setPriority(4);
+                    startThread.start();
+                } catch (Exception e) {
                     String remoteHost = transport.getRemoteAddress();
-                	ServiceSupport.dispose(transport);
+                    ServiceSupport.dispose(transport);
                     onAcceptError(e, remoteHost);
                 }
             }
 
             public void onAcceptError(Exception error) {
-                onAcceptError(error,null);
+                onAcceptError(error, null);
             }
 
             private void onAcceptError(Exception error, String remoteHost) {
-                log.error("Could not accept connection "  +
-                    (remoteHost == null ? "" : "from " + remoteHost)
-                    + ": " + error, error);
+                LOG.error("Could not accept connection " + (remoteHost == null ? "" : "from " + remoteHost) + ": " + error, error);
             }
         });
         this.server.setBrokerInfo(brokerInfo);
     }
 
     public URI getUri() {
-        if( uri == null ) {
+        if (uri == null) {
             try {
                 uri = getConnectUri();
             } catch (Throwable e) {
@@ -217,14 +211,14 @@ public class TransportConnector implements Connector {
     public ConnectorStatistics getStatistics() {
         return statistics;
     }
-    
+
     public MessageAuthorizationPolicy getMessageAuthorizationPolicy() {
         return messageAuthorizationPolicy;
     }
 
     /**
-     * Sets the policy used to decide if the current connection is authorized to consume
-     * a given message
+     * Sets the policy used to decide if the current connection is authorized to
+     * consume a given message
      */
     public void setMessageAuthorizationPolicy(MessageAuthorizationPolicy messageAuthorizationPolicy) {
         this.messageAuthorizationPolicy = messageAuthorizationPolicy;
@@ -233,37 +227,37 @@ public class TransportConnector implements Connector {
     public void start() throws Exception {
         getServer().start();
         DiscoveryAgent da = getDiscoveryAgent();
-        if( da!=null ) {
-        	da.setBrokerName(getBrokerInfo().getBrokerName());
+        if (da != null) {
+            da.setBrokerName(getBrokerInfo().getBrokerName());
             da.registerService(getConnectUri().toString());
             da.start();
         }
-        if (enableStatusMonitor){
+        if (enableStatusMonitor) {
             this.statusDector = new TransportStatusDetector(this);
             this.statusDector.start();
         }
-        
-        log.info("Connector "+getName()+" Started");
+
+        LOG.info("Connector " + getName() + " Started");
     }
 
     public void stop() throws Exception {
         ServiceStopper ss = new ServiceStopper();
-        if( discoveryAgent!=null ) {
+        if (discoveryAgent != null) {
             ss.stop(discoveryAgent);
         }
         if (server != null) {
             ss.stop(server);
         }
-        if (this.statusDector != null){
+        if (this.statusDector != null) {
             this.statusDector.stop();
         }
-        
+
         for (Iterator iter = connections.iterator(); iter.hasNext();) {
-            TransportConnection c = (TransportConnection) iter.next();
+            TransportConnection c = (TransportConnection)iter.next();
             ss.stop(c);
         }
         ss.throwFirstException();
-        log.info("Connector "+getName()+" Stopped");
+        LOG.info("Connector " + getName() + " Stopped");
     }
 
     // Implementation methods
@@ -283,18 +277,18 @@ public class TransportConnector implements Connector {
         if (broker == null) {
             throw new IllegalArgumentException("You must specify the broker property. Maybe this connector should be added to a broker?");
         }
-        return TransportFactory.bind(broker.getBrokerId().getValue(),uri);
+        return TransportFactory.bind(broker.getBrokerId().getValue(), uri);
     }
-    
+
     public DiscoveryAgent getDiscoveryAgent() throws IOException {
-        if( discoveryAgent==null ) {
+        if (discoveryAgent == null) {
             discoveryAgent = createDiscoveryAgent();
         }
         return discoveryAgent;
     }
 
     protected DiscoveryAgent createDiscoveryAgent() throws IOException {
-        if( discoveryUri!=null ) {
+        if (discoveryUri != null) {
             return DiscoveryAgentFactory.createDiscoveryAgent(discoveryUri);
         }
         return null;
@@ -313,8 +307,8 @@ public class TransportConnector implements Connector {
     }
 
     public URI getConnectUri() throws IOException, URISyntaxException {
-        if( connectUri==null ) {
-            if( server !=null ) {
+        if (connectUri == null) {
+            if (server != null) {
                 connectUri = server.getConnectURI();
             }
         }
@@ -333,45 +327,46 @@ public class TransportConnector implements Connector {
         connections.remove(connection);
     }
 
-    public String getName(){
-        if( name==null ){
-        	uri = getUri();
-        	if( uri != null ) {
-        		name = uri.toString();
-        	}
+    public String getName() {
+        if (name == null) {
+            uri = getUri();
+            if (uri != null) {
+                name = uri.toString();
+            }
         }
         return name;
     }
+
     public void setName(String name) {
         this.name = name;
     }
 
     public String toString() {
         String rc = getName();
-        if( rc == null )
-        	rc = super.toString();
+        if (rc == null)
+            rc = super.toString();
         return rc;
     }
 
-	public boolean isDisableAsyncDispatch() {
-		return disableAsyncDispatch;
-	}
+    public boolean isDisableAsyncDispatch() {
+        return disableAsyncDispatch;
+    }
 
-	public void setDisableAsyncDispatch(boolean disableAsyncDispatch) {
-		this.disableAsyncDispatch = disableAsyncDispatch;
-	}
+    public void setDisableAsyncDispatch(boolean disableAsyncDispatch) {
+        this.disableAsyncDispatch = disableAsyncDispatch;
+    }
 
     /**
      * @return the enableStatusMonitor
      */
-    public boolean isEnableStatusMonitor(){
+    public boolean isEnableStatusMonitor() {
         return enableStatusMonitor;
     }
 
     /**
      * @param enableStatusMonitor the enableStatusMonitor to set
      */
-    public void setEnableStatusMonitor(boolean enableStatusMonitor){
-        this.enableStatusMonitor=enableStatusMonitor;
+    public void setEnableStatusMonitor(boolean enableStatusMonitor) {
+        this.enableStatusMonitor = enableStatusMonitor;
     }
 }

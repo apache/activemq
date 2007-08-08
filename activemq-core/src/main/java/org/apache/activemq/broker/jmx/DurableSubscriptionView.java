@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,28 +23,31 @@ import javax.management.openmbean.TabularData;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
+
 /**
  * @version $Revision: 1.5 $
  */
-public class DurableSubscriptionView extends SubscriptionView implements  DurableSubscriptionViewMBean {
-    
+public class DurableSubscriptionView extends SubscriptionView implements DurableSubscriptionViewMBean {
+
     protected ManagedRegionBroker broker;
     protected String subscriptionName;
+
     /**
      * Constructor
+     * 
      * @param clientId
      * @param sub
      */
-    public DurableSubscriptionView(ManagedRegionBroker broker,String clientId,Subscription sub){
-        super(clientId,sub);
+    public DurableSubscriptionView(ManagedRegionBroker broker, String clientId, Subscription sub) {
+        super(clientId, sub);
         this.broker = broker;
         this.subscriptionName = sub.getConsumerInfo().getSubscriptionName();
     }
-    
+
     /**
      * @return name of the durable consumer
      */
-    public String getSubscriptionName(){
+    public String getSubscriptionName() {
         return subscriptionName;
     }
 
@@ -55,7 +57,7 @@ public class DurableSubscriptionView extends SubscriptionView implements  Durabl
      * @return messages
      * @throws OpenDataException
      */
-    public CompositeData[] browse() throws OpenDataException{
+    public CompositeData[] browse() throws OpenDataException {
         return broker.browse(this);
     }
 
@@ -65,12 +67,13 @@ public class DurableSubscriptionView extends SubscriptionView implements  Durabl
      * @return messages
      * @throws OpenDataException
      */
-    public TabularData browseAsTable() throws OpenDataException{
+    public TabularData browseAsTable() throws OpenDataException {
         return broker.browseAsTable(this);
     }
-    
+
     /**
-     * Destroys the durable subscription so that messages will no longer be stored for this subscription
+     * Destroys the durable subscription so that messages will no longer be
+     * stored for this subscription
      */
     public void destroy() throws Exception {
         RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
@@ -81,8 +84,8 @@ public class DurableSubscriptionView extends SubscriptionView implements  Durabl
         context.setClientId(clientId);
         broker.removeSubscription(context, info);
     }
-    
-    public String toString(){
-        return "InactiveDurableSubscriptionView: " + getClientId()  + ":" +  getSubscriptionName();
+
+    public String toString() {
+        return "InactiveDurableSubscriptionView: " + getClientId() + ":" + getSubscriptionName();
     }
 }

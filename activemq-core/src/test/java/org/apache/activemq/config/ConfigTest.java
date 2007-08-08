@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -52,9 +51,9 @@ import org.springframework.core.io.Resource;
  * @version $Revision$
  */
 public class ConfigTest extends TestCase {
-    
+
     private static final Log log = LogFactory.getLog(ConfigTest.class);
-    
+
     protected static final String JOURNAL_ROOT = "target/test-data/";
     protected static final String DERBY_ROOT = "target/test-data/";
     protected static final String CONF_ROOT = "src/test/resources/org/apache/activemq/config/sample-conf/";
@@ -69,21 +68,26 @@ public class ConfigTest extends TestCase {
     }
 
     /*
-     * IMPORTANT NOTE: Assertions checking for the existence of the derby directory will fail if the first derby
-     *                 directory is not created under target/test-data/. The test in unable to change the derby
-     *                 root directory for succeeding creation. It uses the first created directory as the root.
+     * IMPORTANT NOTE: Assertions checking for the existence of the derby
+     * directory will fail if the first derby directory is not created under
+     * target/test-data/. The test in unable to change the derby root directory
+     * for succeeding creation. It uses the first created directory as the root.
      */
 
     /*
-     * This tests creating a journal persistence adapter using the persistence adapter factory bean
+     * This tests creating a journal persistence adapter using the persistence
+     * adapter factory bean
      */
     public void testJournaledJDBCConfig() throws Exception {
-//        System.out.print("Checking journaled JDBC persistence adapter configuration... ");
+        // System.out.print("Checking journaled JDBC persistence adapter
+        // configuration... ");
 
         File journalFile = new File(JOURNAL_ROOT + "testJournaledJDBCConfig/journal");
         recursiveDelete(journalFile);
 
-        File derbyFile = new File(DERBY_ROOT + "testJournaledJDBCConfig/derbydb"); // Default derby name
+        File derbyFile = new File(DERBY_ROOT + "testJournaledJDBCConfig/derbydb"); // Default
+                                                                                    // derby
+                                                                                    // name
         recursiveDelete(derbyFile);
 
         BrokerService broker;
@@ -97,11 +101,11 @@ public class ConfigTest extends TestCase {
             assertTrue("Should have created a derby directory at " + derbyFile.getAbsolutePath(), derbyFile.exists());
             assertTrue("Should have created a journal directory at " + journalFile.getAbsolutePath(), journalFile.exists());
 
-            
             // Check persistence factory configurations
-//            System.out.print("Checking persistence adapter factory settings... ");
-            JournalPersistenceAdapter pa = (JournalPersistenceAdapter) broker.getPersistenceAdapter();
-            
+            // System.out.print("Checking persistence adapter factory
+            // settings... ");
+            JournalPersistenceAdapter pa = (JournalPersistenceAdapter)broker.getPersistenceAdapter();
+
             log.info("Success");
         } finally {
             if (broker != null) {
@@ -114,8 +118,11 @@ public class ConfigTest extends TestCase {
      * This tests creating a jdbc persistence adapter using xbeans-spring
      */
     public void testJdbcConfig() throws Exception {
-//        System.out.print("Checking jdbc persistence adapter configuration... ");
-        File derbyFile = new File(DERBY_ROOT + "testJDBCConfig/derbydb"); // Default derby name
+        // System.out.print("Checking jdbc persistence adapter configuration...
+        // ");
+        File derbyFile = new File(DERBY_ROOT + "testJDBCConfig/derbydb"); // Default
+                                                                            // derby
+                                                                            // name
         recursiveDelete(derbyFile);
 
         BrokerService broker;
@@ -126,12 +133,9 @@ public class ConfigTest extends TestCase {
             PersistenceAdapter adapter = broker.getPersistenceAdapter();
 
             assertTrue("Should have created a jdbc persistence adapter", adapter instanceof JDBCPersistenceAdapter);
-            assertEquals("JDBC Adapter Config Error (cleanupPeriod)", 60000,
-                    ((JDBCPersistenceAdapter)adapter).getCleanupPeriod());
-            assertTrue("Should have created an EmbeddedDataSource",
-                    ((JDBCPersistenceAdapter)adapter).getDataSource() instanceof EmbeddedDataSource);
-            assertTrue("Should have created a DefaultWireFormat",
-                    ((JDBCPersistenceAdapter)adapter).getWireFormat() instanceof ObjectStreamWireFormat);
+            assertEquals("JDBC Adapter Config Error (cleanupPeriod)", 60000, ((JDBCPersistenceAdapter)adapter).getCleanupPeriod());
+            assertTrue("Should have created an EmbeddedDataSource", ((JDBCPersistenceAdapter)adapter).getDataSource() instanceof EmbeddedDataSource);
+            assertTrue("Should have created a DefaultWireFormat", ((JDBCPersistenceAdapter)adapter).getWireFormat() instanceof ObjectStreamWireFormat);
 
             log.info("Success");
         } finally {
@@ -142,7 +146,8 @@ public class ConfigTest extends TestCase {
     }
 
     /*
-     * This tests configuring the different broker properties using xbeans-spring
+     * This tests configuring the different broker properties using
+     * xbeans-spring
      */
     public void testBrokerConfig() throws Exception {
         ActiveMQTopic dest;
@@ -152,13 +157,13 @@ public class ConfigTest extends TestCase {
         recursiveDelete(journalFile);
 
         // Create broker from resource
-//        System.out.print("Creating broker... ");
+        // System.out.print("Creating broker... ");
         broker = createBroker("org/apache/activemq/config/example.xml");
         log.info("Success");
 
         try {
             // Check broker configuration
-//            System.out.print("Checking broker configurations... ");
+            // System.out.print("Checking broker configurations... ");
             assertEquals("Broker Config Error (brokerName)", "brokerConfigTest", broker.getBrokerName());
             assertEquals("Broker Config Error (populateJMSXUserID)", false, broker.isPopulateJMSXUserID());
             assertEquals("Broker Config Error (useLoggingForShutdownErrors)", true, broker.isUseLoggingForShutdownErrors());
@@ -169,73 +174,66 @@ public class ConfigTest extends TestCase {
             log.info("Success");
 
             // Check specific vm transport
-//            System.out.print("Checking vm connector... ");
+            // System.out.print("Checking vm connector... ");
             assertEquals("Should have a specific VM Connector", "vm://javacoola", broker.getVmConnectorURI().toString());
             log.info("Success");
 
             // Check transport connectors list
-//            System.out.print("Checking transport connectors... ");
+            // System.out.print("Checking transport connectors... ");
             List connectors = broker.getTransportConnectors();
             assertTrue("Should have created at least 3 connectors", (connectors.size() >= 3));
-            assertTrue ("1st connector should be TcpTransportServer", ((TransportConnector)connectors.get(0)).getServer() instanceof TcpTransportServer);
-            assertTrue ("2nd connector should be TcpTransportServer", ((TransportConnector)connectors.get(1)).getServer() instanceof TcpTransportServer);
-            assertTrue ("3rd connector should be TcpTransportServer", ((TransportConnector)connectors.get(2)).getServer() instanceof TcpTransportServer);
+            assertTrue("1st connector should be TcpTransportServer", ((TransportConnector)connectors.get(0)).getServer() instanceof TcpTransportServer);
+            assertTrue("2nd connector should be TcpTransportServer", ((TransportConnector)connectors.get(1)).getServer() instanceof TcpTransportServer);
+            assertTrue("3rd connector should be TcpTransportServer", ((TransportConnector)connectors.get(2)).getServer() instanceof TcpTransportServer);
 
             // Check network connectors
-//            System.out.print("Checking network connectors... ");
+            // System.out.print("Checking network connectors... ");
             List networkConnectors = broker.getNetworkConnectors();
             assertEquals("Should have a single network connector", 1, networkConnectors.size());
             log.info("Success");
 
             // Check dispatch policy configuration
-//            System.out.print("Checking dispatch policies... ");
+            // System.out.print("Checking dispatch policies... ");
 
             dest = new ActiveMQTopic("Topic.SimpleDispatch");
             assertTrue("Should have a simple dispatch policy for " + dest.getTopicName(),
-                    broker.getDestinationPolicy().getEntryFor(dest).getDispatchPolicy() instanceof SimpleDispatchPolicy);
+                       broker.getDestinationPolicy().getEntryFor(dest).getDispatchPolicy() instanceof SimpleDispatchPolicy);
 
             dest = new ActiveMQTopic("Topic.RoundRobinDispatch");
             assertTrue("Should have a round robin dispatch policy for " + dest.getTopicName(),
-                    broker.getDestinationPolicy().getEntryFor(dest).getDispatchPolicy() instanceof RoundRobinDispatchPolicy);
+                       broker.getDestinationPolicy().getEntryFor(dest).getDispatchPolicy() instanceof RoundRobinDispatchPolicy);
 
             dest = new ActiveMQTopic("Topic.StrictOrderDispatch");
             assertTrue("Should have a strict order dispatch policy for " + dest.getTopicName(),
-                    broker.getDestinationPolicy().getEntryFor(dest).getDispatchPolicy() instanceof StrictOrderDispatchPolicy);
+                       broker.getDestinationPolicy().getEntryFor(dest).getDispatchPolicy() instanceof StrictOrderDispatchPolicy);
             log.info("Success");
 
             // Check subscription policy configuration
-//            System.out.print("Checking subscription recovery policies... ");
+            // System.out.print("Checking subscription recovery policies... ");
             SubscriptionRecoveryPolicy subsPolicy;
 
             dest = new ActiveMQTopic("Topic.FixedSizedSubs");
             subsPolicy = broker.getDestinationPolicy().getEntryFor(dest).getSubscriptionRecoveryPolicy();
-            assertTrue("Should have a fixed sized subscription recovery policy for " + dest.getTopicName(),
-                  subsPolicy instanceof FixedSizedSubscriptionRecoveryPolicy);
-            assertEquals("FixedSizedSubsPolicy Config Error (maximumSize)", 2000000,
-                  ((FixedSizedSubscriptionRecoveryPolicy)subsPolicy).getMaximumSize());
-            assertEquals("FixedSizedSubsPolicy Config Error (useSharedBuffer)", false,
-                  ((FixedSizedSubscriptionRecoveryPolicy)subsPolicy).isUseSharedBuffer());
+            assertTrue("Should have a fixed sized subscription recovery policy for " + dest.getTopicName(), subsPolicy instanceof FixedSizedSubscriptionRecoveryPolicy);
+            assertEquals("FixedSizedSubsPolicy Config Error (maximumSize)", 2000000, ((FixedSizedSubscriptionRecoveryPolicy)subsPolicy).getMaximumSize());
+            assertEquals("FixedSizedSubsPolicy Config Error (useSharedBuffer)", false, ((FixedSizedSubscriptionRecoveryPolicy)subsPolicy).isUseSharedBuffer());
 
             dest = new ActiveMQTopic("Topic.LastImageSubs");
             subsPolicy = broker.getDestinationPolicy().getEntryFor(dest).getSubscriptionRecoveryPolicy();
-            assertTrue("Should have a last image subscription recovery policy for " + dest.getTopicName(),
-                    subsPolicy instanceof LastImageSubscriptionRecoveryPolicy);
+            assertTrue("Should have a last image subscription recovery policy for " + dest.getTopicName(), subsPolicy instanceof LastImageSubscriptionRecoveryPolicy);
 
             dest = new ActiveMQTopic("Topic.NoSubs");
             subsPolicy = broker.getDestinationPolicy().getEntryFor(dest).getSubscriptionRecoveryPolicy();
-            assertTrue("Should have no subscription recovery policy for " + dest.getTopicName(),
-                    subsPolicy instanceof NoSubscriptionRecoveryPolicy);
+            assertTrue("Should have no subscription recovery policy for " + dest.getTopicName(), subsPolicy instanceof NoSubscriptionRecoveryPolicy);
 
             dest = new ActiveMQTopic("Topic.TimedSubs");
             subsPolicy = broker.getDestinationPolicy().getEntryFor(dest).getSubscriptionRecoveryPolicy();
-            assertTrue("Should have a timed subscription recovery policy for " + dest.getTopicName(),
-                    subsPolicy instanceof TimedSubscriptionRecoveryPolicy);
-            assertEquals("TimedSubsPolicy Config Error (recoverDuration)", 25000,
-                    ((TimedSubscriptionRecoveryPolicy)subsPolicy).getRecoverDuration());
+            assertTrue("Should have a timed subscription recovery policy for " + dest.getTopicName(), subsPolicy instanceof TimedSubscriptionRecoveryPolicy);
+            assertEquals("TimedSubsPolicy Config Error (recoverDuration)", 25000, ((TimedSubscriptionRecoveryPolicy)subsPolicy).getRecoverDuration());
             log.info("Success");
 
             // Check usage manager
-//            System.out.print("Checking memory manager configurations... ");
+            // System.out.print("Checking memory manager configurations... ");
             UsageManager memMgr = broker.getMemoryManager();
             assertTrue("Should have a memory manager", memMgr != null);
             assertEquals("UsageManager Config Error (limit)", 200000, memMgr.getLimit());
@@ -254,7 +252,8 @@ public class ConfigTest extends TestCase {
      * This tests creating a journal persistence adapter using xbeans-spring
      */
     public void testJournalConfig() throws Exception {
-//        System.out.print("Checking journal persistence adapter configuration... ");
+        // System.out.print("Checking journal persistence adapter
+        // configuration... ");
 
         File journalFile = new File(JOURNAL_ROOT + "testJournalConfig/journal");
         recursiveDelete(journalFile);
@@ -281,7 +280,8 @@ public class ConfigTest extends TestCase {
      * This tests creating a memory persistence adapter using xbeans-spring
      */
     public void testMemoryConfig() throws Exception {
-//        System.out.print("Checking memory persistence adapter configuration... ");
+        // System.out.print("Checking memory persistence adapter
+        // configuration... ");
 
         File journalFile = new File(JOURNAL_ROOT + "testMemoryConfig");
         recursiveDelete(journalFile);
@@ -337,7 +337,7 @@ public class ConfigTest extends TestCase {
      */
 
     protected static void recursiveDelete(File file) {
-        if( file.isDirectory() ) {
+        if (file.isDirectory()) {
             File[] files = file.listFiles();
             for (int i = 0; i < files.length; i++) {
                 recursiveDelete(files[i]);
@@ -358,8 +358,8 @@ public class ConfigTest extends TestCase {
 
         assertTrue("Should have a broker!", broker != null);
 
-        //Broker is already started by default when using the XML file
-       // broker.start();
+        // Broker is already started by default when using the XML file
+        // broker.start();
 
         return broker;
     }

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,13 +36,12 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
 /**
- * 
  * @openwire:marshaller code="28"
  * @version $Revision$
  */
 public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage {
 
-    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.ACTIVEMQ_TEXT_MESSAGE;
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_TEXT_MESSAGE;
 
     protected String text;
 
@@ -52,16 +50,16 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
         copy(copy);
         return copy;
     }
-    
+
     private void copy(ActiveMQTextMessage copy) {
         super.copy(copy);
         copy.text = text;
     }
-    
+
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
-    
+
     public String getJMSXMimeType() {
         return "jms/text-message";
     }
@@ -79,7 +77,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
                 ByteSequence bodyAsBytes = getContent();
                 if (bodyAsBytes != null) {
                     is = new ByteArrayInputStream(bodyAsBytes);
-                    if( isCompressed() ) {
+                    if (isCompressed()) {
                         is = new InflaterInputStream(is);
                     }
                     DataInputStream dataIn = new DataInputStream(is);
@@ -89,13 +87,11 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
                 }
             } catch (IOException ioe) {
                 throw JMSExceptionSupport.create(ioe);
-            }
-            finally {
+            } finally {
                 if (is != null) {
                     try {
                         is.close();
-                    }
-                    catch (IOException e) {
+                    } catch (IOException e) {
                         // ignore
                     }
                 }
@@ -106,13 +102,13 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
 
     public void beforeMarshall(WireFormat wireFormat) throws IOException {
         super.beforeMarshall(wireFormat);
-        
+
         ByteSequence content = getContent();
-        if (content == null && text!=null ) {
+        if (content == null && text != null) {
             ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
             OutputStream os = bytesOut;
             ActiveMQConnection connection = getConnection();
-            if( connection!=null && connection.isUseCompression() ) { 
+            if (connection != null && connection.isUseCompression()) {
                 compressed = true;
                 os = new DeflaterOutputStream(os);
             }
@@ -122,26 +118,29 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
             setContent(bytesOut.toByteSequence());
         }
     }
-    
+
     /**
-     * Clears out the message body. Clearing a message's body does not clear its header values or property entries.
-     * <p/>
-     * <P>If this message body was read-only, calling this method leaves the message body in the same state as an empty
-     * body in a newly created message.
-     *
-     * @throws JMSException if the JMS provider fails to clear the message body due to some internal error.
+     * Clears out the message body. Clearing a message's body does not clear its
+     * header values or property entries. <p/>
+     * <P>
+     * If this message body was read-only, calling this method leaves the
+     * message body in the same state as an empty body in a newly created
+     * message.
+     * 
+     * @throws JMSException if the JMS provider fails to clear the message body
+     *                 due to some internal error.
      */
     public void clearBody() throws JMSException {
         super.clearBody();
         this.text = null;
     }
-    
+
     public int getSize() {
-        if( size == 0 && content==null && text!=null ) {
+        if (size == 0 && content == null && text != null) {
             size = AVERAGE_MESSAGE_SIZE_OVERHEAD;
-            if( marshalledProperties!=null )
+            if (marshalledProperties != null)
                 size += marshalledProperties.getLength();
-            size = text.length()*2;
+            size = text.length() * 2;
         }
         return super.getSize();
     }

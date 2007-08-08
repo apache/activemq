@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,9 +40,8 @@ import org.apache.activemq.test.TestSupport;
  * @version $Revision: 1.9 $
  */
 abstract public class JmsTransactionTestSupport extends TestSupport implements MessageListener {
-    
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-            .getLog(JmsTransactionTestSupport.class);
+
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(JmsTransactionTestSupport.class);
 
     protected ConnectionFactory connectionFactory;
     protected Connection connection;
@@ -52,13 +50,13 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
     protected MessageProducer producer;
     protected JmsResourceProvider resourceProvider;
     protected Destination destination;
-    
+
     // for message listener test
     private static final int messageCount = 5;
     private static final String messageText = "message";
     private List unackMessages = new ArrayList(messageCount);
     private List ackMessages = new ArrayList(messageCount);
-    private boolean resendPhase = false;
+    private boolean resendPhase;
     protected int batchCount = 10;
     protected int batchSize = 20;
 
@@ -72,14 +70,15 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
         super(name);
     }
 
-
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see junit.framework.TestCase#setUp()
      */
     protected void setUp() throws Exception {
         broker = createBroker();
         broker.start();
-        
+
         resourceProvider = getJmsResourceProvider();
         topic = resourceProvider.isTopic();
         // We will be using transacted sessions.
@@ -94,45 +93,47 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
         return BrokerFactory.createBroker(new URI("broker://()/localhost?persistent=false"));
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see junit.framework.TestCase#tearDown()
      */
     protected void tearDown() throws Exception {
-        log.info("Closing down connection");
+        LOG.info("Closing down connection");
 
         session.close();
-        session=null;
+        session = null;
         connection.close();
-        connection=null;
+        connection = null;
         broker.stop();
-        broker=null;
-        
-        log.info("Connection closed.");
+        broker = null;
+
+        LOG.info("Connection closed.");
     }
 
     protected abstract JmsResourceProvider getJmsResourceProvider();
 
     /**
      * Sends a batch of messages and validates that the messages are received.
-     *
+     * 
      * @throws Exception
      */
     public void testSendReceiveTransactedBatches() throws Exception {
-       
+
         TextMessage message = session.createTextMessage("Batch Message");
 
         for (int j = 0; j < batchCount; j++) {
-            log.info("Producing bacth " + j + " of " + batchSize + " messages");
+            LOG.info("Producing bacth " + j + " of " + batchSize + " messages");
 
             for (int i = 0; i < batchSize; i++) {
                 producer.send(message);
             }
 
             session.commit();
-            log.info("Consuming bacth " + j + " of " + batchSize + " messages");
+            LOG.info("Consuming bacth " + j + " of " + batchSize + " messages");
 
             for (int i = 0; i < batchSize; i++) {
-                message = (TextMessage) consumer.receive(1000 * 5);
+                message = (TextMessage)consumer.receive(1000 * 5);
                 assertNotNull("Received only " + i + " messages in batch " + j, message);
                 assertEquals("Batch Message", message.getText());
             }
@@ -142,87 +143,83 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
     }
 
     /**
-     * Sends a batch of messages and validates that the rollbacked message was not consumed.
-     *
+     * Sends a batch of messages and validates that the rollbacked message was
+     * not consumed.
+     * 
      * @throws Exception
      */
     public void testSendRollback() throws Exception {
-        Message[] outbound = new Message[]{
-            session.createTextMessage("First Message"),
-            session.createTextMessage("Second Message")
-        };
+        Message[] outbound = new Message[] {session.createTextMessage("First Message"), session.createTextMessage("Second Message")};
 
-        //sends a message
+        // sends a message
         producer.send(outbound[0]);
         session.commit();
 
-        //sends a message that gets rollbacked
+        // sends a message that gets rollbacked
         producer.send(session.createTextMessage("I'm going to get rolled back."));
         session.rollback();
-        
-        //sends a message
+
+        // sends a message
         producer.send(outbound[1]);
         session.commit();
 
-        //receives the first message
+        // receives the first message
         ArrayList messages = new ArrayList();
-        log.info("About to consume message 1");
+        LOG.info("About to consume message 1");
         Message message = consumer.receive(1000);
         messages.add(message);
-        log.info("Received: " + message);
+        LOG.info("Received: " + message);
 
-        //receives the second message
-        log.info("About to consume message 2");
+        // receives the second message
+        LOG.info("About to consume message 2");
         message = consumer.receive(4000);
         messages.add(message);
-        log.info("Received: " + message);
+        LOG.info("Received: " + message);
 
-        //validates that the rollbacked was not consumed
+        // validates that the rollbacked was not consumed
         session.commit();
         Message inbound[] = new Message[messages.size()];
         messages.toArray(inbound);
         assertTextMessagesEqual("Rollback did not work.", outbound, inbound);
     }
-    
+
     /**
-     * Sends a batch of messages and validates that the message sent before session close is not consumed.
-     *
+     * Sends a batch of messages and validates that the message sent before
+     * session close is not consumed.
+     * 
      * @throws Exception
      */
     public void testSendSessionClose() throws Exception {
-        Message[] outbound = new Message[]{
-                session.createTextMessage("First Message"),
-                session.createTextMessage("Second Message")
-        };
-        
-        //sends a message
+        Message[] outbound = new Message[] {session.createTextMessage("First Message"), session.createTextMessage("Second Message")};
+
+        // sends a message
         producer.send(outbound[0]);
         session.commit();
-        
-        //sends a message that gets rollbacked
+
+        // sends a message that gets rollbacked
         producer.send(session.createTextMessage("I'm going to get rolled back."));
         consumer.close();
-        
+
         reconnectSession();
-        
-        //sends a message
+
+        // sends a message
         producer.send(outbound[1]);
         session.commit();
-        
-        //receives the first message
+
+        // receives the first message
         ArrayList messages = new ArrayList();
-        log.info("About to consume message 1");
+        LOG.info("About to consume message 1");
         Message message = consumer.receive(1000);
         messages.add(message);
-        log.info("Received: " + message);
-        
-        //receives the second message
-        log.info("About to consume message 2");
+        LOG.info("Received: " + message);
+
+        // receives the second message
+        LOG.info("About to consume message 2");
         message = consumer.receive(4000);
         messages.add(message);
-        log.info("Received: " + message);
-        
-        //validates that the rollbacked was not consumed
+        LOG.info("Received: " + message);
+
+        // validates that the rollbacked was not consumed
         session.commit();
         Message inbound[] = new Message[messages.size()];
         messages.toArray(inbound);
@@ -230,45 +227,43 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
     }
 
     /**
-     * Sends a batch of messages and validates that the message sent before session close is not consumed.
-     *
+     * Sends a batch of messages and validates that the message sent before
+     * session close is not consumed.
+     * 
      * @throws Exception
      */
     public void testSendSessionAndConnectionClose() throws Exception {
-        Message[] outbound = new Message[]{
-            session.createTextMessage("First Message"),
-            session.createTextMessage("Second Message")
-        };
+        Message[] outbound = new Message[] {session.createTextMessage("First Message"), session.createTextMessage("Second Message")};
 
-        //sends a message
+        // sends a message
         producer.send(outbound[0]);
         session.commit();
 
-        //sends a message that gets rollbacked
+        // sends a message that gets rollbacked
         producer.send(session.createTextMessage("I'm going to get rolled back."));
         consumer.close();
         session.close();
 
         reconnect();
 
-        //sends a message
+        // sends a message
         producer.send(outbound[1]);
         session.commit();
 
-        //receives the first message
+        // receives the first message
         ArrayList messages = new ArrayList();
-        log.info("About to consume message 1");
+        LOG.info("About to consume message 1");
         Message message = consumer.receive(1000);
         messages.add(message);
-        log.info("Received: " + message);
+        LOG.info("Received: " + message);
 
-        //receives the second message
-        log.info("About to consume message 2");
+        // receives the second message
+        LOG.info("About to consume message 2");
         message = consumer.receive(4000);
         messages.add(message);
-        log.info("Received: " + message);
+        LOG.info("Received: " + message);
 
-        //validates that the rollbacked was not consumed
+        // validates that the rollbacked was not consumed
         session.commit();
         Message inbound[] = new Message[messages.size()];
         messages.toArray(inbound);
@@ -276,28 +271,26 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
     }
 
     /**
-     * Sends a batch of messages and validates that the rollbacked message was redelivered.
-     *
+     * Sends a batch of messages and validates that the rollbacked message was
+     * redelivered.
+     * 
      * @throws Exception
      */
     public void testReceiveRollback() throws Exception {
-        Message[] outbound = new Message[]{
-            session.createTextMessage("First Message"),
-            session.createTextMessage("Second Message")
-        };
+        Message[] outbound = new Message[] {session.createTextMessage("First Message"), session.createTextMessage("Second Message")};
 
         // lets consume any outstanding messages from prev test runs
         while (consumer.receive(1000) != null) {
         }
         session.commit();
 
-        //sent both messages
+        // sent both messages
         producer.send(outbound[0]);
         producer.send(outbound[1]);
         session.commit();
 
-        log.info("Sent 0: " + outbound[0]);
-        log.info("Sent 1: " + outbound[1]);
+        LOG.info("Sent 0: " + outbound[0]);
+        LOG.info("Sent 1: " + outbound[1]);
 
         ArrayList messages = new ArrayList();
         Message message = consumer.receive(1000);
@@ -324,15 +317,13 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
     }
 
     /**
-     * Sends a batch of messages and validates that the rollbacked message was redelivered.
-     *
+     * Sends a batch of messages and validates that the rollbacked message was
+     * redelivered.
+     * 
      * @throws Exception
      */
     public void testReceiveTwoThenRollback() throws Exception {
-        Message[] outbound = new Message[]{
-            session.createTextMessage("First Message"),
-            session.createTextMessage("Second Message")
-        };
+        Message[] outbound = new Message[] {session.createTextMessage("First Message"), session.createTextMessage("Second Message")};
 
         // lets consume any outstanding messages from prev test runs
         while (consumer.receive(1000) != null) {
@@ -344,8 +335,8 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
         producer.send(outbound[1]);
         session.commit();
 
-        log.info("Sent 0: " + outbound[0]);
-        log.info("Sent 1: " + outbound[1]);
+        LOG.info("Sent 0: " + outbound[0]);
+        LOG.info("Sent 1: " + outbound[1]);
 
         ArrayList messages = new ArrayList();
         Message message = consumer.receive(1000);
@@ -366,8 +357,8 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
         assertNotNull("Should have re-received the second message again!", message);
         messages.add(message);
         assertEquals(outbound[1], message);
-        
-        assertNull(consumer.receiveNoWait());        
+
+        assertNull(consumer.receiveNoWait());
         session.commit();
 
         Message inbound[] = new Message[messages.size()];
@@ -376,40 +367,38 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
     }
 
     /**
-     * Sends a batch of messages and validates that the rollbacked message was not consumed.
-     *
+     * Sends a batch of messages and validates that the rollbacked message was
+     * not consumed.
+     * 
      * @throws Exception
      */
     public void testSendReceiveWithPrefetchOne() throws Exception {
         setPrefetchToOne();
-        Message[] outbound = new Message[]{
-            session.createTextMessage("First Message"),
-            session.createTextMessage("Second Message"),
-            session.createTextMessage("Third Message"),
-            session.createTextMessage("Fourth Message")
-        };
+        Message[] outbound = new Message[] {session.createTextMessage("First Message"), session.createTextMessage("Second Message"), session.createTextMessage("Third Message"),
+                                            session.createTextMessage("Fourth Message")};
 
         for (int i = 0; i < outbound.length; i++) {
-            //sends a message
+            // sends a message
             producer.send(outbound[i]);
         }
         session.commit();
 
-        //receives the first message
+        // receives the first message
         for (int i = 0; i < outbound.length; i++) {
-            log.info("About to consume message 1");
+            LOG.info("About to consume message 1");
             Message message = consumer.receive(1000);
             assertNotNull(message);
-            log.info("Received: " + message);
+            LOG.info("Received: " + message);
         }
 
-        //validates that the rollbacked was not consumed
+        // validates that the rollbacked was not consumed
         session.commit();
     }
 
     /**
-     * Perform the test that validates if the rollbacked message was redelivered multiple times.
-     *
+     * Perform the test that validates if the rollbacked message was redelivered
+     * multiple times.
+     * 
      * @throws Exception
      */
     public void testReceiveTwoThenRollbackManyTimes() throws Exception {
@@ -418,9 +407,9 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
     }
 
     /**
-     * Sends a batch of messages and validates that the rollbacked message was not consumed. This test differs by
-     * setting the message prefetch to one.
-     *
+     * Sends a batch of messages and validates that the rollbacked message was
+     * not consumed. This test differs by setting the message prefetch to one.
+     * 
      * @throws Exception
      */
     public void testSendRollbackWithPrefetchOfOne() throws Exception {
@@ -429,9 +418,10 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
     }
 
     /**
-     * Sends a batch of messages and  and validates that the rollbacked message was redelivered. This test differs by
-     * setting the message prefetch to one.
-     *
+     * Sends a batch of messages and and validates that the rollbacked message
+     * was redelivered. This test differs by setting the message prefetch to
+     * one.
+     * 
      * @throws Exception
      */
     public void testReceiveRollbackWithPrefetchOfOne() throws Exception {
@@ -440,15 +430,13 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
     }
 
     /**
-     * Tests if the messages can still be received if the consumer is closed (session is not closed).
-     *
+     * Tests if the messages can still be received if the consumer is closed
+     * (session is not closed).
+     * 
      * @throws Exception see http://jira.codehaus.org/browse/AMQ-143
      */
     public void testCloseConsumerBeforeCommit() throws Exception {
-        TextMessage[] outbound = new TextMessage[]{
-            session.createTextMessage("First Message"),
-            session.createTextMessage("Second Message")
-        };
+        TextMessage[] outbound = new TextMessage[] {session.createTextMessage("First Message"), session.createTextMessage("Second Message")};
 
         // lets consume any outstanding messages from prev test runs
         while (consumer.receiveNoWait() != null) {
@@ -456,29 +444,29 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
 
         session.commit();
 
-        //sends the messages
+        // sends the messages
         producer.send(outbound[0]);
         producer.send(outbound[1]);
         session.commit();
-        log.info("Sent 0: " + outbound[0]);
-        log.info("Sent 1: " + outbound[1]);
+        LOG.info("Sent 0: " + outbound[0]);
+        LOG.info("Sent 1: " + outbound[1]);
 
-        TextMessage message = (TextMessage) consumer.receive(1000);
-        assertEquals(outbound[0].getText(), message.getText());        
-        // Close the consumer before the commit.  This should not cause the received message
+        TextMessage message = (TextMessage)consumer.receive(1000);
+        assertEquals(outbound[0].getText(), message.getText());
+        // Close the consumer before the commit. This should not cause the
+        // received message
         // to rollback.
         consumer.close();
         session.commit();
 
         // Create a new consumer
         consumer = resourceProvider.createConsumer(session, destination);
-        log.info("Created consumer: " + consumer);
+        LOG.info("Created consumer: " + consumer);
 
-        message = (TextMessage) consumer.receive(1000);
+        message = (TextMessage)consumer.receive(1000);
         assertEquals(outbound[1].getText(), message.getText());
         session.commit();
     }
-
 
     public void testChangeMutableObjectInObjectMessageThenRollback() throws Exception {
         ArrayList list = new ArrayList();
@@ -489,7 +477,7 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
         producer.send(outbound);
         session.commit();
 
-        log.info("About to consume message 1");
+        LOG.info("About to consume message 1");
         Message message = consumer.receive(5000);
 
         List body = assertReceivedObjectMessageWithListBody(message);
@@ -498,9 +486,8 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
         try {
             message.setStringProperty("foo", "def");
             fail("Cannot change properties of the object!");
-        }
-        catch (JMSException e) {
-            log.info("Caught expected exception: " + e, e);
+        } catch (JMSException e) {
+            LOG.info("Caught expected exception: " + e, e);
         }
         body.clear();
         body.add("This should never be seen!");
@@ -517,9 +504,9 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
         assertEquals("foo header", "abc", message.getStringProperty("foo"));
 
         assertTrue("Should be an object message but was: " + message, message instanceof ObjectMessage);
-        ObjectMessage objectMessage = (ObjectMessage) message;
-        List body = (List) objectMessage.getObject();
-        log.info("Received body: " + body);
+        ObjectMessage objectMessage = (ObjectMessage)message;
+        List body = (List)objectMessage.getObject();
+        LOG.info("Received body: " + body);
 
         assertEquals("Size of list should be 1", 1, body.size());
         assertEquals("element 0 of list", "First", body.get(0));
@@ -532,7 +519,7 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
      * @throws JMSException
      */
     protected void reconnect() throws JMSException {
-        
+
         if (connection != null) {
             // Close the prev connection.
             connection.close();
@@ -542,7 +529,7 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
         reconnectSession();
         connection.start();
     }
-    
+
     /**
      * Recreates the connection.
      * 
@@ -552,7 +539,7 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
         if (session != null) {
             session.close();
         }
-        
+
         session = resourceProvider.createSession(connection);
         destination = resourceProvider.createDestination(session, getSubject());
         producer = resourceProvider.createProducer(session, destination);
@@ -563,7 +550,7 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
      * Sets the prefeftch policy to one.
      */
     protected void setPrefetchToOne() {
-        ActiveMQPrefetchPolicy prefetchPolicy = ((ActiveMQConnection) connection).getPrefetchPolicy();
+        ActiveMQPrefetchPolicy prefetchPolicy = ((ActiveMQConnection)connection).getPrefetchPolicy();
         prefetchPolicy.setQueuePrefetch(1);
         prefetchPolicy.setTopicPrefetch(1);
         prefetchPolicy.setDurableTopicPrefetch(1);
@@ -571,28 +558,28 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
     }
 
     public void testMessageListener() throws Exception {
-        //send messages
-        for(int i = 0;i<messageCount;i++) {
-            producer.send(session.createTextMessage(messageText+i));
+        // send messages
+        for (int i = 0; i < messageCount; i++) {
+            producer.send(session.createTextMessage(messageText + i));
         }
         session.commit();
         consumer.setMessageListener(this);
-        //wait receive
+        // wait receive
         waitReceiveUnack();
-        assertEquals(unackMessages.size(),messageCount);
-        //resend phase
+        assertEquals(unackMessages.size(), messageCount);
+        // resend phase
         waitReceiveAck();
-        assertEquals(ackMessages.size(),messageCount);
-        //should no longer re-receive
+        assertEquals(ackMessages.size(), messageCount);
+        // should no longer re-receive
         consumer.setMessageListener(null);
         assertNull(consumer.receive(500));
         reconnect();
     }
 
     public void onMessage(Message message) {
-        if(!resendPhase) {
+        if (!resendPhase) {
             unackMessages.add(message);
-            if(unackMessages.size() == messageCount) {
+            if (unackMessages.size() == messageCount) {
                 try {
                     session.rollback();
                     resendPhase = true;
@@ -602,7 +589,7 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
             }
         } else {
             ackMessages.add(message);
-            if(ackMessages.size() == messageCount) {
+            if (ackMessages.size() == messageCount) {
                 try {
                     session.commit();
                 } catch (Exception e) {
@@ -613,16 +600,16 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
     }
 
     private void waitReceiveUnack() throws Exception {
-        for(int i=0; i < 100 && !resendPhase; i++) {
+        for (int i = 0; i < 100 && !resendPhase; i++) {
             Thread.sleep(100);
         }
-        assertTrue(resendPhase); 
+        assertTrue(resendPhase);
     }
 
     private void waitReceiveAck() throws Exception {
-        for(int i=0; i < 100 && ackMessages.size() < messageCount; i++) {
+        for (int i = 0; i < 100 && ackMessages.size() < messageCount; i++) {
             Thread.sleep(100);
         }
-        assertFalse(ackMessages.size() < messageCount); 
+        assertFalse(ackMessages.size() < messageCount);
     }
 }

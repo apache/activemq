@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -128,12 +127,12 @@ public class TempDestDeleteTest extends EmbeddedBrokerTestSupport implements Con
 
     protected MessageConsumer createConsumer(Destination dest) throws JMSException {
         final String consumerText = "Consumer: " + (++consumerCounter);
-        log.info("Creating consumer: " + consumerText + " on destination: " + dest);
+        LOG.info("Creating consumer: " + consumerText + " on destination: " + dest);
         
         MessageConsumer consumer = session.createConsumer(dest);
         consumer.setMessageListener(new MessageListener() {
             public void onMessage(Message message) {
-                log.info("Received message by: " + consumerText + " message: " + message);
+                LOG.info("Received message by: " + consumerText + " message: " + message);
             }
         });
         return consumer;

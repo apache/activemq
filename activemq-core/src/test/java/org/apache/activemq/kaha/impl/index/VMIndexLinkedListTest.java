@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,234 +20,243 @@ import java.util.ArrayList;
 import java.util.List;
 
 import junit.framework.TestCase;
-
 import org.apache.activemq.kaha.StoreEntry;
-import org.apache.activemq.kaha.impl.index.IndexItem;
-import org.apache.activemq.kaha.impl.index.IndexLinkedList;
 
-/** 
-* @version $Revision: 1.2 $
-*/
-public class VMIndexLinkedListTest extends TestCase{
+/**
+ * @version $Revision: 1.2 $
+ */
+public class VMIndexLinkedListTest extends TestCase {
     static final int NUMBER = 10;
     private IndexItem root;
     private List testData = new ArrayList();
     private IndexLinkedList list;
-    protected void setUp() throws Exception{
+
+    protected void setUp() throws Exception {
         super.setUp();
-        for (int i =0; i < NUMBER; i++){
+        for (int i = 0; i < NUMBER; i++) {
             testData.add(new IndexItem());
         }
         root = new IndexItem();
         list = new VMIndexLinkedList(root);
     }
 
-    protected void tearDown() throws Exception{
+    protected void tearDown() throws Exception {
         super.tearDown();
         testData.clear();
         list = null;
     }
 
     /*
-     * Test method for 'org.apache.activemq.kaha.impl.VMIndexLinkedList.getFirst()'
+     * Test method for
+     * 'org.apache.activemq.kaha.impl.VMIndexLinkedList.getFirst()'
      */
-    public void testGetFirst(){
-        for (int i =0; i < testData.size(); i++){
-            list.add((IndexItem) testData.get(i));
+    public void testGetFirst() {
+        for (int i = 0; i < testData.size(); i++) {
+            list.add((IndexItem)testData.get(i));
         }
-        assertTrue(list.getFirst()==testData.get(0));
+        assertTrue(list.getFirst() == testData.get(0));
     }
 
     /*
-     * Test method for 'org.apache.activemq.kaha.impl.VMIndexLinkedList.getLast()'
+     * Test method for
+     * 'org.apache.activemq.kaha.impl.VMIndexLinkedList.getLast()'
      */
-    public void testGetLast(){
-        for (int i =0; i < testData.size(); i++){
-            list.add((IndexItem) testData.get(i));
+    public void testGetLast() {
+        for (int i = 0; i < testData.size(); i++) {
+            list.add((IndexItem)testData.get(i));
         }
-        assertTrue(list.getLast()==testData.get(testData.size()-1));
+        assertTrue(list.getLast() == testData.get(testData.size() - 1));
     }
 
     /*
-     * Test method for 'org.apache.activemq.kaha.impl.VMIndexLinkedList.removeFirst()'
+     * Test method for
+     * 'org.apache.activemq.kaha.impl.VMIndexLinkedList.removeFirst()'
      */
-    public void testRemoveFirst(){
-        for (int i =0; i < testData.size(); i++){
-            list.add((IndexItem) testData.get(i));
+    public void testRemoveFirst() {
+        for (int i = 0; i < testData.size(); i++) {
+            list.add((IndexItem)testData.get(i));
         }
-        assertTrue(list.removeFirst()==testData.get(0));
+        assertTrue(list.removeFirst() == testData.get(0));
     }
 
     /*
-     * Test method for 'org.apache.activemq.kaha.impl.VMIndexLinkedList.removeLast()'
+     * Test method for
+     * 'org.apache.activemq.kaha.impl.VMIndexLinkedList.removeLast()'
      */
-    public void testRemoveLast(){
-        for (int i =0; i < testData.size(); i++){
-            list.add((IndexItem) testData.get(i));
+    public void testRemoveLast() {
+        for (int i = 0; i < testData.size(); i++) {
+            list.add((IndexItem)testData.get(i));
         }
-        assertTrue(list.removeLast()==testData.get(testData.size()-1));
+        assertTrue(list.removeLast() == testData.get(testData.size() - 1));
     }
 
     /*
-     * Test method for 'org.apache.activemq.kaha.impl.VMIndexLinkedList.addFirst(IndexItem)'
+     * Test method for
+     * 'org.apache.activemq.kaha.impl.VMIndexLinkedList.addFirst(IndexItem)'
      */
-    public void testAddFirst(){
-        for (int i =0; i < testData.size(); i++){
-            list.addFirst((IndexItem) testData.get(i));
+    public void testAddFirst() {
+        for (int i = 0; i < testData.size(); i++) {
+            list.addFirst((IndexItem)testData.get(i));
         }
         int count = 0;
-        for (int i =testData.size()-1; i>=0; i--){
-            assertTrue(testData.get(i)==list.get(count++));
+        for (int i = testData.size() - 1; i >= 0; i--) {
+            assertTrue(testData.get(i) == list.get(count++));
         }
     }
 
     /*
-     * Test method for 'org.apache.activemq.kaha.impl.VMIndexLinkedList.addLast(IndexItem)'
+     * Test method for
+     * 'org.apache.activemq.kaha.impl.VMIndexLinkedList.addLast(IndexItem)'
      */
-    public void testAddLast(){
-        for (int i =0; i < testData.size(); i++){
-            list.addLast((IndexItem) testData.get(i));
+    public void testAddLast() {
+        for (int i = 0; i < testData.size(); i++) {
+            list.addLast((IndexItem)testData.get(i));
         }
-        for (int i =0; i < testData.size(); i++){
-            assertTrue(testData.get(i)==list.get(i));
+        for (int i = 0; i < testData.size(); i++) {
+            assertTrue(testData.get(i) == list.get(i));
         }
     }
 
     /*
      * Test method for 'org.apache.activemq.kaha.impl.VMIndexLinkedList.size()'
      */
-    public void testSize(){
-        for (int i =0; i < testData.size(); i++){
-            list.addLast((IndexItem) testData.get(i));
-            assertTrue(list.size()==i+1);
+    public void testSize() {
+        for (int i = 0; i < testData.size(); i++) {
+            list.addLast((IndexItem)testData.get(i));
+            assertTrue(list.size() == i + 1);
         }
     }
 
     /*
-     * Test method for 'org.apache.activemq.kaha.impl.VMIndexLinkedList.isEmpty()'
+     * Test method for
+     * 'org.apache.activemq.kaha.impl.VMIndexLinkedList.isEmpty()'
      */
-    public void testIsEmpty(){
-        for (int i =0; i < testData.size(); i++){
-            list.addLast((IndexItem) testData.get(i));
-            assertTrue(list.size()==i+1);
+    public void testIsEmpty() {
+        for (int i = 0; i < testData.size(); i++) {
+            list.addLast((IndexItem)testData.get(i));
+            assertTrue(list.size() == i + 1);
         }
         list.clear();
         assertTrue(list.isEmpty());
     }
 
     /*
-     * Test method for 'org.apache.activemq.kaha.impl.VMIndexLinkedList.add(IndexItem)'
+     * Test method for
+     * 'org.apache.activemq.kaha.impl.VMIndexLinkedList.add(IndexItem)'
      */
-    public void testAddIndexItem(){
-        for (int i =0; i < testData.size(); i++){
-            list.add((IndexItem) testData.get(i));
+    public void testAddIndexItem() {
+        for (int i = 0; i < testData.size(); i++) {
+            list.add((IndexItem)testData.get(i));
         }
-        for (int i =0; i < testData.size(); i++){
-            assertTrue(testData.get(i)==list.get(i));
+        for (int i = 0; i < testData.size(); i++) {
+            assertTrue(testData.get(i) == list.get(i));
         }
     }
 
     /*
      * Test method for 'org.apache.activemq.kaha.impl.VMIndexLinkedList.clear()'
      */
-    public void testClear(){
-        for (int i =0; i < testData.size(); i++){
-            list.addLast((IndexItem) testData.get(i));
-            assertTrue(list.size()==i+1);
+    public void testClear() {
+        for (int i = 0; i < testData.size(); i++) {
+            list.addLast((IndexItem)testData.get(i));
+            assertTrue(list.size() == i + 1);
         }
         list.clear();
         assertTrue(list.isEmpty());
     }
 
-    
     /*
-     * Test method for 'org.apache.activemq.kaha.impl.VMIndexLinkedList.add(int, IndexItem)'
+     * Test method for 'org.apache.activemq.kaha.impl.VMIndexLinkedList.add(int,
+     * IndexItem)'
      */
-    public void testAddIntIndexItem(){
-        for (int i =0; i < testData.size(); i++){
-            list.add(i,(IndexItem) testData.get(i));
+    public void testAddIntIndexItem() {
+        for (int i = 0; i < testData.size(); i++) {
+            list.add(i, (IndexItem)testData.get(i));
         }
-        for (int i =0; i < testData.size(); i++){
-            assertTrue(testData.get(i)==list.get(i));
+        for (int i = 0; i < testData.size(); i++) {
+            assertTrue(testData.get(i) == list.get(i));
         }
     }
 
     /*
-     * Test method for 'org.apache.activemq.kaha.impl.VMIndexLinkedList.remove(int)'
+     * Test method for
+     * 'org.apache.activemq.kaha.impl.VMIndexLinkedList.remove(int)'
      */
-    public void testRemoveInt(){
-        for (int i =0; i < testData.size(); i++){
-            list.add(i,(IndexItem) testData.get(i));
+    public void testRemoveInt() {
+        for (int i = 0; i < testData.size(); i++) {
+            list.add(i, (IndexItem)testData.get(i));
         }
-        for (int i =0; i < testData.size(); i++){
+        for (int i = 0; i < testData.size(); i++) {
             list.remove(0);
         }
         assertTrue(list.isEmpty());
-        for (int i =0; i < testData.size(); i++){
-            list.add(i,(IndexItem) testData.get(i));
+        for (int i = 0; i < testData.size(); i++) {
+            list.add(i, (IndexItem)testData.get(i));
         }
-        for (int i =0; i < testData.size(); i++){
-            list.remove(list.size()-1);
+        for (int i = 0; i < testData.size(); i++) {
+            list.remove(list.size() - 1);
         }
         assertTrue(list.isEmpty());
     }
 
     /*
-     * Test method for 'org.apache.activemq.kaha.impl.VMIndexLinkedList.indexOf(IndexItem)'
+     * Test method for
+     * 'org.apache.activemq.kaha.impl.VMIndexLinkedList.indexOf(IndexItem)'
      */
-    public void testIndexOf(){
-        for (int i =0; i < testData.size(); i++){
-            list.add(i,(IndexItem) testData.get(i));
+    public void testIndexOf() {
+        for (int i = 0; i < testData.size(); i++) {
+            list.add(i, (IndexItem)testData.get(i));
         }
-        for (int i =0; i < testData.size(); i++){
-            assertTrue(list.indexOf((StoreEntry) testData.get(i))==i);
+        for (int i = 0; i < testData.size(); i++) {
+            assertTrue(list.indexOf((StoreEntry)testData.get(i)) == i);
         }
     }
 
     /*
-     * Test method for 'org.apache.activemq.kaha.impl.VMIndexLinkedList.getNextEntry(IndexItem)'
+     * Test method for
+     * 'org.apache.activemq.kaha.impl.VMIndexLinkedList.getNextEntry(IndexItem)'
      */
-    public void testGetNextEntry(){
-        for (int i =0; i < testData.size(); i++){
-            list.add(i,(IndexItem) testData.get(i));
+    public void testGetNextEntry() {
+        for (int i = 0; i < testData.size(); i++) {
+            list.add(i, (IndexItem)testData.get(i));
         }
         IndexItem next = list.getFirst();
         int count = 0;
-        while (next != null){
-            assertTrue(next==testData.get(count++));
+        while (next != null) {
+            assertTrue(next == testData.get(count++));
             next = list.getNextEntry(next);
             assertTrue(next != root);
         }
     }
 
     /*
-     * Test method for 'org.apache.activemq.kaha.impl.VMIndexLinkedList.getPrevEntry(IndexItem)'
+     * Test method for
+     * 'org.apache.activemq.kaha.impl.VMIndexLinkedList.getPrevEntry(IndexItem)'
      */
-    public void testGetPrevEntry(){
-        for (int i =0; i < testData.size(); i++){
-            list.add(i,(IndexItem) testData.get(i));
+    public void testGetPrevEntry() {
+        for (int i = 0; i < testData.size(); i++) {
+            list.add(i, (IndexItem)testData.get(i));
         }
         IndexItem next = list.getLast();
-        int count = testData.size()-1;
-        while (next != null){
-            assertTrue(next==testData.get(count--));
+        int count = testData.size() - 1;
+        while (next != null) {
+            assertTrue(next == testData.get(count--));
             next = list.getPrevEntry(next);
             assertTrue(next != root);
         }
     }
 
-    
-
     /*
-     * Test method for 'org.apache.activemq.kaha.impl.VMIndexLinkedList.remove(IndexItem)'
+     * Test method for
+     * 'org.apache.activemq.kaha.impl.VMIndexLinkedList.remove(IndexItem)'
      */
-    public void testRemoveIndexItem(){
-        for (int i =0; i < testData.size(); i++){
-            list.add(i,(IndexItem) testData.get(i));
+    public void testRemoveIndexItem() {
+        for (int i = 0; i < testData.size(); i++) {
+            list.add(i, (IndexItem)testData.get(i));
         }
-        for (int i =0; i < testData.size(); i++){
+        for (int i = 0; i < testData.size(); i++) {
             list.remove((IndexItem)testData.get(i));
-            assertTrue(list.size()==testData.size()-i-1);
+            assertTrue(list.size() == testData.size() - i - 1);
         }
     }
 }

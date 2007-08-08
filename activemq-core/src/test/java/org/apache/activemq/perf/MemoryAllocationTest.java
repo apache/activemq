@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,79 +33,81 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 /**
  * @version $Revision: 1.3 $
  */
-public class MemoryAllocationTest extends TestCase{
-    
-    protected static final Log log = LogFactory.getLog(MemoryAllocationTest.class);
+public class MemoryAllocationTest extends TestCase {
 
-    protected static final int MESSAGE_COUNT=2000;
+    protected static final Log LOG = LogFactory.getLog(MemoryAllocationTest.class);
+
+    protected static final int MESSAGE_COUNT = 2000;
     protected BrokerService broker;
-    protected String bindAddress="vm://localhost";
-    protected int topicCount=0;
+    protected String bindAddress = "vm://localhost";
+    protected int topicCount;
 
-    public void testPerformance() throws Exception{
-        ConnectionFactory factory=createConnectionFactory();
-        Connection connection=factory.createConnection();
-        for(int i=0;i<MESSAGE_COUNT;i++){
-           
-            Session session=connection.createSession(false,Session.AUTO_ACKNOWLEDGE);
-            Destination dest=session.createTemporaryTopic();
-            MessageConsumer mc=session.createConsumer(dest);
-            MessageProducer mp=session.createProducer(dest);
-            Message msg=session.createTextMessage("test"+i);
+    public void testPerformance() throws Exception {
+        ConnectionFactory factory = createConnectionFactory();
+        Connection connection = factory.createConnection();
+        for (int i = 0; i < MESSAGE_COUNT; i++) {
+
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Destination dest = session.createTemporaryTopic();
+            MessageConsumer mc = session.createConsumer(dest);
+            MessageProducer mp = session.createProducer(dest);
+            Message msg = session.createTextMessage("test" + i);
             mp.send(msg);
             session.close();
-           releaseDestination(dest);
-            if (i%500==0)log.info("Iterator "+i);
+            releaseDestination(dest);
+            if (i % 500 == 0)
+                LOG.info("Iterator " + i);
         }
         connection.close();
     }
 
-    protected Destination getDestination(Session session) throws JMSException{
-        String topicName=getClass().getName()+"."+topicCount++;
+    protected Destination getDestination(Session session) throws JMSException {
+        String topicName = getClass().getName() + "." + topicCount++;
         return session.createTopic(topicName);
     }
 
-    protected void releaseDestination(Destination dest) throws JMSException{
-        if(dest instanceof TemporaryTopic){
-            TemporaryTopic tt=(TemporaryTopic) dest;
+    protected void releaseDestination(Destination dest) throws JMSException {
+        if (dest instanceof TemporaryTopic) {
+            TemporaryTopic tt = (TemporaryTopic)dest;
             tt.delete();
-        }else if(dest instanceof TemporaryQueue){
-            TemporaryQueue tq=(TemporaryQueue) dest;
+        } else if (dest instanceof TemporaryQueue) {
+            TemporaryQueue tq = (TemporaryQueue)dest;
             tq.delete();
         }
     }
 
-    protected void setUp() throws Exception{
-        if(broker==null){
-            broker=createBroker();
+    protected void setUp() throws Exception {
+        if (broker == null) {
+            broker = createBroker();
         }
         super.setUp();
     }
 
-    protected void tearDown() throws Exception{
+    protected void tearDown() throws Exception {
         super.tearDown();
-        
-        if(broker!=null){
-          broker.stop();
+
+        if (broker != null) {
+            broker.stop();
         }
     }
 
-    protected ActiveMQConnectionFactory createConnectionFactory() throws Exception{
-        ActiveMQConnectionFactory cf=new ActiveMQConnectionFactory(bindAddress);
+    protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(bindAddress);
         return cf;
     }
 
-    protected BrokerService createBroker() throws Exception{
-        BrokerService answer=new BrokerService();
+    protected BrokerService createBroker() throws Exception {
+        BrokerService answer = new BrokerService();
         configureBroker(answer);
         answer.start();
         return answer;
     }
 
-    protected void configureBroker(BrokerService answer) throws Exception{
+    protected void configureBroker(BrokerService answer) throws Exception {
         answer.setPersistent(false);
         answer.addConnector(bindAddress);
         answer.setDeleteAllMessagesOnStartup(true);

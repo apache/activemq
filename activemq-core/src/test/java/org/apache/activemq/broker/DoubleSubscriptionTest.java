@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,8 +17,8 @@
 package org.apache.activemq.broker;
 
 import javax.jms.DeliveryMode;
+
 import junit.framework.Test;
-import org.apache.activemq.broker.StubConnection;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConnectionInfo;
@@ -31,9 +30,8 @@ import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.network.NetworkTestSupport;
 
 /**
- * Pretend to be an abusive client that sends multiple
- * identical ConsumerInfo commands and make sure the
- * broker doesn't stall because of it.
+ * Pretend to be an abusive client that sends multiple identical ConsumerInfo
+ * commands and make sure the broker doesn't stall because of it.
  */
 
 public class DoubleSubscriptionTest extends NetworkTestSupport {
@@ -52,8 +50,9 @@ public class DoubleSubscriptionTest extends NetworkTestSupport {
     }
 
     public void initCombosForTestDoubleSubscription() {
-        addCombinationValues("destination", new Object[] { new ActiveMQQueue("TEST"), new ActiveMQQueue("TEST"), });
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"), new ActiveMQQueue("TEST"),});
     }
+
     public void testDoubleSubscription() throws Exception {
 
         // Start a normal consumer on the remote broker
@@ -86,7 +85,8 @@ public class DoubleSubscriptionTest extends NetworkTestSupport {
         // Send a message to sit on the broker while we mess with it
         connection2.request(createMessage(producerInfo2, destination, DeliveryMode.PERSISTENT));
 
-        // Now we're going to resend the same consumer commands again and see if the broker
+        // Now we're going to resend the same consumer commands again and see if
+        // the broker
         // can handle it.
         connection1.send(connectionInfo1);
         connection1.send(sessionInfo1);

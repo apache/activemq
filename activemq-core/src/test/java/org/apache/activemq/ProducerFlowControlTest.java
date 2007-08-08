@@ -22,197 +22,199 @@ import org.apache.activemq.broker.region.policy.VMPendingSubscriberMessageStorag
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.transport.tcp.TcpTransport;
 
-
 public class ProducerFlowControlTest extends JmsTestSupport {
-	
-	ActiveMQQueue queueA = new ActiveMQQueue("QUEUE.A");
-	ActiveMQQueue queueB = new ActiveMQQueue("QUEUE.B");
-	private TransportConnector connector;
-	private ActiveMQConnection connection;
+
+    ActiveMQQueue queueA = new ActiveMQQueue("QUEUE.A");
+    ActiveMQQueue queueB = new ActiveMQQueue("QUEUE.B");
+    private TransportConnector connector;
+    private ActiveMQConnection connection;
 
     public void test2ndPubisherWithProducerWindowSendConnectionThatIsBlocked() throws Exception {
-        ActiveMQConnectionFactory factory = (ActiveMQConnectionFactory) createConnectionFactory();
-        factory.setProducerWindowSize(1024*64);
-        connection = (ActiveMQConnection) factory.createConnection();
+        ActiveMQConnectionFactory factory = (ActiveMQConnectionFactory)createConnectionFactory();
+        factory.setProducerWindowSize(1024 * 64);
+        connection = (ActiveMQConnection)factory.createConnection();
         connections.add(connection);
-    	connection.start();
+        connection.start();
 
-    	Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-    	MessageConsumer consumer = session.createConsumer(queueB);
+        Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        MessageConsumer consumer = session.createConsumer(queueB);
 
-    	// Test sending to Queue A
-    	// 1 few sends should not block until the producer window is used up. 
-    	fillQueue(queueA);
+        // Test sending to Queue A
+        // 1 few sends should not block until the producer window is used up.
+        fillQueue(queueA);
 
-    	// Test sending to Queue B it should not block since the connection should not be blocked.
-    	CountDownLatch pubishDoneToQeueuB = asyncSendTo(queueB, "Message 1");
-    	assertTrue( pubishDoneToQeueuB.await(2, TimeUnit.SECONDS) );
-    	
-    	TextMessage msg = (TextMessage) consumer.receive();
-    	assertEquals("Message 1", msg.getText());
-    	msg.acknowledge();
-    	
-    	pubishDoneToQeueuB = asyncSendTo(queueB, "Message 2");
-    	assertTrue( pubishDoneToQeueuB.await(2, TimeUnit.SECONDS) );
-    	
-    	msg = (TextMessage) consumer.receive();
-    	assertEquals("Message 2", msg.getText());
-    	msg.acknowledge();
+        // Test sending to Queue B it should not block since the connection
+        // should not be blocked.
+        CountDownLatch pubishDoneToQeueuB = asyncSendTo(queueB, "Message 1");
+        assertTrue(pubishDoneToQeueuB.await(2, TimeUnit.SECONDS));
+
+        TextMessage msg = (TextMessage)consumer.receive();
+        assertEquals("Message 1", msg.getText());
+        msg.acknowledge();
+
+        pubishDoneToQeueuB = asyncSendTo(queueB, "Message 2");
+        assertTrue(pubishDoneToQeueuB.await(2, TimeUnit.SECONDS));
+
+        msg = (TextMessage)consumer.receive();
+        assertEquals("Message 2", msg.getText());
+        msg.acknowledge();
     }
 
     public void test2ndPubisherWithSyncSendConnectionThatIsBlocked() throws Exception {
-        ActiveMQConnectionFactory factory = (ActiveMQConnectionFactory) createConnectionFactory();
+        ActiveMQConnectionFactory factory = (ActiveMQConnectionFactory)createConnectionFactory();
         factory.setAlwaysSyncSend(true);
-        connection = (ActiveMQConnection) factory.createConnection();
+        connection = (ActiveMQConnection)factory.createConnection();
         connections.add(connection);
-    	connection.start();
+        connection.start();
 
-    	Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-    	MessageConsumer consumer = session.createConsumer(queueB);
+        Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        MessageConsumer consumer = session.createConsumer(queueB);
 
-    	// Test sending to Queue A
-    	// 1st send should not block.  But the rest will.
-    	fillQueue(queueA);
+        // Test sending to Queue A
+        // 1st send should not block. But the rest will.
+        fillQueue(queueA);
 
-    	// Test sending to Queue B it should not block. 
-    	CountDownLatch pubishDoneToQeueuB = asyncSendTo(queueB, "Message 1");
-    	assertTrue( pubishDoneToQeueuB.await(2, TimeUnit.SECONDS) );
-    	
-    	TextMessage msg = (TextMessage) consumer.receive();
-    	assertEquals("Message 1", msg.getText());
-    	msg.acknowledge();
-    	
-    	pubishDoneToQeueuB = asyncSendTo(queueB, "Message 2");
-    	assertTrue( pubishDoneToQeueuB.await(2, TimeUnit.SECONDS) );
-    	
-    	msg = (TextMessage) consumer.receive();
-    	assertEquals("Message 2", msg.getText());
-    	msg.acknowledge();
+        // Test sending to Queue B it should not block.
+        CountDownLatch pubishDoneToQeueuB = asyncSendTo(queueB, "Message 1");
+        assertTrue(pubishDoneToQeueuB.await(2, TimeUnit.SECONDS));
+
+        TextMessage msg = (TextMessage)consumer.receive();
+        assertEquals("Message 1", msg.getText());
+        msg.acknowledge();
+
+        pubishDoneToQeueuB = asyncSendTo(queueB, "Message 2");
+        assertTrue(pubishDoneToQeueuB.await(2, TimeUnit.SECONDS));
+
+        msg = (TextMessage)consumer.receive();
+        assertEquals("Message 2", msg.getText());
+        msg.acknowledge();
     }
 
     public void testSimpleSendReceive() throws Exception {
-        ActiveMQConnectionFactory factory = (ActiveMQConnectionFactory) createConnectionFactory();
+        ActiveMQConnectionFactory factory = (ActiveMQConnectionFactory)createConnectionFactory();
         factory.setAlwaysSyncSend(true);
-        connection = (ActiveMQConnection) factory.createConnection();
+        connection = (ActiveMQConnection)factory.createConnection();
         connections.add(connection);
-    	connection.start();
+        connection.start();
 
-    	Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-    	MessageConsumer consumer = session.createConsumer(queueA);
+        Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        MessageConsumer consumer = session.createConsumer(queueA);
 
-    	// Test sending to Queue B it should not block. 
-    	CountDownLatch pubishDoneToQeueuA = asyncSendTo(queueA, "Message 1");
-    	assertTrue( pubishDoneToQeueuA.await(2, TimeUnit.SECONDS) );
-    	
-    	TextMessage msg = (TextMessage) consumer.receive();
-    	assertEquals("Message 1", msg.getText());
-    	msg.acknowledge();
-    	
-    	pubishDoneToQeueuA = asyncSendTo(queueA, "Message 2");
-    	assertTrue( pubishDoneToQeueuA.await(2, TimeUnit.SECONDS) );
-    	
-    	msg = (TextMessage) consumer.receive();
-    	assertEquals("Message 2", msg.getText());
-    	msg.acknowledge();
+        // Test sending to Queue B it should not block.
+        CountDownLatch pubishDoneToQeueuA = asyncSendTo(queueA, "Message 1");
+        assertTrue(pubishDoneToQeueuA.await(2, TimeUnit.SECONDS));
+
+        TextMessage msg = (TextMessage)consumer.receive();
+        assertEquals("Message 1", msg.getText());
+        msg.acknowledge();
+
+        pubishDoneToQeueuA = asyncSendTo(queueA, "Message 2");
+        assertTrue(pubishDoneToQeueuA.await(2, TimeUnit.SECONDS));
+
+        msg = (TextMessage)consumer.receive();
+        assertEquals("Message 2", msg.getText());
+        msg.acknowledge();
     }
 
     public void test2ndPubisherWithStandardConnectionThatIsBlocked() throws Exception {
         ConnectionFactory factory = createConnectionFactory();
-        connection = (ActiveMQConnection) factory.createConnection();
+        connection = (ActiveMQConnection)factory.createConnection();
         connections.add(connection);
-    	connection.start();
+        connection.start();
 
-    	// Test sending to Queue A
-    	// 1st send should not block.
-    	fillQueue(queueA);
+        // Test sending to Queue A
+        // 1st send should not block.
+        fillQueue(queueA);
 
-    	// Test sending to Queue B it should block. 
-    	// Since even though  the it's queue limits have not been reached, the connection
-    	// is blocked.
-    	CountDownLatch pubishDoneToQeueuB = asyncSendTo(queueB, "Message 1");
-    	assertFalse( pubishDoneToQeueuB.await(2, TimeUnit.SECONDS) );    	
+        // Test sending to Queue B it should block.
+        // Since even though the it's queue limits have not been reached, the
+        // connection
+        // is blocked.
+        CountDownLatch pubishDoneToQeueuB = asyncSendTo(queueB, "Message 1");
+        assertFalse(pubishDoneToQeueuB.await(2, TimeUnit.SECONDS));
     }
 
+    private void fillQueue(final ActiveMQQueue queue) throws JMSException, InterruptedException {
+        final AtomicBoolean done = new AtomicBoolean(true);
+        final AtomicBoolean keepGoing = new AtomicBoolean(true);
 
-	private void fillQueue(final ActiveMQQueue queue) throws JMSException, InterruptedException {
-		final AtomicBoolean done = new AtomicBoolean(true);
-		final AtomicBoolean keepGoing = new AtomicBoolean(true);
-		
-		// Starts an async thread that every time it publishes it sets the done flag to false.
-		// Once the send starts to block it will not reset the done flag anymore.
-		new Thread("Fill thread.") {
-			public void run() {
-				Session session=null;
-		    	try {
-					session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-					MessageProducer producer = session.createProducer(queue);
-					producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-					while( keepGoing.get() ) {
-						done.set(false);
-						producer.send(session.createTextMessage("Hello World"));						
-					}
-				} catch (JMSException e) {
-				} finally {
-					safeClose(session);
-				}
-			}
-		}.start();
-		
-		while( true ) {
-			Thread.sleep(1000);
-			// the producer is blocked once the done flag stays true.
-			if( done.get() )
-				break;
-			done.set(true);
-		}		
-		keepGoing.set(false);
-	}
+        // Starts an async thread that every time it publishes it sets the done
+        // flag to false.
+        // Once the send starts to block it will not reset the done flag
+        // anymore.
+        new Thread("Fill thread.") {
+            public void run() {
+                Session session = null;
+                try {
+                    session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                    MessageProducer producer = session.createProducer(queue);
+                    producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+                    while (keepGoing.get()) {
+                        done.set(false);
+                        producer.send(session.createTextMessage("Hello World"));
+                    }
+                } catch (JMSException e) {
+                } finally {
+                    safeClose(session);
+                }
+            }
+        }.start();
 
-	private CountDownLatch asyncSendTo(final ActiveMQQueue queue, final String message) throws JMSException {
-		final CountDownLatch done = new CountDownLatch(1);
-		new Thread("Send thread.") {
-			public void run() {
-				Session session=null;
-		    	try {
-					session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-					MessageProducer producer = session.createProducer(queue);
-					producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-					producer.send(session.createTextMessage(message));
-					done.countDown();
-				} catch (JMSException e) {
-				} finally {
-					safeClose(session);
-				}
-			}
-		}.start();    	
-		return done;
-	}
+        while (true) {
+            Thread.sleep(1000);
+            // the producer is blocked once the done flag stays true.
+            if (done.get())
+                break;
+            done.set(true);
+        }
+        keepGoing.set(false);
+    }
+
+    private CountDownLatch asyncSendTo(final ActiveMQQueue queue, final String message) throws JMSException {
+        final CountDownLatch done = new CountDownLatch(1);
+        new Thread("Send thread.") {
+            public void run() {
+                Session session = null;
+                try {
+                    session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                    MessageProducer producer = session.createProducer(queue);
+                    producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+                    producer.send(session.createTextMessage(message));
+                    done.countDown();
+                } catch (JMSException e) {
+                } finally {
+                    safeClose(session);
+                }
+            }
+        }.start();
+        return done;
+    }
 
     protected BrokerService createBroker() throws Exception {
         BrokerService service = new BrokerService();
         service.setPersistent(false);
         service.setUseJmx(false);
-        
+
         // Setup a destination policy where it takes only 1 message at a time.
-        PolicyMap policyMap = new PolicyMap();        
+        PolicyMap policyMap = new PolicyMap();
         PolicyEntry policy = new PolicyEntry();
         policy.setMemoryLimit(1);
         policy.setPendingSubscriberPolicy(new VMPendingSubscriberMessageStoragePolicy());
         policy.setPendingQueuePolicy(new VMPendingQueueMessageStoragePolicy());
-        policyMap.setDefaultEntry(policy);        
+        policyMap.setDefaultEntry(policy);
         service.setDestinationPolicy(policyMap);
-        
-        connector = service.addConnector("tcp://localhost:0");        
+
+        connector = service.addConnector("tcp://localhost:0");
         return service;
     }
-    
+
     protected void tearDown() throws Exception {
-    	TcpTransport t = (TcpTransport) connection.getTransport().narrow(TcpTransport.class);
-    	t.getTransportListener().onException(new IOException("Disposed."));
-    	connection.getTransport().stop();
-    	super.tearDown();
+        TcpTransport t = (TcpTransport)connection.getTransport().narrow(TcpTransport.class);
+        t.getTransportListener().onException(new IOException("Disposed."));
+        connection.getTransport().stop();
+        super.tearDown();
     }
-    
+
     protected ConnectionFactory createConnectionFactory() throws Exception {
         return new ActiveMQConnectionFactory(connector.getConnectUri());
     }

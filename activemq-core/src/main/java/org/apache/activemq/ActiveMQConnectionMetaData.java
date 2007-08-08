@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,36 +33,37 @@ public class ActiveMQConnectionMetaData implements ConnectionMetaData {
     public static final String PROVIDER_VERSION;
     public static final int PROVIDER_MAJOR_VERSION;
     public static final int PROVIDER_MINOR_VERSION;
-    
+
     public static final ActiveMQConnectionMetaData INSTANCE = new ActiveMQConnectionMetaData();
-    
+
     static {
-        String version=null;
-        int major=0;
-        int minor=0;
+        String version = null;
+        int major = 0;
+        int minor = 0;
         try {
             Package p = Package.getPackage("org.apache.activemq");
             if (p != null) {
                 version = p.getImplementationVersion();
                 Pattern pattern = Pattern.compile("(\\d+)\\.(\\d+).*");
                 Matcher m = pattern.matcher(version);
-                if( m.matches() ) {
+                if (m.matches()) {
                     major = Integer.parseInt(m.group(1));
                     minor = Integer.parseInt(m.group(2));
                 }
             }
-        } catch ( Throwable e) {
+        } catch (Throwable e) {
         }
         PROVIDER_VERSION = version;
         PROVIDER_MAJOR_VERSION = major;
         PROVIDER_MINOR_VERSION = minor;
     }
-    
-    private ActiveMQConnectionMetaData() {}
-    
+
+    private ActiveMQConnectionMetaData() {
+    }
+
     /**
      * Gets the JMS API version.
-     *
+     * 
      * @return the JMS API version
      */
 
@@ -73,7 +73,7 @@ public class ActiveMQConnectionMetaData implements ConnectionMetaData {
 
     /**
      * Gets the JMS major version number.
-     *
+     * 
      * @return the JMS API major version number
      */
 
@@ -83,7 +83,7 @@ public class ActiveMQConnectionMetaData implements ConnectionMetaData {
 
     /**
      * Gets the JMS minor version number.
-     *
+     * 
      * @return the JMS API minor version number
      */
 
@@ -93,7 +93,7 @@ public class ActiveMQConnectionMetaData implements ConnectionMetaData {
 
     /**
      * Gets the JMS provider name.
-     *
+     * 
      * @return the JMS provider name
      */
 
@@ -103,7 +103,7 @@ public class ActiveMQConnectionMetaData implements ConnectionMetaData {
 
     /**
      * Gets the JMS provider version.
-     *
+     * 
      * @return the JMS provider version
      */
 
@@ -113,7 +113,7 @@ public class ActiveMQConnectionMetaData implements ConnectionMetaData {
 
     /**
      * Gets the JMS provider major version number.
-     *
+     * 
      * @return the JMS provider major version number
      */
 
@@ -123,7 +123,7 @@ public class ActiveMQConnectionMetaData implements ConnectionMetaData {
 
     /**
      * Gets the JMS provider minor version number.
-     *
+     * 
      * @return the JMS provider minor version number
      */
 
@@ -133,7 +133,7 @@ public class ActiveMQConnectionMetaData implements ConnectionMetaData {
 
     /**
      * Gets an enumeration of the JMSX property names.
-     *
+     * 
      * @return an Enumeration of JMSX property names
      */
 
@@ -141,8 +141,8 @@ public class ActiveMQConnectionMetaData implements ConnectionMetaData {
         Hashtable jmxProperties = new Hashtable();
         jmxProperties.put("JMSXGroupID", "1");
         jmxProperties.put("JMSXGroupSeq", "1");
-        jmxProperties.put("JMSXDeliveryCount","1");
-        jmxProperties.put("JMSXProducerTXID","1");
+        jmxProperties.put("JMSXDeliveryCount", "1");
+        jmxProperties.put("JMSXProducerTXID", "1");
         return jmxProperties.keys();
     }
 }

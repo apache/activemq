@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,7 +38,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * 
  * @version $Revision: 1.1 $
  */
 public class XBeanConfigTest extends TestCase {
@@ -56,28 +54,28 @@ public class XBeanConfigTest extends TestCase {
         // Validate the system properties are being evaluated in xbean.
         assertEquals("testbroker", brokerService.getBrokerName());
 
-        Topic topic = (Topic) broker.addDestination(context, new ActiveMQTopic("FOO.BAR"));
+        Topic topic = (Topic)broker.addDestination(context, new ActiveMQTopic("FOO.BAR"));
         DispatchPolicy dispatchPolicy = topic.getDispatchPolicy();
         assertTrue("dispatchPolicy should be RoundRobinDispatchPolicy: " + dispatchPolicy, dispatchPolicy instanceof RoundRobinDispatchPolicy);
-        
+
         SubscriptionRecoveryPolicy subscriptionRecoveryPolicy = topic.getSubscriptionRecoveryPolicy();
         assertTrue("subscriptionRecoveryPolicy should be LastImageSubscriptionRecoveryPolicy: " + subscriptionRecoveryPolicy,
-                subscriptionRecoveryPolicy instanceof LastImageSubscriptionRecoveryPolicy);
-        
+                   subscriptionRecoveryPolicy instanceof LastImageSubscriptionRecoveryPolicy);
+
         log.info("destination: " + topic);
         log.info("dispatchPolicy: " + dispatchPolicy);
         log.info("subscriptionRecoveryPolicy: " + subscriptionRecoveryPolicy);
 
-        topic = (Topic) broker.addDestination(context, new ActiveMQTopic("ORDERS.BOOKS"));
+        topic = (Topic)broker.addDestination(context, new ActiveMQTopic("ORDERS.BOOKS"));
         dispatchPolicy = topic.getDispatchPolicy();
         assertTrue("dispatchPolicy should be StrictOrderDispatchPolicy: " + dispatchPolicy, dispatchPolicy instanceof StrictOrderDispatchPolicy);
 
         subscriptionRecoveryPolicy = topic.getSubscriptionRecoveryPolicy();
         assertTrue("subscriptionRecoveryPolicy should be TimedSubscriptionRecoveryPolicy: " + subscriptionRecoveryPolicy,
-                subscriptionRecoveryPolicy instanceof TimedSubscriptionRecoveryPolicy);
-        TimedSubscriptionRecoveryPolicy timedSubcriptionPolicy = (TimedSubscriptionRecoveryPolicy) subscriptionRecoveryPolicy;
+                   subscriptionRecoveryPolicy instanceof TimedSubscriptionRecoveryPolicy);
+        TimedSubscriptionRecoveryPolicy timedSubcriptionPolicy = (TimedSubscriptionRecoveryPolicy)subscriptionRecoveryPolicy;
         assertEquals("getRecoverDuration()", 60000, timedSubcriptionPolicy.getRecoverDuration());
-        
+
         log.info("destination: " + topic);
         log.info("dispatchPolicy: " + dispatchPolicy);
         log.info("subscriptionRecoveryPolicy: " + subscriptionRecoveryPolicy);
@@ -89,7 +87,7 @@ public class XBeanConfigTest extends TestCase {
         broker = brokerService.getBroker();
 
         // started automatically
-        //brokerService.start();
+        // brokerService.start();
 
         context = new ConnectionContext();
         context.setBroker(broker);
@@ -97,11 +95,10 @@ public class XBeanConfigTest extends TestCase {
         info.setClientId("James");
         info.setUserName("James");
         info.setConnectionId(new ConnectionId("1234"));
-        
+
         try {
             broker.addConnection(context, info);
-        }
-        catch (Throwable e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             fail(e.getMessage());
         }
@@ -118,7 +115,7 @@ public class XBeanConfigTest extends TestCase {
     protected BrokerService createBroker() throws Exception {
         String uri = "org/apache/activemq/xbean/activemq-policy.xml";
         log.info("Loading broker configuration from the classpath with URI: " + uri);
-        return BrokerFactory.createBroker(new URI("xbean:"+uri));
+        return BrokerFactory.createBroker(new URI("xbean:" + uri));
     }
 
 }

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,31 +26,30 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.ClassPathResource;
 
 /**
- *Test failover for Queues
- *
+ * Test failover for Queues
  */
-public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsTest{
-    private static final transient Log log = LogFactory.getLog(QueueMasterSlaveTest.class);
-   
+public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
+    private static final transient Log LOG = LogFactory.getLog(QueueMasterSlaveTest.class);
+
     protected BrokerService master;
     protected BrokerService slave;
-    protected int inflightMessageCount = 0;
+    protected int inflightMessageCount;
     protected int failureCount = 50;
-    protected String uriString="failover://(tcp://localhost:62001,tcp://localhost:62002)?randomize=false";
+    protected String uriString = "failover://(tcp://localhost:62001,tcp://localhost:62002)?randomize=false";
 
-    protected void setUp() throws Exception{
-        if(System.getProperty("basedir")==null){
-            File file=new File(".");
-            System.setProperty("basedir",file.getAbsolutePath());
+    protected void setUp() throws Exception {
+        if (System.getProperty("basedir") == null) {
+            File file = new File(".");
+            System.setProperty("basedir", file.getAbsolutePath());
         }
-        failureCount = super.messageCount/2;
+        failureCount = super.messageCount / 2;
         super.topic = isTopic();
-        BrokerFactoryBean brokerFactory=new BrokerFactoryBean(new ClassPathResource(getMasterXml()));
+        BrokerFactoryBean brokerFactory = new BrokerFactoryBean(new ClassPathResource(getMasterXml()));
         brokerFactory.afterPropertiesSet();
-        master=brokerFactory.getBroker();
-        brokerFactory=new BrokerFactoryBean(new ClassPathResource(getSlaveXml()));
+        master = brokerFactory.getBroker();
+        brokerFactory = new BrokerFactoryBean(new ClassPathResource(getSlaveXml()));
         brokerFactory.afterPropertiesSet();
-        slave=brokerFactory.getBroker();
+        slave = brokerFactory.getBroker();
         master.start();
         slave.start();
         // wait for thing to connect
@@ -68,26 +66,26 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
         return "org/apache/activemq/broker/ft/master.xml";
     }
 
-    protected void tearDown() throws Exception{
+    protected void tearDown() throws Exception {
         super.tearDown();
         slave.stop();
         master.stop();
     }
 
-    protected ActiveMQConnectionFactory createConnectionFactory() throws Exception{
+    protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         return new ActiveMQConnectionFactory(uriString);
     }
-    
-    protected void messageSent() throws Exception{
-        if (++inflightMessageCount >= failureCount){
+
+    protected void messageSent() throws Exception {
+        if (++inflightMessageCount >= failureCount) {
             inflightMessageCount = 0;
             Thread.sleep(1000);
-            log.error("MASTER STOPPED!@!!!!");
+            LOG.error("MASTER STOPPED!@!!!!");
             master.stop();
         }
     }
-    
-    protected boolean isTopic(){
+
+    protected boolean isTopic() {
         return false;
     }
 }

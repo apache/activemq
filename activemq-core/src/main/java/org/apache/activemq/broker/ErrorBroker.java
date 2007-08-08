@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -191,7 +190,7 @@ public class ErrorBroker implements Broker {
     public void preProcessDispatch(MessageDispatch messageDispatch) {
         throw new BrokerStoppedException(this.message);
     }
-    
+
     public void postProcessDispatch(MessageDispatch messageDispatch) {
         throw new BrokerStoppedException(this.message);
     }
@@ -200,7 +199,6 @@ public class ErrorBroker implements Broker {
         throw new BrokerStoppedException(this.message);
     }
 
-   
     public boolean isStopped() {
         return true;
     }
@@ -232,36 +230,36 @@ public class ErrorBroker implements Broker {
     public Response messagePull(ConnectionContext context, MessagePull pull) {
         throw new BrokerStoppedException(this.message);
     }
-        
+
     public Store getTempDataStore() {
         throw new BrokerStoppedException(this.message);
     }
-    
-    public URI getVmConnectorURI(){
+
+    public URI getVmConnectorURI() {
         throw new BrokerStoppedException(this.message);
     }
-    
-    public void brokerServiceStarted(){
+
+    public void brokerServiceStarted() {
         throw new BrokerStoppedException(this.message);
     }
-    
-    public BrokerService getBrokerService(){
+
+    public BrokerService getBrokerService() {
         throw new BrokerStoppedException(this.message);
     }
-    
+
     public boolean isExpired(MessageReference messageReference) {
         throw new BrokerStoppedException(this.message);
     }
 
-    public void messageExpired(ConnectionContext context,MessageReference message){
-       throw new BrokerStoppedException(this.message);        
+    public void messageExpired(ConnectionContext context, MessageReference message) {
+        throw new BrokerStoppedException(this.message);
     }
 
-    public void sendToDeadLetterQueue(ConnectionContext context,MessageReference messageReference){
-       throw new BrokerStoppedException(this.message); 
-    }
-    
-    public Broker getRoot(){
+    public void sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference) {
         throw new BrokerStoppedException(this.message);
-     }
+    }
+
+    public Broker getRoot() {
+        throw new BrokerStoppedException(this.message);
+    }
 }

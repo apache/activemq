@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -49,7 +48,7 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
 
     public ActiveMQDestination destination;
     public int deliveryMode;
-    
+
     private String remoteURI = "tcp://localhost:0?wireFormat.tcpNoDelayEnabled=true";
 
     public static Test suite() {
@@ -61,9 +60,8 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
     }
 
     public void initCombosForTestPublisherFansout() {
-        addCombinationValues("deliveryMode", new Object[] { Integer.valueOf(DeliveryMode.NON_PERSISTENT),
-        		Integer.valueOf(DeliveryMode.PERSISTENT) });
-        addCombinationValues("destination", new Object[] { new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"), });
+        addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST")});
     }
 
     public void xtestPublisherFansout() throws Exception {
@@ -107,12 +105,11 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
 
     }
 
-    
     public void initCombosForTestPublisherWaitsForServerToBeUp() {
-        addCombinationValues("deliveryMode", new Object[] { Integer.valueOf(DeliveryMode.NON_PERSISTENT),
-                Integer.valueOf(DeliveryMode.PERSISTENT) });
-        addCombinationValues("destination", new Object[] { new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"), });
+        addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST")});
     }
+
     public void testPublisherWaitsForServerToBeUp() throws Exception {
 
         // Start a normal consumer on the local broker
@@ -151,20 +148,20 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
 
         assertNotNull(receiveMessage(connection2));
         assertNoMessagesLeft(connection2);
-        
+
         final CountDownLatch publishDone = new CountDownLatch(1);
-        
+
         // The MockTransport is on the remote connection.
         // Slip in a new transport filter after the MockTransport
-        MockTransport mt = (MockTransport) connection3.getTransport().narrow(MockTransport.class);
+        MockTransport mt = (MockTransport)connection3.getTransport().narrow(MockTransport.class);
         mt.install(new TransportFilter(mt.getNext()) {
             public void oneway(Object command) throws IOException {
-                log.info("Dropping: "+command);
+                log.info("Dropping: " + command);
                 // just eat it! to simulate a recent failure.
             }
         });
-                
-        // Send a message (async) as this will block 
+
+        // Send a message (async) as this will block
         new Thread() {
             public void run() {
                 // Send the message using the fail over publisher.
@@ -176,16 +173,17 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
                 publishDone.countDown();
             }
         }.start();
-        
+
         // Assert that we block:
-        assertFalse( publishDone.await(3, TimeUnit.SECONDS)  );
-        
-        // Restart the remote server.  State should be re-played and the publish should continue.
+        assertFalse(publishDone.await(3, TimeUnit.SECONDS));
+
+        // Restart the remote server. State should be re-played and the publish
+        // should continue.
         remoteURI = remoteConnector.getServer().getConnectURI().toString();
         restartRemoteBroker();
 
         // This should reconnect, and resend
-        assertTrue( publishDone.await(10, TimeUnit.SECONDS)  );
+        assertTrue(publishDone.await(10, TimeUnit.SECONDS));
 
     }
 
@@ -198,8 +196,7 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
     }
 
     protected StubConnection createFanoutConnection() throws Exception {
-        URI fanoutURI = new URI("fanout://static://(" + connector.getServer().getConnectURI() + ","
-                + "mock://"+remoteConnector.getServer().getConnectURI() + ")");
+        URI fanoutURI = new URI("fanout://static://(" + connector.getServer().getConnectURI() + "," + "mock://" + remoteConnector.getServer().getConnectURI() + ")");
         Transport transport = TransportFactory.connect(fanoutURI);
         StubConnection connection = new StubConnection(transport);
         connections.add(connection);

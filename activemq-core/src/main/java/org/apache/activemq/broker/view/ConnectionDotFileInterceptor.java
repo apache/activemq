@@ -44,7 +44,6 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.filter.DestinationMapNode;
 
 /**
- * 
  * @version $Revision: $
  */
 public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
@@ -52,7 +51,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
     protected static final String ID_SEPARATOR = "_";
 
     private final boolean redrawOnRemove;
-    private boolean clearProducerCacheAfterRender = false;
+    private boolean clearProducerCacheAfterRender;
     private String domain = "org.apache.activemq";
     private BrokerViewMBean brokerView;
     private MBeanServer mbeanServer;
@@ -62,15 +61,13 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
     private Map producerDestinations = new HashMap();
     private Object lock = new Object();
 
-    public ConnectionDotFileInterceptor(Broker next, String file, boolean redrawOnRemove)
-            throws MalformedObjectNameException {
+    public ConnectionDotFileInterceptor(Broker next, String file, boolean redrawOnRemove) throws MalformedObjectNameException {
         super(next, file);
         this.redrawOnRemove = redrawOnRemove;
 
         mbeanServer = new ManagementContext().getMBeanServer();
         ObjectName brokerName = new ObjectName(domain + ":Type=Broker,BrokerName=localhost");
-        brokerView = (BrokerViewMBean) MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName,
-                BrokerViewMBean.class, true);
+        brokerView = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
     }
 
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
@@ -112,7 +109,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
         ProducerId producerId = messageSend.getProducerId();
         ActiveMQDestination destination = messageSend.getDestination();
         synchronized (lock) {
-            Set destinations = (Set) producerDestinations.get(producerId);
+            Set destinations = (Set)producerDestinations.get(producerId);
             if (destinations == null) {
                 destinations = new HashSet();
             }
@@ -156,11 +153,11 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
     }
 
     protected void printProducers(PrintWriter writer, Map clients, Map queues, Map topics) {
-        synchronized(lock) {
+        synchronized (lock) {
             for (Iterator iter = producerDestinations.entrySet().iterator(); iter.hasNext();) {
-                Map.Entry entry = (Map.Entry) iter.next();
-                ProducerId producerId = (ProducerId) entry.getKey();
-                Set destinationSet = (Set) entry.getValue();
+                Map.Entry entry = (Map.Entry)iter.next();
+                ProducerId producerId = (ProducerId)entry.getKey();
+                Set destinationSet = (Set)entry.getValue();
                 printProducers(writer, clients, queues, topics, producerId, destinationSet);
             }
         }
@@ -168,7 +165,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
 
     protected void printProducers(PrintWriter writer, Map clients, Map queues, Map topics, ProducerId producerId, Set destinationSet) {
         for (Iterator iter = destinationSet.iterator(); iter.hasNext();) {
-            ActiveMQDestination destination = (ActiveMQDestination) iter.next();
+            ActiveMQDestination destination = (ActiveMQDestination)iter.next();
 
             // TODO use clientId one day
             String clientId = producerId.getConnectionId();
@@ -180,14 +177,13 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
             if (destination.isTopic()) {
                 safeDestinationId = "topic_" + safeDestinationId;
                 topics.put(safeDestinationId, physicalName);
-            }
-            else {
+            } else {
                 safeDestinationId = "queue_" + safeDestinationId;
                 queues.put(safeDestinationId, physicalName);
             }
 
             String safeProducerId = asID(producerId.toString());
-            
+
             // lets write out the links
 
             writer.print(safeClientId);
@@ -210,22 +206,19 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
         }
     }
 
-    
-    protected void printSubscribers(PrintWriter writer, Map clients, Map destinations, String type,
-            ObjectName[] subscribers) {
+    protected void printSubscribers(PrintWriter writer, Map clients, Map destinations, String type, ObjectName[] subscribers) {
         for (int i = 0; i < subscribers.length; i++) {
             ObjectName name = subscribers[i];
-            SubscriptionViewMBean subscriber = (SubscriptionViewMBean) MBeanServerInvocationHandler.newProxyInstance(
-                    mbeanServer, name, SubscriptionViewMBean.class, true);
+            SubscriptionViewMBean subscriber = (SubscriptionViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, name, SubscriptionViewMBean.class, true);
 
             String clientId = subscriber.getClientId();
             String safeClientId = asID(clientId);
             clients.put(safeClientId, clientId);
-            
+
             String destination = subscriber.getDestinationName();
             String safeDestinationId = type + asID(destination);
             destinations.put(safeDestinationId, destination);
-            
+
             String selector = subscriber.getSelector();
 
             // lets write out the links
@@ -255,9 +248,9 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
 
     protected void writeLabels(PrintWriter writer, String color, String prefix, Map map) {
         for (Iterator iter = map.entrySet().iterator(); iter.hasNext();) {
-            Map.Entry entry = (Map.Entry) iter.next();
-            String id = (String) entry.getKey();
-            String label = (String) entry.getValue();
+            Map.Entry entry = (Map.Entry)iter.next();
+            String id = (String)entry.getKey();
+            String label = (String)entry.getValue();
 
             writer.print(id);
             writer.print(" [ fillcolor = ");
@@ -278,8 +271,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
             char ch = name.charAt(i);
             if (Character.isLetterOrDigit(ch) || ch == '_') {
                 buffer.append(ch);
-            }
-            else {
+            } else {
                 buffer.append('_');
             }
         }
@@ -295,8 +287,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
         String label = path;
         if (prefix.equals("topic")) {
             label = "Topics";
-        }
-        else if (prefix.equals("queue")) {
+        } else if (prefix.equals("queue")) {
             label = "Queues";
         }
         writer.print("[ label = \"");
@@ -305,7 +296,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
 
         Collection children = node.getChildren();
         for (Iterator iter = children.iterator(); iter.hasNext();) {
-            DestinationMapNode child = (DestinationMapNode) iter.next();
+            DestinationMapNode child = (DestinationMapNode)iter.next();
             printNodes(writer, child, prefix + ID_SEPARATOR + path);
         }
     }
@@ -314,7 +305,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
         String path = getPath(node);
         Collection children = node.getChildren();
         for (Iterator iter = children.iterator(); iter.hasNext();) {
-            DestinationMapNode child = (DestinationMapNode) iter.next();
+            DestinationMapNode child = (DestinationMapNode)iter.next();
 
             writer.print("  ");
             writer.print(prefix);

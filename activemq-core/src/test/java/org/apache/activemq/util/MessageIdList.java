@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,16 +33,15 @@ import org.apache.commons.logging.LogFactory;
  * A simple container of messages for performing testing and rendezvous style
  * code. You can use this class a {@link MessageListener} and then make
  * assertions about how many messages it has received allowing a certain maximum
- * amount of time to ensure that the test does not hang forever.
- * 
- * Also you can chain these instances together with the
- * {@link #setParent(MessageListener)} method so that you can aggregate the
- * total number of messages consumed across a number of consumers.
+ * amount of time to ensure that the test does not hang forever. Also you can
+ * chain these instances together with the {@link #setParent(MessageListener)}
+ * method so that you can aggregate the total number of messages consumed across
+ * a number of consumers.
  * 
  * @version $Revision: 1.6 $
  */
 public class MessageIdList extends Assert implements MessageListener {
-    
+
     protected static final Log log = LogFactory.getLog(MessageIdList.class);
 
     private List messageIds = new ArrayList();
@@ -51,9 +49,9 @@ public class MessageIdList extends Assert implements MessageListener {
     private boolean verbose;
     private MessageListener parent;
     private long maximumDuration = 15000L;
-    private long processingDelay=0;
-    
-	private CountDownLatch countDownLatch;
+    private long processingDelay;
+
+    private CountDownLatch countDownLatch;
 
     public MessageIdList() {
         this(new Object());
@@ -65,7 +63,7 @@ public class MessageIdList extends Assert implements MessageListener {
 
     public boolean equals(Object that) {
         if (that instanceof MessageIdList) {
-            MessageIdList thatList = (MessageIdList) that;
+            MessageIdList thatList = (MessageIdList)that;
             return getMessageIds().equals(thatList.getMessageIds());
         }
         return false;
@@ -101,11 +99,11 @@ public class MessageIdList extends Assert implements MessageListener {
     }
 
     public void onMessage(Message message) {
-        String id=null;
+        String id = null;
         try {
-        	if( countDownLatch != null )
-        		countDownLatch.countDown();
-        	
+            if (countDownLatch != null)
+                countDownLatch.countDown();
+
             id = message.getJMSMessageID();
             synchronized (semaphore) {
                 messageIds.add(id);
@@ -120,11 +118,11 @@ public class MessageIdList extends Assert implements MessageListener {
         if (parent != null) {
             parent.onMessage(message);
         }
-        if( processingDelay > 0 ) {
-        	try {
-				Thread.sleep(processingDelay);
-			} catch (InterruptedException e) {
-			}
+        if (processingDelay > 0) {
+            try {
+                Thread.sleep(processingDelay);
+            } catch (InterruptedException e) {
+            }
         }
     }
 
@@ -145,14 +143,13 @@ public class MessageIdList extends Assert implements MessageListener {
                     break;
                 }
                 long duration = System.currentTimeMillis() - start;
-                if (duration >= maximumDuration ) {
+                if (duration >= maximumDuration) {
                     break;
                 }
                 synchronized (semaphore) {
-                    semaphore.wait(maximumDuration-duration);
+                    semaphore.wait(maximumDuration - duration);
                 }
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 log.info("Caught: " + e);
             }
         }
@@ -170,10 +167,11 @@ public class MessageIdList extends Assert implements MessageListener {
     public void assertMessagesReceivedNoWait(int messageCount) {
         assertEquals("expected number of messages when received", messageCount, getMessageCount());
     }
-    
+
     /**
      * Performs a testing assertion that the correct number of messages have
-     * been received waiting for the messages to arrive up to a fixed amount of time.
+     * been received waiting for the messages to arrive up to a fixed amount of
+     * time.
      * 
      * @param messageCount
      */
@@ -184,7 +182,8 @@ public class MessageIdList extends Assert implements MessageListener {
     }
 
     /**
-     * Asserts that there are at least the given number of messages received without waiting.
+     * Asserts that there are at least the given number of messages received
+     * without waiting.
      */
     public void assertAtLeastMessagesReceived(int messageCount) {
         int actual = getMessageCount();
@@ -192,7 +191,9 @@ public class MessageIdList extends Assert implements MessageListener {
     }
 
     /**
-     * Asserts that there are at most the number of messages received without waiting
+     * Asserts that there are at most the number of messages received without
+     * waiting
+     * 
      * @param messageCount
      */
     public void assertAtMostMessagesReceived(int messageCount) {
@@ -228,44 +229,42 @@ public class MessageIdList extends Assert implements MessageListener {
         this.parent = parent;
     }
 
-    
     /**
      * @return the maximumDuration
      */
-    public long getMaximumDuration(){
+    public long getMaximumDuration() {
         return this.maximumDuration;
     }
 
-    
     /**
      * @param maximumDuration the maximumDuration to set
      */
-    public void setMaximumDuration(long maximumDuration){
-        this.maximumDuration=maximumDuration;
+    public void setMaximumDuration(long maximumDuration) {
+        this.maximumDuration = maximumDuration;
     }
 
-	public void setCountDownLatch(CountDownLatch countDownLatch) {
-		this.countDownLatch = countDownLatch;
-	}
+    public void setCountDownLatch(CountDownLatch countDownLatch) {
+        this.countDownLatch = countDownLatch;
+    }
 
-	/**
-	 * Gets the amount of time the message listener will spend sleeping to
-	 * simulate a processing delay.
-	 * 
-	 * @return
-	 */
-	public long getProcessingDelay() {
-		return processingDelay;
-	}
+    /**
+     * Gets the amount of time the message listener will spend sleeping to
+     * simulate a processing delay.
+     * 
+     * @return
+     */
+    public long getProcessingDelay() {
+        return processingDelay;
+    }
 
-	/**
-	 * Sets the amount of time the message listener will spend sleeping to
-	 * simulate a processing delay.
-	 * 
-	 * @param processingDelay
-	 */
-	public void setProcessingDelay(long processingDelay) {
-		this.processingDelay = processingDelay;
-	}
+    /**
+     * Sets the amount of time the message listener will spend sleeping to
+     * simulate a processing delay.
+     * 
+     * @param processingDelay
+     */
+    public void setProcessingDelay(long processingDelay) {
+        this.processingDelay = processingDelay;
+    }
 
 }

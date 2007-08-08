@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -73,18 +72,20 @@ import org.apache.commons.logging.LogFactory;
  */
 public class Queue implements Destination, Task {
 
+    final Broker broker;
+
     private final Log log;
     private final ActiveMQDestination destination;
     private final List consumers = new CopyOnWriteArrayList();
     private final Valve dispatchValve = new Valve(true);
     private final UsageManager usageManager;
     private final DestinationStatistics destinationStatistics = new DestinationStatistics();
-    private  PendingMessageCursor messages;
+    private PendingMessageCursor messages;
     private final LinkedList pagedInMessages = new LinkedList();
     private LockOwner exclusiveOwner;
     private MessageGroupMap messageGroupOwners;
 
-    private int garbageSize = 0;
+    private int garbageSize;
     private int garbageSizeBeforeCollection = 1000;
     private DispatchPolicy dispatchPolicy = new RoundRobinDispatchPolicy();
     private final MessageStore store;
@@ -95,23 +96,22 @@ public class Queue implements Destination, Task {
     private final Object exclusiveLockMutex = new Object();
     private final Object doDispatchMutex = new Object();
     private TaskRunner taskRunner;
-    private boolean started = false;
-    final Broker broker;
-    
-    public Queue(Broker broker,ActiveMQDestination destination, final UsageManager memoryManager, MessageStore store, DestinationStatistics parentStats,
-            TaskRunnerFactory taskFactory, Store tmpStore) throws Exception {
-        this.broker=broker;
+    private boolean started;
+
+    public Queue(Broker broker, ActiveMQDestination destination, final UsageManager memoryManager, MessageStore store, DestinationStatistics parentStats,
+                 TaskRunnerFactory taskFactory, Store tmpStore) throws Exception {
+        this.broker = broker;
         this.destination = destination;
-        this.usageManager = new UsageManager(memoryManager,destination.toString());
+        this.usageManager = new UsageManager(memoryManager, destination.toString());
         this.usageManager.setUsagePortion(1.0f);
         this.store = store;
-        if(destination.isTemporary()){
-            this.messages=new VMPendingMessageCursor();
-        }else{
-            this.messages=new StoreQueueCursor(this,tmpStore);
+        if (destination.isTemporary()) {
+            this.messages = new VMPendingMessageCursor();
+        } else {
+            this.messages = new StoreQueueCursor(this, tmpStore);
         }
-        
-        this.taskRunner = taskFactory.createTaskRunner(this, "Queue  "+destination.getPhysicalName());
+
+        this.taskRunner = taskFactory.createTaskRunner(this, "Queue  " + destination.getPhysicalName());
 
         // Let the store know what usage manager we are using so that he can
         // flush messages to disk
@@ -120,35 +120,35 @@ public class Queue implements Destination, Task {
             store.setUsageManager(usageManager);
         }
 
-        //let's copy the enabled property from the parent DestinationStatistics
+        // let's copy the enabled property from the parent DestinationStatistics
         this.destinationStatistics.setEnabled(parentStats.isEnabled());
         destinationStatistics.setParent(parentStats);
         this.log = LogFactory.getLog(getClass().getName() + "." + destination.getPhysicalName());
 
-        
     }
-    
-    public void initialize() throws Exception{
-        if(store!=null){
+
+    public void initialize() throws Exception {
+        if (store != null) {
             // Restore the persistent messages.
             messages.setUsageManager(getUsageManager());
-            if(messages.isRecoveryRequired()){
-                store.recover(new MessageRecoveryListener(){
+            if (messages.isRecoveryRequired()) {
+                store.recover(new MessageRecoveryListener() {
 
-                    public boolean recoverMessage(Message message){
-                        // Message could have expired while it was being loaded..
-                        if(broker.isExpired(message)){
-                            broker.messageExpired(createConnectionContext(),message);
+                    public boolean recoverMessage(Message message) {
+                        // Message could have expired while it was being
+                        // loaded..
+                        if (broker.isExpired(message)) {
+                            broker.messageExpired(createConnectionContext(), message);
                             destinationStatistics.getMessages().decrement();
                             return true;
                         }
-                        if(hasSpace()){
+                        if (hasSpace()) {
                             message.setRegionDestination(Queue.this);
-                            synchronized(messages){
-                                try{
+                            synchronized (messages) {
+                                try {
                                     messages.addMessageLast(message);
-                                }catch(Exception e){
-                                    log.fatal("Failed to add message to cursor",e);
+                                } catch (Exception e) {
+                                    log.fatal("Failed to add message to cursor", e);
                                 }
                             }
                             destinationStatistics.getMessages().increment();
@@ -157,14 +157,14 @@ public class Queue implements Destination, Task {
                         return false;
                     }
 
-                    public boolean recoverMessageReference(MessageId messageReference) throws Exception{
+                    public boolean recoverMessageReference(MessageId messageReference) throws Exception {
                         throw new RuntimeException("Should not be called.");
                     }
 
-                    public void finished(){
+                    public void finished() {
                     }
 
-                    public boolean hasSpace(){
+                    public boolean hasSpace() {
                         return true;
                     }
                 });
@@ -181,14 +181,14 @@ public class Queue implements Destination, Task {
      * @see org.apache.activemq.broker.region.Destination#lock(org.apache.activemq.broker.region.MessageReference,
      *      org.apache.activemq.broker.region.LockOwner)
      */
-    public boolean lock(MessageReference node,LockOwner lockOwner){
-        synchronized(exclusiveLockMutex){
-        	if (exclusiveOwner == lockOwner)
-				return true;
-			if (exclusiveOwner != null)
-				return false;
+    public boolean lock(MessageReference node, LockOwner lockOwner) {
+        synchronized (exclusiveLockMutex) {
+            if (exclusiveOwner == lockOwner)
+                return true;
+            if (exclusiveOwner != null)
+                return false;
         }
-     	return true;
+        return true;
     }
 
     public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
@@ -196,56 +196,54 @@ public class Queue implements Destination, Task {
         destinationStatistics.getConsumers().increment();
         maximumPagedInMessages += sub.getConsumerInfo().getPrefetchSize();
 
-        
-        
-        MessageEvaluationContext msgContext=context.getMessageEvaluationContext();
-        try{
+        MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
+        try {
             synchronized (consumers) {
-				consumers.add(sub);
-				if (sub.getConsumerInfo().isExclusive()) {
-					LockOwner owner = (LockOwner) sub;
-					if (exclusiveOwner == null) {
-						exclusiveOwner = owner;
-					} else {
-						// switch the owner if the priority is higher.
-						if (owner.getLockPriority() > exclusiveOwner.getLockPriority()) {
-							exclusiveOwner = owner;
-						}
-					}
-				}
-			}
+                consumers.add(sub);
+                if (sub.getConsumerInfo().isExclusive()) {
+                    LockOwner owner = (LockOwner)sub;
+                    if (exclusiveOwner == null) {
+                        exclusiveOwner = owner;
+                    } else {
+                        // switch the owner if the priority is higher.
+                        if (owner.getLockPriority() > exclusiveOwner.getLockPriority()) {
+                            exclusiveOwner = owner;
+                        }
+                    }
+                }
+            }
             // page in messages
             doPageIn();
             // synchronize with dispatch method so that no new messages are sent
             // while
             // setting up a subscription. avoid out of order messages,
-			// duplicates
+            // duplicates
             // etc.
             dispatchValve.turnOff();
-            try { 
-	            msgContext.setDestination(destination);
-	            synchronized(pagedInMessages){
-	                // Add all the matching messages in the queue to the
-	                // subscription.
-	                for(Iterator i=pagedInMessages.iterator();i.hasNext();){
-	                    QueueMessageReference node=(QueueMessageReference)i.next();
-	                    if(node.isDropped()){
-	                        continue;
-	                    }
-	                    try{
-	                        msgContext.setMessageReference(node);
-	                        if(sub.matches(node,msgContext)){
-	                            sub.add(node);
-	                        }
-	                    }catch(IOException e){
-	                        log.warn("Could not load message: "+e,e);
-	                    }
-	                }
-	            }
+            try {
+                msgContext.setDestination(destination);
+                synchronized (pagedInMessages) {
+                    // Add all the matching messages in the queue to the
+                    // subscription.
+                    for (Iterator i = pagedInMessages.iterator(); i.hasNext();) {
+                        QueueMessageReference node = (QueueMessageReference)i.next();
+                        if (node.isDropped()) {
+                            continue;
+                        }
+                        try {
+                            msgContext.setMessageReference(node);
+                            if (sub.matches(node, msgContext)) {
+                                sub.add(node);
+                            }
+                        } catch (IOException e) {
+                            log.warn("Could not load message: " + e, e);
+                        }
+                    }
+                }
             } finally {
                 dispatchValve.turnOn();
             }
-        }finally{
+        } finally {
             msgContext.clear();
         }
     }
@@ -262,28 +260,28 @@ public class Queue implements Destination, Task {
         try {
 
             synchronized (consumers) {
-				consumers.remove(sub);
-				if (sub.getConsumerInfo().isExclusive()) {
-					LockOwner owner = (LockOwner) sub;
-					// Did we loose the exclusive owner??
-					if (exclusiveOwner == owner) {
+                consumers.remove(sub);
+                if (sub.getConsumerInfo().isExclusive()) {
+                    LockOwner owner = (LockOwner)sub;
+                    // Did we loose the exclusive owner??
+                    if (exclusiveOwner == owner) {
 
-						// Find the exclusive consumer with the higest Lock
-						// Priority.
-						exclusiveOwner = null;
-						for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-							Subscription s = (Subscription) iter.next();
-							LockOwner so = (LockOwner) s;
-							if (s.getConsumerInfo().isExclusive() && (exclusiveOwner == null || so.getLockPriority() > exclusiveOwner.getLockPriority()))
-								exclusiveOwner = so;
-						}
-					}
-				}
-				if (consumers.isEmpty()) {
-					messages.gc();
-				}
+                        // Find the exclusive consumer with the higest Lock
+                        // Priority.
+                        exclusiveOwner = null;
+                        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
+                            Subscription s = (Subscription)iter.next();
+                            LockOwner so = (LockOwner)s;
+                            if (s.getConsumerInfo().isExclusive() && (exclusiveOwner == null || so.getLockPriority() > exclusiveOwner.getLockPriority()))
+                                exclusiveOwner = so;
+                        }
+                    }
+                }
+                if (consumers.isEmpty()) {
+                    messages.gc();
+                }
 
-			}
+            }
             sub.remove(context, this);
 
             boolean wasExclusiveOwner = false;
@@ -303,8 +301,8 @@ public class Queue implements Destination, Task {
                     // lets copy the messages to dispatch to avoid deadlock
                     List messagesToDispatch = new ArrayList();
                     synchronized (pagedInMessages) {
-                        for(Iterator i =  pagedInMessages.iterator();i.hasNext();) {
-                            QueueMessageReference node = (QueueMessageReference) i.next();
+                        for (Iterator i = pagedInMessages.iterator(); i.hasNext();) {
+                            QueueMessageReference node = (QueueMessageReference)i.next();
                             if (node.isDropped()) {
                                 continue;
                             }
@@ -321,161 +319,165 @@ public class Queue implements Destination, Task {
                     // now lets dispatch from the copy of the collection to
                     // avoid deadlocks
                     for (Iterator iter = messagesToDispatch.iterator(); iter.hasNext();) {
-                        QueueMessageReference node = (QueueMessageReference) iter.next();
+                        QueueMessageReference node = (QueueMessageReference)iter.next();
                         node.incrementRedeliveryCounter();
                         node.unlock();
                         msgContext.setMessageReference(node);
                         dispatchPolicy.dispatch(node, msgContext, consumers);
                     }
-                }
-                finally {
+                } finally {
                     msgContext.clear();
                 }
             }
-        }
-        finally {
+        } finally {
             dispatchValve.turnOn();
         }
 
     }
-    
+
     private final LinkedList<Runnable> messagesWaitingForSpace = new LinkedList<Runnable>();
     private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
-    	public void run() {
-			try {
-				taskRunner.wakeup();
-			} catch (InterruptedException e) {
-			}
-    	};
+        public void run() {
+            try {
+                taskRunner.wakeup();
+            } catch (InterruptedException e) {
+            }
+        };
     };
 
-    public void send(final ProducerBrokerExchange producerExchange,final Message message) throws Exception {
-    	final ConnectionContext context = producerExchange.getConnectionContext(); 
+    public void send(final ProducerBrokerExchange producerExchange, final Message message) throws Exception {
+        final ConnectionContext context = producerExchange.getConnectionContext();
         // There is delay between the client sending it and it arriving at the
         // destination.. it may have expired.
-    	
-    	final boolean sendProducerAck = ( !message.isResponseRequired() || producerExchange.getProducerState().getInfo().getWindowSize() > 0 ) && !context.isInRecoveryMode();
-        if(message.isExpired()){
-            broker.messageExpired(context,message);
+
+        final boolean sendProducerAck = (!message.isResponseRequired() || producerExchange.getProducerState().getInfo().getWindowSize() > 0) && !context.isInRecoveryMode();
+        if (message.isExpired()) {
+            broker.messageExpired(context, message);
             destinationStatistics.getMessages().decrement();
-            if( sendProducerAck ) {
-        		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
-				context.getConnection().dispatchAsync(ack);	    	            	        		
+            if (sendProducerAck) {
+                ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
+                context.getConnection().dispatchAsync(ack);
             }
             return;
         }
-        if ( context.isProducerFlowControl() && usageManager.isFull() ) {
-            if(usageManager.isSendFailIfNoSpace()){
+        if (context.isProducerFlowControl() && usageManager.isFull()) {
+            if (usageManager.isSendFailIfNoSpace()) {
                 throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
-            } 
-            	
-        	// We can avoid blocking due to low usage if the producer is sending a sync message or
-        	// if it is using a producer window
-        	if( producerExchange.getProducerState().getInfo().getWindowSize() > 0 || message.isResponseRequired() ) {
-        		synchronized( messagesWaitingForSpace ) {
-            		messagesWaitingForSpace.add(new Runnable() {
-        				public void run() {
-        					        			                    					
-	            	        try {							
-	        			        
-	        					// While waiting for space to free up... the message may have expired.
-	            	        	if(broker.isExpired(message)) {
-	        			            broker.messageExpired(context,message);
-	                                destinationStatistics.getMessages().decrement();
-	        			        } else {
-	        			        	doMessageSend(producerExchange, message);
-	        			        }
-	        			        
-	            	            if( sendProducerAck ) {
-	            	        		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
-	            					context.getConnection().dispatchAsync(ack);	    	            	        		
-	            	            } else {
-	            	            	Response response = new Response();
-    				                response.setCorrelationId(message.getCommandId());
-    								context.getConnection().dispatchAsync(response);	    								
-	            	            }
-	            	            
-							} catch (Exception e) {
-	            	        	if( !sendProducerAck && !context.isInRecoveryMode() ) {
-    				                ExceptionResponse response = new ExceptionResponse(e);
-    				                response.setCorrelationId(message.getCommandId());
-    								context.getConnection().dispatchAsync(response);	    								
-	            	        	}
-							}
-        				}
-        			});
-            		
-            		// If the user manager is not full, then the task will not get called..
-	            	if( !usageManager.notifyCallbackWhenNotFull(sendMessagesWaitingForSpaceTask) ) {
-	            		// so call it directly here.
-	            		sendMessagesWaitingForSpaceTask.run();
-	            	}			            	
-            		context.setDontSendReponse(true);
-            		return;
-        		}
-        		
-        	} else {
-        		
-        		// Producer flow control cannot be used, so we have do the flow control at the broker 
-        		// by blocking this thread until there is space available.	            		
-                while( !usageManager.waitForSpace(1000) ) {
-                    if( context.getStopping().get() )
+            }
+
+            // We can avoid blocking due to low usage if the producer is sending
+            // a sync message or
+            // if it is using a producer window
+            if (producerExchange.getProducerState().getInfo().getWindowSize() > 0 || message.isResponseRequired()) {
+                synchronized (messagesWaitingForSpace) {
+                    messagesWaitingForSpace.add(new Runnable() {
+                        public void run() {
+
+                            try {
+
+                                // While waiting for space to free up... the
+                                // message may have expired.
+                                if (broker.isExpired(message)) {
+                                    broker.messageExpired(context, message);
+                                    destinationStatistics.getMessages().decrement();
+                                } else {
+                                    doMessageSend(producerExchange, message);
+                                }
+
+                                if (sendProducerAck) {
+                                    ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
+                                    context.getConnection().dispatchAsync(ack);
+                                } else {
+                                    Response response = new Response();
+                                    response.setCorrelationId(message.getCommandId());
+                                    context.getConnection().dispatchAsync(response);
+                                }
+
+                            } catch (Exception e) {
+                                if (!sendProducerAck && !context.isInRecoveryMode()) {
+                                    ExceptionResponse response = new ExceptionResponse(e);
+                                    response.setCorrelationId(message.getCommandId());
+                                    context.getConnection().dispatchAsync(response);
+                                }
+                            }
+                        }
+                    });
+
+                    // If the user manager is not full, then the task will not
+                    // get called..
+                    if (!usageManager.notifyCallbackWhenNotFull(sendMessagesWaitingForSpaceTask)) {
+                        // so call it directly here.
+                        sendMessagesWaitingForSpaceTask.run();
+                    }
+                    context.setDontSendReponse(true);
+                    return;
+                }
+
+            } else {
+
+                // Producer flow control cannot be used, so we have do the flow
+                // control at the broker
+                // by blocking this thread until there is space available.
+                while (!usageManager.waitForSpace(1000)) {
+                    if (context.getStopping().get())
                         throw new IOException("Connection closed, send aborted.");
                 }
-                
+
                 // The usage manager could have delayed us by the time
                 // we unblock the message could have expired..
-                if(message.isExpired()){
+                if (message.isExpired()) {
                     if (log.isDebugEnabled()) {
                         log.debug("Expired message: " + message);
                     }
                     return;
                 }
-        	}
+            }
         }
         doMessageSend(producerExchange, message);
-        if( sendProducerAck ) {
-    		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
-			context.getConnection().dispatchAsync(ack);	    	            	        		
+        if (sendProducerAck) {
+            ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
+            context.getConnection().dispatchAsync(ack);
         }
     }
 
-	void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
-		final ConnectionContext context = producerExchange.getConnectionContext();
-		message.setRegionDestination(this);
-        if(store!=null&&message.isPersistent()){
-            store.addMessage(context,message);
+    void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
+        final ConnectionContext context = producerExchange.getConnectionContext();
+        message.setRegionDestination(this);
+        if (store != null && message.isPersistent()) {
+            store.addMessage(context, message);
         }
-        if(context.isInTransaction()){
-        	// If this is a transacted message.. increase the usage now so that a big TX does not blow up
-        	// our memory.  This increment is decremented once the tx finishes..
+        if (context.isInTransaction()) {
+            // If this is a transacted message.. increase the usage now so that
+            // a big TX does not blow up
+            // our memory. This increment is decremented once the tx finishes..
             message.incrementReferenceCount();
-            context.getTransaction().addSynchronization(new Synchronization(){
-                public void afterCommit() throws Exception{
-                	try { 
+            context.getTransaction().addSynchronization(new Synchronization() {
+                public void afterCommit() throws Exception {
+                    try {
                         // It could take while before we receive the commit
                         // op, by that time the message could have expired..
-	                    if(broker.isExpired(message)){
-	                        broker.messageExpired(context,message);
+                        if (broker.isExpired(message)) {
+                            broker.messageExpired(context, message);
                             destinationStatistics.getMessages().decrement();
-	                        return;
-	                    }
-	                    sendMessage(context,message);
-                	} finally {
+                            return;
+                        }
+                        sendMessage(context, message);
+                    } finally {
                         message.decrementReferenceCount();
-                	}
+                    }
                 }
-                
+
                 @Override
                 public void afterRollback() throws Exception {
                     message.decrementReferenceCount();
                 }
             });
-        }else{
-        	// Add to the pending list, this takes care of incrementing the usage manager.
-            sendMessage(context,message);            
+        } else {
+            // Add to the pending list, this takes care of incrementing the
+            // usage manager.
+            sendMessage(context, message);
         }
-	}    
+    }
 
     public void dispose(ConnectionContext context) throws IOException {
         if (store != null) {
@@ -488,27 +490,27 @@ public class Queue implements Destination, Task {
         dropEvent(false);
     }
 
-    public void dropEvent(boolean skipGc){
+    public void dropEvent(boolean skipGc) {
         // TODO: need to also decrement when messages expire.
         destinationStatistics.getMessages().decrement();
-        synchronized(pagedInMessages){
+        synchronized (pagedInMessages) {
             garbageSize++;
         }
-        if(!skipGc&&garbageSize>garbageSizeBeforeCollection){
+        if (!skipGc && garbageSize > garbageSizeBeforeCollection) {
             gc();
         }
-        try{
+        try {
             taskRunner.wakeup();
-        }catch(InterruptedException e){
-            log.warn("Task Runner failed to wakeup ",e);
+        } catch (InterruptedException e) {
+            log.warn("Task Runner failed to wakeup ", e);
         }
     }
 
     public void gc() {
         synchronized (pagedInMessages) {
-            for(Iterator i = pagedInMessages.iterator(); i.hasNext();) {
+            for (Iterator i = pagedInMessages.iterator(); i.hasNext();) {
                 // Remove dropped messages from the queue.
-                QueueMessageReference node = (QueueMessageReference) i.next();
+                QueueMessageReference node = (QueueMessageReference)i.next();
                 if (node.isDropped()) {
                     garbageSize--;
                     i.remove();
@@ -550,8 +552,8 @@ public class Queue implements Destination, Task {
         synchronized (messages) {
             size = messages.size();
         }
-        return "Queue: destination=" + destination.getPhysicalName() + ", subscriptions=" + consumers.size() + ", memory=" + usageManager.getPercentUsage()
-                + "%, size=" + size + ", in flight groups=" + messageGroupOwners;
+        return "Queue: destination=" + destination.getPhysicalName() + ", subscriptions=" + consumers.size() + ", memory=" + usageManager.getPercentUsage() + "%, size=" + size
+               + ", in flight groups=" + messageGroupOwners;
     }
 
     public void start() throws Exception {
@@ -565,10 +567,10 @@ public class Queue implements Destination, Task {
 
     public void stop() throws Exception {
         started = false;
-        if( taskRunner!=null ) {
+        if (taskRunner != null) {
             taskRunner.shutdown();
         }
-        if(messages!=null){
+        if (messages != null) {
             messages.stop();
         }
         if (usageManager != null) {
@@ -629,17 +631,18 @@ public class Queue implements Destination, Task {
         return getActiveMQDestination().getPhysicalName();
     }
 
-    public PendingMessageCursor getMessages(){
+    public PendingMessageCursor getMessages() {
         return this.messages;
     }
-    public void setMessages(PendingMessageCursor messages){
-        this.messages=messages;
+
+    public void setMessages(PendingMessageCursor messages) {
+        this.messages = messages;
     }
 
     // Implementation methods
     // -------------------------------------------------------------------------
     private MessageReference createMessageReference(Message message) {
-        MessageReference result =  new IndirectMessageReference(this, store, message);
+        MessageReference result = new IndirectMessageReference(this, store, message);
         result.decrementReferenceCount();
         return result;
     }
@@ -650,13 +653,13 @@ public class Queue implements Destination, Task {
 
     public Message[] browse() {
         ArrayList l = new ArrayList();
-        try{
+        try {
             doPageIn(true);
-        }catch(Exception e){
-            log.error("caught an exception browsing " + this,e);
+        } catch (Exception e) {
+            log.error("caught an exception browsing " + this, e);
         }
-        synchronized(pagedInMessages) {
-            for (Iterator i = pagedInMessages.iterator();i.hasNext();) {
+        synchronized (pagedInMessages) {
+            for (Iterator i = pagedInMessages.iterator(); i.hasNext();) {
                 MessageReference r = (MessageReference)i.next();
                 r.incrementReferenceCount();
                 try {
@@ -664,65 +667,64 @@ public class Queue implements Destination, Task {
                     if (m != null) {
                         l.add(m);
                     }
-                }catch(IOException e){
-                    log.error("caught an exception browsing " + this,e);
-                }
-                finally {
+                } catch (IOException e) {
+                    log.error("caught an exception browsing " + this, e);
+                } finally {
                     r.decrementReferenceCount();
                 }
             }
         }
-        synchronized(messages){
-            try{
+        synchronized (messages) {
+            try {
                 messages.reset();
-                while(messages.hasNext()){
-                    try{
-                        MessageReference r=messages.next();
+                while (messages.hasNext()) {
+                    try {
+                        MessageReference r = messages.next();
                         r.incrementReferenceCount();
-                        try{
-                            Message m=r.getMessage();
-                            if(m!=null){
+                        try {
+                            Message m = r.getMessage();
+                            if (m != null) {
                                 l.add(m);
                             }
-                        }finally{
+                        } finally {
                             r.decrementReferenceCount();
                         }
-                    }catch(IOException e){
-                        log.error("caught an exception brwsing "+this,e);
+                    } catch (IOException e) {
+                        log.error("caught an exception brwsing " + this, e);
                     }
                 }
-            }finally{
+            } finally {
                 messages.release();
             }
         }
 
-        return (Message[]) l.toArray(new Message[l.size()]);
+        return (Message[])l.toArray(new Message[l.size()]);
     }
 
-    public Message getMessage(String messageId){
-        synchronized(messages){
-            try{
+    public Message getMessage(String messageId) {
+        synchronized (messages) {
+            try {
                 messages.reset();
-                while(messages.hasNext()){
-                    try{
-                        MessageReference r=messages.next();
-                        if(messageId.equals(r.getMessageId().toString())){
+                while (messages.hasNext()) {
+                    try {
+                        MessageReference r = messages.next();
+                        if (messageId.equals(r.getMessageId().toString())) {
                             r.incrementReferenceCount();
-                            try{
-                                Message m=r.getMessage();
-                                if(m!=null){
+                            try {
+                                Message m = r.getMessage();
+                                if (m != null) {
                                     return m;
                                 }
-                            }finally{
+                            } finally {
                                 r.decrementReferenceCount();
                             }
                             break;
                         }
-                    }catch(IOException e){
-                        log.error("got an exception retrieving message "+messageId);
+                    } catch (IOException e) {
+                        log.error("got an exception retrieving message " + messageId);
                     }
                 }
-            }finally{
+            } finally {
                 messages.release();
             }
         }
@@ -730,14 +732,14 @@ public class Queue implements Destination, Task {
     }
 
     public void purge() throws Exception {
-        
+
         pageInMessages();
-        
+
         synchronized (pagedInMessages) {
             ConnectionContext c = createConnectionContext();
-            for(Iterator i = pagedInMessages.iterator(); i.hasNext();){
+            for (Iterator i = pagedInMessages.iterator(); i.hasNext();) {
                 try {
-                    QueueMessageReference r = (QueueMessageReference) i.next();
+                    QueueMessageReference r = (QueueMessageReference)i.next();
 
                     // We should only delete messages that can be locked.
                     if (r.lock(LockOwner.HIGH_PRIORITY_LOCK_OWNER)) {
@@ -749,8 +751,7 @@ public class Queue implements Destination, Task {
                         r.drop();
                         dropEvent(true);
                     }
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                 }
             }
 
@@ -759,7 +760,6 @@ public class Queue implements Destination, Task {
             gc();
         }
     }
-    
 
     /**
      * Removes the message matching the given messageId
@@ -776,9 +776,10 @@ public class Queue implements Destination, Task {
     public int removeMatchingMessages(String selector) throws Exception {
         return removeMatchingMessages(selector, -1);
     }
-    
+
     /**
-     * Removes the messages matching the given selector up to the maximum number of matched messages
+     * Removes the messages matching the given selector up to the maximum number
+     * of matched messages
      * 
      * @return the number of messages removed
      */
@@ -787,7 +788,8 @@ public class Queue implements Destination, Task {
     }
 
     /**
-     * Removes the messages matching the given filter up to the maximum number of matched messages
+     * Removes the messages matching the given filter up to the maximum number
+     * of matched messages
      * 
      * @return the number of messages removed
      */
@@ -796,14 +798,14 @@ public class Queue implements Destination, Task {
         int counter = 0;
         synchronized (pagedInMessages) {
             ConnectionContext c = createConnectionContext();
-           for(Iterator i = pagedInMessages.iterator(); i.hasNext();) {
-               IndirectMessageReference r = (IndirectMessageReference) i.next();
+            for (Iterator i = pagedInMessages.iterator(); i.hasNext();) {
+                IndirectMessageReference r = (IndirectMessageReference)i.next();
                 if (filter.evaluate(c, r)) {
                     removeMessage(c, r);
                     if (++counter >= maximumMessages && maximumMessages > 0) {
                         break;
                     }
-                    
+
                 }
             }
         }
@@ -816,7 +818,7 @@ public class Queue implements Destination, Task {
     public boolean copyMessageTo(ConnectionContext context, String messageId, ActiveMQDestination dest) throws Exception {
         return copyMatchingMessages(context, createMessageIdFilter(messageId), dest, 1) > 0;
     }
-    
+
     /**
      * Copies the messages matching the given selector
      * 
@@ -825,9 +827,10 @@ public class Queue implements Destination, Task {
     public int copyMatchingMessagesTo(ConnectionContext context, String selector, ActiveMQDestination dest) throws Exception {
         return copyMatchingMessagesTo(context, selector, dest, -1);
     }
-    
+
     /**
-     * Copies the messages matching the given selector up to the maximum number of matched messages
+     * Copies the messages matching the given selector up to the maximum number
+     * of matched messages
      * 
      * @return the number of messages copied
      */
@@ -836,7 +839,8 @@ public class Queue implements Destination, Task {
     }
 
     /**
-     * Copies the messages matching the given filter up to the maximum number of matched messages
+     * Copies the messages matching the given filter up to the maximum number of
+     * matched messages
      * 
      * @return the number of messages copied
      */
@@ -844,8 +848,8 @@ public class Queue implements Destination, Task {
         pageInMessages();
         int counter = 0;
         synchronized (pagedInMessages) {
-            for(Iterator i = pagedInMessages.iterator(); i.hasNext();) {
-                MessageReference r = (MessageReference) i.next();
+            for (Iterator i = pagedInMessages.iterator(); i.hasNext();) {
+                MessageReference r = (MessageReference)i.next();
                 if (filter.evaluate(context, r)) {
                     r.incrementReferenceCount();
                     try {
@@ -854,8 +858,7 @@ public class Queue implements Destination, Task {
                         if (++counter >= maximumMessages && maximumMessages > 0) {
                             break;
                         }
-                    }
-                    finally {
+                    } finally {
                         r.decrementReferenceCount();
                     }
                 }
@@ -870,7 +873,7 @@ public class Queue implements Destination, Task {
     public boolean moveMessageTo(ConnectionContext context, String messageId, ActiveMQDestination dest) throws Exception {
         return moveMatchingMessagesTo(context, createMessageIdFilter(messageId), dest, 1) > 0;
     }
-    
+
     /**
      * Moves the messages matching the given selector
      * 
@@ -879,23 +882,25 @@ public class Queue implements Destination, Task {
     public int moveMatchingMessagesTo(ConnectionContext context, String selector, ActiveMQDestination dest) throws Exception {
         return moveMatchingMessagesTo(context, selector, dest, -1);
     }
-    
+
     /**
-     * Moves the messages matching the given selector up to the maximum number of matched messages
+     * Moves the messages matching the given selector up to the maximum number
+     * of matched messages
      */
     public int moveMatchingMessagesTo(ConnectionContext context, String selector, ActiveMQDestination dest, int maximumMessages) throws Exception {
         return moveMatchingMessagesTo(context, createSelectorFilter(selector), dest, maximumMessages);
     }
 
     /**
-     * Moves the messages matching the given filter up to the maximum number of matched messages
+     * Moves the messages matching the given filter up to the maximum number of
+     * matched messages
      */
     public int moveMatchingMessagesTo(ConnectionContext context, MessageReferenceFilter filter, ActiveMQDestination dest, int maximumMessages) throws Exception {
         pageInMessages();
         int counter = 0;
         synchronized (pagedInMessages) {
-            for(Iterator i = pagedInMessages.iterator(); i.hasNext();) {
-                IndirectMessageReference r = (IndirectMessageReference) i.next();
+            for (Iterator i = pagedInMessages.iterator(); i.hasNext();) {
+                IndirectMessageReference r = (IndirectMessageReference)i.next();
                 if (filter.evaluate(context, r)) {
                     // We should only move messages that can be locked.
                     if (lockMessage(r)) {
@@ -907,8 +912,7 @@ public class Queue implements Destination, Task {
                             if (++counter >= maximumMessages && maximumMessages > 0) {
                                 break;
                             }
-                        }
-                        finally {
+                        } finally {
                             r.decrementReferenceCount();
                         }
                     }
@@ -917,23 +921,23 @@ public class Queue implements Destination, Task {
         }
         return counter;
     }
-    
+
     /**
      * @return
      * @see org.apache.activemq.thread.Task#iterate()
      */
-    public boolean iterate(){
-    	
-		while( !usageManager.isFull() && !messagesWaitingForSpace.isEmpty()) {
-			Runnable op = messagesWaitingForSpace.removeFirst();
-			op.run();
-		}
+    public boolean iterate() {
 
-        try{
+        while (!usageManager.isFull() && !messagesWaitingForSpace.isEmpty()) {
+            Runnable op = messagesWaitingForSpace.removeFirst();
+            op.run();
+        }
+
+        try {
             pageInMessages(false);
-         }catch(Exception e){
-             log.error("Failed to page in more queue messages ",e);
-         }
+        } catch (Exception e) {
+            log.error("Failed to page in more queue messages ", e);
+        }
         return false;
     }
 
@@ -944,25 +948,24 @@ public class Queue implements Destination, Task {
             }
         };
     }
-    
+
     protected MessageReferenceFilter createSelectorFilter(String selector) throws InvalidSelectorException {
         final BooleanExpression selectorExpression = new SelectorParser().parse(selector);
 
         return new MessageReferenceFilter() {
             public boolean evaluate(ConnectionContext context, MessageReference r) throws JMSException {
                 MessageEvaluationContext messageEvaluationContext = context.getMessageEvaluationContext();
-                
+
                 messageEvaluationContext.setMessageReference(r);
                 if (messageEvaluationContext.getDestination() == null) {
                     messageEvaluationContext.setDestination(getActiveMQDestination());
                 }
-                
+
                 return selectorExpression.matches(messageEvaluationContext);
             }
         };
     }
 
-        
     protected void removeMessage(ConnectionContext c, IndirectMessageReference r) throws IOException {
         MessageAck ack = new MessageAck();
         ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
@@ -982,55 +985,54 @@ public class Queue implements Destination, Task {
         answer.getMessageEvaluationContext().setDestination(getActiveMQDestination());
         return answer;
     }
-    
-      
-    final void sendMessage(final ConnectionContext context,Message msg) throws Exception{
-        synchronized(messages){
+
+    final void sendMessage(final ConnectionContext context, Message msg) throws Exception {
+        synchronized (messages) {
             messages.addMessageLast(msg);
         }
         destinationStatistics.getEnqueues().increment();
         destinationStatistics.getMessages().increment();
         pageInMessages(false);
     }
-    
-    private List doPageIn() throws Exception{
+
+    private List doPageIn() throws Exception {
         return doPageIn(true);
     }
-    
-    private List doPageIn(boolean force) throws Exception{
-    	        
-        final int toPageIn=maximumPagedInMessages-pagedInMessages.size();
-        List result=null;
-        if((force||!consumers.isEmpty())&&toPageIn>0){
+
+    private List doPageIn(boolean force) throws Exception {
+
+        final int toPageIn = maximumPagedInMessages - pagedInMessages.size();
+        List result = null;
+        if ((force || !consumers.isEmpty()) && toPageIn > 0) {
             messages.setMaxBatchSize(toPageIn);
-            try{
+            try {
                 dispatchValve.increment();
-                int count=0;
-                result=new ArrayList(toPageIn);
-                synchronized(messages){
-                	
-                    try{
+                int count = 0;
+                result = new ArrayList(toPageIn);
+                synchronized (messages) {
+
+                    try {
                         messages.reset();
-                        while(messages.hasNext()&&count<toPageIn){
-                            MessageReference node=messages.next();
+                        while (messages.hasNext() && count < toPageIn) {
+                            MessageReference node = messages.next();
                             messages.remove();
-                            if(!broker.isExpired(node)){
-                                node=createMessageReference(node.getMessage());
+                            if (!broker.isExpired(node)) {
+                                node = createMessageReference(node.getMessage());
                                 result.add(node);
                                 count++;
-                            }else{
-                                broker.messageExpired(createConnectionContext(),node);
+                            } else {
+                                broker.messageExpired(createConnectionContext(), node);
                                 destinationStatistics.getMessages().decrement();
                             }
                         }
-                    }finally{
+                    } finally {
                         messages.release();
                     }
                 }
-                synchronized(pagedInMessages){
+                synchronized (pagedInMessages) {
                     pagedInMessages.addAll(result);
                 }
-            }finally{
+            } finally {
                 queueMsgConext.clear();
                 dispatchValve.decrement();
             }
@@ -1038,31 +1040,31 @@ public class Queue implements Destination, Task {
         return result;
     }
 
-    private void doDispatch(List list) throws Exception{
-        if(list!=null&&!list.isEmpty()){
-            try{
+    private void doDispatch(List list) throws Exception {
+        if (list != null && !list.isEmpty()) {
+            try {
                 dispatchValve.increment();
-                for(int i=0;i<list.size();i++){
-                    MessageReference node=(MessageReference)list.get(i);
+                for (int i = 0; i < list.size(); i++) {
+                    MessageReference node = (MessageReference)list.get(i);
                     queueMsgConext.setDestination(destination);
                     queueMsgConext.setMessageReference(node);
-                    dispatchPolicy.dispatch(node,queueMsgConext,consumers);
+                    dispatchPolicy.dispatch(node, queueMsgConext, consumers);
                 }
-            }finally{
+            } finally {
                 queueMsgConext.clear();
                 dispatchValve.decrement();
             }
         }
     }
-    
-    private void pageInMessages() throws Exception{
+
+    private void pageInMessages() throws Exception {
         pageInMessages(true);
     }
-    private void pageInMessages(boolean force) throws Exception{
-        synchronized(doDispatchMutex) {
+
+    private void pageInMessages(boolean force) throws Exception {
+        synchronized (doDispatchMutex) {
             doDispatch(doPageIn(force));
         }
     }
 
-    
 }

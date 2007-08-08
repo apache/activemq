@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -38,7 +37,6 @@ import org.apache.activemq.thread.Scheduler;
  * subscriptions.
  * 
  * @org.apache.xbean.XBean
- * 
  * @version $Revision$
  */
 public class TimedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy {
@@ -61,7 +59,7 @@ public class TimedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPoli
             this.timestamp = timestamp;
         }
     }
-    
+
     private final Runnable gcTask = new Runnable() {
         public void run() {
             gc();
@@ -79,15 +77,15 @@ public class TimedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPoli
         return true;
     }
 
-    public void recover(ConnectionContext context,Topic topic,SubscriptionRecovery sub) throws Exception{
+    public void recover(ConnectionContext context, Topic topic, SubscriptionRecovery sub) throws Exception {
         // Re-dispatch the messages from the buffer.
-        ArrayList copy=new ArrayList(buffer);
-        if(!copy.isEmpty()){
-            MessageEvaluationContext msgContext=context.getMessageEvaluationContext();
-            for(Iterator iter=copy.iterator();iter.hasNext();){
-                TimestampWrapper timestampWrapper=(TimestampWrapper)iter.next();
-                MessageReference message=timestampWrapper.message;
-                sub.addRecoveredMessage(context,message);
+        ArrayList copy = new ArrayList(buffer);
+        if (!copy.isEmpty()) {
+            MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
+            for (Iterator iter = copy.iterator(); iter.hasNext();) {
+                TimestampWrapper timestampWrapper = (TimestampWrapper)iter.next();
+                MessageReference message = timestampWrapper.message;
+                sub.addRecoveredMessage(context, message);
             }
         }
     }
@@ -103,12 +101,11 @@ public class TimedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPoli
     public void gc() {
         lastGCRun = System.currentTimeMillis();
         while (buffer.size() > 0) {
-            TimestampWrapper timestampWrapper = (TimestampWrapper) buffer.get(0);
-            if( lastGCRun > timestampWrapper.timestamp+recoverDuration ) {
+            TimestampWrapper timestampWrapper = (TimestampWrapper)buffer.get(0);
+            if (lastGCRun > timestampWrapper.timestamp + recoverDuration) {
                 // GC it.
                 buffer.remove(0);
-            }
-            else {
+            } else {
                 break;
             }
         }
@@ -121,20 +118,20 @@ public class TimedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPoli
     public void setRecoverDuration(long recoverDuration) {
         this.recoverDuration = recoverDuration;
     }
-    
-    public Message[] browse(ActiveMQDestination destination) throws Exception{
+
+    public Message[] browse(ActiveMQDestination destination) throws Exception {
         List result = new ArrayList();
         ArrayList copy = new ArrayList(buffer);
-        DestinationFilter filter=DestinationFilter.parseFilter(destination);
+        DestinationFilter filter = DestinationFilter.parseFilter(destination);
         for (Iterator iter = copy.iterator(); iter.hasNext();) {
-            TimestampWrapper timestampWrapper = (TimestampWrapper) iter.next();
+            TimestampWrapper timestampWrapper = (TimestampWrapper)iter.next();
             MessageReference ref = timestampWrapper.message;
-            Message message=ref.getMessage();
-            if (filter.matches(message.getDestination())){
+            Message message = ref.getMessage();
+            if (filter.matches(message.getDestination())) {
                 result.add(message);
             }
         }
-        return (Message[]) result.toArray(new Message[result.size()]);
+        return (Message[])result.toArray(new Message[result.size()]);
     }
 
 }

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,14 +46,14 @@ public class DestinationStatistics extends StatsImpl {
         consumers = new CountStatisticImpl("consumers", "The number of consumers that that are subscribing to messages from the destination");
         messages = new CountStatisticImpl("messages", "The number of messages that that are being held by the destination");
         messagesCached = new PollCountStatisticImpl("messagesCached", "The number of messages that are held in the destination's memory cache");
-        processTime = new TimeStatisticImpl("processTime","information around length of time messages are held by a destination");
+        processTime = new TimeStatisticImpl("processTime", "information around length of time messages are held by a destination");
         addStatistic("enqueues", enqueues);
         addStatistic("dispatched", dispatched);
         addStatistic("dequeues", dequeues);
         addStatistic("consumers", consumers);
         addStatistic("messages", messages);
         addStatistic("messagesCached", messagesCached);
-        addStatistic("processTime",processTime);
+        addStatistic("processTime", processTime);
     }
 
     public CountStatisticImpl getEnqueues() {
@@ -76,16 +75,16 @@ public class DestinationStatistics extends StatsImpl {
     public CountStatisticImpl getMessages() {
         return messages;
     }
-    
+
     public void setMessagesCached(PollCountStatisticImpl messagesCached) {
         this.messagesCached = messagesCached;
     }
 
     public CountStatisticImpl getDispatched() {
-    return dispatched;
+        return dispatched;
     }
 
-    public TimeStatisticImpl getProcessTime(){
+    public TimeStatisticImpl getProcessTime() {
         return this.processTime;
     }
 
@@ -94,8 +93,8 @@ public class DestinationStatistics extends StatsImpl {
         enqueues.reset();
         dequeues.reset();
         dispatched.reset();
-    }     
-    
+    }
+
     public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
         enqueues.setEnabled(enabled);
@@ -106,7 +105,7 @@ public class DestinationStatistics extends StatsImpl {
         messagesCached.setEnabled(enabled);
         processTime.setEnabled(enabled);
 
-    }    
+    }
 
     public void setParent(DestinationStatistics parent) {
         if (parent != null) {
@@ -117,8 +116,7 @@ public class DestinationStatistics extends StatsImpl {
             messagesCached.setParent(parent.messagesCached);
             messages.setParent(parent.messages);
             processTime.setParent(parent.processTime);
-        }
-        else {
+        } else {
             enqueues.setParent(null);
             dispatched.setParent(null);
             dequeues.setParent(null);
@@ -129,5 +127,4 @@ public class DestinationStatistics extends StatsImpl {
         }
     }
 
-    
 }

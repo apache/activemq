@@ -23,7 +23,7 @@ import org.apache.activemq.broker.region.Subscription;
  * 
  * @version $Revision: 1.8 $
  */
-public class ConsumerBrokerExchange{
+public class ConsumerBrokerExchange {
 
     private ConnectionContext connectionContext;
     private Destination regionDestination;
@@ -34,70 +34,70 @@ public class ConsumerBrokerExchange{
     /**
      * @return the connectionContext
      */
-    public ConnectionContext getConnectionContext(){
+    public ConnectionContext getConnectionContext() {
         return this.connectionContext;
     }
 
     /**
      * @param connectionContext the connectionContext to set
      */
-    public void setConnectionContext(ConnectionContext connectionContext){
-        this.connectionContext=connectionContext;
+    public void setConnectionContext(ConnectionContext connectionContext) {
+        this.connectionContext = connectionContext;
     }
 
     /**
      * @return the region
      */
-    public Region getRegion(){
+    public Region getRegion() {
         return this.region;
     }
 
     /**
      * @param region the region to set
      */
-    public void setRegion(Region region){
-        this.region=region;
+    public void setRegion(Region region) {
+        this.region = region;
     }
 
     /**
      * @return the regionDestination
      */
-    public Destination getRegionDestination(){
+    public Destination getRegionDestination() {
         return this.regionDestination;
     }
 
     /**
      * @param regionDestination the regionDestination to set
      */
-    public void setRegionDestination(Destination regionDestination){
-        this.regionDestination=regionDestination;
+    public void setRegionDestination(Destination regionDestination) {
+        this.regionDestination = regionDestination;
     }
 
     /**
      * @return the subscription
      */
-    public Subscription getSubscription(){
+    public Subscription getSubscription() {
         return this.subscription;
     }
 
     /**
      * @param subscription the subscription to set
      */
-    public void setSubscription(Subscription subscription){
-        this.subscription=subscription;
+    public void setSubscription(Subscription subscription) {
+        this.subscription = subscription;
     }
 
     /**
      * @return the wildcard
      */
-    public boolean isWildcard(){
+    public boolean isWildcard() {
         return this.wildcard;
     }
 
     /**
      * @param wildcard the wildcard to set
      */
-    public void setWildcard(boolean wildcard){
-        this.wildcard=wildcard;
+    public void setWildcard(boolean wildcard) {
+        this.wildcard = wildcard;
     }
 }

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,10 +33,9 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-
 /**
  * Useful base class for unit test cases
- *
+ * 
  * @version $Revision: 1.4 $
  */
 public abstract class TestSupport extends TestCase {
@@ -71,41 +69,44 @@ public abstract class TestSupport extends TestCase {
     protected Destination createDestination(String subject) {
         if (topic) {
             return new ActiveMQTopic(subject);
-        }
-        else {
+        } else {
             return new ActiveMQQueue(subject);
         }
     }
 
-	/**
-     * Tests if firstSet and secondSet are equal.
-     * 
-     * @param messsage - string to be displayed when the assertion fails.
-     * @param firstSet[] - set of messages to be compared with its counterpart in the secondset.
-     * @param secondSet[] - set of messages to be compared with its counterpart in the firstset. 
-	 * @throws JMSException
-	 */
-	protected void assertTextMessagesEqual(Message[] firstSet, Message[] secondSet) throws JMSException {
-		assertTextMessagesEqual("", firstSet, secondSet);
-	}
-	
     /**
      * Tests if firstSet and secondSet are equal.
      * 
      * @param messsage - string to be displayed when the assertion fails.
-     * @param firstSet[] - set of messages to be compared with its counterpart in the secondset.
-     * @param secondSet[] - set of messages to be compared with its counterpart in the firstset. 
+     * @param firstSet[] - set of messages to be compared with its counterpart
+     *                in the secondset.
+     * @param secondSet[] - set of messages to be compared with its counterpart
+     *                in the firstset.
+     * @throws JMSException
+     */
+    protected void assertTextMessagesEqual(Message[] firstSet, Message[] secondSet) throws JMSException {
+        assertTextMessagesEqual("", firstSet, secondSet);
+    }
+
+    /**
+     * Tests if firstSet and secondSet are equal.
+     * 
+     * @param messsage - string to be displayed when the assertion fails.
+     * @param firstSet[] - set of messages to be compared with its counterpart
+     *                in the secondset.
+     * @param secondSet[] - set of messages to be compared with its counterpart
+     *                in the firstset.
      */
     protected void assertTextMessagesEqual(String messsage, Message[] firstSet, Message[] secondSet) throws JMSException {
         assertEquals("Message count does not match: " + messsage, firstSet.length, secondSet.length);
 
         for (int i = 0; i < secondSet.length; i++) {
-            TextMessage m1 = (TextMessage) firstSet[i];
-            TextMessage m2 = (TextMessage) secondSet[i];
-			assertTextMessageEqual("Message " + (i + 1) + " did not match : ", m1,m2);
+            TextMessage m1 = (TextMessage)firstSet[i];
+            TextMessage m2 = (TextMessage)secondSet[i];
+            assertTextMessageEqual("Message " + (i + 1) + " did not match : ", m1, m2);
         }
     }
-	
+
     /**
      * Tests if m1 and m2 are equal.
      * 
@@ -114,24 +115,24 @@ public abstract class TestSupport extends TestCase {
      * @throws JMSException
      */
     protected void assertEquals(TextMessage m1, TextMessage m2) throws JMSException {
-		assertEquals("", m1, m2);
+        assertEquals("", m1, m2);
     }
 
-	/**
+    /**
      * Tests if m1 and m2 are equal.
-	 * 
+     * 
      * @param message - string to be displayed when the assertion fails.
      * @param m1 - message to be compared with m2.
      * @param m2 - message to be compared with m1.
      */
     protected void assertTextMessageEqual(String message, TextMessage m1, TextMessage m2) throws JMSException {
         assertFalse(message + ": expected {" + m1 + "}, but was {" + m2 + "}", m1 == null ^ m2 == null);
-		
-        if( m1 == null ) {
-			return;
-		}	
-        
-		assertEquals(message, m1.getText(), m2.getText());
+
+        if (m1 == null) {
+            return;
+        }
+
+        assertEquals(message, m1.getText(), m2.getText());
     }
 
     /**
@@ -142,36 +143,36 @@ public abstract class TestSupport extends TestCase {
      * @throws JMSException
      */
     protected void assertEquals(Message m1, Message m2) throws JMSException {
-		assertEquals("", m1, m2);
+        assertEquals("", m1, m2);
     }
-    
-	/**
-	 * Tests if m1 and m2 are equal.  
-	 * 
-     * @param message - error message. 
+
+    /**
+     * Tests if m1 and m2 are equal.
+     * 
+     * @param message - error message.
      * @param m1 - message to be compared with m2.
      * @param m2 -- message to be compared with m1.
      */
     protected void assertEquals(String message, Message m1, Message m2) throws JMSException {
         assertFalse(message + ": expected {" + m1 + "}, but was {" + m2 + "}", m1 == null ^ m2 == null);
-		
-        if( m1 == null ){
-			return;
+
+        if (m1 == null) {
+            return;
         }
-        
-        assertTrue(message + ": expected {" + m1 + "}, but was {" + m2 + "}", m1.getClass()==m2.getClass());
-		
-        if( m1 instanceof TextMessage ) {
-			assertTextMessageEqual(message, (TextMessage)m1, (TextMessage)m2);
-		} else {
-			assertEquals(message, m1, m2);
-		}
+
+        assertTrue(message + ": expected {" + m1 + "}, but was {" + m2 + "}", m1.getClass() == m2.getClass());
+
+        if (m1 instanceof TextMessage) {
+            assertTextMessageEqual(message, (TextMessage)m1, (TextMessage)m2);
+        } else {
+            assertEquals(message, m1, m2);
+        }
     }
 
     /**
      * Creates an ActiveMQConnectionFactory.
      * 
-     * @return ActiveMQConnectionFactory 
+     * @return ActiveMQConnectionFactory
      * @throws Exception
      */
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
@@ -181,7 +182,7 @@ public abstract class TestSupport extends TestCase {
     /**
      * Factory method to create a new connection.
      * 
-     * @return connection 
+     * @return connection
      * @throws Exception
      */
     protected Connection createConnection() throws Exception {
@@ -199,7 +200,7 @@ public abstract class TestSupport extends TestCase {
             connectionFactory = createConnectionFactory();
             assertTrue("Should have created a connection factory!", connectionFactory != null);
         }
-        
+
         return connectionFactory;
     }
 
@@ -222,7 +223,7 @@ public abstract class TestSupport extends TestCase {
     }
 
     /**
-     * Returns the subject. 
+     * Returns the subject.
      * 
      * @return String
      */
@@ -236,7 +237,7 @@ public abstract class TestSupport extends TestCase {
             assertEquals(message + ". element: " + i, expected[i], actual[i]);
         }
     }
-    
+
     protected void assertPrimitiveArrayEqual(String message, Object expected, Object actual) {
         int length = Array.getLength(expected);
         assertEquals(message + ". Array length", length, Array.getLength(actual));

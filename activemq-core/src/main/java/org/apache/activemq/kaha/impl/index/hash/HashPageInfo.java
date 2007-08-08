@@ -21,90 +21,90 @@ import java.io.IOException;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-class HashPageInfo{
+class HashPageInfo {
 
     private HashIndex hashIndex;
     private long id;
     private int size;
     private HashPage page;
-    private boolean dirty=false;
+    private boolean dirty;
 
-    HashPageInfo(HashIndex index){
-        this.hashIndex=index;
+    HashPageInfo(HashIndex index) {
+        this.hashIndex = index;
     }
 
     /**
      * @return the id
      */
-    long getId(){
+    long getId() {
         return this.id;
     }
 
     /**
      * @param id the id to set
      */
-    void setId(long id){
-        this.id=id;
+    void setId(long id) {
+        this.id = id;
     }
 
     /**
      * @return the size
      */
-    int size(){
+    int size() {
         return this.size;
     }
 
     /**
      * @param size the size to set
      */
-    void setSize(int size){
-        this.size=size;
+    void setSize(int size) {
+        this.size = size;
     }
 
-    void addHashEntry(int index,HashEntry entry) throws IOException{
-        page.addHashEntry(index,entry);
+    void addHashEntry(int index, HashEntry entry) throws IOException {
+        page.addHashEntry(index, entry);
         size++;
-        dirty=true;
+        dirty = true;
     }
 
-    HashEntry getHashEntry(int index) throws IOException{
+    HashEntry getHashEntry(int index) throws IOException {
         return page.getHashEntry(index);
     }
 
-    HashEntry removeHashEntry(int index) throws IOException{
-        HashEntry result=page.removeHashEntry(index);
-        if(result!=null){
+    HashEntry removeHashEntry(int index) throws IOException {
+        HashEntry result = page.removeHashEntry(index);
+        if (result != null) {
             size--;
-            dirty=true;
+            dirty = true;
         }
         return result;
     }
 
-    void dump(){
+    void dump() {
         page.dump();
     }
 
-    void begin() throws IOException{
-        if(page==null){
-            page=hashIndex.getFullPage(id);
+    void begin() throws IOException {
+        if (page == null) {
+            page = hashIndex.getFullPage(id);
         }
     }
 
-    void end() throws IOException{
-        if(page!=null){
-            if(dirty){
+    void end() throws IOException {
+        if (page != null) {
+            if (dirty) {
                 hashIndex.writeFullPage(page);
             }
         }
-        page=null;
-        dirty=false;
+        page = null;
+        dirty = false;
     }
 
-    HashPage getPage(){
+    HashPage getPage() {
         return page;
     }
 
-    void setPage(HashPage page){
-        this.page=page;
+    void setPage(HashPage page) {
+        this.page = page;
     }
 }

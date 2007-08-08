@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,26 +16,25 @@
  */
 package org.apache.activemq.command;
 
-
 /**
  * @openwire:marshaller code="110"
  * @version $Revision: 1.12 $
  */
 public class MessageId implements DataStructure, Comparable<MessageId> {
 
-    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.MESSAGE_ID;
-    
-    protected ProducerId producerId;    
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.MESSAGE_ID;
+
+    protected ProducerId producerId;
     protected long producerSequenceId;
     protected long brokerSequenceId;
-    
-    transient private String key;    
-    transient private int hashCode;    
+
+    transient private String key;
+    transient private int hashCode;
 
     public MessageId() {
         this.producerId = new ProducerId();
     }
-    
+
     public MessageId(ProducerInfo producerInfo, long producerSequenceId) {
         this.producerId = producerInfo.getProducerId();
         this.producerSequenceId = producerSequenceId;
@@ -45,34 +43,34 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
     public MessageId(String messageKey) {
         setValue(messageKey);
     }
-    
+
     public MessageId(String producerId, long producerSequenceId) {
-        this( new ProducerId(producerId), producerSequenceId);
+        this(new ProducerId(producerId), producerSequenceId);
     }
-    
+
     public MessageId(ProducerId producerId, long producerSequenceId) {
-        this.producerId=producerId;
-        this.producerSequenceId = producerSequenceId;        
+        this.producerId = producerId;
+        this.producerSequenceId = producerSequenceId;
     }
-    
+
     /**
      * Sets the value as a String
      */
     public void setValue(String messageKey) {
         key = messageKey;
-            // Parse off the sequenceId
-            int p = messageKey.lastIndexOf(":");
-            if( p >= 0 ) {
-                producerSequenceId = Long.parseLong(messageKey.substring(p+1));
-                messageKey = messageKey.substring(0,p);
-            }
-            producerId = new ProducerId(messageKey);
+        // Parse off the sequenceId
+        int p = messageKey.lastIndexOf(":");
+        if (p >= 0) {
+            producerSequenceId = Long.parseLong(messageKey.substring(p + 1));
+            messageKey = messageKey.substring(0, p);
+        }
+        producerId = new ProducerId(messageKey);
     }
-    
+
     /**
-     * Sets the transient text view of the message which will be ignored
-     * if the message is marshaled on a transport; so is only for in-JVM changes
-     * to accommodate foreign JMS message IDs
+     * Sets the transient text view of the message which will be ignored if the
+     * message is marshaled on a transport; so is only for in-JVM changes to
+     * accommodate foreign JMS message IDs
      */
     public void setTextView(String key) {
         this.key = key;
@@ -82,26 +80,26 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
         return DATA_STRUCTURE_TYPE;
     }
 
-    public boolean equals(Object o) {        
-        if( this == o )
+    public boolean equals(Object o) {
+        if (this == o)
             return true;
-        if( o==null || o.getClass() != getClass() )
+        if (o == null || o.getClass() != getClass())
             return false;
-        
-        MessageId id = (MessageId) o;
-        return producerSequenceId==id.producerSequenceId && producerId.equals(id.producerId);
+
+        MessageId id = (MessageId)o;
+        return producerSequenceId == id.producerSequenceId && producerId.equals(id.producerId);
     }
-    
+
     public int hashCode() {
-        if( hashCode == 0 ) {
+        if (hashCode == 0) {
             hashCode = producerId.hashCode() ^ (int)producerSequenceId;
         }
         return hashCode;
     }
-    
+
     public String toString() {
-        if(key==null) {
-            key = producerId.toString()+":"+producerSequenceId;
+        if (key == null) {
+            key = producerId.toString() + ":" + producerSequenceId;
         }
         return key;
     }
@@ -112,6 +110,7 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
     public ProducerId getProducerId() {
         return producerId;
     }
+
     public void setProducerId(ProducerId producerId) {
         this.producerId = producerId;
     }
@@ -122,6 +121,7 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
     public long getProducerSequenceId() {
         return producerSequenceId;
     }
+
     public void setProducerSequenceId(long producerSequenceId) {
         this.producerSequenceId = producerSequenceId;
     }
@@ -131,7 +131,8 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
      */
     public long getBrokerSequenceId() {
         return brokerSequenceId;
-    }    
+    }
+
     public void setBrokerSequenceId(long brokerSequenceId) {
         this.brokerSequenceId = brokerSequenceId;
     }
@@ -139,11 +140,11 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
     public boolean isMarshallAware() {
         return false;
     }
-    
-    public MessageId copy(){
+
+    public MessageId copy() {
         MessageId copy = new MessageId(producerId, producerSequenceId);
         copy.key = key;
-        copy.brokerSequenceId = brokerSequenceId ;
+        copy.brokerSequenceId = brokerSequenceId;
         return copy;
     }
 
@@ -152,11 +153,11 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
      * @return
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
-    public int compareTo(MessageId other){
+    public int compareTo(MessageId other) {
         int result = -1;
         if (other != null) {
             result = this.toString().compareTo(other.toString());
         }
         return result;
-    }    
+    }
 }

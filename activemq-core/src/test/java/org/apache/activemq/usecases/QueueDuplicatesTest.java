@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,6 +16,7 @@
  */
 
 package org.apache.activemq.usecases;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -41,7 +41,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class QueueDuplicatesTest extends TestCase {
-    
+
     private static final Log log = LogFactory.getLog(QueueDuplicatesTest.class);
 
     private static DateFormat formatter = new SimpleDateFormat("HH:mm:ss SSS");
@@ -95,8 +95,7 @@ public class QueueDuplicatesTest extends TestCase {
             // sleep a little while longer
             Thread.sleep(15000);
             session.close();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -113,6 +112,7 @@ public class QueueDuplicatesTest extends TestCase {
 
         return cf;
     }
+
     private class SendingThread extends Thread {
         private String brokerUrl;
         private String subject;
@@ -129,7 +129,7 @@ public class QueueDuplicatesTest extends TestCase {
                 Destination dest = session.createQueue(subject);
                 MessageProducer producer = session.createProducer(dest);
                 producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-                for (int i = 0;i < 20;i++) {
+                for (int i = 0; i < 20; i++) {
                     String txt = "Text Message: " + i;
                     TextMessage msg = session.createTextMessage(txt);
                     producer.send(msg);
@@ -137,12 +137,12 @@ public class QueueDuplicatesTest extends TestCase {
                     Thread.sleep(1000);
                 }
                 session.close();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
+
     private static class SimpleConsumer implements MessageListener {
         private Map msgs = new HashMap();
 
@@ -152,8 +152,7 @@ public class QueueDuplicatesTest extends TestCase {
                 String id = message.getJMSMessageID();
                 assertNull("Message is duplicate: " + id, msgs.get(id));
                 msgs.put(id, message);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }

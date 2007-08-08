@@ -27,57 +27,56 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * 
  * @version $Revision: 1.7 $
  */
-public class TempTopicRegion extends AbstractRegion{
+public class TempTopicRegion extends AbstractRegion {
 
-    private static final Log log=LogFactory.getLog(TempTopicRegion.class);
+    private static final Log log = LogFactory.getLog(TempTopicRegion.class);
 
-    public TempTopicRegion(RegionBroker broker,DestinationStatistics destinationStatistics,UsageManager memoryManager,
-            TaskRunnerFactory taskRunnerFactory,DestinationFactory destinationFactory){
-        super(broker,destinationStatistics,memoryManager,taskRunnerFactory,destinationFactory);
-        // We should allow the following to be configurable via a Destination Policy 
+    public TempTopicRegion(RegionBroker broker, DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory,
+                           DestinationFactory destinationFactory) {
+        super(broker, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
+        // We should allow the following to be configurable via a Destination
+        // Policy
         // setAutoCreateDestinations(false);
     }
 
-    protected Subscription createSubscription(ConnectionContext context,ConsumerInfo info) throws JMSException{
-        if(info.isDurable()){
+    protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws JMSException {
+        if (info.isDurable()) {
             throw new JMSException("A durable subscription cannot be created for a temporary topic.");
         }
-        try{
-            TopicSubscription answer=new TopicSubscription(broker,context,info,memoryManager);
+        try {
+            TopicSubscription answer = new TopicSubscription(broker, context, info, memoryManager);
             // lets configure the subscription depending on the destination
-            ActiveMQDestination destination=info.getDestination();
-            if(destination!=null&&broker.getDestinationPolicy()!=null){
-                PolicyEntry entry=broker.getDestinationPolicy().getEntryFor(destination);
-                if(entry!=null){
-                    entry.configure(broker,memoryManager,answer);
+            ActiveMQDestination destination = info.getDestination();
+            if (destination != null && broker.getDestinationPolicy() != null) {
+                PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
+                if (entry != null) {
+                    entry.configure(broker, memoryManager, answer);
                 }
             }
             answer.init();
             return answer;
-        }catch(Exception e){
-            log.error("Failed to create TopicSubscription ",e);
-            JMSException jmsEx=new JMSException("Couldn't create TopicSubscription");
+        } catch (Exception e) {
+            log.error("Failed to create TopicSubscription ", e);
+            JMSException jmsEx = new JMSException("Couldn't create TopicSubscription");
             jmsEx.setLinkedException(e);
             throw jmsEx;
         }
     }
 
-    public String toString(){
-        return "TempTopicRegion: destinations="+destinations.size()+", subscriptions="+subscriptions.size()+", memory="
-                +memoryManager.getPercentUsage()+"%";
+    public String toString() {
+        return "TempTopicRegion: destinations=" + destinations.size() + ", subscriptions=" + subscriptions.size() + ", memory=" + memoryManager.getPercentUsage() + "%";
     }
-    
+
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
-    	
-    	// Force a timeout value so that we don't get an error that 
-    	// there is still an active sub.  Temp destination may be removed   
-    	// while a network sub is still active which is valid.
-    	if( timeout == 0 ) 
-    		timeout = 1;
-    	
-    	super.removeDestination(context, destination, timeout);
-    }    
+
+        // Force a timeout value so that we don't get an error that
+        // there is still an active sub. Temp destination may be removed
+        // while a network sub is still active which is valid.
+        if (timeout == 0)
+            timeout = 1;
+
+        super.removeDestination(context, destination, timeout);
+    }
 }

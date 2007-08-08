@@ -19,14 +19,14 @@ import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.kaha.Store;
 
 /**
- * Creates a PendIngMessageCursor for Durable subscribers
- *  *
- * @org.apache.xbean.XBean element="fileDurableSubscriberCursor" description="Pending messages for durable subscribers
- *                         held in temporary files"
+ * Creates a PendIngMessageCursor for Durable subscribers *
  * 
+ * @org.apache.xbean.XBean element="fileDurableSubscriberCursor"
+ *                         description="Pending messages for durable subscribers
+ *                         held in temporary files"
  * @version $Revision$
  */
-public class FilePendingDurableSubscriberMessageStoragePolicy implements PendingDurableSubscriberMessageStoragePolicy{
+public class FilePendingDurableSubscriberMessageStoragePolicy implements PendingDurableSubscriberMessageStoragePolicy {
 
     /**
      * Retrieve the configured pending message storage cursor;
@@ -37,8 +37,7 @@ public class FilePendingDurableSubscriberMessageStoragePolicy implements Pending
      * @param maxBatchSize
      * @return the Pending Message cursor
      */
-    public PendingMessageCursor getSubscriberPendingMessageCursor(String clientId,String name,Store tmpStorage,
-            int maxBatchSize){
-        return new FilePendingMessageCursor(name,tmpStorage);
+    public PendingMessageCursor getSubscriberPendingMessageCursor(String clientId, String name, Store tmpStorage, int maxBatchSize) {
+        return new FilePendingMessageCursor(name, tmpStorage);
     }
 }

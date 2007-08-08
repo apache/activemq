@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,21 +26,20 @@ import org.apache.activemq.transport.tcp.SslTransportFactory;
 import org.apache.activemq.util.JMSExceptionSupport;
 
 /**
- * An ActiveMQConnectionFactory that allows access to the key and trust managers used for SslConnections.
- * 
- * There is no reason to use this class unless SSL is being used AND the key and trust managers need to be specified
- *      from within code. In fact, if the URI passed to this class does not have an "ssl" scheme, this class will
- *      pass all work on to its superclass.
+ * An ActiveMQConnectionFactory that allows access to the key and trust managers
+ * used for SslConnections. There is no reason to use this class unless SSL is
+ * being used AND the key and trust managers need to be specified from within
+ * code. In fact, if the URI passed to this class does not have an "ssl" scheme,
+ * this class will pass all work on to its superclass.
  * 
  * @author sepandm@gmail.com
- *
  */
 public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
     // The key and trust managers used to initialize the used SSLContext.
-    protected KeyManager[] keyManager = null;
-    protected TrustManager[] trustManager = null;
-    protected SecureRandom secureRandom = null;
-    
+    protected KeyManager[] keyManager;
+    protected TrustManager[] trustManager;
+    protected SecureRandom secureRandom;
+
     /**
      * Sets the key and trust managers used when creating SSL connections.
      * 
@@ -54,13 +52,12 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
         trustManager = tm;
         secureRandom = random;
     }
-    
+
     /**
-     * Overriding to make special considerations for SSL connections.
-     * 
-     * If we are not using SSL, the superclass's method is called.
-     * If we are using SSL, an SslConnectionFactory is used and it is given the
-     *      needed key and trust managers.
+     * Overriding to make special considerations for SSL connections. If we are
+     * not using SSL, the superclass's method is called. If we are using SSL, an
+     * SslConnectionFactory is used and it is given the needed key and trust
+     * managers.
      * 
      * @author sepandm@gmail.com
      */
@@ -69,7 +66,7 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
         if (!brokerURL.getScheme().equals("ssl")) {
             return super.createTransport();
         }
-        
+
         try {
             SslTransportFactory sslFactory = new SslTransportFactory();
             sslFactory.setKeyAndTrustManagers(keyManager, trustManager, secureRandom);

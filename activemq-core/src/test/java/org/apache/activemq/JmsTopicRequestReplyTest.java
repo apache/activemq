@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,7 +46,7 @@ public class JmsTopicRequestReplyTest extends TestSupport implements MessageList
     private Destination requestDestination;
     private List failures = new Vector();
     private boolean dynamicallyCreateProducer;
-    protected boolean useAsyncConsume = false;
+    protected boolean useAsyncConsume;
     private String clientSideClientID;
 
     public void testSendAndReceive() throws Exception {
@@ -177,8 +176,7 @@ public class JmsTopicRequestReplyTest extends TestSupport implements MessageList
         final MessageConsumer requestConsumer = serverSession.createConsumer(requestDestination);
         if (useAsyncConsume) {
             requestConsumer.setMessageListener(this);
-        }
-        else {
+        } else {
             Thread thread = new Thread(new Runnable() {
                 public void run() {
                     syncConsumeLoop(requestConsumer);

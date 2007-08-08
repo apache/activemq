@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,15 +23,13 @@ import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-
 /**
  * @version
  */
 public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTestSupport {
-    
+
     private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-            .getLog(JmsTopicSendReceiveWithTwoConnectionsTest.class);
+        .getLog(JmsTopicSendReceiveWithTwoConnectionsTest.class);
 
     protected Connection sendConnection;
     protected Connection receiveConnection;
@@ -61,24 +58,24 @@ public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTes
         producer = session.createProducer(null);
         producer.setDeliveryMode(deliveryMode);
 
-        log.info("Created producer: " + producer + " delivery mode = " +
-                (deliveryMode == DeliveryMode.PERSISTENT ? "PERSISTENT" : "NON_PERSISTENT"));
+        log.info("Created producer: " + producer + " delivery mode = "
+                 + (deliveryMode == DeliveryMode.PERSISTENT ? "PERSISTENT" : "NON_PERSISTENT"));
 
         if (topic) {
             consumerDestination = session.createTopic(getConsumerSubject());
             producerDestination = session.createTopic(getProducerSubject());
-        }
-        else {
+        } else {
             consumerDestination = session.createQueue(getConsumerSubject());
             producerDestination = session.createQueue(getProducerSubject());
         }
 
-        log.info("Created  consumer destination: " + consumerDestination + " of type: " + consumerDestination.getClass());
-        log.info("Created  producer destination: " + producerDestination + " of type: " + producerDestination.getClass());
+        log.info("Created  consumer destination: " + consumerDestination + " of type: "
+                 + consumerDestination.getClass());
+        log.info("Created  producer destination: " + producerDestination + " of type: "
+                 + producerDestination.getClass());
 
-        consumer = createConsumer(receiveSession,consumerDestination);
+        consumer = createConsumer(receiveSession, consumerDestination);
         consumer.setMessageListener(this);
-
 
         log.info("Started connections");
     }
@@ -90,8 +87,8 @@ public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTes
     protected Connection createSendConnection() throws Exception {
         return createConnection();
     }
-    
-    protected MessageConsumer createConsumer(Session session, Destination dest) throws JMSException{
+
+    protected MessageConsumer createConsumer(Session session, Destination dest) throws JMSException {
         return session.createConsumer(dest);
     }
 

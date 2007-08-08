@@ -20,32 +20,32 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * 
  * @version $Revision: 1.3 $
  */
-public class BrokerRegistry{
+public class BrokerRegistry {
 
-    private static final Log log=LogFactory.getLog(BrokerRegistry.class);
-    static final private BrokerRegistry instance=new BrokerRegistry();
+    private static final Log log = LogFactory.getLog(BrokerRegistry.class);
+    static final private BrokerRegistry instance = new BrokerRegistry();
 
-    public static BrokerRegistry getInstance(){
+    public static BrokerRegistry getInstance() {
         return instance;
     }
-    private final Object mutex=new Object();
-    private final HashMap<String,BrokerService> brokers=new HashMap<String,BrokerService>();
+
+    private final Object mutex = new Object();
+    private final HashMap<String, BrokerService> brokers = new HashMap<String, BrokerService>();
 
     /**
      * @param brokerName
      * @return the BrokerService
      */
-    public BrokerService lookup(String brokerName){
-        BrokerService result=null;
-        synchronized(mutex){
-            result=brokers.get(brokerName);
-            if(result==null&&brokerName!=null&&brokerName.equals(BrokerService.DEFAULT_BROKER_NAME)){
-                result=findFirst();
-                if(result!=null){
-                    log.warn("Broker localhost not started so using "+result.getBrokerName()+" instead");
+    public BrokerService lookup(String brokerName) {
+        BrokerService result = null;
+        synchronized (mutex) {
+            result = brokers.get(brokerName);
+            if (result == null && brokerName != null && brokerName.equals(BrokerService.DEFAULT_BROKER_NAME)) {
+                result = findFirst();
+                if (result != null) {
+                    log.warn("Broker localhost not started so using " + result.getBrokerName() + " instead");
                 }
             }
         }
@@ -54,12 +54,13 @@ public class BrokerRegistry{
 
     /**
      * Returns the first registered broker found
+     * 
      * @return the first BrokerService
      */
-    public BrokerService findFirst(){
-        synchronized(mutex){
-            Iterator<BrokerService> iter=brokers.values().iterator();
-            while(iter.hasNext()){
+    public BrokerService findFirst() {
+        synchronized (mutex) {
+            Iterator<BrokerService> iter = brokers.values().iterator();
+            while (iter.hasNext()) {
                 return iter.next();
             }
             return null;
@@ -70,17 +71,17 @@ public class BrokerRegistry{
      * @param brokerName
      * @param broker
      */
-    public void bind(String brokerName,BrokerService broker){
-        synchronized(mutex){
-            brokers.put(brokerName,broker);
+    public void bind(String brokerName, BrokerService broker) {
+        synchronized (mutex) {
+            brokers.put(brokerName, broker);
         }
     }
 
     /**
      * @param brokerName
      */
-    public void unbind(String brokerName){
-        synchronized(mutex){
+    public void unbind(String brokerName) {
+        synchronized (mutex) {
             brokers.remove(brokerName);
         }
     }
@@ -88,7 +89,7 @@ public class BrokerRegistry{
     /**
      * @return the mutex used
      */
-    public Object getRegistryMutext(){
+    public Object getRegistryMutext() {
         return mutex;
     }
 }

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -44,25 +43,24 @@ import java.util.concurrent.atomic.AtomicLong;
  * <CODE>MessageProducer</CODE> is the parent interface for all message
  * producers.
  * <P>
- * A client also has the option of creating a message producer without
- * supplying a destination. In this case, a destination must be provided with
- * every send operation. A typical use for this kind of message producer is to
- * send replies to requests using the request's <CODE>JMSReplyTo</CODE>
- * destination.
+ * A client also has the option of creating a message producer without supplying
+ * a destination. In this case, a destination must be provided with every send
+ * operation. A typical use for this kind of message producer is to send replies
+ * to requests using the request's <CODE>JMSReplyTo</CODE> destination.
  * <P>
  * A client can specify a default delivery mode, priority, and time to live for
  * messages sent by a message producer. It can also specify the delivery mode,
  * priority, and time to live for an individual message.
  * <P>
- * A client can specify a time-to-live value in milliseconds for each message
- * it sends. This value defines a message expiration time that is the sum of
- * the message's time-to-live and the GMT when it is sent (for transacted
- * sends, this is the time the client sends the message, not the time the
- * transaction is committed).
+ * A client can specify a time-to-live value in milliseconds for each message it
+ * sends. This value defines a message expiration time that is the sum of the
+ * message's time-to-live and the GMT when it is sent (for transacted sends,
+ * this is the time the client sends the message, not the time the transaction
+ * is committed).
  * <P>
- * A JMS provider should do its best to expire messages accurately; however,
- * the JMS API does not define the accuracy provided.
- *
+ * A JMS provider should do its best to expire messages accurately; however, the
+ * JMS API does not define the accuracy provided.
+ * 
  * @version $Revision: 1.14 $
  * @see javax.jms.TopicPublisher
  * @see javax.jms.QueueSender
@@ -79,21 +77,21 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     private MessageTransformer transformer;
     private UsageManager producerWindow;
 
-    protected ActiveMQMessageProducer(ActiveMQSession session, ProducerId producerId, ActiveMQDestination destination)
-            throws JMSException {
+    protected ActiveMQMessageProducer(ActiveMQSession session, ProducerId producerId, ActiveMQDestination destination) throws JMSException {
         super(session);
         this.info = new ProducerInfo(producerId);
-        this.info.setWindowSize(session.connection.getProducerWindowSize());        
-        if (destination!=null && destination.getOptions() != null) {
+        this.info.setWindowSize(session.connection.getProducerWindowSize());
+        if (destination != null && destination.getOptions() != null) {
             HashMap options = new HashMap(destination.getOptions());
             IntrospectionSupport.setProperties(this.info, options, "producer.");
         }
         this.info.setDestination(destination);
-        
-        // Enable producer window flow control if protocol > 3 and the window size > 0
-        if( session.connection.getProtocolVersion()>=3 && this.info.getWindowSize()>0 ) {
-        	producerWindow = new UsageManager("Producer Window: "+producerId);
-        	producerWindow.setLimit(this.info.getWindowSize());
+
+        // Enable producer window flow control if protocol > 3 and the window
+        // size > 0
+        if (session.connection.getProtocolVersion() >= 3 && this.info.getWindowSize() > 0) {
+            producerWindow = new UsageManager("Producer Window: " + producerId);
+            producerWindow.setLimit(this.info.getWindowSize());
         }
 
         this.defaultDeliveryMode = Message.DEFAULT_DELIVERY_MODE;
@@ -102,7 +100,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         this.startTime = System.currentTimeMillis();
         this.messageSequence = new AtomicLong(0);
         this.stats = new JMSProducerStatsImpl(session.getSessionStats(), destination);
-        this.session.addProducer(this);        
+        this.session.addProducer(this);
         this.session.asyncSendPacket(info);
         setTransformer(session.getTransformer());
     }
@@ -117,7 +115,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
 
     /**
      * Gets the destination associated with this <CODE>MessageProducer</CODE>.
-     *
+     * 
      * @return this producer's <CODE>Destination/ <CODE>
      * @throws JMSException if the JMS provider fails to close the producer due to
      *                      some internal error.
@@ -132,30 +130,31 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      * Closes the message producer.
      * <P>
      * Since a provider may allocate some resources on behalf of a <CODE>
-     * MessageProducer</CODE> outside the Java virtual machine, clients should
-     * close them when they are not needed. Relying on garbage collection to
-     * eventually reclaim these resources may not be timely enough.
-     *
-     * @throws JMSException if the JMS provider fails to close the producer due to
-     *                      some internal error.
+     * MessageProducer</CODE>
+     * outside the Java virtual machine, clients should close them when they are
+     * not needed. Relying on garbage collection to eventually reclaim these
+     * resources may not be timely enough.
+     * 
+     * @throws JMSException if the JMS provider fails to close the producer due
+     *                 to some internal error.
      */
     public void close() throws JMSException {
-        if( closed==false ) {
+        if (closed == false) {
             dispose();
             this.session.asyncSendPacket(info.createRemoveCommand());
         }
     }
 
     public void dispose() {
-        if( closed==false ) {
+        if (closed == false) {
             this.session.removeProducer(this);
             closed = true;
         }
     }
 
-
     /**
      * Check if the instance of this producer has been closed.
+     * 
      * @throws IllegalStateException
      */
     protected void checkClosed() throws IllegalStateException {
@@ -168,37 +167,37 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      * Sends a message to a destination for an unidentified message producer,
      * specifying delivery mode, priority and time to live.
      * <P>
-     * Typically, a message producer is assigned a destination at creation
-     * time; however, the JMS API also supports unidentified message producers,
-     * which require that the destination be supplied every time a message is
-     * sent.
-     *
-     * @param destination  the destination to send this message to
-     * @param message      the message to send
+     * Typically, a message producer is assigned a destination at creation time;
+     * however, the JMS API also supports unidentified message producers, which
+     * require that the destination be supplied every time a message is sent.
+     * 
+     * @param destination the destination to send this message to
+     * @param message the message to send
      * @param deliveryMode the delivery mode to use
-     * @param priority     the priority for this message
-     * @param timeToLive   the message's lifetime (in milliseconds)
-     * @throws JMSException                if the JMS provider fails to send the message due to some
-     *                                     internal error.
-     * @throws UnsupportedOperationException   if an invalid destination is specified.
-     * @throws InvalidDestinationException if a client uses this method with an invalid destination.
+     * @param priority the priority for this message
+     * @param timeToLive the message's lifetime (in milliseconds)
+     * @throws JMSException if the JMS provider fails to send the message due to
+     *                 some internal error.
+     * @throws UnsupportedOperationException if an invalid destination is
+     *                 specified.
+     * @throws InvalidDestinationException if a client uses this method with an
+     *                 invalid destination.
      * @see javax.jms.Session#createProducer
      * @since 1.1
      */
-    public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive)
-            throws JMSException {
+    public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         checkClosed();
         if (destination == null) {
-            if( info.getDestination() == null ) {
+            if (info.getDestination() == null) {
                 throw new UnsupportedOperationException("A destination must be specified.");
             }
             throw new InvalidDestinationException("Don't understand null destinations");
         }
 
-        ActiveMQDestination dest; 
-        if( destination == info.getDestination() ) {
-            dest = (ActiveMQDestination) destination;
-        } else  if ( info.getDestination() == null ) {
+        ActiveMQDestination dest;
+        if (destination == info.getDestination()) {
+            dest = (ActiveMQDestination)destination;
+        } else if (info.getDestination() == null) {
             dest = ActiveMQDestination.transform(destination);
         } else {
             throw new UnsupportedOperationException("This producer can only send messages to: " + this.info.getDestination().getPhysicalName());
@@ -213,27 +212,27 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
                 message = transformedMessage;
             }
         }
-        
-        if( producerWindow!=null ) {
-        	try {
-				producerWindow.waitForSpace();
-			} catch (InterruptedException e) {
-				throw new JMSException("Send aborted due to thread interrupt.");
-			}
-        }
-        
-        this.session.send(this, dest, message, deliveryMode, priority, timeToLive, producerWindow);
-        
-        stats.onMessage();            
-    }
 
+        if (producerWindow != null) {
+            try {
+                producerWindow.waitForSpace();
+            } catch (InterruptedException e) {
+                throw new JMSException("Send aborted due to thread interrupt.");
+            }
+        }
+
+        this.session.send(this, dest, message, deliveryMode, priority, timeToLive, producerWindow);
+
+        stats.onMessage();
+    }
 
     public MessageTransformer getTransformer() {
         return transformer;
     }
 
     /**
-     * Sets the transformer used to transform messages before they are sent on to the JMS bus
+     * Sets the transformer used to transform messages before they are sent on
+     * to the JMS bus
      */
     public void setTransformer(MessageTransformer transformer) {
         this.transformer = transformer;
@@ -263,25 +262,25 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     /**
      * @return Returns the info.
      */
-    protected ProducerInfo getProducerInfo(){
-        return this.info!=null?this.info:null;
+    protected ProducerInfo getProducerInfo() {
+        return this.info != null ? this.info : null;
     }
 
     /**
      * @param info The info to set
      */
-    protected  void setProducerInfo(ProducerInfo info){
+    protected void setProducerInfo(ProducerInfo info) {
         this.info = info;
     }
 
     public String toString() {
-        return "ActiveMQMessageProducer { value=" +info.getProducerId()+" }";
+        return "ActiveMQMessageProducer { value=" + info.getProducerId() + " }";
     }
 
-	public void onProducerAck(ProducerAck pa) {
-		if( this.producerWindow!=null ) {
-			this.producerWindow.decreaseUsage(pa.getSize());
-		}
-	}
+    public void onProducerAck(ProducerAck pa) {
+        if (this.producerWindow != null) {
+            this.producerWindow.decreaseUsage(pa.getSize());
+        }
+    }
 
 }

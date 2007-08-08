@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -40,7 +39,7 @@ public class SubscribeClosePublishThenConsumeTest extends TestSupport {
 
         String topicName = "TestTopic";
         String clientID = getName();
-        String subscriberName = "MySubscriber:"+System.currentTimeMillis();
+        String subscriberName = "MySubscriber:" + System.currentTimeMillis();
 
         Connection connection = connectionFactory.createConnection();
         connection.setClientID(clientID);
@@ -59,12 +58,14 @@ public class SubscribeClosePublishThenConsumeTest extends TestSupport {
         session.close();
         session = null;
 
-        // Create the new connection before closing to avoid the broker shutting down.
-        // now create a new Connection, Session &  Producer, send some messages & then close
-        Connection t = connectionFactory.createConnection();        
+        // Create the new connection before closing to avoid the broker shutting
+        // down.
+        // now create a new Connection, Session & Producer, send some messages &
+        // then close
+        Connection t = connectionFactory.createConnection();
         connection.close();
         connection = t;
-        
+
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         topic = session.createTopic(topicName);
         MessageProducer producer = session.createProducer(topic);
@@ -77,12 +78,13 @@ public class SubscribeClosePublishThenConsumeTest extends TestSupport {
         session.close();
         session = null;
 
-        // Now (re)register the Durable subscriber, setup a listener and wait for messages that should
+        // Now (re)register the Durable subscriber, setup a listener and wait
+        // for messages that should
         // have been published by the previous producer
-        t = connectionFactory.createConnection();        
+        t = connectionFactory.createConnection();
         connection.close();
         connection = t;
-        
+
         connection.setClientID(clientID);
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         topic = session.createTopic(topicName);
@@ -100,7 +102,7 @@ public class SubscribeClosePublishThenConsumeTest extends TestSupport {
 
         assertNotNull("Should have received the message we published by now", message);
         assertTrue("should be text textMessage", message instanceof TextMessage);
-        textMessage = (TextMessage) message;
+        textMessage = (TextMessage)message;
         assertEquals("Hello World", textMessage.getText());
     }
 }

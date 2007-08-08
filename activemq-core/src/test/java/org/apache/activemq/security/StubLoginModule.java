@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,20 +32,20 @@ public class StubLoginModule implements LoginModule {
     public static final String ALLOW_LOGIN_PROPERTY = "org.apache.activemq.jaas.stubproperties.allow_login";
     public static final String USERS_PROPERTY = "org.apache.activemq.jaas.stubproperties.users";
     public static final String GROUPS_PROPERTY = "org.apache.activemq.jaas.stubproperties.groups";
-    
-    private Subject subject = null;
-    
-    private String userNames[] = null;
-    private String groupNames[] = null;
-    private boolean allowLogin = false;
-    
+
+    private Subject subject;
+
+    private String userNames[];
+    private String groupNames[];
+    private boolean allowLogin;
+
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
         String allowLoginString = (String)(options.get(ALLOW_LOGIN_PROPERTY));
         String usersString = (String)(options.get(USERS_PROPERTY));
         String groupsString = (String)(options.get(GROUPS_PROPERTY));
-        
+
         this.subject = subject;
-        
+
         allowLogin = Boolean.parseBoolean(allowLoginString);
         userNames = usersString.split(",");
         groupNames = groupsString.split(",");
@@ -56,27 +55,27 @@ public class StubLoginModule implements LoginModule {
         if (!allowLogin) {
             throw new FailedLoginException("Login was not allowed (as specified in configuration).");
         }
-        
+
         return true;
     }
-    
+
     public boolean commit() throws LoginException {
         if (!allowLogin) {
             throw new FailedLoginException("Login was not allowed (as specified in configuration).");
         }
-        
+
         for (int i = 0; i < userNames.length; ++i) {
-            if (userNames[i].length() > 0 ) {
+            if (userNames[i].length() > 0) {
                 subject.getPrincipals().add(new UserPrincipal(userNames[i]));
             }
         }
-        
+
         for (int i = 0; i < groupNames.length; ++i) {
             if (groupNames[i].length() > 0) {
                 subject.getPrincipals().add(new GroupPrincipal(groupNames[i]));
             }
         }
-        
+
         return true;
     }
 
@@ -86,7 +85,7 @@ public class StubLoginModule implements LoginModule {
 
     public boolean logout() throws LoginException {
         subject.getPrincipals().clear();
-        
+
         return true;
     }
 

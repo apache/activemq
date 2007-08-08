@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,11 +23,10 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 
 /**
- * MessageEvaluationContext is used to cache selection results.
- * 
- * A message usually has multiple selectors applied against it. Some selector
- * have a high cost of evaluating against the message. Those selectors may whish
- * to cache evaluation results associated with the message in the
+ * MessageEvaluationContext is used to cache selection results. A message
+ * usually has multiple selectors applied against it. Some selector have a high
+ * cost of evaluating against the message. Those selectors may whish to cache
+ * evaluation results associated with the message in the
  * MessageEvaluationContext.
  * 
  * @version $Revision: 1.4 $
@@ -36,7 +34,7 @@ import org.apache.activemq.command.Message;
 public class MessageEvaluationContext {
 
     private MessageReference messageReference;
-    private boolean loaded=false;
+    private boolean loaded;
     private boolean dropped;
     private Message message;
     private ActiveMQDestination destination;
@@ -48,16 +46,16 @@ public class MessageEvaluationContext {
         getMessage();
         return dropped;
     }
-    
+
     public Message getMessage() throws IOException {
-        if( !dropped && !loaded ) {
-            loaded=true;
+        if (!dropped && !loaded) {
+            loaded = true;
             messageReference.incrementReferenceCount();
             message = messageReference.getMessage();
-            if(message==null) {
+            if (message == null) {
                 messageReference.decrementReferenceCount();
-                dropped=true;
-                loaded=false;
+                dropped = true;
+                loaded = false;
             }
         }
         return message;
@@ -87,11 +85,11 @@ public class MessageEvaluationContext {
      * A strategy hook to allow per-message caches to be cleared
      */
     protected void clearMessageCache() {
-        if( loaded ) {
+        if (loaded) {
             messageReference.decrementReferenceCount();
         }
-        message=null;
-        dropped=false;
-        loaded=false;
+        message = null;
+        dropped = false;
+        loaded = false;
     }
 }

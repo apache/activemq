@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,8 +24,6 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.Topic;
 
-import org.apache.activemq.TestSupport;
-
 /**
  * @version $Revision: 1.2 $
  */
@@ -41,7 +38,7 @@ public class JmsCreateConsumerInOnMessageTest extends TestSupport implements Mes
     private Topic topic;
     private Object lock = new Object();
 
-    /* 
+    /*
      * @see junit.framework.TestCase#setUp()
      */
     protected void setUp() throws Exception {
@@ -57,7 +54,7 @@ public class JmsCreateConsumerInOnMessageTest extends TestSupport implements Mes
         producer = publisherSession.createProducer(topic);
         connection.start();
     }
-    
+
     /*
      * @see junit.framework.TestCase#tearDown()
      */
@@ -66,17 +63,16 @@ public class JmsCreateConsumerInOnMessageTest extends TestSupport implements Mes
         connection.close();
     }
 
-    
     /**
-     * Tests if a consumer can be created asynchronusly  
+     * Tests if a consumer can be created asynchronusly
      * 
      * @throws Exception
      */
-    public void testCreateConsumer() throws Exception{
+    public void testCreateConsumer() throws Exception {
         Message msg = super.createMessage();
         producer.send(msg);
-        if (testConsumer == null){
-            synchronized(lock){
+        if (testConsumer == null) {
+            synchronized (lock) {
                 lock.wait(3000);
             }
         }
@@ -92,10 +88,10 @@ public class JmsCreateConsumerInOnMessageTest extends TestSupport implements Mes
         try {
             testConsumer = consumerSession.createConsumer(topic);
             MessageProducer anotherProducer = consumerSession.createProducer(topic);
-            synchronized(lock){
+            synchronized (lock) {
                 lock.notify();
             }
-        }catch (Exception ex){
+        } catch (Exception ex) {
             ex.printStackTrace();
             assertTrue(false);
         }

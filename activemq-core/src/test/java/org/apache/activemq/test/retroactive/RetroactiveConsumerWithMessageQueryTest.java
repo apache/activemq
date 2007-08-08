@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,7 +35,6 @@ import java.net.URI;
 import java.util.Date;
 
 /**
- * 
  * @version $Revision$
  */
 public class RetroactiveConsumerWithMessageQueryTest extends EmbeddedBrokerTestSupport {
@@ -63,7 +61,7 @@ public class RetroactiveConsumerWithMessageQueryTest extends EmbeddedBrokerTestS
             producer.send(message);
         }
         producer.close();
-        log.info("Sent: " + updateMessageCount + " update messages");
+        LOG.info("Sent: " + updateMessageCount + " update messages");
 
         listener.assertMessagesReceived(messageCount);
     }
@@ -93,8 +91,8 @@ public class RetroactiveConsumerWithMessageQueryTest extends EmbeddedBrokerTestS
 
     protected BrokerService createBroker() throws Exception {
         String uri = getBrokerXml();
-        log.info("Loading broker configuration from the classpath with URI: " + uri);
-        return BrokerFactory.createBroker(new URI("xbean:"+uri));
+        LOG.info("Loading broker configuration from the classpath with URI: " + uri);
+        return BrokerFactory.createBroker(new URI("xbean:" + uri));
     }
 
     protected void startBroker() throws Exception {

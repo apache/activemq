@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -79,7 +78,8 @@ import org.apache.commons.logging.LogFactory;
  * <UL>
  * <LI>It is a factory for its message producers and consumers.
  * <LI>It supplies provider-optimized message factories.
- * <LI>It is a factory for <CODE>TemporaryTopics</CODE> and <CODE>TemporaryQueues</CODE>.
+ * <LI>It is a factory for <CODE>TemporaryTopics</CODE> and
+ * <CODE>TemporaryQueues</CODE>.
  * <LI>It provides a way to create <CODE>Queue</CODE> or <CODE>Topic</CODE>
  * objects for those clients that need to dynamically manipulate
  * provider-specific destination names.
@@ -95,8 +95,9 @@ import org.apache.commons.logging.LogFactory;
  * <P>
  * A session can create and service multiple message producers and consumers.
  * <P>
- * One typical use is to have a thread block on a synchronous <CODE>MessageConsumer</CODE>
- * until a message arrives. The thread may then use one or more of the <CODE>Session</CODE>'s<CODE>MessageProducer</CODE>s.
+ * One typical use is to have a thread block on a synchronous
+ * <CODE>MessageConsumer</CODE> until a message arrives. The thread may then
+ * use one or more of the <CODE>Session</CODE>'s<CODE>MessageProducer</CODE>s.
  * <P>
  * If a client desires to have one thread produce messages while others consume
  * them, the client should use a separate session for its producing thread.
@@ -159,6 +160,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
     public static interface DeliveryListener {
         public void beforeDelivery(ActiveMQSession session, Message msg);
+
         public void afterDelivery(ActiveMQSession session, Message msg);
     }
 
@@ -180,7 +182,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     protected final LongSequenceGenerator deliveryIdGenerator = new LongSequenceGenerator();
     protected final ActiveMQSessionExecutor executor = new ActiveMQSessionExecutor(this);
     protected final AtomicBoolean started = new AtomicBoolean(false);
-    
+
     protected final CopyOnWriteArrayList consumers = new CopyOnWriteArrayList();
     protected final CopyOnWriteArrayList producers = new CopyOnWriteArrayList();
 
@@ -194,21 +196,18 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * Construct the Session
      * 
      * @param connection
-     * @param sessionId 
-     * @param acknowledgeMode
-     *            n.b if transacted - the acknowledgeMode ==
-     *            Session.SESSION_TRANSACTED
-     * @param asyncDispatch 
-     * @param sessionAsyncDispatch 
-     * @throws JMSException
-     *             on internal error
+     * @param sessionId
+     * @param acknowledgeMode n.b if transacted - the acknowledgeMode ==
+     *                Session.SESSION_TRANSACTED
+     * @param asyncDispatch
+     * @param sessionAsyncDispatch
+     * @throws JMSException on internal error
      */
-    protected ActiveMQSession(ActiveMQConnection connection, SessionId sessionId, int acknowledgeMode, boolean asyncDispatch,boolean sessionAsyncDispatch)
-            throws JMSException {
+    protected ActiveMQSession(ActiveMQConnection connection, SessionId sessionId, int acknowledgeMode, boolean asyncDispatch, boolean sessionAsyncDispatch) throws JMSException {
         this.debug = log.isDebugEnabled();
         this.connection = connection;
         this.acknowledgementMode = acknowledgeMode;
-        this.asyncDispatch=asyncDispatch;
+        this.asyncDispatch = asyncDispatch;
         this.sessionAsyncDispatch = sessionAsyncDispatch;
         this.info = new SessionInfo(connection.getConnectionInfo(), sessionId.getValue());
         setTransactionContext(new TransactionContext(connection));
@@ -217,21 +216,21 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         this.connection.asyncSendPacket(info);
         setTransformer(connection.getTransformer());
         setBlobTransferPolicy(connection.getBlobTransferPolicy());
-        
-        if( connection.isStarted() )
+
+        if (connection.isStarted())
             start();
 
     }
-    
-    protected ActiveMQSession(ActiveMQConnection connection, SessionId sessionId, int acknowledgeMode, boolean asyncDispatch)throws JMSException {
-        this(connection,sessionId,acknowledgeMode,asyncDispatch,true);
+
+    protected ActiveMQSession(ActiveMQConnection connection, SessionId sessionId, int acknowledgeMode, boolean asyncDispatch) throws JMSException {
+        this(connection, sessionId, acknowledgeMode, asyncDispatch, true);
     }
 
     /**
      * Sets the transaction context of the session.
      * 
-     * @param transactionContext -
-     *            provides the means to control a JMS transaction.
+     * @param transactionContext - provides the means to control a JMS
+     *                transaction.
      */
     public void setTransactionContext(TransactionContext transactionContext) {
         this.transactionContext = transactionContext;
@@ -270,9 +269,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * bytes.
      * 
      * @return the an ActiveMQBytesMessage
-     * @throws JMSException
-     *             if the JMS provider fails to create this message due to some
-     *             internal error.
+     * @throws JMSException if the JMS provider fails to create this message due
+     *                 to some internal error.
      */
     public BytesMessage createBytesMessage() throws JMSException {
         ActiveMQBytesMessage message = new ActiveMQBytesMessage();
@@ -287,9 +285,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * in the Java programming language.
      * 
      * @return an ActiveMQMapMessage
-     * @throws JMSException
-     *             if the JMS provider fails to create this message due to some
-     *             internal error.
+     * @throws JMSException if the JMS provider fails to create this message due
+     *                 to some internal error.
      */
     public MapMessage createMapMessage() throws JMSException {
         ActiveMQMapMessage message = new ActiveMQMapMessage();
@@ -299,14 +296,14 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
     /**
      * Creates a <CODE>Message</CODE> object. The <CODE>Message</CODE>
-     * interface is the root interface of all JMS messages. A <CODE>Message</CODE>
-     * object holds all the standard message header information. It can be sent
-     * when a message containing only header information is sufficient.
+     * interface is the root interface of all JMS messages. A
+     * <CODE>Message</CODE> object holds all the standard message header
+     * information. It can be sent when a message containing only header
+     * information is sufficient.
      * 
      * @return an ActiveMQMessage
-     * @throws JMSException
-     *             if the JMS provider fails to create this message due to some
-     *             internal error.
+     * @throws JMSException if the JMS provider fails to create this message due
+     *                 to some internal error.
      */
     public Message createMessage() throws JMSException {
         ActiveMQMessage message = new ActiveMQMessage();
@@ -315,14 +312,13 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     /**
-     * Creates an <CODE>ObjectMessage</CODE> object. An <CODE>ObjectMessage</CODE>
-     * object is used to send a message that contains a serializable Java
-     * object.
+     * Creates an <CODE>ObjectMessage</CODE> object. An
+     * <CODE>ObjectMessage</CODE> object is used to send a message that
+     * contains a serializable Java object.
      * 
      * @return an ActiveMQObjectMessage
-     * @throws JMSException
-     *             if the JMS provider fails to create this message due to some
-     *             internal error.
+     * @throws JMSException if the JMS provider fails to create this message due
+     *                 to some internal error.
      */
     public ObjectMessage createObjectMessage() throws JMSException {
         ActiveMQObjectMessage message = new ActiveMQObjectMessage();
@@ -331,16 +327,14 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     /**
-     * Creates an initialized <CODE>ObjectMessage</CODE> object. An <CODE>ObjectMessage</CODE>
-     * object is used to send a message that contains a serializable Java
-     * object.
+     * Creates an initialized <CODE>ObjectMessage</CODE> object. An
+     * <CODE>ObjectMessage</CODE> object is used to send a message that
+     * contains a serializable Java object.
      * 
-     * @param object
-     *            the object to use to initialize this message
+     * @param object the object to use to initialize this message
      * @return an ActiveMQObjectMessage
-     * @throws JMSException
-     *             if the JMS provider fails to create this message due to some
-     *             internal error.
+     * @throws JMSException if the JMS provider fails to create this message due
+     *                 to some internal error.
      */
     public ObjectMessage createObjectMessage(Serializable object) throws JMSException {
         ActiveMQObjectMessage message = new ActiveMQObjectMessage();
@@ -350,14 +344,13 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     /**
-     * Creates a <CODE>StreamMessage</CODE> object. A <CODE>StreamMessage</CODE>
-     * object is used to send a self-defining stream of primitive values in the
-     * Java programming language.
+     * Creates a <CODE>StreamMessage</CODE> object. A
+     * <CODE>StreamMessage</CODE> object is used to send a self-defining
+     * stream of primitive values in the Java programming language.
      * 
      * @return an ActiveMQStreamMessage
-     * @throws JMSException
-     *             if the JMS provider fails to create this message due to some
-     *             internal error.
+     * @throws JMSException if the JMS provider fails to create this message due
+     *                 to some internal error.
      */
     public StreamMessage createStreamMessage() throws JMSException {
         ActiveMQStreamMessage message = new ActiveMQStreamMessage();
@@ -371,9 +364,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * object.
      * 
      * @return an ActiveMQTextMessage
-     * @throws JMSException
-     *             if the JMS provider fails to create this message due to some
-     *             internal error.
+     * @throws JMSException if the JMS provider fails to create this message due
+     *                 to some internal error.
      */
     public TextMessage createTextMessage() throws JMSException {
         ActiveMQTextMessage message = new ActiveMQTextMessage();
@@ -382,15 +374,14 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     /**
-     * Creates an initialized <CODE>TextMessage</CODE> object. A <CODE>TextMessage</CODE>
-     * object is used to send a message containing a <CODE>String</CODE>.
+     * Creates an initialized <CODE>TextMessage</CODE> object. A
+     * <CODE>TextMessage</CODE> object is used to send a message containing a
+     * <CODE>String</CODE>.
      * 
-     * @param text
-     *            the string used to initialize this message
+     * @param text the string used to initialize this message
      * @return an ActiveMQTextMessage
-     * @throws JMSException
-     *             if the JMS provider fails to create this message due to some
-     *             internal error.
+     * @throws JMSException if the JMS provider fails to create this message due
+     *                 to some internal error.
      */
     public TextMessage createTextMessage(String text) throws JMSException {
         ActiveMQTextMessage message = new ActiveMQTextMessage();
@@ -400,36 +391,32 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     /**
-     * Creates an initialized <CODE>BlobMessage</CODE> object. A <CODE>BlobMessage</CODE>
-     * object is used to send a message containing a <CODE>URL</CODE> which points to some
-     * network addressible BLOB.
-     *
-     * @param url
-     *            the network addressable URL used to pass directly to the consumer
+     * Creates an initialized <CODE>BlobMessage</CODE> object. A
+     * <CODE>BlobMessage</CODE> object is used to send a message containing a
+     * <CODE>URL</CODE> which points to some network addressible BLOB.
+     * 
+     * @param url the network addressable URL used to pass directly to the
+     *                consumer
      * @return a BlobMessage
-     * @throws JMSException
-     *             if the JMS provider fails to create this message due to some
-     *             internal error.
+     * @throws JMSException if the JMS provider fails to create this message due
+     *                 to some internal error.
      */
     public BlobMessage createBlobMessage(URL url) throws JMSException {
         return createBlobMessage(url, false);
     }
 
-
     /**
-     * Creates an initialized <CODE>BlobMessage</CODE> object. A <CODE>BlobMessage</CODE>
-     * object is used to send a message containing a <CODE>URL</CODE> which points to some
-     * network addressible BLOB.
-     *
-     * @param url
-     *            the network addressable URL used to pass directly to the consumer
-     * @param deletedByBroker
-     *          indicates whether or not the resource is deleted by the broker when the message
-     * is acknowledged
+     * Creates an initialized <CODE>BlobMessage</CODE> object. A
+     * <CODE>BlobMessage</CODE> object is used to send a message containing a
+     * <CODE>URL</CODE> which points to some network addressible BLOB.
+     * 
+     * @param url the network addressable URL used to pass directly to the
+     *                consumer
+     * @param deletedByBroker indicates whether or not the resource is deleted
+     *                by the broker when the message is acknowledged
      * @return a BlobMessage
-     * @throws JMSException
-     *             if the JMS provider fails to create this message due to some
-     *             internal error.
+     * @throws JMSException if the JMS provider fails to create this message due
+     *                 to some internal error.
      */
     public BlobMessage createBlobMessage(URL url, boolean deletedByBroker) throws JMSException {
         ActiveMQBlobMessage message = new ActiveMQBlobMessage();
@@ -440,18 +427,17 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     /**
-     * Creates an initialized <CODE>BlobMessage</CODE> object. A <CODE>BlobMessage</CODE>
-     * object is used to send a message containing the <CODE>File</CODE> content. Before the
-     * message is sent the file conent will be uploaded to the broker or some other remote repository
+     * Creates an initialized <CODE>BlobMessage</CODE> object. A
+     * <CODE>BlobMessage</CODE> object is used to send a message containing
+     * the <CODE>File</CODE> content. Before the message is sent the file
+     * conent will be uploaded to the broker or some other remote repository
      * depending on the {@link #getBlobTransferPolicy()}.
-     *
-     * @param file
-     *            the file to be uploaded to some remote repo (or the broker) depending on the strategy
-     *
+     * 
+     * @param file the file to be uploaded to some remote repo (or the broker)
+     *                depending on the strategy
      * @return a BlobMessage
-     * @throws JMSException
-     *             if the JMS provider fails to create this message due to some
-     *             internal error.
+     * @throws JMSException if the JMS provider fails to create this message due
+     *                 to some internal error.
      */
     public BlobMessage createBlobMessage(File file) throws JMSException {
         ActiveMQBlobMessage message = new ActiveMQBlobMessage();
@@ -462,20 +448,18 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         return message;
     }
 
-
     /**
-     * Creates an initialized <CODE>BlobMessage</CODE> object. A <CODE>BlobMessage</CODE>
-     * object is used to send a message containing the <CODE>File</CODE> content. Before the
-     * message is sent the file conent will be uploaded to the broker or some other remote repository
+     * Creates an initialized <CODE>BlobMessage</CODE> object. A
+     * <CODE>BlobMessage</CODE> object is used to send a message containing
+     * the <CODE>File</CODE> content. Before the message is sent the file
+     * conent will be uploaded to the broker or some other remote repository
      * depending on the {@link #getBlobTransferPolicy()}.
-     *
-     * @param in
-     *            the stream to be uploaded to some remote repo (or the broker) depending on the strategy
-     *
+     * 
+     * @param in the stream to be uploaded to some remote repo (or the broker)
+     *                depending on the strategy
      * @return a BlobMessage
-     * @throws JMSException
-     *             if the JMS provider fails to create this message due to some
-     *             internal error.
+     * @throws JMSException if the JMS provider fails to create this message due
+     *                 to some internal error.
      */
     public BlobMessage createBlobMessage(InputStream in) throws JMSException {
         ActiveMQBlobMessage message = new ActiveMQBlobMessage();
@@ -485,13 +469,11 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         return message;
     }
 
-
     /**
      * Indicates whether the session is in transacted mode.
      * 
      * @return true if the session is in transacted mode
-     * @throws JMSException
-     *             if there is some internal error.
+     * @throws JMSException if there is some internal error.
      */
     public boolean getTransacted() throws JMSException {
         checkClosed();
@@ -519,14 +501,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * Commits all messages done in this transaction and releases any locks
      * currently held.
      * 
-     * @throws JMSException
-     *             if the JMS provider fails to commit the transaction due to
-     *             some internal error.
-     * @throws TransactionRolledBackException
-     *             if the transaction is rolled back due to some internal error
-     *             during commit.
-     * @throws javax.jms.IllegalStateException
-     *             if the method is not called by a transacted session.
+     * @throws JMSException if the JMS provider fails to commit the transaction
+     *                 due to some internal error.
+     * @throws TransactionRolledBackException if the transaction is rolled back
+     *                 due to some internal error during commit.
+     * @throws javax.jms.IllegalStateException if the method is not called by a
+     *                 transacted session.
      */
     public void commit() throws JMSException {
         checkClosed();
@@ -540,11 +520,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * Rolls back any messages done in this transaction and releases any locks
      * currently held.
      * 
-     * @throws JMSException
-     *             if the JMS provider fails to roll back the transaction due to
-     *             some internal error.
-     * @throws javax.jms.IllegalStateException
-     *             if the method is not called by a transacted session.
+     * @throws JMSException if the JMS provider fails to roll back the
+     *                 transaction due to some internal error.
+     * @throws javax.jms.IllegalStateException if the method is not called by a
+     *                 transacted session.
      */
     public void rollback() throws JMSException {
         checkClosed();
@@ -553,7 +532,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         }
         transactionContext.rollback();
     }
-    
+
     /**
      * Closes the session.
      * <P>
@@ -566,8 +545,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * session.
      * <P>
      * This call will block until a <CODE>receive</CODE> call or message
-     * listener in progress has completed. A blocked message consumer <CODE>receive</CODE>
-     * call returns <CODE>null</CODE> when this session is closed.
+     * listener in progress has completed. A blocked message consumer
+     * <CODE>receive</CODE> call returns <CODE>null</CODE> when this session
+     * is closed.
      * <P>
      * Closing a transacted session must roll back the transaction in progress.
      * <P>
@@ -578,9 +558,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * throw a <CODE> JMSException.IllegalStateException</CODE>. Closing a
      * closed session must <I>not </I> throw an exception.
      * 
-     * @throws JMSException
-     *             if the JMS provider fails to close the session due to some
-     *             internal error.
+     * @throws JMSException if the JMS provider fails to close the session due
+     *                 to some internal error.
      */
     public void close() throws JMSException {
         if (!closed) {
@@ -588,18 +567,18 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             connection.asyncSendPacket(info.createRemoveCommand());
         }
     }
-    
-    void clearMessagesInProgress(){
+
+    void clearMessagesInProgress() {
         executor.clearMessagesInProgress();
         for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-            ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) iter.next();
+            ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer)iter.next();
             consumer.clearMessagesInProgress();
         }
     }
-    
-    void deliverAcks(){
+
+    void deliverAcks() {
         for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-            ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) iter.next();
+            ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer)iter.next();
             consumer.deliverAcks();
         }
     }
@@ -611,13 +590,13 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                 executor.stop();
 
                 for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-                    ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) iter.next();
+                    ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer)iter.next();
                     consumer.dispose();
                 }
                 consumers.clear();
 
                 for (Iterator iter = producers.iterator(); iter.hasNext();) {
-                    ActiveMQMessageProducer producer = (ActiveMQMessageProducer) iter.next();
+                    ActiveMQMessageProducer producer = (ActiveMQMessageProducer)iter.next();
                     producer.dispose();
                 }
                 producers.clear();
@@ -626,13 +605,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                     if (getTransactionContext().isInLocalTransaction()) {
                         rollback();
                     }
-                }
-                catch (JMSException e) {
+                } catch (JMSException e) {
                 }
 
-
-            }
-            finally {
+            } finally {
                 connection.removeSession(this);
                 this.transactionContext = null;
                 closed = true;
@@ -648,13 +624,11 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         message.setConnection(connection);
     }
 
-
     /**
      * Check if the session is closed. It is used for ensuring that the session
      * is open before performing various operations.
      * 
-     * @throws IllegalStateException
-     *             if the Session is closed
+     * @throws IllegalStateException if the Session is closed
      */
     protected void checkClosed() throws IllegalStateException {
         if (closed) {
@@ -680,11 +654,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * be delivered in exactly their original delivery order.
      * </UL>
      * 
-     * @throws JMSException
-     *             if the JMS provider fails to stop and restart message
-     *             delivery due to some internal error.
-     * @throws IllegalStateException
-     *             if the method is called by a transacted session.
+     * @throws JMSException if the JMS provider fails to stop and restart
+     *                 message delivery due to some internal error.
+     * @throws IllegalStateException if the method is called by a transacted
+     *                 session.
      */
     public void recover() throws JMSException {
 
@@ -694,7 +667,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         }
 
         for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer) iter.next();
+            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer)iter.next();
             c.rollback();
         }
 
@@ -704,9 +677,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * Returns the session's distinguished message listener (optional).
      * 
      * @return the message listener associated with this session
-     * @throws JMSException
-     *             if the JMS provider fails to get the message listener due to
-     *             an internal error.
+     * @throws JMSException if the JMS provider fails to get the message
+     *                 listener due to an internal error.
      * @see javax.jms.Session#setMessageListener(javax.jms.MessageListener)
      * @see javax.jms.ServerSessionPool
      * @see javax.jms.ServerSession
@@ -725,11 +697,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * <P>
      * This is an expert facility not used by regular JMS clients.
      * 
-     * @param listener
-     *            the message listener to associate with this session
-     * @throws JMSException
-     *             if the JMS provider fails to set the message listener due to
-     *             an internal error.
+     * @param listener the message listener to associate with this session
+     * @throws JMSException if the JMS provider fails to set the message
+     *                 listener due to an internal error.
      * @see javax.jms.Session#getMessageListener()
      * @see javax.jms.ServerSessionPool
      * @see javax.jms.ServerSession
@@ -754,72 +724,74 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         while ((messageDispatch = executor.dequeueNoWait()) != null) {
             final MessageDispatch md = messageDispatch;
             ActiveMQMessage message = (ActiveMQMessage)md.getMessage();
-            if( message.isExpired() || connection.isDuplicate(ActiveMQSession.this,message)) {
-                //TODO: Ack it without delivery to client
+            if (message.isExpired() || connection.isDuplicate(ActiveMQSession.this, message)) {
+                // TODO: Ack it without delivery to client
                 continue;
             }
-            
-            if( isClientAcknowledge() ) {
+
+            if (isClientAcknowledge()) {
                 message.setAcknowledgeCallback(new Callback() {
                     public void execute() throws Exception {
                     }
                 });
             }
-            
+
             if (deliveryListener != null) {
                 deliveryListener.beforeDelivery(this, message);
             }
 
-            md.setDeliverySequenceId(getNextDeliveryId());            
+            md.setDeliverySequenceId(getNextDeliveryId());
 
-            try { 
+            try {
                 messageListener.onMessage(message);
-            } catch ( Throwable e ) {  
+            } catch (Throwable e) {
                 // TODO: figure out proper way to handle error.
-                log.error("error dispatching message: ",e);
+                log.error("error dispatching message: ", e);
                 connection.onAsyncException(e);
             }
 
             try {
-                MessageAck ack = new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,1);
+                MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
                 ack.setFirstMessageId(md.getMessage().getMessageId());
                 doStartTransaction();
                 ack.setTransactionId(getTransactionContext().getTransactionId());
-                if(ack.getTransactionId()!=null){
-                    getTransactionContext().addSynchronization(new Synchronization(){
+                if (ack.getTransactionId() != null) {
+                    getTransactionContext().addSynchronization(new Synchronization() {
 
-                        public void afterRollback() throws Exception{
+                        public void afterRollback() throws Exception {
                             md.getMessage().onMessageRolledBack();
                             // ensure we don't filter this as a duplicate
-                            connection.rollbackDuplicate(ActiveMQSession.this,md.getMessage());
-                            RedeliveryPolicy redeliveryPolicy=connection.getRedeliveryPolicy();
-                            int redeliveryCounter=md.getMessage().getRedeliveryCounter();
-                            if(redeliveryPolicy.getMaximumRedeliveries()!=RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES
-                                    &&redeliveryCounter>redeliveryPolicy.getMaximumRedeliveries()){
-                                // We need to NACK the messages so that they get sent to the
+                            connection.rollbackDuplicate(ActiveMQSession.this, md.getMessage());
+                            RedeliveryPolicy redeliveryPolicy = connection.getRedeliveryPolicy();
+                            int redeliveryCounter = md.getMessage().getRedeliveryCounter();
+                            if (redeliveryPolicy.getMaximumRedeliveries() != RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES
+                                && redeliveryCounter > redeliveryPolicy.getMaximumRedeliveries()) {
+                                // We need to NACK the messages so that they get
+                                // sent to the
                                 // DLQ.
                                 // Acknowledge the last message.
-                                MessageAck ack=new MessageAck(md,MessageAck.POSION_ACK_TYPE,1);
+                                MessageAck ack = new MessageAck(md, MessageAck.POSION_ACK_TYPE, 1);
                                 ack.setFirstMessageId(md.getMessage().getMessageId());
                                 asyncSendPacket(ack);
-                            }else{
-                                // Figure out how long we should wait to resend this message.
-                                long redeliveryDelay=0;
-                                for(int i=0;i<redeliveryCounter;i++){
-                                    redeliveryDelay=redeliveryPolicy.getRedeliveryDelay(redeliveryDelay);
+                            } else {
+                                // Figure out how long we should wait to resend
+                                // this message.
+                                long redeliveryDelay = 0;
+                                for (int i = 0; i < redeliveryCounter; i++) {
+                                    redeliveryDelay = redeliveryPolicy.getRedeliveryDelay(redeliveryDelay);
                                 }
-                                Scheduler.executeAfterDelay(new Runnable(){
+                                Scheduler.executeAfterDelay(new Runnable() {
 
-                                    public void run(){
+                                    public void run() {
                                         ((ActiveMQDispatcher)md.getConsumer()).dispatch(md);
                                     }
-                                },redeliveryDelay);
+                                }, redeliveryDelay);
                             }
                         }
                     });
                 }
                 asyncSendPacket(ack);
-            } catch ( Throwable e ) {
+            } catch (Throwable e) {
                 connection.onAsyncException(e);
             }
 
@@ -838,26 +810,24 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * inherit from <CODE>Destination</CODE>, they can be used in the
      * destination parameter to create a <CODE>MessageProducer</CODE> object.
      * 
-     * @param destination
-     *            the <CODE>Destination</CODE> to send to, or null if this is
-     *            a producer which does not have a specified destination.
+     * @param destination the <CODE>Destination</CODE> to send to, or null if
+     *                this is a producer which does not have a specified
+     *                destination.
      * @return the MessageProducer
-     * @throws JMSException
-     *             if the session fails to create a MessageProducer due to some
-     *             internal error.
-     * @throws InvalidDestinationException
-     *             if an invalid destination is specified.
+     * @throws JMSException if the session fails to create a MessageProducer due
+     *                 to some internal error.
+     * @throws InvalidDestinationException if an invalid destination is
+     *                 specified.
      * @since 1.1
      */
     public MessageProducer createProducer(Destination destination) throws JMSException {
         checkClosed();
-        if (destination instanceof CustomDestination)  {
-            CustomDestination customDestination = (CustomDestination) destination;
+        if (destination instanceof CustomDestination) {
+            CustomDestination customDestination = (CustomDestination)destination;
             return customDestination.createProducer(this);
         }
 
-        return new ActiveMQMessageProducer(this, getNextProducerId(), ActiveMQMessageTransformation
-                .transformDestination(destination));
+        return new ActiveMQMessageProducer(this, getNextProducerId(), ActiveMQMessageTransformation.transformDestination(destination));
     }
 
     /**
@@ -866,14 +836,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * <CODE>Destination</CODE>, they can be used in the destination
      * parameter to create a <CODE>MessageConsumer</CODE>.
      * 
-     * @param destination
-     *            the <CODE>Destination</CODE> to access.
+     * @param destination the <CODE>Destination</CODE> to access.
      * @return the MessageConsumer
-     * @throws JMSException
-     *             if the session fails to create a consumer due to some
-     *             internal error.
-     * @throws InvalidDestinationException
-     *             if an invalid destination is specified.
+     * @throws JMSException if the session fails to create a consumer due to
+     *                 some internal error.
+     * @throws InvalidDestinationException if an invalid destination is
+     *                 specified.
      * @since 1.1
      */
     public MessageConsumer createConsumer(Destination destination) throws JMSException {
@@ -883,35 +851,32 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
     /**
      * Creates a <CODE>MessageConsumer</CODE> for the specified destination,
-     * using a message selector. Since <CODE> Queue</CODE> and <CODE>Topic</CODE>
-     * both inherit from <CODE>Destination</CODE>, they can be used in the
-     * destination parameter to create a <CODE>MessageConsumer</CODE>.
+     * using a message selector. Since <CODE> Queue</CODE> and
+     * <CODE>Topic</CODE> both inherit from <CODE>Destination</CODE>, they
+     * can be used in the destination parameter to create a
+     * <CODE>MessageConsumer</CODE>.
      * <P>
      * A client uses a <CODE>MessageConsumer</CODE> object to receive messages
      * that have been sent to a destination.
      * 
-     * @param destination
-     *            the <CODE>Destination</CODE> to access
-     * @param messageSelector
-     *            only messages with properties matching the message selector
-     *            expression are delivered. A value of null or an empty string
-     *            indicates that there is no message selector for the message
-     *            consumer.
+     * @param destination the <CODE>Destination</CODE> to access
+     * @param messageSelector only messages with properties matching the message
+     *                selector expression are delivered. A value of null or an
+     *                empty string indicates that there is no message selector
+     *                for the message consumer.
      * @return the MessageConsumer
-     * @throws JMSException
-     *             if the session fails to create a MessageConsumer due to some
-     *             internal error.
-     * @throws InvalidDestinationException
-     *             if an invalid destination is specified.
-     * @throws InvalidSelectorException
-     *             if the message selector is invalid.
+     * @throws JMSException if the session fails to create a MessageConsumer due
+     *                 to some internal error.
+     * @throws InvalidDestinationException if an invalid destination is
+     *                 specified.
+     * @throws InvalidSelectorException if the message selector is invalid.
      * @since 1.1
      */
     public MessageConsumer createConsumer(Destination destination, String messageSelector) throws JMSException {
         checkClosed();
 
-        if (destination instanceof CustomDestination)  {
-            CustomDestination customDestination = (CustomDestination) destination;
+        if (destination instanceof CustomDestination) {
+            CustomDestination customDestination = (CustomDestination)destination;
             return customDestination.createConsumer(this, messageSelector);
         }
 
@@ -924,9 +889,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             prefetch = prefetchPolicy.getQueuePrefetch();
         }
 
-        return new ActiveMQMessageConsumer(this, getNextConsumerId(), 
-                ActiveMQMessageTransformation.transformDestination(destination), null, messageSelector, prefetch, 
-                prefetchPolicy.getMaximumPendingMessageLimit(), false, false, asyncDispatch);
+        return new ActiveMQMessageConsumer(this, getNextConsumerId(), ActiveMQMessageTransformation.transformDestination(destination), null, messageSelector, prefetch,
+                                           prefetchPolicy.getMaximumPendingMessageLimit(), false, false, asyncDispatch);
     }
 
     /**
@@ -962,42 +926,34 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * default value for this attribute is False. The <CODE>noLocal</CODE>
      * value must be supported by destinations that are topics.
      * 
-     * @param destination
-     *            the <CODE>Destination</CODE> to access
-     * @param messageSelector
-     *            only messages with properties matching the message selector
-     *            expression are delivered. A value of null or an empty string
-     *            indicates that there is no message selector for the message
-     *            consumer.
-     * @param noLocal -
-     *            if true, and the destination is a topic, inhibits the delivery
-     *            of messages published by its own connection. The behavior for
-     *            <CODE>NoLocal</CODE> is not specified if the destination is
-     *            a queue.
+     * @param destination the <CODE>Destination</CODE> to access
+     * @param messageSelector only messages with properties matching the message
+     *                selector expression are delivered. A value of null or an
+     *                empty string indicates that there is no message selector
+     *                for the message consumer.
+     * @param noLocal - if true, and the destination is a topic, inhibits the
+     *                delivery of messages published by its own connection. The
+     *                behavior for <CODE>NoLocal</CODE> is not specified if
+     *                the destination is a queue.
      * @return the MessageConsumer
-     * @throws JMSException
-     *             if the session fails to create a MessageConsumer due to some
-     *             internal error.
-     * @throws InvalidDestinationException
-     *             if an invalid destination is specified.
-     * @throws InvalidSelectorException
-     *             if the message selector is invalid.
+     * @throws JMSException if the session fails to create a MessageConsumer due
+     *                 to some internal error.
+     * @throws InvalidDestinationException if an invalid destination is
+     *                 specified.
+     * @throws InvalidSelectorException if the message selector is invalid.
      * @since 1.1
      */
-    public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean noLocal)
-            throws JMSException {
+    public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean noLocal) throws JMSException {
         checkClosed();
 
-        if (destination instanceof CustomDestination)  {
-            CustomDestination customDestination = (CustomDestination) destination;
+        if (destination instanceof CustomDestination) {
+            CustomDestination customDestination = (CustomDestination)destination;
             return customDestination.createConsumer(this, messageSelector, noLocal);
         }
 
-
         ActiveMQPrefetchPolicy prefetchPolicy = connection.getPrefetchPolicy();
-        return new ActiveMQMessageConsumer(this, getNextConsumerId(), 
-                ActiveMQMessageTransformation.transformDestination(destination), null, messageSelector, 
-                prefetchPolicy.getTopicPrefetch(), prefetchPolicy.getMaximumPendingMessageLimit(), noLocal, false, asyncDispatch);
+        return new ActiveMQMessageConsumer(this, getNextConsumerId(), ActiveMQMessageTransformation.transformDestination(destination), null, messageSelector, prefetchPolicy
+            .getTopicPrefetch(), prefetchPolicy.getMaximumPendingMessageLimit(), noLocal, false, asyncDispatch);
     }
 
     /**
@@ -1014,12 +970,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * queues, which is accomplished with the <CODE>createTemporaryQueue</CODE>
      * method.
      * 
-     * @param queueName
-     *            the name of this <CODE>Queue</CODE>
+     * @param queueName the name of this <CODE>Queue</CODE>
      * @return a <CODE>Queue</CODE> with the given name
-     * @throws JMSException
-     *             if the session fails to create a queue due to some internal
-     *             error.
+     * @throws JMSException if the session fails to create a queue due to some
+     *                 internal error.
      * @since 1.1
      */
     public Queue createQueue(String queueName) throws JMSException {
@@ -1044,12 +998,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * topics, which is accomplished with the <CODE>createTemporaryTopic</CODE>
      * method.
      * 
-     * @param topicName
-     *            the name of this <CODE>Topic</CODE>
+     * @param topicName the name of this <CODE>Topic</CODE>
      * @return a <CODE>Topic</CODE> with the given name
-     * @throws JMSException
-     *             if the session fails to create a topic due to some internal
-     *             error.
+     * @throws JMSException if the session fails to create a topic due to some
+     *                 internal error.
      * @since 1.1
      */
     public Topic createTopic(String topicName) throws JMSException {
@@ -1064,10 +1016,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * Creates a <CODE>QueueBrowser</CODE> object to peek at the messages on
      * the specified queue.
      * 
-     * @param queue
-     *            the <CODE>queue</CODE> to access
-     * @exception InvalidDestinationException
-     *                if an invalid destination is specified
+     * @param queue the <CODE>queue</CODE> to access
+     * @exception InvalidDestinationException if an invalid destination is
+     *                    specified
      * @since 1.1
      */
     /**
@@ -1083,8 +1034,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * Sessions with durable subscribers must always provide the same client
      * identifier. In addition, each client must specify a name that uniquely
      * identifies (within client identifier) each durable subscription it
-     * creates. Only one session at a time can have a <CODE>TopicSubscriber</CODE>
-     * for a particular durable subscription.
+     * creates. Only one session at a time can have a
+     * <CODE>TopicSubscriber</CODE> for a particular durable subscription.
      * <P>
      * A client can change an existing durable subscription by creating a
      * durable <CODE>TopicSubscriber</CODE> with the same name and a new topic
@@ -1096,16 +1047,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * inhibit the delivery of messages published by its own connection. The
      * default value for this attribute is false.
      * 
-     * @param topic
-     *            the non-temporary <CODE>Topic</CODE> to subscribe to
-     * @param name
-     *            the name used to identify this subscription
+     * @param topic the non-temporary <CODE>Topic</CODE> to subscribe to
+     * @param name the name used to identify this subscription
      * @return the TopicSubscriber
-     * @throws JMSException
-     *             if the session fails to create a subscriber due to some
-     *             internal error.
-     * @throws InvalidDestinationException
-     *             if an invalid topic is specified.
+     * @throws JMSException if the session fails to create a subscriber due to
+     *                 some internal error.
+     * @throws InvalidDestinationException if an invalid topic is specified.
      * @since 1.1
      */
     public TopicSubscriber createDurableSubscriber(Topic topic, String name) throws JMSException {
@@ -1128,69 +1075,57 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * Sessions with durable subscribers must always provide the same client
      * identifier. In addition, each client must specify a name which uniquely
      * identifies (within client identifier) each durable subscription it
-     * creates. Only one session at a time can have a <CODE>TopicSubscriber</CODE>
-     * for a particular durable subscription. An inactive durable subscriber is
-     * one that exists but does not currently have a message consumer associated
-     * with it.
+     * creates. Only one session at a time can have a
+     * <CODE>TopicSubscriber</CODE> for a particular durable subscription. An
+     * inactive durable subscriber is one that exists but does not currently
+     * have a message consumer associated with it.
      * <P>
      * A client can change an existing durable subscription by creating a
      * durable <CODE>TopicSubscriber</CODE> with the same name and a new topic
      * and/or message selector. Changing a durable subscriber is equivalent to
      * unsubscribing (deleting) the old one and creating a new one.
      * 
-     * @param topic
-     *            the non-temporary <CODE>Topic</CODE> to subscribe to
-     * @param name
-     *            the name used to identify this subscription
-     * @param messageSelector
-     *            only messages with properties matching the message selector
-     *            expression are delivered. A value of null or an empty string
-     *            indicates that there is no message selector for the message
-     *            consumer.
-     * @param noLocal
-     *            if set, inhibits the delivery of messages published by its own
-     *            connection
+     * @param topic the non-temporary <CODE>Topic</CODE> to subscribe to
+     * @param name the name used to identify this subscription
+     * @param messageSelector only messages with properties matching the message
+     *                selector expression are delivered. A value of null or an
+     *                empty string indicates that there is no message selector
+     *                for the message consumer.
+     * @param noLocal if set, inhibits the delivery of messages published by its
+     *                own connection
      * @return the Queue Browser
-     * @throws JMSException
-     *             if the session fails to create a subscriber due to some
-     *             internal error.
-     * @throws InvalidDestinationException
-     *             if an invalid topic is specified.
-     * @throws InvalidSelectorException
-     *             if the message selector is invalid.
+     * @throws JMSException if the session fails to create a subscriber due to
+     *                 some internal error.
+     * @throws InvalidDestinationException if an invalid topic is specified.
+     * @throws InvalidSelectorException if the message selector is invalid.
      * @since 1.1
      */
-    public TopicSubscriber createDurableSubscriber(Topic topic,String name,String messageSelector,boolean noLocal)
-                    throws JMSException{
+    public TopicSubscriber createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
         checkClosed();
 
-        if (topic instanceof CustomDestination)  {
-            CustomDestination customDestination = (CustomDestination) topic;
+        if (topic instanceof CustomDestination) {
+            CustomDestination customDestination = (CustomDestination)topic;
             return customDestination.createDurableSubscriber(this, name, messageSelector, noLocal);
         }
 
         connection.checkClientIDWasManuallySpecified();
-        ActiveMQPrefetchPolicy prefetchPolicy=this.connection.getPrefetchPolicy();
-        int prefetch=isAutoAcknowledge()&&connection.isOptimizedMessageDispatch()?prefetchPolicy
-                        .getOptimizeDurableTopicPrefetch():prefetchPolicy.getDurableTopicPrefetch();
-        int maxPrendingLimit=prefetchPolicy.getMaximumPendingMessageLimit();
-        return new ActiveMQTopicSubscriber(this,getNextConsumerId(),ActiveMQMessageTransformation
-                        .transformDestination(topic),name,messageSelector,prefetch,maxPrendingLimit,noLocal,false,
-                        asyncDispatch);
+        ActiveMQPrefetchPolicy prefetchPolicy = this.connection.getPrefetchPolicy();
+        int prefetch = isAutoAcknowledge() && connection.isOptimizedMessageDispatch() ? prefetchPolicy.getOptimizeDurableTopicPrefetch() : prefetchPolicy.getDurableTopicPrefetch();
+        int maxPrendingLimit = prefetchPolicy.getMaximumPendingMessageLimit();
+        return new ActiveMQTopicSubscriber(this, getNextConsumerId(), ActiveMQMessageTransformation.transformDestination(topic), name, messageSelector, prefetch, maxPrendingLimit,
+                                           noLocal, false, asyncDispatch);
     }
 
     /**
      * Creates a <CODE>QueueBrowser</CODE> object to peek at the messages on
      * the specified queue.
      * 
-     * @param queue
-     *            the <CODE>queue</CODE> to access
+     * @param queue the <CODE>queue</CODE> to access
      * @return the Queue Browser
-     * @throws JMSException
-     *             if the session fails to create a browser due to some internal
-     *             error.
-     * @throws InvalidDestinationException
-     *             if an invalid destination is specified
+     * @throws JMSException if the session fails to create a browser due to some
+     *                 internal error.
+     * @throws InvalidDestinationException if an invalid destination is
+     *                 specified
      * @since 1.1
      */
     public QueueBrowser createBrowser(Queue queue) throws JMSException {
@@ -1202,27 +1137,22 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * Creates a <CODE>QueueBrowser</CODE> object to peek at the messages on
      * the specified queue using a message selector.
      * 
-     * @param queue
-     *            the <CODE>queue</CODE> to access
-     * @param messageSelector
-     *            only messages with properties matching the message selector
-     *            expression are delivered. A value of null or an empty string
-     *            indicates that there is no message selector for the message
-     *            consumer.
+     * @param queue the <CODE>queue</CODE> to access
+     * @param messageSelector only messages with properties matching the message
+     *                selector expression are delivered. A value of null or an
+     *                empty string indicates that there is no message selector
+     *                for the message consumer.
      * @return the Queue Browser
-     * @throws JMSException
-     *             if the session fails to create a browser due to some internal
-     *             error.
-     * @throws InvalidDestinationException
-     *             if an invalid destination is specified
-     * @throws InvalidSelectorException
-     *             if the message selector is invalid.
+     * @throws JMSException if the session fails to create a browser due to some
+     *                 internal error.
+     * @throws InvalidDestinationException if an invalid destination is
+     *                 specified
+     * @throws InvalidSelectorException if the message selector is invalid.
      * @since 1.1
      */
     public QueueBrowser createBrowser(Queue queue, String messageSelector) throws JMSException {
         checkClosed();
-        return new ActiveMQQueueBrowser(this, getNextConsumerId(), ActiveMQMessageTransformation
-                .transformDestination(queue), messageSelector, asyncDispatch);
+        return new ActiveMQQueueBrowser(this, getNextConsumerId(), ActiveMQMessageTransformation.transformDestination(queue), messageSelector, asyncDispatch);
     }
 
     /**
@@ -1230,14 +1160,13 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * of the <CODE>Connection</CODE> unless it is deleted earlier.
      * 
      * @return a temporary queue identity
-     * @throws JMSException
-     *             if the session fails to create a temporary queue due to some
-     *             internal error.
+     * @throws JMSException if the session fails to create a temporary queue due
+     *                 to some internal error.
      * @since 1.1
      */
     public TemporaryQueue createTemporaryQueue() throws JMSException {
         checkClosed();
-        return (TemporaryQueue) connection.createTempDestination(false);
+        return (TemporaryQueue)connection.createTempDestination(false);
     }
 
     /**
@@ -1245,9 +1174,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * of the <CODE>Connection</CODE> unless it is deleted earlier.
      * 
      * @return a temporary topic identity
-     * @throws JMSException
-     *             if the session fails to create a temporary topic due to some
-     *             internal error.
+     * @throws JMSException if the session fails to create a temporary topic due
+     *                 to some internal error.
      * @since 1.1
      */
     public TemporaryTopic createTemporaryTopic() throws JMSException {
@@ -1259,15 +1187,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * Creates a <CODE>QueueReceiver</CODE> object to receive messages from
      * the specified queue.
      * 
-     * @param queue
-     *            the <CODE>Queue</CODE> to access
+     * @param queue the <CODE>Queue</CODE> to access
      * @return
+     * @throws JMSException if the session fails to create a receiver due to
+     *                 some internal error.
      * @throws JMSException
-     *             if the session fails to create a receiver due to some
-     *             internal error.
-     * @throws JMSException
-     * @throws InvalidDestinationException
-     *             if an invalid queue is specified.
+     * @throws InvalidDestinationException if an invalid queue is specified.
      */
     public QueueReceiver createReceiver(Queue queue) throws JMSException {
         checkClosed();
@@ -1278,54 +1203,45 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * Creates a <CODE>QueueReceiver</CODE> object to receive messages from
      * the specified queue using a message selector.
      * 
-     * @param queue
-     *            the <CODE>Queue</CODE> to access
-     * @param messageSelector
-     *            only messages with properties matching the message selector
-     *            expression are delivered. A value of null or an empty string
-     *            indicates that there is no message selector for the message
-     *            consumer.
+     * @param queue the <CODE>Queue</CODE> to access
+     * @param messageSelector only messages with properties matching the message
+     *                selector expression are delivered. A value of null or an
+     *                empty string indicates that there is no message selector
+     *                for the message consumer.
      * @return QueueReceiver
-     * @throws JMSException
-     *             if the session fails to create a receiver due to some
-     *             internal error.
-     * @throws InvalidDestinationException
-     *             if an invalid queue is specified.
-     * @throws InvalidSelectorException
-     *             if the message selector is invalid.
+     * @throws JMSException if the session fails to create a receiver due to
+     *                 some internal error.
+     * @throws InvalidDestinationException if an invalid queue is specified.
+     * @throws InvalidSelectorException if the message selector is invalid.
      */
     public QueueReceiver createReceiver(Queue queue, String messageSelector) throws JMSException {
         checkClosed();
 
-        if (queue instanceof CustomDestination)  {
-            CustomDestination customDestination = (CustomDestination) queue;
+        if (queue instanceof CustomDestination) {
+            CustomDestination customDestination = (CustomDestination)queue;
             return customDestination.createReceiver(this, messageSelector);
         }
 
         ActiveMQPrefetchPolicy prefetchPolicy = this.connection.getPrefetchPolicy();
-        return new ActiveMQQueueReceiver(this, getNextConsumerId(), ActiveMQMessageTransformation
-                .transformDestination(queue), messageSelector, prefetchPolicy.getQueuePrefetch(), 
-                prefetchPolicy.getMaximumPendingMessageLimit(), asyncDispatch);
+        return new ActiveMQQueueReceiver(this, getNextConsumerId(), ActiveMQMessageTransformation.transformDestination(queue), messageSelector, prefetchPolicy.getQueuePrefetch(),
+                                         prefetchPolicy.getMaximumPendingMessageLimit(), asyncDispatch);
     }
 
     /**
      * Creates a <CODE>QueueSender</CODE> object to send messages to the
      * specified queue.
      * 
-     * @param queue
-     *            the <CODE>Queue</CODE> to access, or null if this is an
-     *            unidentified producer
+     * @param queue the <CODE>Queue</CODE> to access, or null if this is an
+     *                unidentified producer
      * @return QueueSender
-     * @throws JMSException
-     *             if the session fails to create a sender due to some internal
-     *             error.
-     * @throws InvalidDestinationException
-     *             if an invalid queue is specified.
+     * @throws JMSException if the session fails to create a sender due to some
+     *                 internal error.
+     * @throws InvalidDestinationException if an invalid queue is specified.
      */
     public QueueSender createSender(Queue queue) throws JMSException {
         checkClosed();
-        if (queue instanceof CustomDestination)  {
-            CustomDestination customDestination = (CustomDestination) queue;
+        if (queue instanceof CustomDestination) {
+            CustomDestination customDestination = (CustomDestination)queue;
             return customDestination.createSender(this);
         }
 
@@ -1346,14 +1262,11 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * inhibit the delivery of messages published by its own connection. The
      * default value for this attribute is false.
      * 
-     * @param topic
-     *            the <CODE>Topic</CODE> to subscribe to
+     * @param topic the <CODE>Topic</CODE> to subscribe to
      * @return TopicSubscriber
-     * @throws JMSException
-     *             if the session fails to create a subscriber due to some
-     *             internal error.
-     * @throws InvalidDestinationException
-     *             if an invalid topic is specified.
+     * @throws JMSException if the session fails to create a subscriber due to
+     *                 some internal error.
+     * @throws InvalidDestinationException if an invalid topic is specified.
      */
     public TopicSubscriber createSubscriber(Topic topic) throws JMSException {
         checkClosed();
@@ -1380,37 +1293,30 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * inhibit the delivery of messages published by its own connection. The
      * default value for this attribute is false.
      * 
-     * @param topic
-     *            the <CODE>Topic</CODE> to subscribe to
-     * @param messageSelector
-     *            only messages with properties matching the message selector
-     *            expression are delivered. A value of null or an empty string
-     *            indicates that there is no message selector for the message
-     *            consumer.
-     * @param noLocal
-     *            if set, inhibits the delivery of messages published by its own
-     *            connection
+     * @param topic the <CODE>Topic</CODE> to subscribe to
+     * @param messageSelector only messages with properties matching the message
+     *                selector expression are delivered. A value of null or an
+     *                empty string indicates that there is no message selector
+     *                for the message consumer.
+     * @param noLocal if set, inhibits the delivery of messages published by its
+     *                own connection
      * @return TopicSubscriber
-     * @throws JMSException
-     *             if the session fails to create a subscriber due to some
-     *             internal error.
-     * @throws InvalidDestinationException
-     *             if an invalid topic is specified.
-     * @throws InvalidSelectorException
-     *             if the message selector is invalid.
+     * @throws JMSException if the session fails to create a subscriber due to
+     *                 some internal error.
+     * @throws InvalidDestinationException if an invalid topic is specified.
+     * @throws InvalidSelectorException if the message selector is invalid.
      */
     public TopicSubscriber createSubscriber(Topic topic, String messageSelector, boolean noLocal) throws JMSException {
         checkClosed();
 
-        if (topic instanceof CustomDestination)  {
-            CustomDestination customDestination = (CustomDestination) topic;
+        if (topic instanceof CustomDestination) {
+            CustomDestination customDestination = (CustomDestination)topic;
             return customDestination.createSubscriber(this, messageSelector, noLocal);
         }
 
         ActiveMQPrefetchPolicy prefetchPolicy = this.connection.getPrefetchPolicy();
-        return new ActiveMQTopicSubscriber(this, getNextConsumerId(), ActiveMQMessageTransformation
-                .transformDestination(topic), null, messageSelector, prefetchPolicy.getTopicPrefetch(), 
-                prefetchPolicy.getMaximumPendingMessageLimit(), noLocal, false, asyncDispatch);
+        return new ActiveMQTopicSubscriber(this, getNextConsumerId(), ActiveMQMessageTransformation.transformDestination(topic), null, messageSelector, prefetchPolicy
+            .getTopicPrefetch(), prefetchPolicy.getMaximumPendingMessageLimit(), noLocal, false, asyncDispatch);
     }
 
     /**
@@ -1421,21 +1327,18 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * a topic, it defines a new sequence of messages that have no ordering
      * relationship with the messages it has previously sent.
      * 
-     * @param topic
-     *            the <CODE>Topic</CODE> to publish to, or null if this is an
-     *            unidentified producer
+     * @param topic the <CODE>Topic</CODE> to publish to, or null if this is
+     *                an unidentified producer
      * @return TopicPublisher
-     * @throws JMSException
-     *             if the session fails to create a publisher due to some
-     *             internal error.
-     * @throws InvalidDestinationException
-     *             if an invalid topic is specified.
+     * @throws JMSException if the session fails to create a publisher due to
+     *                 some internal error.
+     * @throws InvalidDestinationException if an invalid topic is specified.
      */
     public TopicPublisher createPublisher(Topic topic) throws JMSException {
         checkClosed();
-        
-        if (topic instanceof CustomDestination)  {
-            CustomDestination customDestination = (CustomDestination) topic;
+
+        if (topic instanceof CustomDestination) {
+            CustomDestination customDestination = (CustomDestination)topic;
             return customDestination.createPublisher(this);
         }
         return new ActiveMQTopicPublisher(this, ActiveMQMessageTransformation.transformDestination(topic));
@@ -1448,17 +1351,16 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * subscriber by its provider.
      * <P>
      * It is erroneous for a client to delete a durable subscription while there
-     * is an active <CODE>MessageConsumer </CODE> or <CODE>TopicSubscriber</CODE>
-     * for the subscription, or while a consumed message is part of a pending
-     * transaction or has not been acknowledged in the session.
+     * is an active <CODE>MessageConsumer </CODE> or
+     * <CODE>TopicSubscriber</CODE> for the subscription, or while a consumed
+     * message is part of a pending transaction or has not been acknowledged in
+     * the session.
      * 
-     * @param name
-     *            the name used to identify this subscription
-     * @throws JMSException
-     *             if the session fails to unsubscribe to the durable
-     *             subscription due to some internal error.
-     * @throws InvalidDestinationException
-     *             if an invalid subscription name is specified.
+     * @param name the name used to identify this subscription
+     * @throws JMSException if the session fails to unsubscribe to the durable
+     *                 subscription due to some internal error.
+     * @throws InvalidDestinationException if an invalid subscription name is
+     *                 specified.
      * @since 1.1
      */
     public void unsubscribe(String name) throws JMSException {
@@ -1466,7 +1368,6 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         connection.unsubscribe(name);
     }
 
-    
     public void dispatch(MessageDispatch messageDispatch) {
         try {
             executor.execute(messageDispatch);
@@ -1475,18 +1376,16 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             connection.onAsyncException(e);
         }
     }
-    
-    
-    
+
     /**
      * Acknowledges all consumed messages of the session of this consumed
      * message.
      * <P>
      * All consumed JMS messages support the <CODE>acknowledge</CODE> method
      * for use when a client has specified that its JMS session's consumed
-     * messages are to be explicitly acknowledged. By invoking <CODE>acknowledge</CODE>
-     * on a consumed message, a client acknowledges all messages consumed by the
-     * session that the message was delivered to.
+     * messages are to be explicitly acknowledged. By invoking
+     * <CODE>acknowledge</CODE> on a consumed message, a client acknowledges
+     * all messages consumed by the session that the message was delivered to.
      * <P>
      * Calls to <CODE>acknowledge</CODE> are ignored for both transacted
      * sessions and sessions specified to use implicit acknowledgement modes.
@@ -1498,26 +1397,23 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * <P>
      * Messages that have been received but not acknowledged may be redelivered.
      * 
-     * @throws JMSException
-     *             if the JMS provider fails to acknowledge the messages due to
-     *             some internal error.
-     * @throws javax.jms.IllegalStateException
-     *             if this method is called on a closed session.
+     * @throws JMSException if the JMS provider fails to acknowledge the
+     *                 messages due to some internal error.
+     * @throws javax.jms.IllegalStateException if this method is called on a
+     *                 closed session.
      * @see javax.jms.Session#CLIENT_ACKNOWLEDGE
      */
     public void acknowledge() throws JMSException {
         for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer) iter.next();
+            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer)iter.next();
             c.acknowledge();
         }
     }
 
-   
     /**
      * Add a message consumer.
-     *
-     * @param consumer -
-     *            message consumer.
+     * 
+     * @param consumer - message consumer.
      * @throws JMSException
      */
     protected void addConsumer(ActiveMQMessageConsumer consumer) throws JMSException {
@@ -1531,8 +1427,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     /**
      * Remove the message consumer.
      * 
-     * @param consumer -
-     *            consumer to be removed.
+     * @param consumer - consumer to be removed.
      * @throws JMSException
      */
     protected void removeConsumer(ActiveMQMessageConsumer consumer) {
@@ -1547,8 +1442,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     /**
      * Adds a message producer.
      * 
-     * @param producer -
-     *            message producer to be added.
+     * @param producer - message producer to be added.
      * @throws JMSException
      */
     protected void addProducer(ActiveMQMessageProducer producer) throws JMSException {
@@ -1559,8 +1453,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     /**
      * Removes a message producer.
      * 
-     * @param producer -
-     *            message producer to be removed.
+     * @param producer - message producer to be removed.
      * @throws JMSException
      */
     protected void removeProducer(ActiveMQMessageProducer producer) {
@@ -1576,7 +1469,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     protected void start() throws JMSException {
         started.set(true);
         for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer) iter.next();
+            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer)iter.next();
             c.start();
         }
         executor.start();
@@ -1584,12 +1477,13 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
     /**
      * Stops this session.
-     * @throws JMSException 
+     * 
+     * @throws JMSException
      */
     protected void stop() throws JMSException {
-        
+
         for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer) iter.next();
+            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer)iter.next();
             c.stop();
         }
 
@@ -1609,117 +1503,108 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     /**
      * Sends the message for dispatch by the broker.
      * 
-     * @param producer -
-     *            message producer.
-     * @param destination -
-     *            message destination.
-     * @param message -
-     *            message to be sent.
-     * @param deliveryMode -
-     *            JMS messsage delivery mode.
-     * @param priority -
-     *            message priority.
-     * @param timeToLive -
-     *            message expiration.
-     * @param producerWindow 
+     * @param producer - message producer.
+     * @param destination - message destination.
+     * @param message - message to be sent.
+     * @param deliveryMode - JMS messsage delivery mode.
+     * @param priority - message priority.
+     * @param timeToLive - message expiration.
+     * @param producerWindow
      * @throws JMSException
      */
-    protected void send(ActiveMQMessageProducer producer,
-	        ActiveMQDestination destination,Message message,int deliveryMode,
-	        int priority,long timeToLive, UsageManager producerWindow) throws JMSException{
-    	
-		checkClosed();
-		if(destination.isTemporary()&&connection.isDeleted(destination)){
-			throw new JMSException("Cannot publish to a deleted Destination: "
-			        +destination);
-		}
-		synchronized(sendMutex){
-			// tell the Broker we are about to start a new transaction
-			doStartTransaction();
-			TransactionId txid=transactionContext.getTransactionId();
-            long sequenceNumber=producer.getMessageSequence();
+    protected void send(ActiveMQMessageProducer producer, ActiveMQDestination destination, Message message, int deliveryMode, int priority, long timeToLive,
+                        UsageManager producerWindow) throws JMSException {
+
+        checkClosed();
+        if (destination.isTemporary() && connection.isDeleted(destination)) {
+            throw new JMSException("Cannot publish to a deleted Destination: " + destination);
+        }
+        synchronized (sendMutex) {
+            // tell the Broker we are about to start a new transaction
+            doStartTransaction();
+            TransactionId txid = transactionContext.getTransactionId();
+            long sequenceNumber = producer.getMessageSequence();
 
             // transform to our own message format here
-			ActiveMQMessage msg=ActiveMQMessageTransformation.transformMessage(
-			        message,connection);
+            ActiveMQMessage msg = ActiveMQMessageTransformation.transformMessage(message, connection);
 
             // Set the message id.
-			if(msg==message){
-				msg.setMessageId(new MessageId(producer.getProducerInfo()
-				        .getProducerId(),sequenceNumber));
-			}else{
-				msg.setMessageId(new MessageId(producer.getProducerInfo()
-				        .getProducerId(),sequenceNumber));
-				message.setJMSMessageID(msg.getMessageId().toString());
-			}
+            if (msg == message) {
+                msg.setMessageId(new MessageId(producer.getProducerInfo().getProducerId(), sequenceNumber));
+            } else {
+                msg.setMessageId(new MessageId(producer.getProducerInfo().getProducerId(), sequenceNumber));
+                message.setJMSMessageID(msg.getMessageId().toString());
+            }
 
             msg.setJMSDestination(destination);
-			msg.setJMSDeliveryMode(deliveryMode);
-			long expiration=0L;
-			if(!producer.getDisableMessageTimestamp()){
-				long timeStamp=System.currentTimeMillis();
-				msg.setJMSTimestamp(timeStamp);
-				if(timeToLive>0){
-					expiration=timeToLive+timeStamp;
-				}
-			}
-			msg.setJMSExpiration(expiration);
-			msg.setJMSPriority(priority);
-			msg.setJMSRedelivered(false);
+            msg.setJMSDeliveryMode(deliveryMode);
+            long expiration = 0L;
+            if (!producer.getDisableMessageTimestamp()) {
+                long timeStamp = System.currentTimeMillis();
+                msg.setJMSTimestamp(timeStamp);
+                if (timeToLive > 0) {
+                    expiration = timeToLive + timeStamp;
+                }
+            }
+            msg.setJMSExpiration(expiration);
+            msg.setJMSPriority(priority);
+            msg.setJMSRedelivered(false);
 
             msg.setTransactionId(txid);
-            if(connection.isCopyMessageOnSend()){
-                msg=(ActiveMQMessage)msg.copy();
+            if (connection.isCopyMessageOnSend()) {
+                msg = (ActiveMQMessage)msg.copy();
             }
-			msg.setConnection(connection);
-			msg.onSend();
-			msg.setProducerId(msg.getMessageId().getProducerId());
-			if(this.debug){
-				log.debug("Sending message: "+msg);
-			}
-			if(!connection.isAlwaysSyncSend()&&(!msg.isPersistent()||connection.isUseAsyncSend()||txid!=null)){
+            msg.setConnection(connection);
+            msg.onSend();
+            msg.setProducerId(msg.getMessageId().getProducerId());
+            if (this.debug) {
+                log.debug("Sending message: " + msg);
+            }
+            if (!connection.isAlwaysSyncSend() && (!msg.isPersistent() || connection.isUseAsyncSend() || txid != null)) {
                 this.connection.asyncSendPacket(msg);
-    			if( producerWindow!=null ) {
-    				// Since we defer lots of the marshaling till we hit the wire, this might not 
-    				// provide and accurate size.  We may change over to doing more aggressive marshaling,
-    				// to get more accurate sizes.. this is more important once users start using producer window
-    				// flow control.			
-    				int size = msg.getSize();
-    				producerWindow.increaseUsage(size);
-    			}
-            }else{
+                if (producerWindow != null) {
+                    // Since we defer lots of the marshaling till we hit the
+                    // wire, this might not
+                    // provide and accurate size. We may change over to doing
+                    // more aggressive marshaling,
+                    // to get more accurate sizes.. this is more important once
+                    // users start using producer window
+                    // flow control.
+                    int size = msg.getSize();
+                    producerWindow.increaseUsage(size);
+                }
+            } else {
                 this.connection.syncSendPacket(msg);
             }
 
-		}
-	}
-
-	/**
-	 * Send TransactionInfo to indicate transaction has started
-	 * 
-	 * @throws JMSException
-	 *             if some internal error occurs
-	 */
-	protected void doStartTransaction() throws JMSException{
-		if(getTransacted()&&!transactionContext.isInXATransaction()){
-			transactionContext.begin();
-		}
-	}
+        }
+    }
 
     /**
-	 * Checks whether the session has unconsumed messages.
-	 * 
-	 * @return true - if there are unconsumed messages.
-	 */
+     * Send TransactionInfo to indicate transaction has started
+     * 
+     * @throws JMSException if some internal error occurs
+     */
+    protected void doStartTransaction() throws JMSException {
+        if (getTransacted() && !transactionContext.isInXATransaction()) {
+            transactionContext.begin();
+        }
+    }
+
+    /**
+     * Checks whether the session has unconsumed messages.
+     * 
+     * @return true - if there are unconsumed messages.
+     */
     public boolean hasUncomsumedMessages() {
         return executor.hasUncomsumedMessages();
     }
 
     /**
-	 * Checks whether the session uses transactions.
-	 * 
-	 * @return true - if the session uses transactions.
-	 */
+     * Checks whether the session uses transactions.
+     * 
+     * @return true - if the session uses transactions.
+     */
     public boolean isTransacted() {
         return this.acknowledgementMode == Session.SESSION_TRANSACTED;
     }
@@ -1732,23 +1617,23 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     protected boolean isClientAcknowledge() {
         return this.acknowledgementMode == Session.CLIENT_ACKNOWLEDGE;
     }
-    
+
     /**
      * Checks whether the session used auto acknowledgment.
      * 
      * @return true - if the session uses client acknowledgment.
      */
     public boolean isAutoAcknowledge() {
-        return acknowledgementMode==Session.AUTO_ACKNOWLEDGE;
+        return acknowledgementMode == Session.AUTO_ACKNOWLEDGE;
     }
-    
+
     /**
      * Checks whether the session used dup ok acknowledgment.
      * 
      * @return true - if the session uses client acknowledgment.
      */
     public boolean isDupsOkAcknowledge() {
-        return acknowledgementMode==Session.DUPS_OK_ACKNOWLEDGE;
+        return acknowledgementMode == Session.DUPS_OK_ACKNOWLEDGE;
     }
 
     /**
@@ -1763,8 +1648,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     /**
      * Sets the message delivery listener.
      * 
-     * @param deliveryListener -
-     *            message delivery listener.
+     * @param deliveryListener - message delivery listener.
      */
     public void setDeliveryListener(DeliveryListener deliveryListener) {
         this.deliveryListener = deliveryListener;
@@ -1784,8 +1668,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     /**
      * Send the asynchronus command.
      * 
-     * @param command -
-     *            command to be executed.
+     * @param command - command to be executed.
      * @throws JMSException
      */
     public void asyncSendPacket(Command command) throws JMSException {
@@ -1795,8 +1678,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     /**
      * Send the synchronus command.
      * 
-     * @param command -
-     *            command to be executed.
+     * @param command - command to be executed.
      * @return Response
      * @throws JMSException
      */
@@ -1808,19 +1690,19 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         return deliveryIdGenerator.getNextSequenceId();
     }
 
-    public void redispatch(ActiveMQDispatcher dispatcher,MessageDispatchChannel unconsumedMessages) throws JMSException {
-        
-        List <MessageDispatch>c = unconsumedMessages.removeAll();
-        for (MessageDispatch md: c) {
-            this.connection.rollbackDuplicate(dispatcher,md.getMessage());
+    public void redispatch(ActiveMQDispatcher dispatcher, MessageDispatchChannel unconsumedMessages) throws JMSException {
+
+        List<MessageDispatch> c = unconsumedMessages.removeAll();
+        for (MessageDispatch md : c) {
+            this.connection.rollbackDuplicate(dispatcher, md.getMessage());
         }
         Collections.reverse(c);
-        
+
         for (Iterator iter = c.iterator(); iter.hasNext();) {
-            MessageDispatch md = (MessageDispatch) iter.next();
+            MessageDispatch md = (MessageDispatch)iter.next();
             executor.executeFirst(md);
         }
-                
+
     }
 
     public boolean isRunning() {
@@ -1834,19 +1716,19 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     public void setAsyncDispatch(boolean asyncDispatch) {
         this.asyncDispatch = asyncDispatch;
     }
-    
+
     /**
      * @return Returns the sessionAsyncDispatch.
      */
-    public boolean isSessionAsyncDispatch(){
+    public boolean isSessionAsyncDispatch() {
         return sessionAsyncDispatch;
     }
 
     /**
      * @param sessionAsyncDispatch The sessionAsyncDispatch to set.
      */
-    public void setSessionAsyncDispatch(boolean sessionAsyncDispatch){
-        this.sessionAsyncDispatch=sessionAsyncDispatch;
+    public void setSessionAsyncDispatch(boolean sessionAsyncDispatch) {
+        this.sessionAsyncDispatch = sessionAsyncDispatch;
     }
 
     public MessageTransformer getTransformer() {
@@ -1858,8 +1740,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     /**
-     * Sets the transformer used to transform messages before they are sent on to the JMS bus
-     * or when they are received from the bus but before they are delivered to the JMS client
+     * Sets the transformer used to transform messages before they are sent on
+     * to the JMS bus or when they are received from the bus but before they are
+     * delivered to the JMS client
      */
     public void setTransformer(MessageTransformer transformer) {
         this.transformer = transformer;
@@ -1870,19 +1753,19 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     /**
-     * Sets the policy used to describe how out-of-band BLOBs (Binary Large OBjects)
-     * are transferred from producers to brokers to consumers
+     * Sets the policy used to describe how out-of-band BLOBs (Binary Large
+     * OBjects) are transferred from producers to brokers to consumers
      */
     public void setBlobTransferPolicy(BlobTransferPolicy blobTransferPolicy) {
         this.blobTransferPolicy = blobTransferPolicy;
     }
 
     public List getUnconsumedMessages() {
-		return executor.getUnconsumedMessages();
-	}
+        return executor.getUnconsumedMessages();
+    }
 
     public String toString() {
-        return "ActiveMQSession {id="+info.getSessionId()+",started="+started.get()+"}";
+        return "ActiveMQSession {id=" + info.getSessionId() + ",started=" + started.get() + "}";
     }
 
     public void checkMessageListener() throws JMSException {
@@ -1890,38 +1773,38 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             throw new IllegalStateException("Cannot synchronously receive a message when a MessageListener is set");
         }
         for (Iterator i = consumers.iterator(); i.hasNext();) {
-            ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) i.next();
-            if( consumer.getMessageListener()!=null ) {
+            ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer)i.next();
+            if (consumer.getMessageListener() != null) {
                 throw new IllegalStateException("Cannot synchronously receive a message when a MessageListener is set");
             }
         }
     }
-    
-    protected void setOptimizeAcknowledge(boolean value){
+
+    protected void setOptimizeAcknowledge(boolean value) {
         for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer) iter.next();
+            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer)iter.next();
             c.setOptimizeAcknowledge(value);
         }
     }
-    
-    protected void setPrefetchSize(ConsumerId id,int prefetch){
-        for(Iterator iter=consumers.iterator();iter.hasNext();){
-            ActiveMQMessageConsumer c=(ActiveMQMessageConsumer) iter.next();
-            if(c.getConsumerId().equals(id)){
+
+    protected void setPrefetchSize(ConsumerId id, int prefetch) {
+        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
+            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer)iter.next();
+            if (c.getConsumerId().equals(id)) {
                 c.setPrefetchSize(prefetch);
                 break;
             }
         }
     }
-    
-    protected void close(ConsumerId id){
-        for(Iterator iter=consumers.iterator();iter.hasNext();){
-            ActiveMQMessageConsumer c=(ActiveMQMessageConsumer) iter.next();
-            if(c.getConsumerId().equals(id)){
-                try{
+
+    protected void close(ConsumerId id) {
+        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
+            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer)iter.next();
+            if (c.getConsumerId().equals(id)) {
+                try {
                     c.close();
-                }catch(JMSException e){
-                    log.warn("Exception closing consumer",e);
+                } catch (JMSException e) {
+                    log.warn("Exception closing consumer", e);
                 }
                 log.warn("Closed consumer on Command");
                 break;
@@ -1929,14 +1812,14 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         }
     }
 
-	public boolean isInUse(ActiveMQTempDestination destination) {
-        for(Iterator iter=consumers.iterator();iter.hasNext();){
-            ActiveMQMessageConsumer c=(ActiveMQMessageConsumer) iter.next();
-            if( c.isInUse(destination) ) {
-            	return true;
+    public boolean isInUse(ActiveMQTempDestination destination) {
+        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
+            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer)iter.next();
+            if (c.isInUse(destination)) {
+                return true;
             }
         }
         return false;
-	}    
+    }
 
 }

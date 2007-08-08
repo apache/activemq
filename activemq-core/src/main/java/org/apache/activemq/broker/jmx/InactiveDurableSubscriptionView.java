@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,72 +29,70 @@ import org.apache.activemq.command.SubscriptionInfo;
  * 
  * @version $Revision: 1.5 $
  */
-public class InactiveDurableSubscriptionView extends SubscriptionView implements  DurableSubscriptionViewMBean {
+public class InactiveDurableSubscriptionView extends SubscriptionView implements DurableSubscriptionViewMBean {
     protected ManagedRegionBroker broker;
     protected SubscriptionInfo subscriptionInfo;
-    
-    
+
     /**
      * Constructor
+     * 
      * @param broker
      * @param clientId
      * @param sub
      */
-    public InactiveDurableSubscriptionView(ManagedRegionBroker broker,String clientId,SubscriptionInfo sub){
-        super(clientId,null);
+    public InactiveDurableSubscriptionView(ManagedRegionBroker broker, String clientId, SubscriptionInfo sub) {
+        super(clientId, null);
         this.broker = broker;
         this.subscriptionInfo = sub;
     }
-    
-    
 
-    
     /**
      * @return the id of the Subscription
      */
-    public long getSubcriptionId(){
+    public long getSubcriptionId() {
         return -1;
     }
 
     /**
      * @return the destination name
      */
-    public String getDestinationName(){
+    public String getDestinationName() {
         return subscriptionInfo.getDestination().getPhysicalName();
-       
+
     }
 
     /**
      * @return true if the destination is a Queue
      */
-    public boolean isDestinationQueue(){
+    public boolean isDestinationQueue() {
         return false;
     }
 
     /**
      * @return true of the destination is a Topic
      */
-    public boolean isDestinationTopic(){
+    public boolean isDestinationTopic() {
         return true;
     }
 
     /**
      * @return true if the destination is temporary
      */
-    public boolean isDestinationTemporary(){
+    public boolean isDestinationTemporary() {
         return false;
     }
+
     /**
      * @return name of the durable consumer
      */
-    public String getSubscriptionName(){
+    public String getSubscriptionName() {
         return subscriptionInfo.getSubscriptionName();
     }
-    
+
     /**
      * @return true if the subscriber is active
      */
-    public boolean isActive(){
+    public boolean isActive() {
         return false;
     }
 
@@ -105,7 +102,7 @@ public class InactiveDurableSubscriptionView extends SubscriptionView implements
      * @return messages
      * @throws OpenDataException
      */
-    public CompositeData[] browse() throws OpenDataException{
+    public CompositeData[] browse() throws OpenDataException {
         return broker.browse(this);
     }
 
@@ -115,12 +112,13 @@ public class InactiveDurableSubscriptionView extends SubscriptionView implements
      * @return messages
      * @throws OpenDataException
      */
-    public TabularData browseAsTable() throws OpenDataException{
+    public TabularData browseAsTable() throws OpenDataException {
         return broker.browseAsTable(this);
     }
-    
+
     /**
-     * Destroys the durable subscription so that messages will no longer be stored for this subscription
+     * Destroys the durable subscription so that messages will no longer be
+     * stored for this subscription
      */
     public void destroy() throws Exception {
         RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
@@ -131,8 +129,8 @@ public class InactiveDurableSubscriptionView extends SubscriptionView implements
         context.setClientId(clientId);
         broker.removeSubscription(context, info);
     }
-    
-    public String toString(){
-        return "InactiveDurableSubscriptionView: " + getClientId()  + ":" +  getSubscriptionName();
+
+    public String toString() {
+        return "InactiveDurableSubscriptionView: " + getClientId() + ":" + getSubscriptionName();
     }
 }

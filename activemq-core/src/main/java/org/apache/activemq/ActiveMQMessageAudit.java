@@ -29,29 +29,31 @@ import org.apache.activemq.util.LRUCache;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-public class ActiveMQMessageAudit{
+public class ActiveMQMessageAudit {
 
-    private static final int DEFAULT_WINDOW_SIZE=1024;
-    private static final int MAXIMUM_PRODUCER_COUNT=128;
+    private static final int DEFAULT_WINDOW_SIZE = 1024;
+    private static final int MAXIMUM_PRODUCER_COUNT = 128;
     private int windowSize;
-    private LinkedHashMap<Object,BitArrayBin> map;
+    private LinkedHashMap<Object, BitArrayBin> map;
 
     /**
-     * Default Constructor windowSize = 1024, maximumNumberOfProducersToTrack = 128
+     * Default Constructor windowSize = 1024, maximumNumberOfProducersToTrack =
+     * 128
      */
-    public ActiveMQMessageAudit(){
-        this(DEFAULT_WINDOW_SIZE,MAXIMUM_PRODUCER_COUNT);
+    public ActiveMQMessageAudit() {
+        this(DEFAULT_WINDOW_SIZE, MAXIMUM_PRODUCER_COUNT);
     }
 
     /**
      * Construct a MessageAudit
      * 
      * @param windowSize range of ids to track
-     * @param maximumNumberOfProducersToTrack number of producers expected in the system
+     * @param maximumNumberOfProducersToTrack number of producers expected in
+     *                the system
      */
-    public ActiveMQMessageAudit(int windowSize,final int maximumNumberOfProducersToTrack){
-        this.windowSize=windowSize;
-        map=new LRUCache<Object,BitArrayBin>(maximumNumberOfProducersToTrack,maximumNumberOfProducersToTrack,0.75f,true);
+    public ActiveMQMessageAudit(int windowSize, final int maximumNumberOfProducersToTrack) {
+        this.windowSize = windowSize;
+        map = new LRUCache<Object, BitArrayBin>(maximumNumberOfProducersToTrack, maximumNumberOfProducersToTrack, 0.75f, true);
     }
 
     /**
@@ -61,28 +63,29 @@ public class ActiveMQMessageAudit{
      * @return true if the message is a duplicate
      * @throws JMSException
      */
-    public boolean isDuplicateMessage(Message message) throws JMSException{
+    public boolean isDuplicateMessage(Message message) throws JMSException {
         return isDuplicate(message.getJMSMessageID());
     }
 
     /**
-     * checks whether this messageId has been seen before and adds this messageId to the list
+     * checks whether this messageId has been seen before and adds this
+     * messageId to the list
      * 
      * @param id
      * @return true if the message is a duplicate
      */
-    public synchronized boolean isDuplicate(String id){
-        boolean answer=false;
-        String seed=IdGenerator.getSeedFromId(id);
-        if(seed!=null){
-            BitArrayBin bab=map.get(seed);
-            if(bab==null){
-                bab=new BitArrayBin(windowSize);
-                map.put(seed,bab);
+    public synchronized boolean isDuplicate(String id) {
+        boolean answer = false;
+        String seed = IdGenerator.getSeedFromId(id);
+        if (seed != null) {
+            BitArrayBin bab = map.get(seed);
+            if (bab == null) {
+                bab = new BitArrayBin(windowSize);
+                map.put(seed, bab);
             }
-            long index=IdGenerator.getSequenceFromId(id);
-            if(index>=0){
-                answer=bab.setBit(index,true);
+            long index = IdGenerator.getSequenceFromId(id);
+            if (index >= 0) {
+                answer = bab.setBit(index, true);
             }
         }
         return answer;
@@ -94,35 +97,36 @@ public class ActiveMQMessageAudit{
      * @param message
      * @return true if the message is a duplicate
      */
-    public synchronized boolean isDuplicateMessageReference(final MessageReference message){
-        boolean answer=false;
-        MessageId id=message.getMessageId();
-        if(id!=null){
-            ProducerId pid=id.getProducerId();
-            if(pid!=null){
-                BitArrayBin bab=map.get(pid);
-                if(bab==null){
-                    bab=new BitArrayBin(windowSize);
-                    map.put(pid,bab);
+    public synchronized boolean isDuplicateMessageReference(final MessageReference message) {
+        boolean answer = false;
+        MessageId id = message.getMessageId();
+        if (id != null) {
+            ProducerId pid = id.getProducerId();
+            if (pid != null) {
+                BitArrayBin bab = map.get(pid);
+                if (bab == null) {
+                    bab = new BitArrayBin(windowSize);
+                    map.put(pid, bab);
                 }
-                answer=bab.setBit(id.getProducerSequenceId(),true);
+                answer = bab.setBit(id.getProducerSequenceId(), true);
             }
         }
         return answer;
     }
-    
+
     /**
      * uun mark this messager as being received
+     * 
      * @param message
      */
-    public synchronized void rollbackMessageReference(final MessageReference message){
-        MessageId id=message.getMessageId();
-        if(id!=null){
-            ProducerId pid=id.getProducerId();
-            if(pid!=null){
-                BitArrayBin bab=map.get(pid);
-                if(bab!=null){
-                    bab.setBit(id.getProducerSequenceId(),false);
+    public synchronized void rollbackMessageReference(final MessageReference message) {
+        MessageId id = message.getMessageId();
+        if (id != null) {
+            ProducerId pid = id.getProducerId();
+            if (pid != null) {
+                BitArrayBin bab = map.get(pid);
+                if (bab != null) {
+                    bab.setBit(id.getProducerSequenceId(), false);
                 }
             }
         }

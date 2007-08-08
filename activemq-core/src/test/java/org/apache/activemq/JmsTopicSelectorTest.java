@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,9 +32,8 @@ import javax.jms.Topic;
  * @version $Revision: 1.2 $
  */
 public class JmsTopicSelectorTest extends TestSupport {
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-            .getLog(JmsTopicSelectorTest.class);
-    
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(JmsTopicSelectorTest.class);
+
     protected Connection connection;
     protected Session session;
     protected MessageConsumer consumer;
@@ -43,7 +41,7 @@ public class JmsTopicSelectorTest extends TestSupport {
     protected Destination consumerDestination;
     protected Destination producerDestination;
     protected boolean topic = true;
-    protected boolean durable = false;
+    protected boolean durable;
     protected int deliveryMode = DeliveryMode.PERSISTENT;
 
     public JmsTopicSelectorTest() {
@@ -63,11 +61,11 @@ public class JmsTopicSelectorTest extends TestSupport {
             connection.setClientID(getClass().getName());
         }
 
-        log.info("Created connection: " + connection);
+        LOG.info("Created connection: " + connection);
 
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-        log.info("Created session: " + session);
+        LOG.info("Created session: " + session);
 
         if (topic) {
             consumerDestination = session.createTopic(getConsumerSubject());
@@ -77,13 +75,12 @@ public class JmsTopicSelectorTest extends TestSupport {
             producerDestination = session.createQueue(getProducerSubject());
         }
 
-        log.info("Created  consumer destination: " + consumerDestination + " of type: " + consumerDestination.getClass());
-        log.info("Created  producer destination: " + producerDestination + " of type: " + producerDestination.getClass());
+        LOG.info("Created  consumer destination: " + consumerDestination + " of type: " + consumerDestination.getClass());
+        LOG.info("Created  producer destination: " + producerDestination + " of type: " + producerDestination.getClass());
         producer = session.createProducer(producerDestination);
         producer.setDeliveryMode(deliveryMode);
 
-        log.info("Created producer: " + producer + " delivery mode = " +
-                (deliveryMode == DeliveryMode.PERSISTENT ? "PERSISTENT" : "NON_PERSISTENT"));
+        LOG.info("Created producer: " + producer + " delivery mode = " + (deliveryMode == DeliveryMode.PERSISTENT ? "PERSISTENT" : "NON_PERSISTENT"));
         connection.start();
     }
 
@@ -94,8 +91,8 @@ public class JmsTopicSelectorTest extends TestSupport {
 
     protected MessageConsumer createConsumer(String selector) throws JMSException {
         if (durable) {
-            log.info("Creating durable consumer");
-            return session.createDurableSubscriber((Topic) consumerDestination, getName(), selector, false);
+            LOG.info("Creating durable consumer");
+            return session.createDurableSubscriber((Topic)consumerDestination, getName(), selector, false);
         }
         return session.createConsumer(consumerDestination, selector);
     }
@@ -161,7 +158,7 @@ public class JmsTopicSelectorTest extends TestSupport {
             if (message == null) {
                 break;
             }
-            String text = ((TextMessage) message).getText();
+            String text = ((TextMessage)message).getText();
             if (!text.equals("1") && !text.equals("3")) {
                 fail("unexpected message: " + text);
             }
@@ -183,7 +180,7 @@ public class JmsTopicSelectorTest extends TestSupport {
             if (message == null) {
                 break;
             }
-            String text = ((TextMessage) message).getText();
+            String text = ((TextMessage)message).getText();
             if (!text.equals("1") && !text.equals("2") && !text.equals("3")) {
                 fail("unexpected message: " + text);
             }

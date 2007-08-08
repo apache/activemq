@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -187,7 +186,7 @@ public class EmptyBroker implements Broker {
 
     public void preProcessDispatch(MessageDispatch messageDispatch) {
     }
-    
+
     public void postProcessDispatch(MessageDispatch messageDispatch) {
     }
 
@@ -195,7 +194,6 @@ public class EmptyBroker implements Broker {
 
     }
 
-    
     public boolean isStopped() {
         return false;
     }
@@ -221,38 +219,36 @@ public class EmptyBroker implements Broker {
     public void setAdminConnectionContext(ConnectionContext adminConnectionContext) {
     }
 
-    
     public Response messagePull(ConnectionContext context, MessagePull pull) {
         return null;
     }
-    
-    
+
     public Store getTempDataStore() {
         return null;
     }
-    
-    public URI getVmConnectorURI(){
+
+    public URI getVmConnectorURI() {
         return null;
     }
-    
-    public void brokerServiceStarted(){
+
+    public void brokerServiceStarted() {
     }
-    
-    public BrokerService getBrokerService(){
+
+    public BrokerService getBrokerService() {
         return null;
     }
 
     public boolean isExpired(MessageReference messageReference) {
         return false;
     }
-    
-    public void messageExpired(ConnectionContext context,MessageReference message){        
+
+    public void messageExpired(ConnectionContext context, MessageReference message) {
     }
 
-    public void sendToDeadLetterQueue(ConnectionContext context,MessageReference messageReference){        
+    public void sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference) {
     }
-    
-    public Broker getRoot(){
+
+    public Broker getRoot() {
         return null;
-     }
+    }
 }

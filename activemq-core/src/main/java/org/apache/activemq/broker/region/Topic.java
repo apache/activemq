@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -65,7 +64,8 @@ public class Topic implements Destination {
     protected final ActiveMQDestination destination;
     protected final CopyOnWriteArrayList consumers = new CopyOnWriteArrayList();
     protected final Valve dispatchValve = new Valve(true);
-    protected final TopicMessageStore store;//this could be NULL! (If an advsiory)
+    protected final TopicMessageStore store;// this could be NULL! (If an
+    // advsiory)
     protected final UsageManager usageManager;
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
 
@@ -75,22 +75,23 @@ public class Topic implements Destination {
     private DeadLetterStrategy deadLetterStrategy = new SharedDeadLetterStrategy();
     private final ConcurrentHashMap durableSubcribers = new ConcurrentHashMap();
     final Broker broker;
-    
-    public Topic(Broker broker,ActiveMQDestination destination, TopicMessageStore store, UsageManager memoryManager, DestinationStatistics parentStats,
-            TaskRunnerFactory taskFactory) {
-        this.broker=broker;
+
+    public Topic(Broker broker, ActiveMQDestination destination, TopicMessageStore store, UsageManager memoryManager, DestinationStatistics parentStats,
+                 TaskRunnerFactory taskFactory) {
+        this.broker = broker;
         this.destination = destination;
-        this.store = store; //this could be NULL! (If an advsiory)
-        this.usageManager = new UsageManager(memoryManager,destination.toString());
+        this.store = store; // this could be NULL! (If an advsiory)
+        this.usageManager = new UsageManager(memoryManager, destination.toString());
         this.usageManager.setUsagePortion(1.0f);
-        
-        // Let the store know what usage manager we are using so that he can flush messages to disk
+
+        // Let the store know what usage manager we are using so that he can
+        // flush messages to disk
         // when usage gets high.
-        if( store!=null ) {
+        if (store != null) {
             store.setUsageManager(usageManager);
         }
-        
-        //let's copy the enabled property from the parent DestinationStatistics
+
+        // let's copy the enabled property from the parent DestinationStatistics
         this.destinationStatistics.setEnabled(parentStats.isEnabled());
         this.destinationStatistics.setParent(parentStats);
     }
@@ -100,74 +101,76 @@ public class Topic implements Destination {
     }
 
     public void addSubscription(ConnectionContext context, final Subscription sub) throws Exception {
-        
+
         sub.add(context, this);
         destinationStatistics.getConsumers().increment();
 
-        if ( !sub.getConsumerInfo().isDurable() ) {
+        if (!sub.getConsumerInfo().isDurable()) {
 
             // Do a retroactive recovery if needed.
             if (sub.getConsumerInfo().isRetroactive()) {
-                
-                // synchronize with dispatch method so that no new messages are sent
-                // while we are recovering a subscription to avoid out of order messages.
+
+                // synchronize with dispatch method so that no new messages are
+                // sent
+                // while we are recovering a subscription to avoid out of order
+                // messages.
                 dispatchValve.turnOff();
                 try {
-                    
-                    synchronized(consumers) {
+
+                    synchronized (consumers) {
                         consumers.add(sub);
                     }
                     subscriptionRecoveryPolicy.recover(context, this, sub);
-                    
+
                 } finally {
                     dispatchValve.turnOn();
                 }
-                
+
             } else {
-                synchronized(consumers) {
+                synchronized (consumers) {
                     consumers.add(sub);
                 }
-            }            
+            }
         } else {
-            DurableTopicSubscription dsub = (DurableTopicSubscription) sub;
+            DurableTopicSubscription dsub = (DurableTopicSubscription)sub;
             durableSubcribers.put(dsub.getSubscriptionKey(), dsub);
         }
     }
-    
+
     public void removeSubscription(ConnectionContext context, Subscription sub) throws Exception {
-        if ( !sub.getConsumerInfo().isDurable() ) {
+        if (!sub.getConsumerInfo().isDurable()) {
             destinationStatistics.getConsumers().decrement();
-            synchronized(consumers) {
+            synchronized (consumers) {
                 consumers.remove(sub);
             }
         }
         sub.remove(context, this);
     }
-       
+
     public void deleteSubscription(ConnectionContext context, SubscriptionKey key) throws IOException {
         if (store != null) {
             store.deleteSubscription(key.clientId, key.subscriptionName);
             Object removed = durableSubcribers.remove(key);
-            if(removed != null) {
+            if (removed != null) {
                 destinationStatistics.getConsumers().decrement();
             }
         }
     }
-    
+
     public void activate(ConnectionContext context, final DurableTopicSubscription subscription) throws Exception {
         // synchronize with dispatch method so that no new messages are sent
         // while
         // we are recovering a subscription to avoid out of order messages.
         dispatchValve.turnOff();
         try {
-        
-            synchronized(consumers) {           
+
+            synchronized (consumers) {
                 consumers.add(subscription);
             }
-            
-            if (store == null )
+
+            if (store == null)
                 return;
-            
+
             // Recover the durable subscription.
             String clientId = subscription.getClientId();
             String subscriptionName = subscription.getSubscriptionName();
@@ -184,176 +187,184 @@ public class Topic implements Destination {
             }
             // Do we need to create the subscription?
             if (info == null) {
-            	info = new SubscriptionInfo();
-            	info.setClientId(clientId);
-            	info.setSelector(selector);
-            	info.setSubscriptionName(subscriptionName);
-            	info.setDestination(getActiveMQDestination()); // This destination is an actual destination id.
-            	info.setSubscribedDestination(subscription.getConsumerInfo().getDestination()); // This destination might be a pattern
+                info = new SubscriptionInfo();
+                info.setClientId(clientId);
+                info.setSelector(selector);
+                info.setSubscriptionName(subscriptionName);
+                info.setDestination(getActiveMQDestination()); // This
+                // destination
+                // is an actual
+                // destination
+                // id.
+                info.setSubscribedDestination(subscription.getConsumerInfo().getDestination()); // This
+                // destination
+                // might
+                // be a
+                // pattern
                 store.addSubsciption(info, subscription.getConsumerInfo().isRetroactive());
             }
-    
+
             final MessageEvaluationContext msgContext = new MessageEvaluationContext();
             msgContext.setDestination(destination);
-            if(subscription.isRecoveryRequired()){
-                store.recoverSubscription(clientId,subscriptionName,new MessageRecoveryListener(){
-                    public boolean recoverMessage(Message message) throws Exception{
+            if (subscription.isRecoveryRequired()) {
+                store.recoverSubscription(clientId, subscriptionName, new MessageRecoveryListener() {
+                    public boolean recoverMessage(Message message) throws Exception {
                         message.setRegionDestination(Topic.this);
-                        try{
+                        try {
                             msgContext.setMessageReference(message);
-                            if(subscription.matches(message,msgContext)){
+                            if (subscription.matches(message, msgContext)) {
                                 subscription.add(message);
                             }
-                        }catch(InterruptedException e){
+                        } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
-                        }catch(IOException e){
+                        } catch (IOException e) {
                             // TODO: Need to handle this better.
                             e.printStackTrace();
                         }
                         return true;
                     }
 
-                    public boolean recoverMessageReference(MessageId messageReference) throws Exception{
+                    public boolean recoverMessageReference(MessageId messageReference) throws Exception {
                         throw new RuntimeException("Should not be called.");
                     }
 
-                    public void finished(){}
+                    public void finished() {
+                    }
 
-                    public boolean hasSpace(){
+                    public boolean hasSpace() {
                         return true;
                     }
                 });
             }
-            
-            
-        
-        }
-        finally {
+
+        } finally {
             dispatchValve.turnOn();
         }
     }
 
-    public void deactivate(ConnectionContext context, DurableTopicSubscription sub) throws Exception {        
-        synchronized(consumers) {           
+    public void deactivate(ConnectionContext context, DurableTopicSubscription sub) throws Exception {
+        synchronized (consumers) {
             consumers.remove(sub);
         }
         sub.remove(context, this);
-    } 
-    
-    
-    protected void recoverRetroactiveMessages(ConnectionContext context,Subscription subscription) throws Exception{
-        if(subscription.getConsumerInfo().isRetroactive()){
-            subscriptionRecoveryPolicy.recover(context,this,subscription);
+    }
+
+    protected void recoverRetroactiveMessages(ConnectionContext context, Subscription subscription) throws Exception {
+        if (subscription.getConsumerInfo().isRetroactive()) {
+            subscriptionRecoveryPolicy.recover(context, this, subscription);
         }
     }
-    
 
     private final LinkedList<Runnable> messagesWaitingForSpace = new LinkedList<Runnable>();
     private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
-    	public void run() {
-    		
-    		// We may need to do this in async thread since this is run for within a synchronization
-    		// that the UsageManager is holding.
-    		
-    		synchronized( messagesWaitingForSpace ) {
-	    		while( !usageManager.isFull() && !messagesWaitingForSpace.isEmpty()) {
-	    			Runnable op = messagesWaitingForSpace.removeFirst();
-	    			op.run();
-	    		}
-    		}
-    		
-    	};
+        public void run() {
+
+            // We may need to do this in async thread since this is run for
+            // within a synchronization
+            // that the UsageManager is holding.
+
+            synchronized (messagesWaitingForSpace) {
+                while (!usageManager.isFull() && !messagesWaitingForSpace.isEmpty()) {
+                    Runnable op = messagesWaitingForSpace.removeFirst();
+                    op.run();
+                }
+            }
+
+        };
     };
 
     public void send(final ProducerBrokerExchange producerExchange, final Message message) throws Exception {
-    	final ConnectionContext context = producerExchange.getConnectionContext();
-    	
-    	// There is delay between the client sending it and it arriving at the
-    	// destination.. it may have expired.
-    	if( broker.isExpired(message) ) {
-            broker.messageExpired(context,message);
+        final ConnectionContext context = producerExchange.getConnectionContext();
+
+        // There is delay between the client sending it and it arriving at the
+        // destination.. it may have expired.
+        if (broker.isExpired(message)) {
+            broker.messageExpired(context, message);
             destinationStatistics.getMessages().decrement();
-            if( ( !message.isResponseRequired() || producerExchange.getProducerState().getInfo().getWindowSize() > 0 ) && !context.isInRecoveryMode() ) {
-        		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
-				context.getConnection().dispatchAsync(ack);	    	            	        		
+            if ((!message.isResponseRequired() || producerExchange.getProducerState().getInfo().getWindowSize() > 0) && !context.isInRecoveryMode()) {
+                ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
+                context.getConnection().dispatchAsync(ack);
             }
-    		return;
-    	}
-    	
-        if ( context.isProducerFlowControl() && usageManager.isFull() ) {
-            if(usageManager.isSendFailIfNoSpace()){
+            return;
+        }
+
+        if (context.isProducerFlowControl() && usageManager.isFull()) {
+            if (usageManager.isSendFailIfNoSpace()) {
                 throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
-            } 
-            	
-        	// We can avoid blocking due to low usage if the producer is sending a sync message or
-        	// if it is using a producer window
-        	if( producerExchange.getProducerState().getInfo().getWindowSize() > 0 || message.isResponseRequired() ) {
-        		synchronized( messagesWaitingForSpace ) {
-            		messagesWaitingForSpace.add(new Runnable() {
-        				public void run() {
-        					
-        					// While waiting for space to free up... the message may have expired.
-        			        if(broker.isExpired(message)){
-        			            broker.messageExpired(context,message);
+            }
+
+            // We can avoid blocking due to low usage if the producer is sending
+            // a sync message or
+            // if it is using a producer window
+            if (producerExchange.getProducerState().getInfo().getWindowSize() > 0 || message.isResponseRequired()) {
+                synchronized (messagesWaitingForSpace) {
+                    messagesWaitingForSpace.add(new Runnable() {
+                        public void run() {
+
+                            // While waiting for space to free up... the message
+                            // may have expired.
+                            if (broker.isExpired(message)) {
+                                broker.messageExpired(context, message);
                                 destinationStatistics.getMessages().decrement();
-        			            
-        			            if( !message.isResponseRequired() && !context.isInRecoveryMode() ) {
-        			        		ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
-        							context.getConnection().dispatchAsync(ack);	    	            	        		
-        			            }
-        			            return;
-        			        }
-        					
-        					
-	            	        try {							
-	            	        	doMessageSend(producerExchange, message);
-							} catch (Exception e) {
-	            	        	if( message.isResponseRequired() && !context.isInRecoveryMode() ) {
-    				                ExceptionResponse response = new ExceptionResponse(e);
-    				                response.setCorrelationId(message.getCommandId());
-    								context.getConnection().dispatchAsync(response);	    								
-	            	        	}
-							}
-        				}
-        			});
-            		
-            		// If the user manager is not full, then the task will not get called..
-	            	if( !usageManager.notifyCallbackWhenNotFull(sendMessagesWaitingForSpaceTask) ) {
-	            		// so call it directly here.
-	            		sendMessagesWaitingForSpaceTask.run();
-	            	}			            	
-            		context.setDontSendReponse(true);
-            		return;
-        		}
-        		
-        	} else {
-        		
-        		// Producer flow control cannot be used, so we have do the flow control at the broker 
-        		// by blocking this thread until there is space available.	            		
-                while( !usageManager.waitForSpace(1000) ) {
-                    if( context.getStopping().get() )
+
+                                if (!message.isResponseRequired() && !context.isInRecoveryMode()) {
+                                    ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
+                                    context.getConnection().dispatchAsync(ack);
+                                }
+                                return;
+                            }
+
+                            try {
+                                doMessageSend(producerExchange, message);
+                            } catch (Exception e) {
+                                if (message.isResponseRequired() && !context.isInRecoveryMode()) {
+                                    ExceptionResponse response = new ExceptionResponse(e);
+                                    response.setCorrelationId(message.getCommandId());
+                                    context.getConnection().dispatchAsync(response);
+                                }
+                            }
+                        }
+                    });
+
+                    // If the user manager is not full, then the task will not
+                    // get called..
+                    if (!usageManager.notifyCallbackWhenNotFull(sendMessagesWaitingForSpaceTask)) {
+                        // so call it directly here.
+                        sendMessagesWaitingForSpaceTask.run();
+                    }
+                    context.setDontSendReponse(true);
+                    return;
+                }
+
+            } else {
+
+                // Producer flow control cannot be used, so we have do the flow
+                // control at the broker
+                // by blocking this thread until there is space available.
+                while (!usageManager.waitForSpace(1000)) {
+                    if (context.getStopping().get())
                         throw new IOException("Connection closed, send aborted.");
                 }
-                
+
                 // The usage manager could have delayed us by the time
                 // we unblock the message could have expired..
-                if(message.isExpired()){
+                if (message.isExpired()) {
                     if (log.isDebugEnabled()) {
                         log.debug("Expired message: " + message);
                     }
                     return;
                 }
-        	}
+            }
         }
 
         doMessageSend(producerExchange, message);
     }
 
-	void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
-		final ConnectionContext context = producerExchange.getConnectionContext();
-		message.setRegionDestination(this);
+    void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
+        final ConnectionContext context = producerExchange.getConnectionContext();
+        message.setRegionDestination(this);
 
-        if (store != null && message.isPersistent() && !canOptimizeOutPersistence() )
+        if (store != null && message.isPersistent() && !canOptimizeOutPersistence())
             store.addMessage(context, message);
 
         message.incrementReferenceCount();
@@ -362,31 +373,30 @@ public class Topic implements Destination {
             if (context.isInTransaction()) {
                 context.getTransaction().addSynchronization(new Synchronization() {
                     public void afterCommit() throws Exception {
-                    	// It could take while before we receive the commit
-                    	// operration.. by that time the message could have expired..
-                    	if(broker.isExpired(message) ) {
-                    		broker.messageExpired(context,message);
+                        // It could take while before we receive the commit
+                        // operration.. by that time the message could have
+                        // expired..
+                        if (broker.isExpired(message)) {
+                            broker.messageExpired(context, message);
                             message.decrementReferenceCount();
                             destinationStatistics.getMessages().decrement();
-                    		return;
-                    	}
+                            return;
+                        }
                         dispatch(context, message);
                     }
                 });
 
-            }
-            else {
+            } else {
                 dispatch(context, message);
             }
 
-        }
-        finally {
+        } finally {
             message.decrementReferenceCount();
         }
-	}
+    }
 
     private boolean canOptimizeOutPersistence() {
-        return durableSubcribers.size()==0;
+        return durableSubcribers.size() == 0;
     }
 
     public String toString() {
@@ -395,7 +405,7 @@ public class Topic implements Destination {
 
     public void acknowledge(ConnectionContext context, Subscription sub, final MessageAck ack, final MessageReference node) throws IOException {
         if (store != null && node.isPersistent()) {
-            DurableTopicSubscription dsub = (DurableTopicSubscription) sub;
+            DurableTopicSubscription dsub = (DurableTopicSubscription)sub;
             store.acknowledge(context, dsub.getClientId(), dsub.getSubscriptionName(), node.getMessageId());
         }
     }
@@ -419,7 +429,7 @@ public class Topic implements Destination {
         if (usageManager != null) {
             usageManager.start();
         }
-        
+
     }
 
     public void stop() throws Exception {
@@ -428,38 +438,39 @@ public class Topic implements Destination {
             usageManager.stop();
         }
     }
-    
-    public Message[] browse(){
-        final Set result=new CopyOnWriteArraySet();
-        try{
-            if(store!=null){
-                store.recover(new MessageRecoveryListener(){
-                    public boolean recoverMessage(Message message) throws Exception{
+
+    public Message[] browse() {
+        final Set result = new CopyOnWriteArraySet();
+        try {
+            if (store != null) {
+                store.recover(new MessageRecoveryListener() {
+                    public boolean recoverMessage(Message message) throws Exception {
                         result.add(message);
                         return true;
                     }
 
-                    public boolean  recoverMessageReference(MessageId messageReference) throws Exception{
+                    public boolean recoverMessageReference(MessageId messageReference) throws Exception {
                         return true;
                     }
 
-                    public void finished(){}
+                    public void finished() {
+                    }
 
-                    public boolean hasSpace(){
-                       return true;
+                    public boolean hasSpace() {
+                        return true;
                     }
                 });
-                Message[] msgs=subscriptionRecoveryPolicy.browse(getActiveMQDestination());
-                if(msgs!=null){
-                    for(int i=0;i<msgs.length;i++){
+                Message[] msgs = subscriptionRecoveryPolicy.browse(getActiveMQDestination());
+                if (msgs != null) {
+                    for (int i = 0; i < msgs.length; i++) {
                         result.add(msgs[i]);
                     }
                 }
             }
-        }catch(Throwable e){
-            log.warn("Failed to browse Topic: "+getActiveMQDestination().getPhysicalName(),e);
+        } catch (Throwable e) {
+            log.warn("Failed to browse Topic: " + getActiveMQDestination().getPhysicalName(), e);
         }
-        return (Message[]) result.toArray(new Message[result.size()]);
+        return (Message[])result.toArray(new Message[result.size()]);
     }
 
     // Properties
@@ -480,7 +491,7 @@ public class Topic implements Destination {
     public String getDestination() {
         return destination.getPhysicalName();
     }
-    
+
     public DispatchPolicy getDispatchPolicy() {
         return dispatchPolicy;
     }
@@ -521,7 +532,6 @@ public class Topic implements Destination {
         return getActiveMQDestination().getPhysicalName();
     }
 
-
     // Implementation methods
     // -------------------------------------------------------------------------
     protected void dispatch(final ConnectionContext context, Message message) throws Exception {
@@ -532,7 +542,7 @@ public class Topic implements Destination {
             if (!subscriptionRecoveryPolicy.add(context, message)) {
                 return;
             }
-            synchronized(consumers) {
+            synchronized (consumers) {
                 if (consumers.isEmpty()) {
                     onMessageWithNoConsumers(context, message);
                     return;
@@ -545,8 +555,7 @@ public class Topic implements Destination {
             if (!dispatchPolicy.dispatch(message, msgContext, consumers)) {
                 onMessageWithNoConsumers(context, message);
             }
-        }
-        finally {
+        } finally {
             msgContext.clear();
             dispatchValve.decrement();
         }
@@ -562,19 +571,22 @@ public class Topic implements Destination {
                 // allow messages with no consumers to be dispatched to a dead
                 // letter queue
                 if (!AdvisorySupport.isAdvisoryTopic(destination)) {
-                    
-                    // The original destination and transaction id do not get filled when the message is first sent,
-                    // it is only populated if the message is routed to another destination like the DLQ
-                    if( message.getOriginalDestination()!=null )
+
+                    // The original destination and transaction id do not get
+                    // filled when the message is first sent,
+                    // it is only populated if the message is routed to another
+                    // destination like the DLQ
+                    if (message.getOriginalDestination() != null)
                         message.setOriginalDestination(message.getDestination());
-                    if( message.getOriginalTransactionId()!=null )
+                    if (message.getOriginalTransactionId() != null)
                         message.setOriginalTransactionId(message.getTransactionId());
 
                     ActiveMQTopic advisoryTopic = AdvisorySupport.getNoTopicConsumersAdvisoryTopic(destination);
                     message.setDestination(advisoryTopic);
                     message.setTransactionId(null);
 
-                    // Disable flow control for this since since we don't want to block.
+                    // Disable flow control for this since since we don't want
+                    // to block.
                     boolean originalFlowControl = context.isProducerFlowControl();
                     try {
                         context.setProducerFlowControl(false);
@@ -585,11 +597,10 @@ public class Topic implements Destination {
                     } finally {
                         context.setProducerFlowControl(originalFlowControl);
                     }
-                    
+
                 }
             }
         }
     }
-
 
 }

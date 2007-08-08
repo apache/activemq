@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,10 +31,9 @@ import javax.jms.TextMessage;
 
 import junit.framework.TestCase;
 
-
 /**
  * Useful base class for unit test cases
- *
+ * 
  * @version $Revision: 1.1.1.1 $
  */
 public class TestSupport extends TestCase {
@@ -58,15 +56,15 @@ public class TestSupport extends TestCase {
     protected Destination createDestination(String subject) {
         if (topic) {
             return new ActiveMQTopic(subject);
-        }
-        else {
+        } else {
             return new ActiveMQQueue(subject);
         }
     }
 
-	protected void assertTextMessagesEqual(Message[] firstSet, Message[] secondSet) throws JMSException {
-		assertTextMessagesEqual("", firstSet, secondSet);
-	}
+    protected void assertTextMessagesEqual(Message[] firstSet, Message[] secondSet) throws JMSException {
+        assertTextMessagesEqual("", firstSet, secondSet);
+    }
+
     /**
      * @param messsage
      * @param firstSet
@@ -75,46 +73,47 @@ public class TestSupport extends TestCase {
     protected void assertTextMessagesEqual(String messsage, Message[] firstSet, Message[] secondSet) throws JMSException {
         assertEquals("Message count does not match: " + messsage, firstSet.length, secondSet.length);
         for (int i = 0; i < secondSet.length; i++) {
-            TextMessage m1 = (TextMessage) firstSet[i];
-            TextMessage m2 = (TextMessage) secondSet[i];
-			assertTextMessageEqual("Message " + (i + 1) + " did not match : ", m1,m2);
+            TextMessage m1 = (TextMessage)firstSet[i];
+            TextMessage m2 = (TextMessage)secondSet[i];
+            assertTextMessageEqual("Message " + (i + 1) + " did not match : ", m1, m2);
         }
     }
-	
+
     protected void assertEquals(TextMessage m1, TextMessage m2) throws JMSException {
-		assertEquals("", m1, m2);
+        assertEquals("", m1, m2);
     }
 
-	/**
+    /**
      * @param message
      * @param firstSet
      * @param secondSet
      */
     protected void assertTextMessageEqual(String message, TextMessage m1, TextMessage m2) throws JMSException {
         assertFalse(message + ": expected {" + m1 + "}, but was {" + m2 + "}", m1 == null ^ m2 == null);
-		if( m1 == null )
-			return;
+        if (m1 == null)
+            return;
         assertEquals(message, m1.getText(), m2.getText());
     }
 
     protected void assertEquals(Message m1, Message m2) throws JMSException {
-		assertEquals("", m1, m2);
+        assertEquals("", m1, m2);
     }
-	/**
+
+    /**
      * @param message
      * @param firstSet
      * @param secondSet
      */
     protected void assertEquals(String message, Message m1, Message m2) throws JMSException {
         assertFalse(message + ": expected {" + m1 + "}, but was {" + m2 + "}", m1 == null ^ m2 == null);
-		if( m1 == null )
-			return;
-        assertTrue(message + ": expected {" + m1 + "}, but was {" + m2 + "}", m1.getClass()==m2.getClass());
-		if( m1 instanceof TextMessage ) {
-			assertTextMessageEqual(message, (TextMessage)m1, (TextMessage)m2);
-		} else {
-			assertEquals(message, m1, m2);
-		}
+        if (m1 == null)
+            return;
+        assertTrue(message + ": expected {" + m1 + "}, but was {" + m2 + "}", m1.getClass() == m2.getClass());
+        if (m1 instanceof TextMessage) {
+            assertTextMessageEqual(message, (TextMessage)m1, (TextMessage)m2);
+        } else {
+            assertEquals(message, m1, m2);
+        }
     }
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {

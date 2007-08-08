@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,28 +17,27 @@
 
 package org.apache.activemq.broker;
 
-
 public class ProgressPrinter {
 
     private final long total;
     private final long interval;
-    long percentDone=0;
-    long counter=0;
-    
+    long percentDone;
+    long counter;
+
     public ProgressPrinter(long total, long interval) {
-        this.total=total;
+        this.total = total;
         this.interval = interval;
     }
-    
+
     synchronized public void increment() {
         update(++counter);
     }
-    
+
     synchronized public void update(long current) {
-        long at = 100*current/total;
-        if( (percentDone/interval) != (at/interval) ) {
-            percentDone=at;
-            System.out.println("Completed: "+percentDone+"%");
-        }            
+        long at = 100 * current / total;
+        if ((percentDone / interval) != (at / interval)) {
+            percentDone = at;
+            System.out.println("Completed: " + percentDone + "%");
+        }
     }
 }

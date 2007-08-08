@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -51,7 +50,7 @@ import java.util.concurrent.ThreadFactory;
  * Connections. <p/> This class also implements QueueConnectionFactory and
  * TopicConnectionFactory. You can use this connection to create both
  * QueueConnections and TopicConnections.
- *
+ * 
  * @version $Revision: 1.9 $
  * @see javax.jms.ConnectionFactory
  */
@@ -62,12 +61,25 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public static final String DEFAULT_PASSWORD = null;
     public static final int DEFAULT_PRODUCER_WINDOW_SIZE = 0;
 
-    private IdGenerator clientIdGenerator;
-    private String clientIDPrefix;
+    static protected final Executor DEFAULT_CONNECTION_EXECUTOR = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
+        public Thread newThread(Runnable run) {
+            Thread thread = new Thread(run);
+            thread.setPriority(ThreadPriorities.INBOUND_CLIENT_CONNECTION);
+            return thread;
+        }
+    });
+
     protected URI brokerURL;
     protected String userName;
     protected String password;
     protected String clientID;
+    protected boolean dispatchAsync;
+    protected boolean alwaysSessionAsync = true;
+
+    JMSStatsImpl factoryStats = new JMSStatsImpl();
+
+    private IdGenerator clientIdGenerator;
+    private String clientIDPrefix;
 
     // client policies
     private ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
@@ -75,32 +87,21 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private BlobTransferPolicy blobTransferPolicy = new BlobTransferPolicy();
     private MessageTransformer transformer;
 
-    private boolean disableTimeStampsByDefault = false;
+    private boolean disableTimeStampsByDefault;
     private boolean optimizedMessageDispatch = true;
     private boolean copyMessageOnSend = true;
-    private boolean useCompression = false;
-    private boolean objectMessageSerializationDefered = false;
-    protected boolean dispatchAsync = false;
-    protected boolean alwaysSessionAsync=true;
-    private boolean useAsyncSend = false;
-    private boolean optimizeAcknowledge = false;
+    private boolean useCompression;
+    private boolean objectMessageSerializationDefered;
+    private boolean useAsyncSend;
+    private boolean optimizeAcknowledge;
     private int closeTimeout = 15000;
     private boolean useRetroactiveConsumer;
     private boolean exclusiveConsumer;
     private boolean nestedMapAndListEnabled = true;
-    JMSStatsImpl factoryStats = new JMSStatsImpl();
     private boolean alwaysSyncSend;
-    private boolean watchTopicAdvisories=true;
-    private int producerWindowSize=DEFAULT_PRODUCER_WINDOW_SIZE;
+    private boolean watchTopicAdvisories = true;
+    private int producerWindowSize = DEFAULT_PRODUCER_WINDOW_SIZE;
     private long warnAboutUnstartedConnectionTimeout = 500L;
-
-    static protected final Executor DEFAULT_CONNECTION_EXECUTOR = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
-            public Thread newThread(Runnable run) {
-                Thread thread = new Thread(run);
-                thread.setPriority(ThreadPriorities.INBOUND_CLIENT_CONNECTION);
-                return thread;
-            }
-        });
 
     // /////////////////////////////////////////////
     //
@@ -121,9 +122,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     public ActiveMQConnectionFactory copy() {
         try {
-            return (ActiveMQConnectionFactory) super.clone();
-        }
-        catch (CloneNotSupportedException e) {
+            return (ActiveMQConnectionFactory)super.clone();
+        } catch (CloneNotSupportedException e) {
             throw new RuntimeException("This should never happen: " + e, e);
         }
     }
@@ -136,9 +136,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private static URI createURI(String brokerURL) {
         try {
             return new URI(brokerURL);
-        }
-        catch (URISyntaxException e) {
-            throw (IllegalArgumentException) new IllegalArgumentException("Invalid broker URI: " + brokerURL).initCause(e);
+        } catch (URISyntaxException e) {
+            throw (IllegalArgumentException)new IllegalArgumentException("Invalid broker URI: " + brokerURL).initCause(e);
         }
     }
 
@@ -213,25 +212,21 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     //
     // /////////////////////////////////////////////
 
-
     protected ActiveMQConnection createActiveMQConnection() throws JMSException {
         return createActiveMQConnection(userName, password);
     }
-    
+
     /**
-     * Creates a Transport based on this object's connection settings.
-     * 
-     * Separated from createActiveMQConnection to allow for subclasses to
-     *      override.
+     * Creates a Transport based on this object's connection settings. Separated
+     * from createActiveMQConnection to allow for subclasses to override.
      * 
      * @return The newly created Transport.
      * @throws JMSException If unable to create trasnport.
-     * 
      * @author sepandm@gmail.com
      */
     protected Transport createTransport() throws JMSException {
         try {
-            return TransportFactory.connect(brokerURL,DEFAULT_CONNECTION_EXECUTOR);
+            return TransportFactory.connect(brokerURL, DEFAULT_CONNECTION_EXECUTOR);
         } catch (Exception e) {
             throw JMSExceptionSupport.create("Could not create Transport. Reason: " + e, e);
         }
@@ -244,11 +239,11 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         if (brokerURL == null) {
             throw new ConfigurationException("brokerURL not set.");
         }
-        ActiveMQConnection connection=null;
+        ActiveMQConnection connection = null;
         try {
-        	Transport transport = createTransport();
-        	connection = createActiveMQConnection(transport, factoryStats);
-        	
+            Transport transport = createTransport();
+            connection = createActiveMQConnection(transport, factoryStats);
+
             connection.setUserName(userName);
             connection.setPassword(password);
 
@@ -256,20 +251,24 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
             transport.start();
 
-            if( clientID !=null )
+            if (clientID != null)
                 connection.setDefaultClientID(clientID);
 
             return connection;
-        }
-        catch (JMSException e) {
-        	// Clean up!
-        	try { connection.close(); } catch ( Throwable ignore ) {}
+        } catch (JMSException e) {
+            // Clean up!
+            try {
+                connection.close();
+            } catch (Throwable ignore) {
+            }
             throw e;
-        }
-        catch (Exception e) {
-        	// Clean up!
-        	try { connection.close(); } catch ( Throwable ignore ) {}
-        	throw JMSExceptionSupport.create("Could not connect to broker URL: " + brokerURL + ". Reason: " + e, e);
+        } catch (Exception e) {
+            // Clean up!
+            try {
+                connection.close();
+            } catch (Throwable ignore) {
+            }
+            throw JMSExceptionSupport.create("Could not connect to broker URL: " + brokerURL + ". Reason: " + e, e);
         }
     }
 
@@ -277,7 +276,6 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         ActiveMQConnection connection = new ActiveMQConnection(transport, getClientIdGenerator(), stats);
         return connection;
     }
-
 
     protected void configureConnection(ActiveMQConnection connection) {
         connection.setPrefetchPolicy(getPrefetchPolicy());
@@ -307,9 +305,9 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     // /////////////////////////////////////////////
 
     public String getBrokerURL() {
-        return brokerURL==null?null:brokerURL.toString();
+        return brokerURL == null ? null : brokerURL.toString();
     }
-    
+
     /**
      * Sets the <a
      * href="http://activemq.apache.org/configuring-transports.html">connection
@@ -318,14 +316,15 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public void setBrokerURL(String brokerURL) {
         this.brokerURL = createURI(brokerURL);
 
-        // Use all the properties prefixed with 'jms.' to set the connection factory
+        // Use all the properties prefixed with 'jms.' to set the connection
+        // factory
         // options.
-        if( this.brokerURL.getQuery() !=null ) {
+        if (this.brokerURL.getQuery() != null) {
             // It might be a standard URI or...
             try {
 
                 Map map = URISupport.parseQuery(this.brokerURL.getQuery());
-                if( buildFromMap(IntrospectionSupport.extractProperties(map, "jms.")) ) {
+                if (buildFromMap(IntrospectionSupport.extractProperties(map, "jms."))) {
                     this.brokerURL = URISupport.createRemainingURI(this.brokerURL, map);
                 }
 
@@ -337,7 +336,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             // It might be a composite URI.
             try {
                 CompositeData data = URISupport.parseComposite(this.brokerURL);
-                if( buildFromMap(IntrospectionSupport.extractProperties(data.getParameters(), "jms.")) ) {
+                if (buildFromMap(IntrospectionSupport.extractProperties(data.getParameters(), "jms."))) {
                     this.brokerURL = data.toURI();
                 }
             } catch (URISyntaxException e) {
@@ -350,7 +349,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     /**
-     * Sets the JMS clientID to use for the created connection. Note that this can only be used by one connection at once so generally its a better idea
+     * Sets the JMS clientID to use for the created connection. Note that this
+     * can only be used by one connection at once so generally its a better idea
      * to set the clientID on a Connection
      */
     public void setClientID(String clientID) {
@@ -406,7 +406,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         this.password = password;
     }
 
-    public  ActiveMQPrefetchPolicy getPrefetchPolicy() {
+    public ActiveMQPrefetchPolicy getPrefetchPolicy() {
         return prefetchPolicy;
     }
 
@@ -428,8 +428,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     /**
-     * Sets the policy used to describe how out-of-band BLOBs (Binary Large OBjects)
-     * are transferred from producers to brokers to consumers
+     * Sets the policy used to describe how out-of-band BLOBs (Binary Large
+     * OBjects) are transferred from producers to brokers to consumers
      */
     public void setBlobTransferPolicy(BlobTransferPolicy blobTransferPolicy) {
         this.blobTransferPolicy = blobTransferPolicy;
@@ -437,36 +437,37 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
     /**
      * Forces the use of <a
-     * href="http://activemq.apache.org/async-sends.html">Async Sends</a>
-     * which adds a massive performance boost; but means that the send() method
-     * will return immediately whether the message has been sent or not which
-     * could lead to message loss.
+     * href="http://activemq.apache.org/async-sends.html">Async Sends</a> which
+     * adds a massive performance boost; but means that the send() method will
+     * return immediately whether the message has been sent or not which could
+     * lead to message loss.
      */
     public void setUseAsyncSend(boolean useAsyncSend) {
         this.useAsyncSend = useAsyncSend;
     }
-    
-	public synchronized boolean isWatchTopicAdvisories() {
-		return watchTopicAdvisories;
-	}
 
-	public synchronized void setWatchTopicAdvisories(boolean watchTopicAdvisories) {
-		this.watchTopicAdvisories = watchTopicAdvisories;
-	}    
-    
+    public synchronized boolean isWatchTopicAdvisories() {
+        return watchTopicAdvisories;
+    }
+
+    public synchronized void setWatchTopicAdvisories(boolean watchTopicAdvisories) {
+        this.watchTopicAdvisories = watchTopicAdvisories;
+    }
+
     /**
      * @return true if always sync send messages
      */
-    public boolean isAlwaysSyncSend(){
+    public boolean isAlwaysSyncSend() {
         return this.alwaysSyncSend;
     }
 
     /**
      * Set true if always require messages to be sync sent
+     * 
      * @param alwaysSyncSend
      */
-    public void setAlwaysSyncSend(boolean alwaysSyncSend){
-        this.alwaysSyncSend=alwaysSyncSend;
+    public void setAlwaysSyncSend(boolean alwaysSyncSend) {
+        this.alwaysSyncSend = alwaysSyncSend;
     }
 
     public String getUserName() {
@@ -485,9 +486,9 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     /**
-     * Sets whether or not retroactive consumers are enabled. Retroactive consumers allow
-     * non-durable topic subscribers to receive old messages that were published before the
-     * non-durable subscriber started.
+     * Sets whether or not retroactive consumers are enabled. Retroactive
+     * consumers allow non-durable topic subscribers to receive old messages
+     * that were published before the non-durable subscriber started.
      */
     public void setUseRetroactiveConsumer(boolean useRetroactiveConsumer) {
         this.useRetroactiveConsumer = useRetroactiveConsumer;
@@ -498,10 +499,10 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     /**
-     * Enables or disables whether or not queue consumers should be exclusive or not
-     * for example to preserve ordering when not using
-     * <a href="http://activemq.apache.org/message-groups.html">Message Groups</a>
-     *
+     * Enables or disables whether or not queue consumers should be exclusive or
+     * not for example to preserve ordering when not using <a
+     * href="http://activemq.apache.org/message-groups.html">Message Groups</a>
+     * 
      * @param exclusiveConsumer
      */
     public void setExclusiveConsumer(boolean exclusiveConsumer) {
@@ -513,7 +514,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     /**
-     * Sets the global redelivery policy to be used when a message is delivered but the session is rolled back
+     * Sets the global redelivery policy to be used when a message is delivered
+     * but the session is rolled back
      */
     public void setRedeliveryPolicy(RedeliveryPolicy redeliveryPolicy) {
         this.redeliveryPolicy = redeliveryPolicy;
@@ -524,15 +526,16 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     /**
-     * Sets the transformer used to transform messages before they are sent on to the JMS bus
-     * or when they are received from the bus but before they are delivered to the JMS client
+     * Sets the transformer used to transform messages before they are sent on
+     * to the JMS bus or when they are received from the bus but before they are
+     * delivered to the JMS client
      */
     public void setTransformer(MessageTransformer transformer) {
         this.transformer = transformer;
     }
 
     public void buildFromProperties(Properties properties) {
-    	
+
         if (properties == null) {
             properties = new Properties();
         }
@@ -544,27 +547,27 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         if (temp != null && temp.length() > 0) {
             setBrokerURL(temp);
         }
-        
-        buildFromMap(properties);    	
+
+        buildFromMap(properties);
     }
-    
+
     public boolean buildFromMap(Map properties) {
-    	boolean rc=false;
-    	
-        ActiveMQPrefetchPolicy p = new ActiveMQPrefetchPolicy(); 
-        if( IntrospectionSupport.setProperties(p, properties, "prefetchPolicy.") ) {
-        	setPrefetchPolicy(p);
-        	rc = true;
+        boolean rc = false;
+
+        ActiveMQPrefetchPolicy p = new ActiveMQPrefetchPolicy();
+        if (IntrospectionSupport.setProperties(p, properties, "prefetchPolicy.")) {
+            setPrefetchPolicy(p);
+            rc = true;
         }
 
         RedeliveryPolicy rp = new RedeliveryPolicy();
-        if ( IntrospectionSupport.setProperties(rp, properties, "redeliveryPolicy.") ) {
+        if (IntrospectionSupport.setProperties(rp, properties, "redeliveryPolicy.")) {
             setRedeliveryPolicy(rp);
             rc = true;
         }
 
         BlobTransferPolicy blobTransferPolicy = new BlobTransferPolicy();
-        if ( IntrospectionSupport.setProperties(blobTransferPolicy, properties, "blobTransferPolicy.") ) {
+        if (IntrospectionSupport.setProperties(blobTransferPolicy, properties, "blobTransferPolicy.")) {
             setBlobTransferPolicy(blobTransferPolicy);
             rc = true;
         }
@@ -603,16 +606,16 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("useCompression", Boolean.toString(isUseCompression()));
         props.setProperty("useRetroactiveConsumer", Boolean.toString(isUseRetroactiveConsumer()));
         props.setProperty("watchTopicAdvisories", Boolean.toString(isWatchTopicAdvisories()));
-        
+
         if (getUserName() != null) {
             props.setProperty("userName", getUserName());
         }
-        
+
         props.setProperty("closeTimeout", Integer.toString(getCloseTimeout()));
         props.setProperty("alwaysSessionAsync", Boolean.toString(isAlwaysSessionAsync()));
         props.setProperty("optimizeAcknowledge", Boolean.toString(isOptimizeAcknowledge()));
-        props.setProperty("statsEnabled",Boolean.toString(isStatsEnabled()));
-        props.setProperty("alwaysSyncSend",Boolean.toString(isAlwaysSyncSend()));
+        props.setProperty("statsEnabled", Boolean.toString(isStatsEnabled()));
+        props.setProperty("alwaysSyncSend", Boolean.toString(isAlwaysSyncSend()));
         props.setProperty("producerWindowSize", Integer.toString(getProducerWindowSize()));
     }
 
@@ -649,17 +652,15 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * Enables or disables the default setting of whether or not consumers have
      * their messages <a
      * href="http://activemq.apache.org/consumer-dispatch-async.html">dispatched
-     * synchronously or asynchronously by the broker</a>.
+     * synchronously or asynchronously by the broker</a>. For non-durable
+     * topics for example we typically dispatch synchronously by default to
+     * minimize context switches which boost performance. However sometimes its
+     * better to go slower to ensure that a single blocked consumer socket does
+     * not block delivery to other consumers.
      * 
-     * For non-durable topics for example we typically dispatch synchronously by
-     * default to minimize context switches which boost performance. However
-     * sometimes its better to go slower to ensure that a single blocked
-     * consumer socket does not block delivery to other consumers.
-     * 
-     * @param asyncDispatch
-     *            If true then consumers created on this connection will default
-     *            to having their messages dispatched asynchronously. The
-     *            default value is false.
+     * @param asyncDispatch If true then consumers created on this connection
+     *                will default to having their messages dispatched
+     *                asynchronously. The default value is false.
      */
     public void setDispatchAsync(boolean asyncDispatch) {
         this.dispatchAsync = asyncDispatch;
@@ -668,7 +669,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     /**
      * @return Returns the closeTimeout.
      */
-    public int getCloseTimeout(){
+    public int getCloseTimeout() {
         return closeTimeout;
     }
 
@@ -678,14 +679,14 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * allows that operation to timeout to save the client hanging if there is
      * no broker
      */
-    public void setCloseTimeout(int closeTimeout){
-        this.closeTimeout=closeTimeout;
+    public void setCloseTimeout(int closeTimeout) {
+        this.closeTimeout = closeTimeout;
     }
 
     /**
      * @return Returns the alwaysSessionAsync.
      */
-    public boolean isAlwaysSessionAsync(){
+    public boolean isAlwaysSessionAsync() {
         return alwaysSessionAsync;
     }
 
@@ -695,26 +696,26 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * is always used if there is more than one session, or the session isn't in
      * auto acknowledge or duplicates ok mode
      */
-    public void setAlwaysSessionAsync(boolean alwaysSessionAsync){
-        this.alwaysSessionAsync=alwaysSessionAsync;
+    public void setAlwaysSessionAsync(boolean alwaysSessionAsync) {
+        this.alwaysSessionAsync = alwaysSessionAsync;
     }
 
     /**
      * @return Returns the optimizeAcknowledge.
      */
-    public boolean isOptimizeAcknowledge(){
+    public boolean isOptimizeAcknowledge() {
         return optimizeAcknowledge;
     }
 
     /**
      * @param optimizeAcknowledge The optimizeAcknowledge to set.
      */
-    public void setOptimizeAcknowledge(boolean optimizeAcknowledge){
-        this.optimizeAcknowledge=optimizeAcknowledge;
+    public void setOptimizeAcknowledge(boolean optimizeAcknowledge) {
+        this.optimizeAcknowledge = optimizeAcknowledge;
     }
-    
+
     public boolean isNestedMapAndListEnabled() {
-        return nestedMapAndListEnabled ;
+        return nestedMapAndListEnabled;
     }
 
     /**
@@ -732,21 +733,20 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     /**
-     * Sets the prefix used by autogenerated JMS Client ID values which are
-     * used if the JMS client does not explicitly specify on.
+     * Sets the prefix used by autogenerated JMS Client ID values which are used
+     * if the JMS client does not explicitly specify on.
      * 
      * @param clientIDPrefix
      */
     public void setClientIDPrefix(String clientIDPrefix) {
         this.clientIDPrefix = clientIDPrefix;
     }
-    
+
     protected synchronized IdGenerator getClientIdGenerator() {
         if (clientIdGenerator == null) {
             if (clientIDPrefix != null) {
                 clientIdGenerator = new IdGenerator(clientIDPrefix);
-            }
-            else {
+            } else {
                 clientIdGenerator = new IdGenerator();
             }
         }
@@ -757,43 +757,41 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         this.clientIdGenerator = clientIdGenerator;
     }
 
-    
     /**
      * @return the statsEnabled
      */
-    public boolean isStatsEnabled(){
+    public boolean isStatsEnabled() {
         return this.factoryStats.isEnabled();
     }
 
-    
     /**
      * @param statsEnabled the statsEnabled to set
      */
-    public void setStatsEnabled(boolean statsEnabled){
+    public void setStatsEnabled(boolean statsEnabled) {
         this.factoryStats.setEnabled(statsEnabled);
     }
 
-	synchronized public int getProducerWindowSize() {
-		return producerWindowSize;
-	}
+    synchronized public int getProducerWindowSize() {
+        return producerWindowSize;
+    }
 
-	synchronized public void setProducerWindowSize(int producerWindowSize) {
-		this.producerWindowSize = producerWindowSize;
-	}
-
+    synchronized public void setProducerWindowSize(int producerWindowSize) {
+        this.producerWindowSize = producerWindowSize;
+    }
 
     public long getWarnAboutUnstartedConnectionTimeout() {
         return warnAboutUnstartedConnectionTimeout;
     }
 
     /**
-     * Enables the timeout from a connection creation to when a warning is generated
-     * if the connection is not properly started via {@link Connection#start()} and a message is received by a consumer.
-     *
-     * It is a very common gotcha to forget to
-     * <a href="http://activemq.apache.org/i-am-not-receiving-any-messages-what-is-wrong.html">start the connection</a>
-     * so this option makes the default case to create a warning if the user forgets.
-     * To disable the warning just set the value to < 0 (say -1).
+     * Enables the timeout from a connection creation to when a warning is
+     * generated if the connection is not properly started via
+     * {@link Connection#start()} and a message is received by a consumer. It is
+     * a very common gotcha to forget to <a
+     * href="http://activemq.apache.org/i-am-not-receiving-any-messages-what-is-wrong.html">start
+     * the connection</a> so this option makes the default case to create a
+     * warning if the user forgets. To disable the warning just set the value to <
+     * 0 (say -1).
      */
     public void setWarnAboutUnstartedConnectionTimeout(long warnAboutUnstartedConnectionTimeout) {
         this.warnAboutUnstartedConnectionTimeout = warnAboutUnstartedConnectionTimeout;

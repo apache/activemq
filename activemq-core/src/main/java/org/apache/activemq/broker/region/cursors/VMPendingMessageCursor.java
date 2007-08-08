@@ -12,110 +12,111 @@
  * specific language governing permissions and limitations under the License.
  */
 package org.apache.activemq.broker.region.cursors;
+
 import java.util.Iterator;
 import java.util.LinkedList;
 import org.apache.activemq.broker.region.MessageReference;
+
 /**
- * hold pending messages in a linked list (messages awaiting disptach to a consumer) cursor
+ * hold pending messages in a linked list (messages awaiting disptach to a
+ * consumer) cursor
  * 
  * @version $Revision$
  */
-public class VMPendingMessageCursor extends AbstractPendingMessageCursor{
+public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
     private LinkedList<MessageReference> list = new LinkedList<MessageReference>();
-    private Iterator<MessageReference> iter = null;
+    private Iterator<MessageReference> iter;
     private MessageReference last;
-    
+
     /**
      * @return true if there are no pending messages
      */
-    public boolean isEmpty(){
+    public boolean isEmpty() {
         return list.isEmpty();
     }
 
     /**
      * reset the cursor
-     *
      */
-    public void reset(){
+    public void reset() {
         iter = list.listIterator();
-        last=null;
+        last = null;
     }
-    
+
     /**
      * add message to await dispatch
      * 
      * @param node
      */
-    public void addMessageLast(MessageReference node){
-    	node.incrementReferenceCount();
+    public void addMessageLast(MessageReference node) {
+        node.incrementReferenceCount();
         list.addLast(node);
     }
-    
+
     /**
      * add message to await dispatch
-     * @param position 
+     * 
+     * @param position
      * @param node
      */
-    public void addMessageFirst(MessageReference node){
-    	node.incrementReferenceCount();
+    public void addMessageFirst(MessageReference node) {
+        node.incrementReferenceCount();
         list.addFirst(node);
     }
-
 
     /**
      * @return true if there pending messages to dispatch
      */
-    public boolean hasNext(){
-       return iter.hasNext();
+    public boolean hasNext() {
+        return iter.hasNext();
     }
 
     /**
      * @return the next pending message
      */
-    public MessageReference next(){
-    	last = (MessageReference) iter.next();
-    	return last;
+    public MessageReference next() {
+        last = (MessageReference)iter.next();
+        return last;
     }
 
     /**
      * remove the message at the cursor position
-     * 
      */
-    public void remove(){
-    	if( last!=null ) {
-    		last.decrementReferenceCount();
-    	}
+    public void remove() {
+        if (last != null) {
+            last.decrementReferenceCount();
+        }
         iter.remove();
     }
 
     /**
      * @return the number of pending messages
      */
-    public int size(){
+    public int size() {
         return list.size();
     }
 
     /**
      * clear all pending messages
-     * 
      */
-    public void clear(){
+    public void clear() {
         list.clear();
     }
-    
-    public void remove(MessageReference node){
-        for(Iterator<MessageReference> i=list.iterator();i.hasNext();){
-            MessageReference ref=i.next();
-            if(node.getMessageId().equals(ref.getMessageId())){
-            	ref.decrementReferenceCount();
+
+    public void remove(MessageReference node) {
+        for (Iterator<MessageReference> i = list.iterator(); i.hasNext();) {
+            MessageReference ref = i.next();
+            if (node.getMessageId().equals(ref.getMessageId())) {
+                ref.decrementReferenceCount();
                 i.remove();
                 break;
             }
         }
     }
-    
+
     /**
      * Page in a restricted number of messages
+     * 
      * @param maxItems
      * @return a list of paged in messages
      */

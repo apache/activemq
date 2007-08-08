@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -37,18 +36,18 @@ import javax.jms.Topic;
 public abstract class DeadLetterTestSupport extends TestSupport {
 
     protected int messageCount = 10;
-    protected long timeToLive = 0;
+    protected long timeToLive;
     protected Connection connection;
     protected Session session;
     protected MessageConsumer consumer;
     protected MessageProducer producer;
     private Destination destination;
     protected int deliveryMode = DeliveryMode.PERSISTENT;
-    protected boolean durableSubscriber = false;
+    protected boolean durableSubscriber;
     protected Destination dlqDestination;
     protected MessageConsumer dlqConsumer;
     protected BrokerService broker;
-    protected boolean transactedMode = false;
+    protected boolean transactedMode;
     protected int acknowledgeMode = Session.CLIENT_ACKNOWLEDGE;
 
     protected void setUp() throws Exception {
@@ -83,9 +82,8 @@ public abstract class DeadLetterTestSupport extends TestSupport {
         Destination destination = getDestination();
         log.info("Consuming from: " + destination);
         if (durableSubscriber) {
-            consumer = session.createDurableSubscriber((Topic) destination, destination.toString());
-        }
-        else {
+            consumer = session.createDurableSubscriber((Topic)destination, destination.toString());
+        } else {
             consumer = session.createConsumer(destination);
         }
     }
@@ -122,10 +120,10 @@ public abstract class DeadLetterTestSupport extends TestSupport {
         log.info("Received message: " + message);
         assertNotNull("No message received for index: " + i, message);
         assertTrue("Should be a TextMessage not: " + message, message instanceof TextMessage);
-        TextMessage textMessage = (TextMessage) message;
-        assertEquals("text of message: " + i, getMessageText(i), textMessage .getText());
+        TextMessage textMessage = (TextMessage)message;
+        assertEquals("text of message: " + i, getMessageText(i), textMessage.getText());
     }
-    
+
     protected abstract Destination createDlqDestination();
 
     public void testTransientTopicMessage() throws Exception {

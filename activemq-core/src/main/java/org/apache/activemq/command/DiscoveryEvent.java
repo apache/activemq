@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,16 +16,15 @@
  */
 package org.apache.activemq.command;
 
-
 /**
  * Represents a discovery event containing the details of the service
- *
+ * 
  * @openwire:marshaller code="40"
  * @version $Revision:$
  */
 public class DiscoveryEvent implements DataStructure {
 
-    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.DISCOVERY_EVENT;
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.DISCOVERY_EVENT;
 
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
@@ -35,9 +33,9 @@ public class DiscoveryEvent implements DataStructure {
     protected String serviceName;
     protected String brokerName;
 
-    public DiscoveryEvent() {        
+    public DiscoveryEvent() {
     }
-    
+
     public DiscoveryEvent(String serviceName) {
         this.serviceName = serviceName;
     }
@@ -48,21 +46,23 @@ public class DiscoveryEvent implements DataStructure {
     public String getServiceName() {
         return serviceName;
     }
+
     public void setServiceName(String serviceName) {
         this.serviceName = serviceName;
     }
-    
+
     /**
      * @openwire:property version=1
      */
-    public String getBrokerName(){
+    public String getBrokerName() {
         return brokerName;
     }
-    public void setBrokerName(String name){
+
+    public void setBrokerName(String name) {
         this.brokerName = name;
     }
 
     public boolean isMarshallAware() {
         return false;
-    }    
+    }
 }

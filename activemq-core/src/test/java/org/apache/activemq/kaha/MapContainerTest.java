@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,48 +20,46 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
-import org.apache.activemq.kaha.MapContainer;
-import org.apache.activemq.kaha.Store;
-import org.apache.activemq.kaha.StoreFactory;
+
 import junit.framework.TestCase;
 
-public class MapContainerTest extends TestCase{
-    
+public class MapContainerTest extends TestCase {
+
     protected String name = "test";
     protected Store store;
     protected MapContainer container;
     protected Map testMap;
     protected static final int COUNT = 10;
-    
-    public void testBasicAllocations() throws Exception{
+
+    public void testBasicAllocations() throws Exception {
         String key = "key";
         Object value = testMap;
-        MapContainer test = store.getMapContainer("test","test");
-        test.put(key,value);
+        MapContainer test = store.getMapContainer("test", "test");
+        test.put(key, value);
         store.close();
         store = getStore();
-        assertTrue(store.getMapContainerIds().isEmpty()==false);
-        test = store.getMapContainer("test","test");
-        assertEquals(value,test.get(key));
-        
+        assertTrue(store.getMapContainerIds().isEmpty() == false);
+        test = store.getMapContainer("test", "test");
+        assertEquals(value, test.get(key));
+
     }
+
     /*
      * Test method for 'org.apache.activemq.kaha.MapContainer.size()'
      */
     public void testSize() throws Exception {
         container.putAll(testMap);
-        assertTrue(container.size()==testMap.size());
+        assertTrue(container.size() == testMap.size());
     }
 
     /*
      * Test method for 'org.apache.activemq.kaha.MapContainer.isEmpty()'
      */
     public void testIsEmpty() throws Exception {
-       assertTrue(container.isEmpty());
+        assertTrue(container.isEmpty());
     }
 
     /*
@@ -70,18 +67,19 @@ public class MapContainerTest extends TestCase{
      */
     public void testClear() throws Exception {
         container.putAll(testMap);
-        assertTrue(container.size()==testMap.size());
+        assertTrue(container.size() == testMap.size());
         container.clear();
         assertTrue(container.isEmpty());
     }
 
     /*
-     * Test method for 'org.apache.activemq.kaha.MapContainer.containsKey(Object)'
+     * Test method for
+     * 'org.apache.activemq.kaha.MapContainer.containsKey(Object)'
      */
     public void testContainsKeyObject() throws Exception {
         container.putAll(testMap);
-        for (Iterator i = testMap.entrySet().iterator();i.hasNext();){
-            Map.Entry entry = (Entry) i.next();
+        for (Iterator i = testMap.entrySet().iterator(); i.hasNext();) {
+            Map.Entry entry = (Entry)i.next();
             assertTrue(container.containsKey(entry.getKey()));
         }
     }
@@ -91,8 +89,8 @@ public class MapContainerTest extends TestCase{
      */
     public void testGetObject() throws Exception {
         container.putAll(testMap);
-        for (Iterator i = testMap.entrySet().iterator();i.hasNext();){
-            Map.Entry entry = (Entry) i.next();
+        for (Iterator i = testMap.entrySet().iterator(); i.hasNext();) {
+            Map.Entry entry = (Entry)i.next();
             Object value = container.get(entry.getKey());
             assertNotNull(value);
             assertTrue(value.equals(entry.getValue()));
@@ -100,12 +98,13 @@ public class MapContainerTest extends TestCase{
     }
 
     /*
-     * Test method for 'org.apache.activemq.kaha.MapContainer.containsValue(Object)'
+     * Test method for
+     * 'org.apache.activemq.kaha.MapContainer.containsValue(Object)'
      */
     public void testContainsValueObject() throws Exception {
         container.putAll(testMap);
-        for (Iterator i = testMap.entrySet().iterator();i.hasNext();){
-            Map.Entry entry = (Entry) i.next();
+        for (Iterator i = testMap.entrySet().iterator(); i.hasNext();) {
+            Map.Entry entry = (Entry)i.next();
             assertTrue(container.containsValue(entry.getValue()));
         }
     }
@@ -115,8 +114,8 @@ public class MapContainerTest extends TestCase{
      */
     public void testPutAllMap() throws Exception {
         container.putAll(testMap);
-        for (Iterator i = testMap.entrySet().iterator();i.hasNext();){
-            Map.Entry entry = (Entry) i.next();
+        for (Iterator i = testMap.entrySet().iterator(); i.hasNext();) {
+            Map.Entry entry = (Entry)i.next();
             assertTrue(container.containsValue(entry.getValue()));
             assertTrue(container.containsKey(entry.getKey()));
         }
@@ -128,14 +127,14 @@ public class MapContainerTest extends TestCase{
     public void testKeySet() throws Exception {
         container.putAll(testMap);
         Set keys = container.keySet();
-        assertTrue(keys.size()==testMap.size());
-        for (Iterator i = testMap.keySet().iterator();i.hasNext();){
+        assertTrue(keys.size() == testMap.size());
+        for (Iterator i = testMap.keySet().iterator(); i.hasNext();) {
             Object key = i.next();
             assertTrue(keys.contains(key));
             keys.remove(key);
         }
         assertTrue(container.isEmpty());
-        
+
     }
 
     /*
@@ -144,8 +143,8 @@ public class MapContainerTest extends TestCase{
     public void testValues() throws Exception {
         container.putAll(testMap);
         Collection values = container.values();
-        assertTrue(values.size()==testMap.size());
-        for (Iterator i = testMap.values().iterator();i.hasNext();){
+        assertTrue(values.size() == testMap.size());
+        for (Iterator i = testMap.values().iterator(); i.hasNext();) {
             Object value = i.next();
             assertTrue(values.contains(value));
             assertTrue(values.remove(value));
@@ -159,58 +158,53 @@ public class MapContainerTest extends TestCase{
     public void testEntrySet() throws Exception {
         container.putAll(testMap);
         Set entries = container.entrySet();
-        assertTrue(entries.size()==testMap.size());
-        for (Iterator i = entries.iterator();i.hasNext();){
-            Map.Entry entry = (Entry) i.next();
+        assertTrue(entries.size() == testMap.size());
+        for (Iterator i = entries.iterator(); i.hasNext();) {
+            Map.Entry entry = (Entry)i.next();
             assertTrue(testMap.containsKey(entry.getKey()));
             assertTrue(testMap.containsValue(entry.getValue()));
-            
-        }
-        
-    }
 
-    
+        }
+
+    }
 
     /*
      * Test method for 'org.apache.activemq.kaha.MapContainer.remove(Object)'
      */
     public void testRemoveObject() throws Exception {
         container.putAll(testMap);
-        for (Iterator i = testMap.keySet().iterator();i.hasNext();){
+        for (Iterator i = testMap.keySet().iterator(); i.hasNext();) {
             container.remove(i.next());
         }
         assertTrue(container.isEmpty());
     }
 
-    protected Store getStore() throws IOException{
+    protected Store getStore() throws IOException {
         return StoreFactory.open(name, "rw");
     }
-    
-    protected void setUp() throws Exception{
+
+    protected void setUp() throws Exception {
         super.setUp();
-        name = System.getProperty("basedir", ".")+"/target/activemq-data/map-container.db";
+        name = System.getProperty("basedir", ".") + "/target/activemq-data/map-container.db";
         store = getStore();
-        container = store.getMapContainer("test","test",true);
+        container = store.getMapContainer("test", "test", true);
         container.load();
         testMap = new HashMap();
-        for (int i =0; i < COUNT; i++){
+        for (int i = 0; i < COUNT; i++) {
             String key = "key:" + i;
-            String value = "value:"+i;
+            String value = "value:" + i;
             testMap.put(key, value);
         }
-        
+
     }
 
-    protected void tearDown() throws Exception{
+    protected void tearDown() throws Exception {
         super.tearDown();
-        if( store != null ) {
-        	store.close();
-        	store=null;
+        if (store != null) {
+            store.close();
+            store = null;
         }
         assertTrue(StoreFactory.delete(name));
     }
-    
-    
-    
-    
+
 }

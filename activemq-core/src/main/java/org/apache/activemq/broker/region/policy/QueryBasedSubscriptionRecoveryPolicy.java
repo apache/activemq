@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -38,7 +37,6 @@ import java.util.concurrent.atomic.AtomicLong;
  * specific query mechanism to load any messages they may have missed.
  * 
  * @org.apache.xbean.XBean
- * 
  * @version $Revision$
  */
 public class QueryBasedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy {
@@ -60,14 +58,13 @@ public class QueryBasedSubscriptionRecoveryPolicy implements SubscriptionRecover
         return query.validateUpdate(message.getMessage());
     }
 
-    public void recover(final ConnectionContext context,final Topic topic,final SubscriptionRecovery sub)
-            throws Exception{
-        if(query!=null){
-            ActiveMQDestination destination=sub.getActiveMQDestination();
-            query.execute(destination,new MessageListener(){
+    public void recover(final ConnectionContext context, final Topic topic, final SubscriptionRecovery sub) throws Exception {
+        if (query != null) {
+            ActiveMQDestination destination = sub.getActiveMQDestination();
+            query.execute(destination, new MessageListener() {
 
-                public void onMessage(Message message){
-                    dispatchInitialMessage(message,topic,context,sub);
+                public void onMessage(Message message) {
+                    dispatchInitialMessage(message, topic, context, sub);
                 }
             });
         }
@@ -92,12 +89,12 @@ public class QueryBasedSubscriptionRecoveryPolicy implements SubscriptionRecover
     public void setQuery(MessageQuery query) {
         this.query = query;
     }
-    
-    public org.apache.activemq.command.Message[] browse(ActiveMQDestination dest) throws Exception{
+
+    public org.apache.activemq.command.Message[] browse(ActiveMQDestination dest) throws Exception {
         return new org.apache.activemq.command.Message[0];
     }
 
-    protected void dispatchInitialMessage(Message message,  Destination regionDestination, ConnectionContext context, SubscriptionRecovery sub) {
+    protected void dispatchInitialMessage(Message message, Destination regionDestination, ConnectionContext context, SubscriptionRecovery sub) {
         try {
             ActiveMQMessage activeMessage = ActiveMQMessageTransformation.transformMessage(message, null);
             ActiveMQDestination destination = activeMessage.getDestination();
@@ -107,9 +104,8 @@ public class QueryBasedSubscriptionRecoveryPolicy implements SubscriptionRecover
             }
             activeMessage.setRegionDestination(regionDestination);
             configure(activeMessage);
-            sub.addRecoveredMessage(context,activeMessage);
-        }
-        catch (Throwable e) {
+            sub.addRecoveredMessage(context, activeMessage);
+        } catch (Throwable e) {
             log.warn("Failed to dispatch initial message: " + message + " into subscription. Reason: " + e, e);
         }
     }

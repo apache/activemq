@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,90 +26,97 @@ import org.apache.commons.logging.LogFactory;
 
 import java.util.Iterator;
 import java.util.Set;
+
 /**
  * Used to provide information on the status of the Connection
  * 
  * @version $Revision: 1.5 $
  */
-public class TransportStatusDetector implements Service,Runnable{
-    private static final Log log=LogFactory.getLog(TransportStatusDetector.class);
+public class TransportStatusDetector implements Service, Runnable {
+    private static final Log log = LogFactory.getLog(TransportStatusDetector.class);
     private TransportConnector connector;
-    private Set collectionCandidates=new CopyOnWriteArraySet();
-    private AtomicBoolean started=new AtomicBoolean(false);
+    private Set collectionCandidates = new CopyOnWriteArraySet();
+    private AtomicBoolean started = new AtomicBoolean(false);
     private Thread runner;
-    private int sweepInterval=5000;
-    
-    TransportStatusDetector(TransportConnector connector){
-        this.connector=connector;
+    private int sweepInterval = 5000;
+
+    TransportStatusDetector(TransportConnector connector) {
+        this.connector = connector;
     }
+
     /**
      * @return Returns the sweepInterval.
      */
-    public int getSweepInterval(){
+    public int getSweepInterval() {
         return sweepInterval;
     }
-    
+
     /**
-     *  The sweepInterval to set.
+     * The sweepInterval to set.
+     * 
      * @param sweepInterval
-     *           
      */
-    public void setSweepInterval(int sweepInterval){
-        this.sweepInterval=sweepInterval;
+    public void setSweepInterval(int sweepInterval) {
+        this.sweepInterval = sweepInterval;
     }
-    
-    protected void doCollection(){
-        for(Iterator i=collectionCandidates.iterator();i.hasNext();){
-            TransportConnection tc=(TransportConnection) i.next();
-            if(tc.isMarkedCandidate()){
-                if(tc.isBlockedCandidate()){
+
+    protected void doCollection() {
+        for (Iterator i = collectionCandidates.iterator(); i.hasNext();) {
+            TransportConnection tc = (TransportConnection)i.next();
+            if (tc.isMarkedCandidate()) {
+                if (tc.isBlockedCandidate()) {
                     collectionCandidates.remove(tc);
                     doCollection(tc);
-                }else{
+                } else {
                     tc.doMark();
                 }
-            }else{
+            } else {
                 collectionCandidates.remove(tc);
             }
         }
     }
-    protected void doSweep(){
-        for(Iterator i=connector.getConnections().iterator();i.hasNext();){
-            TransportConnection connection=(TransportConnection) i.next();
-            if(connection.isMarkedCandidate()){
+
+    protected void doSweep() {
+        for (Iterator i = connector.getConnections().iterator(); i.hasNext();) {
+            TransportConnection connection = (TransportConnection)i.next();
+            if (connection.isMarkedCandidate()) {
                 connection.doMark();
                 collectionCandidates.add(connection);
             }
         }
     }
-    protected void doCollection(TransportConnection tc){
-        log.warn("found a blocked client - stopping: "+tc);
-        try{
+
+    protected void doCollection(TransportConnection tc) {
+        log.warn("found a blocked client - stopping: " + tc);
+        try {
             tc.stop();
-        }catch(Exception e){
-            log.error("Error stopping "+tc,e);
+        } catch (Exception e) {
+            log.error("Error stopping " + tc, e);
         }
     }
-    public void run(){
-        while(started.get()){
-            try{
+
+    public void run() {
+        while (started.get()) {
+            try {
                 doCollection();
                 doSweep();
                 Thread.sleep(sweepInterval);
-            }catch(Throwable e){
-                log.error("failed to complete a sweep for blocked clients",e);
+            } catch (Throwable e) {
+                log.error("failed to complete a sweep for blocked clients", e);
             }
         }
     }
-    public void start() throws Exception{
-        if(started.compareAndSet(false,true)){
-            runner=new Thread(this,"ActiveMQ Transport Status Monitor: "+connector);
+
+    public void start() throws Exception {
+        if (started.compareAndSet(false, true)) {
+            runner = new Thread(this, "ActiveMQ Transport Status Monitor: " + connector);
             runner.setDaemon(true);
             runner.setPriority(ThreadPriorities.BROKER_MANAGEMENT);
             runner.start();
         }
     }
-    public void stop() throws Exception{
+
+    public void stop() throws Exception {
         started.set(false);
         if (runner != null) {
             runner.join(getSweepInterval() * 5);

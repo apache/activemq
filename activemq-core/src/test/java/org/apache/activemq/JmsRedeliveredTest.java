@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -29,8 +28,6 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -41,8 +38,10 @@ import junit.framework.TestSuite;
 public class JmsRedeliveredTest extends TestCase {
 
     private Connection connection;
-    
-    /* (non-Javadoc)
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see junit.framework.TestCase#setUp()
      */
     protected void setUp() throws Exception {
@@ -58,55 +57,57 @@ public class JmsRedeliveredTest extends TestCase {
             connection = null;
         }
     }
-    
+
     /**
-     * Creates a connection. 
+     * Creates a connection.
      * 
      * @return connection
      * @throws Exception
      */
-    protected Connection createConnection() throws Exception{
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
+    protected Connection createConnection() throws Exception {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(
+                                                                          "vm://localhost?broker.persistent=false");
         return factory.createConnection();
     }
 
     /**
-     * Tests if a message unacknowledged message gets to be resent when the session is closed and
-     * then a new consumer session is created.     
+     * Tests if a message unacknowledged message gets to be resent when the
+     * session is closed and then a new consumer session is created.
      * 
      */
     public void testQueueSessionCloseMarksMessageRedelivered() throws JMSException {
         connection.start();
 
         Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-        Queue queue = session.createQueue("queue-"+getName());
+        Queue queue = session.createQueue("queue-" + getName());
         MessageProducer producer = createProducer(session, queue);
         producer.send(createTextMessage(session));
 
         // Consume the message...
         MessageConsumer consumer = session.createConsumer(queue);
         Message msg = consumer.receive(1000);
-        assertNotNull(msg);        
+        assertNotNull(msg);
         assertFalse("Message should not be redelivered.", msg.getJMSRedelivered());
         // Don't ack the message.
-        
-        // Reset the session.  This should cause the Unacked message to be redelivered.
+
+        // Reset the session. This should cause the Unacked message to be
+        // redelivered.
         session.close();
         session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-                
+
         // Attempt to Consume the message...
         consumer = session.createConsumer(queue);
         msg = consumer.receive(2000);
-        assertNotNull(msg);        
+        assertNotNull(msg);
         assertTrue("Message should be redelivered.", msg.getJMSRedelivered());
         msg.acknowledge();
-        
+
         session.close();
     }
 
     /**
-     * Tests session recovery and that the redelivered message is marked as such.
-     * Session uses client acknowledgement, the destination is a queue.
+     * Tests session recovery and that the redelivered message is marked as
+     * such. Session uses client acknowledgement, the destination is a queue.
      * 
      * @throws JMSException
      */
@@ -114,32 +115,33 @@ public class JmsRedeliveredTest extends TestCase {
         connection.start();
 
         Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-        Queue queue = session.createQueue("queue-"+getName());
+        Queue queue = session.createQueue("queue-" + getName());
         MessageProducer producer = createProducer(session, queue);
         producer.send(createTextMessage(session));
 
         // Consume the message...
         MessageConsumer consumer = session.createConsumer(queue);
         Message msg = consumer.receive(1000);
-        assertNotNull(msg);        
+        assertNotNull(msg);
         assertFalse("Message should not be redelivered.", msg.getJMSRedelivered());
         // Don't ack the message.
-        
-        // Reset the session.  This should cause the Unacked message to be redelivered.
+
+        // Reset the session. This should cause the Unacked message to be
+        // redelivered.
         session.recover();
-                
+
         // Attempt to Consume the message...
         msg = consumer.receive(2000);
-        assertNotNull(msg);        
+        assertNotNull(msg);
         assertTrue("Message should be redelivered.", msg.getJMSRedelivered());
         msg.acknowledge();
-        
+
         session.close();
     }
-    
+
     /**
-     * Tests rollback message to be marked as redelivered.
-     * Session uses client acknowledgement and the destination is a queue.  
+     * Tests rollback message to be marked as redelivered. Session uses client
+     * acknowledgement and the destination is a queue.
      * 
      * @throws JMSException
      */
@@ -147,34 +149,34 @@ public class JmsRedeliveredTest extends TestCase {
         connection.start();
 
         Session session = connection.createSession(true, Session.CLIENT_ACKNOWLEDGE);
-        Queue queue = session.createQueue("queue-"+getName());
+        Queue queue = session.createQueue("queue-" + getName());
         MessageProducer producer = createProducer(session, queue);
         producer.send(createTextMessage(session));
         session.commit();
-        
+
         // Get the message... Should not be redelivered.
         MessageConsumer consumer = session.createConsumer(queue);
         Message msg = consumer.receive(1000);
-        assertNotNull(msg);        
+        assertNotNull(msg);
         assertFalse("Message should not be redelivered.", msg.getJMSRedelivered());
-        
+
         // Rollback.. should cause redelivery.
         session.rollback();
-                        
+
         // Attempt to Consume the message...
         msg = consumer.receive(2000);
-        assertNotNull(msg);        
+        assertNotNull(msg);
         assertTrue("Message should be redelivered.", msg.getJMSRedelivered());
-        
+
         session.commit();
         session.close();
     }
-    
+
     /**
-     * Tests if the message gets to be re-delivered when the session closes and 
-     * that the re-delivered message is marked as such.  
-     * Session uses client acknowledgment, the destination is a topic and 
-     * the consumer is a durable subscriber.
+     * Tests if the message gets to be re-delivered when the session closes and
+     * that the re-delivered message is marked as such. Session uses client
+     * acknowledgment, the destination is a topic and the consumer is a durable
+     * subscriber.
      * 
      * @throws JMSException
      */
@@ -183,10 +185,11 @@ public class JmsRedeliveredTest extends TestCase {
         connection.start();
 
         Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-        Topic topic = session.createTopic("topic-"+getName());
+        Topic topic = session.createTopic("topic-" + getName());
         MessageConsumer consumer = session.createDurableSubscriber(topic, "sub1");
 
-        // This case only works with persistent messages since transient messages
+        // This case only works with persistent messages since transient
+        // messages
         // are dropped when the consumer goes offline.
         MessageProducer producer = session.createProducer(topic);
         producer.setDeliveryMode(DeliveryMode.PERSISTENT);
@@ -194,28 +197,29 @@ public class JmsRedeliveredTest extends TestCase {
 
         // Consume the message...
         Message msg = consumer.receive(1000);
-        assertNotNull(msg);        
+        assertNotNull(msg);
         assertFalse("Message should not be re-delivered.", msg.getJMSRedelivered());
         // Don't ack the message.
-        
-        // Reset the session.  This should cause the Unacked message to be re-delivered.
+
+        // Reset the session. This should cause the Unacked message to be
+        // re-delivered.
         session.close();
         session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-                
+
         // Attempt to Consume the message...
         consumer = session.createDurableSubscriber(topic, "sub1");
         msg = consumer.receive(2000);
-        assertNotNull(msg);        
+        assertNotNull(msg);
         assertTrue("Message should be redelivered.", msg.getJMSRedelivered());
         msg.acknowledge();
-        
+
         session.close();
     }
-    
+
     /**
-     * Tests session recovery and that the redelivered message is marked as such.
-     * Session uses client acknowledgement, the destination is a topic and
-     * the consumer is a durable suscriber. 
+     * Tests session recovery and that the redelivered message is marked as
+     * such. Session uses client acknowledgement, the destination is a topic and
+     * the consumer is a durable suscriber.
      * 
      * @throws JMSException
      */
@@ -224,7 +228,7 @@ public class JmsRedeliveredTest extends TestCase {
         connection.start();
 
         Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-        Topic topic = session.createTopic("topic-"+getName());
+        Topic topic = session.createTopic("topic-" + getName());
         MessageConsumer consumer = session.createDurableSubscriber(topic, "sub1");
 
         MessageProducer producer = createProducer(session, topic);
@@ -232,25 +236,26 @@ public class JmsRedeliveredTest extends TestCase {
 
         // Consume the message...
         Message msg = consumer.receive(1000);
-        assertNotNull(msg);        
+        assertNotNull(msg);
         assertFalse("Message should not be redelivered.", msg.getJMSRedelivered());
         // Don't ack the message.
-        
-        // Reset the session.  This should cause the Unacked message to be redelivered.
+
+        // Reset the session. This should cause the Unacked message to be
+        // redelivered.
         session.recover();
-                
+
         // Attempt to Consume the message...
         msg = consumer.receive(2000);
-        assertNotNull(msg);        
+        assertNotNull(msg);
         assertTrue("Message should be redelivered.", msg.getJMSRedelivered());
         msg.acknowledge();
-        
+
         session.close();
     }
-    
+
     /**
-     * Tests rollback message to be marked as redelivered.
-     * Session uses client acknowledgement and the destination is a topic.  
+     * Tests rollback message to be marked as redelivered. Session uses client
+     * acknowledgement and the destination is a topic.
      * 
      * @throws JMSException
      */
@@ -259,31 +264,30 @@ public class JmsRedeliveredTest extends TestCase {
         connection.start();
 
         Session session = connection.createSession(true, Session.CLIENT_ACKNOWLEDGE);
-        Topic topic = session.createTopic("topic-"+getName());
+        Topic topic = session.createTopic("topic-" + getName());
         MessageConsumer consumer = session.createDurableSubscriber(topic, "sub1");
 
         MessageProducer producer = createProducer(session, topic);
         producer.send(createTextMessage(session));
         session.commit();
-        
+
         // Get the message... Should not be redelivered.
         Message msg = consumer.receive(1000);
-        assertNotNull(msg);        
+        assertNotNull(msg);
         assertFalse("Message should not be redelivered.", msg.getJMSRedelivered());
-        
+
         // Rollback.. should cause redelivery.
         session.rollback();
-                        
+
         // Attempt to Consume the message...
         msg = consumer.receive(2000);
-        assertNotNull(msg);        
+        assertNotNull(msg);
         assertTrue("Message should be redelivered.", msg.getJMSRedelivered());
-        
-        
+
         session.commit();
         session.close();
     }
-     
+
     /**
      * 
      * 
@@ -295,7 +299,7 @@ public class JmsRedeliveredTest extends TestCase {
         connection.start();
 
         Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-        Topic topic = session.createTopic("topic-"+getName());
+        Topic topic = session.createTopic("topic-" + getName());
         MessageConsumer consumer = session.createConsumer(topic);
 
         MessageProducer producer = createProducer(session, topic);
@@ -303,26 +307,27 @@ public class JmsRedeliveredTest extends TestCase {
 
         // Consume the message...
         Message msg = consumer.receive(1000);
-        assertNotNull(msg);        
+        assertNotNull(msg);
         assertFalse("Message should not be redelivered.", msg.getJMSRedelivered());
         // Don't ack the message.
-        
-        // Reset the session.  This should cause the Unacked message to be redelivered.
+
+        // Reset the session. This should cause the Unacked message to be
+        // redelivered.
         session.recover();
-                
+
         // Attempt to Consume the message...
         msg = consumer.receive(2000);
-        assertNotNull(msg);        
+        assertNotNull(msg);
         assertTrue("Message should be redelivered.", msg.getJMSRedelivered());
         msg.acknowledge();
-        
+
         session.close();
     }
-    
+
     /**
-     * Tests rollback message to be marked as redelivered.
-     * Session uses client acknowledgement and the destination is a topic.  
-     *  
+     * Tests rollback message to be marked as redelivered. Session uses client
+     * acknowledgement and the destination is a topic.
+     * 
      * @throws JMSException
      */
     public void testTopicRollbackMarksMessageRedelivered() throws JMSException {
@@ -330,26 +335,26 @@ public class JmsRedeliveredTest extends TestCase {
         connection.start();
 
         Session session = connection.createSession(true, Session.CLIENT_ACKNOWLEDGE);
-        Topic topic = session.createTopic("topic-"+getName());
+        Topic topic = session.createTopic("topic-" + getName());
         MessageConsumer consumer = session.createConsumer(topic);
 
         MessageProducer producer = createProducer(session, topic);
         producer.send(createTextMessage(session));
         session.commit();
-        
+
         // Get the message... Should not be redelivered.
         Message msg = consumer.receive(1000);
-        assertNotNull(msg);        
+        assertNotNull(msg);
         assertFalse("Message should not be redelivered.", msg.getJMSRedelivered());
-        
+
         // Rollback.. should cause redelivery.
         session.rollback();
-                        
+
         // Attempt to Consume the message...
         msg = consumer.receive(2000);
-        assertNotNull(msg);        
-        assertTrue("Message should be redelivered.", msg.getJMSRedelivered());        
-        
+        assertNotNull(msg);
+        assertTrue("Message should be redelivered.", msg.getJMSRedelivered());
+
         session.commit();
         session.close();
     }
@@ -364,25 +369,25 @@ public class JmsRedeliveredTest extends TestCase {
     private TextMessage createTextMessage(Session session) throws JMSException {
         return session.createTextMessage("Hello");
     }
-   
+
     /**
-     * Creates a producer. 
+     * Creates a producer.
      * 
-     * @param session  
+     * @param session
      * @param queue - destination.
      * @return MessageProducer
      * @throws JMSException
      */
     private MessageProducer createProducer(Session session, Destination queue) throws JMSException {
-         MessageProducer producer = session.createProducer(queue);
-         producer.setDeliveryMode(getDeliveryMode());
-         return producer;
+        MessageProducer producer = session.createProducer(queue);
+        producer.setDeliveryMode(getDeliveryMode());
+        return producer;
     }
-    
+
     /**
-     * Returns delivery mode.  
+     * Returns delivery mode.
      * 
-     * @return int - persistent delivery mode.  
+     * @return int - persistent delivery mode.
      */
     protected int getDeliveryMode() {
         return DeliveryMode.PERSISTENT;
@@ -393,12 +398,12 @@ public class JmsRedeliveredTest extends TestCase {
      */
     static final public class PersistentCase extends JmsRedeliveredTest {
 
-    	/**
-         * Returns delivery mode.  
+        /**
+         * Returns delivery mode.
          * 
-         * @return int - persistent delivery mode.  
+         * @return int - persistent delivery mode.
          */
-    	protected int getDeliveryMode() {
+        protected int getDeliveryMode() {
             return DeliveryMode.PERSISTENT;
         }
     }
@@ -409,19 +414,19 @@ public class JmsRedeliveredTest extends TestCase {
     static final public class TransientCase extends JmsRedeliveredTest {
 
         /**
-         * Returns delivery mode.  
+         * Returns delivery mode.
          * 
-         * @return int - non-persistent delivery mode.  
+         * @return int - non-persistent delivery mode.
          */
-    	protected int getDeliveryMode() {
+        protected int getDeliveryMode() {
             return DeliveryMode.NON_PERSISTENT;
         }
     }
-    
-    public static Test suite() { 
-        TestSuite suite= new TestSuite(); 
-        suite.addTestSuite(PersistentCase.class); 
-        suite.addTestSuite(TransientCase.class); 
+
+    public static Test suite() {
+        TestSuite suite = new TestSuite();
+        suite.addTestSuite(PersistentCase.class);
+        suite.addTestSuite(TransientCase.class);
         return suite;
     }
 }

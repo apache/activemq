@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,203 +32,200 @@ import javax.jms.Topic;
  *
  */
 public class JmsSendReceiveWithMessageExpirationTest extends TestSupport {
-	
-	private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-           .getLog(JmsSendReceiveWithMessageExpirationTest.class);
-	
-	protected int messageCount = 100;
+
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(JmsSendReceiveWithMessageExpirationTest.class);
+
+    protected int messageCount = 100;
     protected String[] data;
     protected Session session;
     protected Destination consumerDestination;
     protected Destination producerDestination;
-    protected boolean durable = false;
+    protected boolean durable;
     protected int deliveryMode = DeliveryMode.PERSISTENT;
     protected long timeToLive = 5000;
-    protected boolean verbose = false;
-    
+    protected boolean verbose;
+
     protected Connection connection;
-    
+
     protected void setUp() throws Exception {
-        
-    	super.setUp();
-        
+
+        super.setUp();
+
         data = new String[messageCount];
-        
+
         for (int i = 0; i < messageCount; i++) {
             data[i] = "Text for message: " + i + " at " + new Date();
         }
-        
-        connectionFactory = createConnectionFactory();        
+
+        connectionFactory = createConnectionFactory();
         connection = createConnection();
-        
+
         if (durable) {
             connection.setClientID(getClass().getName());
         }
 
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
-    
+
     /**
      * Test consuming an expired queue.
-     *
+     * 
      * @throws Exception
      */
     public void testConsumeExpiredQueue() throws Exception {
-        
-    	MessageProducer producer = createProducer(timeToLive);
-        
+
+        MessageProducer producer = createProducer(timeToLive);
+
         consumerDestination = session.createQueue(getConsumerSubject());
         producerDestination = session.createQueue(getProducerSubject());
-        
-        MessageConsumer consumer = createConsumer();        
-        connection.start();  
-        
-    	for (int i = 0; i < data.length; i++) {
+
+        MessageConsumer consumer = createConsumer();
+        connection.start();
+
+        for (int i = 0; i < data.length; i++) {
             Message message = session.createTextMessage(data[i]);
-            message.setStringProperty("stringProperty",data[i]);
-            message.setIntProperty("intProperty",i);
-        
+            message.setStringProperty("stringProperty", data[i]);
+            message.setIntProperty("intProperty", i);
+
             if (verbose) {
-                if (log.isDebugEnabled()) {
-                    log.debug("About to send a queue message: " + message + " with text: " + data[i]);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("About to send a queue message: " + message + " with text: " + data[i]);
                 }
             }
-            
+
             producer.send(producerDestination, message);
         }
-        
+
         // sleeps a second longer than the expiration time.
-		// Basically waits till queue expires.
-		Thread.sleep(timeToLive + 1000);
-        
+        // Basically waits till queue expires.
+        Thread.sleep(timeToLive + 1000);
+
         // message should have expired.
         assertNull(consumer.receive(1000));
     }
-    
+
     /**
      * Sends and consumes the messages to a queue destination.
-     *
+     * 
      * @throws Exception
      */
     public void testConsumeQueue() throws Exception {
-        
-    	MessageProducer producer = createProducer(0);
-        
+
+        MessageProducer producer = createProducer(0);
+
         consumerDestination = session.createQueue(getConsumerSubject());
         producerDestination = session.createQueue(getProducerSubject());
-        
-        MessageConsumer consumer = createConsumer();        
-        connection.start();  
-        
-    	for (int i = 0; i < data.length; i++) {
+
+        MessageConsumer consumer = createConsumer();
+        connection.start();
+
+        for (int i = 0; i < data.length; i++) {
             Message message = session.createTextMessage(data[i]);
-            message.setStringProperty("stringProperty",data[i]);
-            message.setIntProperty("intProperty",i);
-        
+            message.setStringProperty("stringProperty", data[i]);
+            message.setIntProperty("intProperty", i);
+
             if (verbose) {
-                if (log.isDebugEnabled()) {
-                    log.debug("About to send a queue message: " + message + " with text: " + data[i]);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("About to send a queue message: " + message + " with text: " + data[i]);
                 }
             }
-            
+
             producer.send(producerDestination, message);
         }
-        
+
         // should receive a queue since there is no expiration.
         assertNotNull(consumer.receive(1000));
     }
-    
+
     /**
      * Test consuming an expired topic.
-     *
+     * 
      * @throws Exception
      */
     public void testConsumeExpiredTopic() throws Exception {
-    	
-    	MessageProducer producer = createProducer(timeToLive);
-        
+
+        MessageProducer producer = createProducer(timeToLive);
+
         consumerDestination = session.createTopic(getConsumerSubject());
         producerDestination = session.createTopic(getProducerSubject());
-        
-        MessageConsumer consumer = createConsumer();        
-        connection.start(); 
-        
-    	for (int i = 0; i < data.length; i++) {
+
+        MessageConsumer consumer = createConsumer();
+        connection.start();
+
+        for (int i = 0; i < data.length; i++) {
             Message message = session.createTextMessage(data[i]);
-            message.setStringProperty("stringProperty",data[i]);
-            message.setIntProperty("intProperty",i);
-        
+            message.setStringProperty("stringProperty", data[i]);
+            message.setIntProperty("intProperty", i);
+
             if (verbose) {
-                if (log.isDebugEnabled()) {
-                    log.debug("About to send a topic message: " + message + " with text: " + data[i]);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("About to send a topic message: " + message + " with text: " + data[i]);
                 }
             }
-            
+
             producer.send(producerDestination, message);
         }
-        
+
         // sleeps a second longer than the expiration time.
-		// Basically waits till topic expires.
-		Thread.sleep(timeToLive + 1000);
-        
+        // Basically waits till topic expires.
+        Thread.sleep(timeToLive + 1000);
+
         // message should have expired.
         assertNull(consumer.receive(1000));
     }
-    
+
     /**
      * Sends and consumes the messages to a topic destination.
-     *
+     * 
      * @throws Exception
      */
     public void testConsumeTopic() throws Exception {
-    	
-    	MessageProducer producer = createProducer(0);
-        
+
+        MessageProducer producer = createProducer(0);
+
         consumerDestination = session.createTopic(getConsumerSubject());
         producerDestination = session.createTopic(getProducerSubject());
-        
-        MessageConsumer consumer = createConsumer();        
-        connection.start(); 
-        
-    	for (int i = 0; i < data.length; i++) {
+
+        MessageConsumer consumer = createConsumer();
+        connection.start();
+
+        for (int i = 0; i < data.length; i++) {
             Message message = session.createTextMessage(data[i]);
-            message.setStringProperty("stringProperty",data[i]);
-            message.setIntProperty("intProperty",i);
-        
+            message.setStringProperty("stringProperty", data[i]);
+            message.setIntProperty("intProperty", i);
+
             if (verbose) {
-                if (log.isDebugEnabled()) {
-                    log.debug("About to send a topic message: " + message + " with text: " + data[i]);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("About to send a topic message: " + message + " with text: " + data[i]);
                 }
             }
-            
+
             producer.send(producerDestination, message);
         }
-        
+
         // should receive a topic since there is no expiration.
         assertNotNull(consumer.receive(1000));
     }
-    
-    
-    
+
     protected MessageProducer createProducer(long timeToLive) throws JMSException {
-    	MessageProducer producer = session.createProducer(null);
+        MessageProducer producer = session.createProducer(null);
         producer.setDeliveryMode(deliveryMode);
         producer.setTimeToLive(timeToLive);
-        
-        return producer;    	
+
+        return producer;
     }
-    
+
     protected MessageConsumer createConsumer() throws JMSException {
         if (durable) {
-            log.info("Creating durable consumer");
-            return session.createDurableSubscriber((Topic) consumerDestination, getName());
+            LOG.info("Creating durable consumer");
+            return session.createDurableSubscriber((Topic)consumerDestination, getName());
         }
         return session.createConsumer(consumerDestination);
     }
-    
+
     protected void tearDown() throws Exception {
-        log.info("Dumping stats...");    
-        log.info("Closing down connection");
+        LOG.info("Dumping stats...");
+        LOG.info("Closing down connection");
 
         session.close();
         connection.close();

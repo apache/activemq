@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -39,10 +38,9 @@ import org.apache.commons.logging.LogFactory;
 
 import java.util.concurrent.CountDownLatch;
 
-
 /**
  * Test case for AMQ-268
- *
+ * 
  * @author Paul Smith
  * @version $Revision: 1.1 $
  */
@@ -80,13 +78,13 @@ public final class TransactionRollbackOrderTest extends TestCase {
         consumer = consumerSession.createConsumer(queue);
         consumer.setMessageListener(new MessageListener() {
 
-            int msgCount = 0;
-            int msgCommittedCount = 0;
+            int msgCount;
+            int msgCommittedCount;
 
             public void onMessage(Message m) {
                 try {
                     msgCount++;
-                    TextMessage tm = (TextMessage) m;
+                    TextMessage tm = (TextMessage)m;
                     receivedText = tm.getText();
 
                     if (tm.getJMSRedelivered()) {
@@ -98,8 +96,7 @@ public final class TransactionRollbackOrderTest extends TestCase {
                         msgRolledBack.add(receivedText);
                         consumerSession.rollback();
                         log.info("[msg: " + receivedText + "] ** rolled back **");
-                    }
-                    else {
+                    } else {
                         msgCommittedCount++;
                         msgCommitted.add(receivedText);
                         consumerSession.commit();
@@ -108,13 +105,11 @@ public final class TransactionRollbackOrderTest extends TestCase {
                     if (msgCommittedCount == NUM_MESSAGES) {
                         latch.countDown();
                     }
-                }
-                catch (JMSException e) {
+                } catch (JMSException e) {
                     try {
                         consumerSession.rollback();
                         log.info("rolled back transaction");
-                    }
-                    catch (JMSException e1) {
+                    } catch (JMSException e1) {
                         log.info(e1);
                         e1.printStackTrace();
                     }
@@ -134,8 +129,7 @@ public final class TransactionRollbackOrderTest extends TestCase {
                 producer.send(tm);
                 log.info("producer sent message: " + tm.getText());
             }
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             e.printStackTrace();
         }
 

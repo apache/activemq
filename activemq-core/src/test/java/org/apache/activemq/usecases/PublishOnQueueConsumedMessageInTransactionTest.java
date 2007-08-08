@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,11 +29,10 @@ import java.util.Collections;
 import java.util.ArrayList;
 import java.io.File;
 
-
 public final class PublishOnQueueConsumedMessageInTransactionTest extends TestCase implements MessageListener {
 
-    private static final Log log = LogFactory.getLog(PublishOnQueueConsumedMessageInTransactionTest.class);
-    
+    private static final Log LOG = LogFactory.getLog(PublishOnQueueConsumedMessageInTransactionTest.class);
+
     private Session producerSession;
     private Session consumerSession;
     private Destination queue;
@@ -42,7 +40,7 @@ public final class PublishOnQueueConsumedMessageInTransactionTest extends TestCa
     private MessageProducer producer;
     private MessageConsumer consumer;
     private Connection connection;
-    private ObjectMessage objectMessage = null;
+    private ObjectMessage objectMessage;
     private List messages = createConcurrentList();
     private final Object lock = new Object();
     private String[] data;
@@ -50,10 +48,10 @@ public final class PublishOnQueueConsumedMessageInTransactionTest extends TestCa
     private int messageCount = 3;
     private String url = "vm://localhost";
 
-    // Invalid acknowledgment warning can be viewed on the console of  a remote broker
+    // Invalid acknowledgment warning can be viewed on the console of a remote
+    // broker
     // The warning message is not thrown back to the client
-    //private String url = "tcp://localhost:61616";
-
+    // private String url = "tcp://localhost:61616";
 
     protected void setUp() throws Exception {
         File dataFile = new File(DATAFILE_ROOT);
@@ -74,7 +72,6 @@ public final class PublishOnQueueConsumedMessageInTransactionTest extends TestCa
         }
     }
 
-
     public void testSendReceive() throws Exception {
         sendMessage();
 
@@ -82,10 +79,9 @@ public final class PublishOnQueueConsumedMessageInTransactionTest extends TestCa
         consumer = consumerSession.createConsumer(queue);
         consumer.setMessageListener(this);
         waitForMessagesToBeDelivered();
-        assertEquals("Messages received doesn't equal messages sent", messages.size(),data.length);
+        assertEquals("Messages received doesn't equal messages sent", messages.size(), data.length);
 
     }
-
 
     protected void sendMessage() throws JMSException {
         messages.clear();
@@ -95,12 +91,12 @@ public final class PublishOnQueueConsumedMessageInTransactionTest extends TestCa
                 objectMessage = producerSession.createObjectMessage(data[i]);
                 producer.send(objectMessage);
                 producerSession.commit();
-                log.info("sending message :" + objectMessage);
+                LOG.info("sending message :" + objectMessage);
             }
         } catch (Exception e) {
             if (producerSession != null) {
                 producerSession.rollback();
-                log.info("rollback");
+                LOG.info("rollback");
                 producerSession.close();
             }
 
@@ -108,28 +104,26 @@ public final class PublishOnQueueConsumedMessageInTransactionTest extends TestCa
         }
     }
 
-
     public synchronized void onMessage(Message m) {
         try {
-            objectMessage = (ObjectMessage) m;
-            consumeMessage(objectMessage,messages);
+            objectMessage = (ObjectMessage)m;
+            consumeMessage(objectMessage, messages);
 
-            log.info("consumer received message :" + objectMessage);
+            LOG.info("consumer received message :" + objectMessage);
             consumerSession.commit();
 
         } catch (Exception e) {
             try {
                 consumerSession.rollback();
-                log.info("rolled back transaction");
+                LOG.info("rolled back transaction");
             } catch (JMSException e1) {
-                log.info(e1);
+                LOG.info(e1);
                 e1.printStackTrace();
             }
-            log.info(e);
+            LOG.info(e);
             e.printStackTrace();
         }
     }
-
 
     protected void consumeMessage(Message message, List messageList) {
         messageList.add(message);
@@ -141,11 +135,9 @@ public final class PublishOnQueueConsumedMessageInTransactionTest extends TestCa
 
     }
 
-
     protected List createConcurrentList() {
         return Collections.synchronizedList(new ArrayList());
     }
-
 
     protected void waitForMessagesToBeDelivered() {
         long maxWaitTime = 5000;
@@ -165,9 +157,8 @@ public final class PublishOnQueueConsumedMessageInTransactionTest extends TestCa
         }
     }
 
-
     protected static void recursiveDelete(File file) {
-        if( file.isDirectory() ) {
+        if (file.isDirectory()) {
             File[] files = file.listFiles();
             for (int i = 0; i < files.length; i++) {
                 recursiveDelete(files[i]);

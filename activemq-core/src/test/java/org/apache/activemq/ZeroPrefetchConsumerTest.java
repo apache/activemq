@@ -32,7 +32,6 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 /**
- * 
  * @version $Revision$
  */
 public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
@@ -50,8 +49,7 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
         try {
             consumer.setMessageListener(listener);
             fail("Should have thrown JMSException as we cannot use MessageListener with zero prefetch");
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             log.info("Received expected exception : " + e);
         }
     }
@@ -76,69 +74,69 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
     public void testIdleConsumer() throws Exception {
         doTestIdleConsumer(false);
     }
-    
+
     public void testIdleConsumerTranscated() throws Exception {
         doTestIdleConsumer(true);
     }
-    
+
     private void doTestIdleConsumer(boolean transacted) throws Exception {
         Session session = connection.createSession(transacted, Session.AUTO_ACKNOWLEDGE);
 
         MessageProducer producer = session.createProducer(queue);
         producer.send(session.createTextMessage("Msg1"));
         producer.send(session.createTextMessage("Msg2"));
-        if(transacted) {
-            session.commit();            
+        if (transacted) {
+            session.commit();
         }
         // now lets receive it
         MessageConsumer consumer = session.createConsumer(queue);
-        //noinspection UNUSED_SYMBOL
+        // noinspection UNUSED_SYMBOL
         MessageConsumer idleConsumer = session.createConsumer(queue);
-        TextMessage answer = (TextMessage) consumer.receive(5000);
+        TextMessage answer = (TextMessage)consumer.receive(5000);
         assertEquals("Should have received a message!", answer.getText(), "Msg1");
-        if(transacted) {
-            session.commit();            
+        if (transacted) {
+            session.commit();
         }
         // this call would return null if prefetchSize > 0
-        answer = (TextMessage) consumer.receive(5000);
+        answer = (TextMessage)consumer.receive(5000);
         assertEquals("Should have received a message!", answer.getText(), "Msg2");
-        if(transacted) {
-            session.commit();            
+        if (transacted) {
+            session.commit();
         }
-        answer = (TextMessage) consumer.receiveNoWait();
+        answer = (TextMessage)consumer.receiveNoWait();
         assertNull("Should have not received a message!", answer);
     }
 
     public void testRecvRecvCommit() throws Exception {
         doTestRecvRecvCommit(false);
     }
-    
+
     public void testRecvRecvCommitTranscated() throws Exception {
         doTestRecvRecvCommit(true);
     }
-    
+
     private void doTestRecvRecvCommit(boolean transacted) throws Exception {
         Session session = connection.createSession(transacted, Session.AUTO_ACKNOWLEDGE);
 
         MessageProducer producer = session.createProducer(queue);
         producer.send(session.createTextMessage("Msg1"));
         producer.send(session.createTextMessage("Msg2"));
-        if(transacted) {
-            session.commit();            
+        if (transacted) {
+            session.commit();
         }
         // now lets receive it
         MessageConsumer consumer = session.createConsumer(queue);
-        TextMessage answer = (TextMessage) consumer.receiveNoWait();
+        TextMessage answer = (TextMessage)consumer.receiveNoWait();
         assertEquals("Should have received a message!", answer.getText(), "Msg1");
-        answer = (TextMessage) consumer.receiveNoWait();
+        answer = (TextMessage)consumer.receiveNoWait();
         assertEquals("Should have received a message!", answer.getText(), "Msg2");
-        if(transacted) {
-            session.commit();            
+        if (transacted) {
+            session.commit();
         }
-        answer = (TextMessage) consumer.receiveNoWait();
+        answer = (TextMessage)consumer.receiveNoWait();
         assertNull("Should have not received a message!", answer);
     }
-    
+
     protected void setUp() throws Exception {
         bindAddress = "tcp://localhost:61616";
         super.setUp();

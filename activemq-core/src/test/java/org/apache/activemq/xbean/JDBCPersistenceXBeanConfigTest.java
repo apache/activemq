@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,7 +26,6 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 
 /**
- * 
  * @version $Revision: 1.1 $
  */
 public class JDBCPersistenceXBeanConfigTest extends TestCase {
@@ -40,9 +38,9 @@ public class JDBCPersistenceXBeanConfigTest extends TestCase {
         assertNotNull(persistenceAdapter);
         assertTrue(persistenceAdapter instanceof JDBCPersistenceAdapter);
 
-        JDBCPersistenceAdapter jpa = (JDBCPersistenceAdapter) persistenceAdapter;
+        JDBCPersistenceAdapter jpa = (JDBCPersistenceAdapter)persistenceAdapter;
         assertEquals("BROKER1.", jpa.getStatements().getTablePrefix());
-        
+
     }
 
     protected void setUp() throws Exception {
@@ -58,7 +56,7 @@ public class JDBCPersistenceXBeanConfigTest extends TestCase {
 
     protected BrokerService createBroker() throws Exception {
         String uri = "org/apache/activemq/xbean/jdbc-persistence-test.xml";
-        return BrokerFactory.createBroker(new URI("xbean:"+uri));
+        return BrokerFactory.createBroker(new URI("xbean:" + uri));
     }
 
 }

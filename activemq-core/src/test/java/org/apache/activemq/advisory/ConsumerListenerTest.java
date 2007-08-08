@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,17 +20,14 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.activemq.EmbeddedBrokerTestSupport;
-import org.apache.activemq.advisory.ConsumerEvent;
-import org.apache.activemq.advisory.ConsumerEventSource;
-import org.apache.activemq.advisory.ConsumerListener;
-
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.Session;
+
+import org.apache.activemq.EmbeddedBrokerTestSupport;
 
 /**
  * 
@@ -118,20 +114,20 @@ public class ConsumerListenerTest extends EmbeddedBrokerTestSupport implements C
 
     protected Session createConsumer() throws JMSException {
         final String consumerText = "Consumer: " + (++consumerCounter);
-        log.info("Creating consumer: " + consumerText + " on destination: " + destination);
-        
+        LOG.info("Creating consumer: " + consumerText + " on destination: " + destination);
+
         Session answer = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = answer.createConsumer(destination);
         consumer.setMessageListener(new MessageListener() {
             public void onMessage(Message message) {
-                log.info("Received message by: " + consumerText + " message: " + message);
+                LOG.info("Received message by: " + consumerText + " message: " + message);
             }
         });
         return answer;
     }
 
     protected ConsumerEvent waitForConsumerEvent() throws InterruptedException {
-        ConsumerEvent answer = (ConsumerEvent) eventQueue.poll(100000, TimeUnit.MILLISECONDS);
+        ConsumerEvent answer = (ConsumerEvent)eventQueue.poll(100000, TimeUnit.MILLISECONDS);
         assertTrue("Should have received a consumer event!", answer != null);
         return answer;
     }

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,9 +29,9 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * A {@link BrokerFactoryHandler} which uses a properties file to
- * configure the broker's various policies.
- *
+ * A {@link BrokerFactoryHandler} which uses a properties file to configure the
+ * broker's various policies.
+ * 
  * @version $Revision$
  */
 public class PropertiesBrokerFactory implements BrokerFactoryHandler {
@@ -58,13 +57,11 @@ public class PropertiesBrokerFactory implements BrokerFactoryHandler {
         InputStream inputStream = null;
         if (file.exists()) {
             inputStream = new FileInputStream(file);
-        }
-        else {
+        } else {
             URL url = null;
             try {
                 url = new URL(remaining);
-            }
-            catch (MalformedURLException e) {
+            } catch (MalformedURLException e) {
                 // lets now see if we can find the name on the classpath
                 inputStream = findResourceOnClassPath(remaining);
                 if (inputStream == null) {
@@ -75,7 +72,7 @@ public class PropertiesBrokerFactory implements BrokerFactoryHandler {
                 inputStream = url.openStream();
             }
         }
-        if(inputStream!=null){
+        if (inputStream != null) {
             properties.load(inputStream);
             inputStream.close();
         }
@@ -84,8 +81,7 @@ public class PropertiesBrokerFactory implements BrokerFactoryHandler {
         try {
             Properties systemProperties = System.getProperties();
             properties.putAll(systemProperties);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             // ignore security exception
         }
         return properties;
