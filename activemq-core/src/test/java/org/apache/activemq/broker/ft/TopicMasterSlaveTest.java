@@ -34,12 +34,12 @@ public class TopicMasterSlaveTest extends QueueMasterSlaveTest{
     }
 
     protected MessageConsumer createConsumer(Session session,Destination dest) throws JMSException{
-        return session.createDurableSubscriber((Topic) dest,dest.toString());
+        return session.createDurableSubscriber((Topic) dest,"subName");
     }
 
     protected Connection createReceiveConnection() throws Exception{
         Connection result=super.createReceiveConnection();
-        result.setClientID(getClass().getName());
+        result.setClientID("clientId");
         return result;
     }
 }

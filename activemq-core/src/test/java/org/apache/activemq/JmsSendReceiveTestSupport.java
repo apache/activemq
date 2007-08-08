@@ -126,8 +126,8 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
         if (data.length != copyOfMessages.size()) {
             for (Iterator iter = copyOfMessages.iterator(); iter.hasNext();) {
                 TextMessage message = (TextMessage) iter.next();
-                if (log.isDebugEnabled()) {
-                    log.info("<== " + counter++ + " = " + message);
+                if (log.isInfoEnabled()) {
+                    log.info("<== " + counter++ + " = " + message.getText());
                 }
             }
         }

@@ -122,7 +122,7 @@ public class TestSupport extends TestCase {
     }
 
     protected String getSubject() {
-        return getClass().getName() + "." + getName();
+        return getName();
     }
     
     

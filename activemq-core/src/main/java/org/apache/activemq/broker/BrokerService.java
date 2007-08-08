@@ -1367,12 +1367,12 @@ public class BrokerService implements Service {
         // Add a filter that will stop access to the broker once stopped
         broker = new MutableBrokerFilter(broker) {
             public void stop() throws Exception {
-                super.stop();
                 setNext(new ErrorBroker("Broker has been stopped: "+this) {
                     // Just ignore additional stop actions.
                     public void stop() throws Exception {
                     }
                 });
+                super.stop();
             }
         };
         
