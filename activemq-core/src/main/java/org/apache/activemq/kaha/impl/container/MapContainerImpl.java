@@ -43,34 +43,34 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.2 $
  */
-public final class MapContainerImpl extends BaseContainerImpl implements MapContainer{
+public final class MapContainerImpl extends BaseContainerImpl implements MapContainer {
 
-    private static final Log log=LogFactory.getLog(MapContainerImpl.class);
+    private static final Log log = LogFactory.getLog(MapContainerImpl.class);
     protected Index index;
-    protected Marshaller keyMarshaller=Store.ObjectMarshaller;
-    protected Marshaller valueMarshaller=Store.ObjectMarshaller;
+    protected Marshaller keyMarshaller = Store.ObjectMarshaller;
+    protected Marshaller valueMarshaller = Store.ObjectMarshaller;
     protected File directory;
 
-    public MapContainerImpl(File directory,ContainerId id,IndexItem root,IndexManager indexManager,
-            DataManager dataManager,boolean persistentIndex){
-        super(id,root,indexManager,dataManager,persistentIndex);
-        this.directory=directory;
+    public MapContainerImpl(File directory, ContainerId id, IndexItem root, IndexManager indexManager,
+                            DataManager dataManager, boolean persistentIndex) {
+        super(id, root, indexManager, dataManager, persistentIndex);
+        this.directory = directory;
     }
 
-    public synchronized void init(){
+    public synchronized void init() {
         super.init();
-        if(index==null){
-            if(persistentIndex){
-                String name=containerId.getDataContainerName()+"_"+containerId.getKey();
-                name=name.replaceAll("[^a-zA-Z0-9\\.\\_\\-]", "_");
-                try{
-                    this.index=new HashIndex(directory,name,indexManager);
-                }catch(IOException e){
-                    log.error("Failed to create HashIndex",e);
+        if (index == null) {
+            if (persistentIndex) {
+                String name = containerId.getDataContainerName() + "_" + containerId.getKey();
+                name = name.replaceAll("[^a-zA-Z0-9\\.\\_\\-]", "_");
+                try {
+                    this.index = new HashIndex(directory, name, indexManager);
+                } catch (IOException e) {
+                    log.error("Failed to create HashIndex", e);
                     throw new RuntimeException(e);
                 }
-            }else{
-                this.index=new VMIndex(indexManager);
+            } else {
+                this.index = new VMIndex(indexManager);
             }
         }
         index.setKeyMarshaller(keyMarshaller);
@@ -81,27 +81,27 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      * 
      * @see org.apache.activemq.kaha.MapContainer#load()
      */
-    public synchronized void load(){
+    public synchronized void load() {
         checkClosed();
-        if(!loaded){
-            if(!loaded){
-                loaded=true;
-                try{
+        if (!loaded) {
+            if (!loaded) {
+                loaded = true;
+                try {
                     init();
                     index.load();
-                    long nextItem=root.getNextItem();
-                    while(nextItem!=Item.POSITION_NOT_SET){
-                        IndexItem item=indexManager.getIndex(nextItem);
-                        StoreLocation data=item.getKeyDataItem();
-                        Object key=dataManager.readItem(keyMarshaller,data);
-                        if(index.isTransient()){
-                            index.store(key,item);
+                    long nextItem = root.getNextItem();
+                    while (nextItem != Item.POSITION_NOT_SET) {
+                        IndexItem item = indexManager.getIndex(nextItem);
+                        StoreLocation data = item.getKeyDataItem();
+                        Object key = dataManager.readItem(keyMarshaller, data);
+                        if (index.isTransient()) {
+                            index.store(key, item);
                         }
                         indexList.add(item);
-                        nextItem=item.getNextItem();
+                        nextItem = item.getNextItem();
                     }
-                }catch(IOException e){
-                    log.error("Failed to load container "+getId(),e);
+                } catch (IOException e) {
+                    log.error("Failed to load container " + getId(), e);
                     throw new RuntimeStoreException(e);
                 }
             }
@@ -113,30 +113,30 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      * 
      * @see org.apache.activemq.kaha.MapContainer#unload()
      */
-    public synchronized void unload(){
+    public synchronized void unload() {
         checkClosed();
-        if(loaded){
-            loaded=false;
-            try{
+        if (loaded) {
+            loaded = false;
+            try {
                 index.unload();
-            }catch(IOException e){
-                log.warn("Failed to unload the index",e);
+            } catch (IOException e) {
+                log.warn("Failed to unload the index", e);
             }
             indexList.clear();
         }
     }
 
-    public synchronized void setKeyMarshaller(Marshaller keyMarshaller){
+    public synchronized void setKeyMarshaller(Marshaller keyMarshaller) {
         checkClosed();
-        this.keyMarshaller=keyMarshaller;
-        if(index!=null){
+        this.keyMarshaller = keyMarshaller;
+        if (index != null) {
             index.setKeyMarshaller(keyMarshaller);
         }
     }
 
-    public synchronized void setValueMarshaller(Marshaller valueMarshaller){
+    public synchronized void setValueMarshaller(Marshaller valueMarshaller) {
         checkClosed();
-        this.valueMarshaller=valueMarshaller;
+        this.valueMarshaller = valueMarshaller;
     }
 
     /*
@@ -144,7 +144,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      * 
      * @see org.apache.activemq.kaha.MapContainer#size()
      */
-    public synchronized int size(){
+    public synchronized int size() {
         load();
         return indexList.size();
     }
@@ -154,7 +154,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      * 
      * @see org.apache.activemq.kaha.MapContainer#isEmpty()
      */
-    public synchronized boolean isEmpty(){
+    public synchronized boolean isEmpty() {
         load();
         return indexList.isEmpty();
     }
@@ -164,12 +164,12 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      * 
      * @see org.apache.activemq.kaha.MapContainer#containsKey(java.lang.Object)
      */
-    public synchronized boolean containsKey(Object key){
+    public synchronized boolean containsKey(Object key) {
         load();
-        try{
+        try {
             return index.containsKey(key);
-        }catch(IOException e){
-            log.error("Failed trying to find key: "+key,e);
+        } catch (IOException e) {
+            log.error("Failed trying to find key: " + key, e);
             throw new RuntimeException(e);
         }
     }
@@ -179,34 +179,35 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      * 
      * @see org.apache.activemq.kaha.MapContainer#get(java.lang.Object)
      */
-    public synchronized Object get(Object key){
+    public synchronized Object get(Object key) {
         load();
-        Object result=null;
-        StoreEntry item=null;
-        try{
-            item=index.get(key);
-        }catch(IOException e){
-            log.error("Failed trying to get key: "+key,e);
+        Object result = null;
+        StoreEntry item = null;
+        try {
+            item = index.get(key);
+        } catch (IOException e) {
+            log.error("Failed trying to get key: " + key, e);
             throw new RuntimeException(e);
         }
-        if(item!=null){
-            result=getValue(item);
+        if (item != null) {
+            result = getValue(item);
         }
         return result;
     }
-    
+
     /**
      * Get the StoreEntry associated with the key
+     * 
      * @param key
      * @return the StoreEntry
      */
     public synchronized StoreEntry getEntry(Object key) {
         load();
-        StoreEntry item=null;
-        try{
-            item=index.get(key);
-        }catch(IOException e){
-            log.error("Failed trying to get key: "+key,e);
+        StoreEntry item = null;
+        try {
+            item = index.get(key);
+        } catch (IOException e) {
+            log.error("Failed trying to get key: " + key, e);
             throw new RuntimeException(e);
         }
         return item;
@@ -217,18 +218,18 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      * 
      * @see org.apache.activemq.kaha.MapContainer#containsValue(java.lang.Object)
      */
-    public synchronized boolean containsValue(Object o){
+    public synchronized boolean containsValue(Object o) {
         load();
-        boolean result=false;
-        if(o!=null){
-            IndexItem item=indexList.getFirst();
-            while(item!=null){
-                Object value=getValue(item);
-                if(value!=null&&value.equals(o)){
-                    result=true;
+        boolean result = false;
+        if (o != null) {
+            IndexItem item = indexList.getFirst();
+            while (item != null) {
+                Object value = getValue(item);
+                if (value != null && value.equals(o)) {
+                    result = true;
                     break;
                 }
-                item=indexList.getNextEntry(item);
+                item = indexList.getNextEntry(item);
             }
         }
         return result;
@@ -239,12 +240,12 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      * 
      * @see org.apache.activemq.kaha.MapContainer#putAll(java.util.Map)
      */
-    public synchronized void putAll(Map t){
+    public synchronized void putAll(Map t) {
         load();
-        if(t!=null){
-            for(Iterator i=t.entrySet().iterator();i.hasNext();){
-                Map.Entry entry=(Map.Entry)i.next();
-                put(entry.getKey(),entry.getValue());
+        if (t != null) {
+            for (Iterator i = t.entrySet().iterator(); i.hasNext();) {
+                Map.Entry entry = (Map.Entry)i.next();
+                put(entry.getKey(), entry.getValue());
             }
         }
     }
@@ -254,7 +255,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      * 
      * @see org.apache.activemq.kaha.MapContainer#keySet()
      */
-    public synchronized Set keySet(){
+    public synchronized Set keySet() {
         load();
         return new ContainerKeySet(this);
     }
@@ -264,7 +265,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      * 
      * @see org.apache.activemq.kaha.MapContainer#values()
      */
-    public synchronized Collection values(){
+    public synchronized Collection values() {
         load();
         return new ContainerValueCollection(this);
     }
@@ -274,7 +275,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      * 
      * @see org.apache.activemq.kaha.MapContainer#entrySet()
      */
-    public synchronized Set entrySet(){
+    public synchronized Set entrySet() {
         load();
         return new ContainerEntrySet(this);
     }
@@ -282,16 +283,17 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
     /*
      * (non-Javadoc)
      * 
-     * @see org.apache.activemq.kaha.MapContainer#put(java.lang.Object, java.lang.Object)
+     * @see org.apache.activemq.kaha.MapContainer#put(java.lang.Object,
+     *      java.lang.Object)
      */
-    public synchronized Object put(Object key,Object value){
+    public synchronized Object put(Object key, Object value) {
         load();
-        Object result=remove(key);
-        IndexItem item=write(key,value);
-        try{
-            index.store(key,item);
-        }catch(IOException e){
-            log.error("Failed trying to insert key: "+key,e);
+        Object result = remove(key);
+        IndexItem item = write(key, value);
+        try {
+            index.store(key, item);
+        } catch (IOException e) {
+            log.error("Failed trying to insert key: " + key, e);
             throw new RuntimeException(e);
         }
         indexList.add(item);
@@ -303,52 +305,52 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      * 
      * @see org.apache.activemq.kaha.MapContainer#remove(java.lang.Object)
      */
-    public synchronized Object remove(Object key){
+    public synchronized Object remove(Object key) {
         load();
-        try{
-            Object result=null;
-            IndexItem item=(IndexItem)index.remove(key);
-            if(item!=null){
+        try {
+            Object result = null;
+            IndexItem item = (IndexItem)index.remove(key);
+            if (item != null) {
                 // refresh the index
-                item=(IndexItem)indexList.refreshEntry(item);
-                result=getValue(item);
-                IndexItem prev=indexList.getPrevEntry(item);
-                IndexItem next=indexList.getNextEntry(item);
+                item = (IndexItem)indexList.refreshEntry(item);
+                result = getValue(item);
+                IndexItem prev = indexList.getPrevEntry(item);
+                IndexItem next = indexList.getNextEntry(item);
                 indexList.remove(item);
-                delete(item,prev,next);
+                delete(item, prev, next);
             }
             return result;
-        }catch(IOException e){
-            log.error("Failed trying to remove key: "+key,e);
+        } catch (IOException e) {
+            log.error("Failed trying to remove key: " + key, e);
             throw new RuntimeException(e);
         }
     }
 
-    public synchronized boolean removeValue(Object o){
+    public synchronized boolean removeValue(Object o) {
         load();
-        boolean result=false;
-        if(o!=null){
-            IndexItem item=indexList.getFirst();
-            while(item!=null){
-                Object value=getValue(item);
-                if(value!=null&&value.equals(o)){
-                    result=true;
+        boolean result = false;
+        if (o != null) {
+            IndexItem item = indexList.getFirst();
+            while (item != null) {
+                Object value = getValue(item);
+                if (value != null && value.equals(o)) {
+                    result = true;
                     // find the key
-                    Object key=getKey(item);
-                    if(key!=null){
+                    Object key = getKey(item);
+                    if (key != null) {
                         remove(key);
                     }
                     break;
                 }
-                item=indexList.getNextEntry(item);
+                item = indexList.getNextEntry(item);
             }
         }
         return result;
     }
 
-    protected synchronized void remove(IndexItem item){
-        Object key=getKey(item);
-        if(key!=null){
+    protected synchronized void remove(IndexItem item) {
+        Object key = getKey(item);
+        if (key != null) {
             remove(key);
         }
     }
@@ -358,15 +360,15 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      * 
      * @see org.apache.activemq.kaha.MapContainer#clear()
      */
-    public synchronized void clear(){
+    public synchronized void clear() {
         checkClosed();
-        loaded=true;
+        loaded = true;
         init();
-        if(index!=null){
-            try{
+        if (index != null) {
+            try {
                 index.clear();
-            }catch(IOException e){
-                log.error("Failed trying clear index",e);
+            } catch (IOException e) {
+                log.error("Failed trying clear index", e);
                 throw new RuntimeException(e);
             }
         }
@@ -381,16 +383,16 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      * @param value
      * @return the StoreEntry associated with the entry
      */
-    public synchronized StoreEntry place(Object key,Object value){
+    public synchronized StoreEntry place(Object key, Object value) {
         load();
-        try{
+        try {
             remove(key);
-            IndexItem item=write(key,value);
-            index.store(key,item);
+            IndexItem item = write(key, value);
+            index.store(key, item);
             indexList.add(item);
             return item;
-        }catch(IOException e){
-            log.error("Failed trying to place key: "+key,e);
+        } catch (IOException e) {
+            log.error("Failed trying to place key: " + key, e);
             throw new RuntimeException(e);
         }
     }
@@ -401,47 +403,47 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      * @param entry
      * @throws IOException
      */
-    public synchronized void remove(StoreEntry entry){
+    public synchronized void remove(StoreEntry entry) {
         load();
-        IndexItem item=(IndexItem)entry;
-        if(item!=null){
-            Object key=getKey(item);
-            try{
+        IndexItem item = (IndexItem)entry;
+        if (item != null) {
+            Object key = getKey(item);
+            try {
                 index.remove(key);
-            }catch(IOException e){
-                log.error("Failed trying to remove entry: "+entry,e);
+            } catch (IOException e) {
+                log.error("Failed trying to remove entry: " + entry, e);
                 throw new RuntimeException(e);
             }
-            IndexItem prev=indexList.getPrevEntry(item);
-            IndexItem next=indexList.getNextEntry(item);
+            IndexItem prev = indexList.getPrevEntry(item);
+            IndexItem next = indexList.getNextEntry(item);
             indexList.remove(item);
-            delete(item,prev,next);
+            delete(item, prev, next);
         }
     }
 
-    public synchronized StoreEntry getFirst(){
+    public synchronized StoreEntry getFirst() {
         load();
         return indexList.getFirst();
     }
 
-    public synchronized StoreEntry getLast(){
+    public synchronized StoreEntry getLast() {
         load();
         return indexList.getLast();
     }
 
-    public synchronized StoreEntry getNext(StoreEntry entry){
+    public synchronized StoreEntry getNext(StoreEntry entry) {
         load();
-        IndexItem item=(IndexItem)entry;
+        IndexItem item = (IndexItem)entry;
         return indexList.getNextEntry(item);
     }
 
-    public synchronized StoreEntry getPrevious(StoreEntry entry){
+    public synchronized StoreEntry getPrevious(StoreEntry entry) {
         load();
-        IndexItem item=(IndexItem)entry;
+        IndexItem item = (IndexItem)entry;
         return indexList.getPrevEntry(item);
     }
 
-    public synchronized StoreEntry refresh(StoreEntry entry){
+    public synchronized StoreEntry refresh(StoreEntry entry) {
         load();
         return indexList.getEntry(entry);
     }
@@ -452,17 +454,17 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      * @param item
      * @return the value associated with the store entry
      */
-    public synchronized Object getValue(StoreEntry item){
+    public synchronized Object getValue(StoreEntry item) {
         load();
-        Object result=null;
-        if(item!=null){
-            try{
+        Object result = null;
+        if (item != null) {
+            try {
                 // ensure this value is up to date
                 // item=indexList.getEntry(item);
-                StoreLocation data=item.getValueDataItem();
-                result=dataManager.readItem(valueMarshaller,data);
-            }catch(IOException e){
-                log.error("Failed to get value for "+item,e);
+                StoreLocation data = item.getValueDataItem();
+                result = dataManager.readItem(valueMarshaller, data);
+            } catch (IOException e) {
+                log.error("Failed to get value for " + item, e);
                 throw new RuntimeStoreException(e);
             }
         }
@@ -475,50 +477,50 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
      * @param item
      * @return the Key Object associated with the StoreEntry
      */
-    public synchronized Object getKey(StoreEntry item){
+    public synchronized Object getKey(StoreEntry item) {
         load();
-        Object result=null;
-        if(item!=null){
-            try{
-                StoreLocation data=item.getKeyDataItem();
-                result=dataManager.readItem(keyMarshaller,data);
-            }catch(IOException e){
-                log.error("Failed to get key for "+item,e);
+        Object result = null;
+        if (item != null) {
+            try {
+                StoreLocation data = item.getKeyDataItem();
+                result = dataManager.readItem(keyMarshaller, data);
+            } catch (IOException e) {
+                log.error("Failed to get key for " + item, e);
                 throw new RuntimeStoreException(e);
             }
         }
         return result;
     }
 
-    protected IndexLinkedList getItemList(){
+    protected IndexLinkedList getItemList() {
         return indexList;
     }
 
-    protected synchronized IndexItem write(Object key,Object value){
-        IndexItem index=null;
-        try{
-            index=indexManager.createNewIndex();
-            StoreLocation data=dataManager.storeDataItem(keyMarshaller,key);
+    protected synchronized IndexItem write(Object key, Object value) {
+        IndexItem index = null;
+        try {
+            index = indexManager.createNewIndex();
+            StoreLocation data = dataManager.storeDataItem(keyMarshaller, key);
             index.setKeyData(data);
-            
-            if(value!=null){
-                data=dataManager.storeDataItem(valueMarshaller,value);
+
+            if (value != null) {
+                data = dataManager.storeDataItem(valueMarshaller, value);
                 index.setValueData(data);
             }
-            IndexItem prev=indexList.getLast();           
-            prev=prev!=null?prev:indexList.getRoot();
-            IndexItem next=indexList.getNextEntry(prev);
+            IndexItem prev = indexList.getLast();
+            prev = prev != null ? prev : indexList.getRoot();
+            IndexItem next = indexList.getNextEntry(prev);
             prev.setNextItem(index.getOffset());
             index.setPreviousItem(prev.getOffset());
             updateIndexes(prev);
-            if(next!=null){
+            if (next != null) {
                 next.setPreviousItem(index.getOffset());
                 index.setNextItem(next.getOffset());
                 updateIndexes(next);
             }
             storeIndex(index);
-        }catch(IOException e){
-            log.error("Failed to write "+key+" , "+value,e);
+        } catch (IOException e) {
+            log.error("Failed to write " + key + " , " + value, e);
             throw new RuntimeStoreException(e);
         }
         return index;

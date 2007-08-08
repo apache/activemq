@@ -28,16 +28,15 @@ import javax.jms.MessageProducer;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.test.JmsTopicSendReceiveTest;
 
-
 /**
  * @version $Revision: 1.4 $
  */
 public class JmsTopicWildcardSendReceiveTest extends JmsTopicSendReceiveTest {
 
-    private String destination1String = "TEST.ONE.ONE" ;
-    private String destination2String = "TEST.ONE.ONE.ONE" ;
-    private String destination3String = "TEST.ONE.TWO" ;
-    private String destination4String = "TEST.TWO.ONE" ;
+    private String destination1String = "TEST.ONE.ONE";
+    private String destination2String = "TEST.ONE.ONE.ONE";
+    private String destination3String = "TEST.ONE.TWO";
+    private String destination4String = "TEST.TWO.ONE";
 
     protected void setUp() throws Exception {
         topic = true;
@@ -45,12 +44,12 @@ public class JmsTopicWildcardSendReceiveTest extends JmsTopicSendReceiveTest {
         deliveryMode = DeliveryMode.NON_PERSISTENT;
         super.setUp();
     }
-    
-    protected String getConsumerSubject(){
+
+    protected String getConsumerSubject() {
         return "FOO.>";
     }
-    
-    protected String getProducerSubject(){
+
+    protected String getProducerSubject() {
         return "FOO.BAR.HUMBUG";
     }
 
@@ -58,27 +57,27 @@ public class JmsTopicWildcardSendReceiveTest extends JmsTopicSendReceiveTest {
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-        ActiveMQDestination destination1 = (ActiveMQDestination) session.createTopic(destination1String);
-        ActiveMQDestination destination3 = (ActiveMQDestination) session.createTopic(destination3String);
+        ActiveMQDestination destination1 = (ActiveMQDestination)session.createTopic(destination1String);
+        ActiveMQDestination destination3 = (ActiveMQDestination)session.createTopic(destination3String);
 
         Message m = null;
         MessageConsumer consumer = null;
         String text = null;
 
-        ActiveMQDestination destination6 = (ActiveMQDestination) session.createTopic("TEST.ONE.*");
+        ActiveMQDestination destination6 = (ActiveMQDestination)session.createTopic("TEST.ONE.*");
         consumer = session.createConsumer(destination6);
-        sendMessage(session,destination1,destination1String);
-        sendMessage(session,destination3,destination3String);
+        sendMessage(session, destination1, destination1String);
+        sendMessage(session, destination3, destination3String);
         m = consumer.receive(1000);
         assertNotNull(m);
         text = ((TextMessage)m).getText();
-        if(!(text.equals(destination1String) || text.equals(destination3String))) {
+        if (!(text.equals(destination1String) || text.equals(destination3String))) {
             fail("unexpected message:" + text);
         }
         m = consumer.receive(1000);
         assertNotNull(m);
         text = ((TextMessage)m).getText();
-        if(!(text.equals(destination1String) || text.equals(destination3String))) {
+        if (!(text.equals(destination1String) || text.equals(destination3String))) {
             fail("unexpected message:" + text);
         }
         assertNull(consumer.receiveNoWait());
@@ -88,33 +87,33 @@ public class JmsTopicWildcardSendReceiveTest extends JmsTopicSendReceiveTest {
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-        ActiveMQDestination destination1 = (ActiveMQDestination) session.createTopic(destination1String);
-        ActiveMQDestination destination2 = (ActiveMQDestination) session.createTopic(destination2String);
-        ActiveMQDestination destination3 = (ActiveMQDestination) session.createTopic(destination3String);
+        ActiveMQDestination destination1 = (ActiveMQDestination)session.createTopic(destination1String);
+        ActiveMQDestination destination2 = (ActiveMQDestination)session.createTopic(destination2String);
+        ActiveMQDestination destination3 = (ActiveMQDestination)session.createTopic(destination3String);
 
         Message m = null;
         MessageConsumer consumer = null;
         String text = null;
 
-        ActiveMQDestination destination7 = (ActiveMQDestination) session.createTopic("TEST.ONE.>");
+        ActiveMQDestination destination7 = (ActiveMQDestination)session.createTopic("TEST.ONE.>");
         consumer = session.createConsumer(destination7);
-        sendMessage(session,destination1,destination1String);
-        sendMessage(session,destination2,destination2String);
-        sendMessage(session,destination3,destination3String);
+        sendMessage(session, destination1, destination1String);
+        sendMessage(session, destination2, destination2String);
+        sendMessage(session, destination3, destination3String);
         m = consumer.receive(1000);
         assertNotNull(m);
         text = ((TextMessage)m).getText();
-        if(!(text.equals(destination1String) || text.equals(destination2String) || text.equals(destination3String))) {
+        if (!(text.equals(destination1String) || text.equals(destination2String) || text.equals(destination3String))) {
             fail("unexpected message:" + text);
         }
         m = consumer.receive(1000);
         assertNotNull(m);
-        if(!(text.equals(destination1String) || text.equals(destination2String) || text.equals(destination3String))) {
+        if (!(text.equals(destination1String) || text.equals(destination2String) || text.equals(destination3String))) {
             fail("unexpected message:" + text);
         }
         m = consumer.receive(1000);
         assertNotNull(m);
-        if(!(text.equals(destination1String) || text.equals(destination2String) || text.equals(destination3String))) {
+        if (!(text.equals(destination1String) || text.equals(destination2String) || text.equals(destination3String))) {
             fail("unexpected message:" + text);
         }
         assertNull(consumer.receiveNoWait());
@@ -124,27 +123,27 @@ public class JmsTopicWildcardSendReceiveTest extends JmsTopicSendReceiveTest {
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-        ActiveMQDestination destination1 = (ActiveMQDestination) session.createTopic(destination1String);
-        ActiveMQDestination destination4 = (ActiveMQDestination) session.createTopic(destination4String);
+        ActiveMQDestination destination1 = (ActiveMQDestination)session.createTopic(destination1String);
+        ActiveMQDestination destination4 = (ActiveMQDestination)session.createTopic(destination4String);
 
         Message m = null;
         MessageConsumer consumer = null;
         String text = null;
 
-        ActiveMQDestination destination8 = (ActiveMQDestination) session.createTopic("TEST.*.ONE");
+        ActiveMQDestination destination8 = (ActiveMQDestination)session.createTopic("TEST.*.ONE");
         consumer = session.createConsumer(destination8);
-        sendMessage(session,destination1,destination1String);
-        sendMessage(session,destination4,destination4String);
+        sendMessage(session, destination1, destination1String);
+        sendMessage(session, destination4, destination4String);
         m = consumer.receive(1000);
         assertNotNull(m);
         text = ((TextMessage)m).getText();
-        if(!(text.equals(destination1String) || text.equals(destination4String))) {
+        if (!(text.equals(destination1String) || text.equals(destination4String))) {
             fail("unexpected message:" + text);
         }
         m = consumer.receive(1000);
         assertNotNull(m);
         text = ((TextMessage)m).getText();
-        if(!(text.equals(destination1String) || text.equals(destination4String))) {
+        if (!(text.equals(destination1String) || text.equals(destination4String))) {
             fail("unexpected message:" + text);
         }
         assertNull(consumer.receiveNoWait());

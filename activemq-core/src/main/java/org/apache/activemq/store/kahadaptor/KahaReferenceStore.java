@@ -26,39 +26,41 @@ import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.ReferenceStore;
 
-public class KahaReferenceStore implements ReferenceStore{
+public class KahaReferenceStore implements ReferenceStore {
 
     protected final ActiveMQDestination destination;
-    protected final MapContainer<MessageId,ReferenceRecord> messageContainer;
+    protected final MapContainer<MessageId, ReferenceRecord> messageContainer;
     protected KahaReferenceStoreAdapter adapter;
-    private StoreEntry batchEntry=null;
-    private String lastBatchId=null;
+    private StoreEntry batchEntry = null;
+    private String lastBatchId = null;
 
-    public KahaReferenceStore(KahaReferenceStoreAdapter adapter,MapContainer container,ActiveMQDestination destination) throws IOException{
+    public KahaReferenceStore(KahaReferenceStoreAdapter adapter, MapContainer container,
+                              ActiveMQDestination destination) throws IOException {
         this.adapter = adapter;
-        this.messageContainer=container;
-        this.destination=destination;
+        this.messageContainer = container;
+        this.destination = destination;
     }
 
-    public void start(){
+    public void start() {
     }
 
-    public void stop(){
+    public void stop() {
     }
 
-    protected MessageId getMessageId(Object object){
+    protected MessageId getMessageId(Object object) {
         return new MessageId(((ReferenceRecord)object).getMessageId());
     }
 
-    public synchronized void addMessage(ConnectionContext context,Message message) throws IOException{
+    public synchronized void addMessage(ConnectionContext context, Message message) throws IOException {
         throw new RuntimeException("Use addMessageReference instead");
     }
 
-    public synchronized Message getMessage(MessageId identity) throws IOException{
+    public synchronized Message getMessage(MessageId identity) throws IOException {
         throw new RuntimeException("Use addMessageReference instead");
     }
 
-    protected final boolean recoverReference(MessageRecoveryListener listener,ReferenceRecord record) throws Exception{
+    protected final boolean recoverReference(MessageRecoveryListener listener, ReferenceRecord record)
+        throws Exception {
         if (listener.hasSpace()) {
             listener.recoverMessageReference(new MessageId(record.getMessageId()));
             return true;
@@ -66,118 +68,121 @@ public class KahaReferenceStore implements ReferenceStore{
         return false;
     }
 
-    public synchronized void recover(MessageRecoveryListener listener) throws Exception{
-        for(StoreEntry entry=messageContainer.getFirst();entry!=null;entry=messageContainer.getNext(entry)){
-            ReferenceRecord record=messageContainer.getValue(entry);
-            if (!recoverReference(listener,record)) {
+    public synchronized void recover(MessageRecoveryListener listener) throws Exception {
+        for (StoreEntry entry = messageContainer.getFirst(); entry != null; entry = messageContainer
+            .getNext(entry)) {
+            ReferenceRecord record = messageContainer.getValue(entry);
+            if (!recoverReference(listener, record)) {
                 break;
             }
         }
     }
 
-    public synchronized void recoverNextMessages(int maxReturned,MessageRecoveryListener listener) throws Exception{
-        StoreEntry entry=batchEntry;
-        if(entry==null){
-            entry=messageContainer.getFirst();
-        }else{
-            entry=messageContainer.refresh(entry);
-            if(entry!=null){
-                entry=messageContainer.getNext(entry);
+    public synchronized void recoverNextMessages(int maxReturned, MessageRecoveryListener listener)
+        throws Exception {
+        StoreEntry entry = batchEntry;
+        if (entry == null) {
+            entry = messageContainer.getFirst();
+        } else {
+            entry = messageContainer.refresh(entry);
+            if (entry != null) {
+                entry = messageContainer.getNext(entry);
             }
         }
-        if(entry!=null){
-            int count=0;
-            do{
-                ReferenceRecord msg=messageContainer.getValue(entry);
-                if(msg!=null){
-                    recoverReference(listener,msg);
+        if (entry != null) {
+            int count = 0;
+            do {
+                ReferenceRecord msg = messageContainer.getValue(entry);
+                if (msg != null) {
+                    recoverReference(listener, msg);
                     count++;
-                    lastBatchId=msg.getMessageId();
-                }else{
-                    lastBatchId=null;
+                    lastBatchId = msg.getMessageId();
+                } else {
+                    lastBatchId = null;
                 }
-                batchEntry=entry;
-                entry=messageContainer.getNext(entry);
-            }while(entry!=null&&count<maxReturned&&listener.hasSpace());
+                batchEntry = entry;
+                entry = messageContainer.getNext(entry);
+            } while (entry != null && count < maxReturned && listener.hasSpace());
         }
     }
 
-    public synchronized void addMessageReference(ConnectionContext context,MessageId messageId,ReferenceData data)
-            throws IOException{
-        ReferenceRecord record=new ReferenceRecord(messageId.toString(),data);
-        messageContainer.put(messageId,record);
+    public synchronized void addMessageReference(ConnectionContext context, MessageId messageId,
+                                                 ReferenceData data) throws IOException {
+        ReferenceRecord record = new ReferenceRecord(messageId.toString(), data);
+        messageContainer.put(messageId, record);
         addInterest(record);
     }
 
-    public synchronized ReferenceData getMessageReference(MessageId identity) throws IOException{
-        ReferenceRecord result=messageContainer.get(identity);
-        if(result==null)
+    public synchronized ReferenceData getMessageReference(MessageId identity) throws IOException {
+        ReferenceRecord result = messageContainer.get(identity);
+        if (result == null)
             return null;
         return result.getData();
     }
 
-    public void addReferenceFileIdsInUse(){
-        for(StoreEntry entry=messageContainer.getFirst();entry!=null;entry=messageContainer.getNext(entry)){
-            ReferenceRecord msg=(ReferenceRecord)messageContainer.getValue(entry);
+    public void addReferenceFileIdsInUse() {
+        for (StoreEntry entry = messageContainer.getFirst(); entry != null; entry = messageContainer
+            .getNext(entry)) {
+            ReferenceRecord msg = (ReferenceRecord)messageContainer.getValue(entry);
             addInterest(msg);
         }
     }
 
-    public void removeMessage(ConnectionContext context,MessageAck ack) throws IOException{
+    public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
         removeMessage(ack.getLastMessageId());
     }
 
-    public synchronized void removeMessage(MessageId msgId) throws IOException{
-        StoreEntry entry=messageContainer.getEntry(msgId);
-        if(entry!=null){
-            ReferenceRecord rr=messageContainer.remove(msgId);
-            if(rr!=null){
+    public synchronized void removeMessage(MessageId msgId) throws IOException {
+        StoreEntry entry = messageContainer.getEntry(msgId);
+        if (entry != null) {
+            ReferenceRecord rr = messageContainer.remove(msgId);
+            if (rr != null) {
                 removeInterest(rr);
-                if(messageContainer.isEmpty()||(lastBatchId!=null&&lastBatchId.equals(msgId.toString()))
-                        ||(batchEntry!=null&&batchEntry.equals(entry))){
+                if (messageContainer.isEmpty()
+                    || (lastBatchId != null && lastBatchId.equals(msgId.toString()))
+                    || (batchEntry != null && batchEntry.equals(entry))) {
                     resetBatching();
                 }
             }
         }
     }
 
-    public synchronized void removeAllMessages(ConnectionContext context) throws IOException{
+    public synchronized void removeAllMessages(ConnectionContext context) throws IOException {
         messageContainer.clear();
     }
 
-    public ActiveMQDestination getDestination(){
+    public ActiveMQDestination getDestination() {
         return destination;
     }
 
-    public synchronized void delete(){
+    public synchronized void delete() {
         messageContainer.clear();
     }
 
-    public synchronized void resetBatching(){
-        batchEntry=null;
-        lastBatchId=null;
+    public synchronized void resetBatching() {
+        batchEntry = null;
+        lastBatchId = null;
     }
 
-    public int getMessageCount(){
+    public int getMessageCount() {
         return messageContainer.size();
     }
 
-    public void setUsageManager(UsageManager usageManager){
+    public void setUsageManager(UsageManager usageManager) {
     }
 
-    public boolean isSupportForCursors(){
+    public boolean isSupportForCursors() {
         return true;
     }
 
-    
-    public boolean supportsExternalBatchControl(){
+    public boolean supportsExternalBatchControl() {
         return true;
     }
-    
+
     void removeInterest(ReferenceRecord rr) {
         adapter.removeInterestInRecordFile(rr.getData().getFileId());
     }
-    
+
     void addInterest(ReferenceRecord rr) {
         adapter.addInterestInRecordFile(rr.getData().getFileId());
     }
@@ -186,6 +191,6 @@ public class KahaReferenceStore implements ReferenceStore{
      * @param startAfter
      * @see org.apache.activemq.store.ReferenceStore#setBatch(org.apache.activemq.command.MessageId)
      */
-    public void setBatch(MessageId startAfter){        
+    public void setBatch(MessageId startAfter) {
     }
 }

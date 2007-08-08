@@ -26,28 +26,28 @@ import org.apache.activemq.broker.BrokerService;
 /**
  * @version $Revision: 1.3 $
  */
-public class CursorDurableTest extends CursorSupport{
+public class CursorDurableTest extends CursorSupport {
 
-    protected Destination getDestination(Session session) throws JMSException{
+    protected Destination getDestination(Session session) throws JMSException {
         String topicName = getClass().getName();
         return session.createTopic(topicName);
     }
 
-    protected Connection getConsumerConnection(ConnectionFactory fac) throws JMSException{
-        Connection connection=fac.createConnection();
+    protected Connection getConsumerConnection(ConnectionFactory fac) throws JMSException {
+        Connection connection = fac.createConnection();
         connection.setClientID("testConsumer");
         connection.start();
         return connection;
     }
 
-    protected MessageConsumer getConsumer(Connection connection) throws Exception{
-        Session consumerSession=connection.createSession(false,Session.AUTO_ACKNOWLEDGE);
-        Topic topic=(Topic)getDestination(consumerSession);
-        MessageConsumer consumer=consumerSession.createDurableSubscriber(topic,"testConsumer");
+    protected MessageConsumer getConsumer(Connection connection) throws Exception {
+        Session consumerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Topic topic = (Topic)getDestination(consumerSession);
+        MessageConsumer consumer = consumerSession.createDurableSubscriber(topic, "testConsumer");
         return consumer;
     }
-    
-    protected void configureBroker(BrokerService answer) throws Exception{
+
+    protected void configureBroker(BrokerService answer) throws Exception {
         answer.setDeleteAllMessagesOnStartup(true);
         answer.addConnector(bindAddress);
         answer.setDeleteAllMessagesOnStartup(true);

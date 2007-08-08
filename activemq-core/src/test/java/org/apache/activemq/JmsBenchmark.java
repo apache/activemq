@@ -47,21 +47,18 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * Benchmarks the broker by starting many consumer and producers against the
- * same destination.
- * 
- * Make sure you run with jvm option -server (makes a big difference). The tests
- * simulate storing 1000 1k jms messages to see the rate of processing msg/sec.
+ * same destination. Make sure you run with jvm option -server (makes a big
+ * difference). The tests simulate storing 1000 1k jms messages to see the rate
+ * of processing msg/sec.
  * 
  * @version $Revision$
  */
 public class JmsBenchmark extends JmsTestSupport {
     private static final transient Log log = LogFactory.getLog(JmsBenchmark.class);
 
-    private static final long SAMPLE_DELAY = Integer.parseInt(System.getProperty("SAMPLE_DELAY",
-                                                                                 "" + 1000 * 5));
+    private static final long SAMPLE_DELAY = Integer.parseInt(System.getProperty("SAMPLE_DELAY", "" + 1000 * 5));
     private static final long SAMPLES = Integer.parseInt(System.getProperty("SAMPLES", "10"));
-    private static final long SAMPLE_DURATION = Integer.parseInt(System.getProperty("SAMPLES_DURATION",
-                                                                                    "" + 1000 * 60));
+    private static final long SAMPLE_DURATION = Integer.parseInt(System.getProperty("SAMPLES_DURATION", "" + 1000 * 60));
     private static final int PRODUCER_COUNT = Integer.parseInt(System.getProperty("PRODUCER_COUNT", "10"));
     private static final int CONSUMER_COUNT = Integer.parseInt(System.getProperty("CONSUMER_COUNT", "10"));
 
@@ -76,9 +73,7 @@ public class JmsBenchmark extends JmsTestSupport {
     }
 
     public void initCombos() {
-        addCombinationValues("destination", new Object[] {
-        // new ActiveMQTopic("TEST"),
-                             new ActiveMQQueue("TEST"),});
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST")});
     }
 
     protected BrokerService createBroker() throws Exception {
@@ -86,8 +81,7 @@ public class JmsBenchmark extends JmsTestSupport {
     }
 
     protected ConnectionFactory createConnectionFactory() throws URISyntaxException, IOException {
-        return new ActiveMQConnectionFactory(((TransportConnector)broker.getTransportConnectors().get(0))
-            .getServer().getConnectURI());
+        return new ActiveMQConnectionFactory(((TransportConnector)broker.getTransportConnectors().get(0)).getServer().getConnectURI());
     }
 
     /**
@@ -177,8 +171,7 @@ public class JmsBenchmark extends JmsTestSupport {
 
         log.info(getName() + ": Waiting for Producers and Consumers to startup.");
         connectionsEstablished.acquire();
-        log.info("Producers and Consumers are now running.  Waiting for system to reach steady state: "
-                 + (SAMPLE_DELAY / 1000.0f) + " seconds");
+        log.info("Producers and Consumers are now running.  Waiting for system to reach steady state: " + (SAMPLE_DELAY / 1000.0f) + " seconds");
         Thread.sleep(1000 * 10);
 
         log.info("Starting sample: " + SAMPLES + " each lasting " + (SAMPLE_DURATION / 1000.0f) + " seconds");
@@ -196,8 +189,7 @@ public class JmsBenchmark extends JmsTestSupport {
             int r = receivedMessages.get();
             int p = producedMessages.get();
 
-            log.info("published: " + p + " msgs at " + (p * 1000f / (end - start)) + " msgs/sec, "
-                     + "consumed: " + r + " msgs at " + (r * 1000f / (end - start)) + " msgs/sec");
+            log.info("published: " + p + " msgs at " + (p * 1000f / (end - start)) + " msgs/sec, " + "consumed: " + r + " msgs at " + (r * 1000f / (end - start)) + " msgs/sec");
         }
 
         log.info("Sample done.");

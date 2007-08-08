@@ -17,7 +17,6 @@
 package org.apache.activemq.network;
 
 /**
- *
  * @version $Revision$
  */
 public class MulticastNetworkTest extends SimpleNetworkTest {
@@ -29,4 +28,4 @@ public class MulticastNetworkTest extends SimpleNetworkTest {
     protected String getLocalBrokerURI() {
         return "org/apache/activemq/network/multicast/localBroker.xml";
     }
-    }
+}

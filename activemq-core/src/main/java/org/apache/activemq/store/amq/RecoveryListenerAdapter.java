@@ -21,53 +21,52 @@ import org.apache.activemq.store.MessageStore;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-final class RecoveryListenerAdapter implements MessageRecoveryListener{
+final class RecoveryListenerAdapter implements MessageRecoveryListener {
 
-    static final private Log log=LogFactory.getLog(RecoveryListenerAdapter.class);
+    static final private Log log = LogFactory.getLog(RecoveryListenerAdapter.class);
     private final MessageStore store;
     private final MessageRecoveryListener listener;
-    private int count=0;
+    private int count = 0;
     private MessageId lastRecovered;
 
-    RecoveryListenerAdapter(MessageStore store,MessageRecoveryListener listener){
-        this.store=store;
-        this.listener=listener;
+    RecoveryListenerAdapter(MessageStore store, MessageRecoveryListener listener) {
+        this.store = store;
+        this.listener = listener;
     }
 
-    
-    public boolean hasSpace(){
+    public boolean hasSpace() {
         return listener.hasSpace();
     }
 
-    public boolean recoverMessage(Message message) throws Exception{
-        if(listener.hasSpace()){
+    public boolean recoverMessage(Message message) throws Exception {
+        if (listener.hasSpace()) {
             listener.recoverMessage(message);
-            lastRecovered=message.getMessageId();
+            lastRecovered = message.getMessageId();
             count++;
             return true;
         }
         return false;
     }
 
-    public boolean recoverMessageReference(MessageId ref) throws Exception{
-        Message message=this.store.getMessage(ref);
-        if(message!=null){
-           return  recoverMessage(message);
-        }else{
-            log.error("Message id "+ref+" could not be recovered from the data store!");
+    public boolean recoverMessageReference(MessageId ref) throws Exception {
+        Message message = this.store.getMessage(ref);
+        if (message != null) {
+            return recoverMessage(message);
+        } else {
+            log.error("Message id " + ref + " could not be recovered from the data store!");
         }
         return false;
     }
-    
+
     MessageId getLastRecoveredMessageId() {
         return lastRecovered;
     }
 
-    int size(){
+    int size() {
         return count;
     }
 
-    void reset(){
-        count=0;
+    void reset() {
+        count = 0;
     }
 }

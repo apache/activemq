@@ -75,7 +75,6 @@ import org.apache.commons.logging.LogFactory;
  * other long term persistent storage.
  * 
  * @org.apache.xbean.XBean
- * 
  * @version $Revision: 1.17 $
  */
 public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEventListener, UsageListener {
@@ -89,45 +88,45 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
 
     private final ConcurrentHashMap queues = new ConcurrentHashMap();
     private final ConcurrentHashMap topics = new ConcurrentHashMap();
-    
+
     private UsageManager usageManager;
     long checkpointInterval = 1000 * 60 * 5;
     long lastCheckpointRequest = System.currentTimeMillis();
     private long lastCleanup = System.currentTimeMillis();
     private int maxCheckpointWorkers = 10;
-    private int maxCheckpointMessageAddSize = 1024*1024;
+    private int maxCheckpointMessageAddSize = 1024 * 1024;
 
     private JournalTransactionStore transactionStore = new JournalTransactionStore(this);
     private ThreadPoolExecutor checkpointExecutor;
-    
+
     private TaskRunner checkpointTask;
     private CountDownLatch nextCheckpointCountDownLatch = new CountDownLatch(1);
     private boolean fullCheckPoint;
-    
+
     private AtomicBoolean started = new AtomicBoolean(false);
 
-    private final Runnable periodicCheckpointTask = createPeriodicCheckpointTask(); 
-    	
+    private final Runnable periodicCheckpointTask = createPeriodicCheckpointTask();
+
     final Runnable createPeriodicCheckpointTask() {
-    	return new Runnable() {
-	        public void run() {
+        return new Runnable() {
+            public void run() {
                 long lastTime = 0;
-                synchronized(this) {
+                synchronized (this) {
                     lastTime = lastCheckpointRequest;
                 }
-	            if( System.currentTimeMillis()>lastTime+checkpointInterval ) {
-	                checkpoint(false, true);
-	            }
-	        }
-	    };
+                if (System.currentTimeMillis() > lastTime + checkpointInterval) {
+                    checkpoint(false, true);
+                }
+            }
+        };
     }
-    
+
     public JournalPersistenceAdapter(Journal journal, PersistenceAdapter longTermPersistence, TaskRunnerFactory taskRunnerFactory) throws IOException {
 
         this.journal = journal;
         journal.setJournalEventListener(this);
-        
-        checkpointTask = taskRunnerFactory.createTaskRunner(new Task(){
+
+        checkpointTask = taskRunnerFactory.createTaskRunner(new Task() {
             public boolean iterate() {
                 return doCheckpoint();
             }
@@ -137,7 +136,8 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     }
 
     /**
-     * @param usageManager The UsageManager that is controlling the destination's memory usage.
+     * @param usageManager The UsageManager that is controlling the
+     *                destination's memory usage.
      */
     public void setUsageManager(UsageManager usageManager) {
         this.usageManager = usageManager;
@@ -153,15 +153,14 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
 
     private MessageStore createMessageStore(ActiveMQDestination destination) throws IOException {
         if (destination.isQueue()) {
-            return createQueueMessageStore((ActiveMQQueue) destination);
-        }
-        else {
-            return createTopicMessageStore((ActiveMQTopic) destination);
+            return createQueueMessageStore((ActiveMQQueue)destination);
+        } else {
+            return createTopicMessageStore((ActiveMQTopic)destination);
         }
     }
 
     public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {
-        JournalMessageStore store = (JournalMessageStore) queues.get(destination);
+        JournalMessageStore store = (JournalMessageStore)queues.get(destination);
         if (store == null) {
             MessageStore checkpointStore = longTermPersistence.createQueueMessageStore(destination);
             store = new JournalMessageStore(this, checkpointStore, destination);
@@ -171,7 +170,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     }
 
     public TopicMessageStore createTopicMessageStore(ActiveMQTopic destinationName) throws IOException {
-        JournalTopicMessageStore store = (JournalTopicMessageStore) topics.get(destinationName);
+        JournalTopicMessageStore store = (JournalTopicMessageStore)topics.get(destinationName);
         if (store == null) {
             TopicMessageStore checkpointStore = longTermPersistence.createTopicMessageStore(destinationName);
             store = new JournalTopicMessageStore(this, checkpointStore, destinationName);
@@ -201,24 +200,25 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     }
 
     public synchronized void start() throws Exception {
-        if( !started.compareAndSet(false, true) )
+        if (!started.compareAndSet(false, true)) {
             return;
-        
+        }
+
         checkpointExecutor = new ThreadPoolExecutor(maxCheckpointWorkers, maxCheckpointWorkers, 30, TimeUnit.SECONDS, new LinkedBlockingQueue(), new ThreadFactory() {
             public Thread newThread(Runnable runable) {
                 Thread t = new Thread(runable, "Journal checkpoint worker");
                 t.setPriority(7);
                 return t;
-            }            
+            }
         });
-        //checkpointExecutor.allowCoreThreadTimeOut(true);
-        
+        // checkpointExecutor.allowCoreThreadTimeOut(true);
+
         this.usageManager.addUsageListener(this);
 
         if (longTermPersistence instanceof JDBCPersistenceAdapter) {
             // Disabled periodic clean up as it deadlocks with the checkpoint
             // operations.
-            ((JDBCPersistenceAdapter) longTermPersistence).setCleanupPeriod(0);
+            ((JDBCPersistenceAdapter)longTermPersistence).setCleanupPeriod(0);
         }
 
         longTermPersistence.start();
@@ -226,23 +226,23 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         recover();
 
         // Do a checkpoint periodically.
-        Scheduler.executePeriodically(periodicCheckpointTask, checkpointInterval/10);
+        Scheduler.executePeriodically(periodicCheckpointTask, checkpointInterval / 10);
 
     }
 
     public void stop() throws Exception {
-        
+
         this.usageManager.removeUsageListener(this);
-        if( !started.compareAndSet(true, false) )
+        if (!started.compareAndSet(true, false))
             return;
-        
+
         Scheduler.cancel(periodicCheckpointTask);
 
         // Take one final checkpoint and stop checkpoint processing.
         checkpoint(true, true);
-        checkpointTask.shutdown();        
+        checkpointTask.shutdown();
         checkpointExecutor.shutdown();
-        
+
         queues.clear();
         topics.clear();
 
@@ -253,7 +253,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
             firstException = IOExceptionSupport.create("Failed to close journals: " + e, e);
         }
         longTermPersistence.stop();
-        
+
         if (firstException != null) {
             throw firstException;
         }
@@ -287,83 +287,86 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
 
     /**
      * When we checkpoint we move all the journalled data to long term storage.
-     * @param stopping 
      * 
+     * @param stopping
      * @param b
      */
     public void checkpoint(boolean sync, boolean fullCheckpoint) {
         try {
-            if (journal == null )
+            if (journal == null)
                 throw new IllegalStateException("Journal is closed.");
-            
+
             long now = System.currentTimeMillis();
             CountDownLatch latch = null;
-            synchronized(this) {
+            synchronized (this) {
                 latch = nextCheckpointCountDownLatch;
                 lastCheckpointRequest = now;
-                if( fullCheckpoint ) {
-                    this.fullCheckPoint = true; 
+                if (fullCheckpoint) {
+                    this.fullCheckPoint = true;
                 }
             }
-            
+
             checkpointTask.wakeup();
-            
+
             if (sync) {
                 log.debug("Waking for checkpoint to complete.");
                 latch.await();
             }
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.warn("Request to start checkpoint failed: " + e, e);
         }
     }
-    
+
     public void checkpoint(boolean sync) {
-        checkpoint(sync,sync);
+        checkpoint(sync, sync);
     }
-        
+
     /**
      * This does the actual checkpoint.
-     * @return 
+     * 
+     * @return
      */
     public boolean doCheckpoint() {
         CountDownLatch latch = null;
         boolean fullCheckpoint;
-        synchronized(this) {                       
+        synchronized (this) {
             latch = nextCheckpointCountDownLatch;
             nextCheckpointCountDownLatch = new CountDownLatch(1);
             fullCheckpoint = this.fullCheckPoint;
-            this.fullCheckPoint=false;            
-        }        
+            this.fullCheckPoint = false;
+        }
         try {
 
             log.debug("Checkpoint started.");
             RecordLocation newMark = null;
 
-            ArrayList futureTasks = new ArrayList(queues.size()+topics.size());
-            
+            ArrayList futureTasks = new ArrayList(queues.size() + topics.size());
+
             //
-            // We do many partial checkpoints (fullCheckpoint==false) to move topic messages
-            // to long term store as soon as possible.  
+            // We do many partial checkpoints (fullCheckpoint==false) to move
+            // topic messages
+            // to long term store as soon as possible.
             // 
-            // We want to avoid doing that for queue messages since removes the come in the same
-            // checkpoint cycle will nullify the previous message add.  Therefore, we only
+            // We want to avoid doing that for queue messages since removes the
+            // come in the same
+            // checkpoint cycle will nullify the previous message add.
+            // Therefore, we only
             // checkpoint queues on the fullCheckpoint cycles.
             //
-            if( fullCheckpoint ) {                
+            if (fullCheckpoint) {
                 Iterator iterator = queues.values().iterator();
                 while (iterator.hasNext()) {
                     try {
-                        final JournalMessageStore ms = (JournalMessageStore) iterator.next();
+                        final JournalMessageStore ms = (JournalMessageStore)iterator.next();
                         FutureTask task = new FutureTask(new Callable() {
                             public Object call() throws Exception {
                                 return ms.checkpoint();
-                            }});
+                            }
+                        });
                         futureTasks.add(task);
-                        checkpointExecutor.execute(task);                        
-                    }
-                    catch (Exception e) {
+                        checkpointExecutor.execute(task);
+                    } catch (Exception e) {
                         log.error("Failed to checkpoint a message store: " + e, e);
                     }
                 }
@@ -372,25 +375,25 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
             Iterator iterator = topics.values().iterator();
             while (iterator.hasNext()) {
                 try {
-                    final JournalTopicMessageStore ms = (JournalTopicMessageStore) iterator.next();
+                    final JournalTopicMessageStore ms = (JournalTopicMessageStore)iterator.next();
                     FutureTask task = new FutureTask(new Callable() {
                         public Object call() throws Exception {
                             return ms.checkpoint();
-                        }});
+                        }
+                    });
                     futureTasks.add(task);
-                    checkpointExecutor.execute(task);                        
-                }
-                catch (Exception e) {
+                    checkpointExecutor.execute(task);
+                } catch (Exception e) {
                     log.error("Failed to checkpoint a message store: " + e, e);
                 }
             }
 
             try {
                 for (Iterator iter = futureTasks.iterator(); iter.hasNext();) {
-                    FutureTask ft = (FutureTask) iter.next();
-                    RecordLocation mark = (RecordLocation) ft.get();
+                    FutureTask ft = (FutureTask)iter.next();
+                    RecordLocation mark = (RecordLocation)ft.get();
                     // We only set a newMark on full checkpoints.
-                    if( fullCheckpoint ) {
+                    if (fullCheckpoint) {
                         if (mark != null && (newMark == null || newMark.compareTo(mark) < 0)) {
                             newMark = mark;
                         }
@@ -399,38 +402,36 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
             } catch (Throwable e) {
                 log.error("Failed to checkpoint a message store: " + e, e);
             }
-            
 
-            if( fullCheckpoint ) {
+            if (fullCheckpoint) {
                 try {
                     if (newMark != null) {
                         log.debug("Marking journal at: " + newMark);
                         journal.setMark(newMark, true);
                     }
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     log.error("Failed to mark the Journal: " + e, e);
                 }
-    
+
                 if (longTermPersistence instanceof JDBCPersistenceAdapter) {
-                    // We may be check pointing more often than the checkpointInterval if under high use
+                    // We may be check pointing more often than the
+                    // checkpointInterval if under high use
                     // But we don't want to clean up the db that often.
                     long now = System.currentTimeMillis();
-                    if( now > lastCleanup+checkpointInterval ) {
+                    if (now > lastCleanup + checkpointInterval) {
                         lastCleanup = now;
-                        ((JDBCPersistenceAdapter) longTermPersistence).cleanup();
+                        ((JDBCPersistenceAdapter)longTermPersistence).cleanup();
                     }
                 }
             }
 
             log.debug("Checkpoint done.");
-        }
-        finally {
+        } finally {
             latch.countDown();
         }
-        synchronized(this) {
+        synchronized (this) {
             return this.fullCheckPoint;
-        }        
+        }
 
     }
 
@@ -441,13 +442,11 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
      */
     public DataStructure readCommand(RecordLocation location) throws IOException {
         try {
-        	Packet packet = journal.read(location);
-            return (DataStructure) wireFormat.unmarshal(toByteSequence(packet));
-        }
-        catch (InvalidRecordLocationException e) {
+            Packet packet = journal.read(location);
+            return (DataStructure)wireFormat.unmarshal(toByteSequence(packet));
+        } catch (InvalidRecordLocationException e) {
             throw createReadException(location, e);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw createReadException(location, e);
         }
     }
@@ -472,49 +471,43 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         // While we have records in the journal.
         while ((pos = journal.getNextRecordLocation(pos)) != null) {
             Packet data = journal.read(pos);
-            DataStructure c = (DataStructure) wireFormat.unmarshal(toByteSequence(data));
+            DataStructure c = (DataStructure)wireFormat.unmarshal(toByteSequence(data));
 
-            if (c instanceof Message ) {
-                Message message = (Message) c;
-                JournalMessageStore store = (JournalMessageStore) createMessageStore(message.getDestination());
-                if ( message.isInTransaction()) {
+            if (c instanceof Message) {
+                Message message = (Message)c;
+                JournalMessageStore store = (JournalMessageStore)createMessageStore(message.getDestination());
+                if (message.isInTransaction()) {
                     transactionStore.addMessage(store, message, pos);
-                }
-                else {
+                } else {
                     store.replayAddMessage(context, message);
                     transactionCounter++;
                 }
             } else {
                 switch (c.getDataStructureType()) {
-                case JournalQueueAck.DATA_STRUCTURE_TYPE:
-                {
-                    JournalQueueAck command = (JournalQueueAck) c;
-                    JournalMessageStore store = (JournalMessageStore) createMessageStore(command.getDestination());
+                case JournalQueueAck.DATA_STRUCTURE_TYPE: {
+                    JournalQueueAck command = (JournalQueueAck)c;
+                    JournalMessageStore store = (JournalMessageStore)createMessageStore(command.getDestination());
                     if (command.getMessageAck().isInTransaction()) {
                         transactionStore.removeMessage(store, command.getMessageAck(), pos);
-                    }
-                    else {
+                    } else {
                         store.replayRemoveMessage(context, command.getMessageAck());
                         transactionCounter++;
                     }
                 }
-                break;
-                case JournalTopicAck.DATA_STRUCTURE_TYPE: 
-                {
-                    JournalTopicAck command = (JournalTopicAck) c;
-                    JournalTopicMessageStore store = (JournalTopicMessageStore) createMessageStore(command.getDestination());
+                    break;
+                case JournalTopicAck.DATA_STRUCTURE_TYPE: {
+                    JournalTopicAck command = (JournalTopicAck)c;
+                    JournalTopicMessageStore store = (JournalTopicMessageStore)createMessageStore(command.getDestination());
                     if (command.getTransactionId() != null) {
                         transactionStore.acknowledge(store, command, pos);
-                    }
-                    else {
+                    } else {
                         store.replayAcknowledge(context, command.getClientId(), command.getSubscritionName(), command.getMessageId());
                         transactionCounter++;
                     }
                 }
-                break;
-                case JournalTransaction.DATA_STRUCTURE_TYPE:
-                {
-                    JournalTransaction command = (JournalTransaction) c;
+                    break;
+                case JournalTransaction.DATA_STRUCTURE_TYPE: {
+                    JournalTransaction command = (JournalTransaction)c;
                     try {
                         // Try to replay the packet.
                         switch (command.getType()) {
@@ -525,23 +518,23 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
                         case JournalTransaction.LOCAL_COMMIT:
                             Tx tx = transactionStore.replayCommit(command.getTransactionId(), command.getWasPrepared());
                             if (tx == null)
-                                break; // We may be trying to replay a commit that
-                                        // was already committed.
+                                break; // We may be trying to replay a commit
+                            // that
+                            // was already committed.
 
                             // Replay the committed operations.
                             tx.getOperations();
                             for (Iterator iter = tx.getOperations().iterator(); iter.hasNext();) {
-                                TxOperation op = (TxOperation) iter.next();
+                                TxOperation op = (TxOperation)iter.next();
                                 if (op.operationType == TxOperation.ADD_OPERATION_TYPE) {
-                                    op.store.replayAddMessage(context, (Message) op.data);
+                                    op.store.replayAddMessage(context, (Message)op.data);
                                 }
                                 if (op.operationType == TxOperation.REMOVE_OPERATION_TYPE) {
-                                    op.store.replayRemoveMessage(context, (MessageAck) op.data);
+                                    op.store.replayRemoveMessage(context, (MessageAck)op.data);
                                 }
                                 if (op.operationType == TxOperation.ACK_OPERATION_TYPE) {
-                                    JournalTopicAck ack = (JournalTopicAck) op.data;
-                                    ((JournalTopicMessageStore) op.store).replayAcknowledge(context, ack.getClientId(), ack.getSubscritionName(), ack
-                                            .getMessageId());
+                                    JournalTopicAck ack = (JournalTopicAck)op.data;
+                                    ((JournalTopicMessageStore)op.store).replayAcknowledge(context, ack.getClientId(), ack.getSubscritionName(), ack.getMessageId());
                                 }
                             }
                             transactionCounter++;
@@ -551,14 +544,13 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
                             transactionStore.replayRollback(command.getTransactionId());
                             break;
                         }
-                    }
-                    catch (IOException e) {
+                    } catch (IOException e) {
                         log.error("Recovery Failure: Could not replay: " + c + ", reason: " + e, e);
                     }
                 }
-                break;
+                    break;
                 case JournalTrace.DATA_STRUCTURE_TYPE:
-                    JournalTrace trace = (JournalTrace) c;
+                    JournalTrace trace = (JournalTrace)c;
                     log.debug("TRACE Entry: " + trace.getMessage());
                     break;
                 default:
@@ -590,14 +582,13 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     }
 
     /**
-     * 
      * @param command
      * @param sync
      * @return
      * @throws IOException
      */
     public RecordLocation writeCommand(DataStructure command, boolean sync) throws IOException {
-        if( started.get() )
+        if (started.get())
             return journal.write(toPacket(wireFormat.marshal(command)), sync);
         throw new IOException("closed");
     }
@@ -609,19 +600,19 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     }
 
     public void onMemoryUseChanged(UsageManager memoryManager, int oldPercentUsage, int newPercentUsage) {
-        newPercentUsage = ((newPercentUsage)/10)*10;
-        oldPercentUsage = ((oldPercentUsage)/10)*10;
+        newPercentUsage = ((newPercentUsage) / 10) * 10;
+        oldPercentUsage = ((oldPercentUsage) / 10) * 10;
         if (newPercentUsage >= 70 && oldPercentUsage < newPercentUsage) {
             boolean sync = newPercentUsage >= 90;
             checkpoint(sync, true);
         }
     }
-    
+
     public JournalTransactionStore getTransactionStore() {
         return transactionStore;
     }
 
-    public void deleteAllMessages() throws IOException {        
+    public void deleteAllMessages() throws IOException {
         try {
             JournalTrace trace = new JournalTrace();
             trace.setMessage("DELETED");
@@ -661,28 +652,28 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     }
 
     public void setUseExternalMessageReferences(boolean enable) {
-        if( enable )
+        if (enable)
             throw new IllegalArgumentException("The journal does not support message references.");
     }
-    
+
     public Packet toPacket(ByteSequence sequence) {
-    	return new ByteArrayPacket(new org.apache.activeio.packet.ByteSequence(sequence.data, sequence.offset, sequence.length));
+        return new ByteArrayPacket(new org.apache.activeio.packet.ByteSequence(sequence.data, sequence.offset, sequence.length));
     }
-    
+
     public ByteSequence toByteSequence(Packet packet) {
-    	org.apache.activeio.packet.ByteSequence sequence = packet.asByteSequence();
-    	return new ByteSequence(sequence.getData(), sequence.getOffset(), sequence.getLength());
+        org.apache.activeio.packet.ByteSequence sequence = packet.asByteSequence();
+        return new ByteSequence(sequence.getData(), sequence.getOffset(), sequence.getLength());
     }
-    
-    public void setBrokerName(String brokerName){
+
+    public void setBrokerName(String brokerName) {
         longTermPersistence.setBrokerName(brokerName);
     }
-    
-    public String toString(){
+
+    public String toString() {
         return "JournalPersistenceAdapator(" + longTermPersistence + ")";
     }
 
-    public void setDirectory(File dir){        
+    public void setDirectory(File dir) {
     }
 
 }

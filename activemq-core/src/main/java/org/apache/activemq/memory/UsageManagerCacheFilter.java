@@ -37,29 +37,28 @@ public class UsageManagerCacheFilter extends CacheFilter {
     public Object put(Object key, Object value) {
         long usage = getUsageOfAddedObject(value);
         Object rc = super.put(key, value);
-        if( rc !=null ) {
+        if (rc != null) {
             usage -= getUsageOfRemovedObject(rc);
         }
         totalUsage.addAndGet(usage);
         um.increaseUsage(usage);
         return rc;
     }
-    
+
     public Object remove(Object key) {
         Object rc = super.remove(key);
-        if( rc !=null ) {
+        if (rc != null) {
             long usage = getUsageOfRemovedObject(rc);
             totalUsage.addAndGet(-usage);
             um.decreaseUsage(usage);
         }
         return rc;
     }
-    
-    
+
     protected long getUsageOfAddedObject(Object value) {
         return 1;
     }
-    
+
     protected long getUsageOfRemovedObject(Object value) {
         return 1;
     }

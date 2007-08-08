@@ -47,12 +47,13 @@ public class TwoBrokerTopicSendReceiveTest extends JmsTopicSendReceiveWithTwoCon
         log.info("Waiting for brokers Initialize.");
         Thread.sleep(5000);
         log.info("Brokers should be initialized by now.. starting test.");
-        
+
         super.setUp();
     }
 
     protected ActiveMQConnectionFactory createReceiverConnectionFactory() throws JMSException {
-        return createConnectionFactory("org/apache/activemq/usecases/receiver.xml", "receiver", "vm://receiver");
+        return createConnectionFactory("org/apache/activemq/usecases/receiver.xml", "receiver",
+                                       "vm://receiver");
     }
 
     protected ActiveMQConnectionFactory createSenderConnectionFactory() throws JMSException {
@@ -61,11 +62,11 @@ public class TwoBrokerTopicSendReceiveTest extends JmsTopicSendReceiveWithTwoCon
 
     protected void tearDown() throws Exception {
         super.tearDown();
-    	for (Iterator iter = brokers.values().iterator(); iter.hasNext();) {
-			BrokerService broker = (BrokerService) iter.next();
-			ServiceSupport.dispose(broker);
-			iter.remove();
-		}
+        for (Iterator iter = brokers.values().iterator(); iter.hasNext();) {
+            BrokerService broker = (BrokerService)iter.next();
+            ServiceSupport.dispose(broker);
+            iter.remove();
+        }
     }
 
     protected Connection createReceiveConnection() throws JMSException {
@@ -76,13 +77,14 @@ public class TwoBrokerTopicSendReceiveTest extends JmsTopicSendReceiveWithTwoCon
         return sendFactory.createConnection();
     }
 
-    protected ActiveMQConnectionFactory createConnectionFactory(String config, String brokerName, String connectUrl) throws JMSException {
+    protected ActiveMQConnectionFactory createConnectionFactory(String config, String brokerName,
+                                                                String connectUrl) throws JMSException {
         try {
             BrokerFactoryBean brokerFactory = new BrokerFactoryBean(new ClassPathResource(config));
             brokerFactory.afterPropertiesSet();
             BrokerService broker = brokerFactory.getBroker();
             brokers.put(brokerName, broker);
-            
+
             return new ActiveMQConnectionFactory(connectUrl);
 
         } catch (Exception e) {

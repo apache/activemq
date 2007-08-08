@@ -28,19 +28,20 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.2 $
  */
-public class VMIndex implements Index{
-    private static final Log log=LogFactory.getLog(VMIndex.class);
+public class VMIndex implements Index {
+    private static final Log log = LogFactory.getLog(VMIndex.class);
     private IndexManager indexManager;
-    private Map<Object,StoreEntry> map=new HashMap<Object,StoreEntry>();
+    private Map<Object, StoreEntry> map = new HashMap<Object, StoreEntry>();
 
     public VMIndex(IndexManager manager) {
-        this.indexManager= manager;
+        this.indexManager = manager;
     }
+
     /**
      * 
      * @see org.apache.activemq.kaha.impl.index.Index#clear()
      */
-    public void clear(){
+    public void clear() {
         map.clear();
     }
 
@@ -49,7 +50,7 @@ public class VMIndex implements Index{
      * @return true if the index contains the key
      * @see org.apache.activemq.kaha.impl.index.Index#containsKey(java.lang.Object)
      */
-    public boolean containsKey(Object key){
+    public boolean containsKey(Object key) {
         return map.containsKey(key);
     }
 
@@ -58,14 +59,14 @@ public class VMIndex implements Index{
      * @return store entry
      * @see org.apache.activemq.kaha.impl.index.Index#removeKey(java.lang.Object)
      */
-    public StoreEntry remove(Object key){
-        StoreEntry result =   map.remove(key);
+    public StoreEntry remove(Object key) {
+        StoreEntry result = map.remove(key);
         if (result != null) {
-            try{
-                result=indexManager.refreshIndex((IndexItem)result);
-            }catch(IOException e){
-                log.error("Failed to refresh entry",e);
-               throw new RuntimeException("Failed to refresh entry");
+            try {
+                result = indexManager.refreshIndex((IndexItem)result);
+            } catch (IOException e) {
+                log.error("Failed to refresh entry", e);
+                throw new RuntimeException("Failed to refresh entry");
             }
         }
         return result;
@@ -77,22 +78,22 @@ public class VMIndex implements Index{
      * @see org.apache.activemq.kaha.impl.index.Index#store(java.lang.Object,
      *      org.apache.activemq.kaha.impl.index.IndexItem)
      */
-    public void store(Object key,StoreEntry entry){
-        map.put(key,entry);
+    public void store(Object key, StoreEntry entry) {
+        map.put(key, entry);
     }
 
     /**
      * @param key
      * @return the entry
      */
-    public StoreEntry get(Object key){
-        StoreEntry result =  map.get(key);
+    public StoreEntry get(Object key) {
+        StoreEntry result = map.get(key);
         if (result != null) {
-            try{
-                result=indexManager.refreshIndex((IndexItem)result);
-            }catch(IOException e){
-                log.error("Failed to refresh entry",e);
-               throw new RuntimeException("Failed to refresh entry");
+            try {
+                result = indexManager.refreshIndex((IndexItem)result);
+            } catch (IOException e) {
+                log.error("Failed to refresh entry", e);
+                throw new RuntimeException("Failed to refresh entry");
             }
         }
         return result;
@@ -101,24 +102,23 @@ public class VMIndex implements Index{
     /**
      * @return true if the index is transient
      */
-    public boolean isTransient(){
+    public boolean isTransient() {
         return true;
     }
 
     /**
      * load indexes
      */
-    public void load(){
+    public void load() {
     }
 
     /**
      * unload indexes
      */
-    public void unload(){
+    public void unload() {
         map.clear();
     }
-    
-   
-    public void setKeyMarshaller(Marshaller marshaller){
+
+    public void setKeyMarshaller(Marshaller marshaller) {
     }
 }

@@ -28,106 +28,101 @@ import org.apache.activemq.util.IOHelper;
  * 
  * @version $Revision: 1.17 $
  */
-public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory{
+public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
 
     private TaskRunnerFactory taskRunnerFactory;
     private File dataDirectory;
     private int journalThreadPriority = Thread.MAX_PRIORITY;
-    private String brokerName="localhost";
+    private String brokerName = "localhost";
     private ReferenceStoreAdapter referenceStoreAdapter;
-    
+
     /**
      * @return a AMQPersistenceAdapter
      * @see org.apache.activemq.store.PersistenceAdapterFactory#createPersistenceAdapter()
      */
-    public PersistenceAdapter createPersistenceAdapter(){
-        AMQPersistenceAdapter result =  new AMQPersistenceAdapter();
+    public PersistenceAdapter createPersistenceAdapter() {
+        AMQPersistenceAdapter result = new AMQPersistenceAdapter();
         result.setDirectory(getDataDirectory());
         result.setTaskRunnerFactory(getTaskRunnerFactory());
         result.setBrokerName(getBrokerName());
         result.setReferenceStoreAdapter(getReferenceStoreAdapter());
         return result;
     }
-    
+
     /**
      * @return the dataDirectory
      */
-    public File getDataDirectory(){
-        if(this.dataDirectory==null){
-            this.dataDirectory=new File(IOHelper.getDefaultDataDirectory(),brokerName);
+    public File getDataDirectory() {
+        if (this.dataDirectory == null) {
+            this.dataDirectory = new File(IOHelper.getDefaultDataDirectory(), brokerName);
         }
         return this.dataDirectory;
     }
-    
+
     /**
      * @param dataDirectory the dataDirectory to set
      */
-    public void setDataDirectory(File dataDirectory){
-        this.dataDirectory=dataDirectory;
+    public void setDataDirectory(File dataDirectory) {
+        this.dataDirectory = dataDirectory;
     }
-    
+
     /**
      * @return the taskRunnerFactory
      */
-    public TaskRunnerFactory getTaskRunnerFactory(){
-        if( taskRunnerFactory == null ) {
-            taskRunnerFactory = new TaskRunnerFactory("AMQPersistenceAdaptor Task", journalThreadPriority, true, 1000);
+    public TaskRunnerFactory getTaskRunnerFactory() {
+        if (taskRunnerFactory == null) {
+            taskRunnerFactory = new TaskRunnerFactory("AMQPersistenceAdaptor Task", journalThreadPriority,
+                                                      true, 1000);
         }
         return taskRunnerFactory;
     }
-    
+
     /**
      * @param taskRunnerFactory the taskRunnerFactory to set
      */
-    public void setTaskRunnerFactory(TaskRunnerFactory taskRunnerFactory){
-        this.taskRunnerFactory=taskRunnerFactory;
+    public void setTaskRunnerFactory(TaskRunnerFactory taskRunnerFactory) {
+        this.taskRunnerFactory = taskRunnerFactory;
     }
 
-    
     /**
      * @return the journalThreadPriority
      */
-    public int getJournalThreadPriority(){
+    public int getJournalThreadPriority() {
         return this.journalThreadPriority;
     }
 
-    
     /**
      * @param journalThreadPriority the journalThreadPriority to set
      */
-    public void setJournalThreadPriority(int journalThreadPriority){
-        this.journalThreadPriority=journalThreadPriority;
+    public void setJournalThreadPriority(int journalThreadPriority) {
+        this.journalThreadPriority = journalThreadPriority;
     }
 
-    
     /**
      * @return the brokerName
      */
-    public String getBrokerName(){
+    public String getBrokerName() {
         return this.brokerName;
     }
 
-    
     /**
      * @param brokerName the brokerName to set
      */
-    public void setBrokerName(String brokerName){
-        this.brokerName=brokerName;
+    public void setBrokerName(String brokerName) {
+        this.brokerName = brokerName;
     }
 
-    
     /**
      * @return the referenceStoreAdapter
      */
-    public ReferenceStoreAdapter getReferenceStoreAdapter(){
+    public ReferenceStoreAdapter getReferenceStoreAdapter() {
         return this.referenceStoreAdapter;
     }
 
-    
     /**
      * @param referenceStoreAdapter the referenceStoreAdapter to set
      */
-    public void setReferenceStoreAdapter(ReferenceStoreAdapter referenceStoreAdapter){
-        this.referenceStoreAdapter=referenceStoreAdapter;
+    public void setReferenceStoreAdapter(ReferenceStoreAdapter referenceStoreAdapter) {
+        this.referenceStoreAdapter = referenceStoreAdapter;
     }
 }

@@ -30,22 +30,21 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-
 /**
  * Negotiates the wire format with a new connection
  */
 public class WireFormatNegotiator extends TransportFilter {
 
-    private static final Log log = LogFactory.getLog(WireFormatNegotiator.class);
-    
+    private static final Log LOG = LogFactory.getLog(WireFormatNegotiator.class);
+
     private OpenWireFormat wireFormat;
     private final int minimumVersion;
-    private long negotiateTimeout=15000;
-    
-    private final AtomicBoolean firstStart=new AtomicBoolean(true);
+    private long negotiateTimeout = 15000L;
+
+    private final AtomicBoolean firstStart = new AtomicBoolean(true);
     private final CountDownLatch readyCountDownLatch = new CountDownLatch(1);
     private final CountDownLatch wireInfoSentDownLatch = new CountDownLatch(1);
-    
+
     /**
      * Negotiator
      * 
@@ -60,31 +59,30 @@ public class WireFormatNegotiator extends TransportFilter {
         this.minimumVersion = minimumVersion;
     }
 
-    
     public void start() throws Exception {
         super.start();
-        if( firstStart.compareAndSet(true, false) ) {
-        	try {
-        		WireFormatInfo info = wireFormat.getPreferedWireFormatInfo();
-                if (log.isDebugEnabled()) {
-                    log.debug("Sending: " + info);
+        if (firstStart.compareAndSet(true, false)) {
+            try {
+                WireFormatInfo info = wireFormat.getPreferedWireFormatInfo();
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Sending: " + info);
                 }
-	            sendWireFormat(info);
-        	} finally {
-        		wireInfoSentDownLatch.countDown();
-        	}
+                sendWireFormat(info);
+            } finally {
+                wireInfoSentDownLatch.countDown();
+            }
         }
     }
-    
+
     public void stop() throws Exception {
-    	super.stop();
+        super.stop();
         readyCountDownLatch.countDown();
     }
-    
+
     public void oneway(Object command) throws IOException {
         try {
-            if( !readyCountDownLatch.await(negotiateTimeout, TimeUnit.MILLISECONDS) ) 
-            	throw new IOException("Wire format negotiation timeout: peer did not send his wire format.");
+            if (!readyCountDownLatch.await(negotiateTimeout, TimeUnit.MILLISECONDS))
+                throw new IOException("Wire format negotiation timeout: peer did not send his wire format.");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new InterruptedIOException();
@@ -92,60 +90,54 @@ public class WireFormatNegotiator extends TransportFilter {
         super.oneway(command);
     }
 
- 
     public void onCommand(Object o) {
-    	Command command = (Command) o;
-        if( command.isWireFormatInfo() ) {
-            WireFormatInfo info = (WireFormatInfo) command;
-            if (log.isDebugEnabled()) {
-                log.debug("Received WireFormat: " + info);
+        Command command = (Command)o;
+        if (command.isWireFormatInfo()) {
+            WireFormatInfo info = (WireFormatInfo)command;
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Received WireFormat: " + info);
             }
-            
+
             try {
                 wireInfoSentDownLatch.await();
-                
-                if (log.isDebugEnabled()) {
-                    log.debug(this + " before negotiation: " + wireFormat);
+
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(this + " before negotiation: " + wireFormat);
                 }
-                if( !info.isValid() ) {
+                if (!info.isValid()) {
                     onException(new IOException("Remote wire format magic is invalid"));
-                } else if( info.getVersion() < minimumVersion ) {
-                    onException(new IOException("Remote wire format ("+info.getVersion()+") is lower the minimum version required ("+minimumVersion+")"));
+                } else if (info.getVersion() < minimumVersion) {
+                    onException(new IOException("Remote wire format (" + info.getVersion() + ") is lower the minimum version required (" + minimumVersion + ")"));
                 }
-                
+
                 wireFormat.renegotiateWireFormat(info);
-                
-                if (log.isDebugEnabled()) {
-                    log.debug(this + " after negotiation: " + wireFormat);
+
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(this + " after negotiation: " + wireFormat);
                 }
-	
+
             } catch (IOException e) {
                 onException(e);
             } catch (InterruptedException e) {
-                onException((IOException) new InterruptedIOException().initCause(e));
+                onException((IOException)new InterruptedIOException().initCause(e));
             } catch (Exception e) {
                 onException(IOExceptionSupport.create(e));
-			}
+            }
             readyCountDownLatch.countDown();
             onWireFormatNegotiated(info);
         }
         getTransportListener().onCommand(command);
     }
 
-
     public void onException(IOException error) {
         readyCountDownLatch.countDown();
         /*
-        try {
-            super.oneway(new ExceptionResponse(error));
-        }
-        catch (IOException e) {
-            // ignore as we are already throwing an exception
-        }
-        */
+         * try { super.oneway(new ExceptionResponse(error)); } catch
+         * (IOException e) { // ignore as we are already throwing an exception }
+         */
         super.onException(error);
     }
-    
+
     public String toString() {
         return next.toString();
     }
@@ -153,16 +145,15 @@ public class WireFormatNegotiator extends TransportFilter {
     protected void sendWireFormat(WireFormatInfo info) throws IOException {
         next.oneway(info);
     }
-    
+
     protected void onWireFormatNegotiated(WireFormatInfo info) {
     }
 
+    public long getNegotiateTimeout() {
+        return negotiateTimeout;
+    }
 
-	public long getNegotiateTimeout() {
-		return negotiateTimeout;
-	}
-
-	public void setNegotiateTimeout(long negotiateTimeout) {
-		this.negotiateTimeout = negotiateTimeout;
-	}
+    public void setNegotiateTimeout(long negotiateTimeout) {
+        this.negotiateTimeout = negotiateTimeout;
+    }
 }

@@ -38,14 +38,14 @@ import org.apache.activemq.wireformat.WireFormat;
  */
 public class WireFormatInfo implements Command, MarshallAware {
 
-    private static final int MAX_PROPERTY_SIZE = 1024*4;
-	public static final byte DATA_STRUCTURE_TYPE = CommandTypes.WIREFORMAT_INFO;
-    static final private byte MAGIC[] = new byte[] { 'A', 'c', 't', 'i', 'v', 'e', 'M', 'Q' };
+    private static final int MAX_PROPERTY_SIZE = 1024 * 4;
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.WIREFORMAT_INFO;
+    static final private byte MAGIC[] = new byte[] {'A', 'c', 't', 'i', 'v', 'e', 'M', 'Q'};
 
     protected byte magic[] = MAGIC;
     protected int version;
     protected ByteSequence marshalledProperties;
-    
+
     protected transient Map properties;
     private transient Endpoint from;
     private transient Endpoint to;
@@ -68,6 +68,7 @@ public class WireFormatInfo implements Command, MarshallAware {
     public byte[] getMagic() {
         return magic;
     }
+
     public void setMagic(byte[] magic) {
         this.magic = magic;
     }
@@ -78,16 +79,18 @@ public class WireFormatInfo implements Command, MarshallAware {
     public int getVersion() {
         return version;
     }
+
     public void setVersion(int version) {
         this.version = version;
     }
-    
+
     /**
      * @openwire:property version=1
      */
     public ByteSequence getMarshalledProperties() {
         return marshalledProperties;
     }
+
     public void setMarshalledProperties(ByteSequence marshalledProperties) {
         this.marshalledProperties = marshalledProperties;
     }
@@ -104,7 +107,8 @@ public class WireFormatInfo implements Command, MarshallAware {
     }
 
     /**
-     * The endpoint within the transport where this message is going to - null means all endpoints.
+     * The endpoint within the transport where this message is going to - null
+     * means all endpoints.
      */
     public Endpoint getTo() {
         return to;
@@ -113,34 +117,34 @@ public class WireFormatInfo implements Command, MarshallAware {
     public void setTo(Endpoint to) {
         this.to = to;
     }
-    
-    //////////////////////
+
+    // ////////////////////
     // 
     // Implementation Methods.
     //
-    //////////////////////
-    
+    // ////////////////////
+
     public Object getProperty(String name) throws IOException {
-        if( properties == null ) {
-            if( marshalledProperties ==null )
+        if (properties == null) {
+            if (marshalledProperties == null)
                 return null;
             properties = unmarsallProperties(marshalledProperties);
         }
         return properties.get(name);
     }
-    
+
     public Map getProperties() throws IOException {
-        if( properties == null ) {
-            if( marshalledProperties==null )
+        if (properties == null) {
+            if (marshalledProperties == null)
                 return Collections.EMPTY_MAP;
             properties = unmarsallProperties(marshalledProperties);
         }
         return Collections.unmodifiableMap(properties);
     }
-    
+
     public void clearProperties() {
         marshalledProperties = null;
-        properties=null;
+        properties = null;
     }
 
     public void setProperty(String name, Object value) throws IOException {
@@ -149,8 +153,8 @@ public class WireFormatInfo implements Command, MarshallAware {
     }
 
     protected void lazyCreateProperties() throws IOException {
-        if( properties == null ) {
-            if( marshalledProperties == null ) {
+        if (properties == null) {
+            if (marshalledProperties == null) {
                 properties = new HashMap();
             } else {
                 properties = unmarsallProperties(marshalledProperties);
@@ -158,14 +162,16 @@ public class WireFormatInfo implements Command, MarshallAware {
             }
         }
     }
-    
+
     private Map unmarsallProperties(ByteSequence marshalledProperties) throws IOException {
-        return MarshallingSupport.unmarshalPrimitiveMap(new DataInputStream(new ByteArrayInputStream(marshalledProperties)), MAX_PROPERTY_SIZE);
+        return MarshallingSupport
+            .unmarshalPrimitiveMap(new DataInputStream(new ByteArrayInputStream(marshalledProperties)),
+                                   MAX_PROPERTY_SIZE);
     }
 
     public void beforeMarshall(WireFormat wireFormat) throws IOException {
         // Need to marshal the properties.
-        if( marshalledProperties==null && properties!=null ) {
+        if (marshalledProperties == null && properties != null) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             DataOutputStream os = new DataOutputStream(baos);
             MarshallingSupport.marshalPrimitiveMap(properties, os);
@@ -183,7 +189,6 @@ public class WireFormatInfo implements Command, MarshallAware {
     public void afterUnmarshall(WireFormat wireFormat) throws IOException {
     }
 
-
     public boolean isValid() {
         return magic != null && Arrays.equals(magic, MAGIC);
     }
@@ -192,141 +197,159 @@ public class WireFormatInfo implements Command, MarshallAware {
     }
 
     /**
-     * @throws IOException 
+     * @throws IOException
      */
     public boolean isCacheEnabled() throws IOException {
         return Boolean.TRUE == getProperty("CacheEnabled");
     }
+
     public void setCacheEnabled(boolean cacheEnabled) throws IOException {
         setProperty("CacheEnabled", cacheEnabled ? Boolean.TRUE : Boolean.FALSE);
     }
 
     /**
-     * @throws IOException 
+     * @throws IOException
      */
     public boolean isStackTraceEnabled() throws IOException {
         return Boolean.TRUE == getProperty("StackTraceEnabled");
     }
+
     public void setStackTraceEnabled(boolean stackTraceEnabled) throws IOException {
         setProperty("StackTraceEnabled", stackTraceEnabled ? Boolean.TRUE : Boolean.FALSE);
     }
 
     /**
-     * @throws IOException 
+     * @throws IOException
      */
     public boolean isTcpNoDelayEnabled() throws IOException {
         return Boolean.TRUE == getProperty("TcpNoDelayEnabled");
     }
+
     public void setTcpNoDelayEnabled(boolean tcpNoDelayEnabled) throws IOException {
         setProperty("TcpNoDelayEnabled", tcpNoDelayEnabled ? Boolean.TRUE : Boolean.FALSE);
     }
 
     /**
-     * @throws IOException 
+     * @throws IOException
      */
     public boolean isSizePrefixDisabled() throws IOException {
         return Boolean.TRUE == getProperty("SizePrefixDisabled");
     }
+
     public void setSizePrefixDisabled(boolean prefixPacketSize) throws IOException {
         setProperty("SizePrefixDisabled", prefixPacketSize ? Boolean.TRUE : Boolean.FALSE);
     }
 
     /**
-     * @throws IOException 
+     * @throws IOException
      */
     public boolean isTightEncodingEnabled() throws IOException {
         return Boolean.TRUE == getProperty("TightEncodingEnabled");
     }
+
     public void setTightEncodingEnabled(boolean tightEncodingEnabled) throws IOException {
         setProperty("TightEncodingEnabled", tightEncodingEnabled ? Boolean.TRUE : Boolean.FALSE);
     }
-    
+
     /**
-     * @throws IOException 
+     * @throws IOException
      */
     public long getMaxInactivityDuration() throws IOException {
-        Long l = (Long) getProperty("MaxInactivityDuration");
+        Long l = (Long)getProperty("MaxInactivityDuration");
         return l == null ? 0 : l.longValue();
     }
+
     public void seMaxInactivityDuration(long maxInactivityDuration) throws IOException {
         setProperty("MaxInactivityDuration", new Long(maxInactivityDuration));
     }
 
     /**
-     * @throws IOException 
+     * @throws IOException
      */
     public int getCacheSize() throws IOException {
-        Integer i = (Integer) getProperty("CacheSize");
+        Integer i = (Integer)getProperty("CacheSize");
         return i == null ? 0 : i.intValue();
     }
+
     public void setCacheSize(int cacheSize) throws IOException {
         setProperty("CacheSize", new Integer(cacheSize));
     }
-    
-    
+
     public Response visit(CommandVisitor visitor) throws Exception {
         return visitor.processWireFormat(this);
     }
 
     public String toString() {
-    	Map p=null;
-		try {
-			p = getProperties();
-		} catch (IOException e) {
-		}
-        return "WireFormatInfo { version="+version+", properties="+p+", magic="+toString(magic)+"}";
+        Map p = null;
+        try {
+            p = getProperties();
+        } catch (IOException e) {
+        }
+        return "WireFormatInfo { version=" + version + ", properties=" + p + ", magic=" + toString(magic)
+               + "}";
     }
-    
-    private String toString(byte []data) {
+
+    private String toString(byte[] data) {
         StringBuffer sb = new StringBuffer();
         sb.append('[');
         for (int i = 0; i < data.length; i++) {
-            if( i != 0 ) {
+            if (i != 0) {
                 sb.append(',');
             }
-            sb.append((char)data[i]);            
+            sb.append((char)data[i]);
         }
         sb.append(']');
         return sb.toString();
     }
 
-    ///////////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////////
     //
     // This are not implemented.
     //
-    ///////////////////////////////////////////////////////////////
-    
+    // /////////////////////////////////////////////////////////////
+
     public void setCommandId(int value) {
     }
+
     public int getCommandId() {
         return 0;
     }
+
     public boolean isResponseRequired() {
         return false;
     }
+
     public boolean isResponse() {
         return false;
     }
+
     public boolean isBrokerInfo() {
         return false;
     }
+
     public boolean isMessageDispatch() {
         return false;
     }
+
     public boolean isMessage() {
         return false;
     }
+
     public boolean isMessageAck() {
         return false;
     }
-    public boolean isMessageDispatchNotification(){
+
+    public boolean isMessageDispatchNotification() {
         return false;
     }
-    public boolean isShutdownInfo(){
+
+    public boolean isShutdownInfo() {
         return false;
     }
+
     public void setCachedMarshalledForm(WireFormat wireFormat, ByteSequence data) {
     }
+
     public ByteSequence getCachedMarshalledForm(WireFormat wireFormat) {
         return null;
     }

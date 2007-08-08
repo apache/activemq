@@ -24,11 +24,10 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-
 public class StompConnection {
 
     public static final long RECEIVE_TIMEOUT = 10000;
-    
+
     private Socket stompSocket;
     private ByteArrayOutputStream inputBuffer = new ByteArrayOutputStream();
 
@@ -36,13 +35,13 @@ public class StompConnection {
         stompSocket = new Socket(host, port);
     }
 
-	public void close() throws IOException {
-		if (stompSocket != null) {
-		    stompSocket.close();
-	        stompSocket = null;
-		}
-	}
-	
+    public void close() throws IOException {
+        if (stompSocket != null) {
+            stompSocket.close();
+            stompSocket = null;
+        }
+    }
+
     public void sendFrame(String data) throws Exception {
         byte[] bytes = data.getBytes("UTF-8");
         OutputStream outputStream = stompSocket.getOutputStream();
@@ -52,28 +51,26 @@ public class StompConnection {
     }
 
     public String receiveFrame() throws Exception {
-    	return receiveFrame(RECEIVE_TIMEOUT);
+        return receiveFrame(RECEIVE_TIMEOUT);
     }
 
     private String receiveFrame(long timeOut) throws Exception {
-        stompSocket.setSoTimeout((int) timeOut);
+        stompSocket.setSoTimeout((int)timeOut);
         InputStream is = stompSocket.getInputStream();
         int c = 0;
         for (;;) {
             c = is.read();
             if (c < 0) {
                 throw new IOException("socket closed.");
-            }
-            else if (c == 0) {
+            } else if (c == 0) {
                 c = is.read();
                 if (c != '\n') {
-                	throw new IOException("Expecting stomp frame to terminate with \0\n");
+                    throw new IOException("Expecting stomp frame to terminate with \0\n");
                 }
                 byte[] ba = inputBuffer.toByteArray();
                 inputBuffer.reset();
                 return new String(ba, "UTF-8");
-            }
-            else {
+            } else {
                 inputBuffer.write(c);
             }
         }

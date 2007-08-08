@@ -36,7 +36,8 @@ public class JMSUsecaseTest extends JmsTestSupport {
 
     public static Test suite() {
         return suite(JMSUsecaseTest.class);
-    }    
+    }
+
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
@@ -47,46 +48,37 @@ public class JMSUsecaseTest extends JmsTestSupport {
     public byte destinationType;
     public boolean durableConsumer;
 
-    public void initCombosForTestQueueBrowser() {    
-        addCombinationValues( "deliveryMode", new Object[]{ 
-                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
-                Integer.valueOf(DeliveryMode.PERSISTENT)} );        
-        addCombinationValues( "destinationType", new Object[]{ 
-                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
-                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
-                } );
-    }       
+    public void initCombosForTestQueueBrowser() {
+        addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});
+        addCombinationValues("destinationType", new Object[] {Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE)});
+    }
+
     public void testQueueBrowser() throws Exception {
-        
+
         // Send a message to the broker.
         connection.start();
         Session session = connection.createSession(false, Session.SESSION_TRANSACTED);
         destination = createDestination(session, destinationType);
         sendMessages(session, destination, 5);
 
-        
-        QueueBrowser browser = session.createBrowser((Queue) destination);
+        QueueBrowser browser = session.createBrowser((Queue)destination);
         Enumeration enumeration = browser.getEnumeration();
-        for(int i=0; i < 5; i++) {
+        for (int i = 0; i < 5; i++) {
             Thread.sleep(100);
             assertTrue(enumeration.hasMoreElements());
             Message m = (Message)enumeration.nextElement();
             assertNotNull(m);
-            assertEquals(""+i, ((TextMessage)m).getText());
+            assertEquals("" + i, ((TextMessage)m).getText());
         }
         assertFalse(enumeration.hasMoreElements());
     }
 
-    public void initCombosForTestSendReceive() {    
-        addCombinationValues( "deliveryMode", new Object[]{ 
-                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
-                Integer.valueOf(DeliveryMode.PERSISTENT)} );        
-        addCombinationValues( "destinationType", new Object[]{ 
-                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
-                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), 
-                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
-                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
-    }       
+    public void initCombosForTestSendReceive() {
+        addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});
+        addCombinationValues("destinationType", new Object[] {Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), Byte.valueOf(ActiveMQDestination.TOPIC_TYPE),
+                                                              Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)});
+    }
+
     public void testSendReceive() throws Exception {
         // Send a message to the broker.
         connection.start();
@@ -96,22 +88,18 @@ public class JMSUsecaseTest extends JmsTestSupport {
         MessageConsumer consumer = session.createConsumer(destination);
         ActiveMQMessage message = new ActiveMQMessage();
         producer.send(message);
-        
+
         // Make sure only 1 message was delivered.
         assertNotNull(consumer.receive(1000));
-        assertNull(consumer.receiveNoWait());        
+        assertNull(consumer.receiveNoWait());
     }
 
-    public void initCombosForTestSendReceiveTransacted() {    
-        addCombinationValues( "deliveryMode", new Object[]{ 
-                Integer.valueOf(DeliveryMode.NON_PERSISTENT), 
-                Integer.valueOf(DeliveryMode.PERSISTENT)} );        
-        addCombinationValues( "destinationType", new Object[]{ 
-                Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), 
-                Byte.valueOf(ActiveMQDestination.TOPIC_TYPE), 
-                Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), 
-                Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)} );
-    }       
+    public void initCombosForTestSendReceiveTransacted() {
+        addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});
+        addCombinationValues("destinationType", new Object[] {Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), Byte.valueOf(ActiveMQDestination.TOPIC_TYPE),
+                                                              Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)});
+    }
+
     public void testSendReceiveTransacted() throws Exception {
         // Send a message to the broker.
         connection.start();
@@ -120,28 +108,28 @@ public class JMSUsecaseTest extends JmsTestSupport {
         MessageProducer producer = session.createProducer(destination);
         MessageConsumer consumer = session.createConsumer(destination);
         producer.send(session.createTextMessage("test"));
-        
+
         // Message should not be delivered until commit.
-        assertNull(consumer.receiveNoWait());        
+        assertNull(consumer.receiveNoWait());
         session.commit();
-        
+
         // Make sure only 1 message was delivered.
         Message message = consumer.receive(1000);
         assertNotNull(message);
         assertFalse(message.getJMSRedelivered());
         assertNull(consumer.receiveNoWait());
-        
+
         // Message should be redelivered is rollback is used.
         session.rollback();
-        
+
         // Make sure only 1 message was delivered.
         message = consumer.receive(2000);
         assertNotNull(message);
         assertTrue(message.getJMSRedelivered());
         assertNull(consumer.receiveNoWait());
-        
+
         // If we commit now, the message should not be redelivered.
-        session.commit();        
+        session.commit();
         assertNull(consumer.receiveNoWait());
     }
 

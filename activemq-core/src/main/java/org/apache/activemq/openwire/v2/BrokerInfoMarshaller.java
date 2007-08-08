@@ -24,29 +24,27 @@ import java.io.IOException;
 import org.apache.activemq.openwire.*;
 import org.apache.activemq.command.*;
 
-
-
 /**
  * Marshalling code for Open Wire Format for BrokerInfoMarshaller
- *
- *
- * NOTE!: This file is auto generated - do not modify!
- *        if you need to make a change, please see the modify the groovy scripts in the
- *        under src/gram/script and then use maven openwire:generate to regenerate 
- *        this file.
- *
+ * 
+ * 
+ * NOTE!: This file is auto generated - do not modify! if you need to make a
+ * change, please see the modify the groovy scripts in the under src/gram/script
+ * and then use maven openwire:generate to regenerate this file.
+ * 
  * @version $Revision$
  */
 public class BrokerInfoMarshaller extends BaseCommandMarshaller {
 
     /**
      * Return the type of Data Structure we marshal
+     * 
      * @return short representation of the type data structure
      */
     public byte getDataStructureType() {
         return BrokerInfo.DATA_STRUCTURE_TYPE;
     }
-    
+
     /**
      * @return a new object instance
      */
@@ -56,27 +54,29 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
 
     /**
      * Un-marshal an object instance from the data input stream
-     *
+     * 
      * @param o the object to un-marshal
      * @param dataIn the data input stream to build the object from
      * @throws IOException
      */
-    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInput dataIn, BooleanStream bs) throws IOException {
+    public void tightUnmarshal(OpenWireFormat wireFormat, Object o, DataInput dataIn, BooleanStream bs)
+        throws IOException {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         BrokerInfo info = (BrokerInfo)o;
-        info.setBrokerId((org.apache.activemq.command.BrokerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setBrokerId((org.apache.activemq.command.BrokerId)tightUnmarsalCachedObject(wireFormat, dataIn,
+                                                                                         bs));
         info.setBrokerURL(tightUnmarshalString(dataIn, bs));
 
         if (bs.readBoolean()) {
             short size = dataIn.readShort();
             org.apache.activemq.command.BrokerInfo value[] = new org.apache.activemq.command.BrokerInfo[size];
-            for( int i=0; i < size; i++ ) {
-                value[i] = (org.apache.activemq.command.BrokerInfo) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
+            for (int i = 0; i < size; i++) {
+                value[i] = (org.apache.activemq.command.BrokerInfo)tightUnmarsalNestedObject(wireFormat,
+                                                                                             dataIn, bs);
             }
             info.setPeerBrokerInfos(value);
-        }
-        else {
+        } else {
             info.setPeerBrokerInfos(null);
         }
         info.setBrokerName(tightUnmarshalString(dataIn, bs));
@@ -88,7 +88,6 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         info.setConnectionId(tightUnmarshalLong(wireFormat, dataIn, bs));
 
     }
-
 
     /**
      * Write the booleans that this object uses to a BooleanStream
@@ -107,19 +106,20 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         bs.writeBoolean(info.isFaultTolerantConfiguration());
         bs.writeBoolean(info.isDuplexConnection());
         bs.writeBoolean(info.isNetworkConnection());
-        rc+=tightMarshalLong1(wireFormat, info.getConnectionId(), bs);
+        rc += tightMarshalLong1(wireFormat, info.getConnectionId(), bs);
 
         return rc + 0;
     }
 
     /**
      * Write a object instance to data output stream
-     *
+     * 
      * @param o the instance to be marshaled
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
      */
-    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutput dataOut, BooleanStream bs) throws IOException {
+    public void tightMarshal2(OpenWireFormat wireFormat, Object o, DataOutput dataOut, BooleanStream bs)
+        throws IOException {
         super.tightMarshal2(wireFormat, o, dataOut, bs);
 
         BrokerInfo info = (BrokerInfo)o;
@@ -138,7 +138,7 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
 
     /**
      * Un-marshal an object instance from the data input stream
-     *
+     * 
      * @param o the object to un-marshal
      * @param dataIn the data input stream to build the object from
      * @throws IOException
@@ -147,18 +147,18 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         BrokerInfo info = (BrokerInfo)o;
-        info.setBrokerId((org.apache.activemq.command.BrokerId) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setBrokerId((org.apache.activemq.command.BrokerId)looseUnmarsalCachedObject(wireFormat, dataIn));
         info.setBrokerURL(looseUnmarshalString(dataIn));
 
         if (dataIn.readBoolean()) {
             short size = dataIn.readShort();
             org.apache.activemq.command.BrokerInfo value[] = new org.apache.activemq.command.BrokerInfo[size];
-            for( int i=0; i < size; i++ ) {
-                value[i] = (org.apache.activemq.command.BrokerInfo) looseUnmarsalNestedObject(wireFormat,dataIn);
+            for (int i = 0; i < size; i++) {
+                value[i] = (org.apache.activemq.command.BrokerInfo)looseUnmarsalNestedObject(wireFormat,
+                                                                                             dataIn);
             }
             info.setPeerBrokerInfos(value);
-        }
-        else {
+        } else {
             info.setPeerBrokerInfos(null);
         }
         info.setBrokerName(looseUnmarshalString(dataIn));
@@ -170,7 +170,6 @@ public class BrokerInfoMarshaller extends BaseCommandMarshaller {
         info.setConnectionId(looseUnmarshalLong(wireFormat, dataIn));
 
     }
-
 
     /**
      * Write the booleans that this object uses to a BooleanStream

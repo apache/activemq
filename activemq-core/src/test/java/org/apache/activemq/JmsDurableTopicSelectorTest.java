@@ -21,7 +21,7 @@ package org.apache.activemq;
  */
 public class JmsDurableTopicSelectorTest extends JmsTopicSelectorTest {
     public void setUp() throws Exception {
-        durable=true;
+        durable = true;
         super.setUp();
     }
 }

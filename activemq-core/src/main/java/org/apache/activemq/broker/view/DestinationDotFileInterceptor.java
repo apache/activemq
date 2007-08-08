@@ -16,6 +16,10 @@
  */
 package org.apache.activemq.broker.view;
 
+import java.io.PrintWriter;
+import java.util.Collection;
+import java.util.Iterator;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
@@ -23,12 +27,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.filter.DestinationMapNode;
 
-import java.io.PrintWriter;
-import java.util.Collection;
-import java.util.Iterator;
-
 /**
- * 
  * @version $Revision: $
  */
 public class DestinationDotFileInterceptor extends DotFileInterceptorSupport {
@@ -45,12 +44,10 @@ public class DestinationDotFileInterceptor extends DotFileInterceptorSupport {
         return answer;
     }
 
-    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout)
-            throws Exception {
+    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
         super.removeDestination(context, destination, timeout);
         generateFile();
     }
-
 
     protected void generateFile(PrintWriter writer) throws Exception {
         ActiveMQDestination[] destinations = getDestinations();
@@ -71,7 +68,7 @@ public class DestinationDotFileInterceptor extends DotFileInterceptorSupport {
         writer.println("topic_root [fillcolor = deepskyblue, label = \"Topics\" ];");
         writer.println("queue_root [fillcolor = deepskyblue, label = \"Queues\" ];");
         writer.println();
-        
+
         writer.println("subgraph queues {");
         writer.println("  node [fillcolor=red];     ");
         writer.println("  label = \"Queues\"");
@@ -83,20 +80,20 @@ public class DestinationDotFileInterceptor extends DotFileInterceptorSupport {
         writer.println("subgraph topics {");
         writer.println("  node [fillcolor=green];     ");
         writer.println("  label = \"Topics\"");
-        writer.println();            
+        writer.println();
         printNodeLinks(writer, map.getTopicRootNode(), "topic");
         writer.println("}");
         writer.println();
-        
+
         printNodes(writer, map.getQueueRootNode(), "queue");
         writer.println();
-        
+
         printNodes(writer, map.getTopicRootNode(), "topic");
         writer.println();
-        
+
         writer.println("}");
     }
-    
+
     protected void printNodes(PrintWriter writer, DestinationMapNode node, String prefix) {
         String path = getPath(node);
         writer.print("  ");
@@ -106,8 +103,7 @@ public class DestinationDotFileInterceptor extends DotFileInterceptorSupport {
         String label = path;
         if (prefix.equals("topic")) {
             label = "Topics";
-        }
-        else if (prefix.equals("queue")) {
+        } else if (prefix.equals("queue")) {
             label = "Queues";
         }
         writer.print("[ label = \"");
@@ -116,7 +112,7 @@ public class DestinationDotFileInterceptor extends DotFileInterceptorSupport {
 
         Collection children = node.getChildren();
         for (Iterator iter = children.iterator(); iter.hasNext();) {
-            DestinationMapNode child = (DestinationMapNode) iter.next();
+            DestinationMapNode child = (DestinationMapNode)iter.next();
             printNodes(writer, child, prefix + ID_SEPARATOR + path);
         }
     }
@@ -125,7 +121,7 @@ public class DestinationDotFileInterceptor extends DotFileInterceptorSupport {
         String path = getPath(node);
         Collection children = node.getChildren();
         for (Iterator iter = children.iterator(); iter.hasNext();) {
-            DestinationMapNode child = (DestinationMapNode) iter.next();
+            DestinationMapNode child = (DestinationMapNode)iter.next();
 
             writer.print("  ");
             writer.print(prefix);
@@ -142,7 +138,6 @@ public class DestinationDotFileInterceptor extends DotFileInterceptorSupport {
             printNodeLinks(writer, child, prefix + ID_SEPARATOR + path);
         }
     }
-
 
     protected String getPath(DestinationMapNode node) {
         String path = node.getPath();

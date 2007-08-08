@@ -64,37 +64,37 @@ public class FanoutTransport implements CompositeTransport {
 
     private final TaskRunner reconnectTask;
     private boolean started;
-    
+
     private ArrayList transports = new ArrayList();
-    private int connectedCount=0;
-    
+    private int connectedCount = 0;
+
     private int minAckCount = 2;
-    
+
     private long initialReconnectDelay = 10;
     private long maxReconnectDelay = 1000 * 30;
-    private long backOffMultiplier = 2;    
+    private long backOffMultiplier = 2;
     private boolean useExponentialBackOff = true;
     private int maxReconnectAttempts;
     private Exception connectionFailure;
     private FanoutTransportHandler primary;
-    
+
     static class RequestCounter {
-        
+
         final Command command;
         final AtomicInteger ackCount;
-        
+
         RequestCounter(Command command, int count) {
             this.command = command;
             this.ackCount = new AtomicInteger(count);
         }
-        
+
         public String toString() {
-            return command.getCommandId()+"="+ackCount.get();
+            return command.getCommandId() + "=" + ackCount.get();
         }
     }
 
     class FanoutTransportHandler extends DefaultTransportListener {
-        
+
         private final URI uri;
         private Transport transport;
 
@@ -103,16 +103,16 @@ public class FanoutTransport implements CompositeTransport {
         private long reconnectDate;
 
         public FanoutTransportHandler(URI uri) {
-            this.uri=uri;
+            this.uri = uri;
         }
 
         public void onCommand(Object o) {
-        	Command command = (Command) o;
+            Command command = (Command)o;
             if (command.isResponse()) {
-                Integer id = new Integer(((Response) command).getCorrelationId());
-                RequestCounter rc = (RequestCounter) requestMap.get(id);
-                if( rc != null ) {
-                    if( rc.ackCount.decrementAndGet() <= 0 ) {
+                Integer id = new Integer(((Response)command).getCorrelationId());
+                RequestCounter rc = (RequestCounter)requestMap.get(id);
+                if (rc != null) {
+                    if (rc.ackCount.decrementAndGet() <= 0) {
                         requestMap.remove(id);
                         transportListenerOnCommand(command);
                     }
@@ -127,27 +127,26 @@ public class FanoutTransport implements CompositeTransport {
         public void onException(IOException error) {
             try {
                 synchronized (reconnectMutex) {
-                    if( transport == null )
+                    if (transport == null)
                         return;
-                    
+
                     log.debug("Transport failed, starting up reconnect task", error);
-                    
+
                     ServiceSupport.dispose(transport);
-                    transport=null;
+                    transport = null;
                     connectedCount--;
-                    if( primary == this) {
+                    if (primary == this) {
                         primary = null;
                     }
                     reconnectTask.wakeup();
                 }
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 if (transportListener != null) {
                     transportListener.onException(new InterruptedIOException());
                 }
             }
-        }        
+        }
     }
 
     public FanoutTransport() throws InterruptedIOException {
@@ -156,58 +155,58 @@ public class FanoutTransport implements CompositeTransport {
             public boolean iterate() {
                 return doConnect();
             }
-        }, "ActiveMQ Fanout Worker: "+System.identityHashCode(this));
+        }, "ActiveMQ Fanout Worker: " + System.identityHashCode(this));
     }
-    
+
     /**
      * @return
      */
     private boolean doConnect() {
-        long closestReconnectDate=0;
+        long closestReconnectDate = 0;
         synchronized (reconnectMutex) {
 
-            if (disposed || connectionFailure!=null) {
+            if (disposed || connectionFailure != null) {
                 reconnectMutex.notifyAll();
             }
 
-            if (transports.size() == connectedCount || disposed || connectionFailure!=null) {
+            if (transports.size() == connectedCount || disposed || connectionFailure != null) {
                 return false;
             } else {
-                
-                if( transports.isEmpty() ) {
-//                    connectionFailure = new IOException("No uris available to connect to.");
+
+                if (transports.isEmpty()) {
+                    // connectionFailure = new IOException("No uris available to
+                    // connect to.");
                 } else {
-                    
-                    
+
                     // Try to connect them up.
                     Iterator iter = transports.iterator();
                     for (int i = 0; iter.hasNext() && !disposed; i++) {
-                        
+
                         long now = System.currentTimeMillis();
-                        
-                        FanoutTransportHandler fanoutHandler = (FanoutTransportHandler) iter.next();
-                        if( fanoutHandler.transport!=null ) {
+
+                        FanoutTransportHandler fanoutHandler = (FanoutTransportHandler)iter.next();
+                        if (fanoutHandler.transport != null) {
                             continue;
                         }
-                        
+
                         // Are we waiting a little to try to reconnect this one?
-                        if( fanoutHandler.reconnectDate!=0 && fanoutHandler.reconnectDate>now ) {
-                            if( closestReconnectDate==0 || fanoutHandler.reconnectDate < closestReconnectDate ) {
+                        if (fanoutHandler.reconnectDate != 0 && fanoutHandler.reconnectDate > now) {
+                            if (closestReconnectDate == 0 || fanoutHandler.reconnectDate < closestReconnectDate) {
                                 closestReconnectDate = fanoutHandler.reconnectDate;
                             }
                             continue;
                         }
-                        
+
                         URI uri = fanoutHandler.uri;
                         try {
-                            log.debug("Stopped: "+this);
+                            log.debug("Stopped: " + this);
                             log.debug("Attempting connect to: " + uri);
                             Transport t = TransportFactory.compositeConnect(uri);
                             log.debug("Connection established");
                             fanoutHandler.transport = t;
                             fanoutHandler.reconnectDelay = 10;
                             fanoutHandler.connectFailures = 0;
-                            if( primary == null ) {
+                            if (primary == null) {
                                 primary = fanoutHandler;
                             }
                             t.setTransportListener(fanoutHandler);
@@ -215,50 +214,48 @@ public class FanoutTransport implements CompositeTransport {
                             if (started) {
                                 restoreTransport(fanoutHandler);
                             }
-                        }
-                        catch (Exception e) {
+                        } catch (Exception e) {
                             log.debug("Connect fail to: " + uri + ", reason: " + e);
-                            
+
                             if (maxReconnectAttempts > 0 && ++fanoutHandler.connectFailures >= maxReconnectAttempts) {
                                 log.error("Failed to connect to transport after: " + fanoutHandler.connectFailures + " attempt(s)");
                                 connectionFailure = e;
                                 reconnectMutex.notifyAll();
                                 return false;
                             } else {
-                                
+
                                 if (useExponentialBackOff) {
                                     // Exponential increment of reconnect delay.
                                     fanoutHandler.reconnectDelay *= backOffMultiplier;
                                     if (fanoutHandler.reconnectDelay > maxReconnectDelay)
                                         fanoutHandler.reconnectDelay = maxReconnectDelay;
                                 }
-                                
+
                                 fanoutHandler.reconnectDate = now + fanoutHandler.reconnectDelay;
-                                
-                                if( closestReconnectDate==0 || fanoutHandler.reconnectDate < closestReconnectDate ) {
+
+                                if (closestReconnectDate == 0 || fanoutHandler.reconnectDate < closestReconnectDate) {
                                     closestReconnectDate = fanoutHandler.reconnectDate;
                                 }
                             }
                         }
                     }
-                    if (transports.size() == connectedCount || disposed ) {
+                    if (transports.size() == connectedCount || disposed) {
                         reconnectMutex.notifyAll();
                         return false;
                     }
-                    
+
                 }
             }
-            
+
         }
 
         try {
             long reconnectDelay = closestReconnectDate - System.currentTimeMillis();
-            if(reconnectDelay>0) {
+            if (reconnectDelay > 0) {
                 log.debug("Waiting " + reconnectDelay + " ms before attempting connection. ");
                 Thread.sleep(reconnectDelay);
             }
-        }
-        catch (InterruptedException e1) {
+        } catch (InterruptedException e1) {
             Thread.currentThread().interrupt();
         }
         return true;
@@ -271,8 +268,8 @@ public class FanoutTransport implements CompositeTransport {
                 return;
             started = true;
             for (Iterator iter = transports.iterator(); iter.hasNext();) {
-                FanoutTransportHandler th = (FanoutTransportHandler) iter.next();
-                if( th.transport != null ) {
+                FanoutTransportHandler th = (FanoutTransportHandler)iter.next();
+                if (th.transport != null) {
                     restoreTransport(th);
                 }
             }
@@ -281,21 +278,21 @@ public class FanoutTransport implements CompositeTransport {
 
     public void stop() throws Exception {
         synchronized (reconnectMutex) {
-        	ServiceStopper ss = new ServiceStopper();
-        	
+            ServiceStopper ss = new ServiceStopper();
+
             if (!started)
                 return;
             started = false;
             disposed = true;
 
             for (Iterator iter = transports.iterator(); iter.hasNext();) {
-                FanoutTransportHandler th = (FanoutTransportHandler) iter.next();
-                if( th.transport != null ) {
-                	ss.stop(th.transport);
+                FanoutTransportHandler th = (FanoutTransportHandler)iter.next();
+                if (th.transport != null) {
+                    ss.stop(th.transport);
                 }
             }
-            
-            log.debug("Stopped: "+this);
+
+            log.debug("Stopped: " + this);
             ss.throwFirstException();
         }
         reconnectTask.shutdown();
@@ -334,50 +331,50 @@ public class FanoutTransport implements CompositeTransport {
     }
 
     public void oneway(Object o) throws IOException {
-    	final Command command = (Command) o;
+        final Command command = (Command)o;
         try {
             synchronized (reconnectMutex) {
-                
+
                 // If it was a request and it was not being tracked by
                 // the state tracker,
                 // then hold it in the requestMap so that we can replay
                 // it later.
                 boolean fanout = isFanoutCommand(command);
-                if (stateTracker.track(command)==null && command.isResponseRequired() ) {
+                if (stateTracker.track(command) == null && command.isResponseRequired()) {
                     int size = fanout ? minAckCount : 1;
                     requestMap.put(new Integer(command.getCommandId()), new RequestCounter(command, size));
                 }
 
                 // Wait for transport to be connected.
-                while (connectedCount != minAckCount && !disposed && connectionFailure==null ) {
-                    log.debug("Waiting for at least "+minAckCount+" transports to be connected.");
+                while (connectedCount != minAckCount && !disposed && connectionFailure == null) {
+                    log.debug("Waiting for at least " + minAckCount + " transports to be connected.");
                     reconnectMutex.wait(1000);
                 }
 
                 // Still not fully connected.
-                if( connectedCount != minAckCount ) {
+                if (connectedCount != minAckCount) {
 
                     Exception error;
-                    
+
                     // Throw the right kind of error..
                     if (disposed) {
                         error = new IOException("Transport disposed.");
-                    } else if (connectionFailure!=null) {
+                    } else if (connectionFailure != null) {
                         error = connectionFailure;
                     } else {
                         error = new IOException("Unexpected failure.");
                     }
-                    
-                    if( error instanceof IOException )
+
+                    if (error instanceof IOException)
                         throw (IOException)error;
                     throw IOExceptionSupport.create(error);
                 }
-                
+
                 // Send the message.
-                if( fanout ) {
+                if (fanout) {
                     for (Iterator iter = transports.iterator(); iter.hasNext();) {
-                        FanoutTransportHandler th = (FanoutTransportHandler) iter.next();
-                        if( th.transport!=null ) {
+                        FanoutTransportHandler th = (FanoutTransportHandler)iter.next();
+                        if (th.transport != null) {
                             try {
                                 th.transport.oneway(command);
                             } catch (IOException e) {
@@ -394,7 +391,7 @@ public class FanoutTransport implements CompositeTransport {
                         primary.onException(e);
                     }
                 }
-                
+
             }
         } catch (InterruptedException e) {
             // Some one may be trying to stop our thread.
@@ -408,10 +405,10 @@ public class FanoutTransport implements CompositeTransport {
      * @return
      */
     private boolean isFanoutCommand(Command command) {
-        if( command.isMessage() ) {
+        if (command.isMessage()) {
             return ((Message)command).getDestination().isTopic();
-        } 
-        if( command.getDataStructureType() == ConsumerInfo.DATA_STRUCTURE_TYPE ) {
+        }
+        if (command.getDataStructureType() == ConsumerInfo.DATA_STRUCTURE_TYPE) {
             return false;
         }
         return true;
@@ -424,8 +421,8 @@ public class FanoutTransport implements CompositeTransport {
     public Object request(Object command) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
-    
-    public Object request(Object command,int timeout) throws IOException {
+
+    public Object request(Object command, int timeout) throws IOException {
         throw new AssertionError("Unsupported Method");
     }
 
@@ -451,67 +448,67 @@ public class FanoutTransport implements CompositeTransport {
         if (target.isAssignableFrom(getClass())) {
             return this;
         }
-        
+
         synchronized (reconnectMutex) {
             for (Iterator iter = transports.iterator(); iter.hasNext();) {
-                FanoutTransportHandler th = (FanoutTransportHandler) iter.next();
-                if( th.transport!=null ) {
+                FanoutTransportHandler th = (FanoutTransportHandler)iter.next();
+                if (th.transport != null) {
                     Object rc = th.transport.narrow(target);
-                    if( rc !=null )
+                    if (rc != null)
                         return rc;
                 }
             }
         }
-        
+
         return null;
 
     }
 
     protected void restoreTransport(FanoutTransportHandler th) throws Exception, IOException {
         th.transport.start();
-        stateTracker.setRestoreConsumers(th.transport==primary);
+        stateTracker.setRestoreConsumers(th.transport == primary);
         stateTracker.restore(th.transport);
         for (Iterator iter2 = requestMap.values().iterator(); iter2.hasNext();) {
-            RequestCounter rc = (RequestCounter) iter2.next();
+            RequestCounter rc = (RequestCounter)iter2.next();
             th.transport.oneway(rc.command);
         }
     }
 
     public void add(URI uris[]) {
-        
+
         synchronized (reconnectMutex) {
             for (int i = 0; i < uris.length; i++) {
                 URI uri = uris[i];
-                
-                boolean match=false;
+
+                boolean match = false;
                 for (Iterator iter = transports.iterator(); iter.hasNext();) {
-                    FanoutTransportHandler th = (FanoutTransportHandler) iter.next();
-                    if( th.uri.equals(uri)) {
-                        match=true;
+                    FanoutTransportHandler th = (FanoutTransportHandler)iter.next();
+                    if (th.uri.equals(uri)) {
+                        match = true;
                         break;
                     }
                 }
-                if( !match ) {
+                if (!match) {
                     FanoutTransportHandler th = new FanoutTransportHandler(uri);
                     transports.add(th);
                     reconnect();
                 }
             }
         }
-        
+
     }
-    
+
     public void remove(URI uris[]) {
-        
+
         synchronized (reconnectMutex) {
             for (int i = 0; i < uris.length; i++) {
                 URI uri = uris[i];
-                
-                boolean match=false;
+
+                boolean match = false;
                 for (Iterator iter = transports.iterator(); iter.hasNext();) {
-                    FanoutTransportHandler th = (FanoutTransportHandler) iter.next();
-                    if( th.uri.equals(uri)) {
-                        if( th.transport!=null ) {
+                    FanoutTransportHandler th = (FanoutTransportHandler)iter.next();
+                    if (th.uri.equals(uri)) {
+                        if (th.transport != null) {
                             ServiceSupport.dispose(th.transport);
                             connectedCount--;
                         }
@@ -521,17 +518,17 @@ public class FanoutTransport implements CompositeTransport {
                 }
             }
         }
-        
+
     }
 
-	public String getRemoteAddress() {
-		if(primary != null){
-		   if(primary.transport != null){
-			   return primary.transport.getRemoteAddress(); 
-		   }
-		}
-		return null;
-	}
+    public String getRemoteAddress() {
+        if (primary != null) {
+            if (primary.transport != null) {
+                return primary.transport.getRemoteAddress();
+            }
+        }
+        return null;
+    }
 
     protected void transportListenerOnCommand(Command command) {
         if (transportListener != null) {
@@ -539,8 +536,7 @@ public class FanoutTransport implements CompositeTransport {
         }
     }
 
-    
-    public boolean isFaultTolerant(){
+    public boolean isFaultTolerant() {
         return true;
     }
 }

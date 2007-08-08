@@ -31,128 +31,132 @@ import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 
 /**
- * An implementation of {@link org.apache.activemq.store.MessageStore} which uses a
+ * An implementation of {@link org.apache.activemq.store.MessageStore} which
+ * uses a
  * 
  * @version $Revision: 1.7 $
  */
-public class MemoryMessageStore implements MessageStore{
+public class MemoryMessageStore implements MessageStore {
 
     protected final ActiveMQDestination destination;
     protected final Map messageTable;
     protected MessageId lastBatchId;
 
-    public MemoryMessageStore(ActiveMQDestination destination){
-        this(destination,new LinkedHashMap());
+    public MemoryMessageStore(ActiveMQDestination destination) {
+        this(destination, new LinkedHashMap());
     }
 
-    public MemoryMessageStore(ActiveMQDestination destination,Map messageTable){
-        this.destination=destination;
-        this.messageTable=Collections.synchronizedMap(messageTable);
+    public MemoryMessageStore(ActiveMQDestination destination, Map messageTable) {
+        this.destination = destination;
+        this.messageTable = Collections.synchronizedMap(messageTable);
     }
 
-    public synchronized void addMessage(ConnectionContext context,Message message) throws IOException{
-        synchronized(messageTable){
-            messageTable.put(message.getMessageId(),message);
+    public synchronized void addMessage(ConnectionContext context, Message message) throws IOException {
+        synchronized (messageTable) {
+            messageTable.put(message.getMessageId(), message);
         }
     }
 
-//    public void addMessageReference(ConnectionContext context,MessageId messageId,long expirationTime,String messageRef)
-//            throws IOException{
-//        synchronized(messageTable){
-//            messageTable.put(messageId,messageRef);
-//        }
-//    }
+    // public void addMessageReference(ConnectionContext context,MessageId
+    // messageId,long expirationTime,String messageRef)
+    // throws IOException{
+    // synchronized(messageTable){
+    // messageTable.put(messageId,messageRef);
+    // }
+    // }
 
-    public Message getMessage(MessageId identity) throws IOException{
+    public Message getMessage(MessageId identity) throws IOException {
         return (Message)messageTable.get(identity);
     }
 
-//    public String getMessageReference(MessageId identity) throws IOException{
-//        return (String)messageTable.get(identity);
-//    }
+    // public String getMessageReference(MessageId identity) throws IOException{
+    // return (String)messageTable.get(identity);
+    // }
 
-    public void removeMessage(ConnectionContext context,MessageAck ack) throws IOException{
+    public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
         removeMessage(ack.getLastMessageId());
     }
 
-    public void removeMessage(MessageId msgId) throws IOException{
-        synchronized(messageTable){
+    public void removeMessage(MessageId msgId) throws IOException {
+        synchronized (messageTable) {
             messageTable.remove(msgId);
-            if((lastBatchId!=null && lastBatchId.equals(msgId)) || messageTable.isEmpty()){
-                lastBatchId=null;
+            if ((lastBatchId != null && lastBatchId.equals(msgId)) || messageTable.isEmpty()) {
+                lastBatchId = null;
             }
         }
     }
 
-    public void recover(MessageRecoveryListener listener) throws Exception{
-        // the message table is a synchronizedMap - so just have to synchronize here
-        synchronized(messageTable){
-            for(Iterator iter=messageTable.values().iterator();iter.hasNext();){
-                Object msg=(Object)iter.next();
-                if(msg.getClass()==MessageId.class){
+    public void recover(MessageRecoveryListener listener) throws Exception {
+        // the message table is a synchronizedMap - so just have to synchronize
+        // here
+        synchronized (messageTable) {
+            for (Iterator iter = messageTable.values().iterator(); iter.hasNext();) {
+                Object msg = (Object)iter.next();
+                if (msg.getClass() == MessageId.class) {
                     listener.recoverMessageReference((MessageId)msg);
-                }else{
+                } else {
                     listener.recoverMessage((Message)msg);
                 }
             }
         }
     }
 
-    public void start(){
+    public void start() {
     }
 
-    public void stop(){
+    public void stop() {
     }
 
-    public void removeAllMessages(ConnectionContext context) throws IOException{
-        synchronized(messageTable){
+    public void removeAllMessages(ConnectionContext context) throws IOException {
+        synchronized (messageTable) {
             messageTable.clear();
         }
     }
 
-    public ActiveMQDestination getDestination(){
+    public ActiveMQDestination getDestination() {
         return destination;
     }
 
-    public void delete(){
-        synchronized(messageTable){
+    public void delete() {
+        synchronized (messageTable) {
             messageTable.clear();
         }
     }
 
     /**
-     * @param usageManager The UsageManager that is controlling the destination's memory usage.
+     * @param usageManager The UsageManager that is controlling the
+     *                destination's memory usage.
      */
-    public void setUsageManager(UsageManager usageManager){
+    public void setUsageManager(UsageManager usageManager) {
     }
 
-    public int getMessageCount(){
+    public int getMessageCount() {
         return messageTable.size();
     }
 
-    public void recoverNextMessages(int maxReturned,MessageRecoveryListener listener) throws Exception{
-        synchronized(messageTable){
-            boolean pastLackBatch=lastBatchId==null;
-            int count=0;
-            for(Iterator iter=messageTable.entrySet().iterator();iter.hasNext();){
-                Map.Entry entry=(Entry)iter.next();
-                if(pastLackBatch){
+    public void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception {
+        synchronized (messageTable) {
+            boolean pastLackBatch = lastBatchId == null;
+            int count = 0;
+            for (Iterator iter = messageTable.entrySet().iterator(); iter.hasNext();) {
+                Map.Entry entry = (Entry)iter.next();
+                if (pastLackBatch) {
                     count++;
-                    Object msg=entry.getValue();
-                    lastBatchId=(MessageId)entry.getKey();
-                    if(msg.getClass()==MessageId.class){
+                    Object msg = entry.getValue();
+                    lastBatchId = (MessageId)entry.getKey();
+                    if (msg.getClass() == MessageId.class) {
                         listener.recoverMessageReference((MessageId)msg);
-                    }else{
+                    } else {
                         listener.recoverMessage((Message)msg);
                     }
-                }else{
-                    pastLackBatch=entry.getKey().equals(lastBatchId);
+                } else {
+                    pastLackBatch = entry.getKey().equals(lastBatchId);
                 }
             }
         }
     }
 
-    public void resetBatching(){
-        lastBatchId=null;
+    public void resetBatching() {
+        lastBatchId = null;
     }
 }

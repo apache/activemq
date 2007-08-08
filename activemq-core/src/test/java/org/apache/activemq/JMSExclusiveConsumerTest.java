@@ -42,14 +42,14 @@ public class JMSExclusiveConsumerTest extends JmsTestSupport {
     }
 
     public int deliveryMode;
-    
+
     public void initCombosForTestRoundRobinDispatchOnNonExclusive() {
-        addCombinationValues("deliveryMode", new Object[] { Integer.valueOf(DeliveryMode.NON_PERSISTENT),
-        		Integer.valueOf(DeliveryMode.PERSISTENT) });
+        addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});
     }
 
     /**
-     * Shows that by default messages are round robined across a set of consumers.
+     * Shows that by default messages are round robined across a set of
+     * consumers.
      * 
      * @throws Exception
      */
@@ -61,18 +61,18 @@ public class JMSExclusiveConsumerTest extends JmsTestSupport {
         ActiveMQQueue destination = new ActiveMQQueue("TEST");
         MessageProducer producer = session.createProducer(destination);
         producer.setDeliveryMode(deliveryMode);
-        
+
         MessageConsumer consumer1 = session.createConsumer(destination);
         MessageConsumer consumer2 = session.createConsumer(destination);
 
         // Send the messages
         producer.send(session.createTextMessage("1st"));
         producer.send(session.createTextMessage("2nd"));
-        
+
         Message m;
         m = consumer2.receive(1000);
         assertNotNull(m);
-        
+
         m = consumer1.receive(1000);
         assertNotNull(m);
 
@@ -81,13 +81,12 @@ public class JMSExclusiveConsumerTest extends JmsTestSupport {
     }
 
     public void initCombosForTestDispatchExclusive() {
-        addCombinationValues("deliveryMode", new Object[] { Integer.valueOf(DeliveryMode.NON_PERSISTENT),
-        		Integer.valueOf(DeliveryMode.PERSISTENT) });
+        addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});
     }
 
     /**
-     * Shows that if the "?consumer.exclusive=true" option is added to destination,
-     * then all messages are routed to 1 consumer.
+     * Shows that if the "?consumer.exclusive=true" option is added to
+     * destination, then all messages are routed to 1 consumer.
      * 
      * @throws Exception
      */
@@ -99,7 +98,7 @@ public class JMSExclusiveConsumerTest extends JmsTestSupport {
         ActiveMQQueue destination = new ActiveMQQueue("TEST?consumer.exclusive=true");
         MessageProducer producer = session.createProducer(destination);
         producer.setDeliveryMode(deliveryMode);
-        
+
         MessageConsumer consumer1 = session.createConsumer(destination);
         MessageConsumer consumer2 = session.createConsumer(destination);
 
@@ -107,10 +106,10 @@ public class JMSExclusiveConsumerTest extends JmsTestSupport {
         producer.send(session.createTextMessage("1st"));
         producer.send(session.createTextMessage("2nd"));
         producer.send(session.createTextMessage("3nd"));
-        
+
         Message m;
         m = consumer2.receive(1000);
-        if( m!=null ) {
+        if (m != null) {
             // Consumer 2 should get all the messages.
             for (int i = 0; i < 2; i++) {
                 m = consumer2.receive(1000);
@@ -138,14 +137,13 @@ public class JMSExclusiveConsumerTest extends JmsTestSupport {
         MessageConsumer nonExCon = session.createConsumer(nonExclusiveQueue);
         MessageConsumer exCon = session.createConsumer(exclusiveQueue);
 
-
         MessageProducer prod = session.createProducer(exclusiveQueue);
         prod.send(session.createMessage());
         prod.send(session.createMessage());
         prod.send(session.createMessage());
 
         Message m;
-        for (int i=0; i<3; i++) {
+        for (int i = 0; i < 3; i++) {
             m = exCon.receive(1000);
             assertNotNull(m);
             m = nonExCon.receive(1000);

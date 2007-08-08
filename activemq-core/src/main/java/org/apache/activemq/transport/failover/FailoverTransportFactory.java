@@ -35,25 +35,25 @@ public class FailoverTransportFactory extends TransportFactory {
     public Transport doConnect(URI location) throws IOException {
         try {
             Transport transport = createTransport(URISupport.parseComposite(location));
-            transport =  new MutexTransport(transport);
+            transport = new MutexTransport(transport);
             transport = new ResponseCorrelator(transport);
             return transport;
         } catch (URISyntaxException e) {
-            throw new IOException("Invalid location: "+location);
+            throw new IOException("Invalid location: " + location);
         }
     }
-    
+
     public Transport doCompositeConnect(URI location) throws IOException {
         try {
             return createTransport(URISupport.parseComposite(location));
         } catch (URISyntaxException e) {
-            throw new IOException("Invalid location: "+location);
+            throw new IOException("Invalid location: " + location);
         }
     }
 
     /**
      * @param location
-     * @return 
+     * @return
      * @throws IOException
      */
     public Transport createTransport(CompositeData compositData) throws IOException {
@@ -72,8 +72,8 @@ public class FailoverTransportFactory extends TransportFactory {
         return transport;
     }
 
-    public TransportServer doBind(String brokerId,URI location) throws IOException {
-        throw new IOException("Invalid server URI: "+location);
+    public TransportServer doBind(String brokerId, URI location) throws IOException {
+        throw new IOException("Invalid server URI: " + location);
     }
 
 }

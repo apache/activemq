@@ -27,61 +27,67 @@ import org.apache.activemq.store.amq.AMQTx;
 
 /**
  * Adapter to the actual persistence mechanism used with ActiveMQ
- *
+ * 
  * @version $Revision: 1.3 $
  */
 public interface ReferenceStoreAdapter extends PersistenceAdapter {
 
     /**
-     * Factory method to create a new queue message store with the given destination name
-     * @param destination 
+     * Factory method to create a new queue message store with the given
+     * destination name
+     * 
+     * @param destination
      * @return the QueueReferenceStore
-     * @throws IOException 
+     * @throws IOException
      */
     public ReferenceStore createQueueReferenceStore(ActiveMQQueue destination) throws IOException;
 
     /**
-     * Factory method to create a new topic message store with the given destination name
+     * Factory method to create a new topic message store with the given
+     * destination name
+     * 
      * @param destination
-     * @return  the TopicRefererenceStore
-     * @throws IOException 
+     * @return the TopicRefererenceStore
+     * @throws IOException
      */
     public TopicReferenceStore createTopicReferenceStore(ActiveMQTopic destination) throws IOException;
 
-	/**
-	 * @return Set of File ids in use
-	 * @throws IOException
-	 */
-	public Set<Integer> getReferenceFileIdsInUse() throws IOException;
-    
+    /**
+     * @return Set of File ids in use
+     * @throws IOException
+     */
+    public Set<Integer> getReferenceFileIdsInUse() throws IOException;
+
     /**
      * If the store isn't valid, it can be recoverd at start-up
+     * 
      * @return true if the reference store is in a consistent state
      */
     public boolean isStoreValid();
-    
+
     /**
      * called by recover to clear out message references
-     * @throws IOException 
+     * 
+     * @throws IOException
      */
     public void clearMessages() throws IOException;
-    
+
     /**
-     * recover any state 
-     * @throws IOException 
-     *
+     * recover any state
+     * 
+     * @throws IOException
      */
     public void recoverState() throws IOException;
-    
+
     /**
      * Save prepared transactions
+     * 
      * @param map
      * @throws IOException
      */
-    public void savePreparedState(Map<TransactionId, AMQTx> map)throws IOException;
-    
+    public void savePreparedState(Map<TransactionId, AMQTx> map) throws IOException;
+
     /**
-     * 
      * @return saved prepared transactions
      * @throws IOException
      */

@@ -18,7 +18,7 @@ package org.apache.activemq.pool;
 
 /**
  * A cache key for the connection details
- *
+ * 
  * @version $Revision: 1.1 $
  */
 public class ConnectionKey {
@@ -30,7 +30,7 @@ public class ConnectionKey {
         this.password = password;
         this.userName = userName;
         hash = 31;
-        if (userName != null)  {
+        if (userName != null) {
             hash += userName.hashCode();
         }
         hash *= 31;
@@ -48,13 +48,13 @@ public class ConnectionKey {
             return true;
         }
         if (that instanceof ConnectionKey) {
-            return equals((ConnectionKey) that);
+            return equals((ConnectionKey)that);
         }
         return false;
     }
 
     public boolean equals(ConnectionKey that) {
-       return isEqual(this.userName, that.userName) && isEqual(this.password, that.password);
+        return isEqual(this.userName, that.userName) && isEqual(this.password, that.password);
     }
 
     public String getPassword() {
@@ -71,6 +71,5 @@ public class ConnectionKey {
         }
         return (o1 != null && o2 != null && o1.equals(o2));
     }
-
 
 }

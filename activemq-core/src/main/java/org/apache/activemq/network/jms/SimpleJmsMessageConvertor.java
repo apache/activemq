@@ -28,32 +28,32 @@ import javax.jms.Message;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-public class SimpleJmsMessageConvertor implements  JmsMesageConvertor {
-    
+public class SimpleJmsMessageConvertor implements JmsMesageConvertor {
+
     /**
-     * Convert a foreign JMS Message to a native ActiveMQ Message - Inbound
-     * or visa-versa outbound
+     * Convert a foreign JMS Message to a native ActiveMQ Message - Inbound or
+     * visa-versa outbound
+     * 
      * @param message
      * @return the converted message
      * @throws JMSException
      */
-    public Message convert(Message message) throws JMSException{
+    public Message convert(Message message) throws JMSException {
         return message;
     }
-    
-    public Message convert(Message message, Destination replyTo) throws JMSException{
-    	Message msg = convert(message);
-    	if(replyTo != null) {
-    		msg.setJMSReplyTo(replyTo);
-		}else{
-			msg.setJMSReplyTo(null);
-		}
-		return msg;
+
+    public Message convert(Message message, Destination replyTo) throws JMSException {
+        Message msg = convert(message);
+        if (replyTo != null) {
+            msg.setJMSReplyTo(replyTo);
+        } else {
+            msg.setJMSReplyTo(null);
+        }
+        return msg;
     }
-    
-    public void setConnection(Connection connection){
-    	//do nothing
+
+    public void setConnection(Connection connection) {
+        // do nothing
     }
-    
-   
+
 }

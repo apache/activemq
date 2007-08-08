@@ -20,27 +20,27 @@ import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.command.Message;
 
-
 /**
  * A Broker interceptor which updates a JMS Client's timestamp on the message
- * with a broker timestamp.  Useful when the clocks on client machines are known to
- * not be correct and you can only trust the time set on the broker machines.
+ * with a broker timestamp. Useful when the clocks on client machines are known
+ * to not be correct and you can only trust the time set on the broker machines.
  * 
- * Enabling this plugin will break JMS compliance since the timestamp that the producer
- * sees on the messages after as send() will be different from the timestamp the consumer
- * will observe when he receives the message.  This plugin is not enabled in the default
- * ActiveMQ configuration.
+ * Enabling this plugin will break JMS compliance since the timestamp that the
+ * producer sees on the messages after as send() will be different from the
+ * timestamp the consumer will observe when he receives the message. This plugin
+ * is not enabled in the default ActiveMQ configuration.
  * 
- * @org.apache.xbean.XBean element="timeStampingBrokerPlugin" 
+ * @org.apache.xbean.XBean element="timeStampingBrokerPlugin"
  * 
  * @version $Revision$
  */
-public class TimeStampingBrokerPlugin  extends BrokerPluginSupport {
-	public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
-        if (message.getTimestamp() > 0 && (message.getBrokerPath() == null || message.getBrokerPath().length == 0)) { 
-            //timestamp not been disabled and has not passed through a network
+public class TimeStampingBrokerPlugin extends BrokerPluginSupport {
+    public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
+        if (message.getTimestamp() > 0
+            && (message.getBrokerPath() == null || message.getBrokerPath().length == 0)) {
+            // timestamp not been disabled and has not passed through a network
             message.setTimestamp(System.currentTimeMillis());
         }
-		super.send(producerExchange, message);
-	}
+        super.send(producerExchange, message);
+    }
 }

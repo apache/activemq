@@ -47,10 +47,11 @@ public class ManagedTransportConnection extends TransportConnection {
     private ConnectionViewMBean mbean;
 
     private ObjectName byClientIdName;
-	private ObjectName byAddressName;
+    private ObjectName byAddressName;
 
-    public ManagedTransportConnection(TransportConnector connector, Transport transport, Broker broker, TaskRunnerFactory factory, MBeanServer server,
-            ObjectName connectorName) throws IOException {
+    public ManagedTransportConnection(TransportConnector connector, Transport transport, Broker broker,
+                                      TaskRunnerFactory factory, MBeanServer server, ObjectName connectorName)
+        throws IOException {
         super(connector, transport, broker, factory);
         this.server = server;
         this.connectorName = connectorName;
@@ -64,12 +65,12 @@ public class ManagedTransportConnection extends TransportConnection {
             setPendingStop(true);
             return;
         }
-    	synchronized(this) {
-	        unregisterMBean(byClientIdName);
-	        unregisterMBean(byAddressName);
-	        byClientIdName=null;
-	        byAddressName=null;
-    	}
+        synchronized (this) {
+            unregisterMBean(byClientIdName);
+            unregisterMBean(byAddressName);
+            byClientIdName = null;
+            byAddressName = null;
+        }
         super.doStop();
     }
 
@@ -85,9 +86,9 @@ public class ManagedTransportConnection extends TransportConnection {
         Response answer = super.processAddConnection(info);
         String clientId = info.getClientId();
         if (clientId != null) {
-            if(byClientIdName==null) {
-    	        byClientIdName = createByClientIdObjectName(clientId);
-    	        registerMBean(byClientIdName);
+            if (byClientIdName == null) {
+                byClientIdName = createByClientIdObjectName(clientId);
+                registerMBean(byClientIdName);
             }
         }
         return answer;
@@ -96,24 +97,23 @@ public class ManagedTransportConnection extends TransportConnection {
     // Implementation methods
     // -------------------------------------------------------------------------
     protected void registerMBean(ObjectName name) {
-    	if( name!=null ) {
-	        try {
-	            server.registerMBean(mbean, name);
-	        } catch (Throwable e) {
-	            log.warn("Failed to register MBean: "+name);
-	            log.debug("Failure reason: "+e,e);
-	        }
-    	}
+        if (name != null) {
+            try {
+                server.registerMBean(mbean, name);
+            } catch (Throwable e) {
+                log.warn("Failed to register MBean: " + name);
+                log.debug("Failure reason: " + e, e);
+            }
+        }
     }
 
     protected void unregisterMBean(ObjectName name) {
         if (name != null) {
             try {
                 server.unregisterMBean(name);
-            }
-            catch (Throwable e) {
+            } catch (Throwable e) {
                 log.warn("Failed to unregister mbean: " + name);
-                log.debug("Failure reason: "+e,e);
+                log.debug("Failure reason: " + e, e);
             }
         }
     }
@@ -122,36 +122,29 @@ public class ManagedTransportConnection extends TransportConnection {
         // Build the object name for the destination
         Hashtable map = connectorName.getKeyPropertyList();
         try {
-            return new ObjectName(
-            		connectorName.getDomain()+":"+
-            		"BrokerName="+JMXSupport.encodeObjectNamePart((String) map.get("BrokerName"))+","+
-            		"Type=Connection,"+
-                    "ConnectorName="+JMXSupport.encodeObjectNamePart((String) map.get("ConnectorName"))+","+
-            		"ViewType="+JMXSupport.encodeObjectNamePart(type)+","+
-            		"Name="+JMXSupport.encodeObjectNamePart(value)
-            		);
-        }
-        catch (Throwable e) {
-            throw IOExceptionSupport.create(e);
-        }
-    }
-    
-    protected ObjectName createByClientIdObjectName(String value) throws IOException {
-        // Build the object name for the destination
-        Hashtable map = connectorName.getKeyPropertyList();
-        try {
-            return new ObjectName(
-            		connectorName.getDomain()+":"+
-            		"BrokerName="+JMXSupport.encodeObjectNamePart((String) map.get("BrokerName"))+","+
-            		"Type=Connection,"+
-                    "ConnectorName="+JMXSupport.encodeObjectNamePart((String) map.get("ConnectorName"))+","+
-                	"Connection="+JMXSupport.encodeObjectNamePart(value)
-            		);
-        }
-        catch (Throwable e) {
+            return new ObjectName(connectorName.getDomain() + ":" + "BrokerName="
+                                  + JMXSupport.encodeObjectNamePart((String)map.get("BrokerName")) + ","
+                                  + "Type=Connection," + "ConnectorName="
+                                  + JMXSupport.encodeObjectNamePart((String)map.get("ConnectorName")) + ","
+                                  + "ViewType=" + JMXSupport.encodeObjectNamePart(type) + "," + "Name="
+                                  + JMXSupport.encodeObjectNamePart(value));
+        } catch (Throwable e) {
             throw IOExceptionSupport.create(e);
         }
     }
 
+    protected ObjectName createByClientIdObjectName(String value) throws IOException {
+        // Build the object name for the destination
+        Hashtable map = connectorName.getKeyPropertyList();
+        try {
+            return new ObjectName(connectorName.getDomain() + ":" + "BrokerName="
+                                  + JMXSupport.encodeObjectNamePart((String)map.get("BrokerName")) + ","
+                                  + "Type=Connection," + "ConnectorName="
+                                  + JMXSupport.encodeObjectNamePart((String)map.get("ConnectorName")) + ","
+                                  + "Connection=" + JMXSupport.encodeObjectNamePart(value));
+        } catch (Throwable e) {
+            throw IOExceptionSupport.create(e);
+        }
+    }
 
 }

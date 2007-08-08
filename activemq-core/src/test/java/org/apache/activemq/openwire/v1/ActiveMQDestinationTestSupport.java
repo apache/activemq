@@ -16,32 +16,25 @@
  */
 package org.apache.activemq.openwire.v1;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import org.apache.activemq.openwire.*;
-import org.apache.activemq.command.*;
-
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
 
 /**
  * Test case for the OpenWire marshalling for ActiveMQDestination
- *
- *
- * NOTE!: This file is auto generated - do not modify!
- *        if you need to make a change, please see the modify the groovy scripts in the
- *        under src/gram/script and then use maven openwire:generate to regenerate 
- *        this file.
- *
+ * 
+ * 
+ * NOTE!: This file is auto generated - do not modify! if you need to make a
+ * change, please see the modify the groovy scripts in the under src/gram/script
+ * and then use maven openwire:generate to regenerate this file.
+ * 
  * @version $Revision$
  */
 public abstract class ActiveMQDestinationTestSupport extends DataFileGeneratorTestSupport {
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		ActiveMQDestination info = (ActiveMQDestination) object;
+        super.populateObject(object);
+        ActiveMQDestination info = (ActiveMQDestination)object;
         info.setPhysicalName("PhysicalName:1");
 
-            }
-        }
+    }
+}

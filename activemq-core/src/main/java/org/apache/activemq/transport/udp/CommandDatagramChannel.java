@@ -56,8 +56,8 @@ public class CommandDatagramChannel extends CommandChannelSupport {
     private int defaultMarshalBufferSize = 64 * 1024;
 
     public CommandDatagramChannel(UdpTransport transport, OpenWireFormat wireFormat, int datagramSize,
-            SocketAddress targetAddress, DatagramHeaderMarshaller headerMarshaller, DatagramChannel channel,
-            ByteBufferPool bufferPool) {
+                                  SocketAddress targetAddress, DatagramHeaderMarshaller headerMarshaller,
+                                  DatagramChannel channel, ByteBufferPool bufferPool) {
         super(transport, wireFormat, datagramSize, targetAddress, headerMarshaller);
         this.channel = channel;
         this.bufferPool = bufferPool;
@@ -97,7 +97,7 @@ public class CommandDatagramChannel extends CommandChannelSupport {
                 // the ByteBuffer to avoid object allocation and unnecessary
                 // buffering?
                 DataInputStream dataIn = new DataInputStream(new ByteArrayInputStream(data));
-                answer = (Command) wireFormat.unmarshal(dataIn);
+                answer = (Command)wireFormat.unmarshal(dataIn);
                 break;
             }
         }
@@ -151,15 +151,14 @@ public class CommandDatagramChannel extends CommandChannelSupport {
                     // lets remove the header of the partial command
                     // which is the byte for the type and an int for the size of
                     // the byte[]
-                    chunkSize -= 1 // the data type
-                    + 4 // the command ID
-                    + 4; // the size of the partial data
+
+                    // data type + the command ID + size of the partial data
+                    chunkSize -= 1 + 4 + 4;
 
                     // the boolean flags
                     if (bs != null) {
                         chunkSize -= bs.marshalledSize();
-                    }
-                    else {
+                    } else {
                         chunkSize -= 1;
                     }
 
@@ -176,8 +175,7 @@ public class CommandDatagramChannel extends CommandChannelSupport {
 
                     if (lastFragment) {
                         writeBuffer.put(LastPartialCommand.DATA_STRUCTURE_TYPE);
-                    }
-                    else {
+                    } else {
                         writeBuffer.put(PartialCommand.DATA_STRUCTURE_TYPE);
                     }
 
@@ -191,7 +189,7 @@ public class CommandDatagramChannel extends CommandChannelSupport {
                     }
                     writeBuffer.putInt(commandId);
                     if (bs == null) {
-                        writeBuffer.put((byte) 1);
+                        writeBuffer.put((byte)1);
                     }
 
                     // size of byte array
@@ -203,8 +201,7 @@ public class CommandDatagramChannel extends CommandChannelSupport {
                     offset += chunkSize;
                     sendWriteBuffer(commandId, address, writeBuffer, false);
                 }
-            }
-            else {
+            } else {
                 writeBuffer.put(data);
                 sendWriteBuffer(command.getCommandId(), address, writeBuffer, false);
             }
@@ -227,15 +224,15 @@ public class CommandDatagramChannel extends CommandChannelSupport {
 
     // Implementation methods
     // -------------------------------------------------------------------------
-    protected void sendWriteBuffer(int commandId, SocketAddress address, ByteBuffer writeBuffer, boolean redelivery)
-            throws IOException {
+    protected void sendWriteBuffer(int commandId, SocketAddress address, ByteBuffer writeBuffer,
+                                   boolean redelivery) throws IOException {
         // lets put the datagram into the replay buffer first to prevent timing
         // issues
         ReplayBuffer bufferCache = getReplayBuffer();
         if (bufferCache != null && !redelivery) {
             bufferCache.addBuffer(commandId, writeBuffer);
         }
-        
+
         writeBuffer.flip();
 
         if (log.isDebugEnabled()) {
@@ -247,10 +244,9 @@ public class CommandDatagramChannel extends CommandChannelSupport {
 
     public void sendBuffer(int commandId, Object buffer) throws IOException {
         if (buffer != null) {
-            ByteBuffer writeBuffer = (ByteBuffer) buffer;
+            ByteBuffer writeBuffer = (ByteBuffer)buffer;
             sendWriteBuffer(commandId, getReplayAddress(), writeBuffer, true);
-        }
-        else {
+        } else {
             if (log.isWarnEnabled()) {
                 log.warn("Request for buffer: " + commandId + " is no longer present");
             }

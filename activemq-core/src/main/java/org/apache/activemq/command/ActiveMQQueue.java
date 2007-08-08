@@ -21,15 +21,16 @@ import javax.jms.Queue;
 
 /**
  * 
- * @org.apache.xbean.XBean element="queue" description="An ActiveMQ Queue Destination"
- *                  
+ * @org.apache.xbean.XBean element="queue" description="An ActiveMQ Queue
+ *                         Destination"
+ * 
  * @openwire:marshaller code="100"
  * @version $Revision: 1.5 $
  */
 public class ActiveMQQueue extends ActiveMQDestination implements Queue {
 
     private static final long serialVersionUID = -3885260014960795889L;
-    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.ACTIVEMQ_QUEUE;
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_QUEUE;
 
     public ActiveMQQueue() {
     }

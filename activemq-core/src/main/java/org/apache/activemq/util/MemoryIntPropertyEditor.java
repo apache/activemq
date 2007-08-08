@@ -20,49 +20,47 @@ import java.beans.PropertyEditorSupport;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/** 
- * Converts string values like "20 Mb", "1024kb", and "1g"
- * to int values in bytes.
- * 
+/**
+ * Converts string values like "20 Mb", "1024kb", and "1g" to int values in
+ * bytes.
  */
 public class MemoryIntPropertyEditor extends PropertyEditorSupport {
-	public void setAsText(String text) throws IllegalArgumentException {
+    public void setAsText(String text) throws IllegalArgumentException {
 
-		Pattern p = Pattern.compile("^\\s*(\\d+)\\s*(b)?\\s*$",Pattern.CASE_INSENSITIVE);
-		Matcher m = p.matcher(text);
-		if (m.matches()) {
-			setValue(Integer.valueOf(Integer.parseInt(m.group(1))));
-			return;
-		}
+        Pattern p = Pattern.compile("^\\s*(\\d+)\\s*(b)?\\s*$", Pattern.CASE_INSENSITIVE);
+        Matcher m = p.matcher(text);
+        if (m.matches()) {
+            setValue(Integer.valueOf(Integer.parseInt(m.group(1))));
+            return;
+        }
 
-		p = Pattern.compile("^\\s*(\\d+)\\s*k(b)?\\s*$",Pattern.CASE_INSENSITIVE);
-		m = p.matcher(text);
-		if (m.matches()) {
-			setValue(Integer.valueOf(Integer.parseInt(m.group(1)) * 1024));
-			return;
-		}
+        p = Pattern.compile("^\\s*(\\d+)\\s*k(b)?\\s*$", Pattern.CASE_INSENSITIVE);
+        m = p.matcher(text);
+        if (m.matches()) {
+            setValue(Integer.valueOf(Integer.parseInt(m.group(1)) * 1024));
+            return;
+        }
 
-		p = Pattern.compile("^\\s*(\\d+)\\s*m(b)?\\s*$", Pattern.CASE_INSENSITIVE);
-		m = p.matcher(text);
-		if (m.matches()) {
-			setValue(Integer.valueOf(Integer.parseInt(m.group(1)) * 1024 * 1024 ));
-			return;
-		}
+        p = Pattern.compile("^\\s*(\\d+)\\s*m(b)?\\s*$", Pattern.CASE_INSENSITIVE);
+        m = p.matcher(text);
+        if (m.matches()) {
+            setValue(Integer.valueOf(Integer.parseInt(m.group(1)) * 1024 * 1024));
+            return;
+        }
 
-		p = Pattern.compile("^\\s*(\\d+)\\s*g(b)?\\s*$", Pattern.CASE_INSENSITIVE);
-		m = p.matcher(text);
-		if (m.matches()) {
-			setValue(Integer.valueOf(Integer.parseInt(m.group(1)) * 1024 * 1024 * 1024 ));
-			return;
-		}
+        p = Pattern.compile("^\\s*(\\d+)\\s*g(b)?\\s*$", Pattern.CASE_INSENSITIVE);
+        m = p.matcher(text);
+        if (m.matches()) {
+            setValue(Integer.valueOf(Integer.parseInt(m.group(1)) * 1024 * 1024 * 1024));
+            return;
+        }
 
-		throw new IllegalArgumentException(
-				"Could convert not to a memory size: " + text);
-	}
+        throw new IllegalArgumentException("Could convert not to a memory size: " + text);
+    }
 
-	public String getAsText() {
-		Integer value = (Integer) getValue();
-		return (value != null ? value.toString() : "");
-	}
+    public String getAsText() {
+        Integer value = (Integer)getValue();
+        return (value != null ? value.toString() : "");
+    }
 
 }

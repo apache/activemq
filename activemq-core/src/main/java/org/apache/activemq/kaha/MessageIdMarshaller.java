@@ -20,6 +20,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import org.apache.activemq.command.MessageId;
+
 /**
  * Implementation of a Marshaller for MessageIds
  * 
@@ -33,7 +34,7 @@ public class MessageIdMarshaller implements Marshaller<MessageId> {
      * @param dataOut
      * @throws IOException
      */
-    public void writePayload(MessageId object,DataOutput dataOut) throws IOException{
+    public void writePayload(MessageId object, DataOutput dataOut) throws IOException {
         dataOut.writeUTF(object.toString());
     }
 
@@ -44,7 +45,7 @@ public class MessageIdMarshaller implements Marshaller<MessageId> {
      * @return unmarshalled object
      * @throws IOException
      */
-    public MessageId readPayload(DataInput dataIn) throws IOException{
+    public MessageId readPayload(DataInput dataIn) throws IOException {
         return new MessageId(dataIn.readUTF());
     }
 }

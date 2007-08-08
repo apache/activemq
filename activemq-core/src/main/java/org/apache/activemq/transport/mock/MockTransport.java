@@ -25,7 +25,6 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportListener;
 
-
 /**
  * @version $Revision: 1.5 $
  */
@@ -48,15 +47,14 @@ public class MockTransport extends DefaultTransportListener implements Transport
             getNext().setTransportListener(this);
     }
 
-
     /**
      * @see org.apache.activemq.Service#start()
      * @throws IOException if the next channel has not been set.
      */
     public void start() throws Exception {
-        if( getNext() == null )
+        if (getNext() == null)
             throw new IOException("The next channel has not been set.");
-        if( transportListener == null )
+        if (transportListener == null)
             throw new IOException("The command listener has not been set.");
         getNext().start();
     }
@@ -66,7 +64,7 @@ public class MockTransport extends DefaultTransportListener implements Transport
      */
     public void stop() throws Exception {
         getNext().stop();
-    }    
+    }
 
     public void onCommand(Object command) {
         getTransportListener().onCommand(command);
@@ -85,7 +83,7 @@ public class MockTransport extends DefaultTransportListener implements Transport
     synchronized public TransportListener getTransportListener() {
         return transportListener;
     }
-    
+
     public String toString() {
         return getNext().toString();
     }
@@ -101,8 +99,8 @@ public class MockTransport extends DefaultTransportListener implements Transport
     public Object request(Object command) throws IOException {
         return getNext().request(command);
     }
-    
-    public Object request(Object command,int timeout) throws IOException {
+
+    public Object request(Object command, int timeout) throws IOException {
         return getNext().request(command, timeout);
     }
 
@@ -111,7 +109,7 @@ public class MockTransport extends DefaultTransportListener implements Transport
     }
 
     public Object narrow(Class target) {
-        if( target.isAssignableFrom(getClass()) ) {
+        if (target.isAssignableFrom(getClass())) {
             return this;
         }
         return getNext().narrow(target);
@@ -127,15 +125,15 @@ public class MockTransport extends DefaultTransportListener implements Transport
         setNext(filter);
     }
 
-	public String getRemoteAddress() {
-		return getNext().getRemoteAddress();
-	}
+    public String getRemoteAddress() {
+        return getNext().getRemoteAddress();
+    }
 
     /**
      * @see org.apache.activemq.transport.Transport#isFaultTolerant()
      */
-    public boolean isFaultTolerant(){
-       return getNext().isFaultTolerant();
-    }  
-    
+    public boolean isFaultTolerant() {
+        return getNext().isFaultTolerant();
+    }
+
 }

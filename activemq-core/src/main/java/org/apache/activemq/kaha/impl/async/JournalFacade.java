@@ -33,75 +33,77 @@ import org.apache.activemq.util.ByteSequence;
  */
 public final class JournalFacade implements Journal {
 
-	
-	public static class RecordLocationFacade implements RecordLocation {
-		private final Location location;
+    public static class RecordLocationFacade implements RecordLocation {
+        private final Location location;
 
-		public RecordLocationFacade(Location location) {
-			this.location = location;
-		}
+        public RecordLocationFacade(Location location) {
+            this.location = location;
+        }
 
-		public Location getLocation() {
-			return location;
-		}
+        public Location getLocation() {
+            return location;
+        }
 
-		public int compareTo(Object o) {
-			RecordLocationFacade rlf = (RecordLocationFacade)o;
-			int rc = location.compareTo(rlf.location);
-			return rc;
-		}
-	}
+        public int compareTo(Object o) {
+            RecordLocationFacade rlf = (RecordLocationFacade)o;
+            int rc = location.compareTo(rlf.location);
+            return rc;
+        }
+    }
 
-	static private RecordLocation convertToRecordLocation(Location location) {
-		if(location==null)
-			return null;
-		return new RecordLocationFacade(location);
-	}
-	
-	static private Location convertFromRecordLocation(RecordLocation location) {
-		
-		if(location==null)
-			return null;
-		
-		return ((RecordLocationFacade)location).getLocation();
-	}
+    static private RecordLocation convertToRecordLocation(Location location) {
+        if (location == null)
+            return null;
+        return new RecordLocationFacade(location);
+    }
 
-	AsyncDataManager dataManager;
-	
-	public JournalFacade(AsyncDataManager dataManager) {
-		this.dataManager = dataManager;
-	}
+    static private Location convertFromRecordLocation(RecordLocation location) {
 
-	public void close() throws IOException {
-		dataManager.close();
-	}
+        if (location == null)
+            return null;
 
-	public RecordLocation getMark() throws IllegalStateException {
-		return convertToRecordLocation(dataManager.getMark());
-	}
+        return ((RecordLocationFacade)location).getLocation();
+    }
 
-	public RecordLocation getNextRecordLocation(RecordLocation location) throws InvalidRecordLocationException, IOException, IllegalStateException {
-		return convertToRecordLocation(dataManager.getNextLocation(convertFromRecordLocation(location)));
-	}
+    AsyncDataManager dataManager;
 
-	public Packet read(RecordLocation location) throws InvalidRecordLocationException, IOException, IllegalStateException {
-		ByteSequence rc = dataManager.read(convertFromRecordLocation(location));
-		if( rc == null )
-			return null;
-		return new ByteArrayPacket(rc.getData(), rc.getOffset(), rc.getLength());
-	}
+    public JournalFacade(AsyncDataManager dataManager) {
+        this.dataManager = dataManager;
+    }
 
-	public void setJournalEventListener(JournalEventListener listener) throws IllegalStateException {
-	}
+    public void close() throws IOException {
+        dataManager.close();
+    }
 
-	public void setMark(RecordLocation location, boolean sync) throws InvalidRecordLocationException, IOException, IllegalStateException {
-		dataManager.setMark(convertFromRecordLocation(location), sync);
-	}
+    public RecordLocation getMark() throws IllegalStateException {
+        return convertToRecordLocation(dataManager.getMark());
+    }
 
-	public RecordLocation write(Packet packet, boolean sync) throws IOException, IllegalStateException {
-		org.apache.activeio.packet.ByteSequence data = packet.asByteSequence();
-		ByteSequence sequence = new ByteSequence(data.getData(), data.getOffset(), data.getLength());
-		return convertToRecordLocation(dataManager.write(sequence, sync));
-	}
-	
+    public RecordLocation getNextRecordLocation(RecordLocation location)
+        throws InvalidRecordLocationException, IOException, IllegalStateException {
+        return convertToRecordLocation(dataManager.getNextLocation(convertFromRecordLocation(location)));
+    }
+
+    public Packet read(RecordLocation location) throws InvalidRecordLocationException, IOException,
+        IllegalStateException {
+        ByteSequence rc = dataManager.read(convertFromRecordLocation(location));
+        if (rc == null)
+            return null;
+        return new ByteArrayPacket(rc.getData(), rc.getOffset(), rc.getLength());
+    }
+
+    public void setJournalEventListener(JournalEventListener listener) throws IllegalStateException {
+    }
+
+    public void setMark(RecordLocation location, boolean sync) throws InvalidRecordLocationException,
+        IOException, IllegalStateException {
+        dataManager.setMark(convertFromRecordLocation(location), sync);
+    }
+
+    public RecordLocation write(Packet packet, boolean sync) throws IOException, IllegalStateException {
+        org.apache.activeio.packet.ByteSequence data = packet.asByteSequence();
+        ByteSequence sequence = new ByteSequence(data.getData(), data.getOffset(), data.getLength());
+        return convertToRecordLocation(dataManager.write(sequence, sync));
+    }
+
 }

@@ -33,27 +33,27 @@ public class MockTransportFactory extends TransportFactory {
 
     public Transport doConnect(URI location) throws URISyntaxException, Exception {
         Transport transport = createTransport(URISupport.parseComposite(location));
-        transport =  new MutexTransport(transport);
+        transport = new MutexTransport(transport);
         transport = new ResponseCorrelator(transport);
         return transport;
     }
-    
+
     public Transport doCompositeConnect(URI location) throws URISyntaxException, Exception {
         return createTransport(URISupport.parseComposite(location));
     }
-    
+
     /**
      * @param location
-     * @return 
-     * @throws Exception 
+     * @return
+     * @throws Exception
      */
     public Transport createTransport(CompositeData compositData) throws Exception {
-        MockTransport transport = new MockTransport( TransportFactory.compositeConnect(compositData.getComponents()[0]) );
+        MockTransport transport = new MockTransport(TransportFactory.compositeConnect(compositData.getComponents()[0]));
         IntrospectionSupport.setProperties(transport, compositData.getParameters());
         return transport;
     }
 
-    public TransportServer doBind(String brokerId,URI location) throws IOException {
+    public TransportServer doBind(String brokerId, URI location) throws IOException {
         throw new IOException("This protocol does not support being bound.");
     }
 

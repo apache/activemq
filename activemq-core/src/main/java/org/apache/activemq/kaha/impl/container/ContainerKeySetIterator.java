@@ -20,38 +20,37 @@ import java.util.Iterator;
 import org.apache.activemq.kaha.impl.index.IndexItem;
 import org.apache.activemq.kaha.impl.index.IndexLinkedList;
 
-
 /**
-*Iterator for the set of keys for a container
-* 
-* @version $Revision: 1.2 $
-*/
-public class ContainerKeySetIterator implements Iterator{
+ * Iterator for the set of keys for a container
+ * 
+ * @version $Revision: 1.2 $
+ */
+public class ContainerKeySetIterator implements Iterator {
     private MapContainerImpl container;
     private IndexLinkedList list;
     protected IndexItem nextItem;
     protected IndexItem currentItem;
-   
-    ContainerKeySetIterator(MapContainerImpl container){
+
+    ContainerKeySetIterator(MapContainerImpl container) {
         this.container = container;
-        this.list=container.getInternalList();
-        this.currentItem=list.getRoot();
-        this.nextItem=list.getNextEntry(currentItem);
-    }
-    
-    public boolean hasNext(){
-        return nextItem!=null;
+        this.list = container.getInternalList();
+        this.currentItem = list.getRoot();
+        this.nextItem = list.getNextEntry(currentItem);
     }
 
-    public Object next(){
-        currentItem=nextItem;
-        Object result=container.getKey(nextItem);
-        nextItem=list.getNextEntry(nextItem);
+    public boolean hasNext() {
+        return nextItem != null;
+    }
+
+    public Object next() {
+        currentItem = nextItem;
+        Object result = container.getKey(nextItem);
+        nextItem = list.getNextEntry(nextItem);
         return result;
     }
 
-    public void remove(){
-        if(currentItem!=null){
+    public void remove() {
+        if (currentItem != null) {
             container.remove(currentItem);
         }
     }

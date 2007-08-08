@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.network.jms;
 
-
 /**
  * Create an Inbound Topic Bridge
  * 
@@ -24,38 +23,40 @@ package org.apache.activemq.network.jms;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-public class InboundTopicBridge extends TopicBridge{
-       
+public class InboundTopicBridge extends TopicBridge {
+
     String inboundTopicName;
     String localTopicName;
+
     /**
      * Constructor that takes a foriegn destination as an argument
+     * 
      * @param inboundTopicName
      */
-    public  InboundTopicBridge(String  inboundTopicName){
+    public InboundTopicBridge(String inboundTopicName) {
         this.inboundTopicName = inboundTopicName;
         this.localTopicName = inboundTopicName;
     }
-    
+
     /**
      * Default Contructor
      */
-    public  InboundTopicBridge(){
+    public InboundTopicBridge() {
     }
 
     /**
      * @return Returns the outboundTopicName.
      */
-    public String getInboundTopicName(){
+    public String getInboundTopicName() {
         return inboundTopicName;
     }
 
     /**
-     * @param inboundTopicName 
+     * @param inboundTopicName
      */
-    public void setInboundTopicName(String inboundTopicName){
-        this.inboundTopicName=inboundTopicName;
-        if(this.localTopicName==null){
+    public void setInboundTopicName(String inboundTopicName) {
+        this.inboundTopicName = inboundTopicName;
+        if (this.localTopicName == null) {
             this.localTopicName = inboundTopicName;
         }
     }
@@ -63,15 +64,15 @@ public class InboundTopicBridge extends TopicBridge{
     /**
      * @return the localTopicName
      */
-    public String getLocalTopicName(){
+    public String getLocalTopicName() {
         return localTopicName;
     }
 
     /**
      * @param localTopicName the localTopicName to set
      */
-    public void setLocalTopicName(String localTopicName){
-        this.localTopicName=localTopicName;
+    public void setLocalTopicName(String localTopicName) {
+        this.localTopicName = localTopicName;
     }
-    
+
 }

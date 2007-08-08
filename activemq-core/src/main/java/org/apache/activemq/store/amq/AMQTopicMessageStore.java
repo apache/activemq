@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.util.HashMap;
 import java.util.Iterator;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.JournalTopicAck;
@@ -38,83 +39,82 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.13 $
  */
-public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessageStore{
+public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessageStore {
 
-    private static final Log log=LogFactory.getLog(AMQTopicMessageStore.class);
+    private static final Log log = LogFactory.getLog(AMQTopicMessageStore.class);
     private TopicReferenceStore topicReferenceStore;
-    private HashMap<SubscriptionKey,MessageId> ackedLastAckLocations=new HashMap<SubscriptionKey,MessageId>();
+    private HashMap<SubscriptionKey, MessageId> ackedLastAckLocations = new HashMap<SubscriptionKey, MessageId>();
 
-    public AMQTopicMessageStore(AMQPersistenceAdapter adapter,TopicReferenceStore topicReferenceStore,
-            ActiveMQTopic destinationName){
-        super(adapter,topicReferenceStore,destinationName);
-        this.topicReferenceStore=topicReferenceStore;
+    public AMQTopicMessageStore(AMQPersistenceAdapter adapter, TopicReferenceStore topicReferenceStore, ActiveMQTopic destinationName) {
+        super(adapter, topicReferenceStore, destinationName);
+        this.topicReferenceStore = topicReferenceStore;
     }
 
-    public void recoverSubscription(String clientId,String subscriptionName,MessageRecoveryListener listener)
-            throws Exception{
+    public void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener) throws Exception {
         flush();
-        topicReferenceStore.recoverSubscription(clientId,subscriptionName,new RecoveryListenerAdapter(this,listener));
+        topicReferenceStore.recoverSubscription(clientId, subscriptionName, new RecoveryListenerAdapter(this, listener));
     }
 
-    public void recoverNextMessages(String clientId,String subscriptionName,int maxReturned,
-            final MessageRecoveryListener listener) throws Exception{
-        RecoveryListenerAdapter recoveryListener=new RecoveryListenerAdapter(this,listener);
-        topicReferenceStore.recoverNextMessages(clientId,subscriptionName,maxReturned,recoveryListener);
-        if(recoveryListener.size()==0){
+    public void recoverNextMessages(String clientId, String subscriptionName, int maxReturned, final MessageRecoveryListener listener) throws Exception {
+        RecoveryListenerAdapter recoveryListener = new RecoveryListenerAdapter(this, listener);
+        topicReferenceStore.recoverNextMessages(clientId, subscriptionName, maxReturned, recoveryListener);
+        if (recoveryListener.size() == 0) {
             flush();
-            topicReferenceStore.recoverNextMessages(clientId,subscriptionName,maxReturned,recoveryListener);
+            topicReferenceStore.recoverNextMessages(clientId, subscriptionName, maxReturned, recoveryListener);
         }
     }
 
-    public SubscriptionInfo lookupSubscription(String clientId,String subscriptionName) throws IOException{
-        return topicReferenceStore.lookupSubscription(clientId,subscriptionName);
+    public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {
+        return topicReferenceStore.lookupSubscription(clientId, subscriptionName);
     }
 
-    public void addSubsciption(SubscriptionInfo subscriptionInfo,boolean retroactive)
-            throws IOException{
-        topicReferenceStore.addSubsciption(subscriptionInfo,retroactive);
+    public void addSubsciption(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException {
+        topicReferenceStore.addSubsciption(subscriptionInfo, retroactive);
     }
 
     /**
      */
-    public void acknowledge(ConnectionContext context,String clientId,String subscriptionName,final MessageId messageId)
-            throws IOException{
-        final boolean debug=log.isDebugEnabled();
-        JournalTopicAck ack=new JournalTopicAck();
+    public void acknowledge(ConnectionContext context, String clientId, String subscriptionName, final MessageId messageId) throws IOException {
+        final boolean debug = log.isDebugEnabled();
+        JournalTopicAck ack = new JournalTopicAck();
         ack.setDestination(destination);
         ack.setMessageId(messageId);
         ack.setMessageSequenceId(messageId.getBrokerSequenceId());
         ack.setSubscritionName(subscriptionName);
         ack.setClientId(clientId);
-        ack.setTransactionId(context.getTransaction()!=null?context.getTransaction().getTransactionId():null);
-        final Location location=peristenceAdapter.writeCommand(ack,false);
-        final SubscriptionKey key=new SubscriptionKey(clientId,subscriptionName);
-        if(!context.isInTransaction()){
-            if(debug)
-                log.debug("Journalled acknowledge for: "+messageId+", at: "+location);
-            acknowledge(messageId,location,key);
-        }else{
-            if(debug)
-                log.debug("Journalled transacted acknowledge for: "+messageId+", at: "+location);
-            synchronized(this){
+        ack.setTransactionId(context.getTransaction() != null ? context.getTransaction().getTransactionId() : null);
+        final Location location = peristenceAdapter.writeCommand(ack, false);
+        final SubscriptionKey key = new SubscriptionKey(clientId, subscriptionName);
+        if (!context.isInTransaction()) {
+            if (debug) {
+                log.debug("Journalled acknowledge for: " + messageId + ", at: " + location);
+            }
+            acknowledge(messageId, location, key);
+        } else {
+            if (debug) {
+                log.debug("Journalled transacted acknowledge for: " + messageId + ", at: " + location);
+            }
+            synchronized (this) {
                 inFlightTxLocations.add(location);
             }
-            transactionStore.acknowledge(this,ack,location);
-            context.getTransaction().addSynchronization(new Synchronization(){
+            transactionStore.acknowledge(this, ack, location);
+            context.getTransaction().addSynchronization(new Synchronization() {
 
-                public void afterCommit() throws Exception{
-                    if(debug)
-                        log.debug("Transacted acknowledge commit for: "+messageId+", at: "+location);
-                    synchronized(AMQTopicMessageStore.this){
+                public void afterCommit() throws Exception {
+                    if (debug) {
+                        log.debug("Transacted acknowledge commit for: " + messageId + ", at: " + location);
+                    }
+                    synchronized (AMQTopicMessageStore.this) {
                         inFlightTxLocations.remove(location);
-                        acknowledge(messageId,location,key);
+                        acknowledge(messageId, location, key);
                     }
                 }
 
-                public void afterRollback() throws Exception{
-                    if(debug)
-                        log.debug("Transacted acknowledge rollback for: "+messageId+", at: "+location);
-                    synchronized(AMQTopicMessageStore.this){
+                public void afterRollback() throws Exception {
+                    if (debug) {
+                        log.debug("Transacted acknowledge rollback for: " + messageId + ", at: " + location);
+                    }
+                    synchronized (AMQTopicMessageStore.this) {
                         inFlightTxLocations.remove(location);
                     }
                 }
@@ -122,17 +122,15 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
         }
     }
 
-    public boolean replayAcknowledge(ConnectionContext context,String clientId,String subscritionName,
-            MessageId messageId){
-        try{
-            SubscriptionInfo sub=topicReferenceStore.lookupSubscription(clientId,subscritionName);
-            if(sub!=null){
-                topicReferenceStore.acknowledge(context,clientId,subscritionName,messageId);
+    public boolean replayAcknowledge(ConnectionContext context, String clientId, String subscritionName, MessageId messageId) {
+        try {
+            SubscriptionInfo sub = topicReferenceStore.lookupSubscription(clientId, subscritionName);
+            if (sub != null) {
+                topicReferenceStore.acknowledge(context, clientId, subscritionName, messageId);
                 return true;
             }
-        }catch(Throwable e){
-            log.debug("Could not replay acknowledge for message '"+messageId
-                    +"'.  Message may have already been acknowledged. reason: "+e);
+        } catch (Throwable e) {
+            log.debug("Could not replay acknowledge for message '" + messageId + "'.  Message may have already been acknowledged. reason: " + e);
         }
         return false;
     }
@@ -143,26 +141,27 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
      * @param key
      * @throws InterruptedIOException
      */
-    protected void acknowledge(MessageId messageId,Location location,SubscriptionKey key) throws InterruptedIOException{
-        synchronized(this){
-            lastLocation=location;
-            ackedLastAckLocations.put(key,messageId);
+    protected void acknowledge(MessageId messageId, Location location, SubscriptionKey key) throws InterruptedIOException {
+        synchronized (this) {
+            lastLocation = location;
+            ackedLastAckLocations.put(key, messageId);
         }
-        try{
+        try {
             asyncWriteTask.wakeup();
-        }catch(InterruptedException e){
+        } catch (InterruptedException e) {
             throw new InterruptedIOException();
         }
     }
 
-    @Override protected Location doAsyncWrite() throws IOException{
-        final HashMap<SubscriptionKey,MessageId> cpAckedLastAckLocations;
+    @Override
+    protected Location doAsyncWrite() throws IOException {
+        final HashMap<SubscriptionKey, MessageId> cpAckedLastAckLocations;
         // swap out the hash maps..
-        synchronized(this){
-            cpAckedLastAckLocations=this.ackedLastAckLocations;
-            this.ackedLastAckLocations=new HashMap<SubscriptionKey,MessageId>();
+        synchronized (this) {
+            cpAckedLastAckLocations = this.ackedLastAckLocations;
+            this.ackedLastAckLocations = new HashMap<SubscriptionKey, MessageId>();
         }
-        Location location=super.doAsyncWrite();
+        Location location = super.doAsyncWrite();
 
         if (cpAckedLastAckLocations != null) {
             transactionTemplate.run(new Callback() {
@@ -172,8 +171,7 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
                     while (iterator.hasNext()) {
                         SubscriptionKey subscriptionKey = iterator.next();
                         MessageId identity = cpAckedLastAckLocations.get(subscriptionKey);
-                        topicReferenceStore.acknowledge(transactionTemplate.getContext(), subscriptionKey.clientId,
-                                subscriptionKey.subscriptionName, identity);
+                        topicReferenceStore.acknowledge(transactionTemplate.getContext(), subscriptionKey.clientId, subscriptionKey.subscriptionName, identity);
                     }
                 }
             });
@@ -184,24 +182,24 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
     /**
      * @return Returns the longTermStore.
      */
-    public TopicReferenceStore getTopicReferenceStore(){
+    public TopicReferenceStore getTopicReferenceStore() {
         return topicReferenceStore;
     }
 
-    public void deleteSubscription(String clientId,String subscriptionName) throws IOException{
-        topicReferenceStore.deleteSubscription(clientId,subscriptionName);
+    public void deleteSubscription(String clientId, String subscriptionName) throws IOException {
+        topicReferenceStore.deleteSubscription(clientId, subscriptionName);
     }
 
-    public SubscriptionInfo[] getAllSubscriptions() throws IOException{
+    public SubscriptionInfo[] getAllSubscriptions() throws IOException {
         return topicReferenceStore.getAllSubscriptions();
     }
 
-    public int getMessageCount(String clientId,String subscriberName) throws IOException{
+    public int getMessageCount(String clientId, String subscriberName) throws IOException {
         flush();
-        return topicReferenceStore.getMessageCount(clientId,subscriberName);
+        return topicReferenceStore.getMessageCount(clientId, subscriberName);
     }
 
-    public void resetBatching(String clientId,String subscriptionName){
-        topicReferenceStore.resetBatching(clientId,subscriptionName);
+    public void resetBatching(String clientId, String subscriptionName) {
+        topicReferenceStore.resetBatching(clientId, subscriptionName);
     }
 }

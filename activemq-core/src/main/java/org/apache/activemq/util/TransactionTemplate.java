@@ -23,19 +23,18 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * A helper class for running code with a PersistenceAdapter
- * in a transaction.
- *
+ * A helper class for running code with a PersistenceAdapter in a transaction.
+ * 
  * @version $Revision: 1.2 $
  */
 public class TransactionTemplate {
-    static private final Log log=LogFactory.getLog(TransactionTemplate.class);
+    static private final Log LOG = LogFactory.getLog(TransactionTemplate.class);
     private PersistenceAdapter persistenceAdapter;
     private ConnectionContext context;
 
     public TransactionTemplate(PersistenceAdapter persistenceAdapter, ConnectionContext context) {
         this.persistenceAdapter = persistenceAdapter;
-        this.context=context;
+        this.context = context;
     }
 
     public void run(Callback task) throws IOException {
@@ -43,26 +42,22 @@ public class TransactionTemplate {
         Throwable throwable = null;
         try {
             task.execute();
-        }
-        catch (IOException t) {
+        } catch (IOException t) {
             throwable = t;
             throw t;
-        }
-        catch (RuntimeException t) {
+        } catch (RuntimeException t) {
             throwable = t;
             throw t;
-        }
-        catch (Throwable t) {
+        } catch (Throwable t) {
             throwable = t;
-            throw IOExceptionSupport.create("Persistence task failed: "+t, t);
+            throw IOExceptionSupport.create("Persistence task failed: " + t, t);
         } finally {
             if (throwable == null) {
                 persistenceAdapter.commitTransaction(context);
-            }
-            else {
-                log.error("Having to Rollback - caught an exception: " + throwable);
+            } else {
+                LOG.error("Having to Rollback - caught an exception: " + throwable);
                 persistenceAdapter.rollbackTransaction(context);
-            }            
+            }
         }
     }
 

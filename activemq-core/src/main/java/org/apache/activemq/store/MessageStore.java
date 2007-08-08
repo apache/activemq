@@ -24,47 +24,48 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.memory.UsageManager;
 
 /**
- * Represents a message store which is used by the persistent 
- * implementations
+ * Represents a message store which is used by the persistent implementations
  * 
  * @version $Revision: 1.5 $
  */
-public interface MessageStore extends Service{
+public interface MessageStore extends Service {
 
     /**
      * Adds a message to the message store
      * 
      * @param context context
-     * @param message 
-     * @throws IOException 
+     * @param message
+     * @throws IOException
      */
-    public void addMessage(ConnectionContext context,Message message) throws IOException;
+    public void addMessage(ConnectionContext context, Message message) throws IOException;
 
     /**
-     * Looks up a message using either the String messageID or the messageNumber. Implementations are encouraged to fill
-     * in the missing key if its easy to do so.
+     * Looks up a message using either the String messageID or the
+     * messageNumber. Implementations are encouraged to fill in the missing key
+     * if its easy to do so.
      * 
      * @param identity which contains either the messageID or the messageNumber
      * @return the message or null if it does not exist
-     * @throws IOException 
+     * @throws IOException
      */
     public Message getMessage(MessageId identity) throws IOException;
 
     /**
      * Removes a message from the message store.
      * 
-     * @param context 
-     * @param ack the ack request that cause the message to be removed. It conatins the identity which contains the
-     *            messageID of the message that needs to be removed.
-     * @throws IOException 
+     * @param context
+     * @param ack the ack request that cause the message to be removed. It
+     *                conatins the identity which contains the messageID of the
+     *                message that needs to be removed.
+     * @throws IOException
      */
-    public void removeMessage(ConnectionContext context,MessageAck ack) throws IOException;
+    public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException;
 
     /**
      * Removes all the messages from the message store.
      * 
-     * @param context 
-     * @throws IOException 
+     * @param context
+     * @throws IOException
      */
     public void removeAllMessages(ConnectionContext context) throws IOException;
 
@@ -84,25 +85,24 @@ public interface MessageStore extends Service{
     public ActiveMQDestination getDestination();
 
     /**
-     * @param usageManager The UsageManager that is controlling the destination's memory usage.
+     * @param usageManager The UsageManager that is controlling the
+     *                destination's memory usage.
      */
     public void setUsageManager(UsageManager usageManager);
 
     /**
      * @return the number of messages ready to deliver
-     * @throws IOException 
+     * @throws IOException
      * 
      */
     public int getMessageCount() throws IOException;
 
     /**
      * A hint to the Store to reset any batching state for the Destination
-     *
+     * 
      */
     public void resetBatching();
 
-    
-    public void recoverNextMessages(int maxReturned,MessageRecoveryListener listener)
-            throws Exception;
-    
+    public void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception;
+
 }

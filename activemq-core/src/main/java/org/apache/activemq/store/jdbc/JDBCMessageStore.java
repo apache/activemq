@@ -19,6 +19,7 @@ package org.apache.activemq.store.jdbc;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
@@ -32,7 +33,6 @@ import org.apache.activemq.util.ByteSequenceData;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 
-
 /**
  * @version $Revision: 1.10 $
  */
@@ -44,8 +44,7 @@ public class JDBCMessageStore implements MessageStore {
     protected final JDBCPersistenceAdapter persistenceAdapter;
     protected AtomicLong lastMessageId = new AtomicLong(-1);
 
-    public JDBCMessageStore(JDBCPersistenceAdapter persistenceAdapter, JDBCAdapter adapter, WireFormat wireFormat,
-            ActiveMQDestination destination) {
+    public JDBCMessageStore(JDBCPersistenceAdapter persistenceAdapter, JDBCAdapter adapter, WireFormat wireFormat, ActiveMQDestination destination) {
         this.persistenceAdapter = persistenceAdapter;
         this.adapter = adapter;
         this.wireFormat = wireFormat;
@@ -53,15 +52,14 @@ public class JDBCMessageStore implements MessageStore {
     }
 
     public void addMessage(ConnectionContext context, Message message) throws IOException {
-        
+
         // Serialize the Message..
         byte data[];
         try {
             ByteSequence packet = wireFormat.marshal(message);
             data = ByteSequenceData.toByteArray(packet);
         } catch (IOException e) {
-            throw IOExceptionSupport.create("Failed to broker message: " + message.getMessageId() + " in container: "
-                    + e, e);
+            throw IOExceptionSupport.create("Failed to broker message: " + message.getMessageId() + " in container: " + e, e);
         }
 
         // Get a connection and insert the message into the DB.
@@ -69,9 +67,8 @@ public class JDBCMessageStore implements MessageStore {
         try {
             adapter.doAddMessage(c, message.getMessageId(), destination, data, message.getExpiration());
         } catch (SQLException e) {
-            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
-            throw IOExceptionSupport.create("Failed to broker message: " + message.getMessageId() + " in container: "
-                    + e, e);
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
+            throw IOExceptionSupport.create("Failed to broker message: " + message.getMessageId() + " in container: " + e, e);
         } finally {
             c.close();
         }
@@ -83,9 +80,8 @@ public class JDBCMessageStore implements MessageStore {
         try {
             adapter.doAddMessageReference(c, messageId, destination, expirationTime, messageRef);
         } catch (SQLException e) {
-            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
-            throw IOExceptionSupport.create("Failed to broker message: " + messageId + " in container: "
-                    + e, e);
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
+            throw IOExceptionSupport.create("Failed to broker message: " + messageId + " in container: " + e, e);
         } finally {
             c.close();
         }
@@ -94,7 +90,7 @@ public class JDBCMessageStore implements MessageStore {
     public Message getMessage(MessageId messageId) throws IOException {
 
         long id = messageId.getBrokerSequenceId();
-        
+
         // Get a connection and pull the message out of the DB
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
@@ -102,21 +98,21 @@ public class JDBCMessageStore implements MessageStore {
             if (data == null)
                 return null;
 
-            Message answer = (Message) wireFormat.unmarshal(new ByteSequence(data));
+            Message answer = (Message)wireFormat.unmarshal(new ByteSequence(data));
             return answer;
         } catch (IOException e) {
             throw IOExceptionSupport.create("Failed to broker message: " + messageId + " in container: " + e, e);
         } catch (SQLException e) {
-            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to broker message: " + messageId + " in container: " + e, e);
         } finally {
             c.close();
         }
     }
-    
+
     public String getMessageReference(MessageId messageId) throws IOException {
         long id = messageId.getBrokerSequenceId();
-        
+
         // Get a connection and pull the message out of the DB
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
@@ -124,7 +120,7 @@ public class JDBCMessageStore implements MessageStore {
         } catch (IOException e) {
             throw IOExceptionSupport.create("Failed to broker message: " + messageId + " in container: " + e, e);
         } catch (SQLException e) {
-            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to broker message: " + messageId + " in container: " + e, e);
         } finally {
             c.close();
@@ -139,7 +135,7 @@ public class JDBCMessageStore implements MessageStore {
         try {
             adapter.doRemoveMessage(c, seq);
         } catch (SQLException e) {
-            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to broker message: " + ack.getLastMessageId() + " in container: " + e, e);
         } finally {
             c.close();
@@ -154,16 +150,17 @@ public class JDBCMessageStore implements MessageStore {
             c = persistenceAdapter.getTransactionContext();
             adapter.doRecover(c, destination, new JDBCMessageRecoveryListener() {
                 public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
-                    Message msg = (Message) wireFormat.unmarshal(new ByteSequence(data));
+                    Message msg = (Message)wireFormat.unmarshal(new ByteSequence(data));
                     msg.getMessageId().setBrokerSequenceId(sequenceId);
                     return listener.recoverMessage(msg);
                 }
+
                 public boolean recoverMessageReference(String reference) throws Exception {
                     return listener.recoverMessageReference(new MessageId(reference));
                 }
             });
         } catch (SQLException e) {
-            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to recover container. Reason: " + e, e);
         } finally {
             c.close();
@@ -185,13 +182,13 @@ public class JDBCMessageStore implements MessageStore {
         try {
             adapter.doRemoveAllMessages(c, destination);
         } catch (SQLException e) {
-            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to broker remove all messages: " + e, e);
         } finally {
             c.close();
         }
     }
-    
+
     public ActiveMQDestination getDestination() {
         return destination;
     }
@@ -200,16 +197,15 @@ public class JDBCMessageStore implements MessageStore {
         // we can ignore since we don't buffer up messages.
     }
 
-  
-    public int getMessageCount() throws IOException{
+    public int getMessageCount() throws IOException {
         int result = 0;
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
-            
+
             result = adapter.doGetMessageCount(c, destination);
-               
+
         } catch (SQLException e) {
-            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
             throw IOExceptionSupport.create("Failed to get Message Count: " + destination + ". Reason: " + e, e);
         } finally {
             c.close();
@@ -221,50 +217,49 @@ public class JDBCMessageStore implements MessageStore {
      * @param maxReturned
      * @param listener
      * @throws Exception
-     * @see org.apache.activemq.store.MessageStore#recoverNextMessages(int, org.apache.activemq.store.MessageRecoveryListener)
+     * @see org.apache.activemq.store.MessageStore#recoverNextMessages(int,
+     *      org.apache.activemq.store.MessageRecoveryListener)
      */
-    public void recoverNextMessages(int maxReturned,final MessageRecoveryListener listener) throws Exception{
-        TransactionContext c=persistenceAdapter.getTransactionContext();
-        
-        try{
-            adapter.doRecoverNextMessages(c,destination,lastMessageId.get(),maxReturned,
-                    new JDBCMessageRecoveryListener(){
+    public void recoverNextMessages(int maxReturned, final MessageRecoveryListener listener) throws Exception {
+        TransactionContext c = persistenceAdapter.getTransactionContext();
 
-                        public  boolean recoverMessage(long sequenceId,byte[] data) throws Exception{
-                            if(listener.hasSpace()){
-                                Message msg=(Message)wireFormat.unmarshal(new ByteSequence(data));
-                                msg.getMessageId().setBrokerSequenceId(sequenceId);
-                                listener.recoverMessage(msg);
-                                lastMessageId.set(sequenceId);
-                                return true;
-                            }
-                            return false;
-                        }
+        try {
+            adapter.doRecoverNextMessages(c, destination, lastMessageId.get(), maxReturned, new JDBCMessageRecoveryListener() {
 
-                        public boolean recoverMessageReference(String reference) throws Exception{
-                            if(listener.hasSpace()) {
-                                listener.recoverMessageReference(new MessageId(reference));
-                                return true;
-                            }
-                            return false;
-                        }
+                public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
+                    if (listener.hasSpace()) {
+                        Message msg = (Message)wireFormat.unmarshal(new ByteSequence(data));
+                        msg.getMessageId().setBrokerSequenceId(sequenceId);
+                        listener.recoverMessage(msg);
+                        lastMessageId.set(sequenceId);
+                        return true;
+                    }
+                    return false;
+                }
 
-                    });
-        }catch(SQLException e){
-            JDBCPersistenceAdapter.log("JDBC Failure: ",e);
-        }finally{
+                public boolean recoverMessageReference(String reference) throws Exception {
+                    if (listener.hasSpace()) {
+                        listener.recoverMessageReference(new MessageId(reference));
+                        return true;
+                    }
+                    return false;
+                }
+
+            });
+        } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
+        } finally {
             c.close();
         }
-        
+
     }
 
     /**
-     * 
      * @see org.apache.activemq.store.MessageStore#resetBatching()
      */
-    public void resetBatching(){
+    public void resetBatching() {
         lastMessageId.set(-1);
-        
+
     }
 
 }

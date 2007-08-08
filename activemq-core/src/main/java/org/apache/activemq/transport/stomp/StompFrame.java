@@ -30,144 +30,144 @@ import org.apache.activemq.state.CommandVisitor;
 /**
  * Represents all the data in a STOMP frame.
  * 
- * @author <a href="http://hiramchirino.com">chirino</a> 
+ * @author <a href="http://hiramchirino.com">chirino</a>
  */
 public class StompFrame implements Command {
 
-    private static final byte[] NO_DATA = new byte[]{};
+    private static final byte[] NO_DATA = new byte[] {};
 
-	private String action;
-	private Map headers = Collections.EMPTY_MAP;
-	private byte[] content = NO_DATA;
+    private String action;
+    private Map headers = Collections.EMPTY_MAP;
+    private byte[] content = NO_DATA;
 
-	public StompFrame(String command, HashMap headers, byte[] data) {
-		this.action = command;
-		this.headers = headers;
-		this.content = data;
-	}
+    public StompFrame(String command, HashMap headers, byte[] data) {
+        this.action = command;
+        this.headers = headers;
+        this.content = data;
+    }
 
-	public StompFrame() {
-	}
+    public StompFrame() {
+    }
 
-	public String getAction() {
-		return action;
-	}
+    public String getAction() {
+        return action;
+    }
 
-	public void setAction(String command) {
-		this.action = command;
-	}
+    public void setAction(String command) {
+        this.action = command;
+    }
 
-	public byte[] getContent() {
-		return content;
-	}
+    public byte[] getContent() {
+        return content;
+    }
 
-	public void setContent(byte[] data) {
-		this.content = data;
-	}
+    public void setContent(byte[] data) {
+        this.content = data;
+    }
 
-	public Map getHeaders() {
-		return headers;
-	}
+    public Map getHeaders() {
+        return headers;
+    }
 
-	public void setHeaders(Map headers) {
-		this.headers = headers;
-	}
+    public void setHeaders(Map headers) {
+        this.headers = headers;
+    }
 
-	//
-	// Methods in the Command interface
-	//
-	public int getCommandId() {
-		return 0;
-	}
+    //
+    // Methods in the Command interface
+    //
+    public int getCommandId() {
+        return 0;
+    }
 
-	public Endpoint getFrom() {
-		return null;
-	}
+    public Endpoint getFrom() {
+        return null;
+    }
 
-	public Endpoint getTo() {
-		return null;
-	}
+    public Endpoint getTo() {
+        return null;
+    }
 
-	public boolean isBrokerInfo() {
-		return false;
-	}
+    public boolean isBrokerInfo() {
+        return false;
+    }
 
-	public boolean isMessage() {
-		return false;
-	}
+    public boolean isMessage() {
+        return false;
+    }
 
-	public boolean isMessageAck() {
-		return false;
-	}
+    public boolean isMessageAck() {
+        return false;
+    }
 
-	public boolean isMessageDispatch() {
-		return false;
-	}
+    public boolean isMessageDispatch() {
+        return false;
+    }
 
-	public boolean isMessageDispatchNotification() {
-		return false;
-	}
+    public boolean isMessageDispatchNotification() {
+        return false;
+    }
 
-	public boolean isResponse() {
-		return false;
-	}
+    public boolean isResponse() {
+        return false;
+    }
 
-	public boolean isResponseRequired() {
-		return false;
-	}
+    public boolean isResponseRequired() {
+        return false;
+    }
 
-	public boolean isShutdownInfo() {
-		return false;
-	}
+    public boolean isShutdownInfo() {
+        return false;
+    }
 
-	public boolean isWireFormatInfo() {
-		return false;
-	}
+    public boolean isWireFormatInfo() {
+        return false;
+    }
 
-	public void setCommandId(int value) {
-	}
+    public void setCommandId(int value) {
+    }
 
-	public void setFrom(Endpoint from) {
-	}
+    public void setFrom(Endpoint from) {
+    }
 
-	public void setResponseRequired(boolean responseRequired) {
-	}
+    public void setResponseRequired(boolean responseRequired) {
+    }
 
-	public void setTo(Endpoint to) {
-	}
+    public void setTo(Endpoint to) {
+    }
 
-	public Response visit(CommandVisitor visitor) throws Exception {
-		return null;
-	}
+    public Response visit(CommandVisitor visitor) throws Exception {
+        return null;
+    }
 
-	public byte getDataStructureType() {
-		return 0;
-	}
+    public byte getDataStructureType() {
+        return 0;
+    }
 
-	public boolean isMarshallAware() {
-		return false;
-	}
+    public boolean isMarshallAware() {
+        return false;
+    }
 
-	public String toString() {
-		StringBuffer buffer = new StringBuffer();
-		buffer.append(getAction());
-		buffer.append("\n");
-		Map headers = getHeaders();
-		for (Iterator iter = headers.entrySet().iterator(); iter.hasNext();) {
-			Map.Entry entry = (Map.Entry) iter.next();
-			buffer.append(entry.getKey());
-			buffer.append(":");
-			buffer.append(entry.getValue());
-			buffer.append("\n");
-		}
-		buffer.append("\n");
-		if( getContent()!=null ) {
-			try {
-				buffer.append(new String(getContent()));
-			} catch (Throwable e) {
-				buffer.append(Arrays.toString(getContent()));
-			}
-		}
-		return buffer.toString();
-	}
+    public String toString() {
+        StringBuffer buffer = new StringBuffer();
+        buffer.append(getAction());
+        buffer.append("\n");
+        Map headers = getHeaders();
+        for (Iterator iter = headers.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry entry = (Map.Entry)iter.next();
+            buffer.append(entry.getKey());
+            buffer.append(":");
+            buffer.append(entry.getValue());
+            buffer.append("\n");
+        }
+        buffer.append("\n");
+        if (getContent() != null) {
+            try {
+                buffer.append(new String(getContent()));
+            } catch (Throwable e) {
+                buffer.append(Arrays.toString(getContent()));
+            }
+        }
+        return buffer.toString();
+    }
 }

@@ -41,26 +41,29 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.13 $
  */
 public class JournalTopicMessageStore extends JournalMessageStore implements TopicMessageStore {
-    
+
     private static final Log log = LogFactory.getLog(JournalTopicMessageStore.class);
 
     private TopicMessageStore longTermStore;
-	private HashMap ackedLastAckLocations = new HashMap();
-    
-    public JournalTopicMessageStore(JournalPersistenceAdapter adapter, TopicMessageStore checkpointStore, ActiveMQTopic destinationName) {
+    private HashMap ackedLastAckLocations = new HashMap();
+
+    public JournalTopicMessageStore(JournalPersistenceAdapter adapter, TopicMessageStore checkpointStore,
+                                    ActiveMQTopic destinationName) {
         super(adapter, checkpointStore, destinationName);
         this.longTermStore = checkpointStore;
     }
-    
-    public void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener) throws Exception {
+
+    public void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener)
+        throws Exception {
         this.peristenceAdapter.checkpoint(true, true);
         longTermStore.recoverSubscription(clientId, subscriptionName, listener);
     }
-    
-    public void recoverNextMessages(String clientId,String subscriptionName,int maxReturned,MessageRecoveryListener listener) throws Exception{
+
+    public void recoverNextMessages(String clientId, String subscriptionName, int maxReturned,
+                                    MessageRecoveryListener listener) throws Exception {
         this.peristenceAdapter.checkpoint(true, true);
-        longTermStore.recoverNextMessages(clientId, subscriptionName, maxReturned,listener);
-        
+        longTermStore.recoverNextMessages(clientId, subscriptionName, maxReturned, listener);
+
     }
 
     public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {
@@ -75,66 +78,69 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
     public void addMessage(ConnectionContext context, Message message) throws IOException {
         super.addMessage(context, message);
     }
-    
+
     /**
      */
-    public void acknowledge(ConnectionContext context, String clientId, String subscriptionName, final MessageId messageId) throws IOException {
+    public void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
+                            final MessageId messageId) throws IOException {
         final boolean debug = log.isDebugEnabled();
-        
+
         JournalTopicAck ack = new JournalTopicAck();
         ack.setDestination(destination);
         ack.setMessageId(messageId);
         ack.setMessageSequenceId(messageId.getBrokerSequenceId());
         ack.setSubscritionName(subscriptionName);
         ack.setClientId(clientId);
-        ack.setTransactionId( context.getTransaction()!=null ? context.getTransaction().getTransactionId():null);
+        ack.setTransactionId(context.getTransaction() != null
+            ? context.getTransaction().getTransactionId() : null);
         final RecordLocation location = peristenceAdapter.writeCommand(ack, false);
-        
-        final SubscriptionKey key = new SubscriptionKey(clientId, subscriptionName);        
-        if( !context.isInTransaction() ) {
-            if( debug )
-                log.debug("Journalled acknowledge for: "+messageId+", at: "+location);
+
+        final SubscriptionKey key = new SubscriptionKey(clientId, subscriptionName);
+        if (!context.isInTransaction()) {
+            if (debug)
+                log.debug("Journalled acknowledge for: " + messageId + ", at: " + location);
             acknowledge(messageId, location, key);
         } else {
-            if( debug )
-                log.debug("Journalled transacted acknowledge for: "+messageId+", at: "+location);
+            if (debug)
+                log.debug("Journalled transacted acknowledge for: " + messageId + ", at: " + location);
             synchronized (this) {
                 inFlightTxLocations.add(location);
             }
             transactionStore.acknowledge(this, ack, location);
-            context.getTransaction().addSynchronization(new Synchronization(){
-                public void afterCommit() throws Exception {                    
-                    if( debug )
-                        log.debug("Transacted acknowledge commit for: "+messageId+", at: "+location);
+            context.getTransaction().addSynchronization(new Synchronization() {
+                public void afterCommit() throws Exception {
+                    if (debug)
+                        log.debug("Transacted acknowledge commit for: " + messageId + ", at: " + location);
                     synchronized (JournalTopicMessageStore.this) {
                         inFlightTxLocations.remove(location);
                         acknowledge(messageId, location, key);
                     }
                 }
-                public void afterRollback() throws Exception {                    
-                    if( debug )
-                        log.debug("Transacted acknowledge rollback for: "+messageId+", at: "+location);
+
+                public void afterRollback() throws Exception {
+                    if (debug)
+                        log.debug("Transacted acknowledge rollback for: " + messageId + ", at: " + location);
                     synchronized (JournalTopicMessageStore.this) {
                         inFlightTxLocations.remove(location);
                     }
                 }
             });
         }
-        
+
     }
-    
-    public void replayAcknowledge(ConnectionContext context, String clientId, String subscritionName, MessageId messageId) {
+
+    public void replayAcknowledge(ConnectionContext context, String clientId, String subscritionName,
+                                  MessageId messageId) {
         try {
             SubscriptionInfo sub = longTermStore.lookupSubscription(clientId, subscritionName);
-            if( sub != null ) {
+            if (sub != null) {
                 longTermStore.acknowledge(context, clientId, subscritionName, messageId);
             }
-        }
-        catch (Throwable e) {
-            log.debug("Could not replay acknowledge for message '" + messageId + "'.  Message may have already been acknowledged. reason: " + e);
+        } catch (Throwable e) {
+            log.debug("Could not replay acknowledge for message '" + messageId
+                      + "'.  Message may have already been acknowledged. reason: " + e);
         }
     }
-        
 
     /**
      * @param messageId
@@ -142,15 +148,15 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
      * @param key
      */
     protected void acknowledge(MessageId messageId, RecordLocation location, SubscriptionKey key) {
-        synchronized(this) {
-		    lastLocation = location;
-		    ackedLastAckLocations.put(key, messageId);
-		}
+        synchronized (this) {
+            lastLocation = location;
+            ackedLastAckLocations.put(key, messageId);
+        }
     }
-    
+
     public RecordLocation checkpoint() throws IOException {
-        
-		final HashMap cpAckedLastAckLocations;
+
+        final HashMap cpAckedLastAckLocations;
 
         // swap out the hash maps..
         synchronized (this) {
@@ -158,15 +164,16 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
             this.ackedLastAckLocations = new HashMap();
         }
 
-        return super.checkpoint( new Callback() {
+        return super.checkpoint(new Callback() {
             public void execute() throws Exception {
 
                 // Checkpoint the acknowledged messages.
                 Iterator iterator = cpAckedLastAckLocations.keySet().iterator();
                 while (iterator.hasNext()) {
-                    SubscriptionKey subscriptionKey = (SubscriptionKey) iterator.next();
-                    MessageId identity = (MessageId) cpAckedLastAckLocations.get(subscriptionKey);
-                    longTermStore.acknowledge(transactionTemplate.getContext(), subscriptionKey.clientId, subscriptionKey.subscriptionName, identity);
+                    SubscriptionKey subscriptionKey = (SubscriptionKey)iterator.next();
+                    MessageId identity = (MessageId)cpAckedLastAckLocations.get(subscriptionKey);
+                    longTermStore.acknowledge(transactionTemplate.getContext(), subscriptionKey.clientId,
+                                              subscriptionKey.subscriptionName, identity);
                 }
 
             }
@@ -175,30 +182,27 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
     }
 
     /**
-	 * @return Returns the longTermStore.
-	 */
-	public TopicMessageStore getLongTermTopicMessageStore() {
-		return longTermStore;
-	}
+     * @return Returns the longTermStore.
+     */
+    public TopicMessageStore getLongTermTopicMessageStore() {
+        return longTermStore;
+    }
 
     public void deleteSubscription(String clientId, String subscriptionName) throws IOException {
         longTermStore.deleteSubscription(clientId, subscriptionName);
     }
-    
+
     public SubscriptionInfo[] getAllSubscriptions() throws IOException {
         return longTermStore.getAllSubscriptions();
     }
 
-    
-    public int getMessageCount(String clientId,String subscriberName) throws IOException{
+    public int getMessageCount(String clientId, String subscriberName) throws IOException {
         this.peristenceAdapter.checkpoint(true, true);
-        return longTermStore.getMessageCount(clientId,subscriberName);
-    }
-    
-    public void resetBatching(String clientId,String subscriptionName) {
-        longTermStore.resetBatching(clientId,subscriptionName);
+        return longTermStore.getMessageCount(clientId, subscriberName);
     }
 
-    
+    public void resetBatching(String clientId, String subscriptionName) {
+        longTermStore.resetBatching(clientId, subscriptionName);
+    }
 
 }

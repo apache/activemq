@@ -29,58 +29,54 @@ import junit.framework.Test;
 public class ActiveMQDestinationTest extends DataStructureTestSupport {
 
     public ActiveMQDestination destination;
-    
+
     public void initCombosForTestDesintaionMarshaling() {
-        addCombinationValues("destination", new Object[]{
-                new ActiveMQQueue("TEST"),
-                new ActiveMQTopic("TEST"),
-                new ActiveMQTempQueue("TEST:1"),
-                new ActiveMQTempTopic("TEST:1"),
-                new ActiveMQTempQueue("TEST"),
-                new ActiveMQTempTopic("TEST"),
-                new ActiveMQQueue("TEST?option=value"),
-                new ActiveMQTopic("TEST?option=value"),
-                new ActiveMQTempQueue("TEST:1?option=value"),
-                new ActiveMQTempTopic("TEST:1?option=value"),
-        });
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"),
+                                                          new ActiveMQTopic("TEST"),
+                                                          new ActiveMQTempQueue("TEST:1"),
+                                                          new ActiveMQTempTopic("TEST:1"),
+                                                          new ActiveMQTempQueue("TEST"),
+                                                          new ActiveMQTempTopic("TEST"),
+                                                          new ActiveMQQueue("TEST?option=value"),
+                                                          new ActiveMQTopic("TEST?option=value"),
+                                                          new ActiveMQTempQueue("TEST:1?option=value"),
+                                                          new ActiveMQTempTopic("TEST:1?option=value")});
     }
-    
+
     public void testDesintaionMarshaling() throws IOException {
         assertBeanMarshalls(destination);
     }
-    
+
     public void initCombosForTestDesintaionOptions() {
-        addCombinationValues("destination", new Object[]{
-                new ActiveMQQueue("TEST?k1=v1&k2=v2"),
-                new ActiveMQTopic("TEST?k1=v1&k2=v2"),
-                new ActiveMQTempQueue("TEST:1?k1=v1&k2=v2"),
-                new ActiveMQTempTopic("TEST:1?k1=v1&k2=v2"),
-        });
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST?k1=v1&k2=v2"),
+                                                          new ActiveMQTopic("TEST?k1=v1&k2=v2"),
+                                                          new ActiveMQTempQueue("TEST:1?k1=v1&k2=v2"),
+                                                          new ActiveMQTempTopic("TEST:1?k1=v1&k2=v2"),});
     }
-    
+
     public void testDesintaionOptions() throws IOException {
         Map options = destination.getOptions();
         assertNotNull(options);
         assertEquals("v1", options.get("k1"));
         assertEquals("v2", options.get("k2"));
     }
-    
+
     public void testSorting() throws Exception {
         SortedSet set = new TreeSet();
-        ActiveMQDestination[] destinations = { new ActiveMQQueue("A"), new ActiveMQQueue("B"), new ActiveMQTopic("A"), new ActiveMQTopic("B") };
+        ActiveMQDestination[] destinations = {new ActiveMQQueue("A"), new ActiveMQQueue("B"),
+                                              new ActiveMQTopic("A"), new ActiveMQTopic("B")};
         List expected = Arrays.asList(destinations);
         set.addAll(expected);
         List actual = new ArrayList(set);
         assertEquals("Sorted order", expected, actual);
     }
-    
-   
+
     public static Test suite() {
         return suite(ActiveMQDestinationTest.class);
     }
-    
+
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
-    
+
 }

@@ -21,14 +21,11 @@ import org.apache.activemq.openwire.DataStreamMarshaller;
 import org.apache.activemq.openwire.OpenWireFormat;
 
 /**
- * MarshallerFactory for Open Wire Format.
- *
- *
- * NOTE!: This file is auto generated - do not modify!
- *        if you need to make a change, please see the modify the groovy scripts in the
- *        under src/gram/script and then use maven openwire:generate to regenerate 
- *        this file.
- *
+ * MarshallerFactory for Open Wire Format. NOTE!: This file is auto generated -
+ * do not modify! if you need to make a change, please see the modify the groovy
+ * scripts in the under src/gram/script and then use maven openwire:generate to
+ * regenerate this file.
+ * 
  * @version $Revision$
  */
 public class MarshallerFactory {
@@ -93,12 +90,12 @@ public class MarshallerFactory {
         add(new RemoveInfoMarshaller());
         add(new ExceptionResponseMarshaller());
 
-	}
+    }
 
-	static private void add(DataStreamMarshaller dsm) {
+    static private void add(DataStreamMarshaller dsm) {
         marshaller[dsm.getDataStructureType()] = dsm;
     }
-	
+
     static public DataStreamMarshaller[] createMarshallerMap(OpenWireFormat wireFormat) {
         return marshaller;
     }

@@ -33,40 +33,40 @@ import org.w3c.dom.traversal.NodeIterator;
 import org.xml.sax.InputSource;
 
 public class XalanXPathEvaluator implements XPathExpression.XPathEvaluator {
-    
+
     private final String xpath;
 
     public XalanXPathEvaluator(String xpath) {
         this.xpath = xpath;
     }
-    
+
     public boolean evaluate(Message m) throws JMSException {
-        if( m instanceof TextMessage ) {
+        if (m instanceof TextMessage) {
             String text = ((TextMessage)m).getText();
-            return evaluate(text);                
-        } else if ( m instanceof BytesMessage ) {
-            BytesMessage bm = (BytesMessage) m;
-            byte data[] = new byte[(int) bm.getBodyLength()];
+            return evaluate(text);
+        } else if (m instanceof BytesMessage) {
+            BytesMessage bm = (BytesMessage)m;
+            byte data[] = new byte[(int)bm.getBodyLength()];
             bm.readBytes(data);
             return evaluate(data);
-        }            
+        }
         return false;
     }
 
     private boolean evaluate(byte[] data) {
         try {
-            
+
             InputSource inputSource = new InputSource(new ByteArrayInputStream(data));
-            
+
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setNamespaceAware(true);
             DocumentBuilder dbuilder = factory.newDocumentBuilder();
             Document doc = dbuilder.parse(inputSource);
-            
+
             CachedXPathAPI cachedXPathAPI = new CachedXPathAPI();
-            NodeIterator iterator = cachedXPathAPI.selectNodeIterator(doc,xpath);
-            return iterator.nextNode()!=null;
-            
+            NodeIterator iterator = cachedXPathAPI.selectNodeIterator(doc, xpath);
+            return iterator.nextNode() != null;
+
         } catch (Throwable e) {
             return false;
         }
@@ -75,17 +75,18 @@ public class XalanXPathEvaluator implements XPathExpression.XPathEvaluator {
     private boolean evaluate(String text) {
         try {
             InputSource inputSource = new InputSource(new StringReader(text));
-            
+
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setNamespaceAware(true);
             DocumentBuilder dbuilder = factory.newDocumentBuilder();
             Document doc = dbuilder.parse(inputSource);
-            
-            // We should associated the cachedXPathAPI object with the message being evaluated
+
+            // We should associated the cachedXPathAPI object with the message
+            // being evaluated
             // since that should speedup subsequent xpath expressions.
             CachedXPathAPI cachedXPathAPI = new CachedXPathAPI();
-            NodeIterator iterator = cachedXPathAPI.selectNodeIterator(doc,xpath);
-            return iterator.nextNode()!=null;
+            NodeIterator iterator = cachedXPathAPI.selectNodeIterator(doc, xpath);
+            return iterator.nextNode() != null;
         } catch (Throwable e) {
             return false;
         }

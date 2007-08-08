@@ -26,59 +26,53 @@ import org.apache.activemq.kaha.impl.index.IndexItem;
 import org.apache.activemq.kaha.impl.index.IndexLinkedList;
 
 /**
-* Values collection for the MapContainer
-* 
-* @version $Revision: 1.2 $
-*/
-class ContainerValueCollection extends ContainerCollectionSupport implements Collection{
-    
-   
-    ContainerValueCollection(MapContainerImpl container){
+ * Values collection for the MapContainer
+ * 
+ * @version $Revision: 1.2 $
+ */
+class ContainerValueCollection extends ContainerCollectionSupport implements Collection {
+
+    ContainerValueCollection(MapContainerImpl container) {
         super(container);
     }
-    
-    
-    
-    public boolean contains(Object o){
+
+    public boolean contains(Object o) {
         return container.containsValue(o);
     }
 
-    
-    public Iterator iterator(){
-        IndexLinkedList list=container.getItemList();
-        return new ContainerValueCollectionIterator(container,list,list.getRoot());
+    public Iterator iterator() {
+        IndexLinkedList list = container.getItemList();
+        return new ContainerValueCollectionIterator(container, list, list.getRoot());
     }
 
-   
-    public Object[] toArray(){
+    public Object[] toArray() {
         Object[] result = null;
         IndexLinkedList list = container.getItemList();
-        synchronized(list){
+        synchronized (list) {
             result = new Object[list.size()];
             IndexItem item = list.getFirst();
             int count = 0;
-            while (item != null){
-                Object value=container.getValue(item);  
+            while (item != null) {
+                Object value = container.getValue(item);
                 result[count++] = value;
-                
+
                 item = list.getNextEntry(item);
             }
-           
-            
+
         }
         return result;
     }
 
-    public Object[] toArray(Object[] result){
-        IndexLinkedList list=container.getItemList();
-        synchronized(list){
-            if(result.length<=list.size()){
+    public Object[] toArray(Object[] result) {
+        IndexLinkedList list = container.getItemList();
+        synchronized (list) {
+            if (result.length <= list.size()) {
                 IndexItem item = list.getFirst();
                 int count = 0;
-                while (item != null){
-                    Object value=container.getValue(item);  
+                while (item != null) {
+                    Object value = container.getValue(item);
                     result[count++] = value;
-                    
+
                     item = list.getNextEntry(item);
                 }
             }
@@ -86,21 +80,18 @@ class ContainerValueCollection extends ContainerCollectionSupport implements Col
         return result;
     }
 
-    
-    public boolean add(Object o){
-        throw  new UnsupportedOperationException("Can't add an object here");
+    public boolean add(Object o) {
+        throw new UnsupportedOperationException("Can't add an object here");
     }
 
-   
-    public boolean remove(Object o){
+    public boolean remove(Object o) {
         return container.removeValue(o);
     }
 
-    
-    public boolean containsAll(Collection c){
+    public boolean containsAll(Collection c) {
         boolean result = !c.isEmpty();
-        for (Iterator i = c.iterator(); i.hasNext(); ){
-            if (!contains(i.next())){
+        for (Iterator i = c.iterator(); i.hasNext();) {
+            if (!contains(i.next())) {
                 result = false;
                 break;
             }
@@ -108,38 +99,34 @@ class ContainerValueCollection extends ContainerCollectionSupport implements Col
         return result;
     }
 
-   
-    public boolean addAll(Collection c){
-        throw  new UnsupportedOperationException("Can't add everything here!");
+    public boolean addAll(Collection c) {
+        throw new UnsupportedOperationException("Can't add everything here!");
     }
 
-    
-    public boolean removeAll(Collection c){
+    public boolean removeAll(Collection c) {
         boolean result = true;
-        for (Iterator i = c.iterator(); i.hasNext(); ){
+        for (Iterator i = c.iterator(); i.hasNext();) {
             Object obj = i.next();
-                result&=remove(obj);
+            result &= remove(obj);
         }
         return result;
     }
 
-    
-    public boolean retainAll(Collection c){
-       List tmpList = new ArrayList();
-       for (Iterator i = c.iterator(); i.hasNext(); ){
-           Object o = i.next();
-           if (!contains(o)){
-               tmpList.add(o);
-           }  
-       }
-       for(Iterator i = tmpList.iterator(); i.hasNext();){
-           remove(i.next());
-       }
-       return !tmpList.isEmpty();
+    public boolean retainAll(Collection c) {
+        List tmpList = new ArrayList();
+        for (Iterator i = c.iterator(); i.hasNext();) {
+            Object o = i.next();
+            if (!contains(o)) {
+                tmpList.add(o);
+            }
+        }
+        for (Iterator i = tmpList.iterator(); i.hasNext();) {
+            remove(i.next());
+        }
+        return !tmpList.isEmpty();
     }
 
-   
-    public void clear(){
-     container.clear();
+    public void clear() {
+        container.clear();
     }
 }

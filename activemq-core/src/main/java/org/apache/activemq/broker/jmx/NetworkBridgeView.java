@@ -22,40 +22,40 @@ public class NetworkBridgeView implements NetworkBridgeViewMBean {
 
     private final NetworkBridge bridge;
 
-	public NetworkBridgeView(NetworkBridge bridge) {
-		this.bridge = bridge;
+    public NetworkBridgeView(NetworkBridge bridge) {
+        this.bridge = bridge;
     }
-    
+
     public void start() throws Exception {
-    	bridge.start();
+        bridge.start();
     }
 
     public void stop() throws Exception {
-    	bridge.stop();
+        bridge.stop();
     }
-    
+
     public String getLocalAddress() {
-    	return bridge.getLocalAddress();
+        return bridge.getLocalAddress();
     }
 
     public String getRemoteAddress() {
-    	return bridge.getRemoteAddress();
+        return bridge.getRemoteAddress();
     }
 
     public String getRemoteBrokerName() {
-    	return bridge.getRemoteBrokerName();
+        return bridge.getRemoteBrokerName();
     }
 
     public String getLocalBrokerName() {
-    	return bridge.getLocalBrokerName();
+        return bridge.getLocalBrokerName();
     }
 
     public long getEnqueueCounter() {
-    	return bridge.getEnqueueCounter();
+        return bridge.getEnqueueCounter();
     }
 
     public long getDequeueCounter() {
-    	return bridge.getDequeueCounter();
+        return bridge.getDequeueCounter();
     }
 
 }

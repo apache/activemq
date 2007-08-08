@@ -18,33 +18,33 @@ package org.apache.activemq.kaha.impl.container;
 
 import java.util.Iterator;
 
-
 /**
-* An Iterator for a container entry Set
-* 
-* @version $Revision: 1.2 $
-*/
-public class ContainerEntrySetIterator implements Iterator{
+ * An Iterator for a container entry Set
+ * 
+ * @version $Revision: 1.2 $
+ */
+public class ContainerEntrySetIterator implements Iterator {
     private MapContainerImpl container;
-    private Iterator  iter;
+    private Iterator iter;
     private ContainerMapEntry currentEntry;
-    ContainerEntrySetIterator(MapContainerImpl container,Iterator iter){
+
+    ContainerEntrySetIterator(MapContainerImpl container, Iterator iter) {
         this.container = container;
         this.iter = iter;
     }
-    
-    public boolean hasNext(){
+
+    public boolean hasNext() {
         return iter.hasNext();
     }
 
-    public Object next(){
-        currentEntry =  (ContainerMapEntry) iter.next();
+    public Object next() {
+        currentEntry = (ContainerMapEntry)iter.next();
         return currentEntry;
     }
 
-    public void remove(){
-       if (currentEntry != null){
-           container.remove(currentEntry.getKey());
-       }
+    public void remove() {
+        if (currentEntry != null) {
+            container.remove(currentEntry.getKey());
+        }
     }
 }

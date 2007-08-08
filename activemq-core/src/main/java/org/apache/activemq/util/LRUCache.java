@@ -18,71 +18,68 @@ package org.apache.activemq.util;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+
 /**
  * A Simple LRU Cache
  * 
  * @version $Revision$
- * @param <K> 
- * @param <V> 
+ * @param <K>
+ * @param <V>
  */
 
 public class LRUCache<K, V> extends LinkedHashMap<K, V> {
-    private static final long serialVersionUID=-342098639681884413L;
-    protected int maxCacheSize=10000;
+    private static final long serialVersionUID = -342098639681884413L;
+    protected int maxCacheSize = 10000;
 
-    
     /**
-     * Default constructorfor an LRU Cache
-     * The default capacity is 10000
-     * 
+     * Default constructorfor an LRU Cache The default capacity is 10000
      */
-    public LRUCache(){
-        super(1000,0.75f,true);
+    public LRUCache() {
+        super(1000, 0.75f, true);
     }
-    
+
     /**
      * Constructs a LRUCache with a maximum capacity
+     * 
      * @param maximumCacheSize
      */
     public LRUCache(int maximumCacheSize) {
-        this(maximumCacheSize,maximumCacheSize,0.75f,true);
-    }
-    /**
-     * Constructs an empty <tt>LRUCache</tt> instance with the
-     * specified initial capacity, maximumCacheSize,load factor and ordering mode.
-     *
-     * @param  initialCapacity the initial capacity.
-     * @param maximumCacheSize 
-     * @param  loadFactor      the load factor.
-     * @param  accessOrder     the ordering mode - <tt>true</tt> for
-     *         access-order, <tt>false</tt> for insertion-order.
-     * @throws IllegalArgumentException if the initial capacity is negative
-     *         or the load factor is nonpositive.
-     */
-    
-    public LRUCache(int initialCapacity,int maximumCacheSize,float loadFactor, boolean accessOrder) {
-        super(initialCapacity,loadFactor,accessOrder);
-        this.maxCacheSize = maximumCacheSize;
+        this(maximumCacheSize, maximumCacheSize, 0.75f, true);
     }
 
-    
+    /**
+     * Constructs an empty <tt>LRUCache</tt> instance with the specified
+     * initial capacity, maximumCacheSize,load factor and ordering mode.
+     * 
+     * @param initialCapacity the initial capacity.
+     * @param maximumCacheSize
+     * @param loadFactor the load factor.
+     * @param accessOrder the ordering mode - <tt>true</tt> for access-order,
+     *                <tt>false</tt> for insertion-order.
+     * @throws IllegalArgumentException if the initial capacity is negative or
+     *                 the load factor is nonpositive.
+     */
+
+    public LRUCache(int initialCapacity, int maximumCacheSize, float loadFactor, boolean accessOrder) {
+        super(initialCapacity, loadFactor, accessOrder);
+        this.maxCacheSize = maximumCacheSize;
+    }
 
     /**
      * @return Returns the maxCacheSize.
      */
-    public int getMaxCacheSize(){
+    public int getMaxCacheSize() {
         return maxCacheSize;
     }
 
     /**
-     * @param maxCacheSize
-     *            The maxCacheSize to set.
+     * @param maxCacheSize The maxCacheSize to set.
      */
-    public void setMaxCacheSize(int maxCacheSize){
-        this.maxCacheSize=maxCacheSize;
+    public void setMaxCacheSize(int maxCacheSize) {
+        this.maxCacheSize = maxCacheSize;
     }
-    
-    protected boolean removeEldestEntry(Map.Entry entry){
+
+    protected boolean removeEldestEntry(Map.Entry entry) {
         return size() > maxCacheSize;
     }
 }

@@ -16,21 +16,20 @@
  */
 package org.apache.activemq.transport;
 
+import java.io.IOException;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.activemq.util.ServiceStopper;
 
-import java.io.IOException;
-
 /**
- *
+ * 
  * @version $Revision$
  */
 public class StubTransport extends TransportSupport {
 
     private Queue queue = new ConcurrentLinkedQueue();
-    
+
     protected void doStop(ServiceStopper stopper) throws Exception {
     }
 
@@ -45,9 +44,8 @@ public class StubTransport extends TransportSupport {
         return queue;
     }
 
-	public String getRemoteAddress() {
-		return null;
-	}
+    public String getRemoteAddress() {
+        return null;
+    }
 
-    
 }

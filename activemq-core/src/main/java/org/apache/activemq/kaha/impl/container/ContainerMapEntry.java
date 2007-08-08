@@ -20,34 +20,30 @@ import java.util.Map;
 import org.apache.activemq.kaha.MapContainer;
 
 /**
-* Map.Entry implementation for a container
-* 
-* @version $Revision: 1.2 $
-*/
+ * Map.Entry implementation for a container
+ * 
+ * @version $Revision: 1.2 $
+ */
 class ContainerMapEntry implements Map.Entry {
 
     private MapContainer container;
     private Object key;
-   
-    ContainerMapEntry(MapContainer container,Object key){
+
+    ContainerMapEntry(MapContainer container, Object key) {
         this.container = container;
         this.key = key;
-      
+
     }
-    
-    
-    public Object getKey(){
+
+    public Object getKey() {
         return key;
     }
 
-    public Object getValue(){
+    public Object getValue() {
         return container.get(key);
     }
 
-    public Object setValue(Object value){
+    public Object setValue(Object value) {
         return container.put(key, value);
     }
 }
-   
-
-    

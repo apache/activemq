@@ -25,16 +25,16 @@ import javax.transaction.xa.XAException;
 import org.apache.activemq.command.TransactionId;
 
 /**
- * Keeps track of all the actions the need to be done when
- * a transaction does a commit or rollback.
- *
+ * Keeps track of all the actions the need to be done when a transaction does a
+ * commit or rollback.
+ * 
  * @version $Revision: 1.5 $
  */
 public abstract class Transaction {
 
-    static final public byte START_STATE = 0;      // can go to: 1,2,3
-    static final public byte IN_USE_STATE = 1;     // can go to: 2,3
-    static final public byte PREPARED_STATE = 2;   // can go to: 3
+    static final public byte START_STATE = 0; // can go to: 1,2,3
+    static final public byte IN_USE_STATE = 1; // can go to: 2,3
+    static final public byte PREPARED_STATE = 2; // can go to: 3
     static final public byte FINISHED_STATE = 3;
 
     private ArrayList synchronizations = new ArrayList();
@@ -54,7 +54,7 @@ public abstract class Transaction {
             state = IN_USE_STATE;
         }
     }
-    
+
     public void removeSynchronization(Synchronization r) {
         synchronizations.remove(r);
     }
@@ -64,47 +64,49 @@ public abstract class Transaction {
         // Is it ok to call prepare now given the state of the
         // transaction?
         switch (state) {
-            case START_STATE:
-            case IN_USE_STATE:
-                break;
-            default:
-                XAException xae = new XAException("Prepare cannot be called now.");
-                xae.errorCode = XAException.XAER_PROTO;
-                throw xae;
+        case START_STATE:
+        case IN_USE_STATE:
+            break;
+        default:
+            XAException xae = new XAException("Prepare cannot be called now.");
+            xae.errorCode = XAException.XAER_PROTO;
+            throw xae;
         }
 
-//        // Run the prePrepareTasks
-//        for (Iterator iter = prePrepareTasks.iterator(); iter.hasNext();) {
-//            Callback r = (Callback) iter.next();
-//            r.execute();
-//        }
+        // // Run the prePrepareTasks
+        // for (Iterator iter = prePrepareTasks.iterator(); iter.hasNext();) {
+        // Callback r = (Callback) iter.next();
+        // r.execute();
+        // }
     }
 
     protected void fireAfterCommit() throws Exception {
         for (Iterator iter = synchronizations.iterator(); iter.hasNext();) {
-            Synchronization s = (Synchronization) iter.next();
+            Synchronization s = (Synchronization)iter.next();
             s.afterCommit();
         }
     }
 
     public void fireAfterRollback() throws Exception {
         for (Iterator iter = synchronizations.iterator(); iter.hasNext();) {
-            Synchronization s = (Synchronization) iter.next();
+            Synchronization s = (Synchronization)iter.next();
             s.afterRollback();
         }
     }
 
     public String toString() {
-        return super.toString() + "[synchronizations=" + synchronizations +"]";
+        return super.toString() + "[synchronizations=" + synchronizations + "]";
     }
 
     abstract public void commit(boolean onePhase) throws XAException, IOException;
+
     abstract public void rollback() throws XAException, IOException;
+
     abstract public int prepare() throws XAException, IOException;
-    
+
     abstract public TransactionId getTransactionId();
 
     public boolean isPrepared() {
-        return getState()==PREPARED_STATE;
+        return getState() == PREPARED_STATE;
     }
 }

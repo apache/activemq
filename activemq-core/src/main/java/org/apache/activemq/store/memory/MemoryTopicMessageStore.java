@@ -33,104 +33,100 @@ import org.apache.activemq.util.SubscriptionKey;
 /**
  * @version $Revision: 1.5 $
  */
-public class MemoryTopicMessageStore extends MemoryMessageStore implements TopicMessageStore{
+public class MemoryTopicMessageStore extends MemoryMessageStore implements TopicMessageStore {
 
     private Map subscriberDatabase;
     private Map topicSubMap;
 
-    public MemoryTopicMessageStore(ActiveMQDestination destination){
-        this(destination,new LRUCache(100,100,0.75f,false),makeMap());
+    public MemoryTopicMessageStore(ActiveMQDestination destination) {
+        this(destination, new LRUCache(100, 100, 0.75f, false), makeMap());
     }
 
-    protected static Map makeMap(){
+    protected static Map makeMap() {
         return Collections.synchronizedMap(new HashMap());
     }
 
-    public MemoryTopicMessageStore(ActiveMQDestination destination,Map messageTable,Map subscriberDatabase){
-        super(destination,messageTable);
-        this.subscriberDatabase=subscriberDatabase;
-        this.topicSubMap=makeMap();
+    public MemoryTopicMessageStore(ActiveMQDestination destination, Map messageTable, Map subscriberDatabase) {
+        super(destination, messageTable);
+        this.subscriberDatabase = subscriberDatabase;
+        this.topicSubMap = makeMap();
     }
 
-    public synchronized void addMessage(ConnectionContext context,Message message) throws IOException{
-        super.addMessage(context,message);
-        for(Iterator i=topicSubMap.values().iterator();i.hasNext();){
-            MemoryTopicSub sub=(MemoryTopicSub)i.next();
-            sub.addMessage(message.getMessageId(),message);
+    public synchronized void addMessage(ConnectionContext context, Message message) throws IOException {
+        super.addMessage(context, message);
+        for (Iterator i = topicSubMap.values().iterator(); i.hasNext();) {
+            MemoryTopicSub sub = (MemoryTopicSub)i.next();
+            sub.addMessage(message.getMessageId(), message);
         }
     }
 
-    public synchronized void acknowledge(ConnectionContext context,String clientId,String subscriptionName,
-            MessageId messageId) throws IOException{
-        SubscriptionKey key=new SubscriptionKey(clientId,subscriptionName);
-        MemoryTopicSub sub=(MemoryTopicSub)topicSubMap.get(key);
-        if(sub!=null){
+    public synchronized void acknowledge(ConnectionContext context, String clientId, String subscriptionName, MessageId messageId) throws IOException {
+        SubscriptionKey key = new SubscriptionKey(clientId, subscriptionName);
+        MemoryTopicSub sub = (MemoryTopicSub)topicSubMap.get(key);
+        if (sub != null) {
             sub.removeMessage(messageId);
         }
     }
 
-    public SubscriptionInfo lookupSubscription(String clientId,String subscriptionName) throws IOException{
-        return (SubscriptionInfo)subscriberDatabase.get(new SubscriptionKey(clientId,subscriptionName));
+    public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {
+        return (SubscriptionInfo)subscriberDatabase.get(new SubscriptionKey(clientId, subscriptionName));
     }
 
-    public synchronized void addSubsciption(SubscriptionInfo info,boolean retroactive)
-            throws IOException{
-        SubscriptionKey key=new SubscriptionKey(info);
-        MemoryTopicSub sub=new MemoryTopicSub();
-        topicSubMap.put(key,sub);
-        if(retroactive){
-            for(Iterator i=messageTable.entrySet().iterator();i.hasNext();){
-                Map.Entry entry=(Entry)i.next();
-                sub.addMessage((MessageId)entry.getKey(),(Message)entry.getValue());
+    public synchronized void addSubsciption(SubscriptionInfo info, boolean retroactive) throws IOException {
+        SubscriptionKey key = new SubscriptionKey(info);
+        MemoryTopicSub sub = new MemoryTopicSub();
+        topicSubMap.put(key, sub);
+        if (retroactive) {
+            for (Iterator i = messageTable.entrySet().iterator(); i.hasNext();) {
+                Map.Entry entry = (Entry)i.next();
+                sub.addMessage((MessageId)entry.getKey(), (Message)entry.getValue());
             }
         }
-        subscriberDatabase.put(key,info);
+        subscriberDatabase.put(key, info);
     }
 
-    public void deleteSubscription(String clientId,String subscriptionName){
-        org.apache.activemq.util.SubscriptionKey key=new SubscriptionKey(clientId,subscriptionName);
+    public void deleteSubscription(String clientId, String subscriptionName) {
+        org.apache.activemq.util.SubscriptionKey key = new SubscriptionKey(clientId, subscriptionName);
         subscriberDatabase.remove(key);
         topicSubMap.remove(key);
     }
 
-    public void recoverSubscription(String clientId,String subscriptionName,MessageRecoveryListener listener)
-            throws Exception{
-        MemoryTopicSub sub=(MemoryTopicSub)topicSubMap.get(new SubscriptionKey(clientId,subscriptionName));
-        if(sub!=null){
+    public void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener) throws Exception {
+        MemoryTopicSub sub = (MemoryTopicSub)topicSubMap.get(new SubscriptionKey(clientId, subscriptionName));
+        if (sub != null) {
             sub.recoverSubscription(listener);
         }
     }
 
-    public void delete(){
+    public void delete() {
         super.delete();
         subscriberDatabase.clear();
         topicSubMap.clear();
     }
 
-    public SubscriptionInfo[] getAllSubscriptions() throws IOException{
+    public SubscriptionInfo[] getAllSubscriptions() throws IOException {
         return (SubscriptionInfo[])subscriberDatabase.values().toArray(new SubscriptionInfo[subscriberDatabase.size()]);
     }
 
-    public synchronized int getMessageCount(String clientId,String subscriberName) throws IOException{
-        int result=0;
-        MemoryTopicSub sub=(MemoryTopicSub)topicSubMap.get(new SubscriptionKey(clientId,subscriberName));
-        if(sub!=null){
-            result=sub.size();
+    public synchronized int getMessageCount(String clientId, String subscriberName) throws IOException {
+        int result = 0;
+        MemoryTopicSub sub = (MemoryTopicSub)topicSubMap.get(new SubscriptionKey(clientId, subscriberName));
+        if (sub != null) {
+            result = sub.size();
         }
         return result;
     }
 
-    public void recoverNextMessages(String clientId,String subscriptionName,int maxReturned,
-            MessageRecoveryListener listener) throws Exception{
-        MemoryTopicSub sub=(MemoryTopicSub)topicSubMap.get(new SubscriptionKey(clientId,subscriptionName));
-        if(sub!=null){
-            sub.recoverNextMessages(maxReturned,listener);
+    public void recoverNextMessages(String clientId, String subscriptionName, int maxReturned, MessageRecoveryListener listener) throws Exception {
+        MemoryTopicSub sub = (MemoryTopicSub)topicSubMap.get(new SubscriptionKey(clientId, subscriptionName));
+        if (sub != null) {
+            sub.recoverNextMessages(maxReturned, listener);
         }
     }
 
-    public void resetBatching(String clientId,String subscriptionName){
-        MemoryTopicSub sub=(MemoryTopicSub)topicSubMap.get(new SubscriptionKey(clientId,subscriptionName));
-        if(sub!=null){
+    public void resetBatching(String clientId, String subscriptionName) {
+        MemoryTopicSub sub = (MemoryTopicSub)topicSubMap.get(new SubscriptionKey(clientId, subscriptionName));
+        if (sub != null) {
             sub.resetBatching();
         }
     }

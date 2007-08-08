@@ -46,7 +46,6 @@ import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-
 /**
  * Forwards all messages from the local broker to the remote broker.
  * 
@@ -54,34 +53,34 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision$
  */
-public class ForwardingBridge  implements Service{
-    
+public class ForwardingBridge implements Service {
+
     static final private Log log = LogFactory.getLog(ForwardingBridge.class);
 
     private final Transport localBroker;
     private final Transport remoteBroker;
-    
+
     IdGenerator idGenerator = new IdGenerator();
     ConnectionInfo connectionInfo;
     SessionInfo sessionInfo;
     ProducerInfo producerInfo;
     ConsumerInfo queueConsumerInfo;
     ConsumerInfo topicConsumerInfo;
-    
+
     private String clientId;
-    private int prefetchSize=1000;
+    private int prefetchSize = 1000;
     private boolean dispatchAsync;
     private String destinationFilter = ">";
-    
+
     BrokerId localBrokerId;
     BrokerId remoteBrokerId;
     private NetworkBridgeListener bridgeFailedListener;
 
-	BrokerInfo localBrokerInfo;
-	BrokerInfo remoteBrokerInfo;
-	
-	final AtomicLong enqueueCounter = new AtomicLong();
-	final AtomicLong dequeueCounter = new AtomicLong();
+    BrokerInfo localBrokerInfo;
+    BrokerInfo remoteBrokerInfo;
+
+    final AtomicLong enqueueCounter = new AtomicLong();
+    final AtomicLong dequeueCounter = new AtomicLong();
 
     public ForwardingBridge(Transport localBroker, Transport remoteBroker) {
         this.localBroker = localBroker;
@@ -89,28 +88,31 @@ public class ForwardingBridge  implements Service{
     }
 
     public void start() throws Exception {
-        log.info("Starting a network connection between " + localBroker + " and " + remoteBroker + " has been established.");
+        log.info("Starting a network connection between " + localBroker + " and " + remoteBroker
+                 + " has been established.");
 
-        localBroker.setTransportListener(new DefaultTransportListener(){
+        localBroker.setTransportListener(new DefaultTransportListener() {
             public void onCommand(Object o) {
-            	Command command = (Command) o;
+                Command command = (Command)o;
                 serviceLocalCommand(command);
             }
+
             public void onException(IOException error) {
                 serviceLocalException(error);
             }
         });
-        
-        remoteBroker.setTransportListener(new DefaultTransportListener(){
+
+        remoteBroker.setTransportListener(new DefaultTransportListener() {
             public void onCommand(Object o) {
-            	Command command = (Command) o;
+                Command command = (Command)o;
                 serviceRemoteCommand(command);
             }
+
             public void onException(IOException error) {
                 serviceRemoteException(error);
             }
         });
-        
+
         localBroker.start();
         remoteBroker.start();
     }
@@ -120,8 +122,7 @@ public class ForwardingBridge  implements Service{
             public void run() {
                 try {
                     startBridge();
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     log.error("Failed to start network bridge: " + e, e);
                 }
             }
@@ -139,22 +140,22 @@ public class ForwardingBridge  implements Service{
         localBroker.oneway(connectionInfo);
         remoteBroker.oneway(connectionInfo);
 
-        sessionInfo=new SessionInfo(connectionInfo, 1);
+        sessionInfo = new SessionInfo(connectionInfo, 1);
         localBroker.oneway(sessionInfo);
         remoteBroker.oneway(sessionInfo);
-        
+
         queueConsumerInfo = new ConsumerInfo(sessionInfo, 1);
         queueConsumerInfo.setDispatchAsync(dispatchAsync);
         queueConsumerInfo.setDestination(new ActiveMQQueue(destinationFilter));
         queueConsumerInfo.setPrefetchSize(prefetchSize);
         queueConsumerInfo.setPriority(ConsumerInfo.NETWORK_CONSUMER_PRIORITY);
         localBroker.oneway(queueConsumerInfo);
-        
+
         producerInfo = new ProducerInfo(sessionInfo, 1);
         producerInfo.setResponseRequired(false);
         remoteBroker.oneway(producerInfo);
-        
-        if( connectionInfo.getClientId()!=null ) {
+
+        if (connectionInfo.getClientId() != null) {
             topicConsumerInfo = new ConsumerInfo(sessionInfo, 2);
             topicConsumerInfo.setDispatchAsync(dispatchAsync);
             topicConsumerInfo.setSubscriptionName("topic-bridge");
@@ -164,12 +165,13 @@ public class ForwardingBridge  implements Service{
             topicConsumerInfo.setPriority(ConsumerInfo.NETWORK_CONSUMER_PRIORITY);
             localBroker.oneway(topicConsumerInfo);
         }
-        log.info("Network connection between " + localBroker + " and " + remoteBroker + " has been established.");
+        log.info("Network connection between " + localBroker + " and " + remoteBroker
+                 + " has been established.");
     }
-    
+
     public void stop() throws Exception {
         try {
-            if( connectionInfo!=null ) {
+            if (connectionInfo != null) {
                 localBroker.request(connectionInfo.createRemoveCommand());
                 remoteBroker.request(connectionInfo.createRemoveCommand());
             }
@@ -184,29 +186,29 @@ public class ForwardingBridge  implements Service{
             ss.throwFirstException();
         }
     }
-    
+
     public void serviceRemoteException(Throwable error) {
-        log.info("Unexpected remote exception: "+error);
+        log.info("Unexpected remote exception: " + error);
         log.debug("Exception trace: ", error);
     }
-    
+
     protected void serviceRemoteCommand(Command command) {
         try {
-            if(command.isBrokerInfo() ) {
-                synchronized( this ) {
-                	remoteBrokerInfo = ((BrokerInfo)command);
+            if (command.isBrokerInfo()) {
+                synchronized (this) {
+                    remoteBrokerInfo = ((BrokerInfo)command);
                     remoteBrokerId = remoteBrokerInfo.getBrokerId();
-                    if( localBrokerId !=null) {
-                        if( localBrokerId.equals(remoteBrokerId) ) {
+                    if (localBrokerId != null) {
+                        if (localBrokerId.equals(remoteBrokerId)) {
                             log.info("Disconnecting loop back connection.");
                             ServiceSupport.dispose(this);
                         } else {
-                            triggerStartBridge();                            
+                            triggerStartBridge();
                         }
                     }
                 }
             } else {
-                log.warn("Unexpected remote command: "+command);
+                log.warn("Unexpected remote command: " + command);
             }
         } catch (IOException e) {
             serviceLocalException(e);
@@ -214,46 +216,50 @@ public class ForwardingBridge  implements Service{
     }
 
     public void serviceLocalException(Throwable error) {
-        log.info("Unexpected local exception: "+error);
+        log.info("Unexpected local exception: " + error);
         log.debug("Exception trace: ", error);
         fireBridgeFailed();
-    }    
+    }
+
     protected void serviceLocalCommand(Command command) {
         try {
-            if( command.isMessageDispatch() ) {
-            	
-            	enqueueCounter.incrementAndGet();
-            	
-                final MessageDispatch md = (MessageDispatch) command;
+            if (command.isMessageDispatch()) {
+
+                enqueueCounter.incrementAndGet();
+
+                final MessageDispatch md = (MessageDispatch)command;
                 Message message = md.getMessage();
                 message.setProducerId(producerInfo.getProducerId());
-                
-                if( message.getOriginalTransactionId()==null )
+
+                if (message.getOriginalTransactionId() == null)
                     message.setOriginalTransactionId(message.getTransactionId());
                 message.setTransactionId(null);
 
-                
-                if( !message.isResponseRequired() ) {
-                    // If the message was originally sent using async send, we will preserve that QOS
-                    // by bridging it using an async send (small chance of message loss).
+                if (!message.isResponseRequired()) {
+                    // If the message was originally sent using async send, we
+                    // will preserve that QOS
+                    // by bridging it using an async send (small chance of
+                    // message loss).
                     remoteBroker.oneway(message);
-                	dequeueCounter.incrementAndGet();
-                    localBroker.oneway(new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,1));
-                    
+                    dequeueCounter.incrementAndGet();
+                    localBroker.oneway(new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1));
+
                 } else {
-                    
-                    // The message was not sent using async send, so we should only ack the local 
-                    // broker when we get confirmation that the remote broker has received the message.
+
+                    // The message was not sent using async send, so we should
+                    // only ack the local
+                    // broker when we get confirmation that the remote broker
+                    // has received the message.
                     ResponseCallback callback = new ResponseCallback() {
                         public void onCompletion(FutureResponse future) {
                             try {
                                 Response response = future.getResult();
-                                if(response.isException()){
-                                    ExceptionResponse er=(ExceptionResponse) response;
+                                if (response.isException()) {
+                                    ExceptionResponse er = (ExceptionResponse)response;
                                     serviceLocalException(er.getException());
                                 } else {
-                                	dequeueCounter.incrementAndGet();
-                                    localBroker.oneway(new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,1));
+                                    dequeueCounter.incrementAndGet();
+                                    localBroker.oneway(new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1));
                                 }
                             } catch (IOException e) {
                                 serviceLocalException(e);
@@ -263,41 +269,49 @@ public class ForwardingBridge  implements Service{
 
                     remoteBroker.asyncRequest(message, callback);
                 }
-                
-                                
-                // Ack on every message since we don't know if the broker is blocked due to memory
-                // usage and is waiting for an Ack to un-block him. 
 
-                // Acking a range is more efficient, but also more prone to locking up a server
-                // Perhaps doing something like the following should be policy based.
-//                if( md.getConsumerId().equals(queueConsumerInfo.getConsumerId()) ) {
-//                    queueDispatched++;
-//                    if( queueDispatched > (queueConsumerInfo.getPrefetchSize()/2) ) {
-//                        localBroker.oneway(new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, queueDispatched));
-//                        queueDispatched=0;
-//                    }
-//                } else {
-//                    topicDispatched++;
-//                    if( topicDispatched > (topicConsumerInfo.getPrefetchSize()/2) ) {
-//                        localBroker.oneway(new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, topicDispatched));
-//                        topicDispatched=0;
-//                    }
-//                }
-            } else if(command.isBrokerInfo() ) {
-                synchronized( this ) {
-                	localBrokerInfo = ((BrokerInfo)command);
+                // Ack on every message since we don't know if the broker is
+                // blocked due to memory
+                // usage and is waiting for an Ack to un-block him.
+
+                // Acking a range is more efficient, but also more prone to
+                // locking up a server
+                // Perhaps doing something like the following should be policy
+                // based.
+                // if(
+                // md.getConsumerId().equals(queueConsumerInfo.getConsumerId())
+                // ) {
+                // queueDispatched++;
+                // if( queueDispatched > (queueConsumerInfo.getPrefetchSize()/2)
+                // ) {
+                // localBroker.oneway(new MessageAck(md,
+                // MessageAck.STANDARD_ACK_TYPE, queueDispatched));
+                // queueDispatched=0;
+                // }
+                // } else {
+                // topicDispatched++;
+                // if( topicDispatched > (topicConsumerInfo.getPrefetchSize()/2)
+                // ) {
+                // localBroker.oneway(new MessageAck(md,
+                // MessageAck.STANDARD_ACK_TYPE, topicDispatched));
+                // topicDispatched=0;
+                // }
+                // }
+            } else if (command.isBrokerInfo()) {
+                synchronized (this) {
+                    localBrokerInfo = ((BrokerInfo)command);
                     localBrokerId = localBrokerInfo.getBrokerId();
-                    if( remoteBrokerId !=null) {
-                        if( remoteBrokerId.equals(localBrokerId) ) {
+                    if (remoteBrokerId != null) {
+                        if (remoteBrokerId.equals(localBrokerId)) {
                             log.info("Disconnecting loop back connection.");
                             ServiceSupport.dispose(this);
                         } else {
-                            triggerStartBridge();                            
+                            triggerStartBridge();
                         }
                     }
                 }
             } else {
-                log.debug("Unexpected local command: "+command);
+                log.debug("Unexpected local command: " + command);
             }
         } catch (IOException e) {
             serviceLocalException(e);
@@ -307,6 +321,7 @@ public class ForwardingBridge  implements Service{
     public String getClientId() {
         return clientId;
     }
+
     public void setClientId(String clientId) {
         this.clientId = clientId;
     }
@@ -314,6 +329,7 @@ public class ForwardingBridge  implements Service{
     public int getPrefetchSize() {
         return prefetchSize;
     }
+
     public void setPrefetchSize(int prefetchSize) {
         this.prefetchSize = prefetchSize;
     }
@@ -321,6 +337,7 @@ public class ForwardingBridge  implements Service{
     public boolean isDispatchAsync() {
         return dispatchAsync;
     }
+
     public void setDispatchAsync(boolean dispatchAsync) {
         this.dispatchAsync = dispatchAsync;
     }
@@ -328,44 +345,44 @@ public class ForwardingBridge  implements Service{
     public String getDestinationFilter() {
         return destinationFilter;
     }
+
     public void setDestinationFilter(String destinationFilter) {
         this.destinationFilter = destinationFilter;
     }
 
-   
-    public void setNetworkBridgeFailedListener(NetworkBridgeListener listener){
-      this.bridgeFailedListener=listener;  
+    public void setNetworkBridgeFailedListener(NetworkBridgeListener listener) {
+        this.bridgeFailedListener = listener;
     }
-    
+
     private void fireBridgeFailed() {
         NetworkBridgeListener l = this.bridgeFailedListener;
-        if (l!=null) {
+        if (l != null) {
             l.bridgeFailed();
         }
     }
 
-	public String getRemoteAddress() {
-		return remoteBroker.getRemoteAddress();
-	}
+    public String getRemoteAddress() {
+        return remoteBroker.getRemoteAddress();
+    }
 
-	public String getLocalAddress() {
-		return localBroker.getRemoteAddress();
-	}
+    public String getLocalAddress() {
+        return localBroker.getRemoteAddress();
+    }
 
-	public String getLocalBrokerName() {
-		return localBrokerInfo == null ? null : localBrokerInfo.getBrokerName();
-	}
+    public String getLocalBrokerName() {
+        return localBrokerInfo == null ? null : localBrokerInfo.getBrokerName();
+    }
 
-	public String getRemoteBrokerName() {
-		return remoteBrokerInfo == null ? null : remoteBrokerInfo.getBrokerName();
-	}
-	
-	public long getDequeueCounter() {
-		return dequeueCounter.get();
-	}
+    public String getRemoteBrokerName() {
+        return remoteBrokerInfo == null ? null : remoteBrokerInfo.getBrokerName();
+    }
 
-	public long getEnqueueCounter() {
-		return enqueueCounter.get();
-	}
+    public long getDequeueCounter() {
+        return dequeueCounter.get();
+    }
+
+    public long getEnqueueCounter() {
+        return enqueueCounter.get();
+    }
 
 }

@@ -96,8 +96,8 @@ public class ActiveMQSessionExecutor implements Task {
                     Thread.currentThread().interrupt();
                 }
             } else {
-                while (iterate())
-                    ;
+                while (iterate()) {                    
+                }
             }
         }
     }
@@ -128,8 +128,9 @@ public class ActiveMQSessionExecutor implements Task {
     synchronized void start() {
         if (!messageQueue.isRunning()) {
             messageQueue.start();
-            if (hasUncomsumedMessages())
+            if (hasUncomsumedMessages()) {
                 wakeup();
+            }
         }
     }
 

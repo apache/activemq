@@ -26,12 +26,12 @@ import java.sql.SQLException;
 import org.apache.activemq.util.ByteArrayInputStream;
 
 /**
- * This JDBCAdapter inserts and extracts BLOB data using the 
+ * This JDBCAdapter inserts and extracts BLOB data using the
  * setBinaryStream()/getBinaryStream() operations.
  * 
  * The databases/JDBC drivers that use this adapter are:
  * <ul>
- * <li>Axion</li> 
+ * <li>Axion</li>
  * </ul>
  * 
  * @org.apache.xbean.XBean element="streamJDBCAdapter"
@@ -39,12 +39,13 @@ import org.apache.activemq.util.ByteArrayInputStream;
  * @version $Revision: 1.2 $
  */
 public class StreamJDBCAdapter extends DefaultJDBCAdapter {
-    
+
     /**
-     * @see org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter#getBinaryData(java.sql.ResultSet, int)
+     * @see org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter#getBinaryData(java.sql.ResultSet,
+     *      int)
      */
     protected byte[] getBinaryData(ResultSet rs, int index) throws SQLException {
-        
+
         try {
             InputStream is = rs.getBinaryStream(index);
             ByteArrayOutputStream os = new ByteArrayOutputStream(1024 * 4);
@@ -58,15 +59,16 @@ public class StreamJDBCAdapter extends DefaultJDBCAdapter {
 
             return os.toByteArray();
         } catch (IOException e) {
-            throw (SQLException)new SQLException("Error reading binary parameter: "+index).initCause(e);
+            throw (SQLException)new SQLException("Error reading binary parameter: " + index).initCause(e);
         }
     }
-    
+
     /**
-     * @see org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter#setBinaryData(java.sql.PreparedStatement, int, byte[])
+     * @see org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter#setBinaryData(java.sql.PreparedStatement,
+     *      int, byte[])
      */
     protected void setBinaryData(PreparedStatement s, int index, byte[] data) throws SQLException {
         s.setBinaryStream(index, new ByteArrayInputStream(data), data.length);
     }
-    
+
 }

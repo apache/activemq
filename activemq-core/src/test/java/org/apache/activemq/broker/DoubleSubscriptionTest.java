@@ -50,7 +50,7 @@ public class DoubleSubscriptionTest extends NetworkTestSupport {
     }
 
     public void initCombosForTestDoubleSubscription() {
-        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"), new ActiveMQQueue("TEST"),});
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"), new ActiveMQQueue("TEST")});
     }
 
     public void testDoubleSubscription() throws Exception {

@@ -29,14 +29,13 @@ import org.apache.activemq.kaha.impl.async.Location;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.wireformat.WireFormat;
 
-
 /**
  */
 public class AMQTxOperation {
 
-    public static final byte ADD_OPERATION_TYPE=0;
-    public static final byte REMOVE_OPERATION_TYPE=1;
-    public static final byte ACK_OPERATION_TYPE=3;
+    public static final byte ADD_OPERATION_TYPE = 0;
+    public static final byte REMOVE_OPERATION_TYPE = 1;
+    public static final byte ACK_OPERATION_TYPE = 3;
     private byte operationType;
     private ActiveMQDestination destination;
     private Object data;
@@ -44,74 +43,73 @@ public class AMQTxOperation {
 
     public AMQTxOperation() {
     }
-    
-    public AMQTxOperation(byte operationType,ActiveMQDestination destination,Object data,Location location){
-        this.operationType=operationType;
-        this.destination=destination;
-        this.data=data;
-        this.location=location;
-        
+
+    public AMQTxOperation(byte operationType, ActiveMQDestination destination, Object data, Location location) {
+        this.operationType = operationType;
+        this.destination = destination;
+        this.data = data;
+        this.location = location;
+
     }
 
     /**
      * @return the data
      */
-    public Object getData(){
+    public Object getData() {
         return this.data;
     }
 
     /**
      * @param data the data to set
      */
-    public void setData(Object data){
-        this.data=data;
+    public void setData(Object data) {
+        this.data = data;
     }
 
     /**
      * @return the location
      */
-    public Location getLocation(){
+    public Location getLocation() {
         return this.location;
     }
 
     /**
      * @param location the location to set
      */
-    public void setLocation(Location location){
-        this.location=location;
+    public void setLocation(Location location) {
+        this.location = location;
     }
 
     /**
      * @return the operationType
      */
-    public byte getOperationType(){
+    public byte getOperationType() {
         return this.operationType;
     }
 
     /**
      * @param operationType the operationType to set
      */
-    public void setOperationType(byte operationType){
-        this.operationType=operationType;
+    public void setOperationType(byte operationType) {
+        this.operationType = operationType;
     }
 
-   
-    public boolean replay(AMQPersistenceAdapter adapter,ConnectionContext context) throws IOException{
-        boolean result=false;
-        AMQMessageStore store=(AMQMessageStore)adapter.createMessageStore(destination);
-        if(operationType==ADD_OPERATION_TYPE){
-            result=store.replayAddMessage(context,(Message)data,location);
-        }else if(operationType==REMOVE_OPERATION_TYPE){
-            result=store.replayRemoveMessage(context,(MessageAck)data);
-        }else{
-            JournalTopicAck ack=(JournalTopicAck)data;
-            result=((AMQTopicMessageStore)store).replayAcknowledge(context,ack.getClientId(),ack.getSubscritionName(),
-                    ack.getMessageId());
+    public boolean replay(AMQPersistenceAdapter adapter, ConnectionContext context) throws IOException {
+        boolean result = false;
+        AMQMessageStore store = (AMQMessageStore)adapter.createMessageStore(destination);
+        if (operationType == ADD_OPERATION_TYPE) {
+            result = store.replayAddMessage(context, (Message)data, location);
+        } else if (operationType == REMOVE_OPERATION_TYPE) {
+            result = store.replayRemoveMessage(context, (MessageAck)data);
+        } else {
+            JournalTopicAck ack = (JournalTopicAck)data;
+            result = ((AMQTopicMessageStore)store).replayAcknowledge(context, ack.getClientId(), ack
+                .getSubscritionName(), ack.getMessageId());
         }
         return result;
     }
-    
-    public void writeExternal(WireFormat wireFormat,DataOutput dos) throws IOException {
+
+    public void writeExternal(WireFormat wireFormat, DataOutput dos) throws IOException {
         location.writeExternal(dos);
         ByteSequence packet = wireFormat.marshal(getData());
         dos.writeInt(packet.length);
@@ -121,16 +119,16 @@ public class AMQTxOperation {
         dos.write(packet.data, packet.offset, packet.length);
     }
 
-    public void readExternal(WireFormat wireFormat,DataInput dis) throws IOException {
-        this.location=new Location();
+    public void readExternal(WireFormat wireFormat, DataInput dis) throws IOException {
+        this.location = new Location();
         this.location.readExternal(dis);
-        int size=dis.readInt();
-        byte[] data=new byte[size];
+        int size = dis.readInt();
+        byte[] data = new byte[size];
         dis.readFully(data);
         setData(wireFormat.unmarshal(new ByteSequence(data)));
-        size=dis.readInt();
-        data=new byte[size];
+        size = dis.readInt();
+        data = new byte[size];
         dis.readFully(data);
-        this.destination=(ActiveMQDestination)wireFormat.unmarshal(new ByteSequence(data));
+        this.destination = (ActiveMQDestination)wireFormat.unmarshal(new ByteSequence(data));
     }
 }

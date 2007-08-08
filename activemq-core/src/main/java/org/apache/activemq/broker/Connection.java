@@ -24,7 +24,6 @@ import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Response;
 
 /**
- * 
  * @version $Revision: 1.5 $
  */
 public interface Connection extends Service {
@@ -37,8 +36,7 @@ public interface Connection extends Service {
     /**
      * Sends a message to the client.
      * 
-     * @param message
-     *            the message to send to the client.
+     * @param message the message to send to the client.
      */
     public void dispatchSync(Command message);
 
@@ -87,12 +85,12 @@ public interface Connection extends Service {
      * Returns the number of messages to be dispatched to this connection
      */
     public int getDispatchQueueSize();
-    
+
     /**
      * Returns the statistics for this connection
      */
     public ConnectionStatistics getStatistics();
-    
+
     /**
      * @return true if the Connection will process control commands
      */
@@ -101,10 +99,10 @@ public interface Connection extends Service {
     /**
      * @return the source address for this connection
      */
-	public String getRemoteAddress();
+    public String getRemoteAddress();
 
-	public void serviceExceptionAsync(IOException e);
-	
-	public String getConnectionId();
+    public void serviceExceptionAsync(IOException e);
+
+    public String getConnectionId();
 
 }

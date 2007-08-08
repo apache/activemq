@@ -37,7 +37,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @org.apache.xbean.XBean
- * 
  * @version $Revision: 1.4 $
  */
 public class MemoryPersistenceAdapter implements PersistenceAdapter {
@@ -47,14 +46,14 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
     ConcurrentHashMap topics = new ConcurrentHashMap();
     ConcurrentHashMap queues = new ConcurrentHashMap();
     private boolean useExternalMessageReferences;
-    
+
     public Set getDestinations() {
-        Set rc = new HashSet(queues.size()+topics.size());
+        Set rc = new HashSet(queues.size() + topics.size());
         for (Iterator iter = queues.keySet().iterator(); iter.hasNext();) {
-            rc.add( iter.next() );
+            rc.add(iter.next());
         }
         for (Iterator iter = topics.keySet().iterator(); iter.hasNext();) {
-            rc.add( iter.next() );
+            rc.add(iter.next());
         }
         return rc;
     }
@@ -62,12 +61,12 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
     public static MemoryPersistenceAdapter newInstance(File file) {
         return new MemoryPersistenceAdapter();
     }
-    
+
     public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {
         MessageStore rc = (MessageStore)queues.get(destination);
-        if(rc==null) {
+        if (rc == null) {
             rc = new MemoryMessageStore(destination);
-            if( transactionStore !=null ) {
+            if (transactionStore != null) {
                 rc = transactionStore.proxy(rc);
             }
             queues.put(destination, rc);
@@ -77,9 +76,9 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
 
     public TopicMessageStore createTopicMessageStore(ActiveMQTopic destination) throws IOException {
         TopicMessageStore rc = (TopicMessageStore)topics.get(destination);
-        if(rc==null) {
+        if (rc == null) {
             rc = new MemoryTopicMessageStore(destination);
-            if( transactionStore !=null ) {
+            if (transactionStore != null) {
                 rc = transactionStore.proxy(rc);
             }
             topics.put(destination, rc);
@@ -88,7 +87,7 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
     }
 
     public TransactionStore createTransactionStore() throws IOException {
-        if( transactionStore==null ) {
+        if (transactionStore == null) {
             transactionStore = new MemoryTransactionStore();
         }
         return transactionStore;
@@ -108,7 +107,7 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
 
     public void stop() throws Exception {
     }
-    
+
     public long getLastMessageBrokerSequenceId() throws IOException {
         return 0;
     }
@@ -142,28 +141,29 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
 
     protected MemoryMessageStore asMemoryMessageStore(Object value) {
         if (value instanceof MemoryMessageStore) {
-            return (MemoryMessageStore) value;
+            return (MemoryMessageStore)value;
         }
         log.warn("Expected an instance of MemoryMessageStore but was: " + value);
         return null;
     }
 
     /**
-     * @param usageManager The UsageManager that is controlling the broker's memory usage.
+     * @param usageManager The UsageManager that is controlling the broker's
+     *                memory usage.
      */
     public void setUsageManager(UsageManager usageManager) {
     }
-    
-    public String toString(){
+
+    public String toString() {
         return "MemoryPersistenceAdapter";
     }
 
-    public void setBrokerName(String brokerName){        
+    public void setBrokerName(String brokerName) {
     }
 
-    public void setDirectory(File dir){        
+    public void setDirectory(File dir) {
     }
 
-    public void checkpoint(boolean sync) throws IOException{        
+    public void checkpoint(boolean sync) throws IOException {
     }
 }

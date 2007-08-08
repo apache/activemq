@@ -22,18 +22,18 @@ import java.io.IOException;
 
 import org.apache.activemq.kaha.Marshaller;
 
-
 /**
  * Marshall an Integer
+ * 
  * @version $Revision: 1.10 $
  */
 public class IntegerMarshaller implements Marshaller<Integer> {
-   
-    public void writePayload(Integer object,DataOutput dataOut) throws IOException{
-       dataOut.writeInt(object.intValue());
+
+    public void writePayload(Integer object, DataOutput dataOut) throws IOException {
+        dataOut.writeInt(object.intValue());
     }
 
-    public Integer readPayload(DataInput dataIn) throws IOException{
+    public Integer readPayload(DataInput dataIn) throws IOException {
         return dataIn.readInt();
     }
 }

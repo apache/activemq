@@ -16,47 +16,48 @@
  */
 package org.apache.activemq.kaha;
 
-
 /**
-*Runtime exception for the Store
-* 
-* @version $Revision: 1.2 $
-*/
+ * Runtime exception for the Store
+ * 
+ * @version $Revision: 1.2 $
+ */
 
-public class RuntimeStoreException extends RuntimeException{
-    
-   
-    private static final long serialVersionUID=8807084681372365173L;
+public class RuntimeStoreException extends RuntimeException {
+
+    private static final long serialVersionUID = 8807084681372365173L;
 
     /**
      * Constructor
      */
-    public RuntimeStoreException(){
+    public RuntimeStoreException() {
         super();
     }
 
     /**
      * Constructor
+     * 
      * @param message
      */
-    public RuntimeStoreException(String message){
+    public RuntimeStoreException(String message) {
         super(message);
     }
 
     /**
      * Constructor
+     * 
      * @param message
      * @param cause
      */
-    public RuntimeStoreException(String message,Throwable cause){
-        super(message,cause);
+    public RuntimeStoreException(String message, Throwable cause) {
+        super(message, cause);
     }
 
     /**
      * Constructor
+     * 
      * @param cause
      */
-    public RuntimeStoreException(Throwable cause){
+    public RuntimeStoreException(Throwable cause) {
         super(cause);
     }
 }

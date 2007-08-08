@@ -16,40 +16,32 @@
  */
 package org.apache.activemq.openwire.v1;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import org.apache.activemq.openwire.*;
-import org.apache.activemq.command.*;
-
+import org.apache.activemq.command.JournalTopicAck;
+import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
 
 /**
  * Test case for the OpenWire marshalling for JournalTopicAck
- *
- *
- * NOTE!: This file is auto generated - do not modify!
- *        if you need to make a change, please see the modify the groovy scripts in the
- *        under src/gram/script and then use maven openwire:generate to regenerate 
- *        this file.
- *
+ * 
+ * 
+ * NOTE!: This file is auto generated - do not modify! if you need to make a
+ * change, please see the modify the groovy scripts in the under src/gram/script
+ * and then use maven openwire:generate to regenerate this file.
+ * 
  * @version $Revision$
  */
 public class JournalTopicAckTest extends DataFileGeneratorTestSupport {
 
-
     public static JournalTopicAckTest SINGLETON = new JournalTopicAckTest();
 
     public Object createObject() throws Exception {
-    		JournalTopicAck info = new JournalTopicAck();
-    		populateObject(info);
-    		return info;
+        JournalTopicAck info = new JournalTopicAck();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		JournalTopicAck info = (JournalTopicAck) object;
+        super.populateObject(object);
+        JournalTopicAck info = (JournalTopicAck)object;
         info.setDestination(createActiveMQDestination("Destination:1"));
         info.setMessageId(createMessageId("MessageId:2"));
         info.setMessageSequenceId(1);
@@ -57,5 +49,5 @@ public class JournalTopicAckTest extends DataFileGeneratorTestSupport {
         info.setClientId("ClientId:4");
         info.setTransactionId(createTransactionId("TransactionId:5"));
 
-            }
-        }
+    }
+}

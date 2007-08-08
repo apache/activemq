@@ -31,10 +31,11 @@ public class ConstantExpression implements Expression {
         public BooleanConstantExpression(Object value) {
             super(value);
         }
+
         public boolean matches(MessageEvaluationContext message) throws JMSException {
             Object object = evaluate(message);
-            return object!=null && object==Boolean.TRUE;            
-        }        
+            return object != null && object == Boolean.TRUE;
+        }
     }
 
     public static final BooleanConstantExpression NULL = new BooleanConstantExpression(null);
@@ -44,19 +45,19 @@ public class ConstantExpression implements Expression {
     private Object value;
 
     public static ConstantExpression createFromDecimal(String text) {
-    	    	
-    	// Strip off the 'l' or 'L' if needed.
-    	if( text.endsWith("l") || text.endsWith("L") )
-    		text = text.substring(0, text.length()-1);
 
-    	Number value;
-    	try {
-    		value = new Long(text);
-    	} catch ( NumberFormatException e) {
-    		// The number may be too big to fit in a long.
-        	value = new BigDecimal(text);    		
-    	}
-    	
+        // Strip off the 'l' or 'L' if needed.
+        if (text.endsWith("l") || text.endsWith("L"))
+            text = text.substring(0, text.length() - 1);
+
+        Number value;
+        try {
+            value = new Long(text);
+        } catch (NumberFormatException e) {
+            // The number may be too big to fit in a long.
+            value = new BigDecimal(text);
+        }
+
         long l = value.longValue();
         if (Integer.MIN_VALUE <= l && l <= Integer.MAX_VALUE) {
             value = Integer.valueOf(value.intValue());
@@ -97,7 +98,7 @@ public class ConstantExpression implements Expression {
 
     public Object getValue() {
         return value;
-    }    
+    }
 
     /**
      * @see java.lang.Object#toString()
@@ -107,17 +108,17 @@ public class ConstantExpression implements Expression {
             return "NULL";
         }
         if (value instanceof Boolean) {
-            return ((Boolean) value).booleanValue() ? "TRUE" : "FALSE";
+            return ((Boolean)value).booleanValue() ? "TRUE" : "FALSE";
         }
         if (value instanceof String) {
-            return encodeString((String) value);
+            return encodeString((String)value);
         }
         return value.toString();
     }
 
     /**
      * TODO: more efficient hashCode()
-     *
+     * 
      * @see java.lang.Object#hashCode()
      */
     public int hashCode() {
@@ -126,7 +127,7 @@ public class ConstantExpression implements Expression {
 
     /**
      * TODO: more efficient hashCode()
-     *
+     * 
      * @see java.lang.Object#equals(java.lang.Object)
      */
     public boolean equals(Object o) {
@@ -138,11 +139,10 @@ public class ConstantExpression implements Expression {
 
     }
 
-
     /**
-     * Encodes the value of string so that it looks like it would look like
-     * when it was provided in a selector.
-     *
+     * Encodes the value of string so that it looks like it would look like when
+     * it was provided in a selector.
+     * 
      * @param string
      * @return
      */
@@ -159,5 +159,5 @@ public class ConstantExpression implements Expression {
         b.append('\'');
         return b.toString();
     }
-    
+
 }

@@ -16,21 +16,19 @@
  */
 package org.apache.activemq.thread;
 
-
 /**
- *
  * @version $Revision: 1.1 $
  */
 class DedicatedTaskRunner implements TaskRunner {
 
     private final Task task;
     private final Thread thread;
-    
+
     private final Object mutex = new Object();
     private boolean threadTerminated;
     private boolean pending;
     private boolean shutdown;
-    
+
     public DedicatedTaskRunner(Task task, String name, int priority, boolean daemon) {
         this.task = task;
         thread = new Thread(name) {
@@ -43,81 +41,83 @@ class DedicatedTaskRunner implements TaskRunner {
         thread.setPriority(priority);
         thread.start();
     }
-    
+
     /**
      */
     public void wakeup() throws InterruptedException {
-        synchronized( mutex ) {
-            if( shutdown )
+        synchronized (mutex) {
+            if (shutdown)
                 return;
-            pending=true;            
+            pending = true;
             mutex.notifyAll();
         }
     }
 
     /**
      * shut down the task
-     * @param timeout 
-     * @throws InterruptedException 
+     * 
+     * @param timeout
+     * @throws InterruptedException
      */
-    public void shutdown(long timeout) throws InterruptedException{
-        synchronized(mutex){
-            shutdown=true;
-            pending=true;
+    public void shutdown(long timeout) throws InterruptedException {
+        synchronized (mutex) {
+            shutdown = true;
+            pending = true;
             mutex.notifyAll();
 
-            // Wait till the thread stops ( no need to wait if shutdown 
-            // is called from thread that is shutting down) 
-            if( Thread.currentThread()!=thread && !threadTerminated ){
+            // Wait till the thread stops ( no need to wait if shutdown
+            // is called from thread that is shutting down)
+            if (Thread.currentThread() != thread && !threadTerminated) {
                 mutex.wait(timeout);
             }
         }
-    }      
-    
+    }
+
     /**
      * shut down the task
-     * @throws InterruptedException 
+     * 
+     * @throws InterruptedException
      */
-    public void shutdown() throws InterruptedException{
+    public void shutdown() throws InterruptedException {
         shutdown(0);
     }
-    
+
     final void runTask() {
-        
+
         try {
-            while( true ) {
-             
-                synchronized (mutex) {   
-                    pending=false;
-                    if( shutdown ) {
+            while (true) {
+
+                synchronized (mutex) {
+                    pending = false;
+                    if (shutdown) {
                         return;
                     }
                 }
-                
-                if( !task.iterate() ) {
+
+                if (!task.iterate()) {
                     // wait to be notified.
                     synchronized (mutex) {
-                        if( shutdown ) {
+                        if (shutdown) {
                             return;
                         }
-                        while( !pending ) {
+                        while (!pending) {
                             mutex.wait();
                         }
                     }
                 }
-                
+
             }
-            
+
         } catch (InterruptedException e) {
             // Someone really wants this thread to die off.
             Thread.currentThread().interrupt();
         } finally {
-            // Make sure we notify any waiting threads that thread 
+            // Make sure we notify any waiting threads that thread
             // has terminated.
             synchronized (mutex) {
-                threadTerminated=true;
+                threadTerminated = true;
                 mutex.notifyAll();
-            }            
+            }
         }
     }
 }

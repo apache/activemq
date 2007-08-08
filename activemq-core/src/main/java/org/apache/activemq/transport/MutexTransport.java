@@ -19,45 +19,43 @@ package org.apache.activemq.transport;
 import java.io.IOException;
 import org.apache.activemq.command.ShutdownInfo;
 
-
-
 /**
  * @version $Revision$
  */
 public class MutexTransport extends TransportFilter {
 
     private final Object writeMutex = new Object();
-    
+
     public MutexTransport(Transport next) {
         super(next);
     }
 
     public FutureResponse asyncRequest(Object command, ResponseCallback responseCallback) throws IOException {
-        synchronized(writeMutex) {
+        synchronized (writeMutex) {
             return next.asyncRequest(command, null);
         }
     }
 
-    public void oneway(Object command) throws IOException{
-        synchronized(writeMutex){
+    public void oneway(Object command) throws IOException {
+        synchronized (writeMutex) {
             next.oneway(command);
         }
     }
 
     public Object request(Object command) throws IOException {
-        synchronized(writeMutex) {
+        synchronized (writeMutex) {
             return next.request(command);
         }
     }
-    
-    public Object request(Object command,int timeout) throws IOException {
-        synchronized(writeMutex){
-            return next.request(command,timeout);
+
+    public Object request(Object command, int timeout) throws IOException {
+        synchronized (writeMutex) {
+            return next.request(command, timeout);
         }
     }
-    
+
     public String toString() {
         return next.toString();
     }
-    
+
 }

@@ -25,37 +25,38 @@ import org.apache.activemq.wireformat.WireFormatFactory;
  */
 public class OpenWireFormatFactory implements WireFormatFactory {
 
-	//
-	// The default values here are what the wire format changes to after a default negotiation.
-	//
-	
-    private int version=OpenWireFormat.DEFAULT_VERSION;
-    private boolean stackTraceEnabled=true;
-    private boolean tcpNoDelayEnabled=true;
-    private boolean cacheEnabled=true;
-    private boolean tightEncodingEnabled=true;
-    private boolean sizePrefixDisabled=false;
-    private long maxInactivityDuration=30*1000;
-    private int cacheSize=1024;
-    
+    //
+    // The default values here are what the wire format changes to after a
+    // default negotiation.
+    //
+
+    private int version = OpenWireFormat.DEFAULT_VERSION;
+    private boolean stackTraceEnabled = true;
+    private boolean tcpNoDelayEnabled = true;
+    private boolean cacheEnabled = true;
+    private boolean tightEncodingEnabled = true;
+    private boolean sizePrefixDisabled = false;
+    private long maxInactivityDuration = 30 * 1000;
+    private int cacheSize = 1024;
+
     public WireFormat createWireFormat() {
-		WireFormatInfo info = new WireFormatInfo();
-		info.setVersion(version);
-		
+        WireFormatInfo info = new WireFormatInfo();
+        info.setVersion(version);
+
         try {
-			info.setStackTraceEnabled(stackTraceEnabled);
-			info.setCacheEnabled(cacheEnabled);
-			info.setTcpNoDelayEnabled(tcpNoDelayEnabled);
-			info.setTightEncodingEnabled(tightEncodingEnabled);
-			info.setSizePrefixDisabled(sizePrefixDisabled);
+            info.setStackTraceEnabled(stackTraceEnabled);
+            info.setCacheEnabled(cacheEnabled);
+            info.setTcpNoDelayEnabled(tcpNoDelayEnabled);
+            info.setTightEncodingEnabled(tightEncodingEnabled);
+            info.setSizePrefixDisabled(sizePrefixDisabled);
             info.seMaxInactivityDuration(maxInactivityDuration);
             info.setCacheSize(cacheSize);
-		} catch (Exception e) {
-			IllegalStateException ise = new IllegalStateException("Could not configure WireFormatInfo");
+        } catch (Exception e) {
+            IllegalStateException ise = new IllegalStateException("Could not configure WireFormatInfo");
             ise.initCause(e);
             throw ise;
-		}
-		
+        }
+
         OpenWireFormat f = new OpenWireFormat();
         f.setPreferedWireFormatInfo(info);
         return f;
@@ -101,13 +102,13 @@ public class OpenWireFormatFactory implements WireFormatFactory {
         this.tightEncodingEnabled = tightEncodingEnabled;
     }
 
-	public boolean isSizePrefixDisabled() {
-		return sizePrefixDisabled;
-	}
+    public boolean isSizePrefixDisabled() {
+        return sizePrefixDisabled;
+    }
 
-	public void setSizePrefixDisabled(boolean sizePrefixDisabled) {
-		this.sizePrefixDisabled = sizePrefixDisabled;
-	}
+    public void setSizePrefixDisabled(boolean sizePrefixDisabled) {
+        this.sizePrefixDisabled = sizePrefixDisabled;
+    }
 
     public long getMaxInactivityDuration() {
         return maxInactivityDuration;
@@ -117,11 +118,11 @@ public class OpenWireFormatFactory implements WireFormatFactory {
         this.maxInactivityDuration = maxInactivityDuration;
     }
 
-	public int getCacheSize() {
-		return cacheSize;
-	}
+    public int getCacheSize() {
+        return cacheSize;
+    }
 
-	public void setCacheSize(int cacheSize) {
-		this.cacheSize = cacheSize;
-	}
+    public void setCacheSize(int cacheSize) {
+        this.cacheSize = cacheSize;
+    }
 }

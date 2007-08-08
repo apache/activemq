@@ -18,27 +18,25 @@ package org.apache.activemq.kaha.impl;
 
 import java.io.IOException;
 
-
-
 /**
-* Exception thrown if the store is in use by another application
-* 
-* @version $Revision: 1.1.1.1 $
-*/
-public class StoreLockedExcpetion extends IOException{
+ * Exception thrown if the store is in use by another application
+ * 
+ * @version $Revision: 1.1.1.1 $
+ */
+public class StoreLockedExcpetion extends IOException {
 
-    private static final long serialVersionUID=3857646689671366926L;
+    private static final long serialVersionUID = 3857646689671366926L;
 
     /**
      * Default Constructor
      */
-    public StoreLockedExcpetion(){
+    public StoreLockedExcpetion() {
     }
 
     /**
      * @param s
      */
-    public StoreLockedExcpetion(String s){
+    public StoreLockedExcpetion(String s) {
         super(s);
     }
 }

@@ -27,29 +27,28 @@ import org.apache.activemq.state.CommandVisitor;
  */
 public class TransactionInfo extends BaseCommand {
 
-    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.TRANSACTION_INFO;
-
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.TRANSACTION_INFO;
 
     public static final byte BEGIN = 0;
-    public static final byte PREPARE=1; 
-    public static final byte COMMIT_ONE_PHASE=2; 
-    public static final byte COMMIT_TWO_PHASE=3; 
-    public static final byte ROLLBACK=4; 
-    public static final byte RECOVER=5; 
-    public static final byte FORGET=6; 
-    public static final byte END=7; 
-    
+    public static final byte PREPARE = 1;
+    public static final byte COMMIT_ONE_PHASE = 2;
+    public static final byte COMMIT_TWO_PHASE = 3;
+    public static final byte ROLLBACK = 4;
+    public static final byte RECOVER = 5;
+    public static final byte FORGET = 6;
+    public static final byte END = 7;
+
     protected byte type;
     protected ConnectionId connectionId;
     protected TransactionId transactionId;
-    
-    public TransactionInfo() {        
+
+    public TransactionInfo() {
     }
-    
+
     public TransactionInfo(ConnectionId connectionId, TransactionId transactionId, byte type) {
-        this.connectionId=connectionId;
-        this.transactionId=transactionId;
-        this.type=type;
+        this.connectionId = connectionId;
+        this.transactionId = transactionId;
+        this.type = type;
     }
 
     public byte getDataStructureType() {
@@ -58,20 +57,22 @@ public class TransactionInfo extends BaseCommand {
 
     /**
      * @openwire:property version=1 cache=true
-     */    
+     */
     public ConnectionId getConnectionId() {
         return connectionId;
     }
+
     public void setConnectionId(ConnectionId connectionId) {
         this.connectionId = connectionId;
     }
 
     /**
      * @openwire:property version=1 cache=true
-     */    
+     */
     public TransactionId getTransactionId() {
         return transactionId;
-    }    
+    }
+
     public void setTransactionId(TransactionId transactionId) {
         this.transactionId = transactionId;
     }
@@ -81,13 +82,14 @@ public class TransactionInfo extends BaseCommand {
      */
     public byte getType() {
         return type;
-    }    
+    }
+
     public void setType(byte type) {
         this.type = type;
     }
 
     public Response visit(CommandVisitor visitor) throws Exception {
-        switch( type ) {
+        switch (type) {
         case TransactionInfo.BEGIN:
             return visitor.processBeginTransaction(this);
         case TransactionInfo.END:
@@ -105,7 +107,7 @@ public class TransactionInfo extends BaseCommand {
         case TransactionInfo.FORGET:
             return visitor.processForgetTransaction(this);
         default:
-            throw new IOException("Transaction info type unknown: "+type);
+            throw new IOException("Transaction info type unknown: " + type);
         }
     }
 

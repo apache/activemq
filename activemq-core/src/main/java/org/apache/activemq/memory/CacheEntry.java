@@ -17,16 +17,16 @@
 package org.apache.activemq.memory;
 
 public class CacheEntry {
-    
-    public final Object key;    
+
+    public final Object key;
     public final Object value;
-    
+
     public CacheEntry next;
     public CacheEntry previous;
     public CacheEntryList owner;
-    
+
     public CacheEntry(Object key, Object value) {
-        this.key=key;
+        this.key = key;
         this.value = value;
     }
 
@@ -36,19 +36,19 @@ public class CacheEntry {
      * @return false if you are trying to remove the tail pointer.
      */
     public boolean remove() {
-                
+
         // Cannot remove if this is a tail pointer.
         // Or not linked.
-        if( owner==null || this.key==null || this.next==null )
+        if (owner == null || this.key == null || this.next == null)
             return false;
-        
-        synchronized( owner.tail ) {            
+
+        synchronized (owner.tail) {
             this.next.previous = this.previous;
             this.previous.next = this.next;
             this.owner = null;
             this.next = this.previous = null;
         }
-        
+
         return true;
     }
 

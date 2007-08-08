@@ -60,12 +60,12 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.21 $
  */
 public class Topic implements Destination {
-    private static final Log log = LogFactory.getLog(Topic.class);
+    private static final Log LOG = LogFactory.getLog(Topic.class);
     protected final ActiveMQDestination destination;
     protected final CopyOnWriteArrayList consumers = new CopyOnWriteArrayList();
     protected final Valve dispatchValve = new Valve(true);
-    protected final TopicMessageStore store;// this could be NULL! (If an
-    // advsiory)
+    // this could be NULL! (If an advisory)
+    protected final TopicMessageStore store;
     protected final UsageManager usageManager;
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
 
@@ -349,8 +349,8 @@ public class Topic implements Destination {
                 // The usage manager could have delayed us by the time
                 // we unblock the message could have expired..
                 if (message.isExpired()) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("Expired message: " + message);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Expired message: " + message);
                     }
                     return;
                 }
@@ -468,7 +468,7 @@ public class Topic implements Destination {
                 }
             }
         } catch (Throwable e) {
-            log.warn("Failed to browse Topic: " + getActiveMQDestination().getPhysicalName(), e);
+            LOG.warn("Failed to browse Topic: " + getActiveMQDestination().getPhysicalName(), e);
         }
         return (Message[])result.toArray(new Message[result.size()]);
     }

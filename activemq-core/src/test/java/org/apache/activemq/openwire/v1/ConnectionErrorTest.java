@@ -16,42 +16,33 @@
  */
 package org.apache.activemq.openwire.v1;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import org.apache.activemq.openwire.*;
-import org.apache.activemq.command.*;
-
+import org.apache.activemq.command.ConnectionError;
 
 /**
  * Test case for the OpenWire marshalling for ConnectionError
- *
- *
- * NOTE!: This file is auto generated - do not modify!
- *        if you need to make a change, please see the modify the groovy scripts in the
- *        under src/gram/script and then use maven openwire:generate to regenerate 
- *        this file.
- *
+ * 
+ * 
+ * NOTE!: This file is auto generated - do not modify! if you need to make a
+ * change, please see the modify the groovy scripts in the under src/gram/script
+ * and then use maven openwire:generate to regenerate this file.
+ * 
  * @version $Revision$
  */
 public class ConnectionErrorTest extends BaseCommandTestSupport {
 
-
     public static ConnectionErrorTest SINGLETON = new ConnectionErrorTest();
 
     public Object createObject() throws Exception {
-    		ConnectionError info = new ConnectionError();
-    		populateObject(info);
-    		return info;
+        ConnectionError info = new ConnectionError();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		ConnectionError info = (ConnectionError) object;
+        super.populateObject(object);
+        ConnectionError info = (ConnectionError)object;
         info.setException(createThrowable("Exception:1"));
         info.setConnectionId(createConnectionId("ConnectionId:2"));
 
-            }
-        }
+    }
+}

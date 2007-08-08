@@ -24,24 +24,23 @@ import javax.jms.JMSException;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.util.JMSExceptionSupport;
 
-
 /**
  * Represents a filter which only operates on Destinations
- *
+ * 
  * @version $Revision: 1.3 $
  */
 public abstract class DestinationFilter implements BooleanExpression {
-    
+
     public static final String ANY_DESCENDENT = ">";
     public static final String ANY_CHILD = "*";
 
     public Object evaluate(MessageEvaluationContext message) throws JMSException {
         return matches(message) ? Boolean.TRUE : Boolean.FALSE;
     }
-    
+
     public boolean matches(MessageEvaluationContext message) throws JMSException {
         try {
-            if( message.isDropped() )
+            if (message.isDropped())
                 return false;
             return matches(message.getMessage().getDestination());
         } catch (IOException e) {
@@ -61,8 +60,7 @@ public abstract class DestinationFilter implements BooleanExpression {
             String lastPath = paths[idx];
             if (lastPath.equals(ANY_DESCENDENT)) {
                 return new PrefixDestinationFilter(paths);
-            }
-            else {
+            } else {
                 while (idx >= 0) {
                     lastPath = paths[idx--];
                     if (lastPath.equals(ANY_CHILD)) {

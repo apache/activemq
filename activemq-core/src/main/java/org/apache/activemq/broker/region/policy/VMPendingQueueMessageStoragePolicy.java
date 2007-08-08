@@ -20,20 +20,21 @@ import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
 import org.apache.activemq.kaha.Store;
 
 /**
- * Creates a VMPendingMessageCursor
- *  *
- * @org.apache.xbean.XBean element="vmQueueCursor" description="Pending messages held in the JVM"
+ * Creates a VMPendingMessageCursor *
+ * 
+ * @org.apache.xbean.XBean element="vmQueueCursor" description="Pending messages
+ *                         held in the JVM"
  * 
  * @version $Revision$
  */
-public class VMPendingQueueMessageStoragePolicy implements PendingQueueMessageStoragePolicy{
+public class VMPendingQueueMessageStoragePolicy implements PendingQueueMessageStoragePolicy {
 
     /**
      * @param queue
      * @param tmpStore
-     * @return the cursor 
+     * @return the cursor
      */
-    public PendingMessageCursor getQueuePendingMessageCursor(Queue queue,Store tmpStore){
+    public PendingMessageCursor getQueuePendingMessageCursor(Queue queue, Store tmpStore) {
         return new VMPendingMessageCursor();
     }
 }

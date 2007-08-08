@@ -24,14 +24,11 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Manages the thread pool for long running tasks.
- * 
- * Long running tasks are not always active but when they are active, they may
- * need a few iterations of processing for them to become idle. The manager
- * ensures that each task is processes but that no one task overtakes the
- * system.
- * 
- * This is kina like cooperative multitasking.
+ * Manages the thread pool for long running tasks. Long running tasks are not
+ * always active but when they are active, they may need a few iterations of
+ * processing for them to become idle. The manager ensures that each task is
+ * processes but that no one task overtakes the system. This is kina like
+ * cooperative multitasking.
  * 
  * @version $Revision: 1.5 $
  */
@@ -48,15 +45,17 @@ public class TaskRunnerFactory {
     }
 
     public TaskRunnerFactory(String name, int priority, boolean daemon, int maxIterationsPerRun) {
-        
+
         this.name = name;
         this.priority = priority;
         this.daemon = daemon;
         this.maxIterationsPerRun = maxIterationsPerRun;
-        
-        // If your OS/JVM combination has a good thread model, you may want to avoid 
-        // using a thread pool to run tasks and use a DedicatedTaskRunner instead.
-        if( "true".equals(System.getProperty("org.apache.activemq.UseDedicatedTaskRunner")) ) {
+
+        // If your OS/JVM combination has a good thread model, you may want to
+        // avoid
+        // using a thread pool to run tasks and use a DedicatedTaskRunner
+        // instead.
+        if ("true".equals(System.getProperty("org.apache.activemq.UseDedicatedTaskRunner"))) {
             executor = null;
         } else {
             executor = createDefaultExecutor();
@@ -68,15 +67,15 @@ public class TaskRunnerFactory {
             executor.shutdownNow();
         }
     }
-    
+
     public TaskRunner createTaskRunner(Task task, String name) {
-        if( executor!=null ) {
+        if (executor != null) {
             return new PooledTaskRunner(executor, task, maxIterationsPerRun);
         } else {
             return new DedicatedTaskRunner(task, name, priority, daemon);
         }
     }
-    
+
     protected ExecutorService createDefaultExecutor() {
         ThreadPoolExecutor rc = new ThreadPoolExecutor(1, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new SynchronousQueue(), new ThreadFactory() {
             public Thread newThread(Runnable runnable) {
@@ -86,7 +85,7 @@ public class TaskRunnerFactory {
                 return thread;
             }
         });
-        //rc.allowCoreThreadTimeOut(true);
+        // rc.allowCoreThreadTimeOut(true);
         return rc;
     }
 

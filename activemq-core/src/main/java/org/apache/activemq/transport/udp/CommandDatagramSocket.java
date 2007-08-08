@@ -48,8 +48,8 @@ public class CommandDatagramSocket extends CommandChannelSupport {
     private Object readLock = new Object();
     private Object writeLock = new Object();
 
-    public CommandDatagramSocket(UdpTransport transport, OpenWireFormat wireFormat, int datagramSize,
-            SocketAddress targetAddress, DatagramHeaderMarshaller headerMarshaller, DatagramSocket channel) {
+    public CommandDatagramSocket(UdpTransport transport, OpenWireFormat wireFormat, int datagramSize, SocketAddress targetAddress, DatagramHeaderMarshaller headerMarshaller,
+                                 DatagramSocket channel) {
         super(transport, wireFormat, datagramSize, targetAddress, headerMarshaller);
         this.channel = channel;
     }
@@ -73,7 +73,7 @@ public class CommandDatagramSocket extends CommandChannelSupport {
                 DataInputStream dataIn = new DataInputStream(new ByteArrayInputStream(datagram.getData()));
 
                 from = headerMarshaller.createEndpoint(datagram, dataIn);
-                answer = (Command) wireFormat.unmarshal(dataIn);
+                answer = (Command)wireFormat.unmarshal(dataIn);
                 break;
             }
         }
@@ -100,8 +100,7 @@ public class CommandDatagramSocket extends CommandChannelSupport {
 
             if (remaining(writeBuffer) >= 0) {
                 sendWriteBuffer(address, writeBuffer, command.getCommandId());
-            }
-            else {
+            } else {
                 // lets split the command up into chunks
                 byte[] data = writeBuffer.toByteArray();
                 boolean lastFragment = false;
@@ -125,15 +124,14 @@ public class CommandDatagramSocket extends CommandChannelSupport {
                     // lets remove the header of the partial command
                     // which is the byte for the type and an int for the size of
                     // the byte[]
-                    chunkSize -= 1 // the data type
-                    + 4 // the command ID
-                    + 4; // the size of the partial data
+
+                    // data type + the command ID + size of the partial data
+                    chunkSize -= 1 + 4 + 4;
 
                     // the boolean flags
                     if (bs != null) {
                         chunkSize -= bs.marshalledSize();
-                    }
-                    else {
+                    } else {
                         chunkSize -= 1;
                     }
 
@@ -150,8 +148,7 @@ public class CommandDatagramSocket extends CommandChannelSupport {
 
                     if (lastFragment) {
                         dataOut.write(LastPartialCommand.DATA_STRUCTURE_TYPE);
-                    }
-                    else {
+                    } else {
                         dataOut.write(PartialCommand.DATA_STRUCTURE_TYPE);
                     }
 
@@ -165,7 +162,7 @@ public class CommandDatagramSocket extends CommandChannelSupport {
                     }
                     dataOut.writeInt(commandId);
                     if (bs == null) {
-                        dataOut.write((byte) 1);
+                        dataOut.write((byte)1);
                     }
 
                     // size of byte array
@@ -191,14 +188,12 @@ public class CommandDatagramSocket extends CommandChannelSupport {
 
     // Implementation methods
     // -------------------------------------------------------------------------
-    protected void sendWriteBuffer(SocketAddress address, ByteArrayOutputStream writeBuffer, int commandId)
-            throws IOException {
+    protected void sendWriteBuffer(SocketAddress address, ByteArrayOutputStream writeBuffer, int commandId) throws IOException {
         byte[] data = writeBuffer.toByteArray();
         sendWriteBuffer(commandId, address, data, false);
     }
 
-    protected void sendWriteBuffer(int commandId, SocketAddress address, byte[] data, boolean redelivery)
-            throws IOException {
+    protected void sendWriteBuffer(int commandId, SocketAddress address, byte[] data, boolean redelivery) throws IOException {
         // lets put the datagram into the replay buffer first to prevent timing
         // issues
         ReplayBuffer bufferCache = getReplayBuffer();
@@ -216,10 +211,9 @@ public class CommandDatagramSocket extends CommandChannelSupport {
 
     public void sendBuffer(int commandId, Object buffer) throws IOException {
         if (buffer != null) {
-            byte[] data = (byte[]) buffer;
+            byte[] data = (byte[])buffer;
             sendWriteBuffer(commandId, replayAddress, data, true);
-        }
-        else {
+        } else {
             if (log.isWarnEnabled()) {
                 log.warn("Request for buffer: " + commandId + " is no longer present");
             }

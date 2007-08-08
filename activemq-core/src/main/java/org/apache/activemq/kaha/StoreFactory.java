@@ -25,28 +25,29 @@ import org.apache.activemq.kaha.impl.KahaStore;
  * 
  * @version $Revision: 1.2 $
  */
-public class StoreFactory{
-   
+public class StoreFactory {
 
     /**
      * open or create a Store
+     * 
      * @param name
      * @param mode
      * @return the opened/created store
      * @throws IOException
      */
-    public static Store open(String name,String mode) throws IOException{
-        return new KahaStore(name,mode);
+    public static Store open(String name, String mode) throws IOException {
+        return new KahaStore(name, mode);
     }
-    
+
     /**
      * Delete a database
+     * 
      * @param name of the database
      * @return true if successful
-     * @throws IOException 
+     * @throws IOException
      */
-    public static boolean delete(String name) throws IOException{
-        KahaStore store = new KahaStore(name,"rw");
+    public static boolean delete(String name) throws IOException {
+        KahaStore store = new KahaStore(name, "rw");
         return store.delete();
     }
 }

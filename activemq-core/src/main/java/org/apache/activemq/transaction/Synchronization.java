@@ -17,13 +17,17 @@
 package org.apache.activemq.transaction;
 
 /**
- * 
  * @version $Revision$
  */
 public class Synchronization {
 
-    public void beforeEnd() throws Exception{}
-    public void afterCommit() throws Exception{}
-    public void afterRollback() throws Exception{}
-    
+    public void beforeEnd() throws Exception {
+    }
+
+    public void afterCommit() throws Exception {
+    }
+
+    public void afterRollback() throws Exception {
+    }
+
 }

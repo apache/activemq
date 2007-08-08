@@ -26,101 +26,99 @@ import java.nio.ByteBuffer;
 final public class BooleanStream {
 
     byte data[] = new byte[48];
-    short arrayLimit;    
-    short arrayPos;    
+    short arrayLimit;
+    short arrayPos;
     byte bytePos;
-    
+
     public boolean readBoolean() throws IOException {
         assert arrayPos <= arrayLimit;
         byte b = data[arrayPos];
-        boolean rc = ((b>>bytePos)&0x01)!=0;
+        boolean rc = ((b >> bytePos) & 0x01) != 0;
         bytePos++;
-        if( bytePos >= 8 ) {
-            bytePos=0;
+        if (bytePos >= 8) {
+            bytePos = 0;
             arrayPos++;
         }
         return rc;
     }
-    
+
     public void writeBoolean(boolean value) throws IOException {
-        if( bytePos == 0 ) {
+        if (bytePos == 0) {
             arrayLimit++;
-            if( arrayLimit >= data.length ) {
+            if (arrayLimit >= data.length) {
                 // re-grow the array.
-                byte d[] = new byte[data.length*2];
+                byte d[] = new byte[data.length * 2];
                 System.arraycopy(data, 0, d, 0, data.length);
                 data = d;
             }
         }
-        if( value ) {
-            data[arrayPos] |= (0x01 << bytePos); 
+        if (value) {
+            data[arrayPos] |= (0x01 << bytePos);
         }
         bytePos++;
-        if( bytePos >= 8 ) {
-            bytePos=0;
+        if (bytePos >= 8) {
+            bytePos = 0;
             arrayPos++;
         }
     }
-    
+
     public void marshal(DataOutput dataOut) throws IOException {
-        if( arrayLimit < 64 ) {
+        if (arrayLimit < 64) {
             dataOut.writeByte(arrayLimit);
-        } else if( arrayLimit < 256 ) { // max value of unsigned byte
+        } else if (arrayLimit < 256) { // max value of unsigned byte
             dataOut.writeByte(0xC0);
-            dataOut.writeByte(arrayLimit);            
+            dataOut.writeByte(arrayLimit);
         } else {
             dataOut.writeByte(0x80);
-            dataOut.writeShort(arrayLimit);            
+            dataOut.writeShort(arrayLimit);
         }
-        
+
         dataOut.write(data, 0, arrayLimit);
         clear();
     }
-    
+
     public void marshal(ByteBuffer dataOut) {
-        if( arrayLimit < 64 ) {
-            dataOut.put((byte) arrayLimit);
-        } else if( arrayLimit < 256 ) { // max value of unsigned byte
-            dataOut.put((byte) 0xC0);
-            dataOut.put((byte) arrayLimit);            
+        if (arrayLimit < 64) {
+            dataOut.put((byte)arrayLimit);
+        } else if (arrayLimit < 256) { // max value of unsigned byte
+            dataOut.put((byte)0xC0);
+            dataOut.put((byte)arrayLimit);
         } else {
-            dataOut.put((byte) 0x80);
-            dataOut.putShort(arrayLimit);            
+            dataOut.put((byte)0x80);
+            dataOut.putShort(arrayLimit);
         }
-        
+
         dataOut.put(data, 0, arrayLimit);
     }
 
-
     public void unmarshal(DataInput dataIn) throws IOException {
-        
-        arrayLimit = (short) (dataIn.readByte() & 0xFF);
-        if ( arrayLimit == 0xC0 ) {
+
+        arrayLimit = (short)(dataIn.readByte() & 0xFF);
+        if (arrayLimit == 0xC0) {
             arrayLimit = (short)(dataIn.readByte() & 0xFF);
-        } else if( arrayLimit == 0x80 ) {
+        } else if (arrayLimit == 0x80) {
             arrayLimit = dataIn.readShort();
-        } 
-        if( data.length < arrayLimit ) {
+        }
+        if (data.length < arrayLimit) {
             data = new byte[arrayLimit];
         }
         dataIn.readFully(data, 0, arrayLimit);
         clear();
     }
-    
+
     public void clear() {
-        arrayPos=0;
-        bytePos=0;
+        arrayPos = 0;
+        bytePos = 0;
     }
 
     public int marshalledSize() {
-        if( arrayLimit < 64 ) {
-            return 1+arrayLimit;
+        if (arrayLimit < 64) {
+            return 1 + arrayLimit;
         } else if (arrayLimit < 256) {
-            return 2+arrayLimit;
+            return 2 + arrayLimit;
         } else {
-            return 3+arrayLimit;
+            return 3 + arrayLimit;
         }
     }
-
 
 }

@@ -41,10 +41,9 @@ import javax.jms.TopicSession;
  * itself to the sessionPool.
  * 
  * <b>NOTE</b> this implementation is only intended for use when sending
- * messages.
- * It does not deal with pooling of consumers; for that look at a library like 
- * <a href="http://jencks.org/">Jencks</a> such as in
- * <a href="http://jencks.org/Message+Driven+POJOs">this example</a>
+ * messages. It does not deal with pooling of consumers; for that look at a
+ * library like <a href="http://jencks.org/">Jencks</a> such as in <a
+ * href="http://jencks.org/Message+Driven+POJOs">this example</a>
  * 
  * @version $Revision: 1.1.1.1 $
  */
@@ -66,10 +65,10 @@ public class PooledConnection implements TopicConnection, QueueConnection {
     }
 
     public void close() throws JMSException {
-    	if( this.pool!=null ) {
-	        this.pool.decrementReferenceCount();
-	        this.pool = null;
-    	}
+        if (this.pool != null) {
+            this.pool.decrementReferenceCount();
+            this.pool = null;
+        }
     }
 
     public void start() throws JMSException {
@@ -81,17 +80,22 @@ public class PooledConnection implements TopicConnection, QueueConnection {
         stopped = true;
     }
 
-    public ConnectionConsumer createConnectionConsumer(Destination destination, String selector, ServerSessionPool serverSessionPool, int maxMessages)
-            throws JMSException {
-        return getConnection().createConnectionConsumer(destination, selector, serverSessionPool, maxMessages);
+    public ConnectionConsumer createConnectionConsumer(Destination destination, String selector,
+                                                       ServerSessionPool serverSessionPool, int maxMessages)
+        throws JMSException {
+        return getConnection()
+            .createConnectionConsumer(destination, selector, serverSessionPool, maxMessages);
     }
 
-    public ConnectionConsumer createConnectionConsumer(Topic topic, String s, ServerSessionPool serverSessionPool, int maxMessages) throws JMSException {
+    public ConnectionConsumer createConnectionConsumer(Topic topic, String s,
+                                                       ServerSessionPool serverSessionPool, int maxMessages)
+        throws JMSException {
         return getConnection().createConnectionConsumer(topic, s, serverSessionPool, maxMessages);
     }
 
-    public ConnectionConsumer createDurableConnectionConsumer(Topic topic, String selector, String s1, ServerSessionPool serverSessionPool, int i)
-            throws JMSException {
+    public ConnectionConsumer createDurableConnectionConsumer(Topic topic, String selector, String s1,
+                                                              ServerSessionPool serverSessionPool, int i)
+        throws JMSException {
         return getConnection().createDurableConnectionConsumer(topic, selector, s1, serverSessionPool, i);
     }
 
@@ -115,18 +119,20 @@ public class PooledConnection implements TopicConnection, QueueConnection {
         getConnection().setClientID(clientID);
     }
 
-    public ConnectionConsumer createConnectionConsumer(Queue queue, String selector, ServerSessionPool serverSessionPool, int maxMessages) throws JMSException {
+    public ConnectionConsumer createConnectionConsumer(Queue queue, String selector,
+                                                       ServerSessionPool serverSessionPool, int maxMessages)
+        throws JMSException {
         return getConnection().createConnectionConsumer(queue, selector, serverSessionPool, maxMessages);
     }
 
     // Session factory methods
     // -------------------------------------------------------------------------
     public QueueSession createQueueSession(boolean transacted, int ackMode) throws JMSException {
-        return (QueueSession) createSession(transacted, ackMode);
+        return (QueueSession)createSession(transacted, ackMode);
     }
 
     public TopicSession createTopicSession(boolean transacted, int ackMode) throws JMSException {
-        return (TopicSession) createSession(transacted, ackMode);
+        return (TopicSession)createSession(transacted, ackMode);
     }
 
     public Session createSession(boolean transacted, int ackMode) throws JMSException {
@@ -148,11 +154,11 @@ public class PooledConnection implements TopicConnection, QueueConnection {
     }
 
     protected ActiveMQSession createSession(SessionKey key) throws JMSException {
-        return (ActiveMQSession) getConnection().createSession(key.isTransacted(), key.getAckMode());
+        return (ActiveMQSession)getConnection().createSession(key.isTransacted(), key.getAckMode());
     }
-    
+
     public String toString() {
-        return "PooledConnection { "+pool+" }";
+        return "PooledConnection { " + pool + " }";
     }
 
 }

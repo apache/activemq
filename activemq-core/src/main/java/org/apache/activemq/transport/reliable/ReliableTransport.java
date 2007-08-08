@@ -54,8 +54,7 @@ public class ReliableTransport extends ResponseCorrelator {
         this.replayStrategy = replayStrategy;
     }
 
-    public ReliableTransport(Transport next, UdpTransport udpTransport)
-            throws IOException {
+    public ReliableTransport(Transport next, UdpTransport udpTransport) throws IOException {
         super(next, udpTransport.getSequenceGenerator());
         this.udpTransport = udpTransport;
         this.replayer = udpTransport.createReplayer();
@@ -70,14 +69,13 @@ public class ReliableTransport extends ResponseCorrelator {
         replay.setLastNakNumber(toCommandId);
         try {
             oneway(replay);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             getTransportListener().onException(e);
         }
     }
 
     public Object request(Object o) throws IOException {
-    	final Command command = (Command) o;
+        final Command command = (Command)o;
         FutureResponse response = asyncRequest(command, null);
         while (true) {
             Response result = response.getResult(requestTimeout);
@@ -89,7 +87,7 @@ public class ReliableTransport extends ResponseCorrelator {
     }
 
     public Object request(Object o, int timeout) throws IOException {
-    	final Command command = (Command) o;
+        final Command command = (Command)o;
         FutureResponse response = asyncRequest(command, null);
         while (timeout > 0) {
             int time = timeout;
@@ -107,14 +105,13 @@ public class ReliableTransport extends ResponseCorrelator {
     }
 
     public void onCommand(Object o) {
-    	Command command = (Command) o;
+        Command command = (Command)o;
         // lets pass wireformat through
         if (command.isWireFormatInfo()) {
             super.onCommand(command);
             return;
-        }
-        else if (command.getDataStructureType() == ReplayCommand.DATA_STRUCTURE_TYPE) {
-            replayCommands((ReplayCommand) command);
+        } else if (command.getDataStructureType() == ReplayCommand.DATA_STRUCTURE_TYPE) {
+            replayCommands((ReplayCommand)command);
             return;
         }
 
@@ -126,10 +123,10 @@ public class ReliableTransport extends ResponseCorrelator {
                 int nextCounter = actualCounter;
                 boolean empty = commands.isEmpty();
                 if (!empty) {
-                    Command nextAvailable = (Command) commands.first();
+                    Command nextAvailable = (Command)commands.first();
                     nextCounter = nextAvailable.getCommandId();
                 }
-                
+
                 try {
                     boolean keep = replayStrategy.onDroppedPackets(this, expectedCounter, actualCounter, nextCounter);
 
@@ -140,15 +137,14 @@ public class ReliableTransport extends ResponseCorrelator {
                         }
                         commands.add(command);
                     }
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     onException(e);
                 }
 
                 if (!empty) {
                     // lets see if the first item in the set is the next
                     // expected
-                    command = (Command) commands.first();
+                    command = (Command)commands.first();
                     valid = expectedCounter == command.getCommandId();
                     if (valid) {
                         commands.remove(command);
@@ -169,7 +165,7 @@ public class ReliableTransport extends ResponseCorrelator {
                 if (valid) {
                     // lets see if the first item in the set is the next
                     // expected
-                    command = (Command) commands.first();
+                    command = (Command)commands.first();
                     valid = expectedCounter == command.getCommandId();
                     if (valid) {
                         commands.remove(command);
@@ -288,8 +284,7 @@ public class ReliableTransport extends ResponseCorrelator {
             // TODO we could proactively remove ack'd stuff from the replay
             // buffer
             // if we only have a single client talking to us
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             onException(e);
         }
     }

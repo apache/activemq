@@ -33,31 +33,30 @@ import java.util.Set;
  */
 public class QueueRegion extends AbstractRegion {
 
-    
-
-    public QueueRegion(RegionBroker broker,DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory,
-            DestinationFactory destinationFactory) {
-        super(broker,destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
+    public QueueRegion(RegionBroker broker, DestinationStatistics destinationStatistics,
+                       UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory,
+                       DestinationFactory destinationFactory) {
+        super(broker, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
     }
 
     public String toString() {
-        return "QueueRegion: destinations=" + destinations.size() + ", subscriptions=" + subscriptions.size() + ", memory=" + memoryManager.getPercentUsage()
-                + "%";
+        return "QueueRegion: destinations=" + destinations.size() + ", subscriptions=" + subscriptions.size()
+               + ", memory=" + memoryManager.getPercentUsage() + "%";
     }
 
-    protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
+    protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info)
+        throws InvalidSelectorException {
         if (info.isBrowser()) {
-            return new QueueBrowserSubscription(broker,context, info);
-        }
-        else {
-            return new QueueSubscription(broker,context, info);
+            return new QueueBrowserSubscription(broker, context, info);
+        } else {
+            return new QueueSubscription(broker, context, info);
         }
     }
 
     protected Set getInactiveDestinations() {
         Set inactiveDestinations = super.getInactiveDestinations();
         for (Iterator iter = inactiveDestinations.iterator(); iter.hasNext();) {
-            ActiveMQDestination dest = (ActiveMQDestination) iter.next();
+            ActiveMQDestination dest = (ActiveMQDestination)iter.next();
             if (!dest.isQueue())
                 iter.remove();
         }

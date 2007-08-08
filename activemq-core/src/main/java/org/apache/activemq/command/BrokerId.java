@@ -37,10 +37,12 @@ public class BrokerId implements DataStructure {
     }
 
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || o.getClass() != BrokerId.class)
+        }
+        if (o == null || o.getClass() != BrokerId.class) {
             return false;
+        }
         BrokerId id = (BrokerId)o;
         return value.equals(id.value);
     }

@@ -24,22 +24,21 @@ import javax.jms.TextMessage;
  * @version $Revision: 1.4 $
  */
 public class JMSDurableTopicRedeliverTest extends JmsTopicRedeliverTest {
-    
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-            .getLog(JMSDurableTopicRedeliverTest.class);
-    
+
+    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(JMSDurableTopicRedeliverTest.class);
+
     protected void setUp() throws Exception {
         durable = true;
         super.setUp();
     }
-    
+
     /**
      * Sends and consumes the messages.
-     *
+     * 
      * @throws Exception
      */
     public void testRedeliverNewSession() throws Exception {
-        String text = "TEST: "+System.currentTimeMillis();
+        String text = "TEST: " + System.currentTimeMillis();
         Message sendMessage = session.createTextMessage(text);
 
         if (verbose) {
@@ -47,26 +46,26 @@ public class JMSDurableTopicRedeliverTest extends JmsTopicRedeliverTest {
         }
         producer.send(producerDestination, sendMessage);
 
-        //receive but don't acknowledge
+        // receive but don't acknowledge
         Message unackMessage = consumer.receive(1000);
         assertNotNull(unackMessage);
         String unackId = unackMessage.getJMSMessageID();
-        assertEquals(((TextMessage) unackMessage).getText(), text);
+        assertEquals(((TextMessage)unackMessage).getText(), text);
         assertFalse(unackMessage.getJMSRedelivered());
-        assertEquals(unackMessage.getIntProperty("JMSXDeliveryCount"),1);
+        assertEquals(unackMessage.getIntProperty("JMSXDeliveryCount"), 1);
         consumeSession.close();
         consumer.close();
 
-        //receive then acknowledge
+        // receive then acknowledge
         consumeSession = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
         consumer = createConsumer();
         Message ackMessage = consumer.receive(1000);
         assertNotNull(ackMessage);
         ackMessage.acknowledge();
         String ackId = ackMessage.getJMSMessageID();
-        assertEquals(((TextMessage) ackMessage).getText(), text);
+        assertEquals(((TextMessage)ackMessage).getText(), text);
         assertTrue(ackMessage.getJMSRedelivered());
-        assertEquals(ackMessage.getIntProperty("JMSXDeliveryCount"),2);
+        assertEquals(ackMessage.getIntProperty("JMSXDeliveryCount"), 2);
         assertEquals(unackId, ackId);
         consumeSession.close();
         consumer.close();

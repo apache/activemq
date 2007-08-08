@@ -38,34 +38,36 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.IOExceptionSupport;
 
 /**
- * Tracks the state of a connection so a newly established transport can 
- * be re-initialized to the state that was tracked.
+ * Tracks the state of a connection so a newly established transport can be
+ * re-initialized to the state that was tracked.
  * 
  * @version $Revision$
  */
 public class ConnectionStateTracker extends CommandVisitorAdapter {
 
-	private final static Tracked TRACKED_RESPONSE_MARKER = new Tracked(null);
-    
-	private boolean trackTransactions = false;
-    
-    private boolean restoreSessions=true;
-    private boolean restoreConsumers=true;
-    private boolean restoreProducers=true;
-    private boolean restoreTransaction=true;
-    
+    private final static Tracked TRACKED_RESPONSE_MARKER = new Tracked(null);
+
+    private boolean trackTransactions = false;
+
+    private boolean restoreSessions = true;
+    private boolean restoreConsumers = true;
+    private boolean restoreProducers = true;
+    private boolean restoreTransaction = true;
+
     protected final ConcurrentHashMap connectionStates = new ConcurrentHashMap();
-        
+
     private class RemoveTransactionAction implements Runnable {
-		private final TransactionInfo info;
-		public RemoveTransactionAction(TransactionInfo info) {
-			this.info = info;
-		}
-		public void run() {
-	        ConnectionId connectionId = info.getConnectionId();
-	        ConnectionState cs = (ConnectionState) connectionStates.get(connectionId);
-	        cs.removeTransactionState(info.getTransactionId());
-		}
+        private final TransactionInfo info;
+
+        public RemoveTransactionAction(TransactionInfo info) {
+            this.info = info;
+        }
+
+        public void run() {
+            ConnectionId connectionId = info.getConnectionId();
+            ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+            cs.removeTransactionState(info.getTransactionId());
+        }
     }
 
     /**
@@ -77,40 +79,40 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
      */
     public Tracked track(Command command) throws IOException {
         try {
-        	return (Tracked) command.visit(this);
+            return (Tracked)command.visit(this);
         } catch (IOException e) {
             throw e;
         } catch (Throwable e) {
             throw IOExceptionSupport.create(e);
         }
-    }   
-    
-    public void restore( Transport transport ) throws IOException {
+    }
+
+    public void restore(Transport transport) throws IOException {
         // Restore the connections.
         for (Iterator iter = connectionStates.values().iterator(); iter.hasNext();) {
-            ConnectionState connectionState = (ConnectionState) iter.next();
+            ConnectionState connectionState = (ConnectionState)iter.next();
             transport.oneway(connectionState.getInfo());
             restoreTempDestinations(transport, connectionState);
-            
-            if( restoreSessions )
+
+            if (restoreSessions)
                 restoreSessions(transport, connectionState);
-            
-            if( restoreTransaction )
-            	restoreTransactions(transport, connectionState);
+
+            if (restoreTransaction)
+                restoreTransactions(transport, connectionState);
         }
     }
 
     private void restoreTransactions(Transport transport, ConnectionState connectionState) throws IOException {
-    	for (Iterator iter = connectionState.getTransactionStates().iterator(); iter.hasNext();) {
-			TransactionState transactionState = (TransactionState) iter.next();
-			for (Iterator iterator = transactionState.getCommands().iterator(); iterator.hasNext();) {
-				Command command = (Command) iterator.next();
-	            transport.oneway(command);
-			}
-		}
-	}
+        for (Iterator iter = connectionState.getTransactionStates().iterator(); iter.hasNext();) {
+            TransactionState transactionState = (TransactionState)iter.next();
+            for (Iterator iterator = transactionState.getCommands().iterator(); iterator.hasNext();) {
+                Command command = (Command)iterator.next();
+                transport.oneway(command);
+            }
+        }
+    }
 
-	/**
+    /**
      * @param transport
      * @param connectionState
      * @throws IOException
@@ -118,13 +120,13 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     protected void restoreSessions(Transport transport, ConnectionState connectionState) throws IOException {
         // Restore the connection's sessions
         for (Iterator iter2 = connectionState.getSessionStates().iterator(); iter2.hasNext();) {
-            SessionState sessionState = (SessionState) iter2.next();
+            SessionState sessionState = (SessionState)iter2.next();
             transport.oneway(sessionState.getInfo());
 
-            if( restoreProducers )
+            if (restoreProducers)
                 restoreProducers(transport, sessionState);
-            
-            if( restoreConsumers )
+
+            if (restoreConsumers)
                 restoreConsumers(transport, sessionState);
         }
     }
@@ -137,7 +139,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     protected void restoreConsumers(Transport transport, SessionState sessionState) throws IOException {
         // Restore the session's consumers
         for (Iterator iter3 = sessionState.getConsumerStates().iterator(); iter3.hasNext();) {
-            ConsumerState consumerState = (ConsumerState) iter3.next();
+            ConsumerState consumerState = (ConsumerState)iter3.next();
             transport.oneway(consumerState.getInfo());
         }
     }
@@ -150,7 +152,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     protected void restoreProducers(Transport transport, SessionState sessionState) throws IOException {
         // Restore the session's producers
         for (Iterator iter3 = sessionState.getProducerStates().iterator(); iter3.hasNext();) {
-            ProducerState producerState = (ProducerState) iter3.next();
+            ProducerState producerState = (ProducerState)iter3.next();
             transport.oneway(producerState.getInfo());
         }
     }
@@ -160,44 +162,44 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
      * @param connectionState
      * @throws IOException
      */
-    protected void restoreTempDestinations(Transport transport, ConnectionState connectionState) throws IOException {
+    protected void restoreTempDestinations(Transport transport, ConnectionState connectionState)
+        throws IOException {
         // Restore the connection's temp destinations.
         for (Iterator iter2 = connectionState.getTempDesinations().iterator(); iter2.hasNext();) {
-            transport.oneway((DestinationInfo) iter2.next());
+            transport.oneway((DestinationInfo)iter2.next());
         }
     }
 
-    public Response processAddDestination(DestinationInfo info){
-        if(info!=null){
-            ConnectionState cs=(ConnectionState)connectionStates.get(info.getConnectionId());
-            if(cs!=null&&info.getDestination().isTemporary()){
+    public Response processAddDestination(DestinationInfo info) {
+        if (info != null) {
+            ConnectionState cs = (ConnectionState)connectionStates.get(info.getConnectionId());
+            if (cs != null && info.getDestination().isTemporary()) {
                 cs.addTempDestination(info);
             }
         }
         return TRACKED_RESPONSE_MARKER;
     }
 
-    public Response processRemoveDestination(DestinationInfo info){
-        if(info!=null){
-            ConnectionState cs=(ConnectionState)connectionStates.get(info.getConnectionId());
-            if(cs!=null&&info.getDestination().isTemporary()){
+    public Response processRemoveDestination(DestinationInfo info) {
+        if (info != null) {
+            ConnectionState cs = (ConnectionState)connectionStates.get(info.getConnectionId());
+            if (cs != null && info.getDestination().isTemporary()) {
                 cs.removeTempDestination(info.getDestination());
             }
         }
         return TRACKED_RESPONSE_MARKER;
     }
 
-
-    public Response processAddProducer(ProducerInfo info){
-        if(info!=null&&info.getProducerId()!=null){
-            SessionId sessionId=info.getProducerId().getParentId();
-            if(sessionId!=null){
-                ConnectionId connectionId=sessionId.getParentId();
-                if(connectionId!=null){
-                    ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
-                    if(cs!=null){
-                        SessionState ss=cs.getSessionState(sessionId);
-                        if(ss!=null){
+    public Response processAddProducer(ProducerInfo info) {
+        if (info != null && info.getProducerId() != null) {
+            SessionId sessionId = info.getProducerId().getParentId();
+            if (sessionId != null) {
+                ConnectionId connectionId = sessionId.getParentId();
+                if (connectionId != null) {
+                    ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                    if (cs != null) {
+                        SessionState ss = cs.getSessionState(sessionId);
+                        if (ss != null) {
                             ss.addProducer(info);
                         }
                     }
@@ -206,17 +208,17 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         }
         return TRACKED_RESPONSE_MARKER;
     }
-    
-    public Response processRemoveProducer(ProducerId id){
-        if(id!=null){
-            SessionId sessionId=id.getParentId();
-            if(sessionId!=null){
-                ConnectionId connectionId=sessionId.getParentId();
-                if(connectionId!=null){
-                    ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
-                    if(cs!=null){
-                        SessionState ss=cs.getSessionState(sessionId);
-                        if(ss!=null){
+
+    public Response processRemoveProducer(ProducerId id) {
+        if (id != null) {
+            SessionId sessionId = id.getParentId();
+            if (sessionId != null) {
+                ConnectionId connectionId = sessionId.getParentId();
+                if (connectionId != null) {
+                    ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                    if (cs != null) {
+                        SessionState ss = cs.getSessionState(sessionId);
+                        if (ss != null) {
                             ss.removeProducer(id);
                         }
                     }
@@ -226,16 +228,16 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         return TRACKED_RESPONSE_MARKER;
     }
 
-    public Response processAddConsumer(ConsumerInfo info){
-        if(info!=null){
-            SessionId sessionId=info.getConsumerId().getParentId();
-            if(sessionId!=null){
-                ConnectionId connectionId=sessionId.getParentId();
-                if(connectionId!=null){
-                    ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
-                    if(cs!=null){
-                        SessionState ss=cs.getSessionState(sessionId);
-                        if(ss!=null){
+    public Response processAddConsumer(ConsumerInfo info) {
+        if (info != null) {
+            SessionId sessionId = info.getConsumerId().getParentId();
+            if (sessionId != null) {
+                ConnectionId connectionId = sessionId.getParentId();
+                if (connectionId != null) {
+                    ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                    if (cs != null) {
+                        SessionState ss = cs.getSessionState(sessionId);
+                        if (ss != null) {
                             ss.addConsumer(info);
                         }
                     }
@@ -244,17 +246,17 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         }
         return TRACKED_RESPONSE_MARKER;
     }
-    
-    public Response processRemoveConsumer(ConsumerId id){
-        if(id!=null){
-            SessionId sessionId=id.getParentId();
-            if(sessionId!=null){
-                ConnectionId connectionId=sessionId.getParentId();
-                if(connectionId!=null){
-                    ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
-                    if(cs!=null){
-                        SessionState ss=cs.getSessionState(sessionId);
-                        if(ss!=null){
+
+    public Response processRemoveConsumer(ConsumerId id) {
+        if (id != null) {
+            SessionId sessionId = id.getParentId();
+            if (sessionId != null) {
+                ConnectionId connectionId = sessionId.getParentId();
+                if (connectionId != null) {
+                    ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                    if (cs != null) {
+                        SessionState ss = cs.getSessionState(sessionId);
+                        if (ss != null) {
                             ss.removeConsumer(id);
                         }
                     }
@@ -263,56 +265,55 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         }
         return TRACKED_RESPONSE_MARKER;
     }
-    
-    public Response processAddSession(SessionInfo info){
-        if(info!=null){
-            ConnectionId connectionId=info.getSessionId().getParentId();
-            if(connectionId!=null){
-                ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
-                if(cs!=null){
+
+    public Response processAddSession(SessionInfo info) {
+        if (info != null) {
+            ConnectionId connectionId = info.getSessionId().getParentId();
+            if (connectionId != null) {
+                ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                if (cs != null) {
                     cs.addSession(info);
                 }
             }
         }
         return TRACKED_RESPONSE_MARKER;
     }
-    
-    public Response processRemoveSession(SessionId id){
-        if(id!=null){
-            ConnectionId connectionId=id.getParentId();
-            if(connectionId!=null){
-                ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
-                if(cs!=null){
+
+    public Response processRemoveSession(SessionId id) {
+        if (id != null) {
+            ConnectionId connectionId = id.getParentId();
+            if (connectionId != null) {
+                ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                if (cs != null) {
                     cs.removeSession(id);
                 }
             }
         }
         return TRACKED_RESPONSE_MARKER;
     }
-    
-    public Response processAddConnection(ConnectionInfo info){
+
+    public Response processAddConnection(ConnectionInfo info) {
         if (info != null) {
-        connectionStates.put(info.getConnectionId(), new ConnectionState(info)); 
-        }
-        return TRACKED_RESPONSE_MARKER;
-    }
-    
-    public Response processRemoveConnection(ConnectionId id) throws Exception {
-        if (id != null) {
-        connectionStates.remove(id);
+            connectionStates.put(info.getConnectionId(), new ConnectionState(info));
         }
         return TRACKED_RESPONSE_MARKER;
     }
 
-    
-    public Response processMessage(Message send) throws Exception{
-        if(trackTransactions&&send!=null&&send.getTransactionId()!=null){
-            ConnectionId connectionId=send.getProducerId().getParentId().getParentId();
-            if(connectionId!=null){
-                ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
-                if(cs!=null){
-                    TransactionState transactionState=cs.getTransactionState(send.getTransactionId());
-                    if(transactionState!=null){
+    public Response processRemoveConnection(ConnectionId id) throws Exception {
+        if (id != null) {
+            connectionStates.remove(id);
+        }
+        return TRACKED_RESPONSE_MARKER;
+    }
+
+    public Response processMessage(Message send) throws Exception {
+        if (trackTransactions && send != null && send.getTransactionId() != null) {
+            ConnectionId connectionId = send.getProducerId().getParentId().getParentId();
+            if (connectionId != null) {
+                ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                if (cs != null) {
+                    TransactionState transactionState = cs.getTransactionState(send.getTransactionId());
+                    if (transactionState != null) {
                         transactionState.addCommand(send);
                     }
                 }
@@ -320,16 +321,16 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
             return TRACKED_RESPONSE_MARKER;
         }
         return null;
-    }    
-    
-    public Response processMessageAck(MessageAck ack){
-        if(trackTransactions&&ack!=null&&ack.getTransactionId()!=null){
-            ConnectionId connectionId=ack.getConsumerId().getParentId().getParentId();
-            if(connectionId!=null){
-                ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
-                if(cs!=null){
-                    TransactionState transactionState=cs.getTransactionState(ack.getTransactionId());
-                    if(transactionState!=null){
+    }
+
+    public Response processMessageAck(MessageAck ack) {
+        if (trackTransactions && ack != null && ack.getTransactionId() != null) {
+            ConnectionId connectionId = ack.getConsumerId().getParentId().getParentId();
+            if (connectionId != null) {
+                ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                if (cs != null) {
+                    TransactionState transactionState = cs.getTransactionState(ack.getTransactionId());
+                    if (transactionState != null) {
                         transactionState.addCommand(ack);
                     }
                 }
@@ -338,29 +339,29 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         }
         return null;
     }
-    
-    public Response processBeginTransaction(TransactionInfo info){
-        if(trackTransactions&&info!=null && info.getTransactionId() != null){
-            ConnectionId connectionId=info.getConnectionId();
-            if(connectionId!=null){
-                ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
-                if(cs!=null){
+
+    public Response processBeginTransaction(TransactionInfo info) {
+        if (trackTransactions && info != null && info.getTransactionId() != null) {
+            ConnectionId connectionId = info.getConnectionId();
+            if (connectionId != null) {
+                ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                if (cs != null) {
                     cs.addTransactionState(info.getTransactionId());
                 }
             }
             return TRACKED_RESPONSE_MARKER;
         }
         return null;
-    }    
-    
-    public Response processPrepareTransaction(TransactionInfo info) throws Exception{
-        if(trackTransactions&&info!=null){
-            ConnectionId connectionId=info.getConnectionId();
-            if(connectionId!=null){
-                ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
-                if(cs!=null){
-                    TransactionState transactionState=cs.getTransactionState(info.getTransactionId());
-                    if(transactionState!=null){
+    }
+
+    public Response processPrepareTransaction(TransactionInfo info) throws Exception {
+        if (trackTransactions && info != null) {
+            ConnectionId connectionId = info.getConnectionId();
+            if (connectionId != null) {
+                ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                if (cs != null) {
+                    TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
+                    if (transactionState != null) {
                         transactionState.addCommand(info);
                     }
                 }
@@ -369,32 +370,15 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         }
         return null;
     }
-    
-    public Response processCommitTransactionOnePhase(TransactionInfo info) throws Exception{
-        if(trackTransactions&&info!=null){
-            ConnectionId connectionId=info.getConnectionId();
-            if(connectionId!=null){
-                ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
-                if(cs!=null){
-                    TransactionState transactionState=cs.getTransactionState(info.getTransactionId());
-                    if(transactionState!=null){
-                        transactionState.addCommand(info);
-                        return new Tracked(new RemoveTransactionAction(info));
-                    }
-                }
-            }
-        }
-        return null;
-    }        
-    
-    public Response processCommitTransactionTwoPhase(TransactionInfo info) throws Exception{
-        if(trackTransactions&&info!=null){
-            ConnectionId connectionId=info.getConnectionId();
-            if(connectionId!=null){
-                ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
-                if(cs!=null){
-                    TransactionState transactionState=cs.getTransactionState(info.getTransactionId());
-                    if(transactionState!=null){
+
+    public Response processCommitTransactionOnePhase(TransactionInfo info) throws Exception {
+        if (trackTransactions && info != null) {
+            ConnectionId connectionId = info.getConnectionId();
+            if (connectionId != null) {
+                ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                if (cs != null) {
+                    TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
+                    if (transactionState != null) {
                         transactionState.addCommand(info);
                         return new Tracked(new RemoveTransactionAction(info));
                     }
@@ -403,15 +387,15 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         }
         return null;
     }
-    
-    public Response processRollbackTransaction(TransactionInfo info) throws Exception{
-        if(trackTransactions&&info!=null){
-            ConnectionId connectionId=info.getConnectionId();
-            if(connectionId!=null){
-                ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
-                if(cs!=null){
-                    TransactionState transactionState=cs.getTransactionState(info.getTransactionId());
-                    if(transactionState!=null){
+
+    public Response processCommitTransactionTwoPhase(TransactionInfo info) throws Exception {
+        if (trackTransactions && info != null) {
+            ConnectionId connectionId = info.getConnectionId();
+            if (connectionId != null) {
+                ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                if (cs != null) {
+                    TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
+                    if (transactionState != null) {
                         transactionState.addCommand(info);
                         return new Tracked(new RemoveTransactionAction(info));
                     }
@@ -420,15 +404,32 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         }
         return null;
     }
-    
-    public Response processEndTransaction(TransactionInfo info) throws Exception{
-        if(trackTransactions&&info!=null){
-            ConnectionId connectionId=info.getConnectionId();
-            if(connectionId!=null){
-                ConnectionState cs=(ConnectionState)connectionStates.get(connectionId);
-                if(cs!=null){
-                    TransactionState transactionState=cs.getTransactionState(info.getTransactionId());
-                    if(transactionState!=null){
+
+    public Response processRollbackTransaction(TransactionInfo info) throws Exception {
+        if (trackTransactions && info != null) {
+            ConnectionId connectionId = info.getConnectionId();
+            if (connectionId != null) {
+                ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                if (cs != null) {
+                    TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
+                    if (transactionState != null) {
+                        transactionState.addCommand(info);
+                        return new Tracked(new RemoveTransactionAction(info));
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public Response processEndTransaction(TransactionInfo info) throws Exception {
+        if (trackTransactions && info != null) {
+            ConnectionId connectionId = info.getConnectionId();
+            if (connectionId != null) {
+                ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                if (cs != null) {
+                    TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
+                    if (transactionState != null) {
                         transactionState.addCommand(info);
                     }
                 }
@@ -437,7 +438,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         }
         return null;
     }
-    
+
     public boolean isRestoreConsumers() {
         return restoreConsumers;
     }
@@ -462,20 +463,20 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         this.restoreSessions = restoreSessions;
     }
 
-	public boolean isTrackTransactions() {
-		return trackTransactions;
-	}
+    public boolean isTrackTransactions() {
+        return trackTransactions;
+    }
 
-	public void setTrackTransactions(boolean trackTransactions) {
-		this.trackTransactions = trackTransactions;
-	}
+    public void setTrackTransactions(boolean trackTransactions) {
+        this.trackTransactions = trackTransactions;
+    }
 
-	public boolean isRestoreTransaction() {
-		return restoreTransaction;
-	}
+    public boolean isRestoreTransaction() {
+        return restoreTransaction;
+    }
 
-	public void setRestoreTransaction(boolean restoreTransaction) {
-		this.restoreTransaction = restoreTransaction;
-	}
+    public void setRestoreTransaction(boolean restoreTransaction) {
+        this.restoreTransaction = restoreTransaction;
+    }
 
 }

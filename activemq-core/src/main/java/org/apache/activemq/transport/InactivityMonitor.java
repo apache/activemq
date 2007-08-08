@@ -26,23 +26,24 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Used to make sure that commands are arriving periodically from the peer of the transport.
- *
+ * Used to make sure that commands are arriving periodically from the peer of
+ * the transport.
+ * 
  * @version $Revision$
  */
 public class InactivityMonitor extends TransportFilter {
 
-    private final Log log = LogFactory.getLog(InactivityMonitor.class);
+    private final Log LOG = LogFactory.getLog(InactivityMonitor.class);
 
     private WireFormatInfo localWireFormatInfo;
     private WireFormatInfo remoteWireFormatInfo;
-    private final AtomicBoolean monitorStarted= new AtomicBoolean(false);
+    private final AtomicBoolean monitorStarted = new AtomicBoolean(false);
 
-    private final AtomicBoolean commandSent=new AtomicBoolean(false);
-    private final AtomicBoolean inSend=new AtomicBoolean(false);
+    private final AtomicBoolean commandSent = new AtomicBoolean(false);
+    private final AtomicBoolean inSend = new AtomicBoolean(false);
 
-    private final AtomicBoolean commandReceived=new AtomicBoolean(true);
-    private final AtomicBoolean inReceive=new AtomicBoolean(false);
+    private final AtomicBoolean commandReceived = new AtomicBoolean(true);
+    private final AtomicBoolean inReceive = new AtomicBoolean(false);
 
     private final Runnable readChecker = new Runnable() {
         public void run() {
@@ -56,7 +57,6 @@ public class InactivityMonitor extends TransportFilter {
         }
     };
 
-
     public InactivityMonitor(Transport next) {
         super(next);
     }
@@ -66,23 +66,22 @@ public class InactivityMonitor extends TransportFilter {
         next.stop();
     }
 
-
     final void writeCheck() {
-        synchronized(writeChecker) {
-            if( inSend.get() ) {
-                log.trace("A send is in progress");
+        synchronized (writeChecker) {
+            if (inSend.get()) {
+                LOG.trace("A send is in progress");
                 return;
             }
 
-            if( !commandSent.get() ) {
-                log.trace("No message sent since last write check, sending a KeepAliveInfo");
+            if (!commandSent.get()) {
+                LOG.trace("No message sent since last write check, sending a KeepAliveInfo");
                 try {
                     next.oneway(new KeepAliveInfo());
                 } catch (IOException e) {
                     onException(e);
                 }
             } else {
-                log.trace("Message sent since last write check, resetting flag");
+                LOG.trace("Message sent since last write check, resetting flag");
             }
 
             commandSent.set(false);
@@ -90,17 +89,17 @@ public class InactivityMonitor extends TransportFilter {
     }
 
     final void readCheck() {
-        synchronized(readChecker) {
-            if( inReceive.get() ) {
-                log.trace("A receive is in progress");
+        synchronized (readChecker) {
+            if (inReceive.get()) {
+                LOG.trace("A receive is in progress");
                 return;
             }
 
-            if( !commandReceived.get() ) {
-                log.debug("No message received since last read check for " + toString() + "! Throwing InactivityIOException.");
+            if (!commandReceived.get()) {
+                LOG.debug("No message received since last read check for " + toString() + "! Throwing InactivityIOException.");
                 onException(new InactivityIOException("Channel was inactive for too long."));
             } else {
-                log.trace("Message received since last read check, resetting flag: ");
+                LOG.trace("Message received since last read check, resetting flag: ");
             }
 
             commandReceived.set(false);
@@ -109,12 +108,12 @@ public class InactivityMonitor extends TransportFilter {
     }
 
     public void onCommand(Object command) {
-        synchronized(readChecker) {
+        synchronized (readChecker) {
             inReceive.set(true);
             try {
-                if( command.getClass() == WireFormatInfo.class ) {
-                    synchronized( this ) {
-                        remoteWireFormatInfo = (WireFormatInfo) command;
+                if (command.getClass() == WireFormatInfo.class) {
+                    synchronized (this) {
+                        remoteWireFormatInfo = (WireFormatInfo)command;
                         try {
                             startMonitorThreads();
                         } catch (IOException e) {
@@ -130,16 +129,15 @@ public class InactivityMonitor extends TransportFilter {
         }
     }
 
-
     public void oneway(Object o) throws IOException {
-        synchronized(writeChecker) {
+        synchronized (writeChecker) {
             // Disable inactivity monitoring while processing a command.
             inSend.set(true);
             commandSent.set(true);
             try {
-                if( o.getClass() == WireFormatInfo.class ) {
-                    synchronized( this ) {
-                        localWireFormatInfo = (WireFormatInfo) o;
+                if (o.getClass() == WireFormatInfo.class) {
+                    synchronized (this) {
+                        localWireFormatInfo = (WireFormatInfo)o;
                         startMonitorThreads();
                     }
                 }
@@ -151,25 +149,24 @@ public class InactivityMonitor extends TransportFilter {
     }
 
     public void onException(IOException error) {
-    	if( monitorStarted.get() ) {
-	        stopMonitorThreads();
-    	}
+        if (monitorStarted.get()) {
+            stopMonitorThreads();
+        }
         getTransportListener().onException(error);
     }
 
-
     synchronized private void startMonitorThreads() throws IOException {
-        if( monitorStarted.get() )
+        if (monitorStarted.get())
             return;
-        if( localWireFormatInfo == null )
+        if (localWireFormatInfo == null)
             return;
-        if( remoteWireFormatInfo == null )
+        if (remoteWireFormatInfo == null)
             return;
 
         long l = Math.min(localWireFormatInfo.getMaxInactivityDuration(), remoteWireFormatInfo.getMaxInactivityDuration());
-        if( l > 0 ) {
+        if (l > 0) {
             monitorStarted.set(true);
-            Scheduler.executePeriodically(writeChecker, l/2);
+            Scheduler.executePeriodically(writeChecker, l / 2);
             Scheduler.executePeriodically(readChecker, l);
         }
     }
@@ -178,11 +175,10 @@ public class InactivityMonitor extends TransportFilter {
      *
      */
     synchronized private void stopMonitorThreads() {
-        if( monitorStarted.compareAndSet(true, false) ) {
+        if (monitorStarted.compareAndSet(true, false)) {
             Scheduler.cancel(readChecker);
             Scheduler.cancel(writeChecker);
         }
     }
-
 
 }

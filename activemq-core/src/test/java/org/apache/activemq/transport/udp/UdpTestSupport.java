@@ -21,7 +21,6 @@ import java.io.IOException;
 import javax.jms.MessageNotWriteableException;
 
 import junit.framework.TestCase;
-
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
@@ -38,7 +37,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * 
  * @version $Revision$
  */
 public abstract class UdpTestSupport extends TestCase implements TransportListener {
@@ -69,12 +67,11 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
 
             Command received = assertCommandReceived();
             assertTrue("Should have received a ConsumerInfo but was: " + received, received instanceof ConsumerInfo);
-            ConsumerInfo actual = (ConsumerInfo) received;
+            ConsumerInfo actual = (ConsumerInfo)received;
             assertEquals("Selector", expected.getSelector(), actual.getSelector());
             assertEquals("isExclusive", expected.isExclusive(), actual.isExclusive());
             assertEquals("getPrefetchSize", expected.getPrefetchSize(), actual.getPrefetchSize());
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.info("Caught: " + e);
             e.printStackTrace();
             fail("Failed to send to transport: " + e);
@@ -93,8 +90,7 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
         assertSendTextMessage(destination, text);
     }
 
-    protected void assertSendTextMessage(ActiveMQDestination destination, String text)
-            throws MessageNotWriteableException {
+    protected void assertSendTextMessage(ActiveMQDestination destination, String text) throws MessageNotWriteableException {
         large = true;
 
         ActiveMQTextMessage expected = new ActiveMQTextMessage();
@@ -114,16 +110,14 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
             producer.oneway(new ProducerInfo());
 
             Command received = assertCommandReceived();
-            assertTrue("Should have received a ActiveMQTextMessage but was: " + received,
-                    received instanceof ActiveMQTextMessage);
-            ActiveMQTextMessage actual = (ActiveMQTextMessage) received;
+            assertTrue("Should have received a ActiveMQTextMessage but was: " + received, received instanceof ActiveMQTextMessage);
+            ActiveMQTextMessage actual = (ActiveMQTextMessage)received;
 
             assertEquals("getDestination", expected.getDestination(), actual.getDestination());
             assertEquals("getText", expected.getText(), actual.getText());
 
             log.info("Received text message with: " + actual.getText().length() + " character(s)");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.info("Caught: " + e);
             e.printStackTrace();
             fail("Failed to send to transport: " + e);
@@ -148,8 +142,7 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
                     consumer.setTransportListener(UdpTestSupport.this);
                     try {
                         consumer.start();
-                    }
-                    catch (Exception e) {
+                    } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 }
@@ -200,29 +193,25 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
     }
 
     public void onCommand(Object o) {
-    	final Command command = (Command) o;
+        final Command command = (Command)o;
         if (command instanceof WireFormatInfo) {
             log.info("Got WireFormatInfo: " + command);
-        }
-        else {
+        } else {
             if (command.isResponseRequired()) {
                 // lets send a response back...
                 sendResponse(command);
 
             }
             if (large) {
-                log.info("### Received command: " + command.getClass() + " with id: "
-                        + command.getCommandId());
-            }
-            else {
+                log.info("### Received command: " + command.getClass() + " with id: " + command.getCommandId());
+            } else {
                 log.info("### Received command: " + command);
             }
 
             synchronized (lock) {
                 if (receivedCommand == null) {
                     receivedCommand = command;
-                }
-                else {
+                } else {
                     log.info("Ignoring superfluous command: " + command);
                 }
                 lock.notifyAll();
@@ -235,8 +224,7 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
         response.setCorrelationId(command.getCommandId());
         try {
             consumer.oneway(response);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             log.info("Caught: " + e);
             e.printStackTrace();
             throw new RuntimeException(e);

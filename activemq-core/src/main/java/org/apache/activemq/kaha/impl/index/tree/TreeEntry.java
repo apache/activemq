@@ -24,123 +24,120 @@ import org.apache.activemq.kaha.Marshaller;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-class TreeEntry implements Comparable{
+class TreeEntry implements Comparable {
 
-    static final int NOT_SET=-1;
+    static final int NOT_SET = -1;
     private Comparable key;
     private long indexOffset;
-    private long prevPageId=NOT_SET;
-    private long nextPageId=NOT_SET;
+    private long prevPageId = NOT_SET;
+    private long nextPageId = NOT_SET;
 
-    public int compareTo(Object o){
-        if(o instanceof TreeEntry){
-            TreeEntry other=(TreeEntry)o;
+    public int compareTo(Object o) {
+        if (o instanceof TreeEntry) {
+            TreeEntry other = (TreeEntry)o;
             return key.compareTo(other.key);
-        }else{
+        } else {
             return key.compareTo(o);
         }
     }
 
-    public boolean equals(Object o){
-        return compareTo(o)==0;
+    public boolean equals(Object o) {
+        return compareTo(o) == 0;
     }
 
-    public int hashCode(){
+    public int hashCode() {
         return key.hashCode();
     }
 
-    public String toString(){
-        return "TreeEntry("+key+","+indexOffset+")prev="+prevPageId+",next="+nextPageId;
+    public String toString() {
+        return "TreeEntry(" + key + "," + indexOffset + ")prev=" + prevPageId + ",next=" + nextPageId;
     }
 
-    void reset(){
-        prevPageId=nextPageId=NOT_SET;
+    void reset() {
+        prevPageId = nextPageId = NOT_SET;
     }
 
-    TreeEntry copy(){
-        TreeEntry copy=new TreeEntry();
-        copy.key=this.key;
-        copy.indexOffset=this.indexOffset;
-        copy.prevPageId=this.prevPageId;
-        copy.nextPageId=this.nextPageId;
+    TreeEntry copy() {
+        TreeEntry copy = new TreeEntry();
+        copy.key = this.key;
+        copy.indexOffset = this.indexOffset;
+        copy.prevPageId = this.prevPageId;
+        copy.nextPageId = this.nextPageId;
         return copy;
     }
 
     /**
      * @return the key
      */
-    Comparable getKey(){
+    Comparable getKey() {
         return this.key;
     }
 
     /**
      * @param key the key to set
      */
-    void setKey(Comparable key){
-        this.key=key;
+    void setKey(Comparable key) {
+        this.key = key;
     }
 
     /**
      * @return the nextPageId
      */
-    long getNextPageId(){
+    long getNextPageId() {
         return this.nextPageId;
     }
 
     /**
      * @param nextPageId the nextPageId to set
      */
-    void setNextPageId(long nextPageId){
-        this.nextPageId=nextPageId;
+    void setNextPageId(long nextPageId) {
+        this.nextPageId = nextPageId;
     }
 
     /**
      * @return the prevPageId
      */
-    long getPrevPageId(){
+    long getPrevPageId() {
         return this.prevPageId;
     }
 
     /**
      * @param prevPageId the prevPageId to set
      */
-    void setPrevPageId(long prevPageId){
-        this.prevPageId=prevPageId;
+    void setPrevPageId(long prevPageId) {
+        this.prevPageId = prevPageId;
     }
-    
+
     /**
      * @return the indexOffset
      */
-     long getIndexOffset(){
+    long getIndexOffset() {
         return this.indexOffset;
     }
 
-    
     /**
      * @param indexOffset the indexOffset to set
      */
-     void setIndexOffset(long indexOffset){
-        this.indexOffset=indexOffset;
+    void setIndexOffset(long indexOffset) {
+        this.indexOffset = indexOffset;
     }
 
-    boolean hasChildPagesReferences(){
-        return prevPageId!=NOT_SET||nextPageId!=NOT_SET;
+    boolean hasChildPagesReferences() {
+        return prevPageId != NOT_SET || nextPageId != NOT_SET;
     }
 
-    void write(Marshaller keyMarshaller,DataOutput dataOut) throws IOException{
-        keyMarshaller.writePayload(key,dataOut);
+    void write(Marshaller keyMarshaller, DataOutput dataOut) throws IOException {
+        keyMarshaller.writePayload(key, dataOut);
         dataOut.writeLong(indexOffset);
         dataOut.writeLong(nextPageId);
         dataOut.writeLong(prevPageId);
     }
 
-    void read(Marshaller keyMarshaller,DataInput dataIn) throws IOException{
-        key=(Comparable)keyMarshaller.readPayload(dataIn);
-        indexOffset=dataIn.readLong();
-        nextPageId=dataIn.readLong();
-        prevPageId=dataIn.readLong();
+    void read(Marshaller keyMarshaller, DataInput dataIn) throws IOException {
+        key = (Comparable)keyMarshaller.readPayload(dataIn);
+        indexOffset = dataIn.readLong();
+        nextPageId = dataIn.readLong();
+        prevPageId = dataIn.readLong();
     }
 
-    
-   
 }

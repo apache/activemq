@@ -27,65 +27,66 @@ import org.apache.activemq.store.MessageRecoveryListener;
  * 
  * @version $Revision: 1.7 $
  */
-class MemoryTopicSub{
+class MemoryTopicSub {
 
-    private Map map=new LinkedHashMap();
+    private Map map = new LinkedHashMap();
     private MessageId lastBatch;
 
-    void addMessage(MessageId id,Message message){
-        map.put(id,message);
+    void addMessage(MessageId id, Message message) {
+        map.put(id, message);
     }
 
-    void removeMessage(MessageId id){
+    void removeMessage(MessageId id) {
         map.remove(id);
         if (map.isEmpty()) {
-            lastBatch=null;
+            lastBatch = null;
         }
     }
 
-    int size(){
+    int size() {
         return map.size();
     }
 
-    void recoverSubscription(MessageRecoveryListener listener) throws Exception{
-        for(Iterator iter=map.entrySet().iterator();iter.hasNext();){
-            Map.Entry entry=(Entry)iter.next();
-            Object msg=entry.getValue();
-            if(msg.getClass()==MessageId.class){
+    void recoverSubscription(MessageRecoveryListener listener) throws Exception {
+        for (Iterator iter = map.entrySet().iterator(); iter.hasNext();) {
+            Map.Entry entry = (Entry)iter.next();
+            Object msg = entry.getValue();
+            if (msg.getClass() == MessageId.class) {
                 listener.recoverMessageReference((MessageId)msg);
-            }else{
+            } else {
                 listener.recoverMessage((Message)msg);
             }
         }
     }
 
-    void recoverNextMessages(int maxReturned,MessageRecoveryListener listener) throws Exception{
-        boolean pastLackBatch=lastBatch==null;
-        MessageId lastId=null;
-        // the message table is a synchronizedMap - so just have to synchronize here
-        int count=0;
-        for(Iterator iter=map.entrySet().iterator();iter.hasNext()&&count<maxReturned;){
-            Map.Entry entry=(Entry)iter.next();
-            if(pastLackBatch){
+    void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception {
+        boolean pastLackBatch = lastBatch == null;
+        MessageId lastId = null;
+        // the message table is a synchronizedMap - so just have to synchronize
+        // here
+        int count = 0;
+        for (Iterator iter = map.entrySet().iterator(); iter.hasNext() && count < maxReturned;) {
+            Map.Entry entry = (Entry)iter.next();
+            if (pastLackBatch) {
                 count++;
-                Object msg=entry.getValue();
-                lastId=(MessageId)entry.getKey();
-                if(msg.getClass()==MessageId.class){
+                Object msg = entry.getValue();
+                lastId = (MessageId)entry.getKey();
+                if (msg.getClass() == MessageId.class) {
                     listener.recoverMessageReference((MessageId)msg);
-                }else{
+                } else {
                     listener.recoverMessage((Message)msg);
                 }
-            }else{
-                pastLackBatch=entry.getKey().equals(lastBatch);
+            } else {
+                pastLackBatch = entry.getKey().equals(lastBatch);
             }
         }
-        if(lastId!=null){
-            lastBatch=lastId;
+        if (lastId != null) {
+            lastBatch = lastId;
         }
 
     }
 
-    void resetBatching(){
-        lastBatch=null;
+    void resetBatching() {
+        lastBatch = null;
     }
 }

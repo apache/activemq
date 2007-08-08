@@ -31,33 +31,32 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Broker side of the VMTransport
- *
  */
 public class VMTransportServer implements TransportServer {
 
     private TransportAcceptListener acceptListener;
     private final URI location;
     private boolean disposed;
-    
+
     private final AtomicInteger connectionCount = new AtomicInteger(0);
     private final boolean disposeOnDisconnect;
 
     /**
      * @param location
-     * @param disposeOnDisconnect 
+     * @param disposeOnDisconnect
      */
     public VMTransportServer(URI location, boolean disposeOnDisconnect) {
         this.location = location;
-        this.disposeOnDisconnect=disposeOnDisconnect;
+        this.disposeOnDisconnect = disposeOnDisconnect;
     }
-    
+
     /**
-     *@return a pretty print of this
+     * @return a pretty print of this
      */
-    public String toString(){
-        return "VMTransportServer(" + location +")";
+    public String toString() {
+        return "VMTransportServer(" + location + ")";
     }
-    
+
     /**
      * @return new VMTransport
      * @throws IOException
@@ -65,34 +64,35 @@ public class VMTransportServer implements TransportServer {
     public VMTransport connect() throws IOException {
         TransportAcceptListener al;
         synchronized (this) {
-            if( disposed )
+            if (disposed)
                 throw new IOException("Server has been disposed.");
             al = acceptListener;
         }
-        if( al == null)
+        if (al == null)
             throw new IOException("Server TransportAcceptListener is null.");
-            
+
         connectionCount.incrementAndGet();
         VMTransport client = new VMTransport(location) {
             public void stop() throws Exception {
-                if( disposed )
+                if (disposed)
                     return;
                 super.stop();
-                if( connectionCount.decrementAndGet()==0 && disposeOnDisconnect ) {
+                if (connectionCount.decrementAndGet() == 0 && disposeOnDisconnect) {
                     VMTransportServer.this.stop();
                 }
             };
         };
-        
+
         VMTransport server = new VMTransport(location);
         client.setPeer(server);
         server.setPeer(client);
         al.onAccept(configure(server));
         return client;
     }
-    
+
     /**
      * Configure transport
+     * 
      * @param transport
      * @return the Transport
      */
@@ -102,14 +102,13 @@ public class VMTransportServer implements TransportServer {
         return transport;
     }
 
-
     /**
      * Set the Transport accept listener for new Connections
-     * @param acceptListener 
      * 
+     * @param acceptListener
      */
     synchronized public void setAcceptListener(TransportAcceptListener acceptListener) {
-        this.acceptListener = acceptListener;        
+        this.acceptListener = acceptListener;
     }
 
     public void start() throws IOException {
@@ -122,7 +121,7 @@ public class VMTransportServer implements TransportServer {
     public URI getConnectURI() {
         return location;
     }
-    
+
     public URI getBindURI() {
         return location;
     }

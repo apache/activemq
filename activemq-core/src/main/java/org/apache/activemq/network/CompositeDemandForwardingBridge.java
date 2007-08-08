@@ -37,26 +37,27 @@ import java.io.IOException;
  */
 public class CompositeDemandForwardingBridge extends DemandForwardingBridgeSupport {
 
-    protected final BrokerId remoteBrokerPath[] = new BrokerId[] { null };
+    protected final BrokerId remoteBrokerPath[] = new BrokerId[] {null};
     protected Object brokerInfoMutex = new Object();
 
-    public CompositeDemandForwardingBridge(NetworkBridgeConfiguration configuration,Transport localBroker, Transport remoteBroker) {
-        super(configuration,localBroker, remoteBroker);
+    public CompositeDemandForwardingBridge(NetworkBridgeConfiguration configuration, Transport localBroker,
+                                           Transport remoteBroker) {
+        super(configuration, localBroker, remoteBroker);
         remoteBrokerName = remoteBroker.toString();
-    	remoteBrokerNameKnownLatch.countDown();
+        remoteBrokerNameKnownLatch.countDown();
     }
 
     protected void serviceRemoteBrokerInfo(Command command) throws IOException {
         synchronized (brokerInfoMutex) {
-            BrokerInfo remoteBrokerInfo = (BrokerInfo) command;
+            BrokerInfo remoteBrokerInfo = (BrokerInfo)command;
             BrokerId remoteBrokerId = remoteBrokerInfo.getBrokerId();
-            
-            // lets associate the incoming endpoint with a broker ID so we can refer to it later
+
+            // lets associate the incoming endpoint with a broker ID so we can
+            // refer to it later
             Endpoint from = command.getFrom();
             if (from == null) {
                 log.warn("Incoming command does not have a from endpoint: " + command);
-            }
-            else {
+            } else {
                 from.setBrokerInfo(remoteBrokerInfo);
             }
             if (localBrokerId != null) {
@@ -84,15 +85,14 @@ public class CompositeDemandForwardingBridge extends DemandForwardingBridgeSuppo
         Endpoint from = command.getFrom();
         if (from == null) {
             log.warn("Incoming command does not have a from endpoint: " + command);
-        }
-        else {
+        } else {
             answer = from.getBrokerId();
         }
-        if (answer != null) { 
+        if (answer != null) {
             return answer;
-        }
-        else {
-            throw new IOException("No broker ID is available for endpoint: " + from + " from command: " + command);
+        } else {
+            throw new IOException("No broker ID is available for endpoint: " + from + " from command: "
+                                  + command);
         }
     }
 
@@ -103,8 +103,8 @@ public class CompositeDemandForwardingBridge extends DemandForwardingBridgeSuppo
     protected NetworkBridgeFilter createNetworkBridgeFilter(ConsumerInfo info) throws IOException {
         return new NetworkBridgeFilter(getFromBrokerId(info), configuration.getNetworkTTL());
     }
-    
-    protected BrokerId[] getRemoteBrokerPath(){
+
+    protected BrokerId[] getRemoteBrokerPath() {
         return remoteBrokerPath;
     }
 

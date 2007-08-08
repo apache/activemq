@@ -29,34 +29,29 @@ import javax.jms.TextMessage;
 
 import org.apache.activemq.test.JmsResourceProvider;
 
-
 /**
  * @version $Revision: 1.2 $
  */
 public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
-	private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-            .getLog(JmsQueueTransactionTest.class);
-    
-	/**
-	 * 
-	 * @see org.apache.activemq.JmsTransactionTestSupport#getJmsResourceProvider()
-	 */
-	protected JmsResourceProvider getJmsResourceProvider() {
-        JmsResourceProvider p = new JmsResourceProvider();
-        p.setTopic(false); 
-        return p;
-	}    
+    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(JmsQueueTransactionTest.class);
 
     /**
-     * Tests if the the connection gets reset, the messages will still be received.  
-     *  
+     * @see org.apache.activemq.JmsTransactionTestSupport#getJmsResourceProvider()
+     */
+    protected JmsResourceProvider getJmsResourceProvider() {
+        JmsResourceProvider p = new JmsResourceProvider();
+        p.setTopic(false);
+        return p;
+    }
+
+    /**
+     * Tests if the the connection gets reset, the messages will still be
+     * received.
+     * 
      * @throws Exception
      */
     public void testReceiveTwoThenCloseConnection() throws Exception {
-        Message[] outbound = new Message[]{
-            session.createTextMessage("First Message"),
-            session.createTextMessage("Second Message")
-        };
+        Message[] outbound = new Message[] {session.createTextMessage("First Message"), session.createTextMessage("Second Message")};
 
         // lets consume any outstanding messages from previous test runs
         while (consumer.receive(1000) != null) {
@@ -77,10 +72,10 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
         message = consumer.receive(1000);
         assertNotNull(message);
         assertEquals(outbound[1], message);
-        
+
         // Close and reopen connection.
-        reconnect();        
-        
+        reconnect();
+
         // Consume again.. the previous message should
         // get redelivered.
         message = consumer.receive(5000);
@@ -99,52 +94,53 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
 
         assertTextMessagesEqual("Rollback did not work", outbound, inbound);
     }
-    
+
     /**
-     * Tests sending and receiving messages with two sessions(one for producing and another for consuming).
+     * Tests sending and receiving messages with two sessions(one for producing
+     * and another for consuming).
      * 
      * @throws Exception
      */
     public void testSendReceiveInSeperateSessionTest() throws Exception {
-        session.close();        
+        session.close();
         int batchCount = 10;
 
-        for (int i=0; i < batchCount; i++) {
-        	//Session that sends messages
+        for (int i = 0; i < batchCount; i++) {
+            // Session that sends messages
             {
                 Session session = resourceProvider.createSession(connection);
                 MessageProducer producer = resourceProvider.createProducer(session, destination);
-                //consumer = resourceProvider.createConsumer(session, destination);
-                producer.send(session.createTextMessage("Test Message: "+i));                   
+                // consumer = resourceProvider.createConsumer(session,
+                // destination);
+                producer.send(session.createTextMessage("Test Message: " + i));
                 session.commit();
                 session.close();
             }
-            
-        	//Session that consumes messages
+
+            // Session that consumes messages
             {
                 Session session = resourceProvider.createSession(connection);
                 MessageConsumer consumer = resourceProvider.createConsumer(session, destination);
 
-                TextMessage message = (TextMessage) consumer.receive(1000*5);
-                assertNotNull("Received only "+i+" messages in batch ", message);
-                assertEquals("Test Message: "+i, message.getText());
+                TextMessage message = (TextMessage)consumer.receive(1000 * 5);
+                assertNotNull("Received only " + i + " messages in batch ", message);
+                assertEquals("Test Message: " + i, message.getText());
 
                 session.commit();
                 session.close();
             }
         }
     }
-    
+
     /**
-     * Tests the queue browser. Browses the messages then the consumer tries to receive them. 
-     * The messages should still be in the queue even when it was browsed.  
+     * Tests the queue browser. Browses the messages then the consumer tries to
+     * receive them. The messages should still be in the queue even when it was
+     * browsed.
      * 
      * @throws Exception
      */
     public void testReceiveBrowseReceive() throws Exception {
-        Message[] outbound = new Message[] { session.createTextMessage("First Message"),
-        									 session.createTextMessage("Second Message"),
-											 session.createTextMessage("Third Message") };
+        Message[] outbound = new Message[] {session.createTextMessage("First Message"), session.createTextMessage("Second Message"), session.createTextMessage("Third Message")};
 
         // lets consume any outstanding messages from previous test runs
         while (consumer.receive(1000) != null) {
@@ -160,21 +156,21 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
         assertEquals(outbound[0], consumer.receive(1000));
         consumer.close();
 
-        QueueBrowser browser = session.createBrowser((Queue) destination);
+        QueueBrowser browser = session.createBrowser((Queue)destination);
         Enumeration enumeration = browser.getEnumeration();
 
         // browse the second
         assertTrue("should have received the second message", enumeration.hasMoreElements());
-        assertEquals(outbound[1], (Message) enumeration.nextElement());
+        assertEquals(outbound[1], (Message)enumeration.nextElement());
 
         // browse the third.
         assertTrue("Should have received the third message", enumeration.hasMoreElements());
-        assertEquals(outbound[2], (Message) enumeration.nextElement());
+        assertEquals(outbound[2], (Message)enumeration.nextElement());
 
         // There should be no more.
         boolean tooMany = false;
         while (enumeration.hasMoreElements()) {
-            log.info("Got extra message: " + ((TextMessage) enumeration.nextElement()).getText());
+            log.info("Got extra message: " + ((TextMessage)enumeration.nextElement()).getText());
             tooMany = true;
         }
         assertFalse(tooMany);
@@ -190,5 +186,5 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
 
         session.commit();
     }
-    
+
 }

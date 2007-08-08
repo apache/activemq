@@ -28,141 +28,136 @@ import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.Topic;
+
 /**
  * A Destination bridge is used to bridge between to different JMS systems
  * 
  * @version $Revision: 1.1.1.1 $
  */
-class QueueBridge extends DestinationBridge{
+class QueueBridge extends DestinationBridge {
     protected Queue consumerQueue;
     protected Queue producerQueue;
     protected QueueSession consumerSession;
     protected QueueSession producerSession;
-   
+
     protected String selector;
     protected QueueSender producer;
     protected QueueConnection consumerConnection;
     protected QueueConnection producerConnection;
-    
 
-    public void stop() throws Exception{
+    public void stop() throws Exception {
         super.stop();
-        if(consumerSession!=null){
+        if (consumerSession != null) {
             consumerSession.close();
         }
-        if(producerSession!=null){
+        if (producerSession != null) {
             producerSession.close();
         }
     }
-    
 
-    protected MessageConsumer createConsumer() throws JMSException{
+    protected MessageConsumer createConsumer() throws JMSException {
         // set up the consumer
-        consumerSession=consumerConnection.createQueueSession(false,Session.CLIENT_ACKNOWLEDGE);
-        MessageConsumer consumer=null;
-        
-            if(selector!=null&&selector.length()>0){
-                consumer=consumerSession.createReceiver(consumerQueue,selector);
-            }else{
-                consumer=consumerSession.createReceiver(consumerQueue);
-            }
-       
+        consumerSession = consumerConnection.createQueueSession(false, Session.CLIENT_ACKNOWLEDGE);
+        MessageConsumer consumer = null;
+
+        if (selector != null && selector.length() > 0) {
+            consumer = consumerSession.createReceiver(consumerQueue, selector);
+        } else {
+            consumer = consumerSession.createReceiver(consumerQueue);
+        }
+
         return consumer;
     }
-    
-    protected synchronized MessageProducer createProducer() throws JMSException{
-        producerSession=producerConnection.createQueueSession(false,Session.AUTO_ACKNOWLEDGE);
+
+    protected synchronized MessageProducer createProducer() throws JMSException {
+        producerSession = producerConnection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
         producer = producerSession.createSender(null);
         return producer;
     }
-    
-        
-        
-    
-    protected synchronized void sendMessage(Message message) throws JMSException{
+
+    protected synchronized void sendMessage(Message message) throws JMSException {
         if (producer == null) {
             createProducer();
         }
-        producer.send(producerQueue,message);
+        producer.send(producerQueue, message);
     }
 
     /**
      * @return Returns the consumerConnection.
      */
-    public QueueConnection getConsumerConnection(){
+    public QueueConnection getConsumerConnection() {
         return consumerConnection;
     }
 
     /**
      * @param consumerConnection The consumerConnection to set.
      */
-    public void setConsumerConnection(QueueConnection consumerConnection){
-        this.consumerConnection=consumerConnection;
+    public void setConsumerConnection(QueueConnection consumerConnection) {
+        this.consumerConnection = consumerConnection;
     }
 
     /**
      * @return Returns the consumerQueue.
      */
-    public Queue getConsumerQueue(){
+    public Queue getConsumerQueue() {
         return consumerQueue;
     }
 
     /**
      * @param consumerQueue The consumerQueue to set.
      */
-    public void setConsumerQueue(Queue consumerQueue){
-        this.consumerQueue=consumerQueue;
+    public void setConsumerQueue(Queue consumerQueue) {
+        this.consumerQueue = consumerQueue;
     }
 
     /**
      * @return Returns the producerConnection.
      */
-    public QueueConnection getProducerConnection(){
+    public QueueConnection getProducerConnection() {
         return producerConnection;
     }
 
     /**
      * @param producerConnection The producerConnection to set.
      */
-    public void setProducerConnection(QueueConnection producerConnection){
-        this.producerConnection=producerConnection;
+    public void setProducerConnection(QueueConnection producerConnection) {
+        this.producerConnection = producerConnection;
     }
 
     /**
      * @return Returns the producerQueue.
      */
-    public Queue getProducerQueue(){
+    public Queue getProducerQueue() {
         return producerQueue;
     }
 
     /**
      * @param producerQueue The producerQueue to set.
      */
-    public void setProducerQueue(Queue producerQueue){
-        this.producerQueue=producerQueue;
+    public void setProducerQueue(Queue producerQueue) {
+        this.producerQueue = producerQueue;
     }
 
     /**
      * @return Returns the selector.
      */
-    public String getSelector(){
+    public String getSelector() {
         return selector;
     }
 
     /**
      * @param selector The selector to set.
      */
-    public void setSelector(String selector){
-        this.selector=selector;
+    public void setSelector(String selector) {
+        this.selector = selector;
     }
-    
-    protected Connection getConnnectionForConsumer(){
+
+    protected Connection getConnnectionForConsumer() {
         return getConsumerConnection();
     }
-    
-    protected Connection getConnectionForProducer(){
+
+    protected Connection getConnectionForProducer() {
         return getProducerConnection();
     }
-    
-  
+
 }

@@ -20,20 +20,21 @@ import javax.jms.JMSException;
 
 /**
  * Provides a uniform interface that can be used to close all the JMS obejcts
- * that provide a close() method.  Useful for when you want to collect
- * a heterogeous set of JMS object in a collection to be closed at a later time.
- *
+ * that provide a close() method. Useful for when you want to collect a
+ * heterogeous set of JMS object in a collection to be closed at a later time.
+ * 
  * @version $Revision: 1.2 $
  */
 public interface Closeable {
-	
-	/**
-	 * Closes a JMS object.
-	 * <P>
-	 * Many JMS objects are closeable such as Connections, Sessions, Consumers and Producers.
-	 *
-	 * @throws JMSException if the JMS provider fails to close the object due to
-	 *                      some internal error.
-	 */
-	public void close() throws JMSException;
+
+    /**
+     * Closes a JMS object.
+     * <P>
+     * Many JMS objects are closeable such as Connections, Sessions, Consumers
+     * and Producers.
+     * 
+     * @throws JMSException if the JMS provider fails to close the object due to
+     *                 some internal error.
+     */
+    public void close() throws JMSException;
 }

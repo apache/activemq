@@ -138,8 +138,9 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     public int getSize() {
         if (size == 0 && content == null && text != null) {
             size = AVERAGE_MESSAGE_SIZE_OVERHEAD;
-            if (marshalledProperties != null)
+            if (marshalledProperties != null) {
                 size += marshalledProperties.getLength();
+            }
             size = text.length() * 2;
         }
         return super.getSize();

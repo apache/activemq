@@ -17,24 +17,25 @@
 package org.apache.activemq.transport;
 
 import java.io.IOException;
+
 /**
  * @version $Revision: 1.5 $
  */
-public class TransportFilter implements TransportListener,Transport{
+public class TransportFilter implements TransportListener, Transport {
     final protected Transport next;
     protected TransportListener transportListener;
 
-    public TransportFilter(Transport next){
-        this.next=next;
+    public TransportFilter(Transport next) {
+        this.next = next;
     }
 
-    public TransportListener getTransportListener(){
+    public TransportListener getTransportListener() {
         return transportListener;
     }
 
-    public void setTransportListener(TransportListener channelListener){
-        this.transportListener=channelListener;
-        if(channelListener==null)
+    public void setTransportListener(TransportListener channelListener) {
+        this.transportListener = channelListener;
+        if (channelListener == null)
             next.setTransportListener(null);
         else
             next.setTransportListener(this);
@@ -42,13 +43,12 @@ public class TransportFilter implements TransportListener,Transport{
 
     /**
      * @see org.apache.activemq.Service#start()
-     * @throws IOException
-     *             if the next channel has not been set.
+     * @throws IOException if the next channel has not been set.
      */
-    public void start() throws Exception{
-        if(next==null)
+    public void start() throws Exception {
+        if (next == null)
             throw new IOException("The next channel has not been set.");
-        if(transportListener==null)
+        if (transportListener == null)
             throw new IOException("The command listener has not been set.");
         next.start();
     }
@@ -56,69 +56,69 @@ public class TransportFilter implements TransportListener,Transport{
     /**
      * @see org.apache.activemq.Service#stop()
      */
-    public void stop() throws Exception{
+    public void stop() throws Exception {
         next.stop();
     }
 
-    public void onCommand(Object command){
+    public void onCommand(Object command) {
         transportListener.onCommand(command);
     }
 
     /**
      * @return Returns the next.
      */
-    public Transport getNext(){
+    public Transport getNext() {
         return next;
     }
 
-    public String toString(){
+    public String toString() {
         return next.toString();
     }
 
-    public void oneway(Object command) throws IOException{
+    public void oneway(Object command) throws IOException {
         next.oneway(command);
     }
 
-    public FutureResponse asyncRequest(Object command,ResponseCallback responseCallback) throws IOException{
-        return next.asyncRequest(command,null);
+    public FutureResponse asyncRequest(Object command, ResponseCallback responseCallback) throws IOException {
+        return next.asyncRequest(command, null);
     }
 
-    public Object request(Object command) throws IOException{
+    public Object request(Object command) throws IOException {
         return next.request(command);
     }
 
-    public Object request(Object command,int timeout) throws IOException{
-        return next.request(command,timeout);
+    public Object request(Object command, int timeout) throws IOException {
+        return next.request(command, timeout);
     }
 
-    public void onException(IOException error){
+    public void onException(IOException error) {
         transportListener.onException(error);
     }
 
-    public void transportInterupted(){
+    public void transportInterupted() {
         transportListener.transportInterupted();
     }
 
-    public void transportResumed(){
+    public void transportResumed() {
         transportListener.transportResumed();
     }
 
-    public Object narrow(Class target){
-        if(target.isAssignableFrom(getClass())){
+    public Object narrow(Class target) {
+        if (target.isAssignableFrom(getClass())) {
             return this;
         }
         return next.narrow(target);
     }
 
-	public String getRemoteAddress() {
-		return next.getRemoteAddress();
-	}
+    public String getRemoteAddress() {
+        return next.getRemoteAddress();
+    }
 
     /**
      * @return
      * @see org.apache.activemq.transport.Transport#isFaultTolerant()
      */
-    public boolean isFaultTolerant(){
+    public boolean isFaultTolerant() {
         return next.isFaultTolerant();
     }
 }

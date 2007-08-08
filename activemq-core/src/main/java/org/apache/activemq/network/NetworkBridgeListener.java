@@ -16,31 +16,26 @@
  */
 package org.apache.activemq.network;
 
-
-
 /**
- *called when a bridge fails
+ * called when a bridge fails
  * 
  * @version $Revision: 1.1 $
  */
-public interface NetworkBridgeListener{
-    
+public interface NetworkBridgeListener {
+
     /**
      * called when the transport fails
-     *
      */
     public void bridgeFailed();
 
     /**
      * called after the bridge is started.
-     *
      */
-	public void onStart(NetworkBridge bridge);
-	
+    public void onStart(NetworkBridge bridge);
+
     /**
      * called before the bridge is stopped.
-     *
      */
-	public void onStop(NetworkBridge bridge);
+    public void onStop(NetworkBridge bridge);
 
 }

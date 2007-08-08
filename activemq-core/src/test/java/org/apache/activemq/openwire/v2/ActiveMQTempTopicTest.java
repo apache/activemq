@@ -16,40 +16,31 @@
  */
 package org.apache.activemq.openwire.v2;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import org.apache.activemq.openwire.*;
-import org.apache.activemq.command.*;
-
+import org.apache.activemq.command.ActiveMQTempTopic;
 
 /**
  * Test case for the OpenWire marshalling for ActiveMQTempTopic
- *
- *
- * NOTE!: This file is auto generated - do not modify!
- *        if you need to make a change, please see the modify the groovy scripts in the
- *        under src/gram/script and then use maven openwire:generate to regenerate 
- *        this file.
- *
+ * 
+ * 
+ * NOTE!: This file is auto generated - do not modify! if you need to make a
+ * change, please see the modify the groovy scripts in the under src/gram/script
+ * and then use maven openwire:generate to regenerate this file.
+ * 
  * @version $Revision: $
  */
 public class ActiveMQTempTopicTest extends ActiveMQTempDestinationTestSupport {
 
-
     public static ActiveMQTempTopicTest SINGLETON = new ActiveMQTempTopicTest();
 
     public Object createObject() throws Exception {
-    		ActiveMQTempTopic info = new ActiveMQTempTopic();
-    		populateObject(info);
-    		return info;
+        ActiveMQTempTopic info = new ActiveMQTempTopic();
+        populateObject(info);
+        return info;
     }
 
-    
     protected void populateObject(Object object) throws Exception {
-    		super.populateObject(object);
-    		ActiveMQTempTopic info = (ActiveMQTempTopic) object;
+        super.populateObject(object);
+        ActiveMQTempTopic info = (ActiveMQTempTopic)object;
 
-            }
-        }
+    }
+}

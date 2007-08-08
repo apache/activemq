@@ -18,61 +18,65 @@ package org.apache.activemq.state;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.TransactionId;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
-public class TransactionState {        
+public class TransactionState {
     final TransactionId id;
-    
+
     public final ArrayList commands = new ArrayList();
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
 
-	private boolean prepared;
+    private boolean prepared;
 
-	private int preparedResult;
-    
+    private int preparedResult;
+
     public TransactionState(TransactionId id) {
         this.id = id;
-    }        
+    }
+
     public String toString() {
         return id.toString();
     }
-    
+
     public void addCommand(Command operation) {
-    	checkShutdown();
-    	commands.add(operation);            
-    }        
+        checkShutdown();
+        commands.add(operation);
+    }
 
     public List getCommands() {
-    	return commands;            
-    }        
-    
-    private void checkShutdown() {
-		if( shutdown.get() )
-			throw new IllegalStateException("Disposed");
-	}
-    
-    public void shutdown() {
-    	shutdown.set(false);
+        return commands;
     }
-	public TransactionId getId() {
-		return id;
-	}
-	
-	public void setPrepared(boolean prepared) {
-		this.prepared = prepared;
-	}
-	public boolean isPrepared() {
-		return prepared;
-	}
-	public void setPreparedResult(int preparedResult) {
-		this.preparedResult = preparedResult;
-	}
-	public int getPreparedResult() {
-		return preparedResult;
-	}
+
+    private void checkShutdown() {
+        if (shutdown.get())
+            throw new IllegalStateException("Disposed");
+    }
+
+    public void shutdown() {
+        shutdown.set(false);
+    }
+
+    public TransactionId getId() {
+        return id;
+    }
+
+    public void setPrepared(boolean prepared) {
+        this.prepared = prepared;
+    }
+
+    public boolean isPrepared() {
+        return prepared;
+    }
+
+    public void setPreparedResult(int preparedResult) {
+        this.preparedResult = preparedResult;
+    }
+
+    public int getPreparedResult() {
+        return preparedResult;
+    }
 
 }

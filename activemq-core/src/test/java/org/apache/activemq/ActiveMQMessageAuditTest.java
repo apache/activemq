@@ -28,16 +28,16 @@ import org.apache.activemq.util.IdGenerator;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-public class ActiveMQMessageAuditTest extends TestCase{
+public class ActiveMQMessageAuditTest extends TestCase {
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
     }
 
-    protected void setUp() throws Exception{
+    protected void setUp() throws Exception {
         super.setUp();
     }
 
-    protected void tearDown() throws Exception{
+    protected void tearDown() throws Exception {
         super.tearDown();
     }
 
@@ -46,48 +46,48 @@ public class ActiveMQMessageAuditTest extends TestCase{
      * 
      * @param arg0
      */
-    public ActiveMQMessageAuditTest(String arg0){
+    public ActiveMQMessageAuditTest(String arg0) {
         super(arg0);
     }
 
     /**
      * test case for isDuplicate
      */
-    public void testIsDuplicateString(){
-        int count=10000;
-        ActiveMQMessageAudit audit=new ActiveMQMessageAudit();
-        IdGenerator idGen=new IdGenerator();
+    public void testIsDuplicateString() {
+        int count = 10000;
+        ActiveMQMessageAudit audit = new ActiveMQMessageAudit();
+        IdGenerator idGen = new IdGenerator();
         // add to a list
-        List<String> list=new ArrayList<String>();
-        for(int i=0;i<count;i++){
-            String id=idGen.generateId();
+        List<String> list = new ArrayList<String>();
+        for (int i = 0; i < count; i++) {
+            String id = idGen.generateId();
             list.add(id);
-            assertTrue(audit.isDuplicate(id)==false);
+            assertTrue(audit.isDuplicate(id) == false);
         }
-        for(String id:list){
+        for (String id : list) {
             assertTrue(audit.isDuplicate(id));
         }
     }
 
-    public void testIsDuplicateMessageReference(){
-        int count=10000;
-        ActiveMQMessageAudit audit=new ActiveMQMessageAudit();
+    public void testIsDuplicateMessageReference() {
+        int count = 10000;
+        ActiveMQMessageAudit audit = new ActiveMQMessageAudit();
         // add to a list
-        List<MessageReference> list=new ArrayList<MessageReference>();
-        for(int i=0;i<count;i++){
-            ProducerId pid=new ProducerId();
+        List<MessageReference> list = new ArrayList<MessageReference>();
+        for (int i = 0; i < count; i++) {
+            ProducerId pid = new ProducerId();
             pid.setConnectionId("test");
             pid.setSessionId(0);
             pid.setValue(1);
-            MessageId id=new MessageId();
+            MessageId id = new MessageId();
             id.setProducerId(pid);
             id.setProducerSequenceId(i);
-            ActiveMQMessage msg=new ActiveMQMessage();
+            ActiveMQMessage msg = new ActiveMQMessage();
             msg.setMessageId(id);
             list.add(msg);
-            assertTrue(audit.isDuplicateMessageReference(msg)==false);
+            assertTrue(audit.isDuplicateMessageReference(msg) == false);
         }
-        for(MessageReference msg:list){
+        for (MessageReference msg : list) {
             assertTrue(audit.isDuplicateMessageReference(msg));
         }
     }

@@ -163,8 +163,9 @@ public class ProducerFlowControlTest extends JmsTestSupport {
         while (true) {
             Thread.sleep(1000);
             // the producer is blocked once the done flag stays true.
-            if (done.get())
+            if (done.get()) {
                 break;
+            }
             done.set(true);
         }
         keepGoing.set(false);

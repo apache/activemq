@@ -23,31 +23,30 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.impl.index.IndexItem;
 
-
 /**
  * Marshall a TopicSubAck
+ * 
  * @version $Revision: 1.10 $
  */
-public class ConsumerMessageRefMarshaller implements Marshaller{
-   
+public class ConsumerMessageRefMarshaller implements Marshaller {
 
     /**
      * @param object
      * @param dataOut
      * @throws IOException
-     * @see org.apache.activemq.kaha.Marshaller#writePayload(java.lang.Object, java.io.DataOutput)
+     * @see org.apache.activemq.kaha.Marshaller#writePayload(java.lang.Object,
+     *      java.io.DataOutput)
      */
-    public void writePayload(Object object,DataOutput dataOut) throws IOException{
-       ConsumerMessageRef ref = (ConsumerMessageRef) object;
-       dataOut.writeUTF(ref.getMessageId().toString());
-       IndexItem item = (IndexItem)ref.getMessageEntry();
-       dataOut.writeLong(item.getOffset());
-       item.write(dataOut);
-       item = (IndexItem)ref.getAckEntry();
-       dataOut.writeLong(item.getOffset());
-       item.write(dataOut);
-       
-       
+    public void writePayload(Object object, DataOutput dataOut) throws IOException {
+        ConsumerMessageRef ref = (ConsumerMessageRef)object;
+        dataOut.writeUTF(ref.getMessageId().toString());
+        IndexItem item = (IndexItem)ref.getMessageEntry();
+        dataOut.writeLong(item.getOffset());
+        item.write(dataOut);
+        item = (IndexItem)ref.getAckEntry();
+        dataOut.writeLong(item.getOffset());
+        item.write(dataOut);
+
     }
 
     /**
@@ -56,7 +55,7 @@ public class ConsumerMessageRefMarshaller implements Marshaller{
      * @throws IOException
      * @see org.apache.activemq.kaha.Marshaller#readPayload(java.io.DataInput)
      */
-    public Object readPayload(DataInput dataIn) throws IOException{
+    public Object readPayload(DataInput dataIn) throws IOException {
         ConsumerMessageRef ref = new ConsumerMessageRef();
         ref.setMessageId(new MessageId(dataIn.readUTF()));
         IndexItem item = new IndexItem();

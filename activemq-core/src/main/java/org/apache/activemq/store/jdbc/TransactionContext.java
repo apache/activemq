@@ -36,7 +36,7 @@ import org.apache.commons.logging.LogFactory;
 public class TransactionContext {
 
     private static final Log log = LogFactory.getLog(TransactionContext.class);
-    
+
     private final DataSource dataSource;
     private Connection connection;
     private boolean inTx;
@@ -49,7 +49,7 @@ public class TransactionContext {
     }
 
     public Connection getConnection() throws IOException {
-        if( connection == null ) {
+        if (connection == null) {
             try {
                 connection = dataSource.getConnection();
                 boolean autoCommit = !inTx;
@@ -60,7 +60,7 @@ public class TransactionContext {
                 JDBCPersistenceAdapter.log("Could not get JDBC connection: ", e);
                 throw IOExceptionSupport.create(e);
             }
-            
+
             try {
                 connection.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
             } catch (Throwable e) {
@@ -77,51 +77,54 @@ public class TransactionContext {
             try {
                 executeBatch(removedMessageStatement, "Failed to remove a message");
             } finally {
-                removedMessageStatement=null;
+                removedMessageStatement = null;
                 try {
                     executeBatch(updateLastAckStatement, "Failed to ack a message");
                 } finally {
-                    updateLastAckStatement=null;
+                    updateLastAckStatement = null;
                 }
             }
         }
     }
 
     private void executeBatch(PreparedStatement p, String message) throws SQLException {
-        if( p == null )
+        if (p == null)
             return;
-        
+
         try {
             int[] rc = p.executeBatch();
             for (int i = 0; i < rc.length; i++) {
                 int code = rc[i];
-                if ( code < 0 && code != Statement.SUCCESS_NO_INFO ) {
+                if (code < 0 && code != Statement.SUCCESS_NO_INFO) {
                     throw new SQLException(message + ". Response code: " + code);
                 }
             }
         } finally {
-            try { p.close(); } catch (Throwable e) { }
+            try {
+                p.close();
+            } catch (Throwable e) {
+            }
         }
     }
-    
+
     public void close() throws IOException {
-        if( !inTx ) {
+        if (!inTx) {
             try {
-                
+
                 /**
                  * we are not in a transaction so should not be committing ??
-                 * This was previously commented out - but had
-                 * adverse affects on testing - so it's back!
+                 * This was previously commented out - but had adverse affects
+                 * on testing - so it's back!
                  * 
                  */
-                try{
+                try {
                     executeBatch();
                 } finally {
                     if (connection != null && !connection.getAutoCommit()) {
                         connection.commit();
                     }
                 }
-                
+
             } catch (SQLException e) {
                 JDBCPersistenceAdapter.log("Error while closing connection: ", e);
                 throw IOExceptionSupport.create(e);
@@ -131,60 +134,60 @@ public class TransactionContext {
                         connection.close();
                     }
                 } catch (Throwable e) {
-                    log.warn("Close failed: "+e.getMessage(), e);
+                    log.warn("Close failed: " + e.getMessage(), e);
                 } finally {
-                    connection=null;
+                    connection = null;
                 }
             }
         }
     }
 
     public void begin() throws IOException {
-        if( inTx )
+        if (inTx)
             throw new IOException("Already started.");
         inTx = true;
         connection = getConnection();
     }
 
     public void commit() throws IOException {
-        if( !inTx )
+        if (!inTx)
             throw new IOException("Not started.");
         try {
             executeBatch();
-            if( !connection.getAutoCommit() )
+            if (!connection.getAutoCommit())
                 connection.commit();
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("Commit failed: ", e);
             throw IOExceptionSupport.create(e);
         } finally {
-            inTx=false;
+            inTx = false;
             close();
         }
     }
-    
+
     public void rollback() throws IOException {
-        if( !inTx )
+        if (!inTx)
             throw new IOException("Not started.");
         try {
-            if( addMessageStatement != null ) {
+            if (addMessageStatement != null) {
                 addMessageStatement.close();
-                addMessageStatement=null;
+                addMessageStatement = null;
             }
-            if( removedMessageStatement != null ) {
+            if (removedMessageStatement != null) {
                 removedMessageStatement.close();
-                removedMessageStatement=null;
+                removedMessageStatement = null;
             }
-            if( updateLastAckStatement != null ) {
+            if (updateLastAckStatement != null) {
                 updateLastAckStatement.close();
-                updateLastAckStatement=null;
+                updateLastAckStatement = null;
             }
             connection.rollback();
-            
+
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("Rollback failed: ", e);
             throw IOExceptionSupport.create(e);
         } finally {
-            inTx=false;
+            inTx = false;
             close();
         }
     }
@@ -192,6 +195,7 @@ public class TransactionContext {
     public PreparedStatement getAddMessageStatement() {
         return addMessageStatement;
     }
+
     public void setAddMessageStatement(PreparedStatement addMessageStatement) {
         this.addMessageStatement = addMessageStatement;
     }
@@ -199,6 +203,7 @@ public class TransactionContext {
     public PreparedStatement getUpdateLastAckStatement() {
         return updateLastAckStatement;
     }
+
     public void setUpdateLastAckStatement(PreparedStatement ackMessageStatement) {
         this.updateLastAckStatement = ackMessageStatement;
     }
@@ -206,6 +211,7 @@ public class TransactionContext {
     public PreparedStatement getRemovedMessageStatement() {
         return removedMessageStatement;
     }
+
     public void setRemovedMessageStatement(PreparedStatement removedMessageStatement) {
         this.removedMessageStatement = removedMessageStatement;
     }

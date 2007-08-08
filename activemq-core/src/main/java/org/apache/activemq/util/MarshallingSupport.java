@@ -32,37 +32,35 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * 
- * 
- * The fixed version of the UTF8 encoding function.  Some older JVM's UTF8 encoding function
- * breaks when handling large strings. 
+ * The fixed version of the UTF8 encoding function. Some older JVM's UTF8
+ * encoding function breaks when handling large strings.
  * 
  * @version $Revision$
  */
 public class MarshallingSupport {
-   
-    public static final byte NULL                    = 0;
-    public static final byte BOOLEAN_TYPE            = 1;
-    public static final byte BYTE_TYPE               = 2;
-    public static final byte CHAR_TYPE               = 3;
-    public static final byte SHORT_TYPE              = 4;
-    public static final byte INTEGER_TYPE            = 5;
-    public static final byte LONG_TYPE               = 6;
-    public static final byte DOUBLE_TYPE             = 7;
-    public static final byte FLOAT_TYPE              = 8;
-    public static final byte STRING_TYPE             = 9;
-    public static final byte BYTE_ARRAY_TYPE         = 10;
-    public static final byte MAP_TYPE                = 11;
-    public static final byte LIST_TYPE               = 12;
-    public static final byte BIG_STRING_TYPE         = 13;
 
-    static  public void marshalPrimitiveMap(Map map, DataOutputStream out) throws IOException {
-        if( map == null ) {
+    public static final byte NULL = 0;
+    public static final byte BOOLEAN_TYPE = 1;
+    public static final byte BYTE_TYPE = 2;
+    public static final byte CHAR_TYPE = 3;
+    public static final byte SHORT_TYPE = 4;
+    public static final byte INTEGER_TYPE = 5;
+    public static final byte LONG_TYPE = 6;
+    public static final byte DOUBLE_TYPE = 7;
+    public static final byte FLOAT_TYPE = 8;
+    public static final byte STRING_TYPE = 9;
+    public static final byte BYTE_ARRAY_TYPE = 10;
+    public static final byte MAP_TYPE = 11;
+    public static final byte LIST_TYPE = 12;
+    public static final byte BIG_STRING_TYPE = 13;
+
+    static public void marshalPrimitiveMap(Map map, DataOutputStream out) throws IOException {
+        if (map == null) {
             out.writeInt(-1);
         } else {
             out.writeInt(map.size());
             for (Iterator iter = map.keySet().iterator(); iter.hasNext();) {
-                String name = (String) iter.next();
+                String name = (String)iter.next();
                 out.writeUTF(name);
                 Object value = map.get(name);
                 marshalPrimitive(out, value);
@@ -71,37 +69,37 @@ public class MarshallingSupport {
     }
 
     static public Map unmarshalPrimitiveMap(DataInputStream in) throws IOException {
-		return unmarshalPrimitiveMap(in, Integer.MAX_VALUE);
-	}
+        return unmarshalPrimitiveMap(in, Integer.MAX_VALUE);
+    }
 
     /**
      * @param in
      * @return
-     * @throws IOException 
+     * @throws IOException
      * @throws IOException
      */
-	public static Map unmarshalPrimitiveMap(DataInputStream in, int max_property_size) throws IOException {
+    public static Map unmarshalPrimitiveMap(DataInputStream in, int max_property_size) throws IOException {
         int size = in.readInt();
-        if( size > max_property_size ) {
-        	throw new IOException("Primitive map is larger than the allowed size: "+size);
+        if (size > max_property_size) {
+            throw new IOException("Primitive map is larger than the allowed size: " + size);
         }
-        if( size < 0 ) {
+        if (size < 0) {
             return null;
         } else {
             HashMap rc = new HashMap(size);
-            for(int i=0; i < size; i++) {
+            for (int i = 0; i < size; i++) {
                 String name = in.readUTF();
                 rc.put(name, unmarshalPrimitive(in));
             }
             return rc;
         }
-        
+
     }
 
     public static void marshalPrimitiveList(List list, DataOutputStream out) throws IOException {
         out.writeInt(list.size());
         for (Iterator iter = list.iterator(); iter.hasNext();) {
-            Object element = (Object) iter.next();
+            Object element = (Object)iter.next();
             marshalPrimitive(out, element);
         }
     }
@@ -116,43 +114,42 @@ public class MarshallingSupport {
     }
 
     static public void marshalPrimitive(DataOutputStream out, Object value) throws IOException {
-        if( value == null ) {
+        if (value == null) {
             marshalNull(out);
-        } else if( value.getClass() == Boolean.class ) {
+        } else if (value.getClass() == Boolean.class) {
             marshalBoolean(out, ((Boolean)value).booleanValue());
-        } else if( value.getClass() == Byte.class ) {
+        } else if (value.getClass() == Byte.class) {
             marshalByte(out, ((Byte)value).byteValue());
-        } else if( value.getClass() == Character.class ) {
+        } else if (value.getClass() == Character.class) {
             marshalChar(out, ((Character)value).charValue());
-        } else if( value.getClass() == Short.class ) {
+        } else if (value.getClass() == Short.class) {
             marshalShort(out, ((Short)value).shortValue());
-        } else if( value.getClass() == Integer.class ) {
+        } else if (value.getClass() == Integer.class) {
             marshalInt(out, ((Integer)value).intValue());
-        } else if( value.getClass() == Long.class ) {
+        } else if (value.getClass() == Long.class) {
             marshalLong(out, ((Long)value).longValue());
-        } else if( value.getClass() == Float.class ) {
+        } else if (value.getClass() == Float.class) {
             marshalFloat(out, ((Float)value).floatValue());
-        } else if( value.getClass() == Double.class ) {
+        } else if (value.getClass() == Double.class) {
             marshalDouble(out, ((Double)value).doubleValue());
-        } else if( value.getClass() == byte[].class ) {
+        } else if (value.getClass() == byte[].class) {
             marshalByteArray(out, ((byte[])value));
-        } else if( value.getClass() == String.class ) {
+        } else if (value.getClass() == String.class) {
             marshalString(out, (String)value);
-        } else if( value instanceof Map) {
+        } else if (value instanceof Map) {
             out.writeByte(MAP_TYPE);
-            marshalPrimitiveMap((Map) value, out);
-        } else if( value instanceof List) {
+            marshalPrimitiveMap((Map)value, out);
+        } else if (value instanceof List) {
             out.writeByte(LIST_TYPE);
-            marshalPrimitiveList((List) value, out);
+            marshalPrimitiveList((List)value, out);
         } else {
-            throw new IOException("Object is not a primitive: "+value);
+            throw new IOException("Object is not a primitive: " + value);
         }
     }
 
-
     static public Object unmarshalPrimitive(DataInputStream in) throws IOException {
-        Object value=null;
-        switch( in.readByte() ) {
+        Object value = null;
+        switch (in.readByte()) {
         case BYTE_TYPE:
             value = Byte.valueOf(in.readByte());
             break;
@@ -251,10 +248,9 @@ public class MarshallingSupport {
         out.write(value, offset, length);
     }
 
-
     public static void marshalString(DataOutputStream out, String s) throws IOException {
         // If it's too big, out.writeUTF may not able able to write it out.
-        if( s.length() < Short.MAX_VALUE/4 ) {
+        if (s.length() < Short.MAX_VALUE / 4) {
             out.writeByte(STRING_TYPE);
             out.writeUTF(s);
         } else {
@@ -282,23 +278,25 @@ public class MarshallingSupport {
                     utflen += 2;
                 }
             }
-            //TODO diff: Sun code - removed
-            byte[] bytearr = new byte[utflen + 4]; //TODO diff: Sun code
-            bytearr[count++] = (byte) ((utflen >>> 24) & 0xFF); //TODO diff: Sun code
-            bytearr[count++] = (byte) ((utflen >>> 16) & 0xFF); //TODO diff: Sun code
-            bytearr[count++] = (byte) ((utflen >>> 8) & 0xFF);
-            bytearr[count++] = (byte) ((utflen >>> 0) & 0xFF);
+            // TODO diff: Sun code - removed
+            byte[] bytearr = new byte[utflen + 4]; // TODO diff: Sun code
+            bytearr[count++] = (byte)((utflen >>> 24) & 0xFF); // TODO diff:
+                                                                // Sun code
+            bytearr[count++] = (byte)((utflen >>> 16) & 0xFF); // TODO diff:
+                                                                // Sun code
+            bytearr[count++] = (byte)((utflen >>> 8) & 0xFF);
+            bytearr[count++] = (byte)((utflen >>> 0) & 0xFF);
             for (int i = 0; i < strlen; i++) {
                 c = charr[i];
                 if ((c >= 0x0001) && (c <= 0x007F)) {
-                    bytearr[count++] = (byte) c;
+                    bytearr[count++] = (byte)c;
                 } else if (c > 0x07FF) {
-                    bytearr[count++] = (byte) (0xE0 | ((c >> 12) & 0x0F));
-                    bytearr[count++] = (byte) (0x80 | ((c >> 6) & 0x3F));
-                    bytearr[count++] = (byte) (0x80 | ((c >> 0) & 0x3F));
+                    bytearr[count++] = (byte)(0xE0 | ((c >> 12) & 0x0F));
+                    bytearr[count++] = (byte)(0x80 | ((c >> 6) & 0x3F));
+                    bytearr[count++] = (byte)(0x80 | ((c >> 0) & 0x3F));
                 } else {
-                    bytearr[count++] = (byte) (0xC0 | ((c >> 6) & 0x1F));
-                    bytearr[count++] = (byte) (0x80 | ((c >> 0) & 0x3F));
+                    bytearr[count++] = (byte)(0xC0 | ((c >> 6) & 0x1F));
+                    bytearr[count++] = (byte)(0x80 | ((c >> 0) & 0x3F));
                 }
             }
             dataOut.write(bytearr);
@@ -309,7 +307,7 @@ public class MarshallingSupport {
     }
 
     static public String readUTF8(DataInput dataIn) throws IOException {
-        int utflen = dataIn.readInt(); //TODO diff: Sun code
+        int utflen = dataIn.readInt(); // TODO diff: Sun code
         if (utflen > -1) {
             StringBuffer str = new StringBuffer(utflen);
             byte bytearr[] = new byte[utflen];
@@ -321,47 +319,47 @@ public class MarshallingSupport {
             while (count < utflen) {
                 c = bytearr[count] & 0xff;
                 switch (c >> 4) {
-                    case 0:
-                    case 1:
-                    case 2:
-                    case 3:
-                    case 4:
-                    case 5:
-                    case 6:
-                    case 7:
-                        /* 0xxxxxxx */
-                        count++;
-                        str.append((char) c);
-                        break;
-                    case 12:
-                    case 13:
-                        /* 110x xxxx 10xx xxxx */
-                        count += 2;
-                        if (count > utflen) {
-                            throw new UTFDataFormatException();
-                        }
-                        char2 = bytearr[count - 1];
-                        if ((char2 & 0xC0) != 0x80) {
-                            throw new UTFDataFormatException();
-                        }
-                        str.append((char) (((c & 0x1F) << 6) | (char2 & 0x3F)));
-                        break;
-                    case 14:
-                        /* 1110 xxxx 10xx xxxx 10xx xxxx */
-                        count += 3;
-                        if (count > utflen) {
-                            throw new UTFDataFormatException();
-                        }
-                        char2 = bytearr[count - 2]; //TODO diff: Sun code
-                        char3 = bytearr[count - 1]; //TODO diff: Sun code
-                        if (((char2 & 0xC0) != 0x80) || ((char3 & 0xC0) != 0x80)) {
-                            throw new UTFDataFormatException();
-                        }
-                        str.append((char) (((c & 0x0F) << 12) | ((char2 & 0x3F) << 6) | ((char3 & 0x3F) << 0)));
-                        break;
-                    default :
-                        /* 10xx xxxx, 1111 xxxx */
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                case 6:
+                case 7:
+                    /* 0xxxxxxx */
+                    count++;
+                    str.append((char)c);
+                    break;
+                case 12:
+                case 13:
+                    /* 110x xxxx 10xx xxxx */
+                    count += 2;
+                    if (count > utflen) {
                         throw new UTFDataFormatException();
+                    }
+                    char2 = bytearr[count - 1];
+                    if ((char2 & 0xC0) != 0x80) {
+                        throw new UTFDataFormatException();
+                    }
+                    str.append((char)(((c & 0x1F) << 6) | (char2 & 0x3F)));
+                    break;
+                case 14:
+                    /* 1110 xxxx 10xx xxxx 10xx xxxx */
+                    count += 3;
+                    if (count > utflen) {
+                        throw new UTFDataFormatException();
+                    }
+                    char2 = bytearr[count - 2]; // TODO diff: Sun code
+                    char3 = bytearr[count - 1]; // TODO diff: Sun code
+                    if (((char2 & 0xC0) != 0x80) || ((char3 & 0xC0) != 0x80)) {
+                        throw new UTFDataFormatException();
+                    }
+                    str.append((char)(((c & 0x0F) << 12) | ((char2 & 0x3F) << 6) | ((char3 & 0x3F) << 0)));
+                    break;
+                default:
+                    /* 10xx xxxx, 1111 xxxx */
+                    throw new UTFDataFormatException();
                 }
             }
             // The number of chars produced may be less than utflen
@@ -370,27 +368,26 @@ public class MarshallingSupport {
             return null;
         }
     }
-    
-    public static String propertiesToString(Properties props) throws IOException{
-        String result="";
-        if(props!=null){
-            DataByteArrayOutputStream dataOut=new DataByteArrayOutputStream();
-            props.store(dataOut,"");
-            result=new String(dataOut.getData(),0,dataOut.size());
+
+    public static String propertiesToString(Properties props) throws IOException {
+        String result = "";
+        if (props != null) {
+            DataByteArrayOutputStream dataOut = new DataByteArrayOutputStream();
+            props.store(dataOut, "");
+            result = new String(dataOut.getData(), 0, dataOut.size());
             dataOut.close();
         }
         return result;
     }
-    
+
     public static Properties stringToProperties(String str) throws IOException {
         Properties result = new Properties();
-        if (str != null && str.length() > 0 ) {
+        if (str != null && str.length() > 0) {
             DataByteArrayInputStream dataIn = new DataByteArrayInputStream(str.getBytes());
             result.load(dataIn);
             dataIn.close();
         }
         return result;
     }
-
 
 }

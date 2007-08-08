@@ -30,14 +30,14 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * A simple fixed size {@link MessageList} where there is a single, fixed size
- * list that all messages are added to for simplicity. Though this
- * will lead to possibly slow recovery times as many more messages
- * than is necessary will have to be iterated through for each subscription.
+ * list that all messages are added to for simplicity. Though this will lead to
+ * possibly slow recovery times as many more messages than is necessary will
+ * have to be iterated through for each subscription.
  * 
  * @version $Revision: 1.1 $
  */
 public class SimpleMessageList implements MessageList {
-    static final private Log log=LogFactory.getLog(SimpleMessageList.class);
+    static final private Log log = LogFactory.getLog(SimpleMessageList.class);
     private LinkedList list = new LinkedList();
     private int maximumSize = 100 * 64 * 1024;
     private int size;
@@ -56,7 +56,7 @@ public class SimpleMessageList implements MessageList {
             list.add(node);
             size += delta;
             while (size > maximumSize) {
-                MessageReference evicted = (MessageReference) list.removeFirst();
+                MessageReference evicted = (MessageReference)list.removeFirst();
                 size -= evicted.getMessageHardRef().getSize();
             }
         }
@@ -65,23 +65,23 @@ public class SimpleMessageList implements MessageList {
     public List getMessages(ActiveMQDestination destination) {
         return getList();
     }
-    
+
     public Message[] browse(ActiveMQDestination destination) {
         List result = new ArrayList();
-        DestinationFilter filter=DestinationFilter.parseFilter(destination);
-        synchronized(lock){
-            for (Iterator i = list.iterator(); i.hasNext();){
+        DestinationFilter filter = DestinationFilter.parseFilter(destination);
+        synchronized (lock) {
+            for (Iterator i = list.iterator(); i.hasNext();) {
                 MessageReference ref = (MessageReference)i.next();
                 Message msg;
-                try{
-                    msg=ref.getMessage();
-                    if (filter.matches(msg.getDestination())){
+                try {
+                    msg = ref.getMessage();
+                    if (filter.matches(msg.getDestination())) {
                         result.add(msg);
                     }
-                }catch(IOException e){
-                   log.error("Failed to get Message from MessageReference: " + ref,e);
+                } catch (IOException e) {
+                    log.error("Failed to get Message from MessageReference: " + ref, e);
                 }
-                
+
             }
         }
         return (Message[])result.toArray(new Message[result.size()]);

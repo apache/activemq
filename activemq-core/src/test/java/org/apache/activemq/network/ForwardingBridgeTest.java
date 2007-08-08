@@ -27,28 +27,25 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
 
-
 public class ForwardingBridgeTest extends NetworkTestSupport {
-    
+
     public ActiveMQDestination destination;
     public byte destinationType;
     public int deliveryMode;
     private ForwardingBridge bridge;
 
-    public void initCombosForTestAddConsumerThenSend() {    
-        addCombinationValues( "deliveryMode", new Object[]{ 
-                new Integer(DeliveryMode.NON_PERSISTENT), 
-                new Integer(DeliveryMode.PERSISTENT)} );        
-        addCombinationValues( "destinationType", new Object[]{ 
-                new Byte(ActiveMQDestination.QUEUE_TYPE), 
-                new Byte(ActiveMQDestination.TOPIC_TYPE), 
-                } );
-    }    
+    public void initCombosForTestAddConsumerThenSend() {
+        addCombinationValues("deliveryMode", new Object[] {new Integer(DeliveryMode.NON_PERSISTENT),
+                                                           new Integer(DeliveryMode.PERSISTENT)});
+        addCombinationValues("destinationType", new Object[] {new Byte(ActiveMQDestination.QUEUE_TYPE),
+                                                              new Byte(ActiveMQDestination.TOPIC_TYPE),});
+    }
+
     public void testAddConsumerThenSend() throws Exception {
-        // Start a producer on local broker 
+        // Start a producer on local broker
         StubConnection connection1 = createConnection();
         ConnectionInfo connectionInfo1 = createConnectionInfo();
-        SessionInfo sessionInfo1 = createSessionInfo(connectionInfo1);        
+        SessionInfo sessionInfo1 = createSessionInfo(connectionInfo1);
         ProducerInfo producerInfo = createProducerInfo(sessionInfo1);
         connection1.send(connectionInfo1);
         connection1.send(sessionInfo1);
@@ -59,10 +56,10 @@ public class ForwardingBridgeTest extends NetworkTestSupport {
         // Start a consumer on a remote broker
         StubConnection connection2 = createRemoteConnection();
         ConnectionInfo connectionInfo2 = createConnectionInfo();
-        SessionInfo sessionInfo2 = createSessionInfo(connectionInfo2);        
+        SessionInfo sessionInfo2 = createSessionInfo(connectionInfo2);
         connection2.send(connectionInfo2);
         connection2.send(sessionInfo2);
-        ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo2, destination);        
+        ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo2, destination);
         connection2.send(consumerInfo);
         Thread.sleep(1000);
         // Give forwarding bridge a chance to finish setting up
@@ -71,33 +68,33 @@ public class ForwardingBridgeTest extends NetworkTestSupport {
         } catch (InterruptedException ie) {
             ie.printStackTrace();
         }
-        
+
         // Send the message to the local boker.
         connection1.send(createMessage(producerInfo, destination, deliveryMode));
-        
+
         // Make sure the message was delivered via the remote.
-        
+
         Message m = receiveMessage(connection2);
         assertNotNull(m);
     }
-    
+
     protected void setUp() throws Exception {
         super.setUp();
         bridge = new ForwardingBridge(createTransport(), createRemoteTransport());
         bridge.setClientId("local-remote-bridge");
         bridge.setDispatchAsync(false);
-        bridge.start();        
+        bridge.start();
     }
-    
+
     protected void tearDown() throws Exception {
         bridge.stop();
         super.tearDown();
     }
-    
+
     public static Test suite() {
         return suite(ForwardingBridgeTest.class);
     }
-    
+
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }

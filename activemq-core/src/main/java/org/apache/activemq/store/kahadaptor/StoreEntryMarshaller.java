@@ -22,22 +22,21 @@ import java.io.IOException;
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.impl.index.IndexItem;
 
-
 /**
  * Marshall a TopicSubAck
+ * 
  * @version $Revision: 1.10 $
  */
-public class StoreEntryMarshaller implements Marshaller{
-   
+public class StoreEntryMarshaller implements Marshaller {
 
-    public void writePayload(Object object,DataOutput dataOut) throws IOException{
-       IndexItem item = (IndexItem)object;
-       dataOut.writeLong(item.getOffset());
-       item.write(dataOut);
-       
+    public void writePayload(Object object, DataOutput dataOut) throws IOException {
+        IndexItem item = (IndexItem)object;
+        dataOut.writeLong(item.getOffset());
+        item.write(dataOut);
+
     }
 
-    public Object readPayload(DataInput dataIn) throws IOException{
+    public Object readPayload(DataInput dataIn) throws IOException {
         IndexItem item = new IndexItem();
         item.setOffset(dataIn.readLong());
         item.read(dataIn);

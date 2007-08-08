@@ -16,6 +16,10 @@
  */
 package org.apache.activemq.broker.region;
 
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.Set;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
@@ -25,10 +29,6 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.MessageStore;
-
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.Set;
 
 /**
  * 
@@ -42,7 +42,8 @@ public class DestinationFilter implements Destination {
         this.next = next;
     }
 
-    public void acknowledge(ConnectionContext context, Subscription sub, MessageAck ack, MessageReference node) throws IOException {
+    public void acknowledge(ConnectionContext context, Subscription sub, MessageAck ack, MessageReference node)
+        throws IOException {
         next.acknowledge(context, sub, ack, node);
     }
 
@@ -105,17 +106,18 @@ public class DestinationFilter implements Destination {
     /**
      * Sends a message to the given destination which may be a wildcard
      */
-    protected void send(ProducerBrokerExchange context, Message message, ActiveMQDestination destination) throws Exception {
+    protected void send(ProducerBrokerExchange context, Message message, ActiveMQDestination destination)
+        throws Exception {
         Broker broker = context.getConnectionContext().getBroker();
         Set destinations = broker.getDestinations(destination);
 
         for (Iterator iter = destinations.iterator(); iter.hasNext();) {
-            Destination dest = (Destination) iter.next();
+            Destination dest = (Destination)iter.next();
             dest.send(context, message);
         }
     }
 
-	public MessageStore getMessageStore() {
-		return next.getMessageStore();
-	}
+    public MessageStore getMessageStore() {
+        return next.getMessageStore();
+    }
 }

@@ -29,7 +29,7 @@ public class TopicSubscriptionView extends SubscriptionView implements TopicSubs
     }
 
     protected TopicSubscription getTopicSubscription() {
-        return (TopicSubscription) subscription;
+        return (TopicSubscription)subscription;
     }
 
     /**
@@ -47,14 +47,14 @@ public class TopicSubscriptionView extends SubscriptionView implements TopicSubs
         TopicSubscription topicSubscription = getTopicSubscription();
         return topicSubscription != null ? topicSubscription.getMaximumPendingMessages() : 0;
     }
-    
+
     /**
      * 
      */
     public void setMaximumPendingQueueSize(int max) {
         TopicSubscription topicSubscription = getTopicSubscription();
-        if ( topicSubscription != null ) {
-        	topicSubscription.setMaximumPendingMessages(max);
+        if (topicSubscription != null) {
+            topicSubscription.setMaximumPendingMessages(max);
         }
     }
 }

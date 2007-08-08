@@ -22,24 +22,23 @@ import java.io.IOException;
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.impl.index.IndexItem;
 
-
 /**
  * Marshall a TopicSubAck
+ * 
  * @version $Revision: 1.10 $
  */
-public class TopicSubAckMarshaller implements Marshaller{
-   
+public class TopicSubAckMarshaller implements Marshaller {
 
-    public void writePayload(Object object,DataOutput dataOut) throws IOException{
-       TopicSubAck tsa = (TopicSubAck) object;
-       dataOut.writeInt(tsa.getCount());
-       IndexItem item = (IndexItem)tsa.getMessageEntry();
-       dataOut.writeLong(item.getOffset());
-       item.write(dataOut);
-       
+    public void writePayload(Object object, DataOutput dataOut) throws IOException {
+        TopicSubAck tsa = (TopicSubAck)object;
+        dataOut.writeInt(tsa.getCount());
+        IndexItem item = (IndexItem)tsa.getMessageEntry();
+        dataOut.writeLong(item.getOffset());
+        item.write(dataOut);
+
     }
 
-    public Object readPayload(DataInput dataIn) throws IOException{
+    public Object readPayload(DataInput dataIn) throws IOException {
         TopicSubAck tsa = new TopicSubAck();
         int count = dataIn.readInt();
         tsa.setCount(count);

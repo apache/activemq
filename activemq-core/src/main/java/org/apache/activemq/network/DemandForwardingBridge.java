@@ -35,41 +35,42 @@ import java.io.IOException;
  */
 public class DemandForwardingBridge extends DemandForwardingBridgeSupport {
 
-    protected final BrokerId remoteBrokerPath[] = new BrokerId[] { null };
+    protected final BrokerId remoteBrokerPath[] = new BrokerId[] {null};
     protected Object brokerInfoMutex = new Object();
     protected BrokerId remoteBrokerId;
 
-    public DemandForwardingBridge(NetworkBridgeConfiguration configuration,Transport localBroker,Transport remoteBroker){
-        super(configuration,localBroker, remoteBroker);
+    public DemandForwardingBridge(NetworkBridgeConfiguration configuration, Transport localBroker,
+                                  Transport remoteBroker) {
+        super(configuration, localBroker, remoteBroker);
     }
 
     protected void serviceRemoteBrokerInfo(Command command) throws IOException {
-        synchronized(brokerInfoMutex){
-            BrokerInfo remoteBrokerInfo=(BrokerInfo) command;
-            remoteBrokerId=remoteBrokerInfo.getBrokerId();
-            remoteBrokerPath[0]=remoteBrokerId;
-            remoteBrokerName=remoteBrokerInfo.getBrokerName();
-            if(localBrokerId!=null){
-                if(localBrokerId.equals(remoteBrokerId)){
+        synchronized (brokerInfoMutex) {
+            BrokerInfo remoteBrokerInfo = (BrokerInfo)command;
+            remoteBrokerId = remoteBrokerInfo.getBrokerId();
+            remoteBrokerPath[0] = remoteBrokerId;
+            remoteBrokerName = remoteBrokerInfo.getBrokerName();
+            if (localBrokerId != null) {
+                if (localBrokerId.equals(remoteBrokerId)) {
                     log.info("Disconnecting loop back connection.");
-                    //waitStarted();
+                    // waitStarted();
                     ServiceSupport.dispose(this);
                 }
             }
-        	remoteBrokerNameKnownLatch.countDown();
+            remoteBrokerNameKnownLatch.countDown();
         }
     }
 
     protected void addRemoteBrokerToBrokerPath(ConsumerInfo info) {
-        info.setBrokerPath(appendToBrokerPath(info.getBrokerPath(),getRemoteBrokerPath()));
+        info.setBrokerPath(appendToBrokerPath(info.getBrokerPath(), getRemoteBrokerPath()));
     }
 
     protected void serviceLocalBrokerInfo(Command command) throws InterruptedException {
-        synchronized(brokerInfoMutex){
-            localBrokerId=((BrokerInfo) command).getBrokerId();
-            localBrokerPath[0]=localBrokerId;
-            if(remoteBrokerId!=null){
-                if(remoteBrokerId.equals(localBrokerId)){
+        synchronized (brokerInfoMutex) {
+            localBrokerId = ((BrokerInfo)command).getBrokerId();
+            localBrokerPath[0] = localBrokerId;
+            if (remoteBrokerId != null) {
+                if (remoteBrokerId.equals(localBrokerId)) {
                     log.info("Disconnecting loop back connection.");
                     waitStarted();
                     ServiceSupport.dispose(this);
@@ -77,12 +78,12 @@ public class DemandForwardingBridge extends DemandForwardingBridgeSupport {
             }
         }
     }
-    
+
     protected NetworkBridgeFilter createNetworkBridgeFilter(ConsumerInfo info) throws IOException {
         return new NetworkBridgeFilter(remoteBrokerPath[0], configuration.getNetworkTTL());
     }
-    
-    protected BrokerId[] getRemoteBrokerPath(){
+
+    protected BrokerId[] getRemoteBrokerPath() {
         return remoteBrokerPath;
     }
 }

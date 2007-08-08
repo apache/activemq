@@ -65,20 +65,20 @@ public class MemoryTransactionStore implements TransactionStore {
 
         public Message[] getMessages() {
             Message rc[] = new Message[messages.size()];
-            int count=0;
+            int count = 0;
             for (Iterator iter = messages.iterator(); iter.hasNext();) {
-                AddMessageCommand cmd = (AddMessageCommand) iter.next();
-                rc[count++] = cmd.getMessage(); 
+                AddMessageCommand cmd = (AddMessageCommand)iter.next();
+                rc[count++] = cmd.getMessage();
             }
             return rc;
         }
 
         public MessageAck[] getAcks() {
             MessageAck rc[] = new MessageAck[acks.size()];
-            int count=0;
+            int count = 0;
             for (Iterator iter = acks.iterator(); iter.hasNext();) {
-                RemoveMessageCommand cmd = (RemoveMessageCommand) iter.next();
-                rc[count++] = cmd.getMessageAck(); 
+                RemoveMessageCommand cmd = (RemoveMessageCommand)iter.next();
+                rc[count++] = cmd.getMessageAck();
             }
             return rc;
         }
@@ -87,14 +87,14 @@ public class MemoryTransactionStore implements TransactionStore {
          * @throws IOException
          */
         public void commit() throws IOException {
-            // Do all the message adds.            
+            // Do all the message adds.
             for (Iterator iter = messages.iterator(); iter.hasNext();) {
-                AddMessageCommand cmd = (AddMessageCommand) iter.next();
+                AddMessageCommand cmd = (AddMessageCommand)iter.next();
                 cmd.run();
             }
             // And removes..
             for (Iterator iter = acks.iterator(); iter.hasNext();) {
-                RemoveMessageCommand cmd = (RemoveMessageCommand) iter.next();
+                RemoveMessageCommand cmd = (RemoveMessageCommand)iter.next();
                 cmd.run();
             }
         }
@@ -102,49 +102,52 @@ public class MemoryTransactionStore implements TransactionStore {
 
     public interface AddMessageCommand {
         Message getMessage();
+
         void run() throws IOException;
     }
 
     public interface RemoveMessageCommand {
         MessageAck getMessageAck();
+
         void run() throws IOException;
     }
 
     public MessageStore proxy(MessageStore messageStore) {
-	    return new ProxyMessageStore(messageStore) {
-	        public void addMessage(ConnectionContext context, final Message send) throws IOException {
-	            MemoryTransactionStore.this.addMessage(getDelegate(), send);
-	        }
-	
-	        public void removeMessage(ConnectionContext context, final MessageAck ack) throws IOException {
-	            MemoryTransactionStore.this.removeMessage(getDelegate(), ack);
-	        }
-	    };
+        return new ProxyMessageStore(messageStore) {
+            public void addMessage(ConnectionContext context, final Message send) throws IOException {
+                MemoryTransactionStore.this.addMessage(getDelegate(), send);
+            }
+
+            public void removeMessage(ConnectionContext context, final MessageAck ack) throws IOException {
+                MemoryTransactionStore.this.removeMessage(getDelegate(), ack);
+            }
+        };
     }
 
     public TopicMessageStore proxy(TopicMessageStore messageStore) {
-	    return new ProxyTopicMessageStore(messageStore) {
-	        public void addMessage(ConnectionContext context, final Message send) throws IOException {
-	            MemoryTransactionStore.this.addMessage(getDelegate(), send);
-	        }
-	        public void removeMessage(ConnectionContext context, final MessageAck ack) throws IOException {
-	            MemoryTransactionStore.this.removeMessage(getDelegate(), ack);
-	        }
-	    };
+        return new ProxyTopicMessageStore(messageStore) {
+            public void addMessage(ConnectionContext context, final Message send) throws IOException {
+                MemoryTransactionStore.this.addMessage(getDelegate(), send);
+            }
+
+            public void removeMessage(ConnectionContext context, final MessageAck ack) throws IOException {
+                MemoryTransactionStore.this.removeMessage(getDelegate(), ack);
+            }
+        };
     }
 
     /**
      * @see org.apache.activemq.store.TransactionStore#prepare(TransactionId)
      */
     public void prepare(TransactionId txid) {
-        Tx tx = (Tx) inflightTransactions.remove(txid);
+        Tx tx = (Tx)inflightTransactions.remove(txid);
         if (tx == null)
             return;
         preparedTransactions.put(txid, tx);
     }
 
     public Tx getTx(Object txid) {
-        Tx tx = (Tx) inflightTransactions.get(txid);
+        Tx tx = (Tx)inflightTransactions.get(txid);
         if (tx == null) {
             tx = new Tx();
             inflightTransactions.put(txid, tx);
@@ -157,18 +160,18 @@ public class MemoryTransactionStore implements TransactionStore {
      * @see org.apache.activemq.store.TransactionStore#commit(org.apache.activemq.service.Transaction)
      */
     public void commit(TransactionId txid, boolean wasPrepared) throws IOException {
-        
+
         Tx tx;
-        if( wasPrepared ) {
-            tx = (Tx) preparedTransactions.remove(txid);
+        if (wasPrepared) {
+            tx = (Tx)preparedTransactions.remove(txid);
         } else {
-            tx = (Tx) inflightTransactions.remove(txid);
+            tx = (Tx)inflightTransactions.remove(txid);
         }
-        
-        if( tx == null )
+
+        if (tx == null)
             return;
         tx.commit();
-        
+
     }
 
     /**
@@ -187,14 +190,14 @@ public class MemoryTransactionStore implements TransactionStore {
 
     synchronized public void recover(TransactionRecoveryListener listener) throws IOException {
         // All the inflight transactions get rolled back..
-        inflightTransactions.clear();        
+        inflightTransactions.clear();
         this.doingRecover = true;
         try {
-	        for (Iterator iter = preparedTransactions.keySet().iterator(); iter.hasNext();) {
-	            Object txid = (Object) iter.next();
-                Tx tx = (Tx) preparedTransactions.get(txid);
-                listener.recover((XATransactionId) txid, tx.getMessages(), tx.getAcks());
-	        }
+            for (Iterator iter = preparedTransactions.keySet().iterator(); iter.hasNext();) {
+                Object txid = (Object)iter.next();
+                Tx tx = (Tx)preparedTransactions.get(txid);
+                listener.recover((XATransactionId)txid, tx.getMessages(), tx.getAcks());
+            }
         } finally {
             this.doingRecover = false;
         }
@@ -205,16 +208,17 @@ public class MemoryTransactionStore implements TransactionStore {
      * @throws IOException
      */
     void addMessage(final MessageStore destination, final Message message) throws IOException {
-        
-        if( doingRecover )
+
+        if (doingRecover)
             return;
-        
-        if (message.getTransactionId()!=null) {
+
+        if (message.getTransactionId() != null) {
             Tx tx = getTx(message.getTransactionId());
             tx.add(new AddMessageCommand() {
                 public Message getMessage() {
                     return message;
                 }
+
                 public void run() throws IOException {
                     destination.addMessage(null, message);
                 }
@@ -223,13 +227,13 @@ public class MemoryTransactionStore implements TransactionStore {
             destination.addMessage(null, message);
         }
     }
-    
+
     /**
      * @param ack
      * @throws IOException
      */
-    final void removeMessage(final MessageStore destination,final MessageAck ack) throws IOException {
-        if( doingRecover )
+    final void removeMessage(final MessageStore destination, final MessageAck ack) throws IOException {
+        if (doingRecover)
             return;
 
         if (ack.isInTransaction()) {
@@ -238,6 +242,7 @@ public class MemoryTransactionStore implements TransactionStore {
                 public MessageAck getMessageAck() {
                     return ack;
                 }
+
                 public void run() throws IOException {
                     destination.removeMessage(null, ack);
                 }
@@ -250,7 +255,7 @@ public class MemoryTransactionStore implements TransactionStore {
     public void delete() {
         inflightTransactions.clear();
         preparedTransactions.clear();
-        doingRecover=false;
+        doingRecover = false;
     }
-    
+
 }
