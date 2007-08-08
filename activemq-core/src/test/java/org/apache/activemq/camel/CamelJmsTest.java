@@ -17,9 +17,12 @@
 package org.apache.activemq.camel;
 
 import junit.framework.Assert;
+import org.apache.activemq.demo.DefaultQueueSender;
 import org.apache.camel.CamelTemplate;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.spring.SpringTestSupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import javax.jms.Connection;
@@ -36,6 +39,9 @@ import javax.jms.TextMessage;
  * @version $Revision: $
  */
 public class CamelJmsTest extends SpringTestSupport {
+    
+    private static final Log LOG = LogFactory.getLog(CamelJmsTest.class);
+    
     protected String expectedBody = "<hello>world!</hello>";
 
     public void testSendingViaJmsIsReceivedByCamel() throws Exception {
@@ -59,7 +65,7 @@ public class CamelJmsTest extends SpringTestSupport {
 
         result.assertIsSatisfied();
 
-        log.info("Received message: " + result.getReceivedExchanges());
+        LOG.info("Received message: " + result.getReceivedExchanges());
     }
 
     public void testConsumingViaJMSReceivesMessageFromCamel() throws Exception {
@@ -72,7 +78,7 @@ public class CamelJmsTest extends SpringTestSupport {
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-        log.info("Consuming from: " + destination);
+        LOG.info("Consuming from: " + destination);
         MessageConsumer consumer = session.createConsumer(destination);
 
         // now lets send a message
@@ -84,7 +90,7 @@ public class CamelJmsTest extends SpringTestSupport {
         TextMessage textMessage = assertIsInstanceOf(TextMessage.class, message);
         Assert.assertEquals("Message body", expectedBody, textMessage.getText());
 
-        log.info("Received message: " + message);
+        LOG.info("Received message: " + message);
     }
 
     protected int getExpectedRouteCount() {
