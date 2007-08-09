@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.broker.region;
 
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
@@ -28,9 +31,6 @@ import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
-
-import java.util.Map;
-import java.util.Set;
 
 /**
  * A Region is used to implement the different QOS options available to 

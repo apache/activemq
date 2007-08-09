@@ -16,14 +16,6 @@
  */
 package org.apache.activemq.camel;
 
-import org.apache.activemq.ActiveMQConnection;
-import org.apache.activemq.ActiveMQSession;
-import org.apache.activemq.CustomDestination;
-import org.apache.camel.CamelContext;
-import org.apache.camel.CamelContextAware;
-import org.apache.camel.Endpoint;
-import org.apache.camel.component.jms.JmsBinding;
-
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
@@ -31,6 +23,14 @@ import javax.jms.QueueReceiver;
 import javax.jms.QueueSender;
 import javax.jms.TopicPublisher;
 import javax.jms.TopicSubscriber;
+
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQSession;
+import org.apache.activemq.CustomDestination;
+import org.apache.camel.CamelContext;
+import org.apache.camel.CamelContextAware;
+import org.apache.camel.Endpoint;
+import org.apache.camel.component.jms.JmsBinding;
 
 /**
  * @version $Revision: $

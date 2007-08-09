@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Iterator;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
@@ -39,8 +40,6 @@ import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @org.apache.xbean.XBean

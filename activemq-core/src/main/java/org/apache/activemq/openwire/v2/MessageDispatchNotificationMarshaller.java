@@ -21,32 +21,31 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.activemq.openwire.*;
-import org.apache.activemq.command.*;
-
-
+import org.apache.activemq.command.DataStructure;
+import org.apache.activemq.command.MessageDispatchNotification;
+import org.apache.activemq.openwire.BooleanStream;
+import org.apache.activemq.openwire.OpenWireFormat;
 
 /**
- * Marshalling code for Open Wire Format for MessageDispatchNotificationMarshaller
- *
- *
- * NOTE!: This file is auto generated - do not modify!
- *        if you need to make a change, please see the modify the groovy scripts in the
- *        under src/gram/script and then use maven openwire:generate to regenerate 
- *        this file.
- *
+ * Marshalling code for Open Wire Format for
+ * MessageDispatchNotificationMarshaller NOTE!: This file is auto generated - do
+ * not modify! if you need to make a change, please see the modify the groovy
+ * scripts in the under src/gram/script and then use maven openwire:generate to
+ * regenerate this file.
+ * 
  * @version $Revision$
  */
 public class MessageDispatchNotificationMarshaller extends BaseCommandMarshaller {
 
     /**
      * Return the type of Data Structure we marshal
+     * 
      * @return short representation of the type data structure
      */
     public byte getDataStructureType() {
         return MessageDispatchNotification.DATA_STRUCTURE_TYPE;
     }
-    
+
     /**
      * @return a new object instance
      */
@@ -56,7 +55,7 @@ public class MessageDispatchNotificationMarshaller extends BaseCommandMarshaller
 
     /**
      * Un-marshal an object instance from the data input stream
-     *
+     * 
      * @param o the object to un-marshal
      * @param dataIn the data input stream to build the object from
      * @throws IOException
@@ -65,13 +64,12 @@ public class MessageDispatchNotificationMarshaller extends BaseCommandMarshaller
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         MessageDispatchNotification info = (MessageDispatchNotification)o;
-        info.setConsumerId((org.apache.activemq.command.ConsumerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setDestination((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setConsumerId((org.apache.activemq.command.ConsumerId)tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination)tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setDeliverySequenceId(tightUnmarshalLong(wireFormat, dataIn, bs));
-        info.setMessageId((org.apache.activemq.command.MessageId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setMessageId((org.apache.activemq.command.MessageId)tightUnmarsalNestedObject(wireFormat, dataIn, bs));
 
     }
-
 
     /**
      * Write the booleans that this object uses to a BooleanStream
@@ -83,7 +81,7 @@ public class MessageDispatchNotificationMarshaller extends BaseCommandMarshaller
         int rc = super.tightMarshal1(wireFormat, o, bs);
         rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getConsumerId(), bs);
         rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getDestination(), bs);
-        rc+=tightMarshalLong1(wireFormat, info.getDeliverySequenceId(), bs);
+        rc += tightMarshalLong1(wireFormat, info.getDeliverySequenceId(), bs);
         rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getMessageId(), bs);
 
         return rc + 0;
@@ -91,7 +89,7 @@ public class MessageDispatchNotificationMarshaller extends BaseCommandMarshaller
 
     /**
      * Write a object instance to data output stream
-     *
+     * 
      * @param o the instance to be marshaled
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
@@ -109,7 +107,7 @@ public class MessageDispatchNotificationMarshaller extends BaseCommandMarshaller
 
     /**
      * Un-marshal an object instance from the data input stream
-     *
+     * 
      * @param o the object to un-marshal
      * @param dataIn the data input stream to build the object from
      * @throws IOException
@@ -118,13 +116,12 @@ public class MessageDispatchNotificationMarshaller extends BaseCommandMarshaller
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         MessageDispatchNotification info = (MessageDispatchNotification)o;
-        info.setConsumerId((org.apache.activemq.command.ConsumerId) looseUnmarsalCachedObject(wireFormat, dataIn));
-        info.setDestination((org.apache.activemq.command.ActiveMQDestination) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setConsumerId((org.apache.activemq.command.ConsumerId)looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination)looseUnmarsalCachedObject(wireFormat, dataIn));
         info.setDeliverySequenceId(looseUnmarshalLong(wireFormat, dataIn));
-        info.setMessageId((org.apache.activemq.command.MessageId) looseUnmarsalNestedObject(wireFormat, dataIn));
+        info.setMessageId((org.apache.activemq.command.MessageId)looseUnmarsalNestedObject(wireFormat, dataIn));
 
     }
-
 
     /**
      * Write the booleans that this object uses to a BooleanStream

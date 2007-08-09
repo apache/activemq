@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.network;
 
+import java.io.IOException;
+
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
@@ -24,8 +26,6 @@ import org.apache.activemq.command.Endpoint;
 import org.apache.activemq.command.NetworkBridgeFilter;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.ServiceSupport;
-
-import java.io.IOException;
 
 /**
  * A demand forwarding bridge which works with multicast style transports where

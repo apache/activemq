@@ -63,11 +63,11 @@ abstract public class BaseDataStreamMarshaller implements DataStreamMarshaller {
             bs.writeBoolean(false);
             bs.writeBoolean(false);
             return 0;
-        } else if ((o & 0xFFFFFFFFFFFF0000l) == 0) {
+        } else if ((o & 0xFFFFFFFFFFFF0000L) == 0) {
             bs.writeBoolean(false);
             bs.writeBoolean(true);
             return 2;
-        } else if ((o & 0xFFFFFFFF00000000l) == 0) {
+        } else if ((o & 0xFFFFFFFF00000000L) == 0) {
             bs.writeBoolean(true);
             bs.writeBoolean(false);
             return 4;

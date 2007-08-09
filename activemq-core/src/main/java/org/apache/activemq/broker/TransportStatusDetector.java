@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.broker;
 
+import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -23,9 +25,6 @@ import org.apache.activemq.Service;
 import org.apache.activemq.ThreadPriorities;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.util.Iterator;
-import java.util.Set;
 
 /**
  * Used to provide information on the status of the Connection

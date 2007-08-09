@@ -16,9 +16,9 @@
  */
 package org.apache.activemq.usecases;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-
 import javax.jms.JMSException;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
 
 /**
  * @version $Revision: 1.1.1.1 $

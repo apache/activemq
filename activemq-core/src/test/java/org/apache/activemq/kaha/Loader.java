@@ -18,11 +18,10 @@ package org.apache.activemq.kaha;
 
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.util.concurrent.CountDownLatch;
 
 /**
  * Store test

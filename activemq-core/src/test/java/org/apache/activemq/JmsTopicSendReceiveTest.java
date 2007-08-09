@@ -27,9 +27,8 @@ import javax.jms.Topic;
  * @version $Revision: 1.3 $
  */
 public class JmsTopicSendReceiveTest extends JmsSendReceiveTestSupport {
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-            .getLog(JmsTopicSendReceiveTest.class);
-    
+    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(JmsTopicSendReceiveTest.class);
+
     protected Connection connection;
 
     protected void setUp() throws Exception {
@@ -49,14 +48,12 @@ public class JmsTopicSendReceiveTest extends JmsSendReceiveTestSupport {
         producer = session.createProducer(null);
         producer.setDeliveryMode(deliveryMode);
 
-        log.info("Created producer: " + producer + " delivery mode = " +
-                (deliveryMode == DeliveryMode.PERSISTENT ? "PERSISTENT" : "NON_PERSISTENT"));
+        log.info("Created producer: " + producer + " delivery mode = " + (deliveryMode == DeliveryMode.PERSISTENT ? "PERSISTENT" : "NON_PERSISTENT"));
 
         if (topic) {
             consumerDestination = session.createTopic(getConsumerSubject());
             producerDestination = session.createTopic(getProducerSubject());
-        }
-        else {
+        } else {
             consumerDestination = session.createQueue(getConsumerSubject());
             producerDestination = session.createQueue(getProducerSubject());
         }
@@ -67,20 +64,20 @@ public class JmsTopicSendReceiveTest extends JmsSendReceiveTestSupport {
         consumer.setMessageListener(this);
         connection.start();
 
-        //log.info("Created connection: " + connection);
+        // log.info("Created connection: " + connection);
     }
 
     protected MessageConsumer createConsumer() throws JMSException {
         if (durable) {
             log.info("Creating durable consumer");
-            return session.createDurableSubscriber((Topic) consumerDestination, getName());
+            return session.createDurableSubscriber((Topic)consumerDestination, getName());
         }
         return session.createConsumer(consumerDestination);
     }
 
     protected void tearDown() throws Exception {
         log.info("Dumping stats...");
-        //connectionFactory.getStats().reset();
+        // connectionFactory.getStats().reset();
 
         log.info("Closing down connection");
 

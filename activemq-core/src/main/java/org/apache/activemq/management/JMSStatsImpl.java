@@ -17,15 +17,14 @@
 package org.apache.activemq.management;
 
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.util.IndentPrinter;
 
-import java.util.concurrent.CopyOnWriteArrayList;
-
 /**
  * Statistics for a number of JMS connections
- *
+ * 
  * @version $Revision: 1.2 $
  */
 public class JMSStatsImpl extends StatsImpl {
@@ -39,7 +38,7 @@ public class JMSStatsImpl extends StatsImpl {
         int size = connectionArray.length;
         JMSConnectionStatsImpl[] answer = new JMSConnectionStatsImpl[size];
         for (int i = 0; i < size; i++) {
-            ActiveMQConnection connection = (ActiveMQConnection) connectionArray[i];
+            ActiveMQConnection connection = (ActiveMQConnection)connectionArray[i];
             answer[i] = connection.getConnectionStats();
         }
         return answer;
@@ -59,7 +58,7 @@ public class JMSStatsImpl extends StatsImpl {
         out.incrementIndent();
         JMSConnectionStatsImpl[] array = getConnections();
         for (int i = 0; i < array.length; i++) {
-            JMSConnectionStatsImpl connectionStat = (JMSConnectionStatsImpl) array[i];
+            JMSConnectionStatsImpl connectionStat = (JMSConnectionStatsImpl)array[i];
             connectionStat.dump(out);
         }
         out.decrementIndent();
@@ -67,16 +66,16 @@ public class JMSStatsImpl extends StatsImpl {
         out.println("}");
         out.flush();
     }
-    
+
     /**
      * @param enabled the enabled to set
      */
-    public void setEnabled(boolean enabled){
+    public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
         JMSConnectionStatsImpl[] stats = getConnections();
         for (int i = 0, size = stats.length; i < size; i++) {
             stats[i].setEnabled(enabled);
         }
-        
+
     }
 }

@@ -31,18 +31,18 @@ import org.apache.activemq.filter.MessageEvaluationContext;
  * @version $Revision: 1.7 $
  */
 public class SelectorTest extends TestCase {
-    
+
     public void testBooleanSelector() throws Exception {
         Message message = createMessage();
 
         assertSelector(message, "(trueProp OR falseProp) AND trueProp", true);
         assertSelector(message, "(trueProp OR falseProp) AND falseProp", false);
-        
+
     }
 
     public void testXPathSelectors() throws Exception {
         ActiveMQTextMessage message = new ActiveMQTextMessage();
-        
+
         message.setJMSType("xml");
         message.setText("<root><a key='first'/><b key='second'/></root>");
 
@@ -64,18 +64,18 @@ public class SelectorTest extends TestCase {
 
         assertSelector(message, "JMSType = 'selector-test'", true);
         assertSelector(message, "JMSType = 'crap'", false);
-        
+
         assertSelector(message, "JMSMessageID = 'id:test:1:1:1:1'", true);
         assertSelector(message, "JMSMessageID = 'id:not-test:1:1:1:1'", false);
-        
+
         message = createMessage();
         message.setJMSType("1001");
-        
+
         assertSelector(message, "JMSType='1001'", true);
         assertSelector(message, "JMSType='1001' OR JMSType='1002'", true);
         assertSelector(message, "JMSType = 'crap'", false);
     }
-    
+
     public void testBasicSelectors() throws Exception {
         Message message = createMessage();
 
@@ -83,7 +83,7 @@ public class SelectorTest extends TestCase {
         assertSelector(message, "rank > 100", true);
         assertSelector(message, "rank >= 123", true);
         assertSelector(message, "rank >= 124", false);
-        
+
     }
 
     public void testPropertyTypes() throws Exception {
@@ -95,7 +95,6 @@ public class SelectorTest extends TestCase {
 
         assertSelector(message, "shortProp = 123", true);
         assertSelector(message, "shortProp = 10", false);
-
 
         assertSelector(message, "shortProp = 123", true);
         assertSelector(message, "shortProp = 10", false);
@@ -112,6 +111,7 @@ public class SelectorTest extends TestCase {
         assertSelector(message, "doubleProp = 123", true);
         assertSelector(message, "doubleProp = 10", false);
     }
+
     public void testAndSelectors() throws Exception {
         Message message = createMessage();
 
@@ -195,7 +195,6 @@ public class SelectorTest extends TestCase {
         assertSelector(message, "name is null", false);
     }
 
-
     public void testLike() throws Exception {
         Message message = createMessage();
         message.setStringProperty("modelClassId", "com.whatever.something.foo.bar");
@@ -203,18 +202,21 @@ public class SelectorTest extends TestCase {
         message.setStringProperty("modelRequestError", "abc");
         message.setStringProperty("modelCorrelatedClientId", "whatever");
 
-        assertSelector(message, "modelClassId LIKE 'com.whatever.something.%' AND modelInstanceId = '170' AND (modelRequestError IS NULL OR modelCorrelatedClientId = 'whatever')", true);
+        assertSelector(message, "modelClassId LIKE 'com.whatever.something.%' AND modelInstanceId = '170' AND (modelRequestError IS NULL OR modelCorrelatedClientId = 'whatever')",
+                       true);
 
         message.setStringProperty("modelCorrelatedClientId", "shouldFailNow");
 
-        assertSelector(message, "modelClassId LIKE 'com.whatever.something.%' AND modelInstanceId = '170' AND (modelRequestError IS NULL OR modelCorrelatedClientId = 'whatever')", false);
+        assertSelector(message, "modelClassId LIKE 'com.whatever.something.%' AND modelInstanceId = '170' AND (modelRequestError IS NULL OR modelCorrelatedClientId = 'whatever')",
+                       false);
 
         message = createMessage();
         message.setStringProperty("modelClassId", "com.whatever.something.foo.bar");
         message.setStringProperty("modelInstanceId", "170");
         message.setStringProperty("modelCorrelatedClientId", "shouldNotMatch");
 
-        assertSelector(message, "modelClassId LIKE 'com.whatever.something.%' AND modelInstanceId = '170' AND (modelRequestError IS NULL OR modelCorrelatedClientId = 'whatever')", true);
+        assertSelector(message, "modelClassId LIKE 'com.whatever.something.%' AND modelInstanceId = '170' AND (modelRequestError IS NULL OR modelCorrelatedClientId = 'whatever')",
+                       true);
     }
 
     /**
@@ -230,7 +232,6 @@ public class SelectorTest extends TestCase {
         message.setLongProperty("SessionserverId", 1234);
         assertSelector(message, "SessionserverId=1870414179", false);
 
-
         assertSelector(message, "Command NOT IN ('MirrorLobbyRequest', 'MirrorLobbyReply')", false);
 
         message.setStringProperty("Command", "Cheese");
@@ -244,11 +245,12 @@ public class SelectorTest extends TestCase {
 
     public void testFloatComparisons() throws Exception {
         Message message = createMessage();
-        
-        // JMS 1.1 Section 3.8.1.1 : Approximate literals use the Java floating-point literal syntax. 
+
+        // JMS 1.1 Section 3.8.1.1 : Approximate literals use the Java
+        // floating-point literal syntax.
         // We will use the java varible x to demo valid floating point syntaxs.
         double x;
-        
+
         // test decimals like x.x
         x = 1.0;
         x = -1.1;
@@ -267,7 +269,7 @@ public class SelectorTest extends TestCase {
         assertSelector(message, "-1.1 < 1.", true);
         assertSelector(message, "1.E1 < 1.1E1", true);
         assertSelector(message, "-1.1E1 < 1.E1", true);
-        
+
         // test decimals like .x
         x = .5;
         x = -.5;
@@ -276,7 +278,7 @@ public class SelectorTest extends TestCase {
         assertSelector(message, "-.5 < .1", true);
         assertSelector(message, ".1E1 < .5E1", true);
         assertSelector(message, "-.5E1 < .1E1", true);
-        
+
         // test exponents
         x = 4E10;
         x = -4E10;
@@ -329,9 +331,9 @@ public class SelectorTest extends TestCase {
         message.setJMSMessageID("connection:1:1:1:1");
         message.setObjectProperty("name", "James");
         message.setObjectProperty("location", "London");
-        
+
         message.setByteProperty("byteProp", (byte)123);
-        message.setByteProperty("byteProp2", (byte) 33);
+        message.setByteProperty("byteProp2", (byte)33);
         message.setShortProperty("shortProp", (short)123);
         message.setIntProperty("intProp", (int)123);
         message.setLongProperty("longProp", (long)123);
@@ -348,13 +350,11 @@ public class SelectorTest extends TestCase {
         return message;
     }
 
-
     protected void assertInvalidSelector(Message message, String text) throws JMSException {
         try {
             new SelectorParser().parse(text);
             fail("Created a valid selector");
-        }
-        catch (InvalidSelectorException e) {
+        } catch (InvalidSelectorException e) {
         }
     }
 

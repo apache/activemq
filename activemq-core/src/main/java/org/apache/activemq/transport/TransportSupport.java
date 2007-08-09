@@ -18,7 +18,6 @@ package org.apache.activemq.transport;
 
 import java.io.IOException;
 
-import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

@@ -16,12 +16,12 @@
  */
 package org.apache.activemq.spring;
 
+import java.util.Iterator;
+import java.util.List;
+
 import junit.framework.TestCase;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * @version $Revision: 1.1 $

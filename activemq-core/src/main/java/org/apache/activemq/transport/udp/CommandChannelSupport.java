@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.transport.udp;
 
+import java.io.IOException;
+import java.net.SocketAddress;
+
 import org.apache.activemq.command.Command;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.reliable.ReplayBuffer;
 import org.apache.activemq.util.IntSequenceGenerator;
-
-import java.io.IOException;
-import java.net.SocketAddress;
 
 /**
  * 

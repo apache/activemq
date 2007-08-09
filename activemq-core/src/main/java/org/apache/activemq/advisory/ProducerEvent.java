@@ -16,11 +16,11 @@
  */
 package org.apache.activemq.advisory;
 
-import org.apache.activemq.command.ProducerId;
+import java.util.EventObject;
 
 import javax.jms.Destination;
 
-import java.util.EventObject;
+import org.apache.activemq.command.ProducerId;
 
 /**
  * An event when the number of producers on a given destination changes.

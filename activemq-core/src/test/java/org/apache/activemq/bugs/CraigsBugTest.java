@@ -16,22 +16,21 @@
  */
 package org.apache.activemq.bugs;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.EmbeddedBrokerTestSupport;
-import org.apache.activemq.command.ActiveMQQueue;
-
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.command.ActiveMQQueue;
+
 /**
- * 
  * @version $Revision: $
  */
 public class CraigsBugTest extends EmbeddedBrokerTestSupport {
-    
+
     public void testConnectionFactory() throws Exception {
         final ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("tcp://localhost:61616");
         final ActiveMQQueue queue = new ActiveMQQueue("testqueue");
@@ -43,8 +42,7 @@ public class CraigsBugTest extends EmbeddedBrokerTestSupport {
                     Session session = conn.createSession(false, 1);
                     MessageConsumer consumer = session.createConsumer(queue, null);
                     Message msg = consumer.receive(1000);
-                }
-                catch (JMSException e) {
+                } catch (JMSException e) {
                     e.printStackTrace();
                 }
             }
@@ -56,8 +54,7 @@ public class CraigsBugTest extends EmbeddedBrokerTestSupport {
             synchronized (this) {
                 wait(3000);
             }
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
@@ -66,6 +63,5 @@ public class CraigsBugTest extends EmbeddedBrokerTestSupport {
         bindAddress = "tcp://localhost:61616";
         super.setUp();
     }
-    
-    
+
 }

@@ -16,20 +16,18 @@
  */
 package org.apache.activemq.broker.policy;
 
+import javax.jms.Destination;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.IndividualDeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 
-import javax.jms.Destination;
-
 /**
- *
  * @version $Revision$
  */
 public class IndividualDeadLetterTest extends DeadLetterTest {
-
 
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = super.createBroker();
@@ -46,7 +44,7 @@ public class IndividualDeadLetterTest extends DeadLetterTest {
     }
 
     protected Destination createDlqDestination() {
-        String prefix = (topic) ? "ActiveMQ.DLQ.Topic.": "ActiveMQ.DLQ.Queue.";
+        String prefix = topic ? "ActiveMQ.DLQ.Topic." : "ActiveMQ.DLQ.Queue.";
         return new ActiveMQQueue(prefix + getClass().getName() + "." + getName());
     }
 }

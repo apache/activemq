@@ -16,11 +16,11 @@
  */
 package org.apache.activemq.usecases;
 
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
-
 import javax.jms.Destination;
 import javax.jms.Message;
+
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
 
 /**
  * @version $Revision: 1.1.1.1 $

@@ -16,17 +16,17 @@
  */
 package org.apache.activemq.openwire.v3;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+
+import org.apache.activemq.command.DataStructure;
+import org.apache.activemq.openwire.BooleanStream;
 import org.apache.activemq.openwire.DataStreamMarshaller;
 import org.apache.activemq.openwire.OpenWireFormat;
-import org.apache.activemq.openwire.BooleanStream;
-import org.apache.activemq.command.DataStructure;
-import org.apache.activemq.util.ClassLoading;
 import org.apache.activemq.util.ByteSequence;
-
-import java.lang.reflect.Constructor;
-import java.io.IOException;
-import java.io.DataOutput;
-import java.io.DataInput;
+import org.apache.activemq.util.ClassLoading;
 
 abstract public class BaseDataStreamMarshaller implements DataStreamMarshaller {
 
@@ -60,11 +60,11 @@ abstract public class BaseDataStreamMarshaller implements DataStreamMarshaller {
             bs.writeBoolean(false);
             bs.writeBoolean(false);
             return 0;
-        } else if ((o & 0xFFFFFFFFFFFF0000l) == 0) {
+        } else if ((o & 0xFFFFFFFFFFFF0000L) == 0) {
             bs.writeBoolean(false);
             bs.writeBoolean(true);
             return 2;
-        } else if ((o & 0xFFFFFFFF00000000l) == 0) {
+        } else if ((o & 0xFFFFFFFF00000000L) == 0) {
             bs.writeBoolean(true);
             bs.writeBoolean(false);
             return 4;

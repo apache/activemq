@@ -16,9 +16,7 @@
  */
 package org.apache.activemq.usecases;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.test.JmsSendReceiveTestSupport;
+import java.util.List;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -27,7 +25,10 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.Session;
-import java.util.List;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.test.JmsSendReceiveTestSupport;
 
 /**
  * @version $Revision: 1.1.1.1 $
@@ -67,8 +68,7 @@ public class CompositePublishTest extends JmsSendReceiveTestSupport {
         if (topic) {
             consumerDestination = session.createTopic(getConsumerSubject());
             producerDestination = session.createTopic(getProducerSubject());
-        }
-        else {
+        } else {
             consumerDestination = session.createQueue(getConsumerSubject());
             producerDestination = session.createQueue(getProducerSubject());
         }
@@ -85,7 +85,6 @@ public class CompositePublishTest extends JmsSendReceiveTestSupport {
             consumers[i] = receiveSession.createConsumer(dest);
             consumers[i].setMessageListener(createMessageListener(i, messageLists[i]));
         }
-
 
         LOG.info("Started connections");
     }
@@ -109,7 +108,7 @@ public class CompositePublishTest extends JmsSendReceiveTestSupport {
      * Returns the destinations to which we consume
      */
     protected Destination[] getDestinations() {
-        return new Destination[]{new ActiveMQTopic(getPrefix() + "FOO.BAR"), new ActiveMQTopic(getPrefix() + "FOO.*"), new ActiveMQTopic(getPrefix() + "FOO.X.Y")};
+        return new Destination[] {new ActiveMQTopic(getPrefix() + "FOO.BAR"), new ActiveMQTopic(getPrefix() + "FOO.*"), new ActiveMQTopic(getPrefix() + "FOO.X.Y")};
     }
 
     protected String getPrefix() {

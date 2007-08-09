@@ -16,11 +16,6 @@
  */
 package org.apache.activemq;
 
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.spring.SpringConsumer;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -30,6 +25,11 @@ import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.spring.SpringConsumer;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision$

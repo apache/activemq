@@ -16,14 +16,14 @@
  */
 package org.apache.activemq.broker;
 
-import org.apache.activemq.EmbeddedBrokerTestSupport;
-
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+
+import org.apache.activemq.EmbeddedBrokerTestSupport;
 
 /**
  * 

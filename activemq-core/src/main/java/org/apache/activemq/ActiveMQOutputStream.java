@@ -72,7 +72,7 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
     }
 
     public void close() throws IOException {
-        if (closed == false) {
+        if (!closed) {
             flushBuffer();
             try {
                 // Send an EOS style empty message to signal EOS.
@@ -86,7 +86,7 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
     }
 
     public void dispose() {
-        if (closed == false) {
+        if (!closed) {
             this.connection.removeOutputStream(this);
             closed = true;
         }

@@ -16,14 +16,14 @@
  */
 package org.apache.activemq.test;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerService;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
 
-import java.util.Iterator;
-import java.util.List;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerService;
 
 /**
  * 

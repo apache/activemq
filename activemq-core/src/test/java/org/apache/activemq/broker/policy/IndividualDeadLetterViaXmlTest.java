@@ -16,12 +16,12 @@
  */
 package org.apache.activemq.broker.policy;
 
+import javax.jms.Destination;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.springframework.core.io.ClassPathResource;
-
-import javax.jms.Destination;
 
 /**
  *

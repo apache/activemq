@@ -23,7 +23,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.activeio.journal.Journal;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
@@ -182,7 +181,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         // store, but they still
         // need to be recovered when the broker starts up.
 
-        if (referenceStoreAdapter.isStoreValid() == false) {
+        if (!referenceStoreAdapter.isStoreValid()) {
             log.warn("The ReferenceStore is not valid - recovering ...");
             recover();
             log.info("Finished recovering the ReferenceStore");
@@ -514,6 +513,8 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
                         case JournalTransaction.XA_ROLLBACK:
                             transactionStore.replayRollback(command.getTransactionId());
                             break;
+                        default:
+                            throw new IOException("Invalid journal command type: " + command.getType());
                         }
                     } catch (IOException e) {
                         log.error("Recovery Failure: Could not replay: " + c + ", reason: " + e, e);
@@ -558,7 +559,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
      * @throws IOException
      */
     public Location writeCommand(DataStructure command, boolean syncHint) throws IOException {
-        return asyncDataManager.write(wireFormat.marshal(command), (syncHint && syncOnWrite));
+        return asyncDataManager.write(wireFormat.marshal(command), syncHint && syncOnWrite);
     }
 
     private Location writeTraceMessage(String message, boolean sync) throws IOException {
@@ -568,8 +569,8 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     }
 
     public void onMemoryUseChanged(UsageManager memoryManager, int oldPercentUsage, int newPercentUsage) {
-        newPercentUsage = ((newPercentUsage) / 10) * 10;
-        oldPercentUsage = ((oldPercentUsage) / 10) * 10;
+        newPercentUsage = (newPercentUsage / 10) * 10;
+        oldPercentUsage = (oldPercentUsage / 10) * 10;
         if (newPercentUsage >= 70 && oldPercentUsage < newPercentUsage) {
             checkpoint(false);
         }

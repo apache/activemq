@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Iterator;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.transport.CompositeTransport;
@@ -31,8 +32,6 @@ import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @org.apache.xbean.XBean

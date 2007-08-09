@@ -23,7 +23,6 @@ import java.util.Arrays;
 
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
-
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.util.ByteSequence;
@@ -72,33 +71,32 @@ public abstract class DataStructureTestSupport extends CombinationTestSupport {
             if (componentType.isPrimitive()) {
                 boolean ok = false;
                 if (componentType == byte.class) {
-                    ok = Arrays.equals((byte[]) expect, (byte[]) was);
+                    ok = Arrays.equals((byte[])expect, (byte[])was);
                 }
                 if (componentType == char.class) {
-                    ok = Arrays.equals((char[]) expect, (char[]) was);
+                    ok = Arrays.equals((char[])expect, (char[])was);
                 }
                 if (componentType == short.class) {
-                    ok = Arrays.equals((short[]) expect, (short[]) was);
+                    ok = Arrays.equals((short[])expect, (short[])was);
                 }
                 if (componentType == int.class) {
-                    ok = Arrays.equals((int[]) expect, (int[]) was);
+                    ok = Arrays.equals((int[])expect, (int[])was);
                 }
                 if (componentType == long.class) {
-                    ok = Arrays.equals((long[]) expect, (long[]) was);
+                    ok = Arrays.equals((long[])expect, (long[])was);
                 }
                 if (componentType == double.class) {
-                    ok = Arrays.equals((double[]) expect, (double[]) was);
+                    ok = Arrays.equals((double[])expect, (double[])was);
                 }
                 if (componentType == float.class) {
-                    ok = Arrays.equals((float[]) expect, (float[]) was);
+                    ok = Arrays.equals((float[])expect, (float[])was);
                 }
                 if (!ok) {
                     throw new AssertionFailedError("Arrays not equal");
                 }
-            }
-            else {
-                Object expectArray[] = (Object[]) expect;
-                Object wasArray[] = (Object[]) was;
+            } else {
+                Object expectArray[] = (Object[])expect;
+                Object wasArray[] = (Object[])was;
                 if (expectArray.length != wasArray.length)
                     throw new AssertionFailedError("Not equals, array lengths don't match. expected: " + expectArray.length + ", was: " + wasArray.length);
                 for (int i = 0; i < wasArray.length; i++) {
@@ -106,41 +104,33 @@ public abstract class DataStructureTestSupport extends CombinationTestSupport {
                 }
 
             }
-        }
-        else if (expect instanceof Command) {
+        } else if (expect instanceof Command) {
             assertEquals(expect.getClass(), was.getClass());
             Method[] methods = expect.getClass().getMethods();
             for (int i = 0; i < methods.length; i++) {
                 Method method = methods[i];
-                if ((method.getName().startsWith("get") || method.getName().startsWith("is")) && method.getParameterTypes().length == 0
-                        && method.getReturnType() != null) {
+                if ((method.getName().startsWith("get") || method.getName().startsWith("is")) && method.getParameterTypes().length == 0 && method.getReturnType() != null) {
 
                     // Check to see if there is a setter for the method.
                     try {
                         if (method.getName().startsWith("get")) {
-                            expect.getClass().getMethod(method.getName().replaceFirst("get", "set"), new Class[] { method.getReturnType() });
+                            expect.getClass().getMethod(method.getName().replaceFirst("get", "set"), new Class[] {method.getReturnType()});
+                        } else {
+                            expect.getClass().getMethod(method.getName().replaceFirst("is", "set"), new Class[] {method.getReturnType()});
                         }
-                        else {
-                            expect.getClass().getMethod(method.getName().replaceFirst("is", "set"), new Class[] { method.getReturnType() });
-                        }
-                    }
-                    catch (Throwable ignore) {
+                    } catch (Throwable ignore) {
                         continue;
                     }
 
                     try {
                         assertEquals(method.invoke(expect, null), method.invoke(was, null));
-                    }
-                    catch (IllegalArgumentException e) {
-                    }
-                    catch (IllegalAccessException e) {
-                    }
-                    catch (InvocationTargetException e) {
+                    } catch (IllegalArgumentException e) {
+                    } catch (IllegalAccessException e) {
+                    } catch (InvocationTargetException e) {
                     }
                 }
             }
-        }
-        else {
+        } else {
             TestCase.assertEquals(expect, was);
         }
     }
@@ -149,7 +139,7 @@ public abstract class DataStructureTestSupport extends CombinationTestSupport {
         wireFormat = createWireFormat();
         super.setUp();
     }
-    
+
     protected WireFormat createWireFormat() {
         OpenWireFormat answer = new OpenWireFormat();
         answer.setCacheEnabled(cacheEnabled);

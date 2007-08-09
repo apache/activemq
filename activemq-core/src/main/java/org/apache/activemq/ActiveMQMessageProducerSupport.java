@@ -16,9 +16,12 @@
  */
 package org.apache.activemq;
 
-import javax.jms.*;
+import javax.jms.DeliveryMode;
+import javax.jms.Destination;
 import javax.jms.IllegalStateException;
+import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.MessageProducer;
 
 /**
  * A useful base class for implementing a {@link MessageProducer}
@@ -194,7 +197,7 @@ public abstract class ActiveMQMessageProducerSupport implements MessageProducer,
      * @see javax.jms.Message#DEFAULT_TIME_TO_LIVE
      */
     public void setTimeToLive(long timeToLive) throws JMSException {
-        if (timeToLive < 0l) {
+        if (timeToLive < 0L) {
             throw new IllegalStateException("cannot set a negative timeToLive");
         }
         checkClosed();

@@ -16,16 +16,16 @@
  */
 package org.apache.activemq.broker.policy;
 
-import org.apache.activemq.broker.QueueSubscriptionTest;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.region.policy.PolicyEntry;
-import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
-import org.apache.activemq.broker.region.policy.PolicyMap;
-
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
+
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.QueueSubscriptionTest;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
 
 public class RoundRobinDispatchPolicyTest extends QueueSubscriptionTest {
 
@@ -47,7 +47,8 @@ public class RoundRobinDispatchPolicyTest extends QueueSubscriptionTest {
         super.testOneProducerTwoConsumersSmallMessagesOnePrefetch();
 
         // Ensure that each consumer should have received at least one message
-        // We cannot guarantee that messages will be equally divided, since prefetch is one
+        // We cannot guarantee that messages will be equally divided, since
+        // prefetch is one
         assertEachConsumerReceivedAtLeastXMessages(1);
     }
 
@@ -60,7 +61,8 @@ public class RoundRobinDispatchPolicyTest extends QueueSubscriptionTest {
         super.testOneProducerTwoConsumersLargeMessagesOnePrefetch();
 
         // Ensure that each consumer should have received at least one message
-        // We cannot guarantee that messages will be equally divided, since prefetch is one
+        // We cannot guarantee that messages will be equally divided, since
+        // prefetch is one
         assertEachConsumerReceivedAtLeastXMessages(1);
     }
 
@@ -72,7 +74,8 @@ public class RoundRobinDispatchPolicyTest extends QueueSubscriptionTest {
     public void testOneProducerManyConsumersFewMessages() throws Exception {
         super.testOneProducerManyConsumersFewMessages();
 
-        // Since there are more consumers, each consumer should have received at most one message only
+        // Since there are more consumers, each consumer should have received at
+        // most one message only
         assertMessagesDividedAmongConsumers();
     }
 
@@ -85,23 +88,23 @@ public class RoundRobinDispatchPolicyTest extends QueueSubscriptionTest {
         super.testManyProducersManyConsumers();
         assertMessagesDividedAmongConsumers();
     }
-    
+
     public void testOneProducerTwoMatchingConsumersOneNotMatchingConsumer() throws Exception {
-    // Create consumer that won't consume any message
+        // Create consumer that won't consume any message
         createMessageConsumer(createConnectionFactory().createConnection(), createDestination(), "JMSPriority<1");
         super.testOneProducerTwoConsumersSmallMessagesLargePrefetch();
         assertMessagesDividedAmongConsumers();
     }
-    	
+
     protected MessageConsumer createMessageConsumer(Connection conn, Destination dest, String selector) throws Exception {
         connections.add(conn);
-    
+
         Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-    	final MessageConsumer consumer = sess.createConsumer(dest, selector);
-    	conn.start();
-    	
-    	return consumer;
-    }    
+        final MessageConsumer consumer = sess.createConsumer(dest, selector);
+        conn.start();
+
+        return consumer;
+    }
 
     public void assertMessagesDividedAmongConsumers() {
         assertEachConsumerReceivedAtLeastXMessages((messageCount * producerCount) / consumerCount);

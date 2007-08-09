@@ -21,8 +21,9 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.activemq.openwire.*;
-import org.apache.activemq.command.*;
+import org.apache.activemq.command.BaseCommand;
+import org.apache.activemq.openwire.BooleanStream;
+import org.apache.activemq.openwire.OpenWireFormat;
 
 
 

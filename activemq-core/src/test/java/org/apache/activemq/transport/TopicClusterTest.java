@@ -20,6 +20,7 @@ package org.apache.activemq.transport;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -33,7 +34,6 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
@@ -43,8 +43,6 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @version $Revision$

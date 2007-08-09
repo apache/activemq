@@ -16,9 +16,8 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import org.apache.activemq.EmbeddedBrokerTestSupport;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.region.Topic;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 import javax.jms.Connection;
 import javax.jms.Message;
@@ -31,10 +30,9 @@ import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-
 import junit.textui.TestRunner;
+import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.broker.BrokerService;
 
 /**
  * A test case of the various MBeans in ActiveMQ. If you want to look at the

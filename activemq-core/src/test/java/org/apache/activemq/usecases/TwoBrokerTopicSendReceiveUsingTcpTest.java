@@ -19,13 +19,10 @@ package org.apache.activemq.usecases;
 import javax.jms.JMSException;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.springframework.core.io.ClassPathResource;
-
-import java.io.IOException;
-import java.net.URISyntaxException;
 
 /**
  * @version $Revision: 1.1.1.1 $

@@ -16,9 +16,9 @@
  */
 package org.apache.activemq.util;
 
-import junit.framework.TestCase;
-
 import java.io.IOException;
+
+import junit.framework.TestCase;
 
 public class DataByteArrayOutputStreamTest extends TestCase {
 

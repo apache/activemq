@@ -17,12 +17,12 @@
 
 package org.apache.activemq;
 
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ConsumerId;
-
 import javax.jms.JMSException;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
+
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ConsumerId;
 
 /**
  * A client uses a <CODE>TopicSubscriber</CODE> object to receive messages

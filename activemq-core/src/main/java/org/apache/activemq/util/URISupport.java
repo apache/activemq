@@ -227,6 +227,8 @@ public class URISupport {
                     l.add(s);
                     last = i + 1;
                 }
+                break;
+            default:
             }
         }
 

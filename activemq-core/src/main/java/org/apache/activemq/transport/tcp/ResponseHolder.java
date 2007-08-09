@@ -36,7 +36,7 @@ public class ResponseHolder {
 
     /**
      * Set the Response for this holder
-     *
+     * 
      * @param r
      */
     public void setResponse(Response r) {
@@ -58,7 +58,7 @@ public class ResponseHolder {
 
     /**
      * wait upto <Code>timeout</Code> timeout ms to get a receipt
-     *
+     * 
      * @param timeout
      * @return
      */
@@ -67,8 +67,7 @@ public class ResponseHolder {
             if (!notified) {
                 try {
                     lock.wait(timeout);
-                }
-                catch (InterruptedException e) {
+                } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
             }

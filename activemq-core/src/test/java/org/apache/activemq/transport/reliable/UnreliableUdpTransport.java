@@ -16,15 +16,14 @@
  */
 package org.apache.activemq.transport.reliable;
 
-import org.apache.activemq.openwire.OpenWireFormat;
-import org.apache.activemq.transport.udp.CommandChannel;
-import org.apache.activemq.transport.udp.CommandDatagramChannel;
-import org.apache.activemq.transport.udp.UdpTransport;
-
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
+
+import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.transport.udp.CommandChannel;
+import org.apache.activemq.transport.udp.UdpTransport;
 
 /**
  * An unreliable UDP transport that will randomly discard packets to simulate a

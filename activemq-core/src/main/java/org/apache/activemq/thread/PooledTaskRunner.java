@@ -87,7 +87,7 @@ class PooledTaskRunner implements TaskRunner {
             // shutDown() being called, which would wait forever
             // waiting for iterating to finish
             if (runningThread != Thread.currentThread()) {
-                if (iterating == true) {
+                if (iterating) {
                     runable.wait(timeout);
                 }
             }

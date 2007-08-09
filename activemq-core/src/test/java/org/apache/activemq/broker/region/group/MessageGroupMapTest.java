@@ -16,11 +16,10 @@
  */
 package org.apache.activemq.broker.region.group;
 
+import junit.framework.TestCase;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.SessionId;
-
-import junit.framework.TestCase;
 
 /**
  * 

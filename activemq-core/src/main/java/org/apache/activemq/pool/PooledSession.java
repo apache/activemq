@@ -18,6 +18,7 @@ package org.apache.activemq.pool;
 
 import java.io.Serializable;
 import java.util.Iterator;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
@@ -50,8 +51,6 @@ import org.apache.activemq.AlreadyClosedException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.util.concurrent.CopyOnWriteArrayList;
-
 /**
  * @version $Revision: 1.1 $
  */
@@ -65,10 +64,9 @@ public class PooledSession implements TopicSession, QueueSession {
     private ActiveMQTopicPublisher topicPublisher;
     private boolean transactional = true;
     private boolean ignoreClose = false;
-    
+
     private final CopyOnWriteArrayList consumers = new CopyOnWriteArrayList();
     private final CopyOnWriteArrayList browsers = new CopyOnWriteArrayList();
-
 
     public PooledSession(ActiveMQSession aSession, SessionPool sessionPool) {
         this.session = aSession;
@@ -87,43 +85,42 @@ public class PooledSession implements TopicSession, QueueSession {
     public void close() throws JMSException {
         if (!ignoreClose) {
             // TODO a cleaner way to reset??
-    
+
             // lets reset the session
             getSession().setMessageListener(null);
-            
+
             // Close any consumers and browsers that may have been created.
             for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-                MessageConsumer consumer = (MessageConsumer) iter.next();
+                MessageConsumer consumer = (MessageConsumer)iter.next();
                 consumer.close();
             }
             consumers.clear();
-            
+
             for (Iterator iter = browsers.iterator(); iter.hasNext();) {
-                QueueBrowser browser = (QueueBrowser) iter.next();
+                QueueBrowser browser = (QueueBrowser)iter.next();
                 browser.close();
             }
             browsers.clear();
-    
+
             // maybe do a rollback?
             if (transactional) {
                 try {
                     getSession().rollback();
-                }
-                catch (JMSException e) {
+                } catch (JMSException e) {
                     log.warn("Caught exception trying rollback() when putting session back into the pool: " + e, e);
-    
-                    // lets close the session and not put the session back into the pool
+
+                    // lets close the session and not put the session back into
+                    // the pool
                     try {
                         session.close();
-                    }
-                    catch (JMSException e1) {
+                    } catch (JMSException e1) {
                         log.trace("Ignoring exception as discarding session: " + e1, e1);
                     }
                     session = null;
                     return;
                 }
             }
-    
+
             sessionPool.returnSession(this);
         }
     }
@@ -206,9 +203,8 @@ public class PooledSession implements TopicSession, QueueSession {
         }
     }
 
-
     // Consumer related methods
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     public QueueBrowser createBrowser(Queue queue) throws JMSException {
         return addQueueBrowser(getSession().createBrowser(queue));
     }
@@ -232,7 +228,6 @@ public class PooledSession implements TopicSession, QueueSession {
     public TopicSubscriber createDurableSubscriber(Topic topic, String selector) throws JMSException {
         return addTopicSubscriber(getSession().createDurableSubscriber(topic, selector));
     }
-
 
     public TopicSubscriber createDurableSubscriber(Topic topic, String name, String selector, boolean noLocal) throws JMSException {
         return addTopicSubscriber(getSession().createDurableSubscriber(topic, name, selector, noLocal));
@@ -262,9 +257,8 @@ public class PooledSession implements TopicSession, QueueSession {
         return addQueueReceiver(getSession().createReceiver(queue, selector));
     }
 
-
     // Producer related methods
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     public MessageProducer createProducer(Destination destination) throws JMSException {
         return new PooledProducer(getMessageProducer(), destination);
     }
@@ -278,7 +272,7 @@ public class PooledSession implements TopicSession, QueueSession {
     }
 
     // Implementation methods
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     protected ActiveMQSession getSession() throws AlreadyClosedException {
         if (session == null) {
             throw new AlreadyClosedException("The session has already been closed");
@@ -288,21 +282,21 @@ public class PooledSession implements TopicSession, QueueSession {
 
     public ActiveMQMessageProducer getMessageProducer() throws JMSException {
         if (messageProducer == null) {
-            messageProducer = (ActiveMQMessageProducer) getSession().createProducer(null);
+            messageProducer = (ActiveMQMessageProducer)getSession().createProducer(null);
         }
         return messageProducer;
     }
 
     public ActiveMQQueueSender getQueueSender() throws JMSException {
         if (queueSender == null) {
-            queueSender = (ActiveMQQueueSender) getSession().createSender(null);
+            queueSender = (ActiveMQQueueSender)getSession().createSender(null);
         }
         return queueSender;
     }
 
     public ActiveMQTopicPublisher getTopicPublisher() throws JMSException {
         if (topicPublisher == null) {
-            topicPublisher = (ActiveMQTopicPublisher) getSession().createPublisher(null);
+            topicPublisher = (ActiveMQTopicPublisher)getSession().createPublisher(null);
         }
         return topicPublisher;
     }
@@ -311,20 +305,23 @@ public class PooledSession implements TopicSession, QueueSession {
         browsers.add(browser);
         return browser;
     }
+
     private MessageConsumer addConsumer(MessageConsumer consumer) {
         consumers.add(consumer);
         return consumer;
-    }    
+    }
+
     private TopicSubscriber addTopicSubscriber(TopicSubscriber subscriber) {
         consumers.add(subscriber);
         return subscriber;
     }
+
     private QueueReceiver addQueueReceiver(QueueReceiver receiver) {
         consumers.add(receiver);
         return receiver;
     }
 
     public String toString() {
-        return "PooledSession { "+session+" }";
+        return "PooledSession { " + session + " }";
     }
 }

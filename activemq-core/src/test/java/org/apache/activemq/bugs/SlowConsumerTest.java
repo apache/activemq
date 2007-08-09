@@ -30,7 +30,6 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -75,8 +74,7 @@ public class SlowConsumerTest extends TestCase {
                     }
                     producer.close();
                     session.close();
-                }
-                catch (Throwable ex) {
+                } catch (Throwable ex) {
                     ex.printStackTrace();
                 }
             }
@@ -93,12 +91,12 @@ public class SlowConsumerTest extends TestCase {
                     MessageConsumer consumer = session.createConsumer(new ActiveMQQueue(getDestinationName()));
                     int diff = 0;
                     while (messagesCount != MESSAGES_COUNT) {
-                        Message msg = consumer.receive(messageReceiveTimeout );
+                        Message msg = consumer.receive(messageReceiveTimeout);
                         if (msg == null) {
                             log.warn("Got null message at count: " + messagesCount + ". Continuing...");
                             break;
                         }
-                        String text = ((TextMessage) msg).getText();
+                        String text = ((TextMessage)msg).getText();
                         int currentMsgIdx = Integer.parseInt(text);
                         log.debug("Received: " + text + " messageCount: " + messagesCount);
                         msg.acknowledge();
@@ -110,10 +108,9 @@ public class SlowConsumerTest extends TestCase {
                         if (messagesCount % messageLogFrequency == 0) {
                             log.info("Received: " + messagesCount + " messages so far");
                         }
-                        //Thread.sleep(70);
+                        // Thread.sleep(70);
                     }
-                }
-                catch (Throwable ex) {
+                } catch (Throwable ex) {
                     ex.printStackTrace();
                 }
             }
@@ -135,21 +132,19 @@ public class SlowConsumerTest extends TestCase {
     }
 
     public String receiveFrame(long timeOut) throws Exception {
-        stompSocket.setSoTimeout((int) timeOut);
+        stompSocket.setSoTimeout((int)timeOut);
         InputStream is = stompSocket.getInputStream();
         int c = 0;
         for (;;) {
             c = is.read();
             if (c < 0) {
                 throw new IOException("socket closed.");
-            }
-            else if (c == 0) {
+            } else if (c == 0) {
                 c = is.read();
                 byte[] ba = inputBuffer.toByteArray();
                 inputBuffer.reset();
                 return new String(ba, "UTF-8");
-            }
-            else {
+            } else {
                 inputBuffer.write(c);
             }
         }

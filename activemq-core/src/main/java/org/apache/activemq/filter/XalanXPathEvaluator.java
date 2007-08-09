@@ -28,9 +28,11 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.xpath.CachedXPathAPI;
+
+import org.xml.sax.InputSource;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.traversal.NodeIterator;
-import org.xml.sax.InputSource;
 
 public class XalanXPathEvaluator implements XPathExpression.XPathEvaluator {
 

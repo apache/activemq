@@ -18,6 +18,9 @@ package org.apache.activemq.transport;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.WireFormatInfo;
@@ -25,10 +28,6 @@ import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Negotiates the wire format with a new connection

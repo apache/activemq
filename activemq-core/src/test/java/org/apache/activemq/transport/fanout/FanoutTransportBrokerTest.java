@@ -18,11 +18,12 @@ package org.apache.activemq.transport.fanout;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.DeliveryMode;
 
 import junit.framework.Test;
-
 import org.apache.activemq.broker.StubConnection;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -38,9 +39,6 @@ import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.mock.MockTransport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 public class FanoutTransportBrokerTest extends NetworkTestSupport {
 

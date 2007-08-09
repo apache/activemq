@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.broker;
 
-import org.apache.activemq.JmsMultipleClientsTestSupport;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.JmsMultipleClientsTestSupport;
 import org.apache.activemq.command.ActiveMQDestination;
 
 public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {

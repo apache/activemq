@@ -22,21 +22,25 @@ import java.io.IOException;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.wireformat.WireFormat;
+
 /**
  * Implementation of a Marshaller for MessageIds
  * 
  * @version $Revision: 1.2 $
  */
 public class MessageMarshaller implements Marshaller<Message> {
-    
+
     private WireFormat wireFormat;
+
     /**
      * Constructor
+     * 
      * @param wireFormat
      */
     public MessageMarshaller(WireFormat wireFormat) {
-        this.wireFormat=wireFormat;
+        this.wireFormat = wireFormat;
     }
+
     /**
      * Write the payload of this entry to the RawContainer
      * 
@@ -44,7 +48,7 @@ public class MessageMarshaller implements Marshaller<Message> {
      * @param dataOut
      * @throws IOException
      */
-    public void writePayload(Message message,DataOutput dataOut) throws IOException{
+    public void writePayload(Message message, DataOutput dataOut) throws IOException {
         ByteSequence packet = wireFormat.marshal(message);
         dataOut.writeInt(packet.length);
         dataOut.write(packet.data, packet.offset, packet.length);
@@ -57,9 +61,9 @@ public class MessageMarshaller implements Marshaller<Message> {
      * @return unmarshalled object
      * @throws IOException
      */
-    public Message readPayload(DataInput dataIn) throws IOException{
-        int size=dataIn.readInt();
-        byte[] data=new byte[size];
+    public Message readPayload(DataInput dataIn) throws IOException {
+        int size = dataIn.readInt();
+        byte[] data = new byte[size];
         dataIn.readFully(data);
         return (Message)wireFormat.unmarshal(new ByteSequence(data));
     }

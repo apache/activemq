@@ -16,17 +16,17 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.Connection;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportServer;
-
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-
-import java.io.IOException;
-import java.net.URISyntaxException;
 
 /**
  * A managed transport connector which can create multiple managed connections

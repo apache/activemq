@@ -100,7 +100,7 @@ public class ListContainerTest extends TestCase {
             i.next();
             i.remove();
         }
-        assert (container.isEmpty());
+        assert container.isEmpty();
     }
 
     /*

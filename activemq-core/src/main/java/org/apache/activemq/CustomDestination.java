@@ -17,13 +17,13 @@
 package org.apache.activemq;
 
 import javax.jms.Destination;
+import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
-import javax.jms.TopicSubscriber;
 import javax.jms.QueueReceiver;
-import javax.jms.TopicPublisher;
 import javax.jms.QueueSender;
-import javax.jms.JMSException;
+import javax.jms.TopicPublisher;
+import javax.jms.TopicSubscriber;
 
 /**
  * Represents a hook to allow the support of custom destinations

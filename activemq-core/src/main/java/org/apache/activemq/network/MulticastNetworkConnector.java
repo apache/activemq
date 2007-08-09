@@ -16,11 +16,11 @@
  */
 package org.apache.activemq.network;
 
+import java.net.URI;
+
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.util.ServiceStopper;
-
-import java.net.URI;
 
 /**
  * A network connector which uses some kind of multicast-like transport that

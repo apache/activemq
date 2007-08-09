@@ -17,21 +17,21 @@
 package org.apache.activemq.proxy;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.apache.activemq.Service;
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 class ProxyConnection implements Service {
 
     static final private Log log = LogFactory.getLog(ProxyConnection.class);
-    
+
     private final Transport localTransport;
     private final Transport remoteTransport;
     private AtomicBoolean shuttingDown = new AtomicBoolean(false);
@@ -43,8 +43,8 @@ class ProxyConnection implements Service {
     }
 
     public void onFailure(IOException e) {
-        if( !shuttingDown.get() ) {
-            log.debug("Transport error: "+e,e);
+        if (!shuttingDown.get()) {
+            log.debug("Transport error: " + e, e);
             try {
                 stop();
             } catch (Exception ignore) {
@@ -53,20 +53,20 @@ class ProxyConnection implements Service {
     }
 
     public void start() throws Exception {
-        if( !running.compareAndSet(false, true) ) {
-            return;            
+        if (!running.compareAndSet(false, true)) {
+            return;
         }
-            
+
         this.localTransport.setTransportListener(new DefaultTransportListener() {
             public void onCommand(Object command) {
-                boolean shutdown=false;
-                if( command.getClass() == ShutdownInfo.class ) {
+                boolean shutdown = false;
+                if (command.getClass() == ShutdownInfo.class) {
                     shuttingDown.set(true);
-                    shutdown=true;
+                    shutdown = true;
                 }
                 try {
                     remoteTransport.oneway(command);
-                    if( shutdown )
+                    if (shutdown)
                         stop();
                 } catch (IOException error) {
                     onFailure(error);
@@ -74,11 +74,12 @@ class ProxyConnection implements Service {
                     onFailure(IOExceptionSupport.create(error));
                 }
             }
+
             public void onException(IOException error) {
                 onFailure(error);
             }
         });
-        
+
         this.remoteTransport.setTransportListener(new DefaultTransportListener() {
             public void onCommand(Object command) {
                 try {
@@ -87,17 +88,18 @@ class ProxyConnection implements Service {
                     onFailure(error);
                 }
             }
+
             public void onException(IOException error) {
                 onFailure(error);
             }
         });
-        
+
         localTransport.start();
         remoteTransport.start();
     }
-    
+
     public void stop() throws Exception {
-        if( !running.compareAndSet(true, false) ) {
+        if (!running.compareAndSet(true, false)) {
             return;
         }
         shuttingDown.set(true);
@@ -106,5 +108,5 @@ class ProxyConnection implements Service {
         ss.stop(remoteTransport);
         ss.throwFirstException();
     }
-    
+
 }

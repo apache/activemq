@@ -16,9 +16,15 @@
  */
 package org.apache.activemq.command;
 
-import org.apache.activemq.jndi.JNDIBaseStorable;
-import org.apache.activemq.util.IntrospectionSupport;
-import org.apache.activemq.util.URISupport;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Properties;
+import java.util.StringTokenizer;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -26,16 +32,10 @@ import javax.jms.Queue;
 import javax.jms.TemporaryQueue;
 import javax.jms.TemporaryTopic;
 import javax.jms.Topic;
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Properties;
-import java.util.StringTokenizer;
+
+import org.apache.activemq.jndi.JNDIBaseStorable;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.URISupport;
 
 /**
  * @openwire:marshaller

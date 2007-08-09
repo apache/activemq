@@ -56,11 +56,9 @@ public class UdpTransportFactory extends TransportFactory {
             Transport configuredTransport = configure(transport, wf, options, true);
             UdpTransportServer server = new UdpTransportServer(location, transport, configuredTransport, createReplayStrategy());
             return server;
-        }
-        catch (URISyntaxException e) {
+        } catch (URISyntaxException e) {
             throw IOExceptionSupport.create(e);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw IOExceptionSupport.create(e);
         }
     }
@@ -71,7 +69,7 @@ public class UdpTransportFactory extends TransportFactory {
 
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
         IntrospectionSupport.setProperties(transport, options);
-        final UdpTransport udpTransport = (UdpTransport) transport;
+        final UdpTransport udpTransport = (UdpTransport)transport;
 
         // deal with fragmentation
         transport = new CommandJoiner(transport, asOpenWireFormat(format));
@@ -97,14 +95,14 @@ public class UdpTransportFactory extends TransportFactory {
     /**
      * Configures the transport
      * 
-     * @param acceptServer
-     *            true if this transport is used purely as an 'accept' transport
-     *            for new connections which work like TCP SocketServers where
-     *            new connections spin up a new separate UDP transport
+     * @param acceptServer true if this transport is used purely as an 'accept'
+     *                transport for new connections which work like TCP
+     *                SocketServers where new connections spin up a new separate
+     *                UDP transport
      */
     protected Transport configure(Transport transport, WireFormat format, Map options, boolean acceptServer) throws Exception {
         IntrospectionSupport.setProperties(transport, options);
-        UdpTransport udpTransport = (UdpTransport) transport;
+        UdpTransport udpTransport = (UdpTransport)transport;
 
         OpenWireFormat openWireFormat = asOpenWireFormat(format);
 
@@ -129,8 +127,7 @@ public class UdpTransportFactory extends TransportFactory {
             // delegate to one that does
             transport = new CommandJoiner(transport, openWireFormat);
             return transport;
-        }
-        else {
+        } else {
             ReliableTransport reliableTransport = new ReliableTransport(transport, udpTransport);
             Replayer replayer = reliableTransport.getReplayer();
             reliableTransport.setReplayStrategy(createReplayStrategy(replayer));
@@ -157,7 +154,7 @@ public class UdpTransportFactory extends TransportFactory {
     }
 
     protected OpenWireFormat asOpenWireFormat(WireFormat wf) {
-        OpenWireFormat answer = (OpenWireFormat) wf;
+        OpenWireFormat answer = (OpenWireFormat)wf;
         return answer;
     }
 }

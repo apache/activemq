@@ -16,9 +16,9 @@
  */
 package org.apache.activemq.transport.udp;
 
-import org.apache.activemq.Service;
-
 import java.nio.ByteBuffer;
+
+import org.apache.activemq.Service;
 
 /**
  * Represents a pool of {@link ByteBuffer} instances. 

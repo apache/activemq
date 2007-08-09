@@ -40,18 +40,18 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 /**
- * A simple polymorphic JMS producer which can work with Queues or Topics
- * which uses JNDI to lookup the JMS connection factory and destination
- *
+ * A simple polymorphic JMS producer which can work with Queues or Topics which
+ * uses JNDI to lookup the JMS connection factory and destination
+ * 
  * @version $Revision: 1.2 $
  */
 public class SimpleProducer {
-    
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-            .getLog(SimpleProducer.class);
+
+    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(SimpleProducer.class);
 
     /**
-     * @param args the destination name to send to and optionally, the number of messages to send
+     * @param args the destination name to send to and optionally, the number of
+     *                messages to send
      */
     public static void main(String[] args) {
         Context jndiContext = null;
@@ -71,8 +71,7 @@ public class SimpleProducer {
         log.info("Destination name is " + destinationName);
         if (args.length == 2) {
             NUM_MSGS = (new Integer(args[1])).intValue();
-        }
-        else {
+        } else {
             NUM_MSGS = 1;
         }
 
@@ -81,8 +80,7 @@ public class SimpleProducer {
          */
         try {
             jndiContext = new InitialContext();
-        }
-        catch (NamingException e) {
+        } catch (NamingException e) {
             log.info("Could not create JNDI API context: " + e.toString());
             System.exit(1);
         }
@@ -91,20 +89,17 @@ public class SimpleProducer {
          * Look up connection factory and destination.
          */
         try {
-            connectionFactory = (ConnectionFactory) jndiContext.lookup("ConnectionFactory");
-            destination = (Destination) jndiContext.lookup(destinationName);
-        }
-        catch (NamingException e) {
+            connectionFactory = (ConnectionFactory)jndiContext.lookup("ConnectionFactory");
+            destination = (Destination)jndiContext.lookup(destinationName);
+        } catch (NamingException e) {
             log.info("JNDI API lookup failed: " + e);
             System.exit(1);
         }
 
         /*
-         * Create connection.
-         * Create session from connection; false means session is not transacted.
-         * Create sender and text message.
-         * Send messages, varying text slightly.
-         * Send end-of-messages message.
+         * Create connection. Create session from connection; false means
+         * session is not transacted. Create sender and text message. Send
+         * messages, varying text slightly. Send end-of-messages message.
          * Finally, close connection.
          */
         try {
@@ -122,16 +117,13 @@ public class SimpleProducer {
              * Send a non-text control message indicating end of messages.
              */
             producer.send(session.createMessage());
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             log.info("Exception occurred: " + e);
-        }
-        finally {
+        } finally {
             if (connection != null) {
                 try {
                     connection.close();
-                }
-                catch (JMSException e) {
+                } catch (JMSException e) {
                 }
             }
         }

@@ -1,13 +1,12 @@
 package org.apache.activemq.blob;
 
-import java.io.File;
-import java.io.InputStream;
-import java.io.FileWriter;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.InputStream;
 import java.net.URL;
 
 import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQBlobMessage;
 import org.apache.activemq.command.MessageId;

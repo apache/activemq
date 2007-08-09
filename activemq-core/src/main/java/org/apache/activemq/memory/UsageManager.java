@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.memory;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.activemq.Service;

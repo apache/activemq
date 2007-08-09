@@ -16,26 +16,24 @@
  */
 package org.apache.activemq.kaha.impl.container;
 
-
 /**
  * Base class for container collections
  * 
  * @version $Revision: 1.2 $
  */
-class ContainerCollectionSupport{
-    
+class ContainerCollectionSupport {
+
     protected MapContainerImpl container;
-    
-    protected ContainerCollectionSupport(MapContainerImpl container){
+
+    protected ContainerCollectionSupport(MapContainerImpl container) {
         this.container = container;
     }
-    
-    public int size(){
+
+    public int size() {
         return container.size();
     }
 
-   
-    public boolean isEmpty(){
+    public boolean isEmpty() {
         return container.isEmpty();
     }
 

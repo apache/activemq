@@ -17,7 +17,6 @@
 package org.apache.activemq.transport;
 
 import java.io.IOException;
-import org.apache.activemq.command.ShutdownInfo;
 
 /**
  * @version $Revision$

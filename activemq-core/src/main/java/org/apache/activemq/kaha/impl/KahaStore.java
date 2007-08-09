@@ -36,7 +36,6 @@ import org.apache.activemq.kaha.RuntimeStoreException;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StoreLocation;
 import org.apache.activemq.kaha.impl.async.AsyncDataManager;
-import org.apache.activemq.kaha.impl.async.ControlFile;
 import org.apache.activemq.kaha.impl.async.DataManagerFacade;
 import org.apache.activemq.kaha.impl.container.ListContainerImpl;
 import org.apache.activemq.kaha.impl.container.MapContainerImpl;

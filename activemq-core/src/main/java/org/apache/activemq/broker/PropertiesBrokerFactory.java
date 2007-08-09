@@ -16,17 +16,17 @@
  */
 package org.apache.activemq.broker;
 
-import org.apache.activemq.util.IntrospectionSupport;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.net.MalformedURLException;
 import java.util.Map;
 import java.util.Properties;
+
+import org.apache.activemq.util.IntrospectionSupport;
 
 /**
  * A {@link BrokerFactoryHandler} which uses a properties file to configure the

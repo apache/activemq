@@ -16,7 +16,7 @@
  */
 package org.apache.activemq;
 
-import junit.framework.TestCase;
+import java.util.ArrayList;
 
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
@@ -30,7 +30,8 @@ import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TemporaryQueue;
 import javax.jms.TextMessage;
-import java.util.ArrayList;
+
+import junit.framework.TestCase;
 
 /**
  * @version

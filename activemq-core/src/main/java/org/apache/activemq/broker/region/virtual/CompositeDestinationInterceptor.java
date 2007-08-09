@@ -29,7 +29,7 @@ import org.apache.activemq.filter.MessageEvaluationContext;
 /**
  * Represents a composite {@link Destination} where send()s are replicated to
  * each Destination instance.
- *
+ * 
  * @version $Revision$
  */
 public class CompositeDestinationInterceptor extends DestinationFilter {
@@ -53,7 +53,7 @@ public class CompositeDestinationInterceptor extends DestinationFilter {
             Object value = iter.next();
 
             if (value instanceof FilteredDestination) {
-                FilteredDestination filteredDestination = (FilteredDestination) value;
+                FilteredDestination filteredDestination = (FilteredDestination)value;
                 if (messageContext == null) {
                     messageContext = new MessageEvaluationContext();
                     messageContext.setMessageReference(message);
@@ -62,9 +62,8 @@ public class CompositeDestinationInterceptor extends DestinationFilter {
                 if (filteredDestination.matches(messageContext)) {
                     destination = filteredDestination.getDestination();
                 }
-            }
-            else if (value instanceof ActiveMQDestination) {
-                destination = (ActiveMQDestination) value;
+            } else if (value instanceof ActiveMQDestination) {
+                destination = (ActiveMQDestination)value;
             }
             if (destination == null) {
                 continue;

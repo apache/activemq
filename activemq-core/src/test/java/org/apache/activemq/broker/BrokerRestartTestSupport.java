@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.broker;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-
 import org.apache.activemq.store.PersistenceAdapter;
 
 public class BrokerRestartTestSupport extends BrokerTestSupport {

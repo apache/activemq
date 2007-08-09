@@ -16,13 +16,14 @@
  */
 package org.apache.activemq.management;
 
+import java.util.List;
+
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.util.IndentPrinter;
 
-import java.util.List;
 /**
  * Statistics for a JMS connection
- *
+ * 
  * @version $Revision: 1.2 $
  */
 public class JMSConnectionStatsImpl extends StatsImpl {
@@ -40,7 +41,7 @@ public class JMSConnectionStatsImpl extends StatsImpl {
         int size = sessionArray.length;
         JMSSessionStatsImpl[] answer = new JMSSessionStatsImpl[size];
         for (int i = 0; i < size; i++) {
-            ActiveMQSession session = (ActiveMQSession) sessionArray[i];
+            ActiveMQSession session = (ActiveMQSession)sessionArray[i];
             answer[i] = session.getSessionStats();
         }
         return answer;
@@ -53,19 +54,18 @@ public class JMSConnectionStatsImpl extends StatsImpl {
             stats[i].reset();
         }
     }
-    
+
     /**
      * @param enabled the enabled to set
      */
-    public void setEnabled(boolean enabled){
+    public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
         JMSSessionStatsImpl[] stats = getSessions();
         for (int i = 0, size = stats.length; i < size; i++) {
             stats[i].setEnabled(enabled);
         }
-        
-    }
 
+    }
 
     public boolean isTransactional() {
         return transactional;
@@ -92,7 +92,7 @@ public class JMSConnectionStatsImpl extends StatsImpl {
         out.incrementIndent();
         JMSSessionStatsImpl[] array = getSessions();
         for (int i = 0; i < array.length; i++) {
-            JMSSessionStatsImpl sessionStat = (JMSSessionStatsImpl) array[i];
+            JMSSessionStatsImpl sessionStat = (JMSSessionStatsImpl)array[i];
             out.printIndent();
             out.println("session {");
             out.incrementIndent();

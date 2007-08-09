@@ -16,9 +16,9 @@
  */
 package org.apache.activemq.transport.discovery;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.CompositeTransport;
@@ -26,8 +26,6 @@ import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A {@link ReliableTransportChannel} which uses a {@link DiscoveryAgent} to

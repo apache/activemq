@@ -355,7 +355,7 @@ public class ActiveMQStreamMessageTest extends TestCase {
     public void testReadLong() {
         ActiveMQStreamMessage msg = new ActiveMQStreamMessage();
         try {
-            long test = 4l;
+            long test = 4L;
             msg.writeLong(test);
             msg.reset();
             assertTrue(msg.readLong() == test);
@@ -555,7 +555,7 @@ public class ActiveMQStreamMessageTest extends TestCase {
             msg.reset();
             assertTrue(msg.readInt() == testInt);
             msg.clearBody();
-            long testLong = 6l;
+            long testLong = 6L;
             msg.writeString(new Long(testLong).toString());
             msg.reset();
             assertTrue(msg.readLong() == testLong);
@@ -699,7 +699,7 @@ public class ActiveMQStreamMessageTest extends TestCase {
             assertTrue(((Integer)msg.readObject()).intValue() == testInt);
             msg.clearBody();
 
-            long testLong = 6l;
+            long testLong = 6L;
             msg.writeLong(testLong);
             msg.reset();
             assertTrue(((Long)msg.readObject()).longValue() == testLong);

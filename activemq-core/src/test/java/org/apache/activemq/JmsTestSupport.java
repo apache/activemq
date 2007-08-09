@@ -67,8 +67,9 @@ public class JmsTestSupport extends CombinationTestSupport {
             return (ActiveMQDestination)session.createTemporaryQueue();
         case ActiveMQDestination.TEMP_TOPIC_TYPE:
             return (ActiveMQDestination)session.createTemporaryTopic();
+        default:
+            throw new IllegalArgumentException("type: " + type);
         }
-        throw new IllegalArgumentException("type: " + type);
     }
 
     protected void sendMessages(Destination destination, int count) throws Exception {

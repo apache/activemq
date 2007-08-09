@@ -16,6 +16,11 @@
  */
 package org.apache.activemq.transport.reliable;
 
+import java.io.IOException;
+import java.net.SocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.DatagramChannel;
+
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.udp.ByteBufferPool;
 import org.apache.activemq.transport.udp.CommandDatagramChannel;
@@ -24,13 +29,7 @@ import org.apache.activemq.transport.udp.UdpTransport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.IOException;
-import java.net.SocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.DatagramChannel;
-
 /**
- * 
  * @version $Revision: $
  */
 public class UnreliableCommandDatagramChannel extends CommandDatagramChannel {
@@ -39,9 +38,9 @@ public class UnreliableCommandDatagramChannel extends CommandDatagramChannel {
 
     private DropCommandStrategy dropCommandStrategy;
 
-    public UnreliableCommandDatagramChannel(UdpTransport transport, OpenWireFormat wireFormat, int datagramSize,
-            SocketAddress targetAddress, DatagramHeaderMarshaller headerMarshaller, ReplayBuffer replayBuffer, DatagramChannel channel,
-            ByteBufferPool bufferPool, DropCommandStrategy strategy) {
+    public UnreliableCommandDatagramChannel(UdpTransport transport, OpenWireFormat wireFormat, int datagramSize, SocketAddress targetAddress,
+                                            DatagramHeaderMarshaller headerMarshaller, ReplayBuffer replayBuffer, DatagramChannel channel, ByteBufferPool bufferPool,
+                                            DropCommandStrategy strategy) {
         super(transport, wireFormat, datagramSize, targetAddress, headerMarshaller, channel, bufferPool);
         this.dropCommandStrategy = strategy;
     }
@@ -50,11 +49,10 @@ public class UnreliableCommandDatagramChannel extends CommandDatagramChannel {
         if (dropCommandStrategy.shouldDropCommand(commandId, address, redelivery)) {
             writeBuffer.flip();
             log.info("Dropping datagram with command: " + commandId);
-            
+
             // lets still add it to the replay buffer though!
             getReplayBuffer().addBuffer(commandId, writeBuffer);
-        }
-        else {
+        } else {
             super.sendWriteBuffer(commandId, address, writeBuffer, redelivery);
         }
     }

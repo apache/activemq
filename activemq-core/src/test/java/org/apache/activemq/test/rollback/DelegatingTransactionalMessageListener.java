@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.test.rollback;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -27,6 +24,8 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.Session;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class DelegatingTransactionalMessageListener implements MessageListener {
     private static final transient Log log = LogFactory.getLog(DelegatingTransactionalMessageListener.class);
@@ -43,8 +42,7 @@ public class DelegatingTransactionalMessageListener implements MessageListener {
             session = connection.createSession(transacted, ackMode);
             MessageConsumer consumer = session.createConsumer(destination);
             consumer.setMessageListener(this);
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             throw new IllegalStateException("Could not listen to " + destination, e);
         }
     }
@@ -53,8 +51,7 @@ public class DelegatingTransactionalMessageListener implements MessageListener {
         try {
             underlyingListener.onMessage(message);
             session.commit();
-        }
-        catch (Throwable e) {
+        } catch (Throwable e) {
             rollback();
         }
     }
@@ -62,8 +59,7 @@ public class DelegatingTransactionalMessageListener implements MessageListener {
     private void rollback() {
         try {
             session.rollback();
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             log.error("Failed to rollback: " + e, e);
         }
     }

@@ -16,8 +16,9 @@
  */
 package org.apache.activemq.jndi;
 
-import javax.naming.Referenceable;
 import java.util.Properties;
+
+import javax.naming.Referenceable;
 
 /**
  * Faciliates objects to be stored in JNDI as properties

@@ -18,40 +18,39 @@ package org.apache.activemq.transport;
 
 import java.io.IOException;
 
-
 /**
  * An asynchronous listener of commands
- *
+ * 
  * @version $Revision$
  */
 public class DefaultTransportListener implements TransportListener {
-    
+
     /**
      * called to process a command
+     * 
      * @param command
      */
-    public void onCommand(Object command){
+    public void onCommand(Object command) {
     }
+
     /**
      * An unrecoverable exception has occured on the transport
+     * 
      * @param error
      */
-    public void onException(IOException error){
+    public void onException(IOException error) {
     }
-    
+
     /**
      * The transport has suffered an interuption from which it hopes to recover
-     *
      */
-    public void transportInterupted(){
+    public void transportInterupted() {
     }
-    
-    
+
     /**
      * The transport has resumed after an interuption
-     *
      */
-    public void transportResumed(){
+    public void transportResumed() {
     }
-    
+
 }

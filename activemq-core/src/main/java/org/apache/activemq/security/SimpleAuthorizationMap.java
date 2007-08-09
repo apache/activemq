@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.security;
 
+import java.util.Set;
+
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.filter.DestinationMap;
-
-import java.util.Set;
 
 /**
  * An AuthorizationMap which is configured with individual DestinationMaps for

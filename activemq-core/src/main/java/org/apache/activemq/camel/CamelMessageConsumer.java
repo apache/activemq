@@ -16,6 +16,12 @@
  */
 package org.apache.activemq.camel;
 
+import javax.jms.IllegalStateException;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.camel.Consumer;
@@ -24,13 +30,10 @@ import org.apache.camel.Exchange;
 import org.apache.camel.PollingConsumer;
 import org.apache.camel.Processor;
 
-import javax.jms.*;
-import javax.jms.IllegalStateException;
-
 /**
- * A JMS {@link javax.jms.MessageConsumer} which consumes message exchanges from a
- * Camel {@link Endpoint}
- *
+ * A JMS {@link javax.jms.MessageConsumer} which consumes message exchanges from
+ * a Camel {@link Endpoint}
+ * 
  * @version $Revision: $
  */
 public class CamelMessageConsumer implements MessageConsumer {
@@ -62,11 +65,9 @@ public class CamelMessageConsumer implements MessageConsumer {
                 if (pollingConsumer != null) {
                     pollingConsumer.stop();
                 }
-            }
-            catch (JMSException e) {
+            } catch (JMSException e) {
                 throw e;
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 throw JMSExceptionSupport.create(e);
             }
         }
@@ -99,7 +100,7 @@ public class CamelMessageConsumer implements MessageConsumer {
     }
 
     // Properties
-    //-----------------------------------------------------------------------
+    // -----------------------------------------------------------------------
 
     public CamelDestination getDestination() {
         return destination;
@@ -122,7 +123,7 @@ public class CamelMessageConsumer implements MessageConsumer {
     }
 
     // Implementation methods
-    //-----------------------------------------------------------------------
+    // -----------------------------------------------------------------------
 
     protected PollingConsumer getPollingConsumer() throws JMSException {
         try {
@@ -131,11 +132,9 @@ public class CamelMessageConsumer implements MessageConsumer {
                 pollingConsumer.start();
             }
             return pollingConsumer;
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             throw e;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw JMSExceptionSupport.create(e);
         }
     }
@@ -144,8 +143,7 @@ public class CamelMessageConsumer implements MessageConsumer {
         if (exchange != null) {
             Message message = destination.getBinding().makeJmsMessage(exchange, session);
             return message;
-        }
-        else {
+        } else {
             return null;
         }
     }
@@ -160,11 +158,9 @@ public class CamelMessageConsumer implements MessageConsumer {
             });
             answer.start();
             return answer;
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             throw e;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw JMSExceptionSupport.create(e);
         }
     }

@@ -16,12 +16,12 @@
  */
 package org.apache.activemq.test.retroactive;
 
-import org.apache.activemq.command.ActiveMQTopic;
-
-import javax.jms.MessageProducer;
-import javax.jms.TextMessage;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.TextMessage;
+
+import org.apache.activemq.command.ActiveMQTopic;
 
 /**
  *

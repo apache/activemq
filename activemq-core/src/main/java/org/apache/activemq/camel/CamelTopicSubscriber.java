@@ -16,12 +16,12 @@
  */
 package org.apache.activemq.camel;
 
-import org.apache.activemq.ActiveMQSession;
-import org.apache.camel.Endpoint;
-
 import javax.jms.JMSException;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
+
+import org.apache.activemq.ActiveMQSession;
+import org.apache.camel.Endpoint;
 
 /**
  * A JMS {@link javax.jms.TopicSubscriber} which consumes message exchanges from a

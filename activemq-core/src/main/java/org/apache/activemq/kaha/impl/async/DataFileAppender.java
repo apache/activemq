@@ -230,7 +230,7 @@ class DataFileAppender {
 
     public void close() throws IOException {
         synchronized (enqueueMutex) {
-            if (shutdown == false) {
+            if (!shutdown) {
                 shutdown = true;
                 if (running) {
                     enqueueMutex.notifyAll();

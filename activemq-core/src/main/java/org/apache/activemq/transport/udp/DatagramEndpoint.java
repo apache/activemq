@@ -16,9 +16,9 @@
  */
 package org.apache.activemq.transport.udp;
 
-import org.apache.activemq.command.BaseEndpoint;
-
 import java.net.SocketAddress;
+
+import org.apache.activemq.command.BaseEndpoint;
 
 /**
  * 

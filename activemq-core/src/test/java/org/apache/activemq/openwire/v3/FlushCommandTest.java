@@ -16,12 +16,7 @@
  */
 package org.apache.activemq.openwire.v3;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import org.apache.activemq.openwire.*;
-import org.apache.activemq.command.*;
+import org.apache.activemq.command.FlushCommand;
 
 
 /**

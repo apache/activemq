@@ -19,13 +19,12 @@ package org.apache.activemq.security;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ConnectionInfo;
-
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Handles authenticating a users against a simple user name/password map.

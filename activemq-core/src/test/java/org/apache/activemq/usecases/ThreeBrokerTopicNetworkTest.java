@@ -16,12 +16,13 @@
  */
 package org.apache.activemq.usecases;
 
-import org.apache.activemq.util.MessageIdList;
-import org.apache.activemq.JmsMultipleBrokersTestSupport;
-
-import javax.jms.MessageConsumer;
-import javax.jms.Destination;
 import java.net.URI;
+
+import javax.jms.Destination;
+import javax.jms.MessageConsumer;
+
+import org.apache.activemq.JmsMultipleBrokersTestSupport;
+import org.apache.activemq.util.MessageIdList;
 
 /**
  * @version $Revision: 1.1.1.1 $

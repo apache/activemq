@@ -22,10 +22,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import org.apache.activemq.kaha.impl.StoreLockedExcpetion;
 
 import junit.framework.TestCase;
+import org.apache.activemq.kaha.impl.StoreLockedExcpetion;
 
 /**
  * Store test

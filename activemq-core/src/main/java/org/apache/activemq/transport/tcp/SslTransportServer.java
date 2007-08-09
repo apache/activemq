@@ -17,9 +17,6 @@
 
 package org.apache.activemq.transport.tcp;
 
-import org.apache.activemq.wireformat.WireFormat;
-import org.apache.activemq.transport.Transport;
-
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URI;
@@ -28,6 +25,9 @@ import java.net.URISyntaxException;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
+
+import org.apache.activemq.transport.Transport;
+import org.apache.activemq.wireformat.WireFormat;
 
 /**
  *  An SSL TransportServer.

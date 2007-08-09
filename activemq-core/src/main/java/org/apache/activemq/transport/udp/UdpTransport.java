@@ -16,6 +16,19 @@
  */
 package org.apache.activemq.transport.udp;
 
+import java.io.EOFException;
+import java.io.IOException;
+import java.net.BindException;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.net.SocketException;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.nio.channels.AsynchronousCloseException;
+import java.nio.channels.DatagramChannel;
+
 import org.apache.activemq.Service;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Endpoint;
@@ -30,19 +43,6 @@ import org.apache.activemq.util.IntSequenceGenerator;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.io.EOFException;
-import java.io.IOException;
-import java.net.BindException;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.net.SocketException;
-import java.net.URI;
-import java.net.UnknownHostException;
-import java.nio.channels.AsynchronousCloseException;
-import java.nio.channels.DatagramChannel;
 
 /**
  * An implementation of the {@link Transport} interface using raw UDP

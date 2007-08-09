@@ -16,16 +16,16 @@
  */
 package org.apache.activemq.pool;
 
-import org.apache.activemq.ActiveMQMessageProducer;
-
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 
+import org.apache.activemq.ActiveMQMessageProducer;
+
 /**
  * A pooled {@link MessageProducer}
- *
+ * 
  * @version $Revision: 1.1 $
  */
 public class PooledProducer implements MessageProducer {
@@ -120,13 +120,13 @@ public class PooledProducer implements MessageProducer {
     }
 
     // Implementation methods
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     protected ActiveMQMessageProducer getMessageProducer() {
         return messageProducer;
     }
-    
+
     public String toString() {
-        return "PooledProducer { "+messageProducer+" }";
+        return "PooledProducer { " + messageProducer + " }";
     }
 
 }

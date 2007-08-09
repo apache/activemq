@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.broker.policy;
 
+import javax.jms.Destination;
+import javax.jms.Message;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
 import org.apache.activemq.command.ActiveMQQueue;
-
-import javax.jms.Destination;
-import javax.jms.Message;
 
 /**
  * 

@@ -43,7 +43,6 @@ import org.apache.commons.logging.LogFactory;
  * An {@link AuthorizationMap} which uses LDAP
  * 
  * @org.apache.xbean.XBean
- * 
  * @author ngcutura
  */
 public class LDAPAuthorizationMap implements AuthorizationMap {
@@ -112,24 +111,24 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
     }
 
     public LDAPAuthorizationMap(Map options) {
-        initialContextFactory = (String) options.get(INITIAL_CONTEXT_FACTORY);
-        connectionURL = (String) options.get(CONNECTION_URL);
-        connectionUsername = (String) options.get(CONNECTION_USERNAME);
-        connectionPassword = (String) options.get(CONNECTION_PASSWORD);
-        connectionProtocol = (String) options.get(CONNECTION_PROTOCOL);
-        authentication = (String) options.get(AUTHENTICATION);
+        initialContextFactory = (String)options.get(INITIAL_CONTEXT_FACTORY);
+        connectionURL = (String)options.get(CONNECTION_URL);
+        connectionUsername = (String)options.get(CONNECTION_USERNAME);
+        connectionPassword = (String)options.get(CONNECTION_PASSWORD);
+        connectionProtocol = (String)options.get(CONNECTION_PROTOCOL);
+        authentication = (String)options.get(AUTHENTICATION);
 
-        adminBase = (String) options.get(ADMIN_BASE);
-        adminAttribute = (String) options.get(ADMIN_ATTRIBUTE);
-        readBase = (String) options.get(READ_BASE);
-        readAttribute = (String) options.get(READ_ATTRIBUTE);
-        writeBase = (String) options.get(WRITE_BASE);
-        writeAttribute = (String) options.get(WRITE_ATTRIBUTE);
+        adminBase = (String)options.get(ADMIN_BASE);
+        adminAttribute = (String)options.get(ADMIN_ATTRIBUTE);
+        readBase = (String)options.get(READ_BASE);
+        readAttribute = (String)options.get(READ_ATTRIBUTE);
+        writeBase = (String)options.get(WRITE_BASE);
+        writeAttribute = (String)options.get(WRITE_ATTRIBUTE);
 
-        String topicSearchMatching = (String) options.get(TOPIC_SEARCH_MATCHING);
-        String topicSearchSubtree = (String) options.get(TOPIC_SEARCH_SUBTREE);
-        String queueSearchMatching = (String) options.get(QUEUE_SEARCH_MATCHING);
-        String queueSearchSubtree = (String) options.get(QUEUE_SEARCH_SUBTREE);
+        String topicSearchMatching = (String)options.get(TOPIC_SEARCH_MATCHING);
+        String topicSearchSubtree = (String)options.get(TOPIC_SEARCH_SUBTREE);
+        String queueSearchMatching = (String)options.get(QUEUE_SEARCH_MATCHING);
+        String queueSearchSubtree = (String)options.get(QUEUE_SEARCH_SUBTREE);
         topicSearchMatchingFormat = new MessageFormat(topicSearchMatching);
         queueSearchMatchingFormat = new MessageFormat(queueSearchMatching);
         topicSearchSubtreeBool = Boolean.valueOf(topicSearchSubtree).booleanValue();
@@ -137,21 +136,21 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
     }
 
     public Set getTempDestinationAdminACLs() {
-        //TODO insert implementation
-    	
-        return null;
-    }    
-    
-    public Set getTempDestinationReadACLs() {
-    	//    	TODO insert implementation
+        // TODO insert implementation
+
         return null;
     }
-    
-    public Set getTempDestinationWriteACLs() {
-    	//    	TODO insert implementation
+
+    public Set getTempDestinationReadACLs() {
+        // TODO insert implementation
         return null;
-    }      
-    
+    }
+
+    public Set getTempDestinationWriteACLs() {
+        // TODO insert implementation
+        return null;
+    }
+
     public Set getAdminACLs(ActiveMQDestination destination) {
         return getACLs(destination, adminBase, adminAttribute);
     }
@@ -308,8 +307,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
     protected Set getACLs(ActiveMQDestination destination, String roleBase, String roleAttribute) {
         try {
             context = open();
-        }
-        catch (NamingException e) {
+        } catch (NamingException e) {
             log.error(e);
             return new HashSet();
         }
@@ -323,32 +321,30 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
         SearchControls constraints = new SearchControls();
 
         if ((destination.getDestinationType() & ActiveMQDestination.QUEUE_TYPE) == ActiveMQDestination.QUEUE_TYPE) {
-            destinationBase = queueSearchMatchingFormat.format(new String[] { destination.getPhysicalName() });
+            destinationBase = queueSearchMatchingFormat.format(new String[] {destination.getPhysicalName()});
             if (queueSearchSubtreeBool) {
                 constraints.setSearchScope(SearchControls.SUBTREE_SCOPE);
-            }
-            else {
+            } else {
                 constraints.setSearchScope(SearchControls.ONELEVEL_SCOPE);
             }
         }
         if ((destination.getDestinationType() & ActiveMQDestination.TOPIC_TYPE) == ActiveMQDestination.TOPIC_TYPE) {
-            destinationBase = topicSearchMatchingFormat.format(new String[] { destination.getPhysicalName() });
+            destinationBase = topicSearchMatchingFormat.format(new String[] {destination.getPhysicalName()});
             if (topicSearchSubtreeBool) {
                 constraints.setSearchScope(SearchControls.SUBTREE_SCOPE);
-            }
-            else {
+            } else {
                 constraints.setSearchScope(SearchControls.ONELEVEL_SCOPE);
             }
         }
 
-        constraints.setReturningAttributes(new String[] { roleAttribute });
+        constraints.setReturningAttributes(new String[] {roleAttribute});
 
         try {
             Set roles = new HashSet();
             Set acls = new HashSet();
             NamingEnumeration results = context.search(destinationBase, roleBase, constraints);
             while (results.hasMore()) {
-                SearchResult result = (SearchResult) results.next();
+                SearchResult result = (SearchResult)results.next();
                 Attributes attrs = result.getAttributes();
                 if (attrs == null) {
                     continue;
@@ -356,12 +352,11 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
                 acls = addAttributeValues(roleAttribute, attrs, acls);
             }
             for (Iterator iter = acls.iterator(); iter.hasNext();) {
-                String roleName = (String) iter.next();
+                String roleName = (String)iter.next();
                 roles.add(new GroupPrincipal(roleName));
             }
             return roles;
-        }
-        catch (NamingException e) {
+        } catch (NamingException e) {
             log.error(e);
             return new HashSet();
         }
@@ -376,11 +371,11 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
         }
         Attribute attr = attrs.get(attrId);
         if (attr == null) {
-            return (values);
+            return values;
         }
         NamingEnumeration e = attr.getAll();
         while (e.hasMore()) {
-            String value = (String) e.next();
+            String value = (String)e.next();
             values.add(value);
         }
         return values;
@@ -405,8 +400,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
             env.put(Context.SECURITY_AUTHENTICATION, authentication);
             context = new InitialDirContext(env);
 
-        }
-        catch (NamingException e) {
+        } catch (NamingException e) {
             log.error(e);
             throw e;
         }

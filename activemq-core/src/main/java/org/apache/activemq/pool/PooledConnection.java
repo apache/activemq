@@ -16,10 +16,6 @@
  */
 package org.apache.activemq.pool;
 
-import org.apache.activemq.ActiveMQConnection;
-import org.apache.activemq.ActiveMQSession;
-import org.apache.activemq.AlreadyClosedException;
-
 import javax.jms.Connection;
 import javax.jms.ConnectionConsumer;
 import javax.jms.ConnectionMetaData;
@@ -34,6 +30,10 @@ import javax.jms.Session;
 import javax.jms.Topic;
 import javax.jms.TopicConnection;
 import javax.jms.TopicSession;
+
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQSession;
+import org.apache.activemq.AlreadyClosedException;
 
 /**
  * Represents a proxy {@link Connection} which is-a {@link TopicConnection} and

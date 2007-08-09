@@ -64,7 +64,7 @@ public class ActiveMQBytesMessageTest extends TestCase {
         int len = 10;
         try {
             for (int i = 0; i < len; i++) {
-                msg.writeLong(5l);
+                msg.writeLong(5L);
             }
         } catch (JMSException ex) {
             ex.printStackTrace();
@@ -243,7 +243,7 @@ public class ActiveMQBytesMessageTest extends TestCase {
             msg.writeObject(Byte.valueOf((byte) 1));
             msg.writeObject(Short.valueOf((short) 3));
             msg.writeObject(Integer.valueOf(3));
-            msg.writeObject(Long.valueOf(300l));
+            msg.writeObject(Long.valueOf(300L));
             msg.writeObject(new Float(3.3f));
             msg.writeObject(new Double(3.3));
             msg.writeObject(new byte[3]);

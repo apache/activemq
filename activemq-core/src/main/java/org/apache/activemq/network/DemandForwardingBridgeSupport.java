@@ -266,7 +266,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
     protected void startRemoteBridge() throws Exception {
         if (remoteBridgeStarted.compareAndSet(false, true)) {
             synchronized (this) {
-                if (isCreatedByDuplex() == false) {
+                if (!isCreatedByDuplex()) {
                     BrokerInfo brokerInfo = new BrokerInfo();
                     brokerInfo.setBrokerName(configuration.getBrokerName());
                     brokerInfo.setNetworkConnection(true);
@@ -436,7 +436,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
             // Create a new local subscription
             ConsumerInfo info = (ConsumerInfo)data;
             BrokerId[] path = info.getBrokerPath();
-            if ((path != null && path.length >= networkTTL)) {
+            if (path != null && path.length >= networkTTL) {
                 if (log.isDebugEnabled())
                     log.debug(configuration.getBrokerName() + " Ignoring Subscription " + info + " restricted to " + networkTTL + " network hops only");
                 return;
@@ -466,16 +466,18 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
             // infomation about temporary destinations
             DestinationInfo destInfo = (DestinationInfo)data;
             BrokerId[] path = destInfo.getBrokerPath();
-            if ((path != null && path.length >= networkTTL)) {
-                if (log.isDebugEnabled())
+            if (path != null && path.length >= networkTTL) {
+                if (log.isDebugEnabled()) {
                     log.debug("Ignoring Subscription " + destInfo + " restricted to " + networkTTL + " network hops only");
+                }
                 return;
             }
             if (contains(destInfo.getBrokerPath(), localBrokerPath[0])) {
                 // Ignore this consumer as it's a consumer we locally sent to
                 // the broker.
-                if (log.isDebugEnabled())
+                if (log.isDebugEnabled()) {
                     log.debug("Ignoring sub " + destInfo + " already routed through this broker once");
+                }
                 return;
             }
             destInfo.setConnectionId(localConnectionInfo.getConnectionId());

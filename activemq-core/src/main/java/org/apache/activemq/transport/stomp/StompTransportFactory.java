@@ -25,7 +25,7 @@ import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * A <a href="http://stomp.codehaus.org/">STOMP</a> transport factory
- *
+ * 
  * @version $Revision: 1.1.1.1 $
  */
 public class StompTransportFactory extends TcpTransportFactory {
@@ -35,13 +35,14 @@ public class StompTransportFactory extends TcpTransportFactory {
     }
 
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
-    	transport = new StompTransportFilter(transport, new LegacyFrameTranslator());
-    	IntrospectionSupport.setProperties(transport, options);
-    	return super.compositeConfigure(transport, format, options);
+        transport = new StompTransportFilter(transport, new LegacyFrameTranslator());
+        IntrospectionSupport.setProperties(transport, options);
+        return super.compositeConfigure(transport, format, options);
     }
 
     protected boolean isUseInactivityMonitor(Transport transport) {
-        // lets disable the inactivity monitor as stomp does not use keep alive packets
+        // lets disable the inactivity monitor as stomp does not use keep alive
+        // packets
         return false;
     }
 }

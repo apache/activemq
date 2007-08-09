@@ -140,6 +140,8 @@ public class XATransaction extends Transaction {
             transactionStore.rollback(getTransactionId());
             doPostRollback();
             break;
+        default:
+            throw new XAException("Invalid state");
         }
 
     }

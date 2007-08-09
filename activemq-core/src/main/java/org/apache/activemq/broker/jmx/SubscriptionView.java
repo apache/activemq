@@ -16,11 +16,11 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import javax.jms.InvalidSelectorException;
+
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
-
-import javax.jms.InvalidSelectorException;
 
 /**
  * @version $Revision: 1.5 $

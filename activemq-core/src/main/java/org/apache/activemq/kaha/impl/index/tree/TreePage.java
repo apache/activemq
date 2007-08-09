@@ -13,10 +13,6 @@
  */
 package org.apache.activemq.kaha.impl.index.tree;
 
-import org.apache.activemq.kaha.Marshaller;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -25,9 +21,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.activemq.kaha.Marshaller;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * Page in a BTree
- *
+ * 
  * @version $Revision: 1.1.1.1 $
  */
 class TreePage {
@@ -52,7 +52,7 @@ class TreePage {
 
     /**
      * Constructor
-     *
+     * 
      * @param tree
      * @param id
      * @param parentId
@@ -67,7 +67,7 @@ class TreePage {
 
     /**
      * Constructor
-     *
+     * 
      * @param maximumEntries
      */
     public TreePage(int maximumEntries) {
@@ -82,14 +82,14 @@ class TreePage {
     public boolean equals(Object o) {
         boolean result = false;
         if (o instanceof TreePage) {
-            TreePage other = (TreePage) o;
+            TreePage other = (TreePage)o;
             result = other.id == id;
         }
         return result;
     }
 
     public int hashCode() {
-        return (int) id;
+        return (int)id;
     }
 
     boolean isActive() {
@@ -190,8 +190,7 @@ class TreePage {
 
     void setParentId(long newId) throws IOException {
         if (newId == this.id) {
-            throw new IllegalStateException("Cannot set page as a child of itself " + this + " trying to set parentId = "
-                    + newId);
+            throw new IllegalStateException("Cannot set page as a child of itself " + this + " trying to set parentId = " + newId);
         }
         this.parentId = newId;
         tree.writePage(this);
@@ -242,12 +241,10 @@ class TreePage {
             int cmp = te.compareTo(key);
             if (cmp == 0) {
                 return te;
-            }
-            else if (cmp < 0) {
+            } else if (cmp < 0) {
                 low = mid + 1;
                 pageId = te.getNextPageId();
-            }
-            else {
+            } else {
                 high = mid - 1;
                 pageId = te.getPrevPageId();
             }
@@ -264,12 +261,10 @@ class TreePage {
         if (isRoot()) {
             if (isEmpty()) {
                 insertTreeEntry(0, newEntry);
-            }
-            else {
+            } else {
                 result = doInsert(null, newEntry);
             }
-        }
-        else {
+        } else {
             throw new IllegalStateException("insert() should not be called on non root page - " + this);
         }
         return result;
@@ -281,8 +276,7 @@ class TreePage {
             if (!isEmpty()) {
                 result = doRemove(entry);
             }
-        }
-        else {
+        } else {
             throw new IllegalStateException("remove() should not be called on non root page");
         }
         return result;
@@ -302,27 +296,23 @@ class TreePage {
                 newEntry.setIndexOffset(oldValue);
                 result = newEntry;
                 save();
-            }
-            else if (closestPage != null) {
+            } else if (closestPage != null) {
                 result = closestPage.doInsert(closest.getFlavour(), newEntry);
-            }
-            else {
+            } else {
                 if (!isFull()) {
                     insertTreeEntry(closest.getIndex(), newEntry);
                     save();
-                }
-                else {
+                } else {
                     doOverflow(flavour, newEntry);
                 }
             }
-        }
-        else {
+        } else {
             if (!isFull()) {
                 doInsertEntry(newEntry);
                 save();
-            }
-            else {
-                // need to insert the new entry and propogate up the hightest value
+            } else {
+                // need to insert the new entry and propogate up the hightest
+                // value
                 doOverflow(flavour, newEntry);
             }
         }
@@ -335,10 +325,10 @@ class TreePage {
         if (!isFull()) {
             doInsertEntry(newEntry);
             save();
-        }
-        else {
+        } else {
             if (!isRoot() && flavour != null) {
-                // we aren't the root, but to ensure the correct distribution we need to
+                // we aren't the root, but to ensure the correct distribution we
+                // need to
                 // insert the new entry and take a node of the end of the page
                 // and pass that up the tree to find a home
                 doInsertEntry(newEntry);
@@ -346,8 +336,7 @@ class TreePage {
                     theEntry = removeTreeEntry(0);
                     theEntry.reset();
                     theEntry.setNextPageId(getId());
-                }
-                else {
+                } else {
                     theEntry = removeTreeEntry(size() - 1);
                     theEntry.reset();
                     theEntry.setPrevPageId(getId());
@@ -356,11 +345,10 @@ class TreePage {
 
                 result = getParent().doOverflow(flavour, theEntry);
                 if (!theEntry.equals(newEntry)) {
-                    //the newEntry stayed here
+                    // the newEntry stayed here
                     result = this;
                 }
-            }
-            else {
+            } else {
                 // so we are the root and need to split
                 doInsertEntry(newEntry);
                 int midIndex = (size() / 2);
@@ -370,7 +358,8 @@ class TreePage {
                 TreePage newRoot = tree.createRoot();
                 newRoot.setLeaf(false);
                 this.setParentId(newRoot.getId());
-                save(); // we are no longer root - need to save - we maybe looked up v. soon!
+                save(); // we are no longer root - need to save - we maybe
+                        // looked up v. soon!
                 TreePage rightPage = tree.createPage(newRoot.getId());
                 rightPage.setEntries(subList);
                 rightPage.checkLeaf();
@@ -402,8 +391,7 @@ class TreePage {
                     save();
                     // ensure we don't loose children
                     doUnderflow(result, index);
-                }
-                else if (closestPage != null) {
+                } else if (closestPage != null) {
                     closestPage.doRemove(entry);
                 }
             }
@@ -441,8 +429,7 @@ class TreePage {
                 if (!page.isEmpty()) {
                     copy.setNextPageId(page.getId());
                     page.setParentId(this.id);
-                }
-                else {
+                } else {
                     page.setLeaf(true);
                 }
                 int replacementIndex = doInsertEntry(copy);
@@ -450,8 +437,7 @@ class TreePage {
                     // page removed so update our replacement
                     resetPageReference(replacementIndex, copy.getNextPageId());
                     copy.setNextPageId(TreeEntry.NOT_SET);
-                }
-                else {
+                } else {
                     page.save();
                 }
                 save();
@@ -466,16 +452,17 @@ class TreePage {
                 if (page != null && !page.isEmpty()) {
                     TreeEntry replacement = page.removeTreeEntry(page.getEntries().size() - 1);
                     TreeEntry copy = replacement.copy();
-                    // check children pages of the replacement point to the correct place
+                    // check children pages of the replacement point to the
+                    // correct place
                     checkParentIdForRemovedPageEntry(copy, page.getId(), getId());
                     if (!page.isEmpty()) {
                         copy.setPrevPageId(page.getId());
-                    }
-                    else {
+                    } else {
                         page.setLeaf(true);
                     }
                     insertTreeEntry(index, copy);
-                    TreePage landed = null;// if we overflow - the page the replacement ends up on
+                    TreePage landed = null;// if we overflow - the page the
+                                            // replacement ends up on
                     TreeEntry removed = null;
                     if (isOverflowed()) {
                         TreePage parent = getParent();
@@ -485,8 +472,7 @@ class TreePage {
                             if (flavour == Flavour.LESS) {
                                 removed = removeTreeEntry(0);
                                 landed = parent.doOverflow(flavour, removed);
-                            }
-                            else {
+                            } else {
                                 removed = removeTreeEntry(size() - 1);
                                 landed = parent.doOverflow(Flavour.MORE, removed);
                             }
@@ -501,8 +487,7 @@ class TreePage {
                         landed.resetPageReference(copy.getNextPageId());
                         copy.setPrevPageId(TreeEntry.NOT_SET);
                         landed.save();
-                    }
-                    else {
+                    } else {
                         page.save();
                     }
                     save();
@@ -522,13 +507,15 @@ class TreePage {
 
     private boolean doUnderflowLeaf() throws IOException {
         boolean result = false;
-        // if we have unerflowed - and we are a leaf - push entries further up the tree
+        // if we have unerflowed - and we are a leaf - push entries further up
+        // the tree
         // and delete ourselves
         if (isUnderflowed() && isLeaf()) {
             List<TreeEntry> list = new ArrayList<TreeEntry>(treeEntries);
             treeEntries.clear();
             for (TreeEntry entry : list) {
-                // need to check for each iteration - we might get promoted to root
+                // need to check for each iteration - we might get promoted to
+                // root
                 TreePage parent = getParent();
                 if (parent != null) {
                     Flavour flavour = getFlavour(parent, entry);
@@ -555,8 +542,7 @@ class TreePage {
             TreeEntry last = page.getEntries().get(page.getEntries().size() - 1);
             if (last.compareTo(entry) > 0) {
                 result = Flavour.MORE;
-            }
-            else {
+            } else {
                 result = Flavour.LESS;
             }
         }
@@ -614,13 +600,11 @@ class TreePage {
                 low = mid + 1;
                 pageId = treeEntry.getNextPageId();
                 flavour = Flavour.LESS;
-            }
-            else if (cmp > 0) {
+            } else if (cmp > 0) {
                 high = mid - 1;
                 pageId = treeEntry.getPrevPageId();
                 flavour = Flavour.MORE;
-            }
-            else {
+            } else {
                 // got exact match
                 low = mid;
                 break;
@@ -642,8 +626,7 @@ class TreePage {
             int cmp = midVal.compareTo(newEntry);
             if (cmp < 0) {
                 low = mid + 1;
-            }
-            else if (cmp > 0) {
+            } else if (cmp > 0) {
                 high = mid - 1;
             }
         }

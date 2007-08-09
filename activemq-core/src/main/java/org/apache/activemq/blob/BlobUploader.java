@@ -16,17 +16,18 @@
  */
 package org.apache.activemq.blob;
 
-import org.apache.activemq.command.ActiveMQBlobMessage;
-
-import javax.jms.JMSException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
+import javax.jms.JMSException;
+
+import org.apache.activemq.command.ActiveMQBlobMessage;
+
 /**
  * A helper class to represent a required upload of a BLOB to some remote URL
- *
+ * 
  * @version $Revision: $
  */
 public class BlobUploader {
@@ -34,7 +35,6 @@ public class BlobUploader {
     private BlobTransferPolicy blobTransferPolicy;
     private File file;
     private InputStream in;
-
 
     public BlobUploader(BlobTransferPolicy blobTransferPolicy, InputStream in) {
         this.blobTransferPolicy = blobTransferPolicy;
@@ -49,12 +49,10 @@ public class BlobUploader {
     public URL upload(ActiveMQBlobMessage message) throws JMSException, IOException {
         if (file != null) {
             return getStrategy().uploadFile(message, file);
-        }
-        else {
+        } else {
             return getStrategy().uploadStream(message, in);
         }
     }
-
 
     public BlobTransferPolicy getBlobTransferPolicy() {
         return blobTransferPolicy;

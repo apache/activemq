@@ -22,7 +22,6 @@ import org.apache.activemq.command.ActiveMQTopic;
 
 public class DestinationMapMemoryTest extends TestCase {
 
-
     public void testLongDestinationPath() throws Exception {
         ActiveMQTopic d1 = new ActiveMQTopic("1.2.3.4.5.6.7.8.9.10.11.12.13.14.15.16.17.18");
         DestinationMap map = new DestinationMap();
@@ -36,13 +35,12 @@ public class DestinationMapMemoryTest extends TestCase {
             for (int j = 2; j <= i; j++) {
                 name += "." + j;
             }
-            //System.out.println("Checking: " + name);
+            // System.out.println("Checking: " + name);
             try {
                 ActiveMQDestination d1 = createDestination(name);
                 DestinationMap map = new DestinationMap();
                 map.put(d1, d1);
-            }
-            catch (Throwable e) {
+            } catch (Throwable e) {
                 fail("Destination name too long: " + name + " : " + e);
             }
         }

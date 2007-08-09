@@ -20,7 +20,6 @@ import java.io.DataInput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UTFDataFormatException;
-import org.apache.activemq.util.ByteSequence;
 
 /**
  * Optimized ByteArrayInputStream that can be used more than once
@@ -219,8 +218,8 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
     }
 
     public long readLong() {
-        return (((long)buf[pos++] << 56) + ((long)(buf[pos++] & 255) << 48) + ((long)(buf[pos++] & 255) << 40) + ((long)(buf[pos++] & 255) << 32)
-                + ((long)(buf[pos++] & 255) << 24) + ((buf[pos++] & 255) << 16) + ((buf[pos++] & 255) << 8) + ((buf[pos++] & 255) << 0));
+        long rc = ((long)buf[pos++] << 56) + ((long)(buf[pos++] & 255) << 48) + ((long)(buf[pos++] & 255) << 40) + ((long)(buf[pos++] & 255) << 32);
+        return rc + ((long)(buf[pos++] & 255) << 24) + ((buf[pos++] & 255) << 16) + ((buf[pos++] & 255) << 8) + ((buf[pos++] & 255) << 0);
     }
 
     public float readFloat() throws IOException {

@@ -543,6 +543,8 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
                         case JournalTransaction.XA_ROLLBACK:
                             transactionStore.replayRollback(command.getTransactionId());
                             break;
+                        default:
+                            throw new IOException("Invalid journal command type: " + command.getType());
                         }
                     } catch (IOException e) {
                         log.error("Recovery Failure: Could not replay: " + c + ", reason: " + e, e);
@@ -600,8 +602,8 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     }
 
     public void onMemoryUseChanged(UsageManager memoryManager, int oldPercentUsage, int newPercentUsage) {
-        newPercentUsage = ((newPercentUsage) / 10) * 10;
-        oldPercentUsage = ((oldPercentUsage) / 10) * 10;
+        newPercentUsage = (newPercentUsage / 10) * 10;
+        oldPercentUsage = (oldPercentUsage / 10) * 10;
         if (newPercentUsage >= 70 && oldPercentUsage < newPercentUsage) {
             boolean sync = newPercentUsage >= 90;
             checkpoint(sync, true);

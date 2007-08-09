@@ -51,8 +51,7 @@ public class DestinationMap {
      * or composite destinations this will typically be a List of matching
      * values.
      * 
-     * @param key
-     *            the destination to lookup
+     * @param key the destination to lookup
      * @return a List of matching values or an empty list if there are no
      *         matching values.
      */
@@ -64,9 +63,8 @@ public class DestinationMap {
                 ActiveMQDestination childDestination = destinations[i];
                 Object value = get(childDestination);
                 if (value instanceof Set) {
-                    answer.addAll((Set) value);
-                }
-                else if (value != null) {
+                    answer.addAll((Set)value);
+                } else if (value != null) {
                     answer.add(value);
                 }
             }
@@ -108,7 +106,7 @@ public class DestinationMap {
     public int getTopicRootChildCount() {
         return topicRootNode.getChildCount();
     }
-    
+
     public int getQueueRootChildCount() {
         return queueRootNode.getChildCount();
     }
@@ -121,7 +119,6 @@ public class DestinationMap {
         return topicRootNode;
     }
 
-    
     // Implementation methods
     // -------------------------------------------------------------------------
 
@@ -131,13 +128,12 @@ public class DestinationMap {
      */
     protected void setEntries(List entries) {
         for (Iterator iter = entries.iterator(); iter.hasNext();) {
-            Object element = (Object) iter.next();
+            Object element = (Object)iter.next();
             Class type = getEntryClass();
             if (type.isInstance(element)) {
-                DestinationMapEntry entry = (DestinationMapEntry) element;
+                DestinationMapEntry entry = (DestinationMapEntry)element;
                 put(entry.getDestination(), entry.getValue());
-            }
-            else {
+            } else {
                 throw new IllegalArgumentException("Each entry must be an instance of type: " + type.getName() + " but was: " + element);
             }
         }
@@ -162,14 +158,14 @@ public class DestinationMap {
 
     /**
      * @param key
-     * @return 
+     * @return
      */
     public Set removeAll(ActiveMQDestination key) {
         Set rc = new HashSet();
         if (key.isComposite()) {
             ActiveMQDestination[] destinations = key.getCompositeDestinations();
             for (int i = 0; i < destinations.length; i++) {
-                rc.add( removeAll(destinations[i]) );
+                rc.add(removeAll(destinations[i]));
             }
             return rc;
         }
@@ -183,8 +179,7 @@ public class DestinationMap {
      * no matching value. If there are multiple values, the results are sorted
      * and the last item (the biggest) is returned.
      * 
-     * @param destination
-     *            the destination to find the value for
+     * @param destination the destination to find the value for
      * @return the largest matching value or null if no value matches
      */
     public Object chooseValue(ActiveMQDestination destination) {
@@ -202,8 +197,7 @@ public class DestinationMap {
     protected DestinationMapNode getRootNode(ActiveMQDestination key) {
         if (key.isQueue()) {
             return queueRootNode;
-        }
-        else {
+        } else {
             return topicRootNode;
         }
     }

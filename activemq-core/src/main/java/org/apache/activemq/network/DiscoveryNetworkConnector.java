@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.Transport;
@@ -29,8 +30,6 @@ import org.apache.activemq.transport.discovery.DiscoveryAgentFactory;
 import org.apache.activemq.transport.discovery.DiscoveryListener;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
-
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A network connector which uses a discovery agent to detect the remote brokers

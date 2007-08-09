@@ -16,11 +16,11 @@ package org.apache.activemq.kaha.impl.index.tree;
 
 import java.io.File;
 import java.io.IOException;
+
+import junit.framework.TestCase;
 import org.apache.activemq.kaha.Store;
-import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.kaha.impl.index.IndexItem;
 import org.apache.activemq.kaha.impl.index.IndexManager;
-import junit.framework.TestCase;
 
 /**
  * Test a TreeIndex

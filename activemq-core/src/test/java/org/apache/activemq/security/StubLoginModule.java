@@ -17,9 +17,6 @@
 
 package org.apache.activemq.security;
 
-import org.apache.activemq.jaas.GroupPrincipal;
-import org.apache.activemq.jaas.UserPrincipal;
-
 import java.util.Map;
 
 import javax.security.auth.Subject;
@@ -27,6 +24,9 @@ import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
+
+import org.apache.activemq.jaas.GroupPrincipal;
+import org.apache.activemq.jaas.UserPrincipal;
 
 public class StubLoginModule implements LoginModule {
     public static final String ALLOW_LOGIN_PROPERTY = "org.apache.activemq.jaas.stubproperties.allow_login";

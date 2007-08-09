@@ -16,10 +16,17 @@
  */
 package org.apache.activemq.store.jdbc;
 
+import java.io.File;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+
+import javax.sql.DataSource;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
@@ -39,14 +46,6 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import javax.sql.DataSource;
-
-import java.io.File;
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.Collections;
-import java.util.Set;
 
 /**
  * A {@link PersistenceAdapter} implementation using JDBC for persistence

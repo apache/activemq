@@ -17,11 +17,12 @@
 package org.apache.activemq.broker.jmx;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.rmi.registry.LocateRegistry;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.management.Attribute;
 import javax.management.JMException;
 import javax.management.MBeanServer;
@@ -31,11 +32,10 @@ import javax.management.ObjectName;
 import javax.management.remote.JMXConnectorServer;
 import javax.management.remote.JMXConnectorServerFactory;
 import javax.management.remote.JMXServiceURL;
+
 import org.apache.activemq.Service;
-import org.apache.activemq.util.ClassLoading;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * A Flow provides different dispatch policies within the NMR

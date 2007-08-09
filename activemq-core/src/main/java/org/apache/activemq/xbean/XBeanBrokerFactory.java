@@ -16,12 +16,17 @@
  */
 package org.apache.activemq.xbean;
 
+import java.beans.PropertyEditorManager;
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URI;
+
 import org.apache.activemq.broker.BrokerFactoryHandler;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.xbean.spring.context.ResourceXmlApplicationContext;
-import org.apache.xbean.spring.context.impl.URIEditor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.xbean.spring.context.ResourceXmlApplicationContext;
+import org.apache.xbean.spring.context.impl.URIEditor;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.ClassPathResource;
@@ -29,11 +34,6 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.util.ResourceUtils;
-
-import java.beans.PropertyEditorManager;
-import java.io.File;
-import java.net.URI;
-import java.net.MalformedURLException;
 
 /**
  * @version $Revision$
@@ -52,9 +52,8 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
 
         BrokerService broker = null;
         try {
-            broker = (BrokerService) context.getBean("broker");
-        }
-        catch (BeansException e) {
+            broker = (BrokerService)context.getBean("broker");
+        } catch (BeansException e) {
         }
 
         if (broker == null) {
@@ -62,7 +61,7 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
             String[] names = context.getBeanNamesForType(BrokerService.class);
             for (int i = 0; i < names.length; i++) {
                 String name = names[i];
-                broker = (BrokerService) context.getBean(name);
+                broker = (BrokerService)context.getBean(name);
                 if (broker != null) {
                     break;
                 }
@@ -71,24 +70,22 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
         if (broker == null) {
             throw new IllegalArgumentException("The configuration has no BrokerService instance for resource: " + config);
         }
-        
+
         // TODO warning resources from the context may not be closed down!
-        
+
         return broker;
     }
 
     protected ApplicationContext createApplicationContext(String uri) throws MalformedURLException {
         log.debug("Now attempting to figure out the type of resource: " + uri);
-        
+
         Resource resource;
         File file = new File(uri);
         if (file.exists()) {
             resource = new FileSystemResource(uri);
-        }
-        else if (ResourceUtils.isUrl(uri)) {
+        } else if (ResourceUtils.isUrl(uri)) {
             resource = new UrlResource(uri);
-        }
-        else {
+        } else {
             resource = new ClassPathResource(uri);
         }
         return new ResourceXmlApplicationContext(resource);

@@ -18,7 +18,6 @@ package org.apache.activemq.broker.region.policy;
 
 import java.util.List;
 
-import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.filter.MessageEvaluationContext;
 

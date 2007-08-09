@@ -16,14 +16,14 @@
  */
 package org.apache.activemq.broker;
 
+import javax.jms.Connection;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.demo.DefaultQueueSender;
-
-import javax.jms.Connection;
-import javax.jms.MessageConsumer;
-import javax.jms.Session;
 
 /**
  * A helper class which can be handy for running a broker in your IDE from the

@@ -13,11 +13,11 @@
  */
 package org.apache.activemq.store.kahadaptor;
 
+import java.util.Iterator;
+
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.StoreEntry;
-
-import java.util.Iterator;
 
 /**
  * Holds information for the subscriber

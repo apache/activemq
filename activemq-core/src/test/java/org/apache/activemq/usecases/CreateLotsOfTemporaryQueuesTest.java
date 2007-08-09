@@ -16,16 +16,13 @@
  */
 package org.apache.activemq.usecases;
 
-import org.apache.activemq.EmbeddedBrokerTestSupport;
-import org.apache.activemq.EmbeddedBrokerAndConnectionTestSupport;
-
-import javax.jms.Connection;
 import javax.jms.Session;
 import javax.jms.TemporaryQueue;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
+import org.apache.activemq.EmbeddedBrokerAndConnectionTestSupport;
 
 /**
  * 

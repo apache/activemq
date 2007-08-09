@@ -16,12 +16,12 @@
  */
 package org.apache.activemq.filter;
 
+import java.util.Set;
+
 import org.apache.activemq.SpringTestSupport;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-
-import java.util.Set;
 
 /**
  *

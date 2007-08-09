@@ -21,8 +21,6 @@ import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.StringWriter;
 import java.io.UTFDataFormatException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -133,7 +131,7 @@ public class MarshallingSupport {
         } else if (value.getClass() == Double.class) {
             marshalDouble(out, ((Double)value).doubleValue());
         } else if (value.getClass() == byte[].class) {
-            marshalByteArray(out, ((byte[])value));
+            marshalByteArray(out, (byte[])value);
         } else if (value.getClass() == String.class) {
             marshalString(out, (String)value);
         } else if (value instanceof Map) {
@@ -149,9 +147,10 @@ public class MarshallingSupport {
 
     static public Object unmarshalPrimitive(DataInputStream in) throws IOException {
         Object value = null;
-        switch (in.readByte()) {
+        byte type = in.readByte();
+        switch (type) {
         case BYTE_TYPE:
-            value = Byte.valueOf(in.readByte());
+            value = Byte.valueOf(type);
             break;
         case BOOLEAN_TYPE:
             value = in.readBoolean() ? Boolean.TRUE : Boolean.FALSE;
@@ -190,6 +189,8 @@ public class MarshallingSupport {
         case LIST_TYPE:
             value = unmarshalPrimitiveList(in);
             break;
+        default:
+            throw new IOException("Unknown primitive type: " + type);
         }
         return value;
     }
@@ -281,9 +282,9 @@ public class MarshallingSupport {
             // TODO diff: Sun code - removed
             byte[] bytearr = new byte[utflen + 4]; // TODO diff: Sun code
             bytearr[count++] = (byte)((utflen >>> 24) & 0xFF); // TODO diff:
-                                                                // Sun code
+            // Sun code
             bytearr[count++] = (byte)((utflen >>> 16) & 0xFF); // TODO diff:
-                                                                // Sun code
+            // Sun code
             bytearr[count++] = (byte)((utflen >>> 8) & 0xFF);
             bytearr[count++] = (byte)((utflen >>> 0) & 0xFF);
             for (int i = 0; i < strlen; i++) {

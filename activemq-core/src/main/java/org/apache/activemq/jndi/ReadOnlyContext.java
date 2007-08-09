@@ -17,14 +17,27 @@
 
 package org.apache.activemq.jndi;
 
-import javax.naming.*;
-import javax.naming.spi.NamingManager;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
+
+import javax.naming.Binding;
+import javax.naming.CompositeName;
+import javax.naming.Context;
+import javax.naming.LinkRef;
+import javax.naming.Name;
+import javax.naming.NameClassPair;
+import javax.naming.NameNotFoundException;
+import javax.naming.NameParser;
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
+import javax.naming.NotContextException;
+import javax.naming.OperationNotSupportedException;
+import javax.naming.Reference;
+import javax.naming.spi.NamingManager;
 
 /**
  * A read-only Context <p/> This version assumes it and all its subcontext are

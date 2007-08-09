@@ -16,10 +16,10 @@
  */
 package org.apache.activemq;
 
+import javax.jms.JMSException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import javax.jms.JMSException;
 
 /**
  * @version $Revision: 1.1 $
@@ -36,8 +36,7 @@ public class CreateConsumerButDontStartConnectionWarningTest extends JmsQueueSen
     protected void assertMessagesAreReceived() throws JMSException {
         try {
             Thread.sleep(1000);
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             log.warn("Caught: " + e, e);
         }
     }

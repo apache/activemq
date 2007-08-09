@@ -19,6 +19,7 @@ package org.apache.activemq.network;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -29,7 +30,6 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 
 import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.advisory.ConsumerEvent;
 import org.apache.activemq.advisory.ConsumerEventSource;
@@ -39,8 +39,6 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * These test cases are used to verifiy that network connections get re

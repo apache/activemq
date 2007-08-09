@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.broker.util;
 
+import java.net.URI;
+
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.test.JmsTopicSendReceiveTest;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.net.URI;
 
 /**
  * 

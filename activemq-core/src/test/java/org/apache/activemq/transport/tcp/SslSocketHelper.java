@@ -16,10 +16,11 @@
  */
 package org.apache.activemq.transport.tcp;
 
-import javax.management.remote.JMXPrincipal;
-import javax.net.ssl.SSLSocket;
 import java.io.IOException;
 import java.security.cert.X509Certificate;
+
+import javax.management.remote.JMXPrincipal;
+import javax.net.ssl.SSLSocket;
 
 /**
  * @version $Revision$

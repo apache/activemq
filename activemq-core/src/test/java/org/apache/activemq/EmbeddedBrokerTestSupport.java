@@ -38,9 +38,9 @@ import org.springframework.jms.core.JmsTemplate;
 public abstract class EmbeddedBrokerTestSupport extends TestCase {
 
     protected static final Log LOG = LogFactory.getLog(EmbeddedBrokerTestSupport.class);
-    
+
     protected BrokerService broker;
-    //protected String bindAddress = "tcp://localhost:61616";
+    // protected String bindAddress = "tcp://localhost:61616";
     protected String bindAddress = "vm://localhost";
     protected ConnectionFactory connectionFactory;
     protected boolean useTopic;
@@ -79,8 +79,7 @@ public abstract class EmbeddedBrokerTestSupport extends TestCase {
         if (usePooledConnectionWithTemplate) {
             // lets use a pool to avoid creating and closing producers
             return new JmsTemplate(new PooledConnectionFactory(bindAddress));
-        }
-        else {
+        } else {
             return new JmsTemplate(connectionFactory);
         }
     }
@@ -101,8 +100,7 @@ public abstract class EmbeddedBrokerTestSupport extends TestCase {
     protected Destination createDestination(String subject) {
         if (useTopic) {
             return new ActiveMQTopic(subject);
-        }
-        else {
+        } else {
             return new ActiveMQQueue(subject);
         }
     }

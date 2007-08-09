@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.broker.virtual;
 
+import javax.jms.Destination;
+
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-
-import javax.jms.Destination;
 
 /**
  *

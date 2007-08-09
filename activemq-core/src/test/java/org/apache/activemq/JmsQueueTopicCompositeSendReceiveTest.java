@@ -16,12 +16,12 @@
  */
 package org.apache.activemq;
 
-import org.apache.activemq.test.JmsTopicSendReceiveTest;
-
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.MessageConsumer;
 import javax.jms.Topic;
+
+import org.apache.activemq.test.JmsTopicSendReceiveTest;
 
 
 /**

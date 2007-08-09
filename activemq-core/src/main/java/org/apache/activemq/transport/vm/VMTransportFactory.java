@@ -21,11 +21,13 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.BrokerFactoryHandler;
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.broker.BrokerFactoryHandler;
 import org.apache.activemq.transport.MarshallingTransportFilter;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
@@ -37,7 +39,6 @@ import org.apache.activemq.util.URISupport;
 import org.apache.activemq.util.URISupport.CompositeData;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class VMTransportFactory extends TransportFactory {
     private static final Log log = LogFactory.getLog(VMTransportFactory.class);

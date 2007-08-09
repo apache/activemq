@@ -20,10 +20,10 @@ import java.util.Enumeration;
 
 import javax.jms.BytesMessage;
 import javax.jms.Destination;
-import javax.jms.MessageEOFException;
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.jms.Message;
+import javax.jms.MessageEOFException;
 import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.StreamMessage;

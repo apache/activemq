@@ -16,16 +16,6 @@
  */
 package org.apache.activemq.broker.util;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.Service;
-import org.apache.activemq.advisory.AdvisorySupport;
-import org.apache.activemq.util.ServiceStopper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.FactoryBean;
-
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
@@ -33,9 +23,19 @@ import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.Service;
+import org.apache.activemq.advisory.AdvisorySupport;
+import org.apache.activemq.util.ServiceStopper;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.InitializingBean;
+
 /**
  * An agent which listens to commands on a JMS destination
- *
+ * 
  * @version $Revision$
  * @org.apache.xbean.XBean
  */
@@ -49,7 +49,6 @@ public class CommandAgent implements Service, InitializingBean, DisposableBean, 
     private CommandMessageListener listener;
     private Session session;
     private MessageConsumer consumer;
-
 
     public void start() throws Exception {
         session = getConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -68,8 +67,7 @@ public class CommandAgent implements Service, InitializingBean, DisposableBean, 
             try {
                 consumer.close();
                 consumer = null;
-            }
-            catch (JMSException e) {
+            } catch (JMSException e) {
                 stopper.onException(this, e);
             }
         }
@@ -77,8 +75,7 @@ public class CommandAgent implements Service, InitializingBean, DisposableBean, 
             try {
                 session.close();
                 session = null;
-            }
-            catch (JMSException e) {
+            } catch (JMSException e) {
                 stopper.onException(this, e);
             }
         }
@@ -86,15 +83,15 @@ public class CommandAgent implements Service, InitializingBean, DisposableBean, 
             try {
                 connection.close();
                 connection = null;
-            }
-            catch (JMSException e) {
+            } catch (JMSException e) {
                 stopper.onException(this, e);
             }
         }
         stopper.throwFirstException();
     }
 
-    // the following methods ensure that we are created on startup and the lifecycles respected
+    // the following methods ensure that we are created on startup and the
+    // lifecycles respected
     // TODO there must be a simpler way?
     public void afterPropertiesSet() throws Exception {
         start();
@@ -116,10 +113,8 @@ public class CommandAgent implements Service, InitializingBean, DisposableBean, 
         return true;
     }
 
-
-
     // Properties
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     public String getBrokerUrl() {
         return brokerUrl;
     }

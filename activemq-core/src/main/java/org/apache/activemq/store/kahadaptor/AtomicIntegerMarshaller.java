@@ -19,8 +19,9 @@ package org.apache.activemq.store.kahadaptor;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import org.apache.activemq.kaha.Marshaller;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.apache.activemq.kaha.Marshaller;
 
 /**
  * Marshall an AtomicInteger

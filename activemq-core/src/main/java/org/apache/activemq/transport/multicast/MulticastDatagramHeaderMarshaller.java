@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.transport.multicast;
 
+import java.net.SocketAddress;
+import java.nio.ByteBuffer;
+
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Endpoint;
 import org.apache.activemq.transport.udp.DatagramEndpoint;
 import org.apache.activemq.transport.udp.DatagramHeaderMarshaller;
-
-import java.net.SocketAddress;
-import java.nio.ByteBuffer;
 
 /**
  * 

@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.pool;
 
-import org.apache.activemq.ActiveMQTopicPublisher;
-
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.Topic;
 import javax.jms.TopicPublisher;
+
+import org.apache.activemq.ActiveMQTopicPublisher;
 
 /**
  * @version $Revision: 1.1 $

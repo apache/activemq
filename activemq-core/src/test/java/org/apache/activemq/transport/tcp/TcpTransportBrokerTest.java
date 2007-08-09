@@ -16,9 +16,8 @@
  */
 package org.apache.activemq.transport.tcp;
 
-import org.apache.activemq.transport.TransportBrokerTestSupport;
-
 import junit.framework.Test;
+import org.apache.activemq.transport.TransportBrokerTestSupport;
 
 public class TcpTransportBrokerTest extends TransportBrokerTestSupport {
 

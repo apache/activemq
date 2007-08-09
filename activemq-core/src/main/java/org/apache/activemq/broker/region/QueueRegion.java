@@ -16,16 +16,16 @@
  */
 package org.apache.activemq.broker.region;
 
+import java.util.Iterator;
+import java.util.Set;
+
+import javax.jms.InvalidSelectorException;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.thread.TaskRunnerFactory;
-
-import javax.jms.InvalidSelectorException;
-
-import java.util.Iterator;
-import java.util.Set;
 
 /**
  * 

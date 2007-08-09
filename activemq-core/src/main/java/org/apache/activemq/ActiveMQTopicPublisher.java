@@ -17,17 +17,12 @@
 
 package org.apache.activemq;
 
-import org.apache.activemq.command.ActiveMQDestination;
-
-import javax.jms.Destination;
-import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
 import javax.jms.Message;
-import javax.jms.MessageFormatException;
-import javax.jms.Session;
 import javax.jms.Topic;
 import javax.jms.TopicPublisher;
-import javax.jms.TopicSession;
+
+import org.apache.activemq.command.ActiveMQDestination;
 
 /**
  * A client uses a <CODE>TopicPublisher</CODE> object to publish messages on

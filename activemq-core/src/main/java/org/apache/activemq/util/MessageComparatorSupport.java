@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.util;
 
-import javax.jms.Message;
-
 import java.io.Serializable;
 import java.util.Comparator;
+
+import javax.jms.Message;
 
 /**
  * A base class for comparators which works on JMS {@link Message} objects
@@ -29,8 +29,8 @@ import java.util.Comparator;
 public abstract class MessageComparatorSupport implements Comparator, Serializable {
 
     public int compare(Object object1, Object object2) {
-        Message command1 = (Message) object1;
-        Message command2 = (Message) object2;
+        Message command1 = (Message)object1;
+        Message command2 = (Message)object2;
         return compareMessages(command1, command2);
     }
 
@@ -39,15 +39,13 @@ public abstract class MessageComparatorSupport implements Comparator, Serializab
     protected int compareComparators(final Comparable comparable, final Comparable comparable2) {
         if (comparable == null && comparable2 == null) {
             return 0;
-        }
-        else if (comparable != null) {
-            if (comparable2== null) {
+        } else if (comparable != null) {
+            if (comparable2 == null) {
                 return 1;
             }
             return comparable.compareTo(comparable2);
-        }
-        else if (comparable2 != null) {
-            if (comparable== null) {
+        } else if (comparable2 != null) {
+            if (comparable == null) {
                 return -11;
             }
             return comparable2.compareTo(comparable) * -1;

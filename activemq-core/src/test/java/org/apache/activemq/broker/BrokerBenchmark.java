@@ -54,8 +54,7 @@ public class BrokerBenchmark extends BrokerTestSupport {
     public boolean deliveryMode;
 
     public void initCombosForTestPerformance() {
-        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"),
-                                                          new ActiveMQTopic("TEST")});
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST")});
         addCombinationValues("PRODUCER_COUNT", new Object[] {new Integer("1"), new Integer("10")});
         addCombinationValues("CONSUMER_COUNT", new Object[] {new Integer("1"), new Integer("10")});
         addCombinationValues("CONSUMER_COUNT", new Object[] {new Integer("1"), new Integer("10")});
@@ -64,13 +63,12 @@ public class BrokerBenchmark extends BrokerTestSupport {
 
     public void testPerformance() throws Exception {
 
-        log.info("Running Benchmark for destination=" + destination + ", producers=" + PRODUCER_COUNT
-                 + ", consumers=" + CONSUMER_COUNT + ", deliveryMode=" + deliveryMode);
+        log.info("Running Benchmark for destination=" + destination + ", producers=" + PRODUCER_COUNT + ", consumers=" + CONSUMER_COUNT + ", deliveryMode=" + deliveryMode);
         final int CONSUME_COUNT = destination.isTopic() ? CONSUMER_COUNT * PRODUCE_COUNT : PRODUCE_COUNT;
 
-        final Semaphore consumersStarted = new Semaphore(1 - (CONSUMER_COUNT));
-        final Semaphore producersFinished = new Semaphore(1 - (PRODUCER_COUNT));
-        final Semaphore consumersFinished = new Semaphore(1 - (CONSUMER_COUNT));
+        final Semaphore consumersStarted = new Semaphore(1 - CONSUMER_COUNT);
+        final Semaphore producersFinished = new Semaphore(1 - PRODUCER_COUNT);
+        final Semaphore consumersFinished = new Semaphore(1 - CONSUMER_COUNT);
         final ProgressPrinter printer = new ProgressPrinter(PRODUCE_COUNT + CONSUME_COUNT, 10);
 
         // Start a producer and consumer
@@ -121,8 +119,7 @@ public class BrokerBenchmark extends BrokerTestSupport {
                             }
 
                             if (msg != null) {
-                                connection.send(createAck(consumerInfo, msg, counter,
-                                                          MessageAck.STANDARD_ACK_TYPE));
+                                connection.send(createAck(consumerInfo, msg, counter, MessageAck.STANDARD_ACK_TYPE));
                             } else if (receiveCounter.get() < CONSUME_COUNT) {
                                 log.info("Consumer stall, waiting for message #" + receiveCounter.get() + 1);
                             }
@@ -179,8 +176,7 @@ public class BrokerBenchmark extends BrokerTestSupport {
         consumersFinished.acquire();
         long end2 = System.currentTimeMillis();
 
-        log.info("Results for destination=" + destination + ", producers=" + PRODUCER_COUNT + ", consumers="
-                 + CONSUMER_COUNT + ", deliveryMode=" + deliveryMode);
+        log.info("Results for destination=" + destination + ", producers=" + PRODUCER_COUNT + ", consumers=" + CONSUMER_COUNT + ", deliveryMode=" + deliveryMode);
         log.info("Produced at messages/sec: " + (PRODUCE_COUNT * 1000.0 / (end1 - start)));
         log.info("Consumed at messages/sec: " + (CONSUME_COUNT * 1000.0 / (end2 - start)));
         profilerPause("Benchmark done.  Stop profiler ");

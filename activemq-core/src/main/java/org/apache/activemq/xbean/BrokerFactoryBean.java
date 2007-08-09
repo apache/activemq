@@ -16,9 +16,14 @@
  */
 package org.apache.activemq.xbean;
 
+import java.beans.PropertyEditorManager;
+import java.net.URI;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.xbean.spring.context.ResourceXmlApplicationContext;
+import org.apache.xbean.spring.context.impl.URIEditor;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
@@ -26,11 +31,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.Resource;
-import org.apache.xbean.spring.context.ResourceXmlApplicationContext;
-import org.apache.xbean.spring.context.impl.URIEditor;
-
-import java.beans.PropertyEditorManager;
-import java.net.URI;
 
 /**
  * A Spring {@link FactoryBean} which creates an embedded broker inside a Spring

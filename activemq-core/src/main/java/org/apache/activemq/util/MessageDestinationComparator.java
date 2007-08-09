@@ -16,9 +16,11 @@
  */
 package org.apache.activemq.util;
 
-import org.apache.activemq.command.ActiveMQMessage;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
 
-import javax.jms.*;
+import org.apache.activemq.command.ActiveMQMessage;
 
 /**
  * A comparator which works on SendCommand objects to compare the destinations
@@ -33,13 +35,12 @@ public class MessageDestinationComparator extends MessageComparatorSupport {
 
     protected Destination getDestination(Message message) {
         if (message instanceof ActiveMQMessage) {
-            ActiveMQMessage amqMessage = (ActiveMQMessage) message;
+            ActiveMQMessage amqMessage = (ActiveMQMessage)message;
             return amqMessage.getDestination();
         }
         try {
             return message.getJMSDestination();
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             return null;
         }
     }
@@ -51,6 +52,4 @@ public class MessageDestinationComparator extends MessageComparatorSupport {
         return null;
     }
 
-
-    
 }

@@ -16,12 +16,12 @@
  */
 package org.apache.activemq.jndi;
 
+import javax.naming.Reference;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
-
-import javax.naming.Reference;
 
 public class ObjectFactoryTest extends CombinationTestSupport {
     public void testConnectionFactory() throws Exception {

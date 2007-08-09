@@ -22,25 +22,25 @@ import java.net.URI;
 import org.apache.activemq.Service;
 import org.apache.activemq.command.BrokerInfo;
 
-
 /**
- * A TransportServer asynchronously accepts {@see Transport} objects
- * and then delivers those objects to a {@see TransportAcceptListener}.
+ * A TransportServer asynchronously accepts {@see Transport} objects and then
+ * delivers those objects to a {@see TransportAcceptListener}.
  * 
  * @version $Revision: 1.4 $
  */
 public interface TransportServer extends Service {
-	
-	/**
-	 * Registers an {@see TransportAcceptListener} which is notified of accepted channels.
-	 *  
-	 * @param acceptListener
-	 */
-    public void setAcceptListener(TransportAcceptListener acceptListener);
-    
+
     /**
-     * Associates a broker info with the transport server so that the transport can do
-     * discovery advertisements of the broker.
+     * Registers an {@see TransportAcceptListener} which is notified of accepted
+     * channels.
+     * 
+     * @param acceptListener
+     */
+    public void setAcceptListener(TransportAcceptListener acceptListener);
+
+    /**
+     * Associates a broker info with the transport server so that the transport
+     * can do discovery advertisements of the broker.
      * 
      * @param brokerInfo
      */
@@ -48,11 +48,11 @@ public interface TransportServer extends Service {
 
     public URI getConnectURI();
 
-    
     /**
-     * @return The socket address that this transport is accepting connections on or null if 
-     * this does not or is not currently accepting connections on a socket.
+     * @return The socket address that this transport is accepting connections
+     *         on or null if this does not or is not currently accepting
+     *         connections on a socket.
      */
     public InetSocketAddress getSocketAddress();
-    
+
 }

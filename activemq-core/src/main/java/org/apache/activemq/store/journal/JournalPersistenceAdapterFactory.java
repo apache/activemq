@@ -18,12 +18,12 @@ package org.apache.activemq.store.journal;
 
 import java.io.File;
 import java.io.IOException;
+
 import org.apache.activeio.journal.Journal;
 import org.apache.activeio.journal.active.JournalImpl;
 import org.apache.activeio.journal.active.JournalLockedException;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.PersistenceAdapterFactory;
-import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.activemq.store.jdbc.DataSourceSupport;
 import org.apache.activemq.store.jdbc.JDBCAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;

@@ -131,7 +131,7 @@ public class DestinationMapTest extends TestCase {
         map.put(d2, v2);
         map.put(d3, v3);
 
-        List allValues = Arrays.asList(new Object[] { v1, v2, v3 });
+        List allValues = Arrays.asList(new Object[] {v1, v2, v3});
 
         assertMapValue(">", allValues);
         assertMapValue("TEST.>", allValues);
@@ -296,21 +296,20 @@ public class DestinationMapTest extends TestCase {
         assertMapValue("TEST.*.*", v3, v5);
         assertMapValue("TEST.BAR.*", v3);
     }
-    
+
     public void testAddAndRemove() throws Exception {
-    	
+
         put("FOO.A", v1);
         assertMapValue("FOO.>", v1);
-        
-        put("FOO.B", v2);        
-        assertMapValue("FOO.>", v1, v2);
-        
-        Set set = map.removeAll(createDestination("FOO.A"));
-        
-        assertMapValue("FOO.>", v2);
-        
-    }
 
+        put("FOO.B", v2);
+        assertMapValue("FOO.>", v1, v2);
+
+        Set set = map.removeAll(createDestination("FOO.A"));
+
+        assertMapValue("FOO.>", v2);
+
+    }
 
     protected void loadSample2() {
         put("TEST.FOO", v1);
@@ -353,34 +352,32 @@ public class DestinationMapTest extends TestCase {
     }
 
     protected void assertMapValue(String destinationName, Object expected1, Object expected2) {
-        assertMapValue(destinationName, Arrays.asList(new Object[] { expected1, expected2 }));
+        assertMapValue(destinationName, Arrays.asList(new Object[] {expected1, expected2}));
     }
 
     protected void assertMapValue(String destinationName, Object expected1, Object expected2, Object expected3) {
-        assertMapValue(destinationName, Arrays.asList(new Object[] { expected1, expected2, expected3 }));
+        assertMapValue(destinationName, Arrays.asList(new Object[] {expected1, expected2, expected3}));
     }
 
     protected void assertMapValue(String destinationName, Object expected1, Object expected2, Object expected3, Object expected4) {
-        assertMapValue(destinationName, Arrays.asList(new Object[] { expected1, expected2, expected3, expected4 }));
+        assertMapValue(destinationName, Arrays.asList(new Object[] {expected1, expected2, expected3, expected4}));
     }
 
     protected void assertMapValue(String destinationName, Object expected1, Object expected2, Object expected3, Object expected4, Object expected5) {
-        assertMapValue(destinationName, Arrays.asList(new Object[] { expected1, expected2, expected3, expected4, expected5 }));
+        assertMapValue(destinationName, Arrays.asList(new Object[] {expected1, expected2, expected3, expected4, expected5}));
     }
-    
+
     protected void assertMapValue(String destinationName, Object expected1, Object expected2, Object expected3, Object expected4, Object expected5, Object expected6) {
-        assertMapValue(destinationName, Arrays.asList(new Object[] { expected1, expected2, expected3, expected4, expected5, expected6 }));
+        assertMapValue(destinationName, Arrays.asList(new Object[] {expected1, expected2, expected3, expected4, expected5, expected6}));
     }
 
     protected void assertMapValue(ActiveMQDestination destination, Object expected) {
         List expectedList = null;
         if (expected == null) {
             expectedList = Collections.EMPTY_LIST;
-        }
-        else if (expected instanceof List) {
-            expectedList = (List) expected;
-        }
-        else {
+        } else if (expected instanceof List) {
+            expectedList = (List)expected;
+        } else {
             expectedList = new ArrayList();
             expectedList.add(expected);
         }

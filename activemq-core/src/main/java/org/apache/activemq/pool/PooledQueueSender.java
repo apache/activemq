@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.pool;
 
-import org.apache.activemq.ActiveMQQueueSender;
-
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.Queue;
 import javax.jms.QueueSender;
+
+import org.apache.activemq.ActiveMQQueueSender;
 
 /**
  * @version $Revision: 1.1 $

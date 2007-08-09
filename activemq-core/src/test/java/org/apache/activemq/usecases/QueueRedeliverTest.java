@@ -16,15 +16,14 @@
  */
 package org.apache.activemq.usecases;
 
-
 /**
  * @version $Revision: 1.1.1.1 $
  */
 public class QueueRedeliverTest extends TopicRedeliverTest {
-    
-    protected void setUp() throws Exception{
+
+    protected void setUp() throws Exception {
         super.setUp();
         topic = false;
     }
-   
+
 }

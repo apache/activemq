@@ -19,6 +19,14 @@ package org.apache.activemq.advisory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.Session;
+
 import org.apache.activemq.Service;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -28,14 +36,6 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.RemoveInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageListener;
-import javax.jms.Session;
 
 /**
  * An object which can be used to listen to the number of active consumers
@@ -82,27 +82,24 @@ public class ConsumerEventSource implements Service, MessageListener {
 
     public void onMessage(Message message) {
         if (message instanceof ActiveMQMessage) {
-            ActiveMQMessage activeMessage = (ActiveMQMessage) message;
+            ActiveMQMessage activeMessage = (ActiveMQMessage)message;
             Object command = activeMessage.getDataStructure();
             int count = 0;
             if (command instanceof ConsumerInfo) {
                 count = consumerCount.incrementAndGet();
                 count = extractConsumerCountFromMessage(message, count);
-                fireConsumerEvent(new ConsumerStartedEvent(this, destination, (ConsumerInfo) command, count));
-            }
-            else if (command instanceof RemoveInfo) {
-                RemoveInfo removeInfo = (RemoveInfo) command;
+                fireConsumerEvent(new ConsumerStartedEvent(this, destination, (ConsumerInfo)command, count));
+            } else if (command instanceof RemoveInfo) {
+                RemoveInfo removeInfo = (RemoveInfo)command;
                 if (removeInfo.isConsumerRemove()) {
                     count = consumerCount.decrementAndGet();
                     count = extractConsumerCountFromMessage(message, count);
-                    fireConsumerEvent(new ConsumerStoppedEvent(this, destination, (ConsumerId) removeInfo.getObjectId(), count));
+                    fireConsumerEvent(new ConsumerStoppedEvent(this, destination, (ConsumerId)removeInfo.getObjectId(), count));
                 }
-            }
-            else {
+            } else {
                 log.warn("Unknown command: " + command);
             }
-        }
-        else {
+        } else {
             log.warn("Unknown message type: " + message + ". Message ignored");
         }
     }
@@ -116,12 +113,11 @@ public class ConsumerEventSource implements Service, MessageListener {
         try {
             Object value = message.getObjectProperty("consumerCount");
             if (value instanceof Number) {
-                Number n = (Number) value;
+                Number n = (Number)value;
                 return n.intValue();
             }
             log.warn("No consumerCount header available on the message: " + message);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.warn("Failed to extract consumerCount from message: " + message + ".Reason: " + e, e);
         }
         return count;

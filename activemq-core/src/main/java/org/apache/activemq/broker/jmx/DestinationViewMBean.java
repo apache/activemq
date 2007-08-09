@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import java.util.List;
+import java.util.Map;
+
 import javax.jms.InvalidSelectorException;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
-
-import java.util.List;
-import java.util.Map;
 
 
 public interface DestinationViewMBean {

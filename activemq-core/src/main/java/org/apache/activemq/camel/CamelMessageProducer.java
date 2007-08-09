@@ -16,6 +16,11 @@
  */
 package org.apache.activemq.camel;
 
+import javax.jms.Destination;
+import javax.jms.IllegalStateException;
+import javax.jms.JMSException;
+import javax.jms.Message;
+
 import org.apache.activemq.ActiveMQMessageProducerSupport;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.util.JMSExceptionSupport;
@@ -23,11 +28,6 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.Producer;
 import org.apache.camel.component.jms.JmsExchange;
 import org.apache.camel.util.ObjectHelper;
-
-import javax.jms.Destination;
-import javax.jms.IllegalStateException;
-import javax.jms.JMSException;
-import javax.jms.Message;
 
 /**
  * A JMS {@link javax.jms.MessageProducer} which sends message exchanges to a
@@ -47,11 +47,9 @@ public class CamelMessageProducer extends ActiveMQMessageProducerSupport {
         this.endpoint = endpoint;
         try {
             this.producer = endpoint.createProducer();
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             throw e;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw JMSExceptionSupport.create(e);
         }
     }
@@ -69,33 +67,28 @@ public class CamelMessageProducer extends ActiveMQMessageProducerSupport {
             closed = true;
             try {
                 producer.stop();
-            }
-            catch (JMSException e) {
+            } catch (JMSException e) {
                 throw e;
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 throw JMSExceptionSupport.create(e);
             }
         }
     }
 
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-    	CamelDestination camelDestination = null;
+        CamelDestination camelDestination = null;
         if (ObjectHelper.equals(destination, this.destination)) {
             camelDestination = this.destination;
-        }
-        else {
+        } else {
             // TODO support any CamelDestination?
             throw new IllegalArgumentException("Invalid destination setting: " + destination + " when expected: " + this.destination);
         }
         try {
             JmsExchange exchange = new JmsExchange(endpoint.getContext(), camelDestination.getBinding(), message);
             producer.process(exchange);
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             throw e;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw JMSExceptionSupport.create(e);
         }
     }

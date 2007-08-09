@@ -18,14 +18,13 @@ package org.apache.activemq.memory;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public class CacheEvictionUsageListener implements UsageListener {
 

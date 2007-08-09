@@ -16,11 +16,7 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Topic;
-import org.apache.activemq.command.ConsumerId;
-import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.RemoveSubscriptionInfo;
 
 public class TopicView extends DestinationView implements TopicViewMBean {
 

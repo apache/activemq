@@ -17,14 +17,6 @@
 
 package org.apache.activemq.security;
 
-import org.apache.activemq.broker.Broker;
-import org.apache.activemq.broker.BrokerFilter;
-import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.jaas.JaasCertificateCallbackHandler;
-import org.apache.activemq.jaas.UserPrincipal;
-import org.apache.activemq.security.JaasAuthenticationBroker.JaasSecurityContext;
-
 import java.security.Principal;
 import java.security.cert.X509Certificate;
 import java.util.Iterator;
@@ -32,6 +24,13 @@ import java.util.Iterator;
 import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.LoginContext;
+
+import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerFilter;
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.jaas.JaasCertificateCallbackHandler;
+import org.apache.activemq.jaas.UserPrincipal;
 
 /**
  * A JAAS Authentication Broker that uses SSL Certificates.

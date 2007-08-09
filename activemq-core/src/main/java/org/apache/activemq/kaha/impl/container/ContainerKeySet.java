@@ -21,8 +21,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
 import org.apache.activemq.kaha.impl.index.IndexItem;
-import org.apache.activemq.kaha.impl.index.IndexLinkedList;
 
 /**
  * A Set of keys for the container

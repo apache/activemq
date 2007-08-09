@@ -17,15 +17,14 @@
 
 package org.apache.activemq;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.context.support.AbstractApplicationContext;
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.context.support.AbstractApplicationContext;
 
 /**
  * A useful base class for spring based unit test cases

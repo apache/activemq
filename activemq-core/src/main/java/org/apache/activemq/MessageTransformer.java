@@ -16,13 +16,11 @@
  */
 package org.apache.activemq;
 
-import org.apache.activemq.command.ActiveMQMessage;
-
-import javax.jms.Message;
-import javax.jms.Session;
-import javax.jms.MessageProducer;
 import javax.jms.JMSException;
+import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
 
 /**
  * A plugin strategy for transforming a message before it is sent by the JMS client or before it is

@@ -18,13 +18,13 @@ package org.apache.activemq.perf;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
+
 /**
  * @version $Revision: 1.3 $
  */
-public class KahaQueueTest extends SimpleQueueTest{
-    
-        
-    protected void configureBroker(BrokerService answer) throws Exception{
+public class KahaQueueTest extends SimpleQueueTest {
+
+    protected void configureBroker(BrokerService answer) throws Exception {
         KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter();
         answer.setPersistenceAdapter(adaptor);
         answer.addConnector(bindAddress);

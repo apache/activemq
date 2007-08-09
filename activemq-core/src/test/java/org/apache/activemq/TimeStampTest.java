@@ -17,12 +17,6 @@
 package org.apache.activemq;
 
 
-import junit.framework.TestCase;
-import org.apache.activemq.broker.BrokerPlugin;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.util.UDPTraceBrokerPlugin;
-import org.apache.activemq.broker.view.ConnectionDotFilePlugin;
-
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -30,6 +24,12 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+
+import junit.framework.TestCase;
+import org.apache.activemq.broker.BrokerPlugin;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.util.UDPTraceBrokerPlugin;
+import org.apache.activemq.broker.view.ConnectionDotFilePlugin;
 
 public class TimeStampTest extends TestCase {
     public void test() throws Exception {
@@ -79,10 +79,10 @@ public class TimeStampTest extends TestCase {
         assertEquals(sentMessage.getJMSMessageID(), receivedMessage.getJMSMessageID());
 
         // assert message timestamp is in window
-        assertTrue("JMS Message Timestamp should be set during the send method: \n" +
-                "        beforeSend = " + beforeSend + "\n" +
-                "   getJMSTimestamp = " + receivedMessage.getJMSTimestamp() + "\n" +
-                "         afterSend = " + afterSend + "\n",
+        assertTrue("JMS Message Timestamp should be set during the send method: \n" 
+                + "        beforeSend = " + beforeSend + "\n"
+                + "   getJMSTimestamp = " + receivedMessage.getJMSTimestamp() + "\n"
+                + "         afterSend = " + afterSend + "\n",
                 beforeSend <= receivedMessage.getJMSTimestamp() && receivedMessage.getJMSTimestamp() <= afterSend);
 
         // assert message timestamp is unchanged

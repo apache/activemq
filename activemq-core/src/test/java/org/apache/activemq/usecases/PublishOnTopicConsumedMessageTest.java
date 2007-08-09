@@ -16,19 +16,18 @@
  */
 package org.apache.activemq.usecases;
 
-import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
-
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
+
+import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
 
 /**
  * @version $Revision: 1.1.1.1 $
  */
 public class PublishOnTopicConsumedMessageTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
     private MessageProducer replyProducer;
-
 
     public synchronized void onMessage(Message message) {
 
@@ -37,10 +36,9 @@ public class PublishOnTopicConsumedMessageTest extends JmsTopicSendReceiveWithTw
             Message msgCopy = (Message)((org.apache.activemq.command.Message)message).copy();
             replyProducer.send(msgCopy);
 
-            //log.info("Sending reply: " + message);
+            // log.info("Sending reply: " + message);
             super.onMessage(message);
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             log.info("Failed to send message: " + e);
             e.printStackTrace();
         }
@@ -53,8 +51,7 @@ public class PublishOnTopicConsumedMessageTest extends JmsTopicSendReceiveWithTw
 
         if (topic) {
             replyDestination = receiveSession.createTopic("REPLY." + getSubject());
-        }
-        else {
+        } else {
             replyDestination = receiveSession.createQueue("REPLY." + getSubject());
         }
 

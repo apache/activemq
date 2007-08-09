@@ -54,7 +54,6 @@ public class UdpTransportServer extends TransportServerSupport {
     private boolean usingWireFormatNegotiation;
     private Map transports = new HashMap();
 
-
     public UdpTransportServer(URI connectURI, UdpTransport serverTransport, Transport configuredTransport, ReplayStrategy replayStrategy) {
         super(connectURI);
         this.serverTransport = serverTransport;
@@ -81,7 +80,7 @@ public class UdpTransportServer extends TransportServerSupport {
 
         configuredTransport.setTransportListener(new TransportListener() {
             public void onCommand(Object o) {
-            	final Command command = (Command) o;
+                final Command command = (Command)o;
                 processInboundConnection(command);
             }
 
@@ -103,18 +102,17 @@ public class UdpTransportServer extends TransportServerSupport {
     }
 
     protected void processInboundConnection(Command command) {
-        DatagramEndpoint endpoint = (DatagramEndpoint) command.getFrom();
+        DatagramEndpoint endpoint = (DatagramEndpoint)command.getFrom();
         if (log.isDebugEnabled()) {
             log.debug("Received command on: " + this + " from address: " + endpoint + " command: " + command);
         }
         Transport transport = null;
         synchronized (transports) {
-            transport = (Transport) transports.get(endpoint);
+            transport = (Transport)transports.get(endpoint);
             if (transport == null) {
                 if (usingWireFormatNegotiation && !command.isWireFormatInfo()) {
                     log.error("Received inbound server communication from: " + command.getFrom() + " expecting WireFormatInfo but was command: " + command);
-                }
-                else {
+                } else {
                     if (log.isDebugEnabled()) {
                         log.debug("Creating a new UDP server connection");
                     }
@@ -122,14 +120,12 @@ public class UdpTransportServer extends TransportServerSupport {
                         transport = createTransport(command, endpoint);
                         transport = configureTransport(transport);
                         transports.put(endpoint, transport);
-                    }
-                    catch (IOException e) {
+                    } catch (IOException e) {
                         log.error("Caught: " + e, e);
                         getAcceptListener().onAcceptError(e);
                     }
                 }
-            }
-            else {
+            } else {
                 log.warn("Discarding duplicate command to server from: " + endpoint + " command: " + command);
             }
         }
@@ -152,8 +148,9 @@ public class UdpTransportServer extends TransportServerSupport {
         final ReliableTransport reliableTransport = new ReliableTransport(transport, transport);
         Replayer replayer = reliableTransport.getReplayer();
         reliableTransport.setReplayStrategy(replayStrategy);
-        
-        // Joiner must be on outside as the inbound messages must be processed by the reliable transport first
+
+        // Joiner must be on outside as the inbound messages must be processed
+        // by the reliable transport first
         return new CommandJoiner(reliableTransport, connectionWireFormat) {
             public void start() throws Exception {
                 super.start();
@@ -161,28 +158,20 @@ public class UdpTransportServer extends TransportServerSupport {
             }
         };
 
-
-        
         /**
-        final WireFormatNegotiator wireFormatNegotiator = new WireFormatNegotiator(configuredTransport, transport.getWireFormat(), serverTransport
-                .getMinmumWireFormatVersion()) {
-
-            public void start() throws Exception {
-                super.start();
-                log.debug("Starting a new server transport: " + this + " with command: " + command);
-                onCommand(command);
-            }
-
-            // lets use the specific addressing of wire format
-            protected void sendWireFormat(WireFormatInfo info) throws IOException {
-                log.debug("#### we have negotiated the wireformat; sending a wireformat to: " + address);
-                transport.oneway(info, address);
-            }
-        };
-        return wireFormatNegotiator;
-        */
+         * final WireFormatNegotiator wireFormatNegotiator = new
+         * WireFormatNegotiator(configuredTransport, transport.getWireFormat(),
+         * serverTransport .getMinmumWireFormatVersion()) { public void start()
+         * throws Exception { super.start(); log.debug("Starting a new server
+         * transport: " + this + " with command: " + command);
+         * onCommand(command); } // lets use the specific addressing of wire
+         * format protected void sendWireFormat(WireFormatInfo info) throws
+         * IOException { log.debug("#### we have negotiated the wireformat;
+         * sending a wireformat to: " + address); transport.oneway(info,
+         * address); } }; return wireFormatNegotiator;
+         */
     }
-    
+
     public InetSocketAddress getSocketAddress() {
         return serverTransport.getLocalSocketAddress();
     }

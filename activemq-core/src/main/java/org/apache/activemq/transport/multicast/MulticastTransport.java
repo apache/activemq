@@ -16,15 +16,6 @@
  */
 package org.apache.activemq.transport.multicast;
 
-import org.apache.activemq.openwire.OpenWireFormat;
-import org.apache.activemq.transport.udp.CommandChannel;
-import org.apache.activemq.transport.udp.CommandDatagramSocket;
-import org.apache.activemq.transport.udp.DatagramHeaderMarshaller;
-import org.apache.activemq.transport.udp.UdpTransport;
-import org.apache.activemq.util.ServiceStopper;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -34,6 +25,15 @@ import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.URI;
 import java.net.UnknownHostException;
+
+import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.transport.udp.CommandChannel;
+import org.apache.activemq.transport.udp.CommandDatagramSocket;
+import org.apache.activemq.transport.udp.DatagramHeaderMarshaller;
+import org.apache.activemq.transport.udp.UdpTransport;
+import org.apache.activemq.util.ServiceStopper;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A multicast based transport.
@@ -97,8 +97,7 @@ public class MulticastTransport extends UdpTransport {
         if (socket != null) {
             try {
                 socket.leaveGroup(getMulticastAddress());
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 stopper.onException(this, e);
             }
             socket.close();
@@ -112,10 +111,9 @@ public class MulticastTransport extends UdpTransport {
 
         log.debug("Joining multicast address: " + getMulticastAddress());
         socket.joinGroup(getMulticastAddress());
-        socket.setSoTimeout((int) keepAliveInterval);
+        socket.setSoTimeout((int)keepAliveInterval);
 
-        return new CommandDatagramSocket(this, getWireFormat(), getDatagramSize(), getTargetAddress(),
-                createDatagramHeaderMarshaller(), getSocket());
+        return new CommandDatagramSocket(this, getWireFormat(), getDatagramSize(), getTargetAddress(), createDatagramHeaderMarshaller(), getSocket());
     }
 
     protected InetAddress getMulticastAddress() {

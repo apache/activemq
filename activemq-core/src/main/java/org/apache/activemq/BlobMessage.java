@@ -16,11 +16,12 @@
  */
 package org.apache.activemq;
 
-import javax.jms.JMSException;
-import java.net.URL;
-import java.net.MalformedURLException;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import javax.jms.JMSException;
 
 /**
  * Represents a message which has a typically out of band Binary Large Object

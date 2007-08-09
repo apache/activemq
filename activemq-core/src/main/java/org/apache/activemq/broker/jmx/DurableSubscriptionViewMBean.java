@@ -16,16 +16,14 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.command.RemoveSubscriptionInfo;
-
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
+
 /**
  * @version $Revision: 1.5 $
  */
-public interface DurableSubscriptionViewMBean extends SubscriptionViewMBean{
+public interface DurableSubscriptionViewMBean extends SubscriptionViewMBean {
     /**
      * @return name of the durable subscription name
      */
@@ -48,7 +46,8 @@ public interface DurableSubscriptionViewMBean extends SubscriptionViewMBean{
     public TabularData browseAsTable() throws OpenDataException;
 
     /**
-     * Destroys the durable subscription so that messages will no longer be stored for this subscription
+     * Destroys the durable subscription so that messages will no longer be
+     * stored for this subscription
      */
     public void destroy() throws Exception;
 }

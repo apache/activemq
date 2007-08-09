@@ -14,8 +14,8 @@
 
 package org.apache.activemq.bugs;
 
-import java.io.File;
 import java.util.Properties;
+
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -25,10 +25,9 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
-import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
 import org.apache.activemq.test.JmsTopicSendReceiveTest;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

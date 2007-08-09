@@ -18,6 +18,9 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 
+import javax.jms.InvalidSelectorException;
+import javax.management.ObjectName;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
@@ -26,9 +29,6 @@ import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.MessageEvaluationContext;
-
-import javax.jms.InvalidSelectorException;
-import javax.management.ObjectName;
 
 /**
  * @version $Revision: 1.5 $

@@ -17,6 +17,11 @@
 
 package org.apache.activemq.broker;
 
+import java.net.URI;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
@@ -38,11 +43,6 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.kaha.Store;
-
-import java.net.URI;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Set;
 
 public class StubBroker implements Broker {
     public LinkedList addConnectionData = new LinkedList();

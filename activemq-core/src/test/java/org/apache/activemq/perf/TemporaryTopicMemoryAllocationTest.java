@@ -19,16 +19,17 @@ package org.apache.activemq.perf;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Session;
+
 /**
  * @version $Revision: 1.3 $
  */
-public class TemporaryTopicMemoryAllocationTest extends MemoryAllocationTest{
-    public TemporaryTopicMemoryAllocationTest(){
+public class TemporaryTopicMemoryAllocationTest extends MemoryAllocationTest {
+    public TemporaryTopicMemoryAllocationTest() {
         super();
         // TODO Auto-generated constructor stub
     }
 
-    protected Destination getDestination(Session session) throws JMSException{
+    protected Destination getDestination(Session session) throws JMSException {
         return session.createTemporaryTopic();
     }
 }

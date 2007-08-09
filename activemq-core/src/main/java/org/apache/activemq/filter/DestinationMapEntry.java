@@ -31,16 +31,13 @@ public abstract class DestinationMapEntry implements InitializingBean, Comparabl
 
     private ActiveMQDestination destination;
 
-    
     public int compareTo(Object that) {
         if (that instanceof DestinationMapEntry) {
-            DestinationMapEntry thatEntry = (DestinationMapEntry) that;
+            DestinationMapEntry thatEntry = (DestinationMapEntry)that;
             return ActiveMQDestination.compare(destination, thatEntry.destination);
-        }
-        else if (that == null) {
+        } else if (that == null) {
             return 1;
-        }
-        else {
+        } else {
             return getClass().getName().compareTo(that.getClass().getName());
         }
     }

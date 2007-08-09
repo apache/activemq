@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.net.URI;
 
 import junit.framework.TestCase;
-
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
@@ -29,11 +28,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- *
  * @version $Revision: 1.1 $
  */
 public class BadConnectionTest extends TestCase {
-    
+
     protected static final Log log = LogFactory.getLog(BadConnectionTest.class);
 
     protected Transport transport;
@@ -42,11 +40,11 @@ public class BadConnectionTest extends TestCase {
         try {
             transport.asyncRequest(new ActiveMQMessage(), null);
             fail("This should never succeed");
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             log.info("Caught expected exception: " + e, e);
         }
     }
+
     protected Transport createTransport() throws Exception {
         return TransportFactory.connect(new URI("failover://(tcp://doesNotExist:1234)?useExponentialBackOff=false&maxReconnectAttempts=3&initialReconnectDelay=100"));
     }
@@ -71,9 +69,9 @@ public class BadConnectionTest extends TestCase {
     }
 
     protected void tearDown() throws Exception {
-        if (transport != null) { 
+        if (transport != null) {
             transport.stop();
         }
     }
-        
+
 }

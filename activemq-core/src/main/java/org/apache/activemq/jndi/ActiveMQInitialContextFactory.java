@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.concurrent.ConcurrentHashMap;
 
-import javax.jms.ConnectionFactory;
 import javax.jms.Queue;
 import javax.jms.Topic;
 import javax.naming.Context;
@@ -33,11 +33,8 @@ import javax.naming.NamingException;
 import javax.naming.spi.InitialContextFactory;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.Broker;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A factory of the ActiveMQ InitialContext which contains

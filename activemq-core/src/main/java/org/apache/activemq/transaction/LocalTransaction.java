@@ -31,9 +31,9 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.3 $
  */
 public class LocalTransaction extends Transaction {
-    
+
     private static final Log log = LogFactory.getLog(LocalTransaction.class);
-    
+
     private final TransactionStore transactionStore;
     private final LocalTransactionId xid;
     private final ConnectionContext context;
@@ -48,11 +48,9 @@ public class LocalTransaction extends Transaction {
         // Get ready for commit.
         try {
             prePrepare();
-        }
-        catch (XAException e) {
+        } catch (XAException e) {
             throw e;
-        }
-        catch (Throwable e) {
+        } catch (Throwable e) {
             log.warn("COMMIT FAILED: ", e);
             rollback();
             // Let them know we rolled back.
@@ -65,12 +63,11 @@ public class LocalTransaction extends Transaction {
         setState(Transaction.FINISHED_STATE);
         context.getTransactions().remove(xid);
         transactionStore.commit(getTransactionId(), false);
-        
+
         try {
             fireAfterCommit();
-        }
-        catch (Throwable e) {
-            // I guess this could happen.  Post commit task failed
+        } catch (Throwable e) {
+            // I guess this could happen. Post commit task failed
             // to execute properly.
             log.warn("POST COMMIT FAILED: ", e);
             XAException xae = new XAException("POST COMMIT FAILED");
@@ -88,8 +85,7 @@ public class LocalTransaction extends Transaction {
 
         try {
             fireAfterRollback();
-        }
-        catch (Throwable e) {
+        } catch (Throwable e) {
             log.warn("POST ROLLBACK FAILED: ", e);
             XAException xae = new XAException("POST ROLLBACK FAILED");
             xae.errorCode = XAException.XAER_RMERR;

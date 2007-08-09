@@ -20,11 +20,11 @@ import org.apache.activemq.command.ActiveMQDestination;
 
 /**
  * A {@link DestinationFilter} used for composite destinations
- *
+ * 
  * @version $Revision: 1.3 $
  */
 public class CompositeDestinationFilter extends DestinationFilter {
-    
+
     private DestinationFilter filters[];
 
     public CompositeDestinationFilter(ActiveMQDestination destination) {
@@ -32,7 +32,7 @@ public class CompositeDestinationFilter extends DestinationFilter {
         filters = new DestinationFilter[destinations.length];
         for (int i = 0; i < destinations.length; i++) {
             ActiveMQDestination childDestination = destinations[i];
-            filters[i]= DestinationFilter.parseFilter(childDestination);
+            filters[i] = DestinationFilter.parseFilter(childDestination);
         }
     }
 

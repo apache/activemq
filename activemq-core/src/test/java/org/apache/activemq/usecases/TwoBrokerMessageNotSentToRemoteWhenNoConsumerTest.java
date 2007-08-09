@@ -16,22 +16,22 @@
  */
 package org.apache.activemq.usecases;
 
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.network.DemandForwardingBridge;
-import org.apache.activemq.network.NetworkBridgeConfiguration;
-import org.apache.activemq.transport.TransportFactory;
-import org.apache.activemq.JmsMultipleBrokersTestSupport;
-import org.apache.activemq.command.Command;
-import org.apache.activemq.util.MessageIdList;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.Destination;
 import javax.jms.MessageConsumer;
-import java.util.List;
-import java.util.ArrayList;
-import java.net.URI;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import org.apache.activemq.JmsMultipleBrokersTestSupport;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.command.Command;
+import org.apache.activemq.network.DemandForwardingBridge;
+import org.apache.activemq.network.NetworkBridgeConfiguration;
+import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.util.MessageIdList;
 
 /**
  * @version $Revision: 1.1.1.1 $

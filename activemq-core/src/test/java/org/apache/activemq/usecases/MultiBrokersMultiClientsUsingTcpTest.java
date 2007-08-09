@@ -16,16 +16,16 @@
  */
 package org.apache.activemq.usecases;
 
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.network.DemandForwardingBridge;
 import org.apache.activemq.network.NetworkBridgeConfiguration;
 import org.apache.activemq.transport.TransportFactory;
-
-import java.util.List;
-import java.util.Iterator;
-import java.util.ArrayList;
-import java.net.URI;
 
 /**
  * @version $Revision: 1.1.1.1 $

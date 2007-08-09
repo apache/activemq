@@ -1,13 +1,14 @@
 package org.apache.activemq.transport.stomp;
 
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQDestination;
-
-import javax.jms.JMSException;
-import javax.jms.Destination;
 import java.io.IOException;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
+
+import javax.jms.Destination;
+import javax.jms.JMSException;
+
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
 
 /**
  * Implementations of this interface are used to map back and forth from Stomp

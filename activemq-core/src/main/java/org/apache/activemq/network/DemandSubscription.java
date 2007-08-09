@@ -16,13 +16,12 @@
  */
 package org.apache.activemq.network;
 
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
-
-import java.util.Set;
 
 /**
  * Represents a network bridge interface
