@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 
  * @version $Revision$
  */
-abstract public class SecurityContext {
+public abstract class SecurityContext {
 
     public static final SecurityContext BROKER_SECURITY_CONTEXT = new SecurityContext("ActiveMQBroker") {
         @Override
@@ -54,7 +54,7 @@ abstract public class SecurityContext {
         return set.size() > 0;
     }
 
-    abstract public Set getPrincipals();
+    public abstract Set getPrincipals();
 
     public String getUserName() {
         return userName;

@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1 $
  */
 public abstract class TransportServerThreadSupport extends TransportServerSupport implements Runnable {
-    private static final Log log = LogFactory.getLog(TransportServerThreadSupport.class);
+    private static final Log LOG = LogFactory.getLog(TransportServerThreadSupport.class);
 
     private boolean daemon = true;
     private boolean joinOnStop = true;
@@ -69,7 +69,7 @@ public abstract class TransportServerThreadSupport extends TransportServerSuppor
     }
 
     protected void doStart() throws Exception {
-        log.info("Listening for connections at: " + getConnectURI());
+        LOG.info("Listening for connections at: " + getConnectURI());
         runner = new Thread(null, this, "ActiveMQ Transport Server: " + toString(), stackSize);
         runner.setDaemon(daemon);
         runner.setPriority(ThreadPriorities.BROKER_MANAGEMENT);

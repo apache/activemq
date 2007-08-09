@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,8 +32,11 @@ import org.apache.activemq.transport.TransportAcceptListener;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.TransportServer;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class WireformatNegociationTest extends CombinationTestSupport {
+    private static final Log LOG = LogFactory.getLog(WireformatNegociationTest.class);
 
     private TransportServer server;
     private Transport clientTransport;
@@ -66,7 +69,7 @@ public class WireformatNegociationTest extends CombinationTestSupport {
 
             public void onException(IOException error) {
                 if (!ignoreAsycError.get()) {
-                    log.info("Client transport error: ", error);
+                    LOG.info("Client transport error: ", error);
                     asyncError.set(error);
                     negociationCounter.countDown();
                 }
@@ -91,7 +94,7 @@ public class WireformatNegociationTest extends CombinationTestSupport {
         server.setAcceptListener(new TransportAcceptListener() {
             public void onAccept(Transport transport) {
                 try {
-                    log.info("[" + getName() + "] Server Accepted a Connection");
+                    LOG.info("[" + getName() + "] Server Accepted a Connection");
                     serverTransport = transport;
                     serverTransport.setTransportListener(new TransportListener() {
                         public void onCommand(Object command) {
@@ -103,7 +106,7 @@ public class WireformatNegociationTest extends CombinationTestSupport {
 
                         public void onException(IOException error) {
                             if (!ignoreAsycError.get()) {
-                                log.info("Server transport error: ", error);
+                                LOG.info("Server transport error: ", error);
                                 asyncError.set(error);
                                 negociationCounter.countDown();
                             }
@@ -131,12 +134,15 @@ public class WireformatNegociationTest extends CombinationTestSupport {
     protected void tearDown() throws Exception {
         ignoreAsycError.set(true);
         try {
-            if (clientTransport != null)
+            if (clientTransport != null) {
                 clientTransport.stop();
-            if (serverTransport != null)
+            }
+            if (serverTransport != null) {
                 serverTransport.stop();
-            if (server != null)
+            }
+            if (server != null) {
                 server.stop();
+            }
         } catch (Throwable e) {
             e.printStackTrace();
         }

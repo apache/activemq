@@ -1,12 +1,12 @@
 /**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * Copyright 2005-2006 The Apache Software Foundation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -48,10 +48,11 @@ import org.apache.commons.logging.LogFactory;
  */
 public class ReconnectTest extends TestCase {
 
-    protected static final Log log = LogFactory.getLog(ReconnectTest.class);
-
     public static final int MESSAGES_PER_ITTERATION = 10;
     public static final int WORKER_COUNT = 10;
+
+    private static final Log LOG = LogFactory.getLog(ReconnectTest.class);
+
     private BrokerService bs;
     private URI tcpUri;
     private AtomicInteger interruptedCount = new AtomicInteger();
@@ -161,20 +162,20 @@ public class ReconnectTest extends TestCase {
 
         for (int k = 1; k < 5; k++) {
 
-            log.info("Test run: " + k);
+            LOG.info("Test run: " + k);
 
             // Wait for at least one iteration to occur...
             for (int i = 0; i < WORKER_COUNT; i++) {
                 for (int j = 0; workers[i].iterations.get() == 0 && j < 5; j++) {
                     workers[i].assertNoErrors();
-                    log.info("Waiting for worker " + i + " to finish an iteration.");
+                    LOG.info("Waiting for worker " + i + " to finish an iteration.");
                     Thread.sleep(1000);
                 }
                 assertTrue("Worker " + i + " never completed an interation.", workers[i].iterations.get() != 0);
                 workers[i].assertNoErrors();
             }
 
-            log.info("Simulating transport error to cause reconnect.");
+            LOG.info("Simulating transport error to cause reconnect.");
 
             // Simulate a transport failure.
             for (int i = 0; i < WORKER_COUNT; i++) {
@@ -183,12 +184,12 @@ public class ReconnectTest extends TestCase {
 
             // Wait for the connections to get interrupted...
             while (interruptedCount.get() < WORKER_COUNT) {
-                log.info("Waiting for connections to get interrupted.. at: " + interruptedCount.get());
+                LOG.info("Waiting for connections to get interrupted.. at: " + interruptedCount.get());
                 Thread.sleep(1000);
             }
 
             // let things stablize..
-            log.info("Pausing before starting next iterations...");
+            LOG.info("Pausing before starting next iterations...");
             Thread.sleep(1000);
 
             // Reset the counters..

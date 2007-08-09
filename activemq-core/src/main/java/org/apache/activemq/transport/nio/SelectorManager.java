@@ -32,19 +32,9 @@ import java.util.concurrent.ThreadFactory;
  * 
  * @version $Rev: 46019 $ $Date: 2004-09-14 05:56:06 -0400 (Tue, 14 Sep 2004) $
  */
-final public class SelectorManager {
+public final class SelectorManager {
 
-    static final public SelectorManager singleton = new SelectorManager();
-
-    static SelectorManager getInstance() {
-        return singleton;
-    }
-
-    public interface Listener {
-        public void onSelect(SelectorSelection selector);
-
-        public void onError(SelectorSelection selection, Throwable error);
-    }
+    public static final SelectorManager SINGLETON = new SelectorManager();
 
     private Executor selectorExecutor = Executors.newCachedThreadPool(new ThreadFactory() {
         public Thread newThread(Runnable r) {
@@ -56,6 +46,17 @@ final public class SelectorManager {
     private Executor channelExecutor = selectorExecutor;
     private LinkedList<SelectorWorker> freeWorkers = new LinkedList<SelectorWorker>();
     private int maxChannelsPerWorker = 64;
+    
+    static SelectorManager getInstance() {
+        return SINGLETON;
+    }
+
+    public interface Listener {
+        void onSelect(SelectorSelection selector);
+
+        void onError(SelectorSelection selection, Throwable error);
+    }
+
 
     public synchronized SelectorSelection register(SocketChannel socketChannel, Listener listener)
         throws IOException {
@@ -76,11 +77,11 @@ final public class SelectorManager {
         freeWorkers.remove(worker);
     }
 
-    synchronized public void onWorkerEmptyEvent(SelectorWorker worker) {
+    public synchronized void onWorkerEmptyEvent(SelectorWorker worker) {
         freeWorkers.remove(worker);
     }
 
-    synchronized public void onWorkerNotFullEvent(SelectorWorker worker) {
+    public synchronized void onWorkerNotFullEvent(SelectorWorker worker) {
         freeWorkers.add(worker);
     }
 

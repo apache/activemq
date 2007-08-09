@@ -29,7 +29,7 @@ import java.io.OutputStream;
  */
 
 public class TcpBufferedOutputStream extends FilterOutputStream {
-    private final static int BUFFER_SIZE = 8192;
+    private static final int BUFFER_SIZE = 8192;
     private byte[] buffer;
     private int bufferlen;
     private int count;
@@ -123,7 +123,7 @@ public class TcpBufferedOutputStream extends FilterOutputStream {
      * 
      * @throws IOException
      */
-    private final void checkClosed() throws IOException {
+    private void checkClosed() throws IOException {
         if (closed) {
             throw new EOFException("Cannot write to the stream any more it has already been closed");
         }

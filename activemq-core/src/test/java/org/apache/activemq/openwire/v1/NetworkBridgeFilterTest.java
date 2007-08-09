@@ -31,7 +31,7 @@ import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
  */
 public class NetworkBridgeFilterTest extends DataFileGeneratorTestSupport {
 
-    public static NetworkBridgeFilterTest SINGLETON = new NetworkBridgeFilterTest();
+    public static final NetworkBridgeFilterTest SINGLETON = new NetworkBridgeFilterTest();
 
     public Object createObject() throws Exception {
         NetworkBridgeFilter info = new NetworkBridgeFilter();

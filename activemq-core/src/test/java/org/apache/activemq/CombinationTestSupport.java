@@ -60,7 +60,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public abstract class CombinationTestSupport extends AutoFailTestSupport {
 
-    protected static final Log log = LogFactory.getLog(CombinationTestSupport.class);
+    private static final Log LOG = LogFactory.getLog(CombinationTestSupport.class);
 
     private HashMap comboOptions = new HashMap();
     private boolean combosEvaluated;
@@ -108,7 +108,7 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
                 Field field = getClass().getField(attribute);
                 field.set(this, value);
             } catch (Throwable e) {
-                log.info("Could not set field '" + attribute + "' to value '" + value + "', make sure the field exists and is public.");
+                LOG.info("Could not set field '" + attribute + "' to value '" + value + "', make sure the field exists and is public.");
             }
         }
     }
@@ -190,8 +190,9 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
         Method[] methods = clazz.getMethods();
         for (int i = 0; i < methods.length; i++) {
             String name = methods[i].getName();
-            if (names.contains(name) || !isPublicTestMethod(methods[i]))
+            if (names.contains(name) || !isPublicTestMethod(methods[i])) {
                 continue;
+            }
             names.add(name);
             Test test = TestSuite.createTest(clazz, name);
             if (test instanceof CombinationTestSupport) {
@@ -206,11 +207,11 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
         return suite;
     }
 
-    static private boolean isPublicTestMethod(Method m) {
+    private static boolean isPublicTestMethod(Method m) {
         return isTestMethod(m) && Modifier.isPublic(m.getModifiers());
     }
 
-    static private boolean isTestMethod(Method m) {
+    private static boolean isTestMethod(Method m) {
         String name = m.getName();
         Class[] parameters = m.getParameterTypes();
         Class returnType = m.getReturnType();

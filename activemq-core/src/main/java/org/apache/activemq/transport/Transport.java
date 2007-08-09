@@ -34,7 +34,7 @@ public interface Transport extends Service {
      * @param command
      * @throws IOException
      */
-    public void oneway(Object command) throws IOException;
+    void oneway(Object command) throws IOException;
 
     /**
      * An asynchronous request response where the Receipt will be returned in
@@ -46,7 +46,7 @@ public interface Transport extends Service {
      * @return the FutureResponse
      * @throws IOException
      */
-    public FutureResponse asyncRequest(Object command, ResponseCallback responseCallback) throws IOException;
+    FutureResponse asyncRequest(Object command, ResponseCallback responseCallback) throws IOException;
 
     /**
      * A synchronous request response
@@ -55,7 +55,7 @@ public interface Transport extends Service {
      * @return the response
      * @throws IOException
      */
-    public Object request(Object command) throws IOException;
+    Object request(Object command) throws IOException;
 
     /**
      * A synchronous request response
@@ -65,14 +65,14 @@ public interface Transport extends Service {
      * @return the repsonse or null if timeout
      * @throws IOException
      */
-    public Object request(Object command, int timeout) throws IOException;
+    Object request(Object command, int timeout) throws IOException;
 
     // /**
     // * A one way asynchronous send
     // * @param command
     // * @throws IOException
     // */
-    // public void oneway(Command command) throws IOException;
+    // void oneway(Command command) throws IOException;
     //
     // /**
     // * An asynchronous request response where the Receipt will be returned
@@ -84,7 +84,7 @@ public interface Transport extends Service {
     // * @return the FutureResponse
     // * @throws IOException
     // */
-    // public FutureResponse asyncRequest(Command command, ResponseCallback
+    // FutureResponse asyncRequest(Command command, ResponseCallback
     // responseCallback) throws IOException;
     //    
     // /**
@@ -93,7 +93,7 @@ public interface Transport extends Service {
     // * @return the response
     // * @throws IOException
     // */
-    // public Response request(Command command) throws IOException;
+    // Response request(Command command) throws IOException;
     //
     // /**
     // * A synchronous request response
@@ -102,38 +102,38 @@ public interface Transport extends Service {
     // * @return the repsonse or null if timeout
     // * @throws IOException
     // */
-    // public Response request(Command command, int timeout) throws IOException;
+    // Response request(Command command, int timeout) throws IOException;
 
     /**
      * Returns the current transport listener
      * 
      * @return
      */
-    public TransportListener getTransportListener();
+    TransportListener getTransportListener();
 
     /**
      * Registers an inbound command listener
      * 
      * @param commandListener
      */
-    public void setTransportListener(TransportListener commandListener);
+    void setTransportListener(TransportListener commandListener);
 
     /**
      * @param target
      * @return the target
      */
-    public Object narrow(Class target);
+    Object narrow(Class target);
 
     /**
      * @return the remote address for this connection
      */
-    public String getRemoteAddress();
+    String getRemoteAddress();
 
     /**
      * Indicates if the transport can handle faults
      * 
      * @return tru if fault tolerant
      */
-    public boolean isFaultTolerant();
+    boolean isFaultTolerant();
 
 }

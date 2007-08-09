@@ -39,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.4 $
  */
 public class MemoryPersistenceAdapter implements PersistenceAdapter {
-    private static final Log log = LogFactory.getLog(MemoryPersistenceAdapter.class);
+    private static final Log LOG = LogFactory.getLog(MemoryPersistenceAdapter.class);
 
     MemoryTransactionStore transactionStore;
     ConcurrentHashMap topics = new ConcurrentHashMap();
@@ -142,7 +142,7 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
         if (value instanceof MemoryMessageStore) {
             return (MemoryMessageStore)value;
         }
-        log.warn("Expected an instance of MemoryMessageStore but was: " + value);
+        LOG.warn("Expected an instance of MemoryMessageStore but was: " + value);
         return null;
     }
 

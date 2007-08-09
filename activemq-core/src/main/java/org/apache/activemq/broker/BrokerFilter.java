@@ -48,7 +48,7 @@ import org.apache.activemq.kaha.Store;
  */
 public class BrokerFilter implements Broker {
 
-    final protected Broker next;
+    protected final Broker next;
 
     public BrokerFilter(Broker next) {
         this.next = next;

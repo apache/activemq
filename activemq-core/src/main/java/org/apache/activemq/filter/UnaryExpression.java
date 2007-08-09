@@ -107,10 +107,11 @@ public abstract class UnaryExpression implements Expression {
             }
 
             public String getExpressionSymbol() {
-                if (not)
+                if (not) {
                     return "NOT IN";
-                else
+                } else {
                     return "IN";
+                }
             }
         };
     }
@@ -249,6 +250,6 @@ public abstract class UnaryExpression implements Expression {
      * 
      * @return
      */
-    abstract public String getExpressionSymbol();
+    public abstract String getExpressionSymbol();
 
 }

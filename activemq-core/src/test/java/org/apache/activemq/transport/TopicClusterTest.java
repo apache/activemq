@@ -48,12 +48,14 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class TopicClusterTest extends TestCase implements MessageListener {
-    protected final static Log log = LogFactory.getLog(TopicClusterTest.class);
+    
+    private static final Log LOG = LogFactory.getLog(TopicClusterTest.class);
+    protected static final int MESSAGE_COUNT = 50;
+    protected static final int NUMBER_IN_CLUSTER = 3;
+    
     protected Destination destination;
     protected boolean topic = true;
     protected AtomicInteger receivedMessageCount = new AtomicInteger(0);
-    protected static final int MESSAGE_COUNT = 50;
-    protected static final int NUMBER_IN_CLUSTER = 3;
     protected int deliveryMode = DeliveryMode.NON_PERSISTENT;
     protected MessageProducer[] producers;
     protected Connection[] connections;
@@ -82,7 +84,7 @@ public class TopicClusterTest extends TestCase implements MessageListener {
                 consumer.setMessageListener(this);
 
             }
-            log.info("Sleeping to ensure cluster is fully connected");
+            LOG.info("Sleeping to ensure cluster is fully connected");
             Thread.sleep(5000);
         } finally {
             System.setProperty("activemq.store.dir", root);
@@ -169,7 +171,7 @@ public class TopicClusterTest extends TestCase implements MessageListener {
         }
         // sleep a little - to check we don't get too many messages
         Thread.sleep(2000);
-        log.info("GOT: " + receivedMessageCount.get());
+        LOG.info("GOT: " + receivedMessageCount.get());
         assertEquals("Expected message count not correct", expectedReceiveCount(), receivedMessageCount.get());
     }
 

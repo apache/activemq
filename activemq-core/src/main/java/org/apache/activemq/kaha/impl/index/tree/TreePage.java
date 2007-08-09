@@ -1,15 +1,18 @@
 /**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE
- * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
- * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
- * License. You may obtain a copy of the License at
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.activemq.kaha.impl.index.tree;
 
@@ -31,7 +34,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1.1.1 $
  */
 class TreePage {
-    private static final transient Log log = LogFactory.getLog(TreePage.class);
+    private static final transient Log LOG = LogFactory.getLog(TreePage.class);
     static final int PAGE_HEADER_SIZE = 18;
 
     static enum Flavour {
@@ -737,11 +740,11 @@ class TreePage {
     }
 
     protected void dump() throws IOException {
-        log.info(this);
+        LOG.info(this);
         Set<Long> set = new HashSet<Long>();
         for (TreeEntry entry : treeEntries) {
             if (entry != null) {
-                log.info(entry);
+                LOG.info(entry);
                 set.add(entry.getPrevPageId());
                 set.add(entry.getNextPageId());
             }

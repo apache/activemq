@@ -54,7 +54,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class JmsBenchmark extends JmsTestSupport {
-    private static final transient Log log = LogFactory.getLog(JmsBenchmark.class);
+    private static final transient Log LOG = LogFactory.getLog(JmsBenchmark.class);
 
     private static final long SAMPLE_DELAY = Integer.parseInt(System.getProperty("SAMPLE_DELAY", "" + 1000 * 5));
     private static final long SAMPLES = Integer.parseInt(System.getProperty("SAMPLES", "10"));
@@ -169,12 +169,12 @@ public class JmsBenchmark extends JmsTestSupport {
             }.start();
         }
 
-        log.info(getName() + ": Waiting for Producers and Consumers to startup.");
+        LOG.info(getName() + ": Waiting for Producers and Consumers to startup.");
         connectionsEstablished.acquire();
-        log.info("Producers and Consumers are now running.  Waiting for system to reach steady state: " + (SAMPLE_DELAY / 1000.0f) + " seconds");
+        LOG.info("Producers and Consumers are now running.  Waiting for system to reach steady state: " + (SAMPLE_DELAY / 1000.0f) + " seconds");
         Thread.sleep(1000 * 10);
 
-        log.info("Starting sample: " + SAMPLES + " each lasting " + (SAMPLE_DURATION / 1000.0f) + " seconds");
+        LOG.info("Starting sample: " + SAMPLES + " each lasting " + (SAMPLE_DURATION / 1000.0f) + " seconds");
 
         long now = System.currentTimeMillis();
         for (int i = 0; i < SAMPLES; i++) {
@@ -189,10 +189,10 @@ public class JmsBenchmark extends JmsTestSupport {
             int r = receivedMessages.get();
             int p = producedMessages.get();
 
-            log.info("published: " + p + " msgs at " + (p * 1000f / (end - start)) + " msgs/sec, " + "consumed: " + r + " msgs at " + (r * 1000f / (end - start)) + " msgs/sec");
+            LOG.info("published: " + p + " msgs at " + (p * 1000f / (end - start)) + " msgs/sec, " + "consumed: " + r + " msgs at " + (r * 1000f / (end - start)) + " msgs/sec");
         }
 
-        log.info("Sample done.");
+        LOG.info("Sample done.");
         sampleTimeDone.countDown();
 
         workerDone.acquire();

@@ -28,7 +28,7 @@ import org.apache.activemq.util.DataByteArrayOutputStream;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-final public class SyncDataFileWriter {
+public final class SyncDataFileWriter {
 
     private DataByteArrayOutputStream buffer;
     private DataManagerImpl dataManager;

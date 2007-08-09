@@ -32,10 +32,10 @@ import org.apache.activemq.command.TransactionId;
  */
 public abstract class Transaction {
 
-    static final public byte START_STATE = 0; // can go to: 1,2,3
-    static final public byte IN_USE_STATE = 1; // can go to: 2,3
-    static final public byte PREPARED_STATE = 2; // can go to: 3
-    static final public byte FINISHED_STATE = 3;
+    public static final byte START_STATE = 0; // can go to: 1,2,3
+    public static final byte IN_USE_STATE = 1; // can go to: 2,3
+    public static final byte PREPARED_STATE = 2; // can go to: 3
+    public static final byte FINISHED_STATE = 3;
 
     private ArrayList synchronizations = new ArrayList();
     private byte state = START_STATE;
@@ -98,13 +98,13 @@ public abstract class Transaction {
         return super.toString() + "[synchronizations=" + synchronizations + "]";
     }
 
-    abstract public void commit(boolean onePhase) throws XAException, IOException;
+    public abstract void commit(boolean onePhase) throws XAException, IOException;
 
-    abstract public void rollback() throws XAException, IOException;
+    public abstract void rollback() throws XAException, IOException;
 
-    abstract public int prepare() throws XAException, IOException;
+    public abstract int prepare() throws XAException, IOException;
 
-    abstract public TransactionId getTransactionId();
+    public abstract TransactionId getTransactionId();
 
     public boolean isPrepared() {
         return getState() == PREPARED_STATE;

@@ -29,8 +29,12 @@ import javax.jms.Session;
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.network.DiscoveryNetworkConnector;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
+    private static final Log LOG = LogFactory.getLog(ActiveMQConnectionFactoryTest.class);
 
     private ActiveMQConnection connection;
     private BrokerService broker;
@@ -44,7 +48,7 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         connection.start();
 
         String clientID = connection.getClientID();
-        log.info("Got client ID: " + clientID);
+        LOG.info("Got client ID: " + clientID);
 
         assertTrue("should start with Cheese! but was: " + clientID, clientID.startsWith("Cheese"));
     }
@@ -117,7 +121,7 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         connection.start();
 
         String brokerName = connection.getBrokerName();
-        log.info("Got broker name: " + brokerName);
+        LOG.info("Got broker name: " + brokerName);
 
         assertNotNull("No broker name available!", brokerName);
     }
@@ -172,7 +176,7 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         URI connectURI = new URI(temp.getScheme(), temp.getUserInfo(), temp.getHost(), currentURI.getPort(),
                                  temp.getPath(), temp.getQuery(), temp.getFragment());
 
-        log.info("connection URI is: " + connectURI);
+        LOG.info("connection URI is: " + connectURI);
 
         // This should create the connection.
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(connectURI);

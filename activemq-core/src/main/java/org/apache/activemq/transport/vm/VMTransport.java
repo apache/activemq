@@ -1,17 +1,19 @@
 /**
- * 
- * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE
- * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
- * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
- * License. You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package org.apache.activemq.transport.vm;
 
 import java.io.IOException;
@@ -39,9 +41,9 @@ import org.apache.commons.logging.LogFactory;
  */
 public class VMTransport implements Transport, Task {
 
-    private static final Log log = LogFactory.getLog(VMTransport.class);
-    private static final AtomicLong nextId = new AtomicLong(0);
-    private static final TaskRunnerFactory taskRunnerFactory = new TaskRunnerFactory("VMTransport", Thread.NORM_PRIORITY, true, 1000);
+    private static final Log LOG = LogFactory.getLog(VMTransport.class);
+    private static final AtomicLong NEXT_ID = new AtomicLong(0);
+    private static final TaskRunnerFactory TASK_RUNNER_FACTORY = new TaskRunnerFactory("VMTransport", Thread.NORM_PRIORITY, true, 1000);
     protected VMTransport peer;
     protected TransportListener transportListener;
     protected boolean disposed;
@@ -49,7 +51,7 @@ public class VMTransport implements Transport, Task {
     protected boolean network;
     protected boolean async = true;
     protected int asyncQueueDepth = 2000;
-    protected LinkedBlockingQueue messageQueue = null;
+    protected LinkedBlockingQueue messageQueue;
     protected boolean started;
     protected final URI location;
     protected final long id;
@@ -58,7 +60,7 @@ public class VMTransport implements Transport, Task {
 
     public VMTransport(URI location) {
         this.location = location;
-        this.id = nextId.getAndIncrement();
+        this.id = NEXT_ID.getAndIncrement();
     }
 
     public VMTransport getPeer() {
@@ -77,8 +79,9 @@ public class VMTransport implements Transport, Task {
         if (disposed) {
             throw new TransportDisposedIOException("Transport disposed.");
         }
-        if (peer == null)
+        if (peer == null) {
             throw new IOException("Peer not connected.");
+        }
 
         TransportListener tl = null;
         synchronized (peer.mutex) {
@@ -146,8 +149,9 @@ public class VMTransport implements Transport, Task {
     }
 
     public void start() throws Exception {
-        if (transportListener == null)
+        if (transportListener == null) {
             throw new IOException("TransportListener not set.");
+        }
 
         synchronized (mutex) {
             if (messageQueue != null) {
@@ -219,8 +223,9 @@ public class VMTransport implements Transport, Task {
         final TransportListener tl;
         synchronized (mutex) {
             tl = transportListener;
-            if (!started || disposed || tl == null)
+            if (!started || disposed || tl == null) {
                 return false;
+            }
         }
 
         LinkedBlockingQueue mq = getMessageQueue();
@@ -265,7 +270,7 @@ public class VMTransport implements Transport, Task {
         if (async) {
             synchronized (mutex) {
                 if (taskRunner == null) {
-                    taskRunner = taskRunnerFactory.createTaskRunner(this, "VMTransport: " + toString());
+                    taskRunner = TASK_RUNNER_FACTORY.createTaskRunner(this, "VMTransport: " + toString());
                 }
             }
             try {

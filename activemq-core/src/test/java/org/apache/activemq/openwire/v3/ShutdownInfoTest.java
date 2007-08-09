@@ -33,7 +33,7 @@ import org.apache.activemq.command.ShutdownInfo;
 public class ShutdownInfoTest extends BaseCommandTestSupport {
 
 
-    public static ShutdownInfoTest SINGLETON = new ShutdownInfoTest();
+    public static final ShutdownInfoTest SINGLETON = new ShutdownInfoTest();
 
     public Object createObject() throws Exception {
         ShutdownInfo info = new ShutdownInfo();

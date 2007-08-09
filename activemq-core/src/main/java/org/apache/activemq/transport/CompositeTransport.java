@@ -19,6 +19,6 @@ package org.apache.activemq.transport;
 import java.net.URI;
 
 public interface CompositeTransport extends Transport {
-    public void add(URI[] uris);
-    public void remove(URI[] uris);
+    void add(URI[] uris);
+    void remove(URI[] uris);
 }

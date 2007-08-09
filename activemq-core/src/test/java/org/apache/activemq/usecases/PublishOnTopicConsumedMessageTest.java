@@ -22,11 +22,16 @@ import javax.jms.Message;
 import javax.jms.MessageProducer;
 
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision: 1.1.1.1 $
  */
 public class PublishOnTopicConsumedMessageTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
+
+    private static final Log LOG = LogFactory.getLog(PublishOnTopicConsumedMessageTest.class);
+
     private MessageProducer replyProducer;
 
     public synchronized void onMessage(Message message) {
@@ -39,7 +44,7 @@ public class PublishOnTopicConsumedMessageTest extends JmsTopicSendReceiveWithTw
             // log.info("Sending reply: " + message);
             super.onMessage(message);
         } catch (JMSException e) {
-            log.info("Failed to send message: " + e);
+            LOG.info("Failed to send message: " + e);
             e.printStackTrace();
         }
     }
@@ -56,7 +61,7 @@ public class PublishOnTopicConsumedMessageTest extends JmsTopicSendReceiveWithTw
         }
 
         replyProducer = receiveSession.createProducer(replyDestination);
-        log.info("Created replyProducer: " + replyProducer);
+        LOG.info("Created replyProducer: " + replyProducer);
 
     }
 }

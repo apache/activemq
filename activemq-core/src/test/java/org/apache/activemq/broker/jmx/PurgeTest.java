@@ -28,6 +28,8 @@ import javax.management.ObjectName;
 import junit.textui.TestRunner;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A specific test of Queue.purge() functionality
@@ -35,6 +37,7 @@ import org.apache.activemq.broker.BrokerService;
  * @version $Revision$
  */
 public class PurgeTest extends EmbeddedBrokerTestSupport {
+    private static final Log LOG = LogFactory.getLog(PurgeTest.class);
 
     protected MBeanServer mbeanServer;
     protected String domain = "org.apache.activemq";

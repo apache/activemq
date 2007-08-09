@@ -21,11 +21,12 @@ import java.io.IOException;
 /**
  * Used to write and read primitives to and from a ByteSequence.
  */
-final public class ByteSequenceData {
+public final class ByteSequenceData {
 
     public static byte[] toByteArray(ByteSequence packet) {
-        if (packet.offset == 0 && packet.length == packet.data.length)
+        if (packet.offset == 0 && packet.length == packet.data.length) {
             return packet.data;
+        }
 
         byte rc[] = new byte[packet.length];
         System.arraycopy(packet.data, packet.offset, rc, 0, packet.length);

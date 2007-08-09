@@ -178,22 +178,14 @@ import org.apache.commons.logging.LogFactory;
 public class ActiveMQSession implements Session, QueueSession, TopicSession, StatsCapable, ActiveMQDispatcher {
 
     public static interface DeliveryListener {
-        public void beforeDelivery(ActiveMQSession session, Message msg);
+        void beforeDelivery(ActiveMQSession session, Message msg);
 
-        public void afterDelivery(ActiveMQSession session, Message msg);
+        void afterDelivery(ActiveMQSession session, Message msg);
     }
 
-    private static final Log log = LogFactory.getLog(ActiveMQSession.class);
+    private static final Log LOG = LogFactory.getLog(ActiveMQSession.class);
 
     protected int acknowledgementMode;
-
-    private MessageListener messageListener;
-    private JMSSessionStatsImpl stats;
-    private TransactionContext transactionContext;
-    private DeliveryListener deliveryListener;
-    private MessageTransformer transformer;
-    private BlobTransferPolicy blobTransferPolicy;
-
     protected final ActiveMQConnection connection;
     protected final SessionInfo info;
     protected final LongSequenceGenerator consumerIdGenerator = new LongSequenceGenerator();
@@ -211,6 +203,13 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     protected final boolean debug;
     protected Object sendMutex = new Object();
 
+    private MessageListener messageListener;
+    private JMSSessionStatsImpl stats;
+    private TransactionContext transactionContext;
+    private DeliveryListener deliveryListener;
+    private MessageTransformer transformer;
+    private BlobTransferPolicy blobTransferPolicy;
+
     /**
      * Construct the Session
      * 
@@ -223,7 +222,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws JMSException on internal error
      */
     protected ActiveMQSession(ActiveMQConnection connection, SessionId sessionId, int acknowledgeMode, boolean asyncDispatch, boolean sessionAsyncDispatch) throws JMSException {
-        this.debug = log.isDebugEnabled();
+        this.debug = LOG.isDebugEnabled();
         this.connection = connection;
         this.acknowledgementMode = acknowledgeMode;
         this.asyncDispatch = asyncDispatch;
@@ -602,7 +601,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         }
     }
 
-    synchronized public void dispose() throws JMSException {
+    public synchronized void dispose() throws JMSException {
         if (!closed) {
 
             try {
@@ -765,7 +764,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                 messageListener.onMessage(message);
             } catch (Throwable e) {
                 // TODO: figure out proper way to handle error.
-                log.error("error dispatching message: ", e);
+                LOG.error("error dispatching message: ", e);
                 connection.onAsyncException(e);
             }
 
@@ -1577,7 +1576,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             msg.onSend();
             msg.setProducerId(msg.getMessageId().getProducerId());
             if (this.debug) {
-                log.debug("Sending message: " + msg);
+                LOG.debug("Sending message: " + msg);
             }
             if (!connection.isAlwaysSyncSend() && (!msg.isPersistent() || connection.isUseAsyncSend() || txid != null)) {
                 this.connection.asyncSendPacket(msg);
@@ -1823,9 +1822,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                 try {
                     c.close();
                 } catch (JMSException e) {
-                    log.warn("Exception closing consumer", e);
+                    LOG.warn("Exception closing consumer", e);
                 }
-                log.warn("Closed consumer on Command");
+                LOG.warn("Closed consumer on Command");
                 break;
             }
         }

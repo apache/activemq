@@ -22,10 +22,13 @@ import java.util.List;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import junit.framework.Assert;
 
 public class ConsumerBean extends Assert implements MessageListener {
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(ConsumerBean.class);
+    private static final Log LOG = LogFactory.getLog(ConsumerBean.class);
     private List messages = new ArrayList();
     private Object semaphore;
     private boolean verbose;
@@ -63,7 +66,7 @@ public class ConsumerBean extends Assert implements MessageListener {
     public synchronized void onMessage(Message message) {
         messages.add(message);
         if (verbose) {
-            log.info("Received: " + message);
+            LOG.info("Received: " + message);
         }
         synchronized (semaphore) {
             semaphore.notifyAll();
@@ -74,7 +77,7 @@ public class ConsumerBean extends Assert implements MessageListener {
      * Use to wait for a single message to arrive.
      */
     public void waitForMessageToArrive() {
-        log.info("Waiting for message to arrive");
+        LOG.info("Waiting for message to arrive");
 
         long start = System.currentTimeMillis();
 
@@ -85,11 +88,11 @@ public class ConsumerBean extends Assert implements MessageListener {
                 }
             }
         } catch (InterruptedException e) {
-            log.info("Caught: " + e);
+            LOG.info("Caught: " + e);
         }
         long end = System.currentTimeMillis() - start;
 
-        log.info("End of wait for " + end + " millis");
+        LOG.info("End of wait for " + end + " millis");
     }
 
     /**
@@ -98,7 +101,7 @@ public class ConsumerBean extends Assert implements MessageListener {
      * @param messageCount
      */
     public void waitForMessagesToArrive(int messageCount) {
-        log.info("Waiting for message to arrive");
+        LOG.info("Waiting for message to arrive");
 
         long start = System.currentTimeMillis();
 
@@ -111,12 +114,12 @@ public class ConsumerBean extends Assert implements MessageListener {
                     semaphore.wait(1000);
                 }
             } catch (InterruptedException e) {
-                log.info("Caught: " + e);
+                LOG.info("Caught: " + e);
             }
         }
         long end = System.currentTimeMillis() - start;
 
-        log.info("End of wait for " + end + " millis");
+        LOG.info("End of wait for " + end + " millis");
     }
 
     public void assertMessagesArrived(int total) {

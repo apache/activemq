@@ -50,7 +50,7 @@ public interface Region extends Service {
      * @return TODO
      * @throws Exception TODO
      */
-    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception;
+    Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception;
     
     /**
      * Used to destroy a destination.  
@@ -62,14 +62,14 @@ public interface Region extends Service {
      * @param timeout the max amount of time to wait for the destination to quiesce
      * @throws Exception TODO
      */
-    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception;
+    void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception;
 
     /**
      * Returns a copy of the current destinations available in the region
      * 
      * @return a copy of the regions currently active at the time of the call with the key the destination and the value the Destination.
      */
-    public Map getDestinationMap();
+    Map getDestinationMap();
     
 
     /**
@@ -78,14 +78,14 @@ public interface Region extends Service {
      * @return TODO
      * @throws Exception TODO
      */
-    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception;
+    Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception;
 
     /**
      * Removes a consumer.
      * @param context the environment the operation is being executed under.
      * @throws Exception TODO
      */
-    public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception;
+    void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception;
 
     /**
      * Deletes a durable subscription.
@@ -93,7 +93,7 @@ public interface Region extends Service {
      * @param info TODO
      * @throws Exception TODO
      */
-    public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception;
+    void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception;
     
     /**
      * Send a message to the broker to using the specified destination.  The destination specified
@@ -103,34 +103,34 @@ public interface Region extends Service {
      * @param message 
      * @throws Exception TODO
      */
-    public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception;
+    void send(ProducerBrokerExchange producerExchange, Message message) throws Exception;
     
     /**
      * Used to acknowledge the receipt of a message by a client.
      * @param consumerExchange the environment the operation is being executed under.
      * @throws Exception TODO
      */
-    public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception;
+    void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception;
     
     /**
      * Allows a consumer to pull a message from a queue
      */
-    public Response messagePull(ConnectionContext context, MessagePull pull) throws Exception;
+    Response messagePull(ConnectionContext context, MessagePull pull) throws Exception;
 
     /**
      * Process a notification of a dispatch - used by a Slave Broker
      * @param messageDispatchNotification
      * @throws Exception TODO
      */
-    public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception;
+    void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception;
 
-    public void gc();
+    void gc();
 
     /**
      * Provide an exact or wildcard lookup of destinations in the region
      * 
      * @return a set of matching destination objects.
      */
-    public Set getDestinations(ActiveMQDestination destination);
+    Set getDestinations(ActiveMQDestination destination);
     
 }

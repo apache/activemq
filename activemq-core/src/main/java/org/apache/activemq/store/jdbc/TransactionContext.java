@@ -35,7 +35,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class TransactionContext {
 
-    private static final Log log = LogFactory.getLog(TransactionContext.class);
+    private static final Log LOG = LogFactory.getLog(TransactionContext.class);
 
     private final DataSource dataSource;
     private Connection connection;
@@ -134,7 +134,7 @@ public class TransactionContext {
                         connection.close();
                     }
                 } catch (Throwable e) {
-                    log.warn("Close failed: " + e.getMessage(), e);
+                    LOG.warn("Close failed: " + e.getMessage(), e);
                 } finally {
                     connection = null;
                 }

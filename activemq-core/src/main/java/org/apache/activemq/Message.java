@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -28,6 +28,6 @@ public interface Message extends javax.jms.Message {
      * the MIME types of the different JMS messages, or in the case of {@link org.apache.activemq.BlobMessage}
      * it allows you to create a selector on the MIME type of the BLOB body
      */
-    public String getJMSXMimeType();
+    String getJMSXMimeType();
 
 }

@@ -29,7 +29,7 @@ import org.apache.activemq.command.DataStructure;
  */
 public class DataArrayResponseTest extends ResponseTest {
 
-    public static DataArrayResponseTest SINGLETON = new DataArrayResponseTest();
+    public static final DataArrayResponseTest SINGLETON = new DataArrayResponseTest();
 
     public Object createObject() throws Exception {
         DataArrayResponse info = new DataArrayResponse();

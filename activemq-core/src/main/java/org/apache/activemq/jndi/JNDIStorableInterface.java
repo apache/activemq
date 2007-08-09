@@ -32,7 +32,7 @@ public interface JNDIStorableInterface extends Referenceable {
      * @param properties
      */
 
-    public void setProperties(Properties properties);
+    void setProperties(Properties properties);
 
     /**
      * Get the properties from this instance for storing in JNDI
@@ -40,6 +40,6 @@ public interface JNDIStorableInterface extends Referenceable {
      * @return
      */
 
-    public Properties getProperties();
+    Properties getProperties();
 
 }

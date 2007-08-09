@@ -101,8 +101,9 @@ public class NIOTransport extends TcpTransport {
                     break;
                 }
 
-                if (currentBuffer.hasRemaining())
+                if (currentBuffer.hasRemaining()) {
                     continue;
+                }
 
                 // Are we trying to figure out the size of the next frame?
                 if (nextFrameSize == -1) {

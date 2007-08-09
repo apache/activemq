@@ -22,9 +22,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
 import java.lang.reflect.Proxy;
 
-
 public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
-	
+
     private static final ClassLoader FALLBACK_CLASS_LOADER = ClassLoadingAwareObjectInputStream.class.getClassLoader();
 
     public ClassLoadingAwareObjectInputStream(InputStream in) throws IOException {
@@ -39,8 +38,9 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
     protected Class resolveProxyClass(String[] interfaces) throws IOException, ClassNotFoundException {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         Class[] cinterfaces = new Class[interfaces.length];
-        for (int i = 0; i < interfaces.length; i++)
+        for (int i = 0; i < interfaces.length; i++) {
             cinterfaces[i] = load(interfaces[i], cl);
+        }
 
         try {
             return Proxy.getProxyClass(cinterfaces[0].getClassLoader(), cinterfaces);
@@ -52,7 +52,7 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
     private Class load(String className, ClassLoader cl) throws ClassNotFoundException {
         try {
             return ClassLoading.loadClass(className, cl);
-        } catch ( ClassNotFoundException e ) {
+        } catch (ClassNotFoundException e) {
             return ClassLoading.loadClass(className, FALLBACK_CLASS_LOADER);
         }
     }

@@ -34,7 +34,7 @@ public interface MessageQuery {
      * @param destination the destination on which the query is to be performed
      * @param listener is the listener to notify as each message is created or loaded
      */
-    public void execute(ActiveMQDestination destination, MessageListener listener) throws Exception;
+    void execute(ActiveMQDestination destination, MessageListener listener) throws Exception;
 
     /**
      * Returns true if the given update is valid and does not overlap with the initial message query.
@@ -48,6 +48,6 @@ public interface MessageQuery {
      * @param message the update message which may have been sent before the query actually completed
      * @return true if the update message is valid otherwise false in which case the update message will be discarded.
      */
-    public boolean validateUpdate(Message message);
+    boolean validateUpdate(Message message);
 
 }

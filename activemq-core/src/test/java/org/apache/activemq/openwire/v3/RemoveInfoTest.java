@@ -33,7 +33,7 @@ import org.apache.activemq.command.RemoveInfo;
 public class RemoveInfoTest extends BaseCommandTestSupport {
 
 
-    public static RemoveInfoTest SINGLETON = new RemoveInfoTest();
+    public static final RemoveInfoTest SINGLETON = new RemoveInfoTest();
 
     public Object createObject() throws Exception {
         RemoveInfo info = new RemoveInfo();

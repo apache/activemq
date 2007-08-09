@@ -32,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class NumberRangesWhileMarshallingTest extends TestCase {
 
-    private static final Log log = LogFactory.getLog(NumberRangesWhileMarshallingTest.class);
+    private static final Log LOG = LogFactory.getLog(NumberRangesWhileMarshallingTest.class);
 
     protected String connectionId = "Cheese";
     protected ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -74,7 +74,7 @@ public class NumberRangesWhileMarshallingTest extends TestCase {
         for (int i = 0; i < numberValues.length; i++) {
             long value = numberValues[i];
             String expected = Long.toHexString(value);
-            log.info("Unmarshaling value: " + i + " = " + expected);
+            LOG.info("Unmarshaling value: " + i + " = " + expected);
 
             SessionId command = (SessionId)openWireformat.unmarshal(dis);
             assertEquals("connection ID in object: " + i, connectionId, command.getConnectionId());

@@ -1,17 +1,19 @@
 /**
- * 
- * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE
- * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
- * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
- * License. You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package org.apache.activemq.store.jdbc.adapter;
 
 import java.io.IOException;
@@ -50,7 +52,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class DefaultJDBCAdapter implements JDBCAdapter {
 
-    private static final Log log = LogFactory.getLog(DefaultJDBCAdapter.class);
+    private static final Log LOG = LogFactory.getLog(DefaultJDBCAdapter.class);
     protected Statements statements;
     protected boolean batchStatments = true;
 
@@ -87,15 +89,15 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 // This will fail usually since the tables will be
                 // created already.
                 try {
-                    log.debug("Executing SQL: " + createStatments[i]);
+                    LOG.debug("Executing SQL: " + createStatments[i]);
                     boolean rc = s.execute(createStatments[i]);
                 } catch (SQLException e) {
                     if (alreadyExists) {
-                        log.debug("Could not create JDBC tables; The message table already existed."
+                        LOG.debug("Could not create JDBC tables; The message table already existed."
                                   + " Failure was: " + createStatments[i] + " Message: " + e.getMessage()
                                   + " SQLState: " + e.getSQLState() + " Vendor code: " + e.getErrorCode());
                     } else {
-                        log.warn("Could not create JDBC tables; they could already exist." + " Failure was: "
+                        LOG.warn("Could not create JDBC tables; they could already exist." + " Failure was: "
                                  + createStatments[i] + " Message: " + e.getMessage() + " SQLState: "
                                  + e.getSQLState() + " Vendor code: " + e.getErrorCode());
                         JDBCPersistenceAdapter.log("Failure details: ", e);
@@ -122,7 +124,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 try {
                     boolean rc = s.execute(dropStatments[i]);
                 } catch (SQLException e) {
-                    log.warn("Could not drop JDBC tables; they may not exist." + " Failure was: "
+                    LOG.warn("Could not drop JDBC tables; they may not exist." + " Failure was: "
                              + dropStatments[i] + " Message: " + e.getMessage() + " SQLState: "
                              + e.getSQLState() + " Vendor code: " + e.getErrorCode());
                     JDBCPersistenceAdapter.log("Failure details: ", e);
@@ -564,11 +566,11 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     public void doDeleteOldMessages(TransactionContext c) throws SQLException, IOException {
         PreparedStatement s = null;
         try {
-            log.debug("Executing SQL: " + statements.getDeleteOldMessagesStatement());
+            LOG.debug("Executing SQL: " + statements.getDeleteOldMessagesStatement());
             s = c.getConnection().prepareStatement(statements.getDeleteOldMessagesStatement());
             s.setLong(1, System.currentTimeMillis());
             int i = s.executeUpdate();
-            log.debug("Deleted " + i + " old message(s).");
+            LOG.debug("Deleted " + i + " old message(s).");
         } finally {
             close(s);
         }
@@ -600,14 +602,14 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         return result;
     }
 
-    static private void close(PreparedStatement s) {
+    private static void close(PreparedStatement s) {
         try {
             s.close();
         } catch (Throwable e) {
         }
     }
 
-    static private void close(ResultSet rs) {
+    private static void close(ResultSet rs) {
         try {
             rs.close();
         } catch (Throwable e) {
@@ -710,7 +712,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                     if (listener.recoverMessageReference(rs.getString(1))) {
                         count++;
                     } else {
-                        log.debug("Stopped recover next messages");
+                        LOG.debug("Stopped recover next messages");
                     }
                 }
             } else {
@@ -718,7 +720,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                     if (listener.recoverMessage(rs.getLong(1), getBinaryData(rs, 2))) {
                         count++;
                     } else {
-                        log.debug("Stopped recover next messages");
+                        LOG.debug("Stopped recover next messages");
                     }
                 }
             }

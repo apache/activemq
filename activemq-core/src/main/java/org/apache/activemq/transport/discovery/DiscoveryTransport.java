@@ -35,7 +35,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class DiscoveryTransport extends TransportFilter implements DiscoveryListener {
 
-    private static final Log log = LogFactory.getLog(DiscoveryTransport.class);
+    private static final Log LOG = LogFactory.getLog(DiscoveryTransport.class);
 
     private final CompositeTransport next;
     private DiscoveryAgent discoveryAgent;
@@ -58,10 +58,10 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
     }
 
     public void stop() throws Exception {
-    	ServiceStopper ss = new ServiceStopper();
-    	ss.stop(discoveryAgent);
-    	ss.stop(next);
-    	ss.throwFirstException();
+        ServiceStopper ss = new ServiceStopper();
+        ss.stop(discoveryAgent);
+        ss.stop(next);
+        ss.throwFirstException();
     }
 
     public void onServiceAdd(DiscoveryEvent event) {
@@ -70,18 +70,18 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
             try {
                 URI uri = new URI(url);
                 serviceURIs.put(event.getServiceName(), uri);
-                log.info("Adding new broker connection URL: " + uri );
-                next.add(new URI[]{uri});
+                LOG.info("Adding new broker connection URL: " + uri);
+                next.add(new URI[] {uri});
             } catch (URISyntaxException e) {
-                log.warn("Could not connect to remote URI: " + url + " due to bad URI syntax: " + e, e);
+                LOG.warn("Could not connect to remote URI: " + url + " due to bad URI syntax: " + e, e);
             }
         }
     }
 
     public void onServiceRemove(DiscoveryEvent event) {
-        URI uri = (URI) serviceURIs.get(event.getServiceName());
+        URI uri = (URI)serviceURIs.get(event.getServiceName());
         if (uri != null) {
-            next.remove(new URI[]{uri});
+            next.remove(new URI[] {uri});
         }
     }
 

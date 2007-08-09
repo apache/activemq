@@ -64,24 +64,27 @@ public class SimpleAuthorizationMap implements AuthorizationMap {
     }
 
     public Set getTempDestinationAdminACLs() {
-        if (tempDestinationAuthorizationEntry != null)
+        if (tempDestinationAuthorizationEntry != null) {
             return tempDestinationAuthorizationEntry.getAdminACLs();
-        else
+        } else {
             return null;
+        }
     }
 
     public Set getTempDestinationReadACLs() {
-        if (tempDestinationAuthorizationEntry != null)
+        if (tempDestinationAuthorizationEntry != null) {
             return tempDestinationAuthorizationEntry.getReadACLs();
-        else
+        } else {
             return null;
+        }
     }
 
     public Set getTempDestinationWriteACLs() {
-        if (tempDestinationAuthorizationEntry != null)
+        if (tempDestinationAuthorizationEntry != null) {
             return tempDestinationAuthorizationEntry.getWriteACLs();
-        else
+        } else {
             return null;
+        }
     }
 
     public Set getAdminACLs(ActiveMQDestination destination) {

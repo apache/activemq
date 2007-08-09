@@ -61,14 +61,14 @@ import org.apache.commons.logging.LogFactory;
 
 public abstract class DataFileGeneratorTestSupport extends TestSupport {
 
-    private static final Log log = LogFactory.getLog(DataFileGeneratorTestSupport.class);
-
     protected static final Object[] EMPTY_ARGUMENTS = {};
-    private static Throwable singletonException = new Exception("shared exception");
+    private static final Log LOG = LogFactory.getLog(DataFileGeneratorTestSupport.class);
 
-    static final File moduleBaseDir;
-    static final File controlDir;
-    static final File classFileDir;
+    private static final Throwable SINGLETON_EXCEPTION = new Exception("shared exception");
+    private static final File MODULE_BASE_DIR;
+    private static final File CONTROL_DIR;
+    private static final File CLASS_FILE_DIR;
+
 
     static {
         File basedir = null;
@@ -79,15 +79,15 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        moduleBaseDir = basedir;
-        controlDir = new File(moduleBaseDir, "src/test/resources/openwire-control");
-        classFileDir = new File(moduleBaseDir, "src/test/java/org/activemq/openwire");
+        MODULE_BASE_DIR = basedir;
+        CONTROL_DIR = new File(MODULE_BASE_DIR, "src/test/resources/openwire-control");
+        CLASS_FILE_DIR = new File(MODULE_BASE_DIR, "src/test/java/org/activemq/openwire");
     }
 
     private int counter;
     private OpenWireFormat openWireformat;
 
-    public void XXXX_testControlFileIsValid() throws Exception {
+    public void xtestControlFileIsValid() throws Exception {
         generateControlFile();
         assertControlFileIsEqual();
     }
@@ -96,7 +96,7 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         DataOutputStream ds = new DataOutputStream(buffer);
         Object expected = createObject();
-        log.info("Created: " + expected);
+        LOG.info("Created: " + expected);
         openWireformat.marshal(expected, ds);
         ds.close();
 
@@ -105,7 +105,7 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
         DataInputStream dis = new DataInputStream(in);
         Object actual = openWireformat.unmarshal(dis);
 
-        log.info("Parsed: " + actual);
+        LOG.info("Parsed: " + actual);
 
         assertBeansEqual("", new HashSet(), expected, actual);
     }
@@ -131,7 +131,7 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
                     expectedValue = method.invoke(expected, EMPTY_ARGUMENTS);
                     actualValue = method.invoke(actual, EMPTY_ARGUMENTS);
                 } catch (Exception e) {
-                    log.info("Failed to access property: " + name);
+                    LOG.info("Failed to access property: " + name);
                 }
                 assertPropertyValuesEqual(message + name, comparedObjects, expectedValue, actualValue);
             }
@@ -202,8 +202,8 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
     }
 
     public void generateControlFile() throws Exception {
-        controlDir.mkdirs();
-        File dataFile = new File(controlDir, getClass().getName() + ".bin");
+        CONTROL_DIR.mkdirs();
+        File dataFile = new File(CONTROL_DIR, getClass().getName() + ".bin");
 
         FileOutputStream os = new FileOutputStream(dataFile);
         DataOutputStream ds = new DataOutputStream(os);
@@ -222,7 +222,7 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
     }
 
     public void assertControlFileIsEqual() throws Exception {
-        File dataFile = new File(controlDir, getClass().getName() + ".bin");
+        File dataFile = new File(CONTROL_DIR, getClass().getName() + ".bin");
         FileInputStream is1 = new FileInputStream(dataFile);
         int pos = 0;
         try {
@@ -311,7 +311,7 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
     protected Throwable createThrowable(String string) {
         // we have issues with stack frames not being equal so share the same
         // exception each time
-        return singletonException;
+        return SINGLETON_EXCEPTION;
     }
 
     protected BooleanExpression createBooleanExpression(String string) {

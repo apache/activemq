@@ -46,7 +46,7 @@ import org.apache.commons.logging.LogFactory;
  */
 
 public class UdpTransportServer extends TransportServerSupport {
-    private static final Log log = LogFactory.getLog(UdpTransportServer.class);
+    private static final Log LOG = LogFactory.getLog(UdpTransportServer.class);
 
     private UdpTransport serverTransport;
     private ReplayStrategy replayStrategy;
@@ -76,7 +76,7 @@ public class UdpTransportServer extends TransportServerSupport {
     }
 
     protected void doStart() throws Exception {
-        log.info("Starting " + this);
+        LOG.info("Starting " + this);
 
         configuredTransport.setTransportListener(new TransportListener() {
             public void onCommand(Object o) {
@@ -85,7 +85,7 @@ public class UdpTransportServer extends TransportServerSupport {
             }
 
             public void onException(IOException error) {
-                log.error("Caught: " + error, error);
+                LOG.error("Caught: " + error, error);
             }
 
             public void transportInterupted() {
@@ -103,30 +103,30 @@ public class UdpTransportServer extends TransportServerSupport {
 
     protected void processInboundConnection(Command command) {
         DatagramEndpoint endpoint = (DatagramEndpoint)command.getFrom();
-        if (log.isDebugEnabled()) {
-            log.debug("Received command on: " + this + " from address: " + endpoint + " command: " + command);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Received command on: " + this + " from address: " + endpoint + " command: " + command);
         }
         Transport transport = null;
         synchronized (transports) {
             transport = (Transport)transports.get(endpoint);
             if (transport == null) {
                 if (usingWireFormatNegotiation && !command.isWireFormatInfo()) {
-                    log.error("Received inbound server communication from: " + command.getFrom() + " expecting WireFormatInfo but was command: " + command);
+                    LOG.error("Received inbound server communication from: " + command.getFrom() + " expecting WireFormatInfo but was command: " + command);
                 } else {
-                    if (log.isDebugEnabled()) {
-                        log.debug("Creating a new UDP server connection");
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Creating a new UDP server connection");
                     }
                     try {
                         transport = createTransport(command, endpoint);
                         transport = configureTransport(transport);
                         transports.put(endpoint, transport);
                     } catch (IOException e) {
-                        log.error("Caught: " + e, e);
+                        LOG.error("Caught: " + e, e);
                         getAcceptListener().onAcceptError(e);
                     }
                 }
             } else {
-                log.warn("Discarding duplicate command to server from: " + endpoint + " command: " + command);
+                LOG.warn("Discarding duplicate command to server from: " + endpoint + " command: " + command);
             }
         }
     }

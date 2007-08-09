@@ -24,7 +24,7 @@ import org.apache.activemq.util.IntrospectionSupport;
  * @openwire:marshaller
  * @version $Revision: 1.11 $
  */
-abstract public class BaseCommand implements Command {
+public abstract class BaseCommand implements Command {
 
     protected int commandId;
     protected boolean responseRequired;

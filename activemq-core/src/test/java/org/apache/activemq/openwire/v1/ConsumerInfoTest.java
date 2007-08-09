@@ -29,7 +29,7 @@ import org.apache.activemq.command.ConsumerInfo;
  */
 public class ConsumerInfoTest extends BaseCommandTestSupport {
 
-    public static ConsumerInfoTest SINGLETON = new ConsumerInfoTest();
+    public static final ConsumerInfoTest SINGLETON = new ConsumerInfoTest();
 
     public Object createObject() throws Exception {
         ConsumerInfo info = new ConsumerInfo();

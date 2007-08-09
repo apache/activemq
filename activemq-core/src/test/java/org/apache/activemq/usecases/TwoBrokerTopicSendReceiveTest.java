@@ -27,12 +27,15 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.activemq.xbean.BrokerFactoryBean;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.ClassPathResource;
 
 /**
  * @version $Revision: 1.1.1.1 $
  */
 public class TwoBrokerTopicSendReceiveTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
+    private static final Log LOG = LogFactory.getLog(TwoBrokerTopicSendReceiveTest.class);
 
     protected ActiveMQConnectionFactory sendFactory;
     protected ActiveMQConnectionFactory receiveFactory;
@@ -44,9 +47,9 @@ public class TwoBrokerTopicSendReceiveTest extends JmsTopicSendReceiveWithTwoCon
 
         // Give server enough time to setup,
         // so we don't lose messages when connection fails
-        log.info("Waiting for brokers Initialize.");
+        LOG.info("Waiting for brokers Initialize.");
         Thread.sleep(5000);
-        log.info("Brokers should be initialized by now.. starting test.");
+        LOG.info("Brokers should be initialized by now.. starting test.");
 
         super.setUp();
     }

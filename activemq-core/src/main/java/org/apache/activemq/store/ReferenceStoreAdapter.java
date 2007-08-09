@@ -40,7 +40,7 @@ public interface ReferenceStoreAdapter extends PersistenceAdapter {
      * @return the QueueReferenceStore
      * @throws IOException
      */
-    public ReferenceStore createQueueReferenceStore(ActiveMQQueue destination) throws IOException;
+    ReferenceStore createQueueReferenceStore(ActiveMQQueue destination) throws IOException;
 
     /**
      * Factory method to create a new topic message store with the given
@@ -50,34 +50,34 @@ public interface ReferenceStoreAdapter extends PersistenceAdapter {
      * @return the TopicRefererenceStore
      * @throws IOException
      */
-    public TopicReferenceStore createTopicReferenceStore(ActiveMQTopic destination) throws IOException;
+    TopicReferenceStore createTopicReferenceStore(ActiveMQTopic destination) throws IOException;
 
     /**
      * @return Set of File ids in use
      * @throws IOException
      */
-    public Set<Integer> getReferenceFileIdsInUse() throws IOException;
+    Set<Integer> getReferenceFileIdsInUse() throws IOException;
 
     /**
      * If the store isn't valid, it can be recoverd at start-up
      * 
      * @return true if the reference store is in a consistent state
      */
-    public boolean isStoreValid();
+    boolean isStoreValid();
 
     /**
      * called by recover to clear out message references
      * 
      * @throws IOException
      */
-    public void clearMessages() throws IOException;
+    void clearMessages() throws IOException;
 
     /**
      * recover any state
      * 
      * @throws IOException
      */
-    public void recoverState() throws IOException;
+    void recoverState() throws IOException;
 
     /**
      * Save prepared transactions
@@ -85,12 +85,12 @@ public interface ReferenceStoreAdapter extends PersistenceAdapter {
      * @param map
      * @throws IOException
      */
-    public void savePreparedState(Map<TransactionId, AMQTx> map) throws IOException;
+    void savePreparedState(Map<TransactionId, AMQTx> map) throws IOException;
 
     /**
      * @return saved prepared transactions
      * @throws IOException
      */
-    public Map<TransactionId, AMQTx> retrievePreparedState() throws IOException;
+    Map<TransactionId, AMQTx> retrievePreparedState() throws IOException;
 
 }

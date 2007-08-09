@@ -48,7 +48,7 @@ import org.apache.commons.logging.LogFactory;
 /**
  * @version $Revision: 1.14 $
  */
-abstract public class AbstractRegion implements Region {
+public abstract class AbstractRegion implements Region {
 
     private static final Log LOG = LogFactory.getLog(AbstractRegion.class);
 

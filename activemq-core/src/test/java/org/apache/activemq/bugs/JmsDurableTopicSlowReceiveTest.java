@@ -1,17 +1,19 @@
 /**
- * 
- * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE
- * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
- * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
- * License. You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package org.apache.activemq.bugs;
 
 import java.util.Properties;
@@ -36,7 +38,11 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.5 $
  */
 public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest {
-    private static final transient Log log = LogFactory.getLog(JmsDurableTopicSlowReceiveTest.class);
+    
+    static final int NMSG = 100;
+    static final int MSIZE = 256000;
+    private static final transient Log LOG = LogFactory.getLog(JmsDurableTopicSlowReceiveTest.class);
+    private static final String COUNT_PROPERY_NAME = "count";
 
     protected Connection connection2;
     protected Session session2;
@@ -45,12 +51,9 @@ public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest {
     protected MessageProducer producer2;
     protected Destination consumerDestination2;
     BrokerService broker;
-    static final int NMSG = 100;
-    static final int MSIZE = 256000;
     private Connection connection3;
     private Session consumeSession3;
     private TopicSubscriber consumer3;
-    private static final String countProperyName = "count";
 
     /**
      * Set up a durable suscriber test.
@@ -120,12 +123,12 @@ public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest {
                             BytesMessage message = session2.createBytesMessage();
                             message.writeBytes(new byte[MSIZE]);
                             message.setStringProperty("test", "test");
-                            message.setIntProperty(countProperyName, count);
+                            message.setIntProperty(COUNT_PROPERY_NAME, count);
                             message.setJMSType("test");
                             producer2.send(consumerDestination2, message);
                             Thread.sleep(50);
                             if (verbose) {
-                                log.debug("Sent(" + loop + "): " + i);
+                                LOG.debug("Sent(" + loop + "): " + i);
                             }
                             count++;
                         }
@@ -155,15 +158,16 @@ public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest {
             int i;
             for (i = 0; i < NMSG / 4; i++) {
                 msg = consumer3.receive(10000);
-                if (msg == null)
+                if (msg == null) {
                     break;
+                }
                 if (verbose) {
-                    log.debug("Received(" + loop + "): " + i + " count = " + msg.getIntProperty(countProperyName));
+                    LOG.debug("Received(" + loop + "): " + i + " count = " + msg.getIntProperty(COUNT_PROPERY_NAME));
                 }
                 assertNotNull(msg);
                 assertEquals(msg.getJMSType(), "test");
                 assertEquals(msg.getStringProperty("test"), "test");
-                assertEquals("Messages received out of order", count, msg.getIntProperty(countProperyName));
+                assertEquals("Messages received out of order", count, msg.getIntProperty(COUNT_PROPERY_NAME));
                 Thread.sleep(500);
                 msg.acknowledge();
                 count++;

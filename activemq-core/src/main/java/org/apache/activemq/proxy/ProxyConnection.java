@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
 
 class ProxyConnection implements Service {
 
-    static final private Log log = LogFactory.getLog(ProxyConnection.class);
+    private static final Log LOG = LogFactory.getLog(ProxyConnection.class);
 
     private final Transport localTransport;
     private final Transport remoteTransport;
@@ -44,7 +44,7 @@ class ProxyConnection implements Service {
 
     public void onFailure(IOException e) {
         if (!shuttingDown.get()) {
-            log.debug("Transport error: " + e, e);
+            LOG.debug("Transport error: " + e, e);
             try {
                 stop();
             } catch (Exception ignore) {

@@ -36,7 +36,7 @@ import org.apache.commons.logging.LogFactory;
  * @author <a href="http://hiramchirino.com">chirino</a>
  */
 public class StompTransportFilter extends TransportFilter {
-    static final private Log log = LogFactory.getLog(StompTransportFilter.class);
+    private static final Log LOG = LogFactory.getLog(StompTransportFilter.class);
     private final ProtocolConverter protocolConverter;
 
     private final Object sendToActiveMQMutex = new Object();
@@ -64,7 +64,7 @@ public class StompTransportFilter extends TransportFilter {
     public void onCommand(Object command) {
         try {
             if (trace) {
-                log.trace("Received: \n" + command);
+                LOG.trace("Received: \n" + command);
             }
             protocolConverter.onStompCommad((StompFrame)command);
         } catch (IOException e) {
@@ -82,7 +82,7 @@ public class StompTransportFilter extends TransportFilter {
 
     public void sendToStomp(StompFrame command) throws IOException {
         if (trace) {
-            log.trace("Sending: \n" + command);
+            LOG.trace("Sending: \n" + command);
         }
         synchronized (sendToStompMutex) {
             next.oneway(command);

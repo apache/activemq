@@ -1,17 +1,19 @@
 /**
- * 
- * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE
- * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
- * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
- * License. You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package org.apache.activemq.command;
 
 import javax.jms.JMSException;
@@ -23,9 +25,9 @@ import org.apache.commons.logging.LogFactory;
  * @openwire:marshaller
  * @version $Revision: 1.5 $
  */
-abstract public class ActiveMQTempDestination extends ActiveMQDestination {
+public abstract class ActiveMQTempDestination extends ActiveMQDestination {
 
-    private static final Log log = LogFactory.getLog(ActiveMQTempDestination.class);
+    private static final Log LOG = LogFactory.getLog(ActiveMQTempDestination.class);
     protected transient ActiveMQConnection connection;
     protected transient String connectionId;
     protected transient int sequenceId;
@@ -70,7 +72,7 @@ abstract public class ActiveMQTempDestination extends ActiveMQDestination {
                     try {
                         sequenceId = Integer.parseInt(seqStr);
                     } catch (NumberFormatException e) {
-                        log.debug("Did not parse sequence Id from " + physicalName);
+                        LOG.debug("Did not parse sequence Id from " + physicalName);
                     }
                     // The rest should be the connection id.
                     connectionId = this.physicalName.substring(0, p);

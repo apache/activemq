@@ -31,12 +31,17 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.test.TemporaryDestinationToFromNameTest;
 import org.apache.activemq.util.MessageIdList;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision: 1.1 $
  */
 public class RetroactiveConsumerTestWithSimpleMessageListTest extends EmbeddedBrokerTestSupport {
+    private static final Log LOG = LogFactory.getLog(RetroactiveConsumerTestWithSimpleMessageListTest.class);
+
     protected int messageCount = 20;
     protected Connection connection;
     protected Session session;

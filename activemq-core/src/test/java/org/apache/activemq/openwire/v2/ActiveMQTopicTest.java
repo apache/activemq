@@ -30,7 +30,7 @@ import org.apache.activemq.command.ActiveMQTopic;
  */
 public class ActiveMQTopicTest extends ActiveMQDestinationTestSupport {
 
-    public static ActiveMQTopicTest SINGLETON = new ActiveMQTopicTest();
+    public static final ActiveMQTopicTest SINGLETON = new ActiveMQTopicTest();
 
     public Object createObject() throws Exception {
         ActiveMQTopic info = new ActiveMQTopic();

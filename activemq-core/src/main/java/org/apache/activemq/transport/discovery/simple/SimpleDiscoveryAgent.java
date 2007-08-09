@@ -132,8 +132,9 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
 
                         synchronized (sleepMutex) {
                             try {
-                                if (!running.get())
+                                if (!running.get()) {
                                     return;
+                                }
 
                                 sleepMutex.wait(event.reconnectDelay);
                             } catch (InterruptedException ie) {
@@ -147,8 +148,9 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
                         } else {
                             // Exponential increment of reconnect delay.
                             event.reconnectDelay *= backOffMultiplier;
-                            if (event.reconnectDelay > maxReconnectDelay)
+                            if (event.reconnectDelay > maxReconnectDelay) {
                                 event.reconnectDelay = maxReconnectDelay;
+                            }
                         }
 
                     } else {
@@ -156,8 +158,9 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
                         event.reconnectDelay = initialReconnectDelay;
                     }
 
-                    if (!running.get())
+                    if (!running.get()) {
                         return;
+                    }
 
                     event.connectTime = System.currentTimeMillis();
                     event.failed.set(false);

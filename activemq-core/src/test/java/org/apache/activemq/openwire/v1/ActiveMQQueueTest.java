@@ -28,7 +28,7 @@ import org.apache.activemq.command.ActiveMQQueue;
  */
 public class ActiveMQQueueTest extends ActiveMQDestinationTestSupport {
 
-    public static ActiveMQQueueTest SINGLETON = new ActiveMQQueueTest();
+    public static final ActiveMQQueueTest SINGLETON = new ActiveMQQueueTest();
 
     public Object createObject() throws Exception {
         ActiveMQQueue info = new ActiveMQQueue();

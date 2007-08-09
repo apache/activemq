@@ -34,7 +34,7 @@ public interface Marshaller<T> {
      * @param dataOut
      * @throws IOException
      */
-    public void writePayload(T object, DataOutput dataOut) throws IOException;
+    void writePayload(T object, DataOutput dataOut) throws IOException;
     
     
     /**
@@ -43,7 +43,7 @@ public interface Marshaller<T> {
      * @return unmarshalled object
      * @throws IOException
      */
-    public T readPayload(DataInput dataIn) throws IOException;
+    T readPayload(DataInput dataIn) throws IOException;
 
    
 }

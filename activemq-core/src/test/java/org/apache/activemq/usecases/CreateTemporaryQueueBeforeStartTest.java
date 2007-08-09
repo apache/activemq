@@ -63,9 +63,9 @@ public class CreateTemporaryQueueBeforeStartTest extends TestCase {
     }
 
     public void testTemporaryQueueConsumer() throws Exception {
-        final int NUMBER = 20;
+        final int number = 20;
         final AtomicInteger count = new AtomicInteger(0);
-        for (int i = 0; i < NUMBER; i++) {
+        for (int i = 0; i < number; i++) {
             Thread thread = new Thread(new Runnable() {
                 public void run() {
                     try {
@@ -75,7 +75,7 @@ public class CreateTemporaryQueueBeforeStartTest extends TestCase {
                         QueueReceiver consumer = session.createReceiver(queue);
                         connection.start();
 
-                        if (count.incrementAndGet() >= NUMBER) {
+                        if (count.incrementAndGet() >= number) {
                             synchronized (count) {
                                 count.notify();
                             }
@@ -91,7 +91,7 @@ public class CreateTemporaryQueueBeforeStartTest extends TestCase {
         synchronized (count) {
             long waitTime = maxWaitTime;
             long start = System.currentTimeMillis();
-            while (count.get() < NUMBER) {
+            while (count.get() < number) {
                 if (waitTime <= 0) {
                     break;
                 } else {
@@ -100,7 +100,7 @@ public class CreateTemporaryQueueBeforeStartTest extends TestCase {
                 }
             }
         }
-        assertTrue("Unexpected count: " + count, count.get() == NUMBER);
+        assertTrue("Unexpected count: " + count, count.get() == number);
     }
 
     protected QueueConnection createConnection() throws Exception {

@@ -23,7 +23,7 @@ package org.apache.activemq.filter;
  * 
  * @version $Revision: 1.2 $
  */
-abstract public class BinaryExpression implements Expression {
+public abstract class BinaryExpression implements Expression {
     protected Expression left;
     protected Expression right;
 
@@ -77,7 +77,7 @@ abstract public class BinaryExpression implements Expression {
      *
      * @return
      */
-    abstract public String getExpressionSymbol();
+    public abstract String getExpressionSymbol();
 
     /**
      * @param expression

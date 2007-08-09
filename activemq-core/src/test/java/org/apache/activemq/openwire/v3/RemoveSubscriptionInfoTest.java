@@ -33,7 +33,7 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 public class RemoveSubscriptionInfoTest extends BaseCommandTestSupport {
 
 
-    public static RemoveSubscriptionInfoTest SINGLETON = new RemoveSubscriptionInfoTest();
+    public static final RemoveSubscriptionInfoTest SINGLETON = new RemoveSubscriptionInfoTest();
 
     public Object createObject() throws Exception {
         RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();

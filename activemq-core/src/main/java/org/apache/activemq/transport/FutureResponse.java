@@ -26,7 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class FutureResponse {
-    private static final Log log = LogFactory.getLog(FutureResponse.class);
+    private static final Log LOG = LogFactory.getLog(FutureResponse.class);
 
     private final ResponseCallback responseCallback;
     private final ArrayBlockingQueue responseSlot = new ArrayBlockingQueue(1);
@@ -40,8 +40,8 @@ public class FutureResponse {
             return (Response)responseSlot.take();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            if (log.isDebugEnabled()) {
-                log.debug("Operation interupted: " + e, e);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Operation interupted: " + e, e);
             }
             throw new InterruptedIOException("Interrupted.");
         }

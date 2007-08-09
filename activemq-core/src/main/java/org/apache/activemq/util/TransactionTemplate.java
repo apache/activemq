@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.2 $
  */
 public class TransactionTemplate {
-    static private final Log LOG = LogFactory.getLog(TransactionTemplate.class);
+    private static final Log LOG = LogFactory.getLog(TransactionTemplate.class);
     private PersistenceAdapter persistenceAdapter;
     private ConnectionContext context;
 

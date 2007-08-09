@@ -33,7 +33,7 @@ import org.apache.activemq.command.ReplayCommand;
 public class ReplayCommandTest extends BaseCommandTestSupport {
 
 
-    public static ReplayCommandTest SINGLETON = new ReplayCommandTest();
+    public static final ReplayCommandTest SINGLETON = new ReplayCommandTest();
 
     public Object createObject() throws Exception {
         ReplayCommand info = new ReplayCommand();

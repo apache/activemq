@@ -41,7 +41,7 @@ import org.apache.activemq.util.URISupport;
  * @openwire:marshaller
  * @version $Revision: 1.10 $
  */
-abstract public class ActiveMQDestination extends JNDIBaseStorable implements DataStructure, Destination,
+public abstract class ActiveMQDestination extends JNDIBaseStorable implements DataStructure, Destination,
     Externalizable, Comparable {
 
     private static final long serialVersionUID = -3885260014960795889L;
@@ -64,15 +64,15 @@ abstract public class ActiveMQDestination extends JNDIBaseStorable implements Da
 
     protected String physicalName;
 
-    transient protected ActiveMQDestination[] compositeDestinations;
-    transient protected String[] destinationPaths;
-    transient protected boolean isPattern;
-    transient protected int hashValue;
+    protected transient ActiveMQDestination[] compositeDestinations;
+    protected transient String[] destinationPaths;
+    protected transient boolean isPattern;
+    protected transient int hashValue;
     protected Map options;
 
     // static helper methods for working with destinations
     // -------------------------------------------------------------------------
-    static public ActiveMQDestination createDestination(String name, byte defaultType) {
+    public static ActiveMQDestination createDestination(String name, byte defaultType) {
 
         if (name.startsWith(QUEUE_QUALIFIED_PREFIX)) {
             return new ActiveMQQueue(name.substring(QUEUE_QUALIFIED_PREFIX.length()));
@@ -186,7 +186,7 @@ abstract public class ActiveMQDestination extends JNDIBaseStorable implements Da
         return getQualifiedPrefix() + physicalName;
     }
 
-    abstract protected String getQualifiedPrefix();
+    protected abstract String getQualifiedPrefix();
 
     /**
      * @openwire:property version=1
@@ -271,7 +271,7 @@ abstract public class ActiveMQDestination extends JNDIBaseStorable implements Da
         return destinationPaths;
     }
 
-    abstract public byte getDestinationType();
+    public abstract byte getDestinationType();
 
     public boolean isQueue() {
         return false;

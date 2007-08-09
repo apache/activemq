@@ -48,7 +48,7 @@ import org.apache.commons.logging.LogFactory;
 
 public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements ReferenceStoreAdapter {
 
-    private static final Log log = LogFactory.getLog(KahaPersistenceAdapter.class);
+    private static final Log LOG = LogFactory.getLog(KahaPersistenceAdapter.class);
     private static final String STORE_STATE = "store-state";
     private static final String RECORD_REFERENCES = "record-references";
     private static final String TRANSACTIONS = "transactions-state";
@@ -91,7 +91,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
         durableSubscribers.setMarshaller(new CommandMarshaller());
         preparedTransactions = store.getMapContainer("transactions", TRANSACTIONS, false);
         // need to set the Marshallers here
-        preparedTransactions.setKeyMarshaller(Store.CommandMarshaller);
+        preparedTransactions.setKeyMarshaller(Store.COMMAND_MARSHALLER);
         preparedTransactions.setValueMarshaller(new AMQTxMarshaller(wireFormat));
     }
 
@@ -274,7 +274,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
         try {
             return StoreFactory.open(stateDirectory.getAbsolutePath(), "rw");
         } catch (IOException e) {
-            log.error("Failed to create the state store", e);
+            LOG.error("Failed to create the state store", e);
         }
         return null;
     }

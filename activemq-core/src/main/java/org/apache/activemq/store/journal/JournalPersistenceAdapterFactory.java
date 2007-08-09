@@ -41,7 +41,7 @@ public class JournalPersistenceAdapterFactory extends DataSourceSupport implemen
 
     private static final int JOURNAL_LOCKED_WAIT_DELAY = 10 * 1000;
 
-    private static final Log log = LogFactory.getLog(JournalPersistenceAdapterFactory.class);
+    private static final Log LOG = LogFactory.getLog(JournalPersistenceAdapterFactory.class);
 
     private int journalLogFileSize = 1024 * 1024 * 20;
     private int journalLogFiles = 2;
@@ -222,7 +222,7 @@ public class JournalPersistenceAdapterFactory extends DataSourceSupport implemen
                                               getJournalArchiveDirectory());
                     break;
                 } catch (JournalLockedException e) {
-                    log.info("Journal is locked... waiting " + (JOURNAL_LOCKED_WAIT_DELAY / 1000)
+                    LOG.info("Journal is locked... waiting " + (JOURNAL_LOCKED_WAIT_DELAY / 1000)
                              + " seconds for the journal to be unlocked.");
                     try {
                         Thread.sleep(JOURNAL_LOCKED_WAIT_DELAY);

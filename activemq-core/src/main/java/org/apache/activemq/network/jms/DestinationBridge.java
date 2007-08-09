@@ -37,7 +37,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1.1.1 $
  */
 public abstract class DestinationBridge implements Service, MessageListener {
-    private static final Log log = LogFactory.getLog(DestinationBridge.class);
+    private static final Log LOG = LogFactory.getLog(DestinationBridge.class);
     protected MessageConsumer consumer;
     protected AtomicBoolean started = new AtomicBoolean(false);
     protected JmsMesageConvertor jmsMessageConvertor;
@@ -130,12 +130,12 @@ public abstract class DestinationBridge implements Service, MessageListener {
                 sendMessage(converted);
                 message.acknowledge();
             } catch (Exception e) {
-                log.error("failed to forward message on attempt: " + (++attempt) + " reason: " + e + " message: " + message, e);
+                LOG.error("failed to forward message on attempt: " + (++attempt) + " reason: " + e + " message: " + message, e);
                 if (maximumRetries > 0 && attempt >= maximumRetries) {
                     try {
                         stop();
                     } catch (Exception e1) {
-                        log.warn("Failed to stop cleanly", e1);
+                        LOG.warn("Failed to stop cleanly", e1);
                     }
                 }
             }
@@ -170,7 +170,7 @@ public abstract class DestinationBridge implements Service, MessageListener {
         try {
             getConnectionForProducer().close();
         } catch (Exception e) {
-            log.debug("Ignoring failure to close producer connection: " + e, e);
+            LOG.debug("Ignoring failure to close producer connection: " + e, e);
         }
         jmsConnector.restartProducerConnection();
         createProducer();

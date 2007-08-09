@@ -30,12 +30,17 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.usecases.CreateLotsOfTemporaryQueuesTest;
 import org.apache.activemq.util.MessageIdList;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision$
  */
 public class RetroactiveConsumerWithMessageQueryTest extends EmbeddedBrokerTestSupport {
+    private static final Log LOG = LogFactory.getLog(RetroactiveConsumerWithMessageQueryTest.class);
+    
     protected int messageCount = 20;
     protected Connection connection;
     protected Session session;
@@ -53,7 +58,7 @@ public class RetroactiveConsumerWithMessageQueryTest extends EmbeddedBrokerTestS
         consumer.setMessageListener(listener);
 
         MessageProducer producer = session.createProducer(destination);
-        int updateMessageCount = messageCount - DummyMessageQuery.messageCount;
+        int updateMessageCount = messageCount - DummyMessageQuery.MESSAGE_COUNT;
         for (int i = 0; i < updateMessageCount; i++) {
             TextMessage message = session.createTextMessage("Update Message: " + i + " sent at: " + new Date());
             producer.send(message);

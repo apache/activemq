@@ -1,21 +1,19 @@
 /**
- * 
  * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements. See the NOTICE file distributed with this
- * work for additional information regarding copyright ownership. The ASF
- * licenses this file to You under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package org.apache.activemq.kaha.impl;
 
 import java.io.File;
@@ -55,11 +53,12 @@ import org.apache.commons.logging.LogFactory;
  */
 public class KahaStore implements Store {
 
-    private final static String PROPERTY_PREFIX = "org.apache.activemq.kaha.Store";
-    private final static boolean brokenFileLock = "true".equals(System.getProperty(PROPERTY_PREFIX + ".FileLockBroken", "false"));
-    private final static boolean disableLocking = "true".equals(System.getProperty(PROPERTY_PREFIX + ".DisableLocking", "false"));
+    private static final String PROPERTY_PREFIX = "org.apache.activemq.kaha.Store";
+    private static final boolean BROKEN_FILE_LOCK = "true".equals(System.getProperty(PROPERTY_PREFIX + ".FileLockBroken", "false"));
+    private static final boolean DISABLE_LOCKING = "true".equals(System.getProperty(PROPERTY_PREFIX + ".DisableLocking", "false"));
 
-    private static final Log log = LogFactory.getLog(KahaStore.class);
+    private static final Log LOG = LogFactory.getLog(KahaStore.class);
+    
     private final File directory;
     private final String mode;
     private IndexRootContainer mapsContainer;
@@ -168,7 +167,7 @@ public class KahaStore implements Store {
                 }
             }
             String str = result ? "successfully deleted" : "failed to delete";
-            log.info("Kaha Store " + str + " data directory " + directory);
+            LOG.info("Kaha Store " + str + " data directory " + directory);
         }
         return result;
     }
@@ -420,7 +419,7 @@ public class KahaStore implements Store {
             throw new IOException("Store has been closed.");
         if (!initialized) {
 
-            log.info("Kaha Store using data directory " + directory);
+            LOG.info("Kaha Store using data directory " + directory);
             lockFile = new RandomAccessFile(new File(directory, "lock"), "rw");
             lock();
 
@@ -454,16 +453,17 @@ public class KahaStore implements Store {
     }
 
     private synchronized void lock() throws IOException {
-        if (!disableLocking && directory != null && lock == null) {
+        if (!DISABLE_LOCKING && directory != null && lock == null) {
             String key = getPropertyKey();
             String property = System.getProperty(key);
             if (null == property) {
-                if (!brokenFileLock) {
+                if (!BROKEN_FILE_LOCK) {
                     lock = lockFile.getChannel().tryLock();
                     if (lock == null) {
                         throw new StoreLockedExcpetion("Kaha Store " + directory.getName() + "  is already opened by another application");
-                    } else
+                    } else {
                         System.setProperty(key, new Date().toString());
+                    }
                 }
             } else { // already locked
                 throw new StoreLockedExcpetion("Kaha Store " + directory.getName() + " is already opened by this application.");
@@ -472,7 +472,7 @@ public class KahaStore implements Store {
     }
 
     private synchronized void unlock() throws IOException {
-        if (!disableLocking && (null != directory) && (null != lock)) {
+        if (!DISABLE_LOCKING && (null != directory) && (null != lock)) {
             System.getProperties().remove(getPropertyKey());
             if (lock.isValid()) {
                 lock.release();

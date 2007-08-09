@@ -183,11 +183,13 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
         IndexItem e = root;
         if (index < size / 2) {
-            for (int i = 0; i <= index; i++)
+            for (int i = 0; i <= index; i++) {
                 e = e.next;
+            }
         } else {
-            for (int i = size; i > index; i--)
+            for (int i = size; i > index; i--) {
                 e = e.prev;
+            }
         }
         return e;
     }
@@ -259,8 +261,9 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      */
     public Object clone() {
         IndexLinkedList clone = new VMIndexLinkedList(this.root);
-        for (IndexItem e = root.next; e != root; e = e.next)
+        for (IndexItem e = root.next; e != root; e = e.next) {
             clone.add(e);
+        }
         return clone;
     }
 

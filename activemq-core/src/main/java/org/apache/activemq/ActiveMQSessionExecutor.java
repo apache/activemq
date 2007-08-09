@@ -38,7 +38,7 @@ import org.apache.commons.logging.LogFactory;
  * @see javax.jms.Session
  */
 public class ActiveMQSessionExecutor implements Task {
-    private static final transient Log log = LogFactory.getLog(ActiveMQSessionExecutor.class);
+    private static final Log LOG = LogFactory.getLog(ActiveMQSessionExecutor.class);
 
     private ActiveMQSession session;
     private MessageDispatchChannel messageQueue = new MessageDispatchChannel();
@@ -69,7 +69,7 @@ public class ActiveMQSessionExecutor implements Task {
                 // lets only warn when a significant amount of time has passed
                 // just in case its normal operation
                 if (elapsedTime > aboutUnstartedConnectionTimeout) {
-                    log.warn("Received a message on a connection which is not yet started. Have you forgotten to call Connection.start()? Connection: " + connection
+                    LOG.warn("Received a message on a connection which is not yet started. Have you forgotten to call Connection.start()? Connection: " + connection
                              + " Received: " + message);
                     startedOrWarnedThatNotStarted = true;
                 }

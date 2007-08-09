@@ -30,20 +30,20 @@ public interface Endpoint {
     /**
      * Returns the name of the endpoint.
      */
-    public String getName();
+    String getName();
 
     /**
      * Returns the broker ID for this endpoint, if the endpoint is a broker or
      * null
      */
-    public BrokerId getBrokerId();
+    BrokerId getBrokerId();
 
     /**
      * Returns the broker information for this endpoint, if the endpoint is a
      * broker or null
      */
-    public BrokerInfo getBrokerInfo();
+    BrokerInfo getBrokerInfo();
 
-    public void setBrokerInfo(BrokerInfo brokerInfo);
+    void setBrokerInfo(BrokerInfo brokerInfo);
 
 }

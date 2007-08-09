@@ -29,7 +29,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class DefaultReplayBuffer implements ReplayBuffer {
 
-    private static final Log log = LogFactory.getLog(DefaultReplayBuffer.class);
+    private static final Log LOG = LogFactory.getLog(DefaultReplayBuffer.class);
 
     private final int size;
     private ReplayBufferListener listener;
@@ -43,8 +43,8 @@ public class DefaultReplayBuffer implements ReplayBuffer {
     }
 
     public void addBuffer(int commandId, Object buffer) {
-        if (log.isDebugEnabled()) {
-            log.debug("Adding command ID: " + commandId + " to replay buffer: " + this + " object: " + buffer);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Adding command ID: " + commandId + " to replay buffer: " + this + " object: " + buffer);
         }
         synchronized (lock) {
             int max = size - 1;
@@ -65,8 +65,8 @@ public class DefaultReplayBuffer implements ReplayBuffer {
         if (replayer == null) {
             throw new IllegalArgumentException("No Replayer parameter specified");
         }
-        if (log.isDebugEnabled()) {
-            log.debug("Buffer: " + this + " replaying messages from: " + fromCommandId + " to: " + toCommandId);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Buffer: " + this + " replaying messages from: " + fromCommandId + " to: " + toCommandId);
         }
         for (int i = fromCommandId; i <= toCommandId; i++) {
             Object buffer = null;

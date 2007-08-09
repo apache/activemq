@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -28,9 +28,9 @@ import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.ClassLoading;
 
-abstract public class BaseDataStreamMarshaller implements DataStreamMarshaller {
+public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
 
-    static final public Constructor STACK_TRACE_ELEMENT_CONSTRUCTOR;
+    public static final Constructor STACK_TRACE_ELEMENT_CONSTRUCTOR;
 
     static {
         Constructor constructor = null;
@@ -41,9 +41,9 @@ abstract public class BaseDataStreamMarshaller implements DataStreamMarshaller {
         STACK_TRACE_ELEMENT_CONSTRUCTOR = constructor;
     }
 
-    abstract public byte getDataStructureType();
+    public abstract byte getDataStructureType();
 
-    abstract public DataStructure createObject();
+    public abstract DataStructure createObject();
 
     public int tightMarshal1(OpenWireFormat wireFormat, Object o, BooleanStream bs) throws IOException {
         return 0;

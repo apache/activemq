@@ -21,7 +21,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-final public class BooleanStream {
+public final class BooleanStream {
 
     byte data[] = new byte[48];
     short arrayLimit;

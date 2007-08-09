@@ -36,7 +36,7 @@ public class MarshallerFactory {
     /**
      * Creates a Map of command type -> Marshallers
      */
-    static final private DataStreamMarshaller marshaller[] = new DataStreamMarshaller[256];
+    private static final DataStreamMarshaller MARSHALLER[] = new DataStreamMarshaller[256];
     static {
 
         add(new ActiveMQBlobMessageMarshaller());
@@ -98,11 +98,11 @@ public class MarshallerFactory {
 
     }
 
-    static private void add(DataStreamMarshaller dsm) {
-        marshaller[dsm.getDataStructureType()] = dsm;
+    private static void add(DataStreamMarshaller dsm) {
+        MARSHALLER[dsm.getDataStructureType()] = dsm;
     }
     
-    static public DataStreamMarshaller[] createMarshallerMap(OpenWireFormat wireFormat) {
-        return marshaller;
+    public static DataStreamMarshaller[] createMarshallerMap(OpenWireFormat wireFormat) {
+        return MARSHALLER;
     }
 }

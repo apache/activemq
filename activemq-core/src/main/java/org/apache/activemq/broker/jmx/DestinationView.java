@@ -48,7 +48,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class DestinationView implements DestinationViewMBean {
-    private static final Log log = LogFactory.getLog(DestinationViewMBean.class);
+    private static final Log LOG = LogFactory.getLog(DestinationViewMBean.class);
     protected final Destination destination;
     protected final ManagedRegionBroker broker;
 
@@ -147,7 +147,7 @@ public class DestinationView implements DestinationViewMBean {
                 }
 
             } catch (Throwable e) {
-                log.warn("exception browsing destination", e);
+                LOG.warn("exception browsing destination", e);
             }
         }
 
@@ -188,7 +188,7 @@ public class DestinationView implements DestinationViewMBean {
                 }
 
             } catch (Throwable e) {
-                log.warn("exception browsing destination", e);
+                LOG.warn("exception browsing destination", e);
             }
         }
         return answer;
@@ -224,7 +224,7 @@ public class DestinationView implements DestinationViewMBean {
                     }
                 }
             } catch (Throwable e) {
-                log.warn("exception browsing destination", e);
+                LOG.warn("exception browsing destination", e);
             }
         }
 

@@ -108,13 +108,14 @@ public class StompWireFormat implements WireFormat {
                 String line = readLine(in, MAX_HEADER_LENGTH, "The maximum header length was exceeded");
                 if (line != null && line.trim().length() > 0) {
 
-                    if (headers.size() > MAX_HEADERS)
+                    if (headers.size() > MAX_HEADERS) {
                         throw new ProtocolException("The maximum number of headers was exceeded", true);
+                    }
 
                     try {
-                        int seperator_index = line.indexOf(Stomp.Headers.SEPERATOR);
-                        String name = line.substring(0, seperator_index).trim();
-                        String value = line.substring(seperator_index + 1, line.length()).trim();
+                        int seperatorIndex = line.indexOf(Stomp.Headers.SEPERATOR);
+                        String name = line.substring(0, seperatorIndex).trim();
+                        String value = line.substring(seperatorIndex + 1, line.length()).trim();
                         headers.put(name, value);
                     } catch (Exception e) {
                         throw new ProtocolException("Unable to parser header line [" + line + "]", true);
@@ -137,8 +138,9 @@ public class StompWireFormat implements WireFormat {
                     throw new ProtocolException("Specified content-length is not a valid integer", true);
                 }
 
-                if (length > MAX_DATA_LENGTH)
+                if (length > MAX_DATA_LENGTH) {
                     throw new ProtocolException("The maximum data length was exceeded", true);
+                }
 
                 data = new byte[length];
                 in.readFully(data);
@@ -182,8 +184,9 @@ public class StompWireFormat implements WireFormat {
         byte b;
         ByteArrayOutputStream baos = new ByteArrayOutputStream(maxLength);
         while ((b = in.readByte()) != '\n') {
-            if (baos.size() > maxLength)
+            if (baos.size() > maxLength) {
                 throw new ProtocolException(errorMessage, true);
+            }
             baos.write(b);
         }
         baos.close();

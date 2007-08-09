@@ -31,11 +31,11 @@ public interface MessageAvailableConsumer extends MessageConsumer {
      * Sets the listener used to notify synchronous consumers that there is a message
      * available so that the {@link MessageConsumer#receiveNoWait()} can be called.
      */
-    public void setAvailableListener(MessageAvailableListener availableListener);
+    void setAvailableListener(MessageAvailableListener availableListener);
 
     /**
      * Gets the listener used to notify synchronous consumers that there is a message
      * available so that the {@link MessageConsumer#receiveNoWait()} can be called.
      */
-    public MessageAvailableListener getAvailableListener();
+    MessageAvailableListener getAvailableListener();
 }

@@ -29,7 +29,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1 $
  */
 public abstract class ServiceSupport implements Service {
-    private static final Log log = LogFactory.getLog(ServiceSupport.class);
+    private static final Log LOG = LogFactory.getLog(ServiceSupport.class);
 
     private AtomicBoolean started = new AtomicBoolean(false);
     private AtomicBoolean stopping = new AtomicBoolean(false);
@@ -39,7 +39,7 @@ public abstract class ServiceSupport implements Service {
         try {
             service.stop();
         } catch (Exception e) {
-            log.debug("Could not stop service: " + service + ". Reason: " + e, e);
+            LOG.debug("Could not stop service: " + service + ". Reason: " + e, e);
         }
     }
 

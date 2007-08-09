@@ -35,7 +35,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
  */
 public abstract class JNDITestSupport extends TestCase {
     
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory
             .getLog(JNDITestSupport.class);
     
     protected Hashtable environment = new Hashtable();
@@ -56,7 +56,7 @@ public abstract class JNDITestSupport extends TestCase {
         NamingEnumeration iter = childContext.listBindings("");
         while (iter.hasMore()) {
             Binding destinationBinding = (Binding) iter.next();
-            log.info("Found destination: " + destinationBinding.getName());
+            LOG.info("Found destination: " + destinationBinding.getName());
             Object destination = destinationBinding.getObject();
             assertTrue("Should have a Destination but got: " + destination, destination instanceof Destination);
         }

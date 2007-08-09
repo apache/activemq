@@ -199,6 +199,6 @@ public abstract class ArithmeticExpression extends BinaryExpression {
      * @param rvalue
      * @return
      */
-    abstract protected Object evaluate(Object lvalue, Object rvalue);
+    protected abstract Object evaluate(Object lvalue, Object rvalue);
 
 }

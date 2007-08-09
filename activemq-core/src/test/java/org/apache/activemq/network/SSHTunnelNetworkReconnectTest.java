@@ -35,7 +35,7 @@ import org.apache.commons.logging.LogFactory;
  * @author chirino
  */
 public class SSHTunnelNetworkReconnectTest extends NetworkReconnectTest {
-    private static final transient Log log = LogFactory.getLog(SSHTunnelNetworkReconnectTest.class);
+    private static final transient Log LOG = LogFactory.getLog(SSHTunnelNetworkReconnectTest.class);
 
     ArrayList processes = new ArrayList();
 

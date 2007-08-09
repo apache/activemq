@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -61,7 +61,7 @@ public class SslTransportFactory extends TcpTransportFactory {
     private SSLContext sslContext = null;
 
     // The log this uses.,
-    private static final Log log = LogFactory.getLog(SslTransportFactory.class);
+    private static final Log LOG = LogFactory.getLog(SslTransportFactory.class);
 
     /**
      * Constructor. Nothing special.
@@ -130,7 +130,7 @@ public class SslTransportFactory extends TcpTransportFactory {
                 String localString = location.getScheme() + ":/" + path;
                 localLocation = new URI(localString);
             } catch (Exception e) {
-                log.warn("path isn't a valid local location for SslTransport to use", e);
+                LOG.warn("path isn't a valid local location for SslTransport to use", e);
             }
         }
         SocketFactory socketFactory = createSocketFactory();
@@ -165,8 +165,9 @@ public class SslTransportFactory extends TcpTransportFactory {
     protected ServerSocketFactory createServerSocketFactory() {
         if (sslContext == null) {
             return SSLServerSocketFactory.getDefault();
-        } else
+        } else {
             return sslContext.getServerSocketFactory();
+        }
     }
 
     /**
@@ -178,8 +179,9 @@ public class SslTransportFactory extends TcpTransportFactory {
     protected SocketFactory createSocketFactory() {
         if (sslContext == null) {
             return SSLSocketFactory.getDefault();
-        } else
+        } else {
             return sslContext.getSocketFactory();
+        }
     }
 
 }

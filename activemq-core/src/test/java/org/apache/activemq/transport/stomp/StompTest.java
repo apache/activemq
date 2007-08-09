@@ -37,8 +37,12 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.transport.reliable.UnreliableUdpTransportTest;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class StompTest extends CombinationTestSupport {
+    private static final Log LOG = LogFactory.getLog(StompTest.class);
 
     private BrokerService broker;
     private TransportConnector connector;
@@ -99,8 +103,8 @@ public class StompTest extends CombinationTestSupport {
 
     public void testConnect() throws Exception {
 
-        String connect_frame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n" + "request-id: 1\n" + "\n" + Stomp.NULL;
-        stompConnection.sendFrame(connect_frame);
+        String connectFrame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n" + "request-id: 1\n" + "\n" + Stomp.NULL;
+        stompConnection.sendFrame(connectFrame);
 
         String f = stompConnection.receiveFrame();
         assertTrue(f.startsWith("CONNECTED"));
@@ -239,9 +243,9 @@ public class StompTest extends CombinationTestSupport {
         assertTrue(frame.startsWith("MESSAGE"));
 
         Pattern cl = Pattern.compile("Content-length:\\s*(\\d+)", Pattern.CASE_INSENSITIVE);
-        Matcher cl_matcher = cl.matcher(frame);
-        assertTrue(cl_matcher.find());
-        assertEquals("5", cl_matcher.group(1));
+        Matcher clMmatcher = cl.matcher(frame);
+        assertTrue(clMmatcher.find());
+        assertEquals("5", clMmatcher.group(1));
 
         assertFalse(Pattern.compile("type:\\s*null", Pattern.CASE_INSENSITIVE).matcher(frame).find());
 
@@ -396,7 +400,7 @@ public class StompTest extends CombinationTestSupport {
 
         try {
             frame = stompConnection.receiveFrame();
-            log.info("Received frame: " + frame);
+            LOG.info("Received frame: " + frame);
             fail("No message should have been received since subscription was removed");
         } catch (SocketTimeoutException e) {
 

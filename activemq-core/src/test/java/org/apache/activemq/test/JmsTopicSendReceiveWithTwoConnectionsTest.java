@@ -31,7 +31,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTestSupport {
 
-    protected static final Log log = LogFactory.getLog(JmsTopicSendReceiveWithTwoConnectionsTest.class);
+    private static final Log LOG = LogFactory.getLog(JmsTopicSendReceiveWithTwoConnectionsTest.class);
 
     protected Connection sendConnection;
     protected Connection receiveConnection;
@@ -47,29 +47,29 @@ public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTes
 
         connectionFactory = createConnectionFactory();
 
-        log.info("Creating send connection");
+        LOG.info("Creating send connection");
         sendConnection = createSendConnection();
-        log.info("Starting send connection");
+        LOG.info("Starting send connection");
         sendConnection.start();
 
-        log.info("Creating receive connection");
+        LOG.info("Creating receive connection");
         receiveConnection = createReceiveConnection();
-        log.info("Starting receive connection");
+        LOG.info("Starting receive connection");
         receiveConnection.start();
 
-        log.info("Created sendConnection: " + sendConnection);
-        log.info("Created receiveConnection: " + receiveConnection);
+        LOG.info("Created sendConnection: " + sendConnection);
+        LOG.info("Created receiveConnection: " + receiveConnection);
 
         session = sendConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         receiveSession = receiveConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-        log.info("Created sendSession: " + session);
-        log.info("Created receiveSession: " + receiveSession);
+        LOG.info("Created sendSession: " + session);
+        LOG.info("Created receiveSession: " + receiveSession);
 
         producer = session.createProducer(null);
         producer.setDeliveryMode(deliveryMode);
 
-        log.info("Created producer: " + producer + " delivery mode = " + (deliveryMode == DeliveryMode.PERSISTENT ? "PERSISTENT" : "NON_PERSISTENT"));
+        LOG.info("Created producer: " + producer + " delivery mode = " + (deliveryMode == DeliveryMode.PERSISTENT ? "PERSISTENT" : "NON_PERSISTENT"));
 
         if (topic) {
             consumerDestination = session.createTopic(getConsumerSubject());
@@ -79,13 +79,13 @@ public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTes
             producerDestination = session.createQueue(getProducerSubject());
         }
 
-        log.info("Created  consumer destination: " + consumerDestination + " of type: " + consumerDestination.getClass());
-        log.info("Created  producer destination: " + producerDestination + " of type: " + producerDestination.getClass());
+        LOG.info("Created  consumer destination: " + consumerDestination + " of type: " + consumerDestination.getClass());
+        LOG.info("Created  producer destination: " + producerDestination + " of type: " + producerDestination.getClass());
 
         consumer = createConsumer();
         consumer.setMessageListener(this);
 
-        log.info("Started connections");
+        LOG.info("Started connections");
     }
 
     protected MessageConsumer createConsumer() throws JMSException {

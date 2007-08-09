@@ -39,12 +39,13 @@ public class MockTransport extends DefaultTransportListener implements Transport
 
     /**
      */
-    synchronized public void setTransportListener(TransportListener channelListener) {
+    public synchronized void setTransportListener(TransportListener channelListener) {
         this.transportListener = channelListener;
-        if (channelListener == null)
+        if (channelListener == null) {
             getNext().setTransportListener(null);
-        else
+        } else {
             getNext().setTransportListener(this);
+        }
     }
 
     /**
@@ -52,10 +53,12 @@ public class MockTransport extends DefaultTransportListener implements Transport
      * @throws IOException if the next channel has not been set.
      */
     public void start() throws Exception {
-        if (getNext() == null)
+        if (getNext() == null) {
             throw new IOException("The next channel has not been set.");
-        if (transportListener == null)
+        }
+        if (transportListener == null) {
             throw new IOException("The command listener has not been set.");
+        }
         getNext().start();
     }
 
@@ -73,14 +76,14 @@ public class MockTransport extends DefaultTransportListener implements Transport
     /**
      * @return Returns the getNext().
      */
-    synchronized public Transport getNext() {
+    public synchronized Transport getNext() {
         return next;
     }
 
     /**
      * @return Returns the packetListener.
      */
-    synchronized public TransportListener getTransportListener() {
+    public synchronized TransportListener getTransportListener() {
         return transportListener;
     }
 
@@ -115,7 +118,7 @@ public class MockTransport extends DefaultTransportListener implements Transport
         return getNext().narrow(target);
     }
 
-    synchronized public void setNext(Transport next) {
+    public synchronized void setNext(Transport next) {
         this.next = next;
     }
 

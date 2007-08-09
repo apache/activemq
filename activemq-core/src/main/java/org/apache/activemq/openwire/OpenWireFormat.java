@@ -38,7 +38,7 @@ import org.apache.activemq.wireformat.WireFormat;
  * 
  * @version $Revision$
  */
-final public class OpenWireFormat implements WireFormat {
+public final class OpenWireFormat implements WireFormat {
 
     public static final int DEFAULT_VERSION = CommandTypes.PROTOCOL_VERSION;
 

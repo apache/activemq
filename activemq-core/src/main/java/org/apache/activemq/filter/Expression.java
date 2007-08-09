@@ -30,6 +30,6 @@ public interface Expression {
     /**
      * @return the value of this expression
      */
-    public Object evaluate(MessageEvaluationContext message) throws JMSException;
+    Object evaluate(MessageEvaluationContext message) throws JMSException;
     
 }

@@ -48,7 +48,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class NetworkReconnectTest extends TestCase {
 
-    protected static final Log log = LogFactory.getLog(NetworkReconnectTest.class);
+    private static final Log LOG = LogFactory.getLog(NetworkReconnectTest.class);
 
     private BrokerService producerBroker;
     private BrokerService consumerBroker;
@@ -184,9 +184,9 @@ public class NetworkReconnectTest extends TestCase {
 
     protected void setUp() throws Exception {
 
-        log.info("===============================================================================");
-        log.info("Running Test Case: " + getName());
-        log.info("===============================================================================");
+        LOG.info("===============================================================================");
+        LOG.info("Running Test Case: " + getName());
+        LOG.info("===============================================================================");
 
         producerConnectionFactory = createProducerConnectionFactory();
         consumerConnectionFactory = createConsumerConnectionFactory();

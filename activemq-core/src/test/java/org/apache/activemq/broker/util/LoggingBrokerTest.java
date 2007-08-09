@@ -29,7 +29,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class LoggingBrokerTest extends JmsTopicSendReceiveTest {
-    private static final Log log = LogFactory.getLog(LoggingBrokerTest.class);
+    private static final Log LOG = LogFactory.getLog(LoggingBrokerTest.class);
     private BrokerService broker;
 
     protected void setUp() throws Exception {
@@ -49,7 +49,7 @@ public class LoggingBrokerTest extends JmsTopicSendReceiveTest {
     }
 
     protected BrokerService createBroker(String uri) throws Exception {
-        log.info("Loading broker configuration from the classpath with URI: " + uri);
+        LOG.info("Loading broker configuration from the classpath with URI: " + uri);
         return BrokerFactory.createBroker(new URI("xbean:" + uri));
     }
 }

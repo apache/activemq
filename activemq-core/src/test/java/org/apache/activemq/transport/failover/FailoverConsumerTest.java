@@ -28,13 +28,14 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.network.NetworkTestSupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class FailoverConsumerTest extends NetworkTestSupport {
 
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-        .getLog(FailoverConsumerTest.class);
-
     public static final int MSG_COUNT = 100;
+    private static final Log LOG = LogFactory.getLog(FailoverConsumerTest.class);
+
 
     public void testPublisherFailsOver() throws Exception {
         // Uncomment this if you want to use remote broker created by
@@ -70,7 +71,7 @@ public class FailoverConsumerTest extends NetworkTestSupport {
         // after restart, javadoc says, that messages should be received
         // though).
         // So we must use external broker ant restart it manually.
-        log.info("You should restart remote broker now and press enter!");
+        LOG.info("You should restart remote broker now and press enter!");
         System.in.read();
         // Thread.sleep(20000);
         restartRemoteBroker();
@@ -80,7 +81,7 @@ public class FailoverConsumerTest extends NetworkTestSupport {
         for (int idx = 1; idx < MSG_COUNT; ++idx) {
             msg = consumer.receive(3000);
             if (msg == null) {
-                log.error("No messages received! Received:" + count);
+                LOG.error("No messages received! Received:" + count);
                 break;
             }
             msg.acknowledge();

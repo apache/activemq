@@ -47,7 +47,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class QueryBasedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy {
 
-    private static final Log log = LogFactory.getLog(QueryBasedSubscriptionRecoveryPolicy.class);
+    private static final Log LOG = LogFactory.getLog(QueryBasedSubscriptionRecoveryPolicy.class);
 
     private MessageQuery query;
     private AtomicLong messageSequence = new AtomicLong(0);
@@ -112,7 +112,7 @@ public class QueryBasedSubscriptionRecoveryPolicy implements SubscriptionRecover
             configure(activeMessage);
             sub.addRecoveredMessage(context, activeMessage);
         } catch (Throwable e) {
-            log.warn("Failed to dispatch initial message: " + message + " into subscription. Reason: " + e, e);
+            LOG.warn("Failed to dispatch initial message: " + message + " into subscription. Reason: " + e, e);
         }
     }
 

@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -32,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: $
  */
 public class NewConsumerCreatesDestinationTest extends EmbeddedBrokerAndConnectionTestSupport {
-    private static final transient Log log = LogFactory.getLog(NewConsumerCreatesDestinationTest.class);
+    private static final Log LOG = LogFactory.getLog(NewConsumerCreatesDestinationTest.class);
 
     private ActiveMQQueue wildcard;
     
@@ -42,8 +42,8 @@ public class NewConsumerCreatesDestinationTest extends EmbeddedBrokerAndConnecti
         String wildcardText = "org.*" + getDestinationString().substring("org.apache".length());
         wildcard = new ActiveMQQueue(wildcardText);
 
-        log.info("Using wildcard: " + wildcard);
-        log.info("on destination: " + destination);
+        LOG.info("Using wildcard: " + wildcard);
+        LOG.info("on destination: " + destination);
         
         assertDestinationCreated(destination, false);
         assertDestinationCreated(wildcard, false);

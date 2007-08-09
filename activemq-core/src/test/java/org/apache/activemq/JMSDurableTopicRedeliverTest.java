@@ -25,7 +25,7 @@ import javax.jms.TextMessage;
  */
 public class JMSDurableTopicRedeliverTest extends JmsTopicRedeliverTest {
 
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(JMSDurableTopicRedeliverTest.class);
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(JMSDurableTopicRedeliverTest.class);
 
     protected void setUp() throws Exception {
         durable = true;
@@ -42,7 +42,7 @@ public class JMSDurableTopicRedeliverTest extends JmsTopicRedeliverTest {
         Message sendMessage = session.createTextMessage(text);
 
         if (verbose) {
-            log.info("About to send a message: " + sendMessage + " with text: " + text);
+            LOG.info("About to send a message: " + sendMessage + " with text: " + text);
         }
         producer.send(producerDestination, sendMessage);
 

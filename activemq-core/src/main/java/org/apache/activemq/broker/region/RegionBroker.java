@@ -74,7 +74,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class RegionBroker implements Broker {
     private static final Log LOG = LogFactory.getLog(RegionBroker.class);
-    private static final IdGenerator brokerIdGenerator = new IdGenerator();
+    private static final IdGenerator BROKER_ID_GENERATOR = new IdGenerator();
 
     private final Region queueRegion;
     private final Region topicRegion;
@@ -486,7 +486,7 @@ public class RegionBroker implements Broker {
             // TODO: this should persist the broker id so that subsequent
             // startup
             // uses the same broker id.
-            brokerId = new BrokerId(brokerIdGenerator.generateId());
+            brokerId = new BrokerId(BROKER_ID_GENERATOR.generateId());
         }
         return brokerId;
     }

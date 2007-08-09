@@ -46,7 +46,7 @@ public class HexSupport {
      * @param hex
      * @return
      */
-    static public byte[] toBytesFromHex(String hex) {
+    public static byte[] toBytesFromHex(String hex) {
         byte rc[] = new byte[hex.length() / 2];
         for (int i = 0; i < rc.length; i++) {
             String h = hex.substring(i * 2, i * 2 + 2);
@@ -60,7 +60,7 @@ public class HexSupport {
      * @param bytes
      * @return
      */
-    static public String toHexFromBytes(byte[] bytes) {
+    public static String toHexFromBytes(byte[] bytes) {
         StringBuffer rc = new StringBuffer(bytes.length * 2);
         for (int i = 0; i < bytes.length; i++) {
             rc.append(HEX_TABLE[0xFF & bytes[i]]);

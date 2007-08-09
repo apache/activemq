@@ -25,6 +25,8 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.NetworkBridgeFilter;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.ServiceSupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Forwards messages from the local broker to the remote broker based on demand.
@@ -34,6 +36,7 @@ import org.apache.activemq.util.ServiceSupport;
  * @version $Revision$
  */
 public class DemandForwardingBridge extends DemandForwardingBridgeSupport {
+    private static final Log LOG = LogFactory.getLog(DemandForwardingBridge.class);
 
     protected final BrokerId remoteBrokerPath[] = new BrokerId[] {null};
     protected Object brokerInfoMutex = new Object();
@@ -52,7 +55,7 @@ public class DemandForwardingBridge extends DemandForwardingBridgeSupport {
             remoteBrokerName = remoteBrokerInfo.getBrokerName();
             if (localBrokerId != null) {
                 if (localBrokerId.equals(remoteBrokerId)) {
-                    log.info("Disconnecting loop back connection.");
+                    LOG.info("Disconnecting loop back connection.");
                     // waitStarted();
                     ServiceSupport.dispose(this);
                 }
@@ -71,7 +74,7 @@ public class DemandForwardingBridge extends DemandForwardingBridgeSupport {
             localBrokerPath[0] = localBrokerId;
             if (remoteBrokerId != null) {
                 if (remoteBrokerId.equals(localBrokerId)) {
-                    log.info("Disconnecting loop back connection.");
+                    LOG.info("Disconnecting loop back connection.");
                     waitStarted();
                     ServiceSupport.dispose(this);
                 }

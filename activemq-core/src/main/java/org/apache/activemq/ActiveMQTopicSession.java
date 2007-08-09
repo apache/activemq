@@ -126,15 +126,15 @@ public class ActiveMQTopicSession implements TopicSession {
     /**
      * @param destination
      * @param messageSelector
-     * @param NoLocal
+     * @param noLocal
      * @return
      * @throws JMSException
      */
-    public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean NoLocal) throws JMSException {
+    public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean noLocal) throws JMSException {
         if (destination instanceof Queue) {
             throw new InvalidDestinationException("Queues are not supported by a TopicSession");
         }
-        return next.createConsumer(destination, messageSelector, NoLocal);
+        return next.createConsumer(destination, messageSelector, noLocal);
     }
 
     /**

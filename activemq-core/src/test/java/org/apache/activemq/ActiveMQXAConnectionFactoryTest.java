@@ -28,8 +28,12 @@ import javax.jms.XATopicConnection;
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.transport.stomp.StompTransportFilter;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
+    private static final Log LOG = LogFactory.getLog(ActiveMQXAConnectionFactoryTest.class);
 
     public void testCopy() throws URISyntaxException, JMSException {
         ActiveMQXAConnectionFactory cf = new ActiveMQXAConnectionFactory("vm://localhost?");
@@ -78,7 +82,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         connection.start();
 
         String brokerName = connection.getBrokerName();
-        log.info("Got broker name: " + brokerName);
+        LOG.info("Got broker name: " + brokerName);
 
         assertNotNull("No broker name available!", brokerName);
         connection.close();
@@ -110,7 +114,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         URI connectURI = new URI(temp.getScheme(), temp.getUserInfo(), temp.getHost(), currentURI.getPort(),
                                  temp.getPath(), temp.getQuery(), temp.getFragment());
 
-        log.info("connection URI is: " + connectURI);
+        LOG.info("connection URI is: " + connectURI);
 
         // This should create the connection.
         ActiveMQXAConnectionFactory cf = new ActiveMQXAConnectionFactory(connectURI);

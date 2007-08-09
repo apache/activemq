@@ -26,12 +26,12 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class BrokerPropertiesTest extends TestCase {
-    private static final transient Log log = LogFactory.getLog(BrokerPropertiesTest.class);
+    private static final transient Log LOG = LogFactory.getLog(BrokerPropertiesTest.class);
     
     public void testPropertiesFile() throws Exception {
         BrokerService broker = BrokerFactory.createBroker("properties:org/apache/activemq/config/broker.properties");
 
-        log.info("Created broker: " + broker);
+        LOG.info("Created broker: " + broker);
         assertNotNull(broker);
 
         assertEquals("isUseJmx()", false, broker.isUseJmx());

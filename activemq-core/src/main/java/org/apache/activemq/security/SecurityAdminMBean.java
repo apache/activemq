@@ -24,20 +24,20 @@ package org.apache.activemq.security;
  */
 public interface SecurityAdminMBean {
     
-    public static final String OPERATION_READ = "read";
-    public static final String OPERATION_WRITE = "write";
-    public static final String OPERATION_ADMIN = "admin";
+    String OPERATION_READ = "read";
+    String OPERATION_WRITE = "write";
+    String OPERATION_ADMIN = "admin";
     
-    public void addRole(String role);
-    public void removeRole(String role);
+    void addRole(String role);
+    void removeRole(String role);
 
-    public void addUserRole(String user, String role);
-    public void removeUserRole(String user, String role);
+    void addUserRole(String user, String role);
+    void removeUserRole(String user, String role);
 
-    public void addTopicRole(String topic, String operation, String role);
-    public void removeTopicRole(String topic, String operation, String role);
+    void addTopicRole(String topic, String operation, String role);
+    void removeTopicRole(String topic, String operation, String role);
     
-    public void addQueueRole(String queue, String operation, String role);
-    public void removeQueueRole(String queue, String operation, String role);
+    void addQueueRole(String queue, String operation, String role);
+    void removeQueueRole(String queue, String operation, String role);
     
 }

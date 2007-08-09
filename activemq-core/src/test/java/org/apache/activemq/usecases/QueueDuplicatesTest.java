@@ -42,7 +42,7 @@ import org.apache.commons.logging.LogFactory;
 
 public class QueueDuplicatesTest extends TestCase {
 
-    private static final Log log = LogFactory.getLog(QueueDuplicatesTest.class);
+    private static final Log LOG = LogFactory.getLog(QueueDuplicatesTest.class);
 
     private static DateFormat formatter = new SimpleDateFormat("HH:mm:ss SSS");
     private String brokerUrl;
@@ -133,7 +133,7 @@ public class QueueDuplicatesTest extends TestCase {
                     String txt = "Text Message: " + i;
                     TextMessage msg = session.createTextMessage(txt);
                     producer.send(msg);
-                    log.info(formatter.format(new Date()) + " Sent ==> " + msg + " to " + subject);
+                    LOG.info(formatter.format(new Date()) + " Sent ==> " + msg + " to " + subject);
                     Thread.sleep(1000);
                 }
                 session.close();
@@ -147,7 +147,7 @@ public class QueueDuplicatesTest extends TestCase {
         private Map msgs = new HashMap();
 
         public void onMessage(Message message) {
-            log.info(formatter.format(new Date()) + " SimpleConsumer Message Received: " + message);
+            LOG.info(formatter.format(new Date()) + " SimpleConsumer Message Received: " + message);
             try {
                 String id = message.getJMSMessageID();
                 assertNull("Message is duplicate: " + id, msgs.get(id));

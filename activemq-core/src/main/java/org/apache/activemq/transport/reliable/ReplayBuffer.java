@@ -31,9 +31,9 @@ public interface ReplayBuffer {
      * Submit a buffer for caching around for a period of time, during which time it can be replayed
      * to users interested in it.
      */
-    public void addBuffer(int commandId, Object buffer);
+    void addBuffer(int commandId, Object buffer);
     
-    public void setReplayBufferListener(ReplayBufferListener bufferPoolAdapter);
+    void setReplayBufferListener(ReplayBufferListener bufferPoolAdapter);
     
-    public void replayMessages(int fromCommandId, int toCommandId, Replayer replayer) throws IOException;
+    void replayMessages(int fromCommandId, int toCommandId, Replayer replayer) throws IOException;
 }

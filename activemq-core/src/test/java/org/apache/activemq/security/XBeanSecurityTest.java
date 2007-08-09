@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class XBeanSecurityTest extends SecurityTestSupport {
 
-    private static final Log log = LogFactory.getLog(XBeanSecurityTest.class);
+    private static final Log LOG = LogFactory.getLog(XBeanSecurityTest.class);
     
     public static Test suite() {
         return suite(XBeanSecurityTest.class);
@@ -46,7 +46,7 @@ public class XBeanSecurityTest extends SecurityTestSupport {
     }
 
     protected BrokerService createBroker(String uri) throws Exception {
-        log.info("Loading broker configuration from the classpath with URI: " + uri);
+        LOG.info("Loading broker configuration from the classpath with URI: " + uri);
         return BrokerFactory.createBroker(new URI("xbean:" + uri));
     }
 

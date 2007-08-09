@@ -36,10 +36,10 @@ import org.apache.activemq.util.JMSExceptionSupport;
 public class PropertyExpression implements Expression {
 
     interface SubExpression {
-        public Object evaluate(Message message);
+        Object evaluate(Message message);
     }
 
-    static final private HashMap JMS_PROPERTY_EXPRESSIONS = new HashMap();
+    private static final HashMap JMS_PROPERTY_EXPRESSIONS = new HashMap();
     static {
         JMS_PROPERTY_EXPRESSIONS.put("JMSDestination", new SubExpression() {
 

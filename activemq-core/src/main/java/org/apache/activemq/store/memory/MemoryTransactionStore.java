@@ -140,8 +140,9 @@ public class MemoryTransactionStore implements TransactionStore {
      */
     public void prepare(TransactionId txid) {
         Tx tx = (Tx)inflightTransactions.remove(txid);
-        if (tx == null)
+        if (tx == null) {
             return;
+        }
         preparedTransactions.put(txid, tx);
     }
 
@@ -167,8 +168,9 @@ public class MemoryTransactionStore implements TransactionStore {
             tx = (Tx)inflightTransactions.remove(txid);
         }
 
-        if (tx == null)
+        if (tx == null) {
             return;
+        }
         tx.commit();
 
     }
@@ -187,7 +189,7 @@ public class MemoryTransactionStore implements TransactionStore {
     public void stop() throws Exception {
     }
 
-    synchronized public void recover(TransactionRecoveryListener listener) throws IOException {
+    public synchronized void recover(TransactionRecoveryListener listener) throws IOException {
         // All the inflight transactions get rolled back..
         inflightTransactions.clear();
         this.doingRecover = true;
@@ -208,8 +210,9 @@ public class MemoryTransactionStore implements TransactionStore {
      */
     void addMessage(final MessageStore destination, final Message message) throws IOException {
 
-        if (doingRecover)
+        if (doingRecover) {
             return;
+        }
 
         if (message.getTransactionId() != null) {
             Tx tx = getTx(message.getTransactionId());
@@ -232,8 +235,9 @@ public class MemoryTransactionStore implements TransactionStore {
      * @throws IOException
      */
     final void removeMessage(final MessageStore destination, final MessageAck ack) throws IOException {
-        if (doingRecover)
+        if (doingRecover) {
             return;
+        }
 
         if (ack.isInTransaction()) {
             Tx tx = getTx(ack.getTransactionId());

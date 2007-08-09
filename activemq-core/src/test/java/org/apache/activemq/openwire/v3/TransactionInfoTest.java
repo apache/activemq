@@ -33,7 +33,7 @@ import org.apache.activemq.command.TransactionInfo;
 public class TransactionInfoTest extends BaseCommandTestSupport {
 
 
-    public static TransactionInfoTest SINGLETON = new TransactionInfoTest();
+    public static final TransactionInfoTest SINGLETON = new TransactionInfoTest();
 
     public Object createObject() throws Exception {
         TransactionInfo info = new TransactionInfo();

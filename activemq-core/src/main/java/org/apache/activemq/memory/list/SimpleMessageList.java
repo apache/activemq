@@ -37,7 +37,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1 $
  */
 public class SimpleMessageList implements MessageList {
-    static final private Log log = LogFactory.getLog(SimpleMessageList.class);
+    private static final Log LOG = LogFactory.getLog(SimpleMessageList.class);
     private LinkedList list = new LinkedList();
     private int maximumSize = 100 * 64 * 1024;
     private int size;
@@ -79,7 +79,7 @@ public class SimpleMessageList implements MessageList {
                         result.add(msg);
                     }
                 } catch (IOException e) {
-                    log.error("Failed to get Message from MessageReference: " + ref, e);
+                    LOG.error("Failed to get Message from MessageReference: " + ref, e);
                 }
 
             }

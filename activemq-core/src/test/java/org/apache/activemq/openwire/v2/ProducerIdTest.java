@@ -34,7 +34,7 @@ import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
 public class ProducerIdTest extends DataFileGeneratorTestSupport {
 
 
-    public static ProducerIdTest SINGLETON = new ProducerIdTest();
+    public static final ProducerIdTest SINGLETON = new ProducerIdTest();
 
     public Object createObject() throws Exception {
         ProducerId info = new ProducerId();

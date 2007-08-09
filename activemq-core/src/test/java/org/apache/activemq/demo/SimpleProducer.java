@@ -47,7 +47,7 @@ import javax.naming.NamingException;
  */
 public class SimpleProducer {
 
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(SimpleProducer.class);
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(SimpleProducer.class);
 
     /**
      * @param args the destination name to send to and optionally, the number of
@@ -61,18 +61,18 @@ public class SimpleProducer {
         Destination destination = null;
         MessageProducer producer = null;
         String destinationName = null;
-        final int NUM_MSGS;
+        final int numMsgs;
 
         if ((args.length < 1) || (args.length > 2)) {
-            log.info("Usage: java SimpleProducer <destination-name> [<number-of-messages>]");
+            LOG.info("Usage: java SimpleProducer <destination-name> [<number-of-messages>]");
             System.exit(1);
         }
         destinationName = args[0];
-        log.info("Destination name is " + destinationName);
+        LOG.info("Destination name is " + destinationName);
         if (args.length == 2) {
-            NUM_MSGS = (new Integer(args[1])).intValue();
+            numMsgs = (new Integer(args[1])).intValue();
         } else {
-            NUM_MSGS = 1;
+            numMsgs = 1;
         }
 
         /*
@@ -81,7 +81,7 @@ public class SimpleProducer {
         try {
             jndiContext = new InitialContext();
         } catch (NamingException e) {
-            log.info("Could not create JNDI API context: " + e.toString());
+            LOG.info("Could not create JNDI API context: " + e.toString());
             System.exit(1);
         }
 
@@ -92,7 +92,7 @@ public class SimpleProducer {
             connectionFactory = (ConnectionFactory)jndiContext.lookup("ConnectionFactory");
             destination = (Destination)jndiContext.lookup(destinationName);
         } catch (NamingException e) {
-            log.info("JNDI API lookup failed: " + e);
+            LOG.info("JNDI API lookup failed: " + e);
             System.exit(1);
         }
 
@@ -107,9 +107,9 @@ public class SimpleProducer {
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             producer = session.createProducer(destination);
             TextMessage message = session.createTextMessage();
-            for (int i = 0; i < NUM_MSGS; i++) {
+            for (int i = 0; i < numMsgs; i++) {
                 message.setText("This is message " + (i + 1));
-                log.info("Sending message: " + message.getText());
+                LOG.info("Sending message: " + message.getText());
                 producer.send(message);
             }
 
@@ -118,7 +118,7 @@ public class SimpleProducer {
              */
             producer.send(session.createMessage());
         } catch (JMSException e) {
-            log.info("Exception occurred: " + e);
+            LOG.info("Exception occurred: " + e);
         } finally {
             if (connection != null) {
                 try {

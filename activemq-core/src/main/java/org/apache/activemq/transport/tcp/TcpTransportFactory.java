@@ -41,7 +41,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class TcpTransportFactory extends TransportFactory {
-    private static final Log log = LogFactory.getLog(TcpTransportFactory.class);
+    private static final Log LOG = LogFactory.getLog(TcpTransportFactory.class);
 
     public TransportServer doBind(String brokerId, final URI location) throws IOException {
         try {
@@ -117,7 +117,7 @@ public class TcpTransportFactory extends TransportFactory {
                 String localString = location.getScheme() + ":/" + path;
                 localLocation = new URI(localString);
             } catch (Exception e) {
-                log.warn("path isn't a valid local location for TcpTransport to use", e);
+                LOG.warn("path isn't a valid local location for TcpTransport to use", e);
             }
         }
         SocketFactory socketFactory = createSocketFactory();

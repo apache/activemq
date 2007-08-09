@@ -76,8 +76,9 @@ public class URISupport {
             } else {
                 sb.append('(');
                 for (int i = 0; i < components.length; i++) {
-                    if (i != 0)
+                    if (i != 0) {
                         sb.append(',');
+                    }
                     sb.append(components[i].toString());
                 }
                 sb.append(')');
@@ -197,8 +198,9 @@ public class URISupport {
             }
             rc.parameters = parseQuery(params.substring(p + 1));
         } else {
-            if (params.length() > 0)
+            if (params.length() > 0) {
                 rc.path = stripPrefix(params, "/");
+            }
             rc.parameters = Collections.EMPTY_MAP;
         }
     }
@@ -233,8 +235,9 @@ public class URISupport {
         }
 
         String s = str.substring(last);
-        if (s.length() != 0)
+        if (s.length() != 0) {
             l.add(s);
+        }
 
         String rc[] = new String[l.size()];
         l.toArray(rc);
@@ -242,8 +245,9 @@ public class URISupport {
     }
 
     public static String stripPrefix(String value, String prefix) {
-        if (value.startsWith(prefix))
+        if (value.startsWith(prefix)) {
             return value.substring(prefix.length());
+        }
         return value;
     }
 
@@ -257,11 +261,11 @@ public class URISupport {
                 StringBuffer rc = new StringBuffer();
                 boolean first = true;
                 for (Iterator iter = options.keySet().iterator(); iter.hasNext();) {
-                    if (first)
+                    if (first) {
                         first = false;
-                    else
+                    } else {
                         rc.append("&");
-
+                    }
                     String key = (String)iter.next();
                     String value = (String)options.get(key);
                     rc.append(URLEncoder.encode(key, "UTF-8"));
@@ -284,12 +288,13 @@ public class URISupport {
      */
     public static URI createRemainingURI(URI originalURI, Map params) throws URISyntaxException {
         String s = createQueryString(params);
-        if (s.length() == 0)
+        if (s.length() == 0) {
             s = null;
+        }
         return createURIWithQuery(originalURI, s);
     }
 
-    static public URI changeScheme(URI bindAddr, String scheme) throws URISyntaxException {
+    public static URI changeScheme(URI bindAddr, String scheme) throws URISyntaxException {
         return new URI(scheme, bindAddr.getUserInfo(), bindAddr.getHost(), bindAddr.getPort(), bindAddr.getPath(), bindAddr.getQuery(), bindAddr.getFragment());
     }
 

@@ -30,7 +30,7 @@ import org.apache.activemq.command.ActiveMQObjectMessage;
  */
 public class ActiveMQObjectMessageTest extends ActiveMQMessageTest {
 
-    public static ActiveMQObjectMessageTest SINGLETON = new ActiveMQObjectMessageTest();
+    public static final ActiveMQObjectMessageTest SINGLETON = new ActiveMQObjectMessageTest();
 
     public Object createObject() throws Exception {
         ActiveMQObjectMessage info = new ActiveMQObjectMessage();

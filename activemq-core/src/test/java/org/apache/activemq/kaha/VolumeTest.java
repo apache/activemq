@@ -24,7 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class VolumeTest extends TestCase {
-    private static final transient Log log = LogFactory.getLog(VolumeTest.class);
+    private static final transient Log LOG = LogFactory.getLog(VolumeTest.class);
 
     protected Store store;
     protected String name;
@@ -36,12 +36,12 @@ public class VolumeTest extends TestCase {
      */
     public void testListVolume() throws Exception {
         ListContainer container = store.getListContainer("volume");
-        container.setMarshaller(Store.BytesMarshaller);
+        container.setMarshaller(Store.BYTES_MARSHALLER);
         byte[] data = new byte[10];
         for (int i = 0; i < NUMBER; i++) {
             container.add(data);
             if (i % 100000 == 0) {
-                log.error("persisted " + i);
+                LOG.error("persisted " + i);
             }
 
         }
@@ -51,7 +51,7 @@ public class VolumeTest extends TestCase {
             assertNotNull(i.next());
             count++;
             if (count % 100000 == 0) {
-                log.error("retrived  " + count);
+                LOG.error("retrived  " + count);
             }
         }
         assertEquals("Different retrieved to stored", NUMBER, count);

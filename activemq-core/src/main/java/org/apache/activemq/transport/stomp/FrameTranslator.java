@@ -1,3 +1,19 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.activemq.transport.stomp;
 
 import java.io.IOException;
@@ -17,19 +33,23 @@ import org.apache.activemq.command.ActiveMQMessage;
  * from one to the other
  */
 public interface FrameTranslator {
-    public ActiveMQMessage convertFrame(StompFrame frame) throws JMSException, ProtocolException;
+    ActiveMQMessage convertFrame(StompFrame frame) throws JMSException, ProtocolException;
 
-    public StompFrame convertMessage(ActiveMQMessage message) throws IOException, JMSException;
+    StompFrame convertMessage(ActiveMQMessage message) throws IOException, JMSException;
 
-    public String convertDestination(Destination d);
+    String convertDestination(Destination d);
 
-    public ActiveMQDestination convertDestination(String name) throws ProtocolException;
+    ActiveMQDestination convertDestination(String name) throws ProtocolException;
 
     /**
      * Helper class which holds commonly needed functions used when implementing
      * FrameTranslators
      */
-    public final static class Helper {
+    static final class Helper {
+
+        private Helper() {
+        }
+
         public static void copyStandardHeadersFromMessageToFrame(ActiveMQMessage message, StompFrame command, FrameTranslator ft) throws IOException {
             final Map headers = command.getHeaders();
             headers.put(Stomp.Headers.Message.DESTINATION, ft.convertDestination(message.getDestination()));

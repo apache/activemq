@@ -34,7 +34,7 @@ import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
 public class JournalTopicAckTest extends DataFileGeneratorTestSupport {
 
 
-    public static JournalTopicAckTest SINGLETON = new JournalTopicAckTest();
+    public static final JournalTopicAckTest SINGLETON = new JournalTopicAckTest();
 
     public Object createObject() throws Exception {
         JournalTopicAck info = new JournalTopicAck();

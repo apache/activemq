@@ -38,7 +38,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
         return LogicExpression.createOR(createLessThan(value, left), createGreaterThan(value, right));
     }
 
-    static final private HashSet REGEXP_CONTROL_CHARS = new HashSet();
+    private static final HashSet REGEXP_CONTROL_CHARS = new HashSet();
 
     static {
         REGEXP_CONTROL_CHARS.add(Character.valueOf('.'));
@@ -415,8 +415,9 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
                 } else {
                     return Boolean.FALSE;
                 }
-            } else
+            } else {
                 return Boolean.FALSE;
+            }
         }
         return asBoolean(lv.compareTo(rv)) ? Boolean.TRUE : Boolean.FALSE;
     }

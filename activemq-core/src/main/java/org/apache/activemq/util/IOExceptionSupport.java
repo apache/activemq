@@ -18,7 +18,7 @@ package org.apache.activemq.util;
 
 import java.io.IOException;
 
-final public class IOExceptionSupport {
+public final class IOExceptionSupport {
 
     public static IOException create(String msg, Throwable cause) {
         IOException exception = new IOException(msg);

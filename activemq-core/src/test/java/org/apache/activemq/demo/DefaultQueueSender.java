@@ -46,7 +46,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
  */
 public class DefaultQueueSender {
 
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(DefaultQueueSender.class);
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(DefaultQueueSender.class);
 
     public static void main(String[] args) {
 
@@ -72,8 +72,8 @@ public class DefaultQueueSender {
             idx += 2;
         }
         String queueName = args[idx];
-        log.info("Connecting to: " + uri);
-        log.info("Queue name is " + queueName);
+        LOG.info("Connecting to: " + uri);
+        LOG.info("Queue name is " + queueName);
 
         if (++idx < args.length) {
             text = args[idx];
@@ -89,7 +89,7 @@ public class DefaultQueueSender {
             Message message = session.createTextMessage(text);
             producer.send(message);
         } catch (JMSException e) {
-            log.info("Exception occurred: " + e.toString());
+            LOG.info("Exception occurred: " + e.toString());
         } finally {
             if (connection != null) {
                 try {

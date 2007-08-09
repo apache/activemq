@@ -1,12 +1,12 @@
 /**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * Copyright 2005-2006 The Apache Software Foundation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,7 +36,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
 
-    private static final Log log = LogFactory.getLog(ZeroPrefetchConsumerTest.class);
+    private static final Log LOG = LogFactory.getLog(ZeroPrefetchConsumerTest.class);
 
     protected Connection connection;
     protected Queue queue;
@@ -50,7 +50,7 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
             consumer.setMessageListener(listener);
             fail("Should have thrown JMSException as we cannot use MessageListener with zero prefetch");
         } catch (JMSException e) {
-            log.info("Received expected exception : " + e);
+            LOG.info("Received expected exception : " + e);
         }
     }
 

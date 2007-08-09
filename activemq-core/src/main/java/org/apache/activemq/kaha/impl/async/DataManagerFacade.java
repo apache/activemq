@@ -56,13 +56,13 @@ public final class DataManagerFacade implements org.apache.activemq.kaha.impl.Da
         }
     }
 
-    static private StoreLocation convertToStoreLocation(Location location) {
+    private static StoreLocation convertToStoreLocation(Location location) {
         if (location == null)
             return null;
         return new StoreLocationFacade(location);
     }
 
-    static private Location convertFromStoreLocation(StoreLocation location) {
+    private static Location convertFromStoreLocation(StoreLocation location) {
 
         if (location == null)
             return null;
@@ -77,7 +77,7 @@ public final class DataManagerFacade implements org.apache.activemq.kaha.impl.Da
         return l;
     }
 
-    static final private ByteSequence FORCE_COMMAND = new ByteSequence(new byte[] {'F', 'O', 'R', 'C', 'E'});
+    private static final ByteSequence FORCE_COMMAND = new ByteSequence(new byte[] {'F', 'O', 'R', 'C', 'E'});
 
     AsyncDataManager dataManager;
     private final String name;

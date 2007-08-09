@@ -20,15 +20,15 @@ public class LongSequenceGenerator {
 
     private long lastSequenceId;
 
-    synchronized public long getNextSequenceId() {
+    public synchronized long getNextSequenceId() {
         return ++lastSequenceId;
     }
 
-    synchronized public long getLastSequenceId() {
+    public synchronized long getLastSequenceId() {
         return lastSequenceId;
     }
 
-    synchronized public void setLastSequenceId(long l) {
+    public synchronized void setLastSequenceId(long l) {
         lastSequenceId = l;
     }
 

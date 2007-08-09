@@ -25,7 +25,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class BadDummyPolicyConfigTest extends TestCase {
 
-    protected static final Log log = LogFactory.getLog(BadDummyPolicyConfigTest.class);
+    private static final Log LOG = LogFactory.getLog(BadDummyPolicyConfigTest.class);
     protected DummyPolicy policy = new DummyPolicy();
 
     public void testNoDestinationSpecified() throws Exception {
@@ -54,7 +54,7 @@ public class BadDummyPolicyConfigTest extends TestCase {
         try {
             entry.afterPropertiesSet();
         } catch (IllegalArgumentException e) {
-            log.info("Worked! Caught expected exception: " + e);
+            LOG.info("Worked! Caught expected exception: " + e);
         }
     }
 }

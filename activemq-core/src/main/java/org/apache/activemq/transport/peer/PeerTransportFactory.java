@@ -37,13 +37,10 @@ import org.apache.activemq.util.URISupport;
 
 public class PeerTransportFactory extends TransportFactory {
 
-    final public static ConcurrentHashMap brokers = new ConcurrentHashMap();
-
-    final public static ConcurrentHashMap connectors = new ConcurrentHashMap();
-
-    final public static ConcurrentHashMap servers = new ConcurrentHashMap();
-
-    private IdGenerator idGenerator = new IdGenerator("peer-");
+    public static final ConcurrentHashMap BROKERS = new ConcurrentHashMap();
+    public static final ConcurrentHashMap CONNECTORS = new ConcurrentHashMap();
+    public static final ConcurrentHashMap SERVERS = new ConcurrentHashMap();
+    private static final IdGenerator ID_GENERATOR = new IdGenerator("peer-");
 
     public Transport doConnect(URI location) throws Exception {
         VMTransportFactory vmTransportFactory = createTransportFactory(location);
@@ -69,7 +66,7 @@ public class PeerTransportFactory extends TransportFactory {
                 group = "default";
             }
             if (broker == null || broker.length() == 0) {
-                broker = idGenerator.generateSanitizedId();
+                broker = ID_GENERATOR.generateSanitizedId();
             }
 
             final Map brokerOptions = new HashMap(URISupport.parseParamters(location));

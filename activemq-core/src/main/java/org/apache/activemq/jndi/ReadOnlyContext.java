@@ -60,9 +60,10 @@ import javax.naming.spi.NamingManager;
  * @version $Revision: 1.2 $ $Date: 2005/08/27 03:52:39 $
  */
 public class ReadOnlyContext implements Context, Serializable {
-    private static final long serialVersionUID = -5754338187296859149L;
-    protected static final NameParser nameParser = new NameParserImpl();
+
     public static final String SEPARATOR = "/";
+    protected static final NameParser NAME_PARSER = new NameParserImpl();
+    private static final long serialVersionUID = -5754338187296859149L;
 
     protected final Hashtable environment; // environment for this context
     protected final Map bindings; // bindings at my level
@@ -339,11 +340,11 @@ public class ReadOnlyContext implements Context, Serializable {
     }
 
     public NameParser getNameParser(Name name) throws NamingException {
-        return nameParser;
+        return NAME_PARSER;
     }
 
     public NameParser getNameParser(String name) throws NamingException {
-        return nameParser;
+        return NAME_PARSER;
     }
 
     public void rebind(Name name, Object obj) throws NamingException {

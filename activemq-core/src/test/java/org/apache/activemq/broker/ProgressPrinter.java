@@ -29,11 +29,11 @@ public class ProgressPrinter {
         this.interval = interval;
     }
 
-    synchronized public void increment() {
+    public synchronized void increment() {
         update(++counter);
     }
 
-    synchronized public void update(long current) {
+    public synchronized void update(long current) {
         long at = 100 * current / total;
         if ((percentDone / interval) != (at / interval)) {
             percentDone = at;

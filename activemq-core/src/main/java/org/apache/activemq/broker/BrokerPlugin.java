@@ -27,6 +27,6 @@ public interface BrokerPlugin {
      * Installs the plugin into the interceptor chain of the broker, returning the new
      * intercepted broker to use.
      */
-    public Broker installPlugin(Broker broker) throws Exception;
+    Broker installPlugin(Broker broker) throws Exception;
     
 }

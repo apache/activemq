@@ -53,7 +53,7 @@ public final class PublishOnQueueConsumedMessageInTransactionTest extends TestCa
     private List messages = createConcurrentList();
     private final Object lock = new Object();
     private String[] data;
-    private String DATAFILE_ROOT = IOHelper.getDefaultDataDirectory();
+    private String dataFileRoot = IOHelper.getDefaultDataDirectory();
     private int messageCount = 3;
     private String url = "vm://localhost";
 
@@ -63,7 +63,7 @@ public final class PublishOnQueueConsumedMessageInTransactionTest extends TestCa
     // private String url = "tcp://localhost:61616";
 
     protected void setUp() throws Exception {
-        File dataFile = new File(DATAFILE_ROOT);
+        File dataFile = new File(dataFileRoot);
         recursiveDelete(dataFile);
         try {
             factory = new ActiveMQConnectionFactory(url);

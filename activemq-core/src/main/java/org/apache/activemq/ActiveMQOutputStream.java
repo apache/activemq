@@ -114,7 +114,7 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
         }
     }
 
-    synchronized public void flush() throws IOException {
+    public synchronized void flush() throws IOException {
         flushBuffer();
     }
 

@@ -28,8 +28,11 @@ import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.MessageSendTest;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.jaas.GroupPrincipal;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Tests that the broker allows/fails access to destinations based on the
@@ -38,10 +41,11 @@ import org.apache.activemq.jaas.GroupPrincipal;
  * @version $Revision$
  */
 public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
+    private static final Log LOG = LogFactory.getLog(SimpleSecurityBrokerSystemTest.class);
 
-    static final GroupPrincipal guests = new GroupPrincipal("guests");
-    static final GroupPrincipal users = new GroupPrincipal("users");
-    static final GroupPrincipal admins = new GroupPrincipal("admins");
+    static final GroupPrincipal GUESTS = new GroupPrincipal("guests");
+    static final GroupPrincipal USERS = new GroupPrincipal("users");
+    static final GroupPrincipal ADMINS = new GroupPrincipal("admins");
 
     public BrokerPlugin authorizationPlugin;
     public BrokerPlugin authenticationPlugin;
@@ -55,7 +59,7 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
                 System.setProperty("java.security.auth.login.config", path);
             }
         }
-        log.info("Path to login config: " + path);
+        LOG.info("Path to login config: " + path);
     }
 
     public static Test suite() {
@@ -68,35 +72,35 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
 
     public static AuthorizationMap createAuthorizationMap() {
         DestinationMap readAccess = new DestinationMap();
-        readAccess.put(new ActiveMQQueue(">"), admins);
-        readAccess.put(new ActiveMQQueue("USERS.>"), users);
-        readAccess.put(new ActiveMQQueue("GUEST.>"), guests);
-        readAccess.put(new ActiveMQTopic(">"), admins);
-        readAccess.put(new ActiveMQTopic("USERS.>"), users);
-        readAccess.put(new ActiveMQTopic("GUEST.>"), guests);
+        readAccess.put(new ActiveMQQueue(">"), ADMINS);
+        readAccess.put(new ActiveMQQueue("USERS.>"), USERS);
+        readAccess.put(new ActiveMQQueue("GUEST.>"), GUESTS);
+        readAccess.put(new ActiveMQTopic(">"), ADMINS);
+        readAccess.put(new ActiveMQTopic("USERS.>"), USERS);
+        readAccess.put(new ActiveMQTopic("GUEST.>"), GUESTS);
 
         DestinationMap writeAccess = new DestinationMap();
-        writeAccess.put(new ActiveMQQueue(">"), admins);
-        writeAccess.put(new ActiveMQQueue("USERS.>"), users);
-        writeAccess.put(new ActiveMQQueue("GUEST.>"), users);
-        writeAccess.put(new ActiveMQQueue("GUEST.>"), guests);
-        writeAccess.put(new ActiveMQTopic(">"), admins);
-        writeAccess.put(new ActiveMQTopic("USERS.>"), users);
-        writeAccess.put(new ActiveMQTopic("GUEST.>"), users);
-        writeAccess.put(new ActiveMQTopic("GUEST.>"), guests);
+        writeAccess.put(new ActiveMQQueue(">"), ADMINS);
+        writeAccess.put(new ActiveMQQueue("USERS.>"), USERS);
+        writeAccess.put(new ActiveMQQueue("GUEST.>"), USERS);
+        writeAccess.put(new ActiveMQQueue("GUEST.>"), GUESTS);
+        writeAccess.put(new ActiveMQTopic(">"), ADMINS);
+        writeAccess.put(new ActiveMQTopic("USERS.>"), USERS);
+        writeAccess.put(new ActiveMQTopic("GUEST.>"), USERS);
+        writeAccess.put(new ActiveMQTopic("GUEST.>"), GUESTS);
 
-        readAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), guests);
-        readAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), users);
-        writeAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), guests);
-        writeAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), users);
+        readAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), GUESTS);
+        readAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), USERS);
+        writeAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), GUESTS);
+        writeAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), USERS);
 
         DestinationMap adminAccess = new DestinationMap();
-        adminAccess.put(new ActiveMQTopic(">"), admins);
-        adminAccess.put(new ActiveMQTopic(">"), users);
-        adminAccess.put(new ActiveMQTopic(">"), guests);
-        adminAccess.put(new ActiveMQQueue(">"), admins);
-        adminAccess.put(new ActiveMQQueue(">"), users);
-        adminAccess.put(new ActiveMQQueue(">"), guests);
+        adminAccess.put(new ActiveMQTopic(">"), ADMINS);
+        adminAccess.put(new ActiveMQTopic(">"), USERS);
+        adminAccess.put(new ActiveMQTopic(">"), GUESTS);
+        adminAccess.put(new ActiveMQQueue(">"), ADMINS);
+        adminAccess.put(new ActiveMQQueue(">"), USERS);
+        adminAccess.put(new ActiveMQQueue(">"), GUESTS);
 
         return new SimpleAuthorizationMap(writeAccess, readAccess, adminAccess);
     }
@@ -110,9 +114,9 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
             u.put("guest", "password");
 
             HashMap groups = new HashMap();
-            groups.put("system", new HashSet(Arrays.asList(new Object[] { admins, users })));
-            groups.put("user", new HashSet(Arrays.asList(new Object[] { users })));
-            groups.put("guest", new HashSet(Arrays.asList(new Object[] { guests })));
+            groups.put("system", new HashSet(Arrays.asList(new Object[] { ADMINS, USERS })));
+            groups.put("user", new HashSet(Arrays.asList(new Object[] { USERS })));
+            groups.put("guest", new HashSet(Arrays.asList(new Object[] { GUESTS })));
 
             return new SimpleAuthenticationBroker(broker, u, groups);
         }

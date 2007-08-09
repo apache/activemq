@@ -30,7 +30,7 @@ import org.apache.activemq.command.Response;
  */
 public class ResponseTest extends BaseCommandTestSupport {
 
-    public static ResponseTest SINGLETON = new ResponseTest();
+    public static final ResponseTest SINGLETON = new ResponseTest();
 
     public Object createObject() throws Exception {
         Response info = new Response();

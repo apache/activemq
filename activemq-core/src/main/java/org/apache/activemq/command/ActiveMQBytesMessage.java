@@ -94,10 +94,10 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_BYTES_MESSAGE;
 
-    transient protected DataOutputStream dataOut;
-    transient protected ByteArrayOutputStream bytesOut;
-    transient protected DataInputStream dataIn;
-    transient protected int length;
+    protected transient DataOutputStream dataOut;
+    protected transient ByteArrayOutputStream bytesOut;
+    protected transient DataInputStream dataIn;
+    protected transient int length;
 
     public Message copy() {
         ActiveMQBytesMessage copy = new ActiveMQBytesMessage();

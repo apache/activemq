@@ -23,17 +23,20 @@ import org.apache.activemq.filter.Expression;
 import org.apache.activemq.filter.LogicExpression;
 import org.apache.activemq.filter.PropertyExpression;
 import org.apache.activemq.filter.XPathExpression;
+import org.apache.activemq.spring.ConsumerBean;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision: 1.2 $
  */
 public class SelectorParserTest extends TestCase {
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(SelectorParserTest.class);
+    private static final Log LOG = LogFactory.getLog(SelectorParserTest.class);
 
     public void testParseXPath() throws Exception {
         BooleanExpression filter = parse("XPATH '//title[@lang=''eng'']'");
         assertTrue("Created XPath expression", filter instanceof XPathExpression);
-        log.info("Expression: " + filter);
+        LOG.info("Expression: " + filter);
     }
 
     public void testParseWithParensAround() throws Exception {
@@ -41,7 +44,7 @@ public class SelectorParserTest extends TestCase {
 
         for (int i = 0; i < values.length; i++) {
             String value = values[i];
-            log.info("Parsing: " + value);
+            LOG.info("Parsing: " + value);
 
             BooleanExpression andExpression = parse(value);
             assertTrue("Created LogicExpression expression", andExpression instanceof LogicExpression);

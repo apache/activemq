@@ -348,7 +348,7 @@ public final class AsyncDataManager {
         }
     }
 
-    synchronized public void consolidateDataFilesNotIn(Set<Integer> inUse) throws IOException {
+    public synchronized void consolidateDataFilesNotIn(Set<Integer> inUse) throws IOException {
 
         // Substract and the difference is the set of files that are no longer
         // needed :)

@@ -45,12 +45,12 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.9 $
  */
 public class BrokerBenchmark extends BrokerTestSupport {
-    private static final transient Log log = LogFactory.getLog(BrokerBenchmark.class);
+    private static final transient Log LOG = LogFactory.getLog(BrokerBenchmark.class);
 
-    public int PRODUCE_COUNT = Integer.parseInt(System.getProperty("PRODUCE_COUNT", "10000"));
+    public int produceCount = Integer.parseInt(System.getProperty("PRODUCE_COUNT", "10000"));
     public ActiveMQDestination destination;
-    public int PRODUCER_COUNT;
-    public int CONSUMER_COUNT;
+    public int prodcuerCount;
+    public int consumerCount;
     public boolean deliveryMode;
 
     public void initCombosForTestPerformance() {
@@ -63,13 +63,13 @@ public class BrokerBenchmark extends BrokerTestSupport {
 
     public void testPerformance() throws Exception {
 
-        log.info("Running Benchmark for destination=" + destination + ", producers=" + PRODUCER_COUNT + ", consumers=" + CONSUMER_COUNT + ", deliveryMode=" + deliveryMode);
-        final int CONSUME_COUNT = destination.isTopic() ? CONSUMER_COUNT * PRODUCE_COUNT : PRODUCE_COUNT;
+        LOG.info("Running Benchmark for destination=" + destination + ", producers=" + prodcuerCount + ", consumers=" + consumerCount + ", deliveryMode=" + deliveryMode);
+        final int consumeCount = destination.isTopic() ? consumerCount * produceCount : produceCount;
 
-        final Semaphore consumersStarted = new Semaphore(1 - CONSUMER_COUNT);
-        final Semaphore producersFinished = new Semaphore(1 - PRODUCER_COUNT);
-        final Semaphore consumersFinished = new Semaphore(1 - CONSUMER_COUNT);
-        final ProgressPrinter printer = new ProgressPrinter(PRODUCE_COUNT + CONSUME_COUNT, 10);
+        final Semaphore consumersStarted = new Semaphore(1 - consumerCount);
+        final Semaphore producersFinished = new Semaphore(1 - prodcuerCount);
+        final Semaphore consumersFinished = new Semaphore(1 - consumerCount);
+        final ProgressPrinter printer = new ProgressPrinter(produceCount + consumeCount, 10);
 
         // Start a producer and consumer
 
@@ -78,7 +78,7 @@ public class BrokerBenchmark extends BrokerTestSupport {
         long start = System.currentTimeMillis();
 
         final AtomicInteger receiveCounter = new AtomicInteger(0);
-        for (int i = 0; i < CONSUMER_COUNT; i++) {
+        for (int i = 0; i < consumerCount; i++) {
             new Thread() {
                 public void run() {
                     try {
@@ -96,7 +96,7 @@ public class BrokerBenchmark extends BrokerTestSupport {
 
                         consumersStarted.release();
 
-                        while (receiveCounter.get() < CONSUME_COUNT) {
+                        while (receiveCounter.get() < consumeCount) {
 
                             int counter = 0;
                             // Get a least 1 message.
@@ -120,8 +120,8 @@ public class BrokerBenchmark extends BrokerTestSupport {
 
                             if (msg != null) {
                                 connection.send(createAck(consumerInfo, msg, counter, MessageAck.STANDARD_ACK_TYPE));
-                            } else if (receiveCounter.get() < CONSUME_COUNT) {
-                                log.info("Consumer stall, waiting for message #" + receiveCounter.get() + 1);
+                            } else if (receiveCounter.get() < consumeCount) {
+                                LOG.info("Consumer stall, waiting for message #" + receiveCounter.get() + 1);
                             }
                         }
 
@@ -142,7 +142,7 @@ public class BrokerBenchmark extends BrokerTestSupport {
         consumersStarted.acquire();
 
         // Send the messages in an async thread.
-        for (int i = 0; i < PRODUCER_COUNT; i++) {
+        for (int i = 0; i < prodcuerCount; i++) {
             new Thread() {
                 public void run() {
                     try {
@@ -155,7 +155,7 @@ public class BrokerBenchmark extends BrokerTestSupport {
                         connection.send(sessionInfo);
                         connection.send(producerInfo);
 
-                        for (int i = 0; i < PRODUCE_COUNT / PRODUCER_COUNT; i++) {
+                        for (int i = 0; i < produceCount / prodcuerCount; i++) {
                             Message message = createMessage(producerInfo, destination);
                             message.setPersistent(deliveryMode);
                             message.setResponseRequired(false);
@@ -176,9 +176,9 @@ public class BrokerBenchmark extends BrokerTestSupport {
         consumersFinished.acquire();
         long end2 = System.currentTimeMillis();
 
-        log.info("Results for destination=" + destination + ", producers=" + PRODUCER_COUNT + ", consumers=" + CONSUMER_COUNT + ", deliveryMode=" + deliveryMode);
-        log.info("Produced at messages/sec: " + (PRODUCE_COUNT * 1000.0 / (end1 - start)));
-        log.info("Consumed at messages/sec: " + (CONSUME_COUNT * 1000.0 / (end2 - start)));
+        LOG.info("Results for destination=" + destination + ", producers=" + prodcuerCount + ", consumers=" + consumerCount + ", deliveryMode=" + deliveryMode);
+        LOG.info("Produced at messages/sec: " + (produceCount * 1000.0 / (end1 - start)));
+        LOG.info("Consumed at messages/sec: " + (consumeCount * 1000.0 / (end2 - start)));
         profilerPause("Benchmark done.  Stop profiler ");
     }
 

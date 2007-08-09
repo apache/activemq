@@ -37,7 +37,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1.1.1 $
  */
 public class JmsQueueConnector extends JmsConnector {
-    private static final Log log = LogFactory.getLog(JmsQueueConnector.class);
+    private static final Log LOG = LogFactory.getLog(JmsQueueConnector.class);
     private String outboundQueueConnectionFactoryName;
     private String localConnectionFactoryName;
     private QueueConnectionFactory outboundQueueConnectionFactory;
@@ -58,7 +58,7 @@ public class JmsQueueConnector extends JmsConnector {
                 initializeInboundQueueBridges();
                 initializeOutboundQueueBridges();
             } catch (Exception e) {
-                log.error("Failed to initialize the JMSConnector", e);
+                LOG.error("Failed to initialize the JMSConnector", e);
             }
         }
         return result;
@@ -336,9 +336,9 @@ public class JmsQueueConnector extends JmsConnector {
                     }
                     bridge.setJmsConnector(this);
                     bridge.start();
-                    log.info("Created replyTo bridge for " + replyToProducerQueue);
+                    LOG.info("Created replyTo bridge for " + replyToProducerQueue);
                 } catch (Exception e) {
-                    log.error("Failed to create replyTo bridge for queue: " + replyToProducerQueue, e);
+                    LOG.error("Failed to create replyTo bridge for queue: " + replyToProducerQueue, e);
                     return null;
                 }
                 replyToBridges.put(replyToProducerQueue, bridge);
@@ -367,9 +367,9 @@ public class JmsQueueConnector extends JmsConnector {
                     }
                     bridge.setJmsConnector(this);
                     bridge.start();
-                    log.info("Created replyTo bridge for " + replyToProducerQueue);
+                    LOG.info("Created replyTo bridge for " + replyToProducerQueue);
                 } catch (Exception e) {
-                    log.error("Failed to create replyTo bridge for queue: " + replyToProducerQueue, e);
+                    LOG.error("Failed to create replyTo bridge for queue: " + replyToProducerQueue, e);
                     return null;
                 }
                 replyToBridges.put(replyToProducerQueue, bridge);
@@ -392,7 +392,7 @@ public class JmsQueueConnector extends JmsConnector {
                 result = (Queue)jndiOutboundTemplate.lookup(queueName, Queue.class);
             } catch (NamingException e1) {
                 String errStr = "Failed to look-up Queue for name: " + queueName;
-                log.error(errStr, e);
+                LOG.error(errStr, e);
                 JMSException jmsEx = new JMSException(errStr);
                 jmsEx.setLinkedException(e1);
                 throw jmsEx;

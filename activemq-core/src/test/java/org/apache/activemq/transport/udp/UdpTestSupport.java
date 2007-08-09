@@ -41,7 +41,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public abstract class UdpTestSupport extends TestCase implements TransportListener {
 
-    protected static final Log log = LogFactory.getLog(UdpTestSupport.class);
+    private static final Log LOG = LogFactory.getLog(UdpTestSupport.class);
 
     protected Transport producer;
     protected Transport consumer;
@@ -62,7 +62,7 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
         expected.setPrefetchSize(3456);
 
         try {
-            log.info("About to send: " + expected);
+            LOG.info("About to send: " + expected);
             producer.oneway(expected);
 
             Command received = assertCommandReceived();
@@ -72,7 +72,7 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
             assertEquals("isExclusive", expected.isExclusive(), actual.isExclusive());
             assertEquals("getPrefetchSize", expected.getPrefetchSize(), actual.getPrefetchSize());
         } catch (Exception e) {
-            log.info("Caught: " + e);
+            LOG.info("Caught: " + e);
             e.printStackTrace();
             fail("Failed to send to transport: " + e);
         }
@@ -99,7 +99,7 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
         expected.setDestination(destination);
 
         try {
-            log.info("About to send message of type: " + expected.getClass());
+            LOG.info("About to send message of type: " + expected.getClass());
             producer.oneway(expected);
 
             // lets send a dummy command to ensure things don't block if we
@@ -116,9 +116,9 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
             assertEquals("getDestination", expected.getDestination(), actual.getDestination());
             assertEquals("getText", expected.getText(), actual.getText());
 
-            log.info("Received text message with: " + actual.getText().length() + " character(s)");
+            LOG.info("Received text message with: " + actual.getText().length() + " character(s)");
         } catch (Exception e) {
-            log.info("Caught: " + e);
+            LOG.info("Caught: " + e);
             e.printStackTrace();
             fail("Failed to send to transport: " + e);
         }
@@ -162,11 +162,11 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
         producer = createProducer();
         producer.setTransportListener(new TransportListener() {
             public void onCommand(Object command) {
-                log.info("Producer received: " + command);
+                LOG.info("Producer received: " + command);
             }
 
             public void onException(IOException error) {
-                log.info("Producer exception: " + error);
+                LOG.info("Producer exception: " + error);
                 error.printStackTrace();
             }
 
@@ -195,7 +195,7 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
     public void onCommand(Object o) {
         final Command command = (Command)o;
         if (command instanceof WireFormatInfo) {
-            log.info("Got WireFormatInfo: " + command);
+            LOG.info("Got WireFormatInfo: " + command);
         } else {
             if (command.isResponseRequired()) {
                 // lets send a response back...
@@ -203,16 +203,16 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
 
             }
             if (large) {
-                log.info("### Received command: " + command.getClass() + " with id: " + command.getCommandId());
+                LOG.info("### Received command: " + command.getClass() + " with id: " + command.getCommandId());
             } else {
-                log.info("### Received command: " + command);
+                LOG.info("### Received command: " + command);
             }
 
             synchronized (lock) {
                 if (receivedCommand == null) {
                     receivedCommand = command;
                 } else {
-                    log.info("Ignoring superfluous command: " + command);
+                    LOG.info("Ignoring superfluous command: " + command);
                 }
                 lock.notifyAll();
             }
@@ -225,23 +225,23 @@ public abstract class UdpTestSupport extends TestCase implements TransportListen
         try {
             consumer.oneway(response);
         } catch (IOException e) {
-            log.info("Caught: " + e);
+            LOG.info("Caught: " + e);
             e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
 
     public void onException(IOException error) {
-        log.info("### Received error: " + error);
+        LOG.info("### Received error: " + error);
         error.printStackTrace();
     }
 
     public void transportInterupted() {
-        log.info("### Transport interrupted");
+        LOG.info("### Transport interrupted");
     }
 
     public void transportResumed() {
-        log.info("### Transport resumed");
+        LOG.info("### Transport resumed");
     }
 
     protected Command assertCommandReceived() throws InterruptedException {

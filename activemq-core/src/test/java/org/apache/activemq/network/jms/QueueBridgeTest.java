@@ -39,7 +39,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class QueueBridgeTest extends TestCase implements MessageListener {
 
-    protected static final Log log = LogFactory.getLog(QueueBridgeTest.class);
+    private static final Log LOG = LogFactory.getLog(QueueBridgeTest.class);
 
     protected static final int MESSAGE_COUNT = 10;
     protected AbstractApplicationContext context;
@@ -90,7 +90,7 @@ public class QueueBridgeTest extends TestCase implements MessageListener {
             TextMessage msg = requestServerSession.createTextMessage("test msg: " + i);
             TextMessage result = (TextMessage)requestor.request(msg);
             assertNotNull(result);
-            log.info(result.getText());
+            LOG.info(result.getText());
         }
     }
 

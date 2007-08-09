@@ -28,12 +28,16 @@ import javax.jms.MessageListener;
 import javax.jms.Session;
 
 import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.ReconnectWithSameClientIDTest;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * 
  * @version $Revision$
  */
 public class ConsumerListenerTest extends EmbeddedBrokerTestSupport implements ConsumerListener {
+    private static final Log LOG = LogFactory.getLog(ConsumerListenerTest.class);
 
     protected Session consumerSession1;
     protected Session consumerSession2;

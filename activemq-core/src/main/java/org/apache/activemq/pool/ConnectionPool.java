@@ -90,7 +90,7 @@ public class ConnectionPool {
         }
     }
 
-    synchronized public ActiveMQConnection getConnection() {
+    public synchronized ActiveMQConnection getConnection() {
         return connection;
     }
 
@@ -126,7 +126,7 @@ public class ConnectionPool {
         }
     }
 
-    synchronized public void close() {
+    public synchronized void close() {
         if (connection != null) {
             try {
                 Iterator i = cache.values().iterator();
@@ -149,12 +149,12 @@ public class ConnectionPool {
         }
     }
 
-    synchronized public void incrementReferenceCount() {
+    public synchronized void incrementReferenceCount() {
         referenceCount++;
         lastUsed = System.currentTimeMillis();
     }
 
-    synchronized public void decrementReferenceCount() {
+    public synchronized void decrementReferenceCount() {
         referenceCount--;
         lastUsed = System.currentTimeMillis();
         if (referenceCount == 0) {
@@ -165,7 +165,7 @@ public class ConnectionPool {
     /**
      * @return true if this connection has expired.
      */
-    synchronized public boolean expiredCheck() {
+    public synchronized boolean expiredCheck() {
         if (connection == null) {
             return true;
         }

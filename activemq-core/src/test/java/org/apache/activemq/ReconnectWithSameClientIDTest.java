@@ -21,11 +21,16 @@ import javax.jms.InvalidClientIDException;
 import javax.jms.JMSException;
 import javax.jms.Session;
 
+import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * 
  * @version $Revision$
  */
 public class ReconnectWithSameClientIDTest extends EmbeddedBrokerTestSupport {
+    private static final Log LOG = LogFactory.getLog(ReconnectWithSameClientIDTest.class);
 
     protected Connection connection;
     protected boolean transacted;

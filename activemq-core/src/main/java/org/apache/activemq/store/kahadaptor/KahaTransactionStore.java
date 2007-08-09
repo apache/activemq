@@ -116,7 +116,7 @@ public class KahaTransactionStore implements TransactionStore {
     public void stop() throws Exception {
     }
 
-    synchronized public void recover(TransactionRecoveryListener listener) throws IOException {
+    public synchronized void recover(TransactionRecoveryListener listener) throws IOException {
         for (Iterator i = prepared.entrySet().iterator(); i.hasNext();) {
             Map.Entry entry = (Entry)i.next();
             XATransactionId xid = (XATransactionId)entry.getKey();

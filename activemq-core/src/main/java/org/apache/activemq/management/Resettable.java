@@ -26,5 +26,5 @@ public interface Resettable {
     /**
      * Reset the statistic
      */
-    public void reset();
+    void reset();
 }

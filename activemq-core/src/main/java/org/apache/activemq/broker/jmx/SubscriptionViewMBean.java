@@ -26,68 +26,68 @@ public interface SubscriptionViewMBean {
     /**
      * @return the clientId of the Connection the Subscription is on
      */
-    public String getClientId();
+    String getClientId();
 
     /**
      * @return the id of the Connection the Subscription is on
      */
-    public String getConnectionId();
+    String getConnectionId();
 
     /**
      * @return the id of the Session the subscription is on
      */
-    public long getSessionId();
+    long getSessionId();
 
     /**
      * @return the id of the Subscription
      */
-    public long getSubcriptionId();
+    long getSubcriptionId();
 
     /**
      * @return the destination name
      */
-    public String getDestinationName();
+    String getDestinationName();
 
     /**
      * @return the JMS selector on the current subscription
      */
-    public String getSelector();
+    String getSelector();
 
     /**
      * Attempts to change the current active selector on the subscription. This
      * operation is not supported for persistent topics.
      */
-    public void setSelector(String selector) throws InvalidSelectorException, UnsupportedOperationException;
+    void setSelector(String selector) throws InvalidSelectorException, UnsupportedOperationException;
 
     /**
      * @return true if the destination is a Queue
      */
-    public boolean isDestinationQueue();
+    boolean isDestinationQueue();
 
     /**
      * @return true of the destination is a Topic
      */
-    public boolean isDestinationTopic();
+    boolean isDestinationTopic();
 
     /**
      * @return true if the destination is temporary
      */
-    public boolean isDestinationTemporary();
+    boolean isDestinationTemporary();
 
     /**
      * @return true if the subscriber is active
      */
-    public boolean isActive();
+    boolean isActive();
 
     /**
      * @return number of messages pending delivery
      */
-    public int getPendingQueueSize();
+    int getPendingQueueSize();
 
     /**
      * @return number of messages dispatched
      */
-    public int getDispatchedQueueSize();
+    int getDispatchedQueueSize();
 
     /**
      * @return number of messages that matched the subscription
@@ -107,27 +107,27 @@ public interface SubscriptionViewMBean {
     /**
      * @return the prefetch that has been configured for this subscriber
      */
-    public int getPrefetchSize();
+    int getPrefetchSize();
 
     /**
      * @return whether or not the subscriber is retroactive or not
      */
-    public boolean isRetroactive();
+    boolean isRetroactive();
 
     /**
      * @return whether or not the subscriber is an exclusive consumer
      */
-    public boolean isExclusive();
+    boolean isExclusive();
 
     /**
      * @return whether or not the subscriber is durable (persistent)
      */
-    public boolean isDurable();
+    boolean isDurable();
 
     /**
      * @return whether or not the subscriber ignores local messages
      */
-    public boolean isNoLocal();
+    boolean isNoLocal();
 
     /**
      * @return the maximum number of pending messages allowed in addition to the
@@ -135,16 +135,16 @@ public interface SubscriptionViewMBean {
      *         perform eviction of messages for slow consumers on non-durable
      *         topics.
      */
-    public int getMaximumPendingMessageLimit();
+    int getMaximumPendingMessageLimit();
 
     /**
      * @return the consumer priority
      */
-    public byte getPriority();
+    byte getPriority();
 
     /**
      * @return the name of the consumer which is only used for durable
      *         consumers.
      */
-    public String getSubcriptionName();
+    String getSubcriptionName();
 }

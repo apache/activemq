@@ -33,7 +33,7 @@ import org.apache.activemq.command.MessageDispatch;
 public class MessageDispatchTest extends BaseCommandTestSupport {
 
 
-    public static MessageDispatchTest SINGLETON = new MessageDispatchTest();
+    public static final MessageDispatchTest SINGLETON = new MessageDispatchTest();
 
     public Object createObject() throws Exception {
         MessageDispatch info = new MessageDispatch();

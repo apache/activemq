@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1 $
  */
 public abstract class TransportSupport extends ServiceSupport implements Transport {
-    private static final Log log = LogFactory.getLog(TransportSupport.class);
+    private static final Log LOG = LogFactory.getLog(TransportSupport.class);
 
     TransportListener transportListener;
 
@@ -82,7 +82,7 @@ public abstract class TransportSupport extends ServiceSupport implements Transpo
             if (transportListener != null) {
                 transportListener.onCommand(command);
             } else {
-                log.error("No transportListener available to process inbound command: " + command);
+                LOG.error("No transportListener available to process inbound command: " + command);
             }
         }
     }

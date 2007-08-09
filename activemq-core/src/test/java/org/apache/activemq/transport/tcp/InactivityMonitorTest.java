@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -6,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,8 +32,12 @@ import org.apache.activemq.transport.TransportAcceptListener;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.stomp.StompTest;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class InactivityMonitorTest extends CombinationTestSupport implements TransportAcceptListener {
+    private static final Log LOG = LogFactory.getLog(InactivityMonitorTest.class);
 
     private TransportServer server;
     private Transport clientTransport;
@@ -71,7 +75,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
 
             public void onException(IOException error) {
                 if (!ignoreClientError.get()) {
-                    log.info("Client transport error:");
+                    LOG.info("Client transport error:");
                     error.printStackTrace();
                     clientErrorCount.incrementAndGet();
                 }
@@ -101,12 +105,15 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
         ignoreClientError.set(true);
         ignoreServerError.set(true);
         try {
-            if (clientTransport != null)
+            if (clientTransport != null) {
                 clientTransport.stop();
-            if (serverTransport != null)
+            }
+            if (serverTransport != null) {
                 serverTransport.stop();
-            if (server != null)
+            }
+            if (server != null) {
                 server.stop();
+            }
         } catch (Throwable e) {
             e.printStackTrace();
         }
@@ -115,7 +122,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
 
     public void onAccept(Transport transport) {
         try {
-            log.info("[" + getName() + "] Server Accepted a Connection");
+            LOG.info("[" + getName() + "] Server Accepted a Connection");
             serverTransport = transport;
             serverTransport.setTransportListener(new TransportListener() {
                 public void onCommand(Object command) {
@@ -127,7 +134,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
 
                 public void onException(IOException error) {
                     if (!ignoreClientError.get()) {
-                        log.info("Server transport error:");
+                        LOG.info("Server transport error:");
                         error.printStackTrace();
                         serverErrorCount.incrementAndGet();
                     }
@@ -166,7 +173,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
 
             public void onException(IOException error) {
                 if (!ignoreClientError.get()) {
-                    log.info("Client transport error:");
+                    LOG.info("Client transport error:");
                     error.printStackTrace();
                     clientErrorCount.incrementAndGet();
                 }
@@ -222,7 +229,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
         addCombinationValues("serverRunOnCommand", new Object[] {new Runnable() {
             public void run() {
                 try {
-                    log.info("Sleeping");
+                    LOG.info("Sleeping");
                     Thread.sleep(4000);
                 } catch (InterruptedException e) {
                 }

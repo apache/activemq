@@ -37,7 +37,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1.1.1 $
  */
 public class JmsTopicConnector extends JmsConnector {
-    private static final Log log = LogFactory.getLog(JmsTopicConnector.class);
+    private static final Log LOG = LogFactory.getLog(JmsTopicConnector.class);
     private String outboundTopicConnectionFactoryName;
     private String localConnectionFactoryName;
     private TopicConnectionFactory outboundTopicConnectionFactory;
@@ -58,7 +58,7 @@ public class JmsTopicConnector extends JmsConnector {
                 initializeInboundTopicBridges();
                 initializeOutboundTopicBridges();
             } catch (Exception e) {
-                log.error("Failed to initialize the JMSConnector", e);
+                LOG.error("Failed to initialize the JMSConnector", e);
             }
         }
         return result;
@@ -336,9 +336,9 @@ public class JmsTopicConnector extends JmsConnector {
                     }
                     bridge.setJmsConnector(this);
                     bridge.start();
-                    log.info("Created replyTo bridge for " + replyToProducerTopic);
+                    LOG.info("Created replyTo bridge for " + replyToProducerTopic);
                 } catch (Exception e) {
-                    log.error("Failed to create replyTo bridge for topic: " + replyToProducerTopic, e);
+                    LOG.error("Failed to create replyTo bridge for topic: " + replyToProducerTopic, e);
                     return null;
                 }
                 replyToBridges.put(replyToProducerTopic, bridge);
@@ -367,9 +367,9 @@ public class JmsTopicConnector extends JmsConnector {
                     }
                     bridge.setJmsConnector(this);
                     bridge.start();
-                    log.info("Created replyTo bridge for " + replyToProducerTopic);
+                    LOG.info("Created replyTo bridge for " + replyToProducerTopic);
                 } catch (Exception e) {
-                    log.error("Failed to create replyTo bridge for topic: " + replyToProducerTopic, e);
+                    LOG.error("Failed to create replyTo bridge for topic: " + replyToProducerTopic, e);
                     return null;
                 }
                 replyToBridges.put(replyToProducerTopic, bridge);
@@ -392,7 +392,7 @@ public class JmsTopicConnector extends JmsConnector {
                 result = (Topic)jndiOutboundTemplate.lookup(topicName, Topic.class);
             } catch (NamingException e1) {
                 String errStr = "Failed to look-up Topic for name: " + topicName;
-                log.error(errStr, e);
+                LOG.error(errStr, e);
                 JMSException jmsEx = new JMSException(errStr);
                 jmsEx.setLinkedException(e1);
                 throw jmsEx;

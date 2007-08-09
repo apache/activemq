@@ -35,7 +35,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class NestedMapMessageTest extends JmsTopicSendReceiveWithTwoConnectionsAndEmbeddedBrokerTest {
 
-    private static final Log log = LogFactory.getLog(NestedMapMessageTest.class);
+    private static final Log LOG = LogFactory.getLog(NestedMapMessageTest.class);
 
     protected void assertMessageValid(int index, Message message) throws JMSException {
         assertTrue("Should be a MapMessage: " + message, message instanceof MapMessage);
@@ -59,13 +59,13 @@ public class NestedMapMessageTest extends JmsTopicSendReceiveWithTwoConnectionsA
         value = map.get("y");
         assertTrue("mapField.d.y is a List", value instanceof List);
         List list = (List) value;
-        log.debug("mapField.d.y: " + list);
+        LOG.debug("mapField.d.y: " + list);
         assertEquals("listField.size", 3, list.size());
 
-        log.debug("Found map: " + map);
+        LOG.debug("Found map: " + map);
 
         list = (List) mapMessage.getObject("listField");
-        log.debug("listField: " + list);
+        LOG.debug("listField: " + list);
         assertEquals("listField.size", 3, list.size());
         assertEquals("listField[0]", "a", list.get(0));
         assertEquals("listField[1]", "b", list.get(1));

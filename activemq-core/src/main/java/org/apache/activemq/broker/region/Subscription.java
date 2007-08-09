@@ -140,50 +140,50 @@ public interface Subscription extends SubscriptionRecovery {
     /**
      * @return the JMS selector on the current subscription
      */
-    public String getSelector();
+    String getSelector();
     
     /**
      * Attempts to change the current active selector on the subscription.
      * This operation is not supported for persistent topics.
      */
-    public void setSelector(String selector) throws InvalidSelectorException, UnsupportedOperationException;
+    void setSelector(String selector) throws InvalidSelectorException, UnsupportedOperationException;
 
     /**
      * @return the JMX object name that this subscription was registered as if applicable
      */
-    public ObjectName getObjectName();
+    ObjectName getObjectName();
 
     /**
      * Set when the subscription is registered in JMX
      */
-    public void setObjectName(ObjectName objectName);
+    void setObjectName(ObjectName objectName);
     
     /**
      * @return true when 60% or more room is left for dispatching messages
      */
-    public boolean isLowWaterMark();
+    boolean isLowWaterMark();
     
     /**
      * @return true when 10% or less room is left for dispatching messages
      */
-    public boolean isHighWaterMark();
+    boolean isHighWaterMark();
     
     /**
      * inform the MessageConsumer on the client to change it's prefetch
      * @param newPrefetch
      */
-    public void updateConsumerPrefetch(int newPrefetch);
+    void updateConsumerPrefetch(int newPrefetch);
     
     /**
      * optimize message consumer prefetch if the consumer supports it
      *
      */
-    public void optimizePrefetch();
+    void optimizePrefetch();
     
     /**
      * Called when the subscription is destroyed.
      */
-    public void destroy();
+    void destroy();
 
     /**
      * @return the prefetch size that is configured for the subscription
@@ -196,6 +196,6 @@ public interface Subscription extends SubscriptionRecovery {
      * @see org.apache.activemq.region.cursors.PendingMessageCursor
      * @return true if recovery required
      */
-    public boolean isRecoveryRequired();
+    boolean isRecoveryRequired();
 
 }

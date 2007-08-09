@@ -51,13 +51,13 @@ public final class JournalFacade implements Journal {
         }
     }
 
-    static private RecordLocation convertToRecordLocation(Location location) {
+    private static RecordLocation convertToRecordLocation(Location location) {
         if (location == null)
             return null;
         return new RecordLocationFacade(location);
     }
 
-    static private Location convertFromRecordLocation(RecordLocation location) {
+    private static Location convertFromRecordLocation(RecordLocation location) {
 
         if (location == null)
             return null;

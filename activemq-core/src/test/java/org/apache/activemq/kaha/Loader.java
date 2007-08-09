@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
  */
 class Loader extends Thread {
 
-    protected static final Log log = LogFactory.getLog(Loader.class);
+    private static final Log LOG = LogFactory.getLog(Loader.class);
 
     private String name;
     private Store store;
@@ -67,7 +67,7 @@ class Loader extends Thread {
             }
             long finishLoad = System.currentTimeMillis();
             long totalLoadTime = finishLoad - startLoad;
-            log.info("name " + name + " load time = " + totalLoadTime + "(ms)");
+            LOG.info("name " + name + " load time = " + totalLoadTime + "(ms)");
 
             Set keys = container.keySet();
             long startExtract = System.currentTimeMillis();
@@ -77,7 +77,7 @@ class Loader extends Thread {
             }
             long finishExtract = System.currentTimeMillis();
             long totalExtractTime = finishExtract - startExtract;
-            log.info("name " + name + " extract time = " + totalExtractTime + "(ms)");
+            LOG.info("name " + name + " extract time = " + totalExtractTime + "(ms)");
 
             long startRemove = System.currentTimeMillis();
             for (Iterator i = keys.iterator(); i.hasNext();) {
@@ -85,7 +85,7 @@ class Loader extends Thread {
             }
             long finishRemove = System.currentTimeMillis();
             long totalRemoveTime = finishRemove - startRemove;
-            log.info("name " + name + " remove time = " + totalRemoveTime + "(ms)");
+            LOG.info("name " + name + " remove time = " + totalRemoveTime + "(ms)");
             // re-insert data of longer length
             startLoad = System.currentTimeMillis();
             value = getData(2048);
@@ -97,7 +97,7 @@ class Loader extends Thread {
             }
             finishLoad = System.currentTimeMillis();
             totalLoadTime = finishLoad - startLoad;
-            log.info("name " + name + " 2nd load time = " + totalLoadTime + "(ms)");
+            LOG.info("name " + name + " 2nd load time = " + totalLoadTime + "(ms)");
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -25,7 +25,7 @@ import org.apache.activemq.transport.nio.SelectorManager.Listener;
 /**
  * @author chirino
  */
-final public class SelectorSelection {
+public final class SelectorSelection {
 
     private final SelectorWorker worker;
     private final SelectionKey key;

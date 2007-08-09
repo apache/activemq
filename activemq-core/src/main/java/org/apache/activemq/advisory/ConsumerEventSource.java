@@ -44,7 +44,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class ConsumerEventSource implements Service, MessageListener {
-    private static final Log log = LogFactory.getLog(ConsumerEventSource.class);
+    private static final Log LOG = LogFactory.getLog(ConsumerEventSource.class);
 
     private final Connection connection;
     private final ActiveMQDestination destination;
@@ -97,10 +97,10 @@ public class ConsumerEventSource implements Service, MessageListener {
                     fireConsumerEvent(new ConsumerStoppedEvent(this, destination, (ConsumerId)removeInfo.getObjectId(), count));
                 }
             } else {
-                log.warn("Unknown command: " + command);
+                LOG.warn("Unknown command: " + command);
             }
         } else {
-            log.warn("Unknown message type: " + message + ". Message ignored");
+            LOG.warn("Unknown message type: " + message + ". Message ignored");
         }
     }
 
@@ -116,9 +116,9 @@ public class ConsumerEventSource implements Service, MessageListener {
                 Number n = (Number)value;
                 return n.intValue();
             }
-            log.warn("No consumerCount header available on the message: " + message);
+            LOG.warn("No consumerCount header available on the message: " + message);
         } catch (Exception e) {
-            log.warn("Failed to extract consumerCount from message: " + message + ".Reason: " + e, e);
+            LOG.warn("Failed to extract consumerCount from message: " + message + ".Reason: " + e, e);
         }
         return count;
     }

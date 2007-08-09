@@ -67,21 +67,20 @@ public interface ReferenceStore extends MessageStore {
     /**
      * Adds a message reference to the message store
      */
-    public void addMessageReference(ConnectionContext context, MessageId messageId, ReferenceData data)
-        throws IOException;
+    void addMessageReference(ConnectionContext context, MessageId messageId, ReferenceData data) throws IOException;
 
     /**
      * Looks up a message using either the String messageID or the
      * messageNumber. Implementations are encouraged to fill in the missing key
      * if its easy to do so.
      */
-    public ReferenceData getMessageReference(MessageId identity) throws IOException;
+    ReferenceData getMessageReference(MessageId identity) throws IOException;
 
     /**
      * @return true if it supports external batch control
      */
-    public boolean supportsExternalBatchControl();
+    boolean supportsExternalBatchControl();
 
-    public void setBatch(MessageId startAfter);
+    void setBatch(MessageId startAfter);
 
 }

@@ -212,8 +212,9 @@ public class DiskIndexLinkedList implements IndexLinkedList {
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
         IndexItem e = root;
 
-        for (int i = 0; i <= index; i++)
+        for (int i = 0; i <= index; i++) {
             e = getNextEntry(e);
+        }
         if (e != null && last != null && last.equals(e)) {
             last = e;
         }

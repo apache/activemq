@@ -21,7 +21,6 @@ import java.util.Set;
 import org.apache.activemq.command.ActiveMQDestination;
 
 /**
- *
  * @version $Revision$
  */
 public interface AuthorizationMap {
@@ -30,24 +29,26 @@ public interface AuthorizationMap {
      * Returns the set of all ACLs capable of administering temp destination
      */
     Set getTempDestinationAdminACLs();
-	
+
     /**
      * Returns the set of all ACLs capable of reading from temp destination
      */
     Set getTempDestinationReadACLs();
-    
+
     /**
      * Returns the set of all ACLs capable of writing to temp destination
      */
-    Set getTempDestinationWriteACLs();    
-    
+    Set getTempDestinationWriteACLs();
+
     /**
-     * Returns the set of all ACLs capable of administering the given destination
+     * Returns the set of all ACLs capable of administering the given
+     * destination
      */
     Set getAdminACLs(ActiveMQDestination destination);
 
     /**
-     * Returns the set of all ACLs capable of reading (consuming from) the given destination
+     * Returns the set of all ACLs capable of reading (consuming from) the given
+     * destination
      */
     Set getReadACLs(ActiveMQDestination destination);
 

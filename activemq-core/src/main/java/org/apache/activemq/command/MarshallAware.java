@@ -22,10 +22,12 @@ import org.apache.activemq.wireformat.WireFormat;
 
 public interface MarshallAware {
 
-    public void beforeMarshall(WireFormat wireFormat) throws IOException;
-    public void afterMarshall(WireFormat wireFormat) throws IOException;
-    
-    public void beforeUnmarshall(WireFormat wireFormat) throws IOException;
-    public void afterUnmarshall(WireFormat wireFormat) throws IOException;
-    
+    void beforeMarshall(WireFormat wireFormat) throws IOException;
+
+    void afterMarshall(WireFormat wireFormat) throws IOException;
+
+    void beforeUnmarshall(WireFormat wireFormat) throws IOException;
+
+    void afterUnmarshall(WireFormat wireFormat) throws IOException;
+
 }

@@ -31,10 +31,10 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1 $
  */
 public class LocationTest extends TestCase {
-    private static final transient Log log = LogFactory.getLog(LocationTest.class);
+    private static final transient Log LOG = LogFactory.getLog(LocationTest.class);
 
     @SuppressWarnings("unchecked")
-    synchronized public void testRecordLocationImplComparison() throws IOException {
+    public synchronized void testRecordLocationImplComparison() throws IOException {
         Location l1 = new Location();
         l1.setDataFileId(0);
         l1.setOffset(5);
@@ -54,7 +54,7 @@ public class LocationTest extends TestCase {
         Collections.sort(l);
 
         // Did they get sorted to the correct order?
-        log.debug(l.get(0));
+        LOG.debug(l.get(0));
         assertSame(l.get(0).getLocation(), l1);
         assertSame(l.get(1).getLocation(), l2);
         assertSame(l.get(2).getLocation(), l3);

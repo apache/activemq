@@ -49,14 +49,14 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class LoadTestBurnIn extends JmsTestSupport {
-    private static final transient Log log = LogFactory.getLog(LoadTestBurnIn.class);
+    private static final transient Log LOG = LogFactory.getLog(LoadTestBurnIn.class);
 
     public static Test suite() {
         return suite(LoadTestBurnIn.class);
     }
 
     protected void setUp() throws Exception {
-        log.info("Start: " + getName());
+        LOG.info("Start: " + getName());
         super.setUp();
     }
 
@@ -66,7 +66,7 @@ public class LoadTestBurnIn extends JmsTestSupport {
         } catch (Throwable e) {
             e.printStackTrace(System.out);
         } finally {
-            log.info("End: " + getName());
+            LOG.info("End: " + getName());
         }
     }
 

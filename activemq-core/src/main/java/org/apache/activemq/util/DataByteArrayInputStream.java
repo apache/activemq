@@ -256,8 +256,9 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
         int total = pos + length;
         while (pos < total) {
             c = (int)buf[pos] & 0xff;
-            if (c > 127)
+            if (c > 127) {
                 break;
+            }
             pos++;
             characters[count++] = (char)c;
         }
@@ -278,21 +279,25 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
             case 12:
             case 13:
                 pos += 2;
-                if (pos > length)
+                if (pos > length) {
                     throw new UTFDataFormatException("bad string");
+                }
                 c2 = (int)buf[pos - 1];
-                if ((c2 & 0xC0) != 0x80)
+                if ((c2 & 0xC0) != 0x80) {
                     throw new UTFDataFormatException("bad string");
+                }
                 characters[count++] = (char)(((c & 0x1F) << 6) | (c2 & 0x3F));
                 break;
             case 14:
                 pos += 3;
-                if (pos > length)
+                if (pos > length) {
                     throw new UTFDataFormatException("bad string");
+                }
                 c2 = (int)buf[pos - 2];
                 c3 = (int)buf[pos - 1];
-                if (((c2 & 0xC0) != 0x80) || ((c3 & 0xC0) != 0x80))
+                if (((c2 & 0xC0) != 0x80) || ((c3 & 0xC0) != 0x80)) {
                     throw new UTFDataFormatException("bad string");
+                }
                 characters[count++] = (char)(((c & 0x0F) << 12) | ((c2 & 0x3F) << 6) | ((c3 & 0x3F) << 0));
                 break;
             default:

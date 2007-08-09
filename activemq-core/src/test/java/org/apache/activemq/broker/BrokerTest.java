@@ -111,7 +111,7 @@ public class BrokerTest extends BrokerTestSupport {
      * 
      * @throws Exception
      */
-    public void XtestQueueBrowserWith2Consumers() throws Exception {
+    public void xtestQueueBrowserWith2Consumers() throws Exception {
 
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
 
@@ -1061,7 +1061,7 @@ public class BrokerTest extends BrokerTestSupport {
         // Send another message, connection1 should not get the message.
         connection2.send(createMessage(producerInfo2, destination, deliveryMode));
 
-        assertNull(connection1.getDispatchQueue().poll(MAX_WAIT, TimeUnit.MILLISECONDS));
+        assertNull(connection1.getDispatchQueue().poll(maxWait, TimeUnit.MILLISECONDS));
     }
 
     public void initCombosForTestSessionCloseCascades() {
@@ -1113,7 +1113,7 @@ public class BrokerTest extends BrokerTestSupport {
         // Send another message, connection1 should not get the message.
         connection2.send(createMessage(producerInfo2, destination, deliveryMode));
 
-        assertNull(connection1.getDispatchQueue().poll(MAX_WAIT, TimeUnit.MILLISECONDS));
+        assertNull(connection1.getDispatchQueue().poll(maxWait, TimeUnit.MILLISECONDS));
     }
 
     public void initCombosForTestConsumerClose() {
@@ -1165,7 +1165,7 @@ public class BrokerTest extends BrokerTestSupport {
         // Send another message, connection1 should not get the message.
         connection2.send(createMessage(producerInfo2, destination, deliveryMode));
 
-        assertNull(connection1.getDispatchQueue().poll(MAX_WAIT, TimeUnit.MILLISECONDS));
+        assertNull(connection1.getDispatchQueue().poll(maxWait, TimeUnit.MILLISECONDS));
     }
 
     public void initCombosForTestTopicNoLocal() {

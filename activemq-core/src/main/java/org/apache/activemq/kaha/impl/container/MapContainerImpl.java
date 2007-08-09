@@ -1,17 +1,19 @@
 /**
- * 
- * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE
- * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
- * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
- * License. You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package org.apache.activemq.kaha.impl.container;
 
 import java.io.File;
@@ -45,10 +47,10 @@ import org.apache.commons.logging.LogFactory;
  */
 public final class MapContainerImpl extends BaseContainerImpl implements MapContainer {
 
-    private static final Log log = LogFactory.getLog(MapContainerImpl.class);
+    private static final Log LOG = LogFactory.getLog(MapContainerImpl.class);
     protected Index index;
-    protected Marshaller keyMarshaller = Store.ObjectMarshaller;
-    protected Marshaller valueMarshaller = Store.ObjectMarshaller;
+    protected Marshaller keyMarshaller = Store.OBJECT_MARSHALLER;
+    protected Marshaller valueMarshaller = Store.OBJECT_MARSHALLER;
     protected File directory;
 
     public MapContainerImpl(File directory, ContainerId id, IndexItem root, IndexManager indexManager,
@@ -66,7 +68,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
                 try {
                     this.index = new HashIndex(directory, name, indexManager);
                 } catch (IOException e) {
-                    log.error("Failed to create HashIndex", e);
+                    LOG.error("Failed to create HashIndex", e);
                     throw new RuntimeException(e);
                 }
             } else {
@@ -101,7 +103,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
                         nextItem = item.getNextItem();
                     }
                 } catch (IOException e) {
-                    log.error("Failed to load container " + getId(), e);
+                    LOG.error("Failed to load container " + getId(), e);
                     throw new RuntimeStoreException(e);
                 }
             }
@@ -120,7 +122,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
             try {
                 index.unload();
             } catch (IOException e) {
-                log.warn("Failed to unload the index", e);
+                LOG.warn("Failed to unload the index", e);
             }
             indexList.clear();
         }
@@ -169,7 +171,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
         try {
             return index.containsKey(key);
         } catch (IOException e) {
-            log.error("Failed trying to find key: " + key, e);
+            LOG.error("Failed trying to find key: " + key, e);
             throw new RuntimeException(e);
         }
     }
@@ -186,7 +188,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
         try {
             item = index.get(key);
         } catch (IOException e) {
-            log.error("Failed trying to get key: " + key, e);
+            LOG.error("Failed trying to get key: " + key, e);
             throw new RuntimeException(e);
         }
         if (item != null) {
@@ -207,7 +209,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
         try {
             item = index.get(key);
         } catch (IOException e) {
-            log.error("Failed trying to get key: " + key, e);
+            LOG.error("Failed trying to get key: " + key, e);
             throw new RuntimeException(e);
         }
         return item;
@@ -293,7 +295,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
         try {
             index.store(key, item);
         } catch (IOException e) {
-            log.error("Failed trying to insert key: " + key, e);
+            LOG.error("Failed trying to insert key: " + key, e);
             throw new RuntimeException(e);
         }
         indexList.add(item);
@@ -321,7 +323,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
             }
             return result;
         } catch (IOException e) {
-            log.error("Failed trying to remove key: " + key, e);
+            LOG.error("Failed trying to remove key: " + key, e);
             throw new RuntimeException(e);
         }
     }
@@ -368,7 +370,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
             try {
                 index.clear();
             } catch (IOException e) {
-                log.error("Failed trying clear index", e);
+                LOG.error("Failed trying clear index", e);
                 throw new RuntimeException(e);
             }
         }
@@ -392,7 +394,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
             indexList.add(item);
             return item;
         } catch (IOException e) {
-            log.error("Failed trying to place key: " + key, e);
+            LOG.error("Failed trying to place key: " + key, e);
             throw new RuntimeException(e);
         }
     }
@@ -411,7 +413,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
             try {
                 index.remove(key);
             } catch (IOException e) {
-                log.error("Failed trying to remove entry: " + entry, e);
+                LOG.error("Failed trying to remove entry: " + entry, e);
                 throw new RuntimeException(e);
             }
             IndexItem prev = indexList.getPrevEntry(item);
@@ -464,7 +466,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
                 StoreLocation data = item.getValueDataItem();
                 result = dataManager.readItem(valueMarshaller, data);
             } catch (IOException e) {
-                log.error("Failed to get value for " + item, e);
+                LOG.error("Failed to get value for " + item, e);
                 throw new RuntimeStoreException(e);
             }
         }
@@ -485,7 +487,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
                 StoreLocation data = item.getKeyDataItem();
                 result = dataManager.readItem(keyMarshaller, data);
             } catch (IOException e) {
-                log.error("Failed to get key for " + item, e);
+                LOG.error("Failed to get key for " + item, e);
                 throw new RuntimeStoreException(e);
             }
         }
@@ -520,7 +522,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
             }
             storeIndex(index);
         } catch (IOException e) {
-            log.error("Failed to write " + key + " , " + value, e);
+            LOG.error("Failed to write " + key + " , " + value, e);
             throw new RuntimeStoreException(e);
         }
         return index;

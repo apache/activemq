@@ -32,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class BadConnectionTest extends TestCase {
 
-    protected static final Log log = LogFactory.getLog(BadConnectionTest.class);
+    private static final Log LOG = LogFactory.getLog(BadConnectionTest.class);
 
     protected Transport transport;
 
@@ -41,7 +41,7 @@ public class BadConnectionTest extends TestCase {
             transport.asyncRequest(new ActiveMQMessage(), null);
             fail("This should never succeed");
         } catch (IOException e) {
-            log.info("Caught expected exception: " + e, e);
+            LOG.info("Caught expected exception: " + e, e);
         }
     }
 

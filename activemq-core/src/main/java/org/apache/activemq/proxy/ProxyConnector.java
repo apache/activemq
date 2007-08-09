@@ -40,7 +40,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class ProxyConnector implements Service {
 
-    private static final Log log = LogFactory.getLog(ProxyConnector.class);
+    private static final Log LOG = LogFactory.getLog(ProxyConnector.class);
     private TransportServer server;
     private URI bind;
     private URI remote;
@@ -64,11 +64,11 @@ public class ProxyConnector implements Service {
             }
 
             public void onAcceptError(Exception error) {
-                log.error("Could not accept connection: " + error, error);
+                LOG.error("Could not accept connection: " + error, error);
             }
         });
         getServer().start();
-        log.info("Proxy Connector " + getName() + " Started");
+        LOG.info("Proxy Connector " + getName() + " Started");
 
     }
 
@@ -78,11 +78,11 @@ public class ProxyConnector implements Service {
             ss.stop(this.server);
         }
         for (Iterator iter = connections.iterator(); iter.hasNext();) {
-            log.info("Connector stopped: Stopping proxy.");
+            LOG.info("Connector stopped: Stopping proxy.");
             ss.stop((Service)iter.next());
         }
         ss.throwFirstException();
-        log.info("Proxy Connector " + getName() + " Stopped");
+        LOG.info("Proxy Connector " + getName() + " Stopped");
     }
 
     // Properties
@@ -140,7 +140,7 @@ public class ProxyConnector implements Service {
         // Add a transport filter so that can track the transport life cycle
         transport = new TransportFilter(transport) {
             public void stop() throws Exception {
-                log.info("Stopping proxy.");
+                LOG.info("Stopping proxy.");
                 super.stop();
                 connections.remove(this);
             }

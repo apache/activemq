@@ -20,42 +20,42 @@ import org.apache.activemq.Service;
 
 public interface NetworkConnectorViewMBean extends Service {
 
-    public String getName();
+    String getName();
 
-    public int getNetworkTTL();
+    int getNetworkTTL();
 
-    public int getPrefetchSize();
+    int getPrefetchSize();
 
-    public String getUserName();
+    String getUserName();
 
-    public boolean isBridgeTempDestinations();
+    boolean isBridgeTempDestinations();
 
-    public boolean isConduitSubscriptions();
+    boolean isConduitSubscriptions();
 
-    public boolean isDecreaseNetworkConsumerPriority();
+    boolean isDecreaseNetworkConsumerPriority();
 
-    public boolean isDispatchAsync();
+    boolean isDispatchAsync();
 
-    public boolean isDynamicOnly();
+    boolean isDynamicOnly();
 
-    public void setBridgeTempDestinations(boolean bridgeTempDestinations);
+    void setBridgeTempDestinations(boolean bridgeTempDestinations);
 
-    public void setConduitSubscriptions(boolean conduitSubscriptions);
+    void setConduitSubscriptions(boolean conduitSubscriptions);
 
-    public void setDispatchAsync(boolean dispatchAsync);
+    void setDispatchAsync(boolean dispatchAsync);
 
-    public void setDynamicOnly(boolean dynamicOnly);
+    void setDynamicOnly(boolean dynamicOnly);
 
-    public void setNetworkTTL(int networkTTL);
+    void setNetworkTTL(int networkTTL);
 
-    public void setPassword(String password);
+    void setPassword(String password);
 
-    public void setPrefetchSize(int prefetchSize);
+    void setPrefetchSize(int prefetchSize);
 
-    public void setUserName(String userName);
+    void setUserName(String userName);
 
-    public String getPassword();
+    String getPassword();
 
-    public void setDecreaseNetworkConsumerPriority(boolean decreaseNetworkConsumerPriority);
+    void setDecreaseNetworkConsumerPriority(boolean decreaseNetworkConsumerPriority);
 
 }

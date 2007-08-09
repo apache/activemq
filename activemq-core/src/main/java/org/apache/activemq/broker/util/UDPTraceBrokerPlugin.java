@@ -67,7 +67,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class UDPTraceBrokerPlugin extends BrokerPluginSupport {
 
-    static final private Log log = LogFactory.getLog(UDPTraceBrokerPlugin.class);
+    private static final Log LOG = LogFactory.getLog(UDPTraceBrokerPlugin.class);
     protected WireFormat wireFormat;
     protected WireFormatFactory wireFormatFactory;
     protected int maxTraceDatagramSize = 1024 * 4;
@@ -124,7 +124,7 @@ public class UDPTraceBrokerPlugin extends BrokerPluginSupport {
             socket.send(datagram);
 
         } catch (Throwable e) {
-            log.debug("Failed to trace: " + command, e);
+            LOG.debug("Failed to trace: " + command, e);
         }
     }
 

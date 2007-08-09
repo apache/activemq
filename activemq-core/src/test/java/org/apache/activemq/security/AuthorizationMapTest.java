@@ -29,18 +29,18 @@ import org.apache.activemq.jaas.GroupPrincipal;
  * @version $Revision$
  */
 public class AuthorizationMapTest extends TestCase {
-    static final GroupPrincipal guests = new GroupPrincipal("guests");
-    static final GroupPrincipal users = new GroupPrincipal("users");
-    static final GroupPrincipal admins = new GroupPrincipal("admins");
-    static final GroupPrincipal tempDestinationAdmins = new GroupPrincipal("tempDestAdmins");
+    static final GroupPrincipal GUESTS = new GroupPrincipal("guests");
+    static final GroupPrincipal USERS = new GroupPrincipal("users");
+    static final GroupPrincipal ADMINS = new GroupPrincipal("admins");
+    static final GroupPrincipal TEMP_DESTINATION_ADMINS = new GroupPrincipal("tempDestAdmins");
 
     public void testAuthorizationMap() {
         AuthorizationMap map = createAuthorizationMap();
 
         Set readACLs = map.getReadACLs(new ActiveMQQueue("USERS.FOO.BAR"));
         assertEquals("set size: " + readACLs, 2, readACLs.size());
-        assertTrue("Contains users group", readACLs.contains(admins));
-        assertTrue("Contains users group", readACLs.contains(users));
+        assertTrue("Contains users group", readACLs.contains(ADMINS));
+        assertTrue("Contains users group", readACLs.contains(USERS));
 
     }
 
@@ -49,12 +49,12 @@ public class AuthorizationMapTest extends TestCase {
 
         Set readACLs = map.getReadACLs(new ActiveMQQueue("USERS.FOO.BAR"));
         assertEquals("set size: " + readACLs, 2, readACLs.size());
-        assertTrue("Contains users group", readACLs.contains(admins));
-        assertTrue("Contains users group", readACLs.contains(users));
+        assertTrue("Contains users group", readACLs.contains(ADMINS));
+        assertTrue("Contains users group", readACLs.contains(USERS));
 
         Set tempAdminACLs = map.getTempDestinationAdminACLs();
         assertEquals("set size: " + tempAdminACLs, 1, tempAdminACLs.size());
-        assertTrue("Contains users group", tempAdminACLs.contains(tempDestinationAdmins));
+        assertTrue("Contains users group", tempAdminACLs.contains(TEMP_DESTINATION_ADMINS));
 
     }
 

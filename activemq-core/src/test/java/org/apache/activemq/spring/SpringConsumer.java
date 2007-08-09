@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.jms.core.JmsTemplate;
 
 public class SpringConsumer extends ConsumerBean implements MessageListener {
-    private static final Log log = LogFactory.getLog(SpringConsumer.class);
+    private static final Log LOG = LogFactory.getLog(SpringConsumer.class);
     private JmsTemplate template;
     private String myId = "foo";
     private Destination destination;
@@ -59,7 +59,7 @@ public class SpringConsumer extends ConsumerBean implements MessageListener {
             consumer = session.createConsumer(destination, selector, false);
             consumer.setMessageListener(this);
         } catch (JMSException ex) {
-            log.error("", ex);
+            LOG.error("", ex);
             throw ex;
         }
     }
@@ -81,7 +81,7 @@ public class SpringConsumer extends ConsumerBean implements MessageListener {
         try {
             message.acknowledge();
         } catch (JMSException e) {
-            log.error("Failed to acknowledge: " + e, e);
+            LOG.error("Failed to acknowledge: " + e, e);
         }
     }
 

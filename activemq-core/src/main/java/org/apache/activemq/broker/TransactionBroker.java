@@ -51,7 +51,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class TransactionBroker extends BrokerFilter {
 
-    private static final Log log = LogFactory.getLog(TransactionBroker.class);
+    private static final Log LOG = LogFactory.getLog(TransactionBroker.class);
 
     // The prepared XA transactions.
     private TransactionStore transactionStore;
@@ -222,8 +222,8 @@ public class TransactionBroker extends BrokerFilter {
             if (sync != null && transaction != null) {
                 transaction.removeSynchronization(sync);
             }
-            if (log.isDebugEnabled()) {
-                log.debug("IGNORING duplicate message " + message);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("IGNORING duplicate message " + message);
             }
         }
     }
@@ -234,7 +234,7 @@ public class TransactionBroker extends BrokerFilter {
                 Transaction transaction = (Transaction)iter.next();
                 transaction.rollback();
             } catch (Exception e) {
-                log.warn("ERROR Rolling back disconnected client's transactions: ", e);
+                LOG.warn("ERROR Rolling back disconnected client's transactions: ", e);
             }
             iter.remove();
         }

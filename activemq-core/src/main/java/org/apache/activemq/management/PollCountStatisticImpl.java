@@ -58,18 +58,18 @@ public class PollCountStatisticImpl extends StatisticImpl implements CountStatis
         }
     }
 
-    synchronized private void removeChild(PollCountStatisticImpl child) {
+    private synchronized void removeChild(PollCountStatisticImpl child) {
         if (children != null)
             children.remove(child);
     }
 
-    synchronized private void addChild(PollCountStatisticImpl child) {
+    private synchronized void addChild(PollCountStatisticImpl child) {
         if (children == null)
             children = new ArrayList();
         children.add(child);
     }
 
-    synchronized public long getCount() {
+    public synchronized long getCount() {
         if (children == null)
             return 0;
         long count = 0;

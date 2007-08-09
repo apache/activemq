@@ -78,15 +78,15 @@ public class IndirectMessageReference implements QueueMessageReference {
         this.cachedSize = message.getSize();
     }
 
-    synchronized public Message getMessageHardRef() {
+    public synchronized Message getMessageHardRef() {
         return message;
     }
 
-    synchronized public int getReferenceCount() {
+    public synchronized int getReferenceCount() {
         return referenceCount;
     }
 
-    synchronized public int incrementReferenceCount() {
+    public synchronized int incrementReferenceCount() {
         int rc = ++referenceCount;
         if (persistent && rc == 1 && message == null) {
 
@@ -105,7 +105,7 @@ public class IndirectMessageReference implements QueueMessageReference {
         return rc;
     }
 
-    synchronized public int decrementReferenceCount() {
+    public synchronized int decrementReferenceCount() {
         int rc = --referenceCount;
         if (persistent && rc == 0 && message != null) {
             message.decrementReferenceCount();
@@ -114,7 +114,7 @@ public class IndirectMessageReference implements QueueMessageReference {
         return rc;
     }
 
-    synchronized public Message getMessage() {
+    public synchronized Message getMessage() {
         return message;
     }
 
@@ -122,15 +122,15 @@ public class IndirectMessageReference implements QueueMessageReference {
         return "Message " + messageId + " dropped=" + dropped + " locked=" + (lockOwner != null);
     }
 
-    synchronized public void incrementRedeliveryCounter() {
+    public synchronized void incrementRedeliveryCounter() {
         this.redeliveryCounter++;
     }
 
-    synchronized public boolean isDropped() {
+    public synchronized boolean isDropped() {
         return dropped;
     }
 
-    synchronized public void drop() {
+    public synchronized void drop() {
         dropped = true;
         lockOwner = null;
         if (!persistent && message != null) {
@@ -150,15 +150,15 @@ public class IndirectMessageReference implements QueueMessageReference {
         }
     }
 
-    synchronized public void unlock() {
+    public synchronized void unlock() {
         lockOwner = null;
     }
 
-    synchronized public LockOwner getLockOwner() {
+    public synchronized LockOwner getLockOwner() {
         return lockOwner;
     }
 
-    synchronized public int getRedeliveryCounter() {
+    public synchronized int getRedeliveryCounter() {
         return redeliveryCounter;
     }
 
@@ -174,15 +174,15 @@ public class IndirectMessageReference implements QueueMessageReference {
         return persistent;
     }
 
-    synchronized public boolean isLocked() {
+    public synchronized boolean isLocked() {
         return lockOwner != null;
     }
 
-    synchronized public boolean isAcked() {
+    public synchronized boolean isAcked() {
         return acked;
     }
 
-    synchronized public void setAcked(boolean b) {
+    public synchronized void setAcked(boolean b) {
         acked = b;
     }
 

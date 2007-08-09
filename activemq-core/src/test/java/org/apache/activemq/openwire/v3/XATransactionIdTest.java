@@ -33,7 +33,7 @@ import org.apache.activemq.command.XATransactionId;
 public class XATransactionIdTest extends TransactionIdTestSupport {
 
 
-    public static XATransactionIdTest SINGLETON = new XATransactionIdTest();
+    public static final XATransactionIdTest SINGLETON = new XATransactionIdTest();
 
     public Object createObject() throws Exception {
         XATransactionId info = new XATransactionId();

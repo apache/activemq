@@ -34,10 +34,10 @@ public interface JmsMesageConvertor {
      * @return the converted message
      * @throws JMSException
      */
-    public Message convert(Message message) throws JMSException;
+    Message convert(Message message) throws JMSException;
     
-    public Message convert(Message message, Destination replyTo) throws JMSException;
+    Message convert(Message message, Destination replyTo) throws JMSException;
     
-    public void setConnection(Connection connection);
+    void setConnection(Connection connection);
    
 }

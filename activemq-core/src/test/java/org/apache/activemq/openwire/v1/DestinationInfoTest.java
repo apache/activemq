@@ -29,7 +29,7 @@ import org.apache.activemq.command.DestinationInfo;
  */
 public class DestinationInfoTest extends BaseCommandTestSupport {
 
-    public static DestinationInfoTest SINGLETON = new DestinationInfoTest();
+    public static final DestinationInfoTest SINGLETON = new DestinationInfoTest();
 
     public Object createObject() throws Exception {
         DestinationInfo info = new DestinationInfo();

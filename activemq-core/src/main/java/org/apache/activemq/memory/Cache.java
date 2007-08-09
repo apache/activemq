@@ -30,7 +30,7 @@ public interface Cache {
      * @return null if the object was not previously put or if the object has
      *         expired out of the cache.
      */
-    public Object get(Object key);
+    Object get(Object key);
 
     /**
      * Puts an object into the cache.
@@ -38,7 +38,7 @@ public interface Cache {
      * @param messageID
      * @param message
      */
-    public Object put(Object key, Object value);
+    Object put(Object key, Object value);
 
     /**
      * Removes an object from the cache.
@@ -46,19 +46,19 @@ public interface Cache {
      * @param messageID
      * @return the object associated with the key if it was still in the cache.
      */
-    public Object remove(Object key);
+    Object remove(Object key);
 
     /**
      * Lets a cache know it will not be used any further and that it can release
      * acquired resources
      */
-    public void close();
+    void close();
 
     /**
      * How big is the cache right now?
      * 
      * @return
      */
-    public int size();
+    int size();
 
 }

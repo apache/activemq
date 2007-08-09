@@ -178,7 +178,7 @@ public class AMQTransactionStore implements TransactionStore {
     public void stop() throws Exception {
     }
 
-    synchronized public void recover(TransactionRecoveryListener listener) throws IOException {
+    public synchronized void recover(TransactionRecoveryListener listener) throws IOException {
         // All the in-flight transactions get rolled back..
         synchronized (inflightTransactions) {
             inflightTransactions.clear();

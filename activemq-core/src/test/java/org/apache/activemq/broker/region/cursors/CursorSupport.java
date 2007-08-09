@@ -1,17 +1,19 @@
 /**
- * 
- * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE
- * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
- * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
- * License. You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package org.apache.activemq.broker.region.cursors;
 
 import java.util.ArrayList;
@@ -39,7 +41,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.3 $
  */
 public abstract class CursorSupport extends TestCase {
-    protected static final Log log = LogFactory.getLog(CursorSupport.class);
+    private static final Log LOG = LogFactory.getLog(CursorSupport.class);
 
     protected static final int MESSAGE_COUNT = 500;
     protected static final int PREFETCH_SIZE = 50;
@@ -135,9 +137,9 @@ public abstract class CursorSupport extends TestCase {
             Message sent = (Message)senderList.get(i);
             Message consumed = (Message)consumerList.get(i);
             if (!sent.equals(consumed)) {
-                log.error("BAD MATCH AT POS " + i);
-                log.error(sent);
-                log.error(consumed);
+                LOG.error("BAD MATCH AT POS " + i);
+                LOG.error(sent);
+                LOG.error(consumed);
                 /*
                  * log.error("\n\n\n\n\n"); for (int j = 0; j <
                  * consumerList.size(); j++) { log.error(consumerList.get(j)); }

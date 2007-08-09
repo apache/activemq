@@ -41,8 +41,7 @@ public interface TopicReferenceStore extends ReferenceStore, TopicMessageStore {
      * @param subscriptionPersistentId
      * @throws IOException
      */
-    public void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
-                            MessageId messageId) throws IOException;
+    void acknowledge(ConnectionContext context, String clientId, String subscriptionName, MessageId messageId) throws IOException;
 
     /**
      * @param clientId
@@ -51,7 +50,7 @@ public interface TopicReferenceStore extends ReferenceStore, TopicMessageStore {
      * @throws IOException
      * @throws JMSException
      */
-    public void deleteSubscription(String clientId, String subscriptionName) throws IOException;
+    void deleteSubscription(String clientId, String subscriptionName) throws IOException;
 
     /**
      * For the new subscription find the last acknowledged message ID and then
@@ -64,11 +63,9 @@ public interface TopicReferenceStore extends ReferenceStore, TopicMessageStore {
      * @param subscriptionName
      * @param listener
      * @param subscription
-     * 
      * @throws Exception
      */
-    public void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener)
-        throws Exception;
+    void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener) throws Exception;
 
     /**
      * For an active subscription - retrieve messages from the store for the
@@ -78,20 +75,17 @@ public interface TopicReferenceStore extends ReferenceStore, TopicMessageStore {
      * @param subscriptionName
      * @param maxReturned
      * @param listener
-     * 
      * @throws Exception
      */
-    public void recoverNextMessages(String clientId, String subscriptionName, int maxReturned,
-                                    MessageRecoveryListener listener) throws Exception;
+    void recoverNextMessages(String clientId, String subscriptionName, int maxReturned, MessageRecoveryListener listener) throws Exception;
 
     /**
      * A hint to the Store to reset any batching state for a durable subsriber
      * 
      * @param clientId
      * @param subscriptionName
-     * 
      */
-    public void resetBatching(String clientId, String subscriptionName);
+    void resetBatching(String clientId, String subscriptionName);
 
     /**
      * Get the number of messages ready to deliver from the store to a durable
@@ -102,7 +96,7 @@ public interface TopicReferenceStore extends ReferenceStore, TopicMessageStore {
      * @return the outstanding message count
      * @throws IOException
      */
-    public int getMessageCount(String clientId, String subscriberName) throws IOException;
+    int getMessageCount(String clientId, String subscriberName) throws IOException;
 
     /**
      * Finds the subscriber entry for the given consumer info
@@ -112,7 +106,7 @@ public interface TopicReferenceStore extends ReferenceStore, TopicMessageStore {
      * @return the SubscriptionInfo
      * @throws IOException
      */
-    public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException;
+    SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException;
 
     /**
      * Lists all the durable subscirptions for a given destination.
@@ -120,7 +114,7 @@ public interface TopicReferenceStore extends ReferenceStore, TopicMessageStore {
      * @return an array SubscriptionInfos
      * @throws IOException
      */
-    public SubscriptionInfo[] getAllSubscriptions() throws IOException;
+    SubscriptionInfo[] getAllSubscriptions() throws IOException;
 
     /**
      * Inserts the subscriber info due to a subscription change <p/> If this is
@@ -135,7 +129,6 @@ public interface TopicReferenceStore extends ReferenceStore, TopicMessageStore {
      * @param selector
      * @param retroactive
      * @throws IOException
-     * 
      */
-    public void addSubsciption(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException;
+    void addSubsciption(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException;
 }

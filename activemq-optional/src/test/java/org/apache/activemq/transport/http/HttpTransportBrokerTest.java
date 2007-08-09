@@ -29,7 +29,7 @@ public class HttpTransportBrokerTest extends TransportBrokerTestSupport {
     }
 
     protected void setUp() throws Exception {
-        MAX_WAIT = 2000;
+        maxWait = 2000;
         super.setUp();
     }
 

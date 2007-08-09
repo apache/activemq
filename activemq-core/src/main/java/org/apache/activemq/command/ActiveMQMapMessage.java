@@ -99,7 +99,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_MAP_MESSAGE;
 
-    transient protected Map map = new HashMap();
+    protected transient Map map = new HashMap();
 
     public Message copy() {
         ActiveMQMapMessage copy = new ActiveMQMapMessage();

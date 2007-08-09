@@ -55,9 +55,9 @@ public interface Destination extends Service {
 
     DeadLetterStrategy getDeadLetterStrategy();
 
-    public Message[] browse();
+    Message[] browse();
 
-    public String getName();
+    String getName();
 
-    public MessageStore getMessageStore();
+    MessageStore getMessageStore();
 }

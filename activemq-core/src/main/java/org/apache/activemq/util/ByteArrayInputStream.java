@@ -45,10 +45,11 @@ public class ByteArrayInputStream extends InputStream {
     }
 
     public int read() throws IOException {
-        if (pos < limit)
+        if (pos < limit) {
             return buffer[pos++] & 0xff;
-        else
+        } else {
             return -1;
+        }
     }
 
     public int read(byte[] b) throws IOException {

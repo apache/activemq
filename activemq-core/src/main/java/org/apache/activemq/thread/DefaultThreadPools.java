@@ -26,9 +26,9 @@ import java.util.concurrent.ThreadFactory;
  */
 public class DefaultThreadPools {
 
-    private static final Executor defaultPool;
+    private static final Executor DEFAULT_POOL;
     static {
-        defaultPool = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
+        DEFAULT_POOL = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
             public Thread newThread(Runnable runnable) {
                 Thread thread = new Thread(runnable, "ActiveMQ Default Thread Pool Thread");
                 thread.setDaemon(true);
@@ -37,14 +37,14 @@ public class DefaultThreadPools {
         });
     }
     
-    private static final TaskRunnerFactory defaultTaskRunnerFactory = new TaskRunnerFactory();
+    private static final TaskRunnerFactory DEFAULT_TASK_RUNNER_FACTORY = new TaskRunnerFactory();
     
     public static Executor getDefaultPool() {
-        return defaultPool;
+        return DEFAULT_POOL;
     }
     
     public static TaskRunnerFactory getDefaultTaskRunnerFactory() {
-        return defaultTaskRunnerFactory;
+        return DEFAULT_TASK_RUNNER_FACTORY;
     }
     
 }

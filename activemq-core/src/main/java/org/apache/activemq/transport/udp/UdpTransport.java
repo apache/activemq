@@ -50,7 +50,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class UdpTransport extends TransportThreadSupport implements Transport, Service, Runnable {
-    private static final Log log = LogFactory.getLog(UdpTransport.class);
+    private static final Log LOG = LogFactory.getLog(UdpTransport.class);
 
     private static final int MAX_BIND_ATTEMPTS = 50;
     private static final long BIND_ATTEMPT_DELAY = 100;
@@ -119,8 +119,8 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
      * A one way asynchronous send to a given address
      */
     public void oneway(Object command, SocketAddress address) throws IOException {
-        if (log.isDebugEnabled()) {
-            log.debug("Sending oneway from: " + this + " to target: " + targetAddress + " command: " + command);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Sending oneway from: " + this + " to target: " + targetAddress + " command: " + command);
         }
         checkStarted();
         commandChannel.write((Command)command, address);
@@ -141,7 +141,7 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
      * reads packets from a Socket
      */
     public void run() {
-        log.trace("Consumer thread starting for: " + toString());
+        LOG.trace("Consumer thread starting for: " + toString());
         while (!isStopped()) {
             try {
                 Command command = commandChannel.read();
@@ -151,34 +151,34 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
                 try {
                     stop();
                 } catch (Exception e2) {
-                    log.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
+                    LOG.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
                 }
             } catch (SocketException e) {
                 // DatagramSocket closed
-                log.debug("Socket closed: " + e, e);
+                LOG.debug("Socket closed: " + e, e);
                 try {
                     stop();
                 } catch (Exception e2) {
-                    log.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
+                    LOG.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
                 }
             } catch (EOFException e) {
                 // DataInputStream closed
-                log.debug("Socket closed: " + e, e);
+                LOG.debug("Socket closed: " + e, e);
                 try {
                     stop();
                 } catch (Exception e2) {
-                    log.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
+                    LOG.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
                 }
             } catch (Exception e) {
                 try {
                     stop();
                 } catch (Exception e2) {
-                    log.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
+                    LOG.warn("Caught in: " + this + " while closing: " + e2 + ". Now Closed", e2);
                 }
                 if (e instanceof IOException) {
                     onException((IOException)e);
                 } else {
-                    log.error("Caught: " + e, e);
+                    LOG.error("Caught: " + e, e);
                     e.printStackTrace();
                 }
             }
@@ -377,8 +377,8 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
     protected void bind(DatagramSocket socket, SocketAddress localAddress) throws IOException {
         channel.configureBlocking(true);
 
-        if (log.isDebugEnabled()) {
-            log.debug("Binding to address: " + localAddress);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Binding to address: " + localAddress);
         }
 
         //
@@ -392,8 +392,9 @@ public class UdpTransport extends TransportThreadSupport implements Transport, S
                 socket.bind(localAddress);
                 return;
             } catch (BindException e) {
-                if (i + 1 == MAX_BIND_ATTEMPTS)
+                if (i + 1 == MAX_BIND_ATTEMPTS) {
                     throw e;
+                }
                 try {
                     Thread.sleep(BIND_ATTEMPT_DELAY);
                 } catch (InterruptedException e1) {

@@ -32,7 +32,7 @@ public class PerfRate {
         return totalCount;
     }
 
-    synchronized public void increment() {
+    public synchronized void increment() {
         totalCount++;
         count++;
     }
@@ -47,7 +47,7 @@ public class PerfRate {
     /**
      * Resets the rate sampling.
      */
-    synchronized public PerfRate cloneAndReset() {
+    public synchronized PerfRate cloneAndReset() {
         PerfRate rc = new PerfRate();
         rc.totalCount = totalCount;
         rc.count = count;

@@ -33,10 +33,13 @@ import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.network.NetworkTestSupport;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.transport.multicast.MulticastTransportTest;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class FailoverTransportBrokerTest extends NetworkTestSupport {
 
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(FailoverTransportBrokerTest.class);
+    private static final Log LOG = LogFactory.getLog(FailoverTransportBrokerTest.class);
 
     public ActiveMQDestination destination;
     public int deliveryMode;
@@ -67,7 +70,7 @@ public class FailoverTransportBrokerTest extends NetworkTestSupport {
         connection2.request(consumerInfo2);
 
         // Start a failover publisher.
-        log.info("Starting the failover connection.");
+        LOG.info("Starting the failover connection.");
         StubConnection connection3 = createFailoverConnection();
         ConnectionInfo connectionInfo3 = createConnectionInfo();
         SessionInfo sessionInfo3 = createSessionInfo(connectionInfo3);
@@ -100,7 +103,7 @@ public class FailoverTransportBrokerTest extends NetworkTestSupport {
         assertNoMessagesLeft(connectionB);
 
         // Dispose the server so that it fails over to the other server.
-        log.info("Disconnecting the active connection");
+        LOG.info("Disconnecting the active connection");
         serverA.stop();
 
         connection3.request(createMessage(producerInfo3, destination, deliveryMode));

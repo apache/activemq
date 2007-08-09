@@ -42,7 +42,7 @@ import org.apache.commons.logging.LogFactory;
 
 public class FanoutTransportBrokerTest extends NetworkTestSupport {
 
-    private static final Log log = LogFactory.getLog(FanoutTransportBrokerTest.class);
+    private static final Log LOG = LogFactory.getLog(FanoutTransportBrokerTest.class);
 
     public ActiveMQDestination destination;
     public int deliveryMode;
@@ -83,7 +83,7 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
         connection2.request(consumerInfo2);
 
         // Start a fanout publisher.
-        log.info("Starting the fanout connection.");
+        LOG.info("Starting the fanout connection.");
         StubConnection connection3 = createFanoutConnection();
         ConnectionInfo connectionInfo3 = createConnectionInfo();
         SessionInfo sessionInfo3 = createSessionInfo(connectionInfo3);
@@ -129,7 +129,7 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
         connection2.request(consumerInfo2);
 
         // Start a fanout publisher.
-        log.info("Starting the fanout connection.");
+        LOG.info("Starting the fanout connection.");
         final StubConnection connection3 = createFanoutConnection();
         ConnectionInfo connectionInfo3 = createConnectionInfo();
         SessionInfo sessionInfo3 = createSessionInfo(connectionInfo3);
@@ -154,7 +154,7 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
         MockTransport mt = (MockTransport)connection3.getTransport().narrow(MockTransport.class);
         mt.install(new TransportFilter(mt.getNext()) {
             public void oneway(Object command) throws IOException {
-                log.info("Dropping: " + command);
+                LOG.info("Dropping: " + command);
                 // just eat it! to simulate a recent failure.
             }
         });

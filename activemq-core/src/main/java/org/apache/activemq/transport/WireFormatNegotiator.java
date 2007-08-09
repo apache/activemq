@@ -80,8 +80,9 @@ public class WireFormatNegotiator extends TransportFilter {
 
     public void oneway(Object command) throws IOException {
         try {
-            if (!readyCountDownLatch.await(negotiateTimeout, TimeUnit.MILLISECONDS))
+            if (!readyCountDownLatch.await(negotiateTimeout, TimeUnit.MILLISECONDS)) {
                 throw new IOException("Wire format negotiation timeout: peer did not send his wire format.");
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new InterruptedIOException();

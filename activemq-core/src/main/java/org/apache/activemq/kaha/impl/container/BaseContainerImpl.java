@@ -1,21 +1,19 @@
 /**
- * 
  * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements. See the NOTICE file distributed with this
- * work for additional information regarding copyright ownership. The ASF
- * licenses this file to You under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package org.apache.activemq.kaha.impl.container;
 
 import java.io.IOException;
@@ -110,11 +108,11 @@ public abstract class BaseContainerImpl {
 
     protected abstract void remove(IndexItem currentItem);
 
-    protected synchronized final IndexLinkedList getInternalList() {
+    protected final synchronized IndexLinkedList getInternalList() {
         return indexList;
     }
 
-    public synchronized final void close() {
+    public final synchronized void close() {
         unload();
         closed = true;
     }
@@ -124,7 +122,7 @@ public abstract class BaseContainerImpl {
      * 
      * @see org.apache.activemq.kaha.ListContainer#isLoaded()
      */
-    public synchronized final boolean isLoaded() {
+    public final synchronized boolean isLoaded() {
         checkClosed();
         return loaded;
     }
@@ -147,7 +145,7 @@ public abstract class BaseContainerImpl {
         return indexManager;
     }
 
-    public synchronized final void expressDataInterest() throws IOException {
+    public final synchronized void expressDataInterest() throws IOException {
         long nextItem = root.getNextItem();
         while (nextItem != Item.POSITION_NOT_SET) {
             IndexItem item = indexManager.getIndex(nextItem);

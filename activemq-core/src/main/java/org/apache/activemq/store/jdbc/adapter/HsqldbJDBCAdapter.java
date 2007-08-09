@@ -19,14 +19,13 @@ package org.apache.activemq.store.jdbc.adapter;
 import org.apache.activemq.store.jdbc.Statements;
 
 /**
- * 
  * @version $Revision: 1.2 $
  */
 public class HsqldbJDBCAdapter extends BytesJDBCAdapter {
-	   
+
     public void setStatements(Statements statements) {
         statements.setBinaryDataType("OTHER");
         super.setStatements(statements);
     }
-    
+
 }

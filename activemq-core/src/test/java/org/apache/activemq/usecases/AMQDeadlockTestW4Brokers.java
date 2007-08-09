@@ -1,12 +1,12 @@
 /**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * Copyright 2005-2006 The Apache Software Foundation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -50,7 +50,7 @@ import org.springframework.jms.core.MessageCreator;
 import org.springframework.jms.listener.DefaultMessageListenerContainer;
 
 public class AMQDeadlockTestW4Brokers extends TestCase {
-    private static final transient Log log = LogFactory.getLog(AMQDeadlockTestW4Brokers.class);
+    private static final transient Log LOG = LogFactory.getLog(AMQDeadlockTestW4Brokers.class);
 
     private static final String BROKER_URL1 = "tcp://localhost:61616";
     private static final String BROKER_URL2 = "tcp://localhost:61617";
@@ -67,7 +67,7 @@ public class AMQDeadlockTestW4Brokers extends TestCase {
     private static final String QUEUE1_NAME = "test.queue.1";
     private static final int MAX_CONSUMERS = 5;
     private static final int NUM_MESSAGE_TO_SEND = 10000;
-    private static final CountDownLatch latch = new CountDownLatch(MAX_CONSUMERS * NUM_MESSAGE_TO_SEND);
+    private static final CountDownLatch LATCH = new CountDownLatch(MAX_CONSUMERS * NUM_MESSAGE_TO_SEND);
 
     @Override
     public void setUp() throws Exception {
@@ -143,8 +143,8 @@ public class AMQDeadlockTestW4Brokers extends TestCase {
                 executor.submit(task[i]);
             }
 
-            latch.await(15, TimeUnit.SECONDS);
-            assertTrue(latch.getCount() == MAX_CONSUMERS * NUM_MESSAGE_TO_SEND);
+            LATCH.await(15, TimeUnit.SECONDS);
+            assertTrue(LATCH.getCount() == MAX_CONSUMERS * NUM_MESSAGE_TO_SEND);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -249,11 +249,11 @@ public class AMQDeadlockTestW4Brokers extends TestCase {
                  */
                 int value = count.incrementAndGet();
                 if (value % 1000 == 0) {
-                    log.info("Consumed message: " + value);
+                    LOG.info("Consumed message: " + value);
                 }
 
                 Thread.sleep(waitTime);
-                latch.countDown();
+                LATCH.countDown();
                 /*
                  * } catch (JMSException e) { e.printStackTrace();
                  */
@@ -309,7 +309,7 @@ public class AMQDeadlockTestW4Brokers extends TestCase {
                     // Thread.sleep(1000);
                 }
             } catch (final Throwable e) {
-                log.error("Producer 1 is exiting", e);
+                LOG.error("Producer 1 is exiting", e);
             }
         }
     }

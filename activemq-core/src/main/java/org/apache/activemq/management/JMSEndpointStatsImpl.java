@@ -33,7 +33,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.3 $
  */
 public class JMSEndpointStatsImpl extends StatsImpl {
-    private static final Log log = LogFactory.getLog(JMSEndpointStatsImpl.class);
+    private static final Log LOG = LogFactory.getLog(JMSEndpointStatsImpl.class);
 
     protected CountStatisticImpl messageCount;
     protected CountStatisticImpl pendingMessageCount;
@@ -158,7 +158,7 @@ public class JMSEndpointStatsImpl extends StatsImpl {
             CountStatisticImpl c = (CountStatisticImpl)child;
             c.setParent((CountStatisticImpl)parent);
         } else {
-            log.warn("Cannot associate endpoint counters with session level counters as they are not both CountStatisticImpl clases. Endpoint: " + child + " session: " + parent);
+            LOG.warn("Cannot associate endpoint counters with session level counters as they are not both CountStatisticImpl clases. Endpoint: " + child + " session: " + parent);
         }
     }
 
@@ -167,7 +167,7 @@ public class JMSEndpointStatsImpl extends StatsImpl {
             TimeStatisticImpl c = (TimeStatisticImpl)child;
             c.setParent((TimeStatisticImpl)parent);
         } else {
-            log.warn("Cannot associate endpoint counters with session level counters as they are not both TimeStatisticImpl clases. Endpoint: " + child + " session: " + parent);
+            LOG.warn("Cannot associate endpoint counters with session level counters as they are not both TimeStatisticImpl clases. Endpoint: " + child + " session: " + parent);
         }
     }
 }

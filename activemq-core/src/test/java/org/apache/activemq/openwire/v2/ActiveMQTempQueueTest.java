@@ -30,7 +30,7 @@ import org.apache.activemq.command.ActiveMQTempQueue;
  */
 public class ActiveMQTempQueueTest extends ActiveMQTempDestinationTestSupport {
 
-    public static ActiveMQTempQueueTest SINGLETON = new ActiveMQTempQueueTest();
+    public static final ActiveMQTempQueueTest SINGLETON = new ActiveMQTempQueueTest();
 
     public Object createObject() throws Exception {
         ActiveMQTempQueue info = new ActiveMQTempQueue();

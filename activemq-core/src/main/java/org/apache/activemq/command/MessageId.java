@@ -28,8 +28,8 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
     protected long producerSequenceId;
     protected long brokerSequenceId;
 
-    transient private String key;
-    transient private int hashCode;
+    private transient String key;
+    private transient int hashCode;
 
     public MessageId() {
         this.producerId = new ProducerId();

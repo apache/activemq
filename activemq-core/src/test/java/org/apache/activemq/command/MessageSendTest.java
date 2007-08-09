@@ -20,9 +20,13 @@ import java.io.IOException;
 
 import junit.framework.Test;
 
+import org.apache.activemq.JmsQueueSendReceiveTwoConnectionsStartBeforeBrokerTest;
 import org.apache.activemq.util.ByteSequence;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class MessageSendTest extends DataStructureTestSupport {
+    private static final Log LOG = LogFactory.getLog(MessageSendTest.class);
 
     public static Test suite() {
         return suite(MessageSendTest.class);
@@ -70,6 +74,6 @@ public class MessageSendTest extends DataStructureTestSupport {
         }
         long end = System.currentTimeMillis();
 
-        log.info("marshaled/unmarshaled: " + p + " msgs at " + (p * 1000f / (end - start)) + " msgs/sec");
+        LOG.info("marshaled/unmarshaled: " + p + " msgs at " + (p * 1000f / (end - start)) + " msgs/sec");
     }
 }

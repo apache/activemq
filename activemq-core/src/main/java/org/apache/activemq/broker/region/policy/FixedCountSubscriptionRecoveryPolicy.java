@@ -45,14 +45,14 @@ public class FixedCountSubscriptionRecoveryPolicy implements SubscriptionRecover
         return rc;
     }
 
-    synchronized public boolean add(ConnectionContext context, MessageReference node) throws Exception {
+    public synchronized boolean add(ConnectionContext context, MessageReference node) throws Exception {
         messages[tail++] = node;
         if (tail >= messages.length)
             tail = 0;
         return true;
     }
 
-    synchronized public void recover(ConnectionContext context, Topic topic, SubscriptionRecovery sub) throws Exception {
+    public synchronized void recover(ConnectionContext context, Topic topic, SubscriptionRecovery sub) throws Exception {
         // Re-dispatch the last message seen.
         int t = tail;
         // The buffer may not have rolled over yet..., start from the front

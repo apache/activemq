@@ -27,5 +27,5 @@ public interface ReplayBufferListener {
      * Indications that the buffer has been discarded and so could be
      * re-introduced into some pool
      */
-    public void onBufferDiscarded(int commandId, Object buffer);
+    void onBufferDiscarded(int commandId, Object buffer);
 }

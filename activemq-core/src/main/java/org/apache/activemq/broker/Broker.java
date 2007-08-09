@@ -46,22 +46,22 @@ public interface Broker extends Region, Service {
      * @param type
      * @return
      */
-    public Broker getAdaptor(Class type);
+    Broker getAdaptor(Class type);
 
     /**
      * Get the id of the broker
      */
-    public BrokerId getBrokerId();
+    BrokerId getBrokerId();
 
     /**
      * Get the name of the broker
      */
-    public String getBrokerName();
+    String getBrokerName();
 
     /**
      * A remote Broker connects
      */
-    public void addBroker(Connection connection, BrokerInfo info);
+    void addBroker(Connection connection, BrokerInfo info);
 
     /**
      * Remove a BrokerInfo
@@ -69,14 +69,14 @@ public interface Broker extends Region, Service {
      * @param connection
      * @param info
      */
-    public void removeBroker(Connection connection, BrokerInfo info);
+    void removeBroker(Connection connection, BrokerInfo info);
 
     /**
      * A client is establishing a connection with the broker.
      * 
      * @throws Exception TODO
      */
-    public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception;
+    void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception;
 
     /**
      * A client is disconnecting from the broker.
@@ -87,7 +87,7 @@ public interface Broker extends Region, Service {
      *                that caused the client to disconnect.
      * @throws Exception TODO
      */
-    public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception;
+    void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception;
 
     /**
      * Adds a session.
@@ -96,7 +96,7 @@ public interface Broker extends Region, Service {
      * @param info
      * @throws Exception TODO
      */
-    public void addSession(ConnectionContext context, SessionInfo info) throws Exception;
+    void addSession(ConnectionContext context, SessionInfo info) throws Exception;
 
     /**
      * Removes a session.
@@ -105,7 +105,7 @@ public interface Broker extends Region, Service {
      * @param info
      * @throws Exception TODO
      */
-    public void removeSession(ConnectionContext context, SessionInfo info) throws Exception;
+    void removeSession(ConnectionContext context, SessionInfo info) throws Exception;
 
     /**
      * Adds a producer.
@@ -113,7 +113,7 @@ public interface Broker extends Region, Service {
      * @param context the enviorment the operation is being executed under.
      * @throws Exception TODO
      */
-    public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception;
+    void addProducer(ConnectionContext context, ProducerInfo info) throws Exception;
 
     /**
      * Removes a producer.
@@ -121,19 +121,19 @@ public interface Broker extends Region, Service {
      * @param context the enviorment the operation is being executed under.
      * @throws Exception TODO
      */
-    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception;
+    void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception;
 
     /**
      * @return all clients added to the Broker.
      * @throws Exception TODO
      */
-    public Connection[] getClients() throws Exception;
+    Connection[] getClients() throws Exception;
 
     /**
      * @return all destinations added to the Broker.
      * @throws Exception TODO
      */
-    public ActiveMQDestination[] getDestinations() throws Exception;
+    ActiveMQDestination[] getDestinations() throws Exception;
 
     /**
      * Gets a list of all the prepared xa transactions.
@@ -142,7 +142,7 @@ public interface Broker extends Region, Service {
      * @return
      * @throws Exception TODO
      */
-    public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Exception;
+    TransactionId[] getPreparedTransactions(ConnectionContext context) throws Exception;
 
     /**
      * Starts a transaction.
@@ -151,7 +151,7 @@ public interface Broker extends Region, Service {
      * @param xid
      * @throws Exception TODO
      */
-    public void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception;
+    void beginTransaction(ConnectionContext context, TransactionId xid) throws Exception;
 
     /**
      * Prepares a transaction. Only valid for xa transactions.
@@ -161,7 +161,7 @@ public interface Broker extends Region, Service {
      * @return id
      * @throws Exception TODO
      */
-    public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception;
+    int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception;
 
     /**
      * Rollsback a transaction.
@@ -171,7 +171,7 @@ public interface Broker extends Region, Service {
      * @throws Exception TODO
      */
 
-    public void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Exception;
+    void rollbackTransaction(ConnectionContext context, TransactionId xid) throws Exception;
 
     /**
      * Commits a transaction.
@@ -181,7 +181,7 @@ public interface Broker extends Region, Service {
      * @param onePhase
      * @throws Exception TODO
      */
-    public void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Exception;
+    void commitTransaction(ConnectionContext context, TransactionId xid, boolean onePhase) throws Exception;
 
     /**
      * Forgets a transaction.
@@ -190,7 +190,7 @@ public interface Broker extends Region, Service {
      * @param transactionId
      * @throws Exception
      */
-    public void forgetTransaction(ConnectionContext context, TransactionId transactionId) throws Exception;
+    void forgetTransaction(ConnectionContext context, TransactionId transactionId) throws Exception;
 
     /**
      * Get the BrokerInfo's of any connected Brokers
@@ -204,24 +204,24 @@ public interface Broker extends Region, Service {
      * 
      * @param messageDispatch
      */
-    public void preProcessDispatch(MessageDispatch messageDispatch);
+    void preProcessDispatch(MessageDispatch messageDispatch);
 
     /**
      * Notify the Broker that a dispatch has happened
      * 
      * @param messageDispatch
      */
-    public void postProcessDispatch(MessageDispatch messageDispatch);
+    void postProcessDispatch(MessageDispatch messageDispatch);
 
     /**
      * @return true if the broker has stopped
      */
-    public boolean isStopped();
+    boolean isStopped();
 
     /**
      * @return a Set of all durable destinations
      */
-    public Set getDurableDestinations();
+    Set getDurableDestinations();
 
     /**
      * Add and process a DestinationInfo object
@@ -230,7 +230,7 @@ public interface Broker extends Region, Service {
      * @param info
      * @throws Exception
      */
-    public void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception;
+    void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception;
 
     /**
      * Remove and process a DestinationInfo object
@@ -239,18 +239,18 @@ public interface Broker extends Region, Service {
      * @param info
      * @throws Exception
      */
-    public void removeDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception;
+    void removeDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception;
 
     /**
      * @return true if fault tolerant
      */
-    public boolean isFaultTolerantConfiguration();
+    boolean isFaultTolerantConfiguration();
 
     /**
      * @return the connection context used to make administration operations on
      *         startup or via JMX MBeans
      */
-    public abstract ConnectionContext getAdminConnectionContext();
+    ConnectionContext getAdminConnectionContext();
 
     /**
      * Sets the default administration connection context used when configuring
@@ -258,22 +258,22 @@ public interface Broker extends Region, Service {
      * 
      * @param adminConnectionContext
      */
-    public abstract void setAdminConnectionContext(ConnectionContext adminConnectionContext);
+    void setAdminConnectionContext(ConnectionContext adminConnectionContext);
 
     /**
      * @return the temp data store
      */
-    public Store getTempDataStore();
+    Store getTempDataStore();
 
     /**
      * @return the URI that can be used to connect to the local Broker
      */
-    public URI getVmConnectorURI();
+    URI getVmConnectorURI();
 
     /**
      * called when the brokerService starts
      */
-    public void brokerServiceStarted();
+    void brokerServiceStarted();
 
     /**
      * @return the BrokerService
@@ -295,7 +295,7 @@ public interface Broker extends Region, Service {
      * @param messageReference
      * @return true if the message is expired
      */
-    public boolean isExpired(MessageReference messageReference);
+    boolean isExpired(MessageReference messageReference);
 
     /**
      * A Message has Expired
@@ -303,7 +303,7 @@ public interface Broker extends Region, Service {
      * @param context
      * @param messageReference
      */
-    public void messageExpired(ConnectionContext context, MessageReference messageReference);
+    void messageExpired(ConnectionContext context, MessageReference messageReference);
 
     /**
      * A message needs to go the a DLQ
@@ -311,6 +311,6 @@ public interface Broker extends Region, Service {
      * @param context
      * @param messageReference
      */
-    public void sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference);
+    void sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference);
 
 }

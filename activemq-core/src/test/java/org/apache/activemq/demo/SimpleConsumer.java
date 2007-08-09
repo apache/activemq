@@ -44,7 +44,7 @@ import javax.naming.NamingException;
  */
 public class SimpleConsumer {
 
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(SimpleConsumer.class);
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(SimpleConsumer.class);
 
     /**
      * @param args the queue used by the example
@@ -62,11 +62,11 @@ public class SimpleConsumer {
          * Read destination name from command line and display it.
          */
         if (args.length != 1) {
-            log.info("Usage: java SimpleConsumer <destination-name>");
+            LOG.info("Usage: java SimpleConsumer <destination-name>");
             System.exit(1);
         }
         destinationName = args[0];
-        log.info("Destination name is " + destinationName);
+        LOG.info("Destination name is " + destinationName);
 
         /*
          * Create a JNDI API InitialContext object
@@ -74,7 +74,7 @@ public class SimpleConsumer {
         try {
             jndiContext = new InitialContext();
         } catch (NamingException e) {
-            log.info("Could not create JNDI API " + "context: " + e.toString());
+            LOG.info("Could not create JNDI API " + "context: " + e.toString());
             System.exit(1);
         }
 
@@ -85,7 +85,7 @@ public class SimpleConsumer {
             connectionFactory = (ConnectionFactory)jndiContext.lookup("ConnectionFactory");
             destination = (Destination)jndiContext.lookup(destinationName);
         } catch (NamingException e) {
-            log.info("JNDI API lookup failed: " + e.toString());
+            LOG.info("JNDI API lookup failed: " + e.toString());
             System.exit(1);
         }
 
@@ -106,14 +106,14 @@ public class SimpleConsumer {
                 if (m != null) {
                     if (m instanceof TextMessage) {
                         TextMessage message = (TextMessage)m;
-                        log.info("Reading message: " + message.getText());
+                        LOG.info("Reading message: " + message.getText());
                     } else {
                         break;
                     }
                 }
             }
         } catch (JMSException e) {
-            log.info("Exception occurred: " + e);
+            LOG.info("Exception occurred: " + e);
         } finally {
             if (connection != null) {
                 try {

@@ -25,13 +25,13 @@ import org.apache.commons.logging.LogFactory;
  */
 public class JmsQueueSendReceiveTwoConnectionsTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
 
-    protected static final Log log = LogFactory.getLog(JmsQueueSendReceiveTwoConnectionsTest.class);
-    
+    private static final Log LOG = LogFactory.getLog(JmsQueueSendReceiveTwoConnectionsTest.class);
+
     /**
-     * Set up the test with a queue and using two connections. 
+     * Set up the test with a queue and using two connections.
      * 
      * @see junit.framework.TestCase#setUp()
-     */	
+     */
     protected void setUp() throws Exception {
         topic = false;
         super.setUp();

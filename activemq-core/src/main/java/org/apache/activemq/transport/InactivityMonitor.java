@@ -33,7 +33,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class InactivityMonitor extends TransportFilter {
 
-    private final Log LOG = LogFactory.getLog(InactivityMonitor.class);
+    private static final Log LOG = LogFactory.getLog(InactivityMonitor.class);
 
     private WireFormatInfo localWireFormatInfo;
     private WireFormatInfo remoteWireFormatInfo;
@@ -155,13 +155,16 @@ public class InactivityMonitor extends TransportFilter {
         getTransportListener().onException(error);
     }
 
-    synchronized private void startMonitorThreads() throws IOException {
-        if (monitorStarted.get())
+    private synchronized void startMonitorThreads() throws IOException {
+        if (monitorStarted.get()) {
             return;
-        if (localWireFormatInfo == null)
+        }
+        if (localWireFormatInfo == null) {
             return;
-        if (remoteWireFormatInfo == null)
+        }
+        if (remoteWireFormatInfo == null) {
             return;
+        }
 
         long l = Math.min(localWireFormatInfo.getMaxInactivityDuration(), remoteWireFormatInfo.getMaxInactivityDuration());
         if (l > 0) {
@@ -174,7 +177,7 @@ public class InactivityMonitor extends TransportFilter {
     /**
      *
      */
-    synchronized private void stopMonitorThreads() {
+    private synchronized void stopMonitorThreads() {
         if (monitorStarted.compareAndSet(true, false)) {
             Scheduler.cancel(readChecker);
             Scheduler.cancel(writeChecker);

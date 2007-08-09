@@ -45,7 +45,7 @@ import org.springframework.core.io.Resource;
 
 public class SimpleNetworkTest extends TestCase {
 
-    protected static final Log log = LogFactory.getLog(SimpleNetworkTest.class);
+    private static final Log LOG = LogFactory.getLog(SimpleNetworkTest.class);
 
     protected static final int MESSAGE_COUNT = 10;
     protected AbstractApplicationContext context;
@@ -86,11 +86,11 @@ public class SimpleNetworkTest extends TestCase {
             TextMessage msg = localSession.createTextMessage("test msg: " + i);
             TextMessage result = (TextMessage)requestor.request(msg);
             assertNotNull(result);
-            log.info(result.getText());
+            LOG.info(result.getText());
         }
     }
 
-    public void XtestFiltering() throws Exception {
+    public void xtestFiltering() throws Exception {
 
         MessageConsumer includedConsumer = remoteSession.createConsumer(included);
         MessageConsumer excludedConsumer = remoteSession.createConsumer(excluded);
@@ -104,7 +104,7 @@ public class SimpleNetworkTest extends TestCase {
         assertNotNull(includedConsumer.receive(500));
     }
 
-    public void XtestConduitBridge() throws Exception {
+    public void xtestConduitBridge() throws Exception {
         MessageConsumer consumer1 = remoteSession.createConsumer(included);
         MessageConsumer consumer2 = remoteSession.createConsumer(included);
         MessageProducer producer = localSession.createProducer(included);
@@ -121,7 +121,7 @@ public class SimpleNetworkTest extends TestCase {
         assertNull(consumer2.receive(500));
     }
 
-    public void XtestDurableStoreAndForward() throws Exception {
+    public void xtestDurableStoreAndForward() throws Exception {
         // create a remote durable consumer
         MessageConsumer remoteConsumer = remoteSession.createDurableSubscriber(included, consumerName);
         Thread.sleep(1000);
@@ -192,10 +192,10 @@ public class SimpleNetworkTest extends TestCase {
         return "org/apache/activemq/network/localBroker.xml";
     }
 
-    protected BrokerService createBroker(String URI) throws Exception {
-        Resource resource = new ClassPathResource(URI);
+    protected BrokerService createBroker(String uri) throws Exception {
+        Resource resource = new ClassPathResource(uri);
         BrokerFactoryBean factory = new BrokerFactoryBean(resource);
-        resource = new ClassPathResource(URI);
+        resource = new ClassPathResource(uri);
         factory = new BrokerFactoryBean(resource);
         factory.afterPropertiesSet();
         BrokerService result = factory.getBroker();

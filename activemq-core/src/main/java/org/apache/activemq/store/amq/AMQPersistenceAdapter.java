@@ -1,15 +1,18 @@
 /**
- * 
- * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE
- * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
- * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
- * License. You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.activemq.store.amq;
 
@@ -70,7 +73,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener, BrokerServiceAware {
 
-    private static final Log log = LogFactory.getLog(AMQPersistenceAdapter.class);
+    private static final Log LOG = LogFactory.getLog(AMQPersistenceAdapter.class);
     private final ConcurrentHashMap<ActiveMQQueue, AMQMessageStore> queues = new ConcurrentHashMap<ActiveMQQueue, AMQMessageStore>();
     private final ConcurrentHashMap<ActiveMQTopic, AMQMessageStore> topics = new ConcurrentHashMap<ActiveMQTopic, AMQMessageStore>();
     private AsyncDataManager asyncDataManager;
@@ -125,7 +128,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
                 this.directory = new File(directory, "amqstore");
             }
         }
-        log.info("AMQStore starting using directory: " + directory);
+        LOG.info("AMQStore starting using directory: " + directory);
         this.directory.mkdirs();
 
         if (this.usageManager != null) {
@@ -151,7 +154,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
                 trace.setMessage("DELETED " + new Date());
                 Location location = asyncDataManager.write(wireFormat.marshal(trace), false);
                 asyncDataManager.setMark(location, true);
-                log.info("Journal deleted: ");
+                LOG.info("Journal deleted: ");
                 deleteAllMessages = false;
             } catch (IOException e) {
                 throw e;
@@ -162,7 +165,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         }
         referenceStoreAdapter.start();
         Set<Integer> files = referenceStoreAdapter.getReferenceFileIdsInUse();
-        log.info("Active data files: " + files);
+        LOG.info("Active data files: " + files);
         checkpointTask = taskRunnerFactory.createTaskRunner(new Task() {
 
             public boolean iterate() {
@@ -182,9 +185,9 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         // need to be recovered when the broker starts up.
 
         if (!referenceStoreAdapter.isStoreValid()) {
-            log.warn("The ReferenceStore is not valid - recovering ...");
+            LOG.warn("The ReferenceStore is not valid - recovering ...");
             recover();
-            log.info("Finished recovering the ReferenceStore");
+            LOG.info("Finished recovering the ReferenceStore");
         } else {
             Location location = writeTraceMessage("RECOVERED " + new Date(), true);
             asyncDataManager.setMark(location, true);
@@ -240,7 +243,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         IOException firstException = null;
         referenceStoreAdapter.stop();
         try {
-            log.debug("Journal close");
+            LOG.debug("Journal close");
             asyncDataManager.close();
         } catch (Exception e) {
             firstException = IOExceptionSupport.create("Failed to close journals: " + e, e);
@@ -266,17 +269,17 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
                 checkpointTask.wakeup();
             }
             if (sync) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Waitng for checkpoint to complete.");
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Waitng for checkpoint to complete.");
                 }
                 latch.await();
             }
             referenceStoreAdapter.checkpoint(sync);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.warn("Request to start checkpoint failed: " + e, e);
+            LOG.warn("Request to start checkpoint failed: " + e, e);
         } catch (IOException e) {
-            log.error("checkpoint failed: " + e, e);
+            LOG.error("checkpoint failed: " + e, e);
         }
     }
 
@@ -292,8 +295,8 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
             nextCheckpointCountDownLatch = new CountDownLatch(1);
         }
         try {
-            if (log.isDebugEnabled()) {
-                log.debug("Checkpoint started.");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Checkpoint started.");
             }
 
             Location newMark = null;
@@ -315,17 +318,17 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
             }
             try {
                 if (newMark != null) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("Marking journal at: " + newMark);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Marking journal at: " + newMark);
                     }
                     asyncDataManager.setMark(newMark, false);
                     writeTraceMessage("CHECKPOINT " + new Date(), true);
                 }
             } catch (Exception e) {
-                log.error("Failed to mark the Journal: " + e, e);
+                LOG.error("Failed to mark the Journal: " + e, e);
             }
-            if (log.isDebugEnabled()) {
-                log.debug("Checkpoint done.");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Checkpoint done.");
             }
         } finally {
             latch.countDown();
@@ -344,7 +347,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
             Set<Integer> inUse = referenceStoreAdapter.getReferenceFileIdsInUse();
             asyncDataManager.consolidateDataFilesNotIn(inUse);
         } catch (IOException e) {
-            log.error("Could not cleanup data files: " + e, e);
+            LOG.error("Could not cleanup data files: " + e, e);
         }
     }
 
@@ -441,7 +444,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         referenceStoreAdapter.recoverState();
         Location pos = null;
         int redoCounter = 0;
-        log.info("Journal Recovery Started from: " + asyncDataManager);
+        LOG.info("Journal Recovery Started from: " + asyncDataManager);
         long start = System.currentTimeMillis();
         ConnectionContext context = new ConnectionContext();
         // While we have records in the journal.
@@ -517,23 +520,23 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
                             throw new IOException("Invalid journal command type: " + command.getType());
                         }
                     } catch (IOException e) {
-                        log.error("Recovery Failure: Could not replay: " + c + ", reason: " + e, e);
+                        LOG.error("Recovery Failure: Could not replay: " + c + ", reason: " + e, e);
                     }
                 }
                     break;
                 case JournalTrace.DATA_STRUCTURE_TYPE:
                     JournalTrace trace = (JournalTrace)c;
-                    log.debug("TRACE Entry: " + trace.getMessage());
+                    LOG.debug("TRACE Entry: " + trace.getMessage());
                     break;
                 default:
-                    log.error("Unknown type of record in transaction log which will be discarded: " + c);
+                    LOG.error("Unknown type of record in transaction log which will be discarded: " + c);
                 }
             }
         }
         Location location = writeTraceMessage("RECOVERED " + new Date(), true);
         asyncDataManager.setMark(location, true);
         long end = System.currentTimeMillis();
-        log.info("Recovered " + redoCounter + " operations from redo log in " + ((end - start) / 1000.0f) + " seconds.");
+        LOG.info("Recovered " + redoCounter + " operations from redo log in " + ((end - start) / 1000.0f) + " seconds.");
     }
 
     private IOException createReadException(Location location, Exception e) {

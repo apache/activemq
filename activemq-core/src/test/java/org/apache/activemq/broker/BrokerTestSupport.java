@@ -58,13 +58,14 @@ import org.apache.commons.logging.LogFactory;
 
 public class BrokerTestSupport extends CombinationTestSupport {
 
-    protected static final Log LOG = LogFactory.getLog(BrokerTestSupport.class);
-
     /**
      * Setting this to false makes the test run faster but they may be less
      * accurate.
      */
     public static final boolean FAST_NO_MESSAGE_LEFT_ASSERT = System.getProperty("FAST_NO_MESSAGE_LEFT_ASSERT", "true").equals("true");
+
+    private static final Log LOG = LogFactory.getLog(BrokerTestSupport.class);
+
 
     protected RegionBroker regionBroker;
     protected BrokerService broker;
@@ -74,7 +75,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
     protected int tempDestGenerator;
     protected PersistenceAdapter persistenceAdapter;
 
-    protected int MAX_WAIT = 4000;
+    protected int maxWait = 4000;
 
     protected UsageManager memoryManager;
 
@@ -249,7 +250,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
         ArrayList skipped = new ArrayList();
 
         // Now get the messages.
-        Object m = connection.getDispatchQueue().poll(MAX_WAIT, TimeUnit.MILLISECONDS);
+        Object m = connection.getDispatchQueue().poll(maxWait, TimeUnit.MILLISECONDS);
         int i = 0;
         while (m != null) {
             if (m instanceof MessageDispatch && ((MessageDispatch)m).getConsumerId().equals(consumerInfo.getConsumerId())) {
@@ -263,7 +264,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
             } else {
                 skipped.add(m);
             }
-            m = connection.getDispatchQueue().poll(MAX_WAIT, TimeUnit.MILLISECONDS);
+            m = connection.getDispatchQueue().poll(maxWait, TimeUnit.MILLISECONDS);
         }
 
         for (Iterator iter = skipped.iterator(); iter.hasNext();) {
@@ -319,22 +320,22 @@ public class BrokerTestSupport extends CombinationTestSupport {
      * @throws InterruptedException
      */
     public Message receiveMessage(StubConnection connection) throws InterruptedException {
-        return receiveMessage(connection, MAX_WAIT);
+        return receiveMessage(connection, maxWait);
     }
 
     public Message receiveMessage(StubConnection connection, long timeout) throws InterruptedException {
         while (true) {
             Object o = connection.getDispatchQueue().poll(timeout, TimeUnit.MILLISECONDS);
 
-            if (o == null)
+            if (o == null) {
                 return null;
-
+            }
             if (o instanceof MessageDispatch) {
 
                 MessageDispatch dispatch = (MessageDispatch)o;
-                if (dispatch.getMessage() == null)
+                if (dispatch.getMessage() == null) {
                     return null;
-
+                }
                 dispatch.setMessage(dispatch.getMessage().copy());
                 dispatch.getMessage().setRedeliveryCounter(dispatch.getRedeliveryCounter());
                 return dispatch.getMessage();
@@ -343,11 +344,12 @@ public class BrokerTestSupport extends CombinationTestSupport {
     };
 
     protected void assertNoMessagesLeft(StubConnection connection) throws InterruptedException {
-        long wait = FAST_NO_MESSAGE_LEFT_ASSERT ? 0 : MAX_WAIT;
+        long wait = FAST_NO_MESSAGE_LEFT_ASSERT ? 0 : maxWait;
         while (true) {
             Object o = connection.getDispatchQueue().poll(wait, TimeUnit.MILLISECONDS);
-            if (o == null)
+            if (o == null) {
                 return;
+            }
             if (o instanceof MessageDispatch && ((MessageDispatch)o).getMessage() != null) {
                 fail("Received a message.");
             }

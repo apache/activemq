@@ -31,13 +31,13 @@ import org.apache.commons.logging.LogFactory;
  */
 public class UdpTransportTest extends UdpTestSupport {
 
-    protected static final Log log = LogFactory.getLog(UdpTransportTest.class);
+    private static final Log LOG = LogFactory.getLog(UdpTransportTest.class);
 
     protected int consumerPort = 9123;
     protected String producerURI = "udp://localhost:" + consumerPort;
 
     protected Transport createProducer() throws Exception {
-        log.info("Producer using URI: " + producerURI);
+        LOG.info("Producer using URI: " + producerURI);
         
         // we are not using the TransportFactory as this assumes that
         // UDP transports talk to a server using a WireFormat Negotiation step
@@ -50,7 +50,7 @@ public class UdpTransportTest extends UdpTestSupport {
     }
 
     protected Transport createConsumer() throws Exception {
-        log.info("Consumer on port: " + consumerPort);
+        LOG.info("Consumer on port: " + consumerPort);
         OpenWireFormat wireFormat = createWireFormat();
         UdpTransport transport = new UdpTransport(wireFormat, consumerPort);
         transport.setSequenceGenerator(new IntSequenceGenerator());

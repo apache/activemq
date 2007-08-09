@@ -20,11 +20,11 @@ package org.apache.activemq.command;
  * @openwire:marshaller
  * @version $Revision: 1.6 $
  */
-abstract public class TransactionId implements DataStructure {
+public abstract class TransactionId implements DataStructure {
 
-    abstract public boolean isXATransaction();
-    abstract public boolean isLocalTransaction();
-    abstract public String getTransactionKey();
+    public abstract boolean isXATransaction();
+    public abstract boolean isLocalTransaction();
+    public abstract String getTransactionKey();
 
     public boolean isMarshallAware() {
         return false;

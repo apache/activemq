@@ -22,5 +22,5 @@ package org.apache.activemq.thread;
  * @version $Revision: 1.3 $
  */
 public interface Task {
-    public boolean iterate();
+    boolean iterate();
 }

@@ -32,7 +32,7 @@ public interface DeadLetterStrategy {
      * @param message
      * @return true if message should be sent to a dead letter queue
      */
-    public boolean isSendToDeadLetterQueue(Message message);
+    boolean isSendToDeadLetterQueue(Message message);
 
     /**
      * Returns the dead letter queue for the given destination.

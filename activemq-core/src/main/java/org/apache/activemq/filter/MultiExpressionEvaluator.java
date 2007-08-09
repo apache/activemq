@@ -133,7 +133,7 @@ public class MultiExpressionEvaluator {
      * implement this interface.
      */
     static interface ExpressionListener {
-        public void evaluateResultEvent(Expression selector, MessageEvaluationContext message, Object result);
+        void evaluateResultEvent(Expression selector, MessageEvaluationContext message, Object result);
     }
 
     /**

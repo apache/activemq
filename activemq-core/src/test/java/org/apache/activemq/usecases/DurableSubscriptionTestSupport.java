@@ -36,7 +36,7 @@ import org.apache.activemq.store.PersistenceAdapter;
 /**
  * @version $Revision: 1.1.1.1 $
  */
-abstract public class DurableSubscriptionTestSupport extends TestSupport {
+public abstract class DurableSubscriptionTestSupport extends TestSupport {
 
     private Connection connection;
     private Session session;
@@ -101,15 +101,17 @@ abstract public class DurableSubscriptionTestSupport extends TestSupport {
     }
 
     private void destroyBroker() throws Exception {
-        if (connection != null)
+        if (connection != null) {
             connection.close();
-        if (broker != null)
+        }
+        if (broker != null) {
             broker.stop();
+        }
     }
 
-    abstract protected PersistenceAdapter createPersistenceAdapter() throws Exception;
+    protected abstract PersistenceAdapter createPersistenceAdapter() throws Exception;
 
-    public void XtestUnsubscribeSubscription() throws Exception {
+    public void xtestUnsubscribeSubscription() throws Exception {
         session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("TestTopic");
         consumer = session.createDurableSubscriber(topic, "sub1");
@@ -142,7 +144,7 @@ abstract public class DurableSubscriptionTestSupport extends TestSupport {
         assertTextMessageEquals("Msg:3", consumer.receive(5000));
     }
 
-    public void XtestInactiveDurableSubscriptionTwoConnections() throws Exception {
+    public void xtestInactiveDurableSubscriptionTwoConnections() throws Exception {
         session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("TestTopic");
         consumer = session.createDurableSubscriber(topic, "sub1");
@@ -173,7 +175,7 @@ abstract public class DurableSubscriptionTestSupport extends TestSupport {
         assertTextMessageEquals("Msg:2", consumer.receive(5000));
     }
 
-    public void XtestInactiveDurableSubscriptionBrokerRestart() throws Exception {
+    public void xtestInactiveDurableSubscriptionBrokerRestart() throws Exception {
         session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("TestTopic");
         consumer = session.createDurableSubscriber(topic, "sub1");
@@ -239,7 +241,7 @@ abstract public class DurableSubscriptionTestSupport extends TestSupport {
         assertNull(consumer.receive(5000));
     }
 
-    public void XtestInactiveDurableSubscriptionOneConnection() throws Exception {
+    public void xtestInactiveDurableSubscriptionOneConnection() throws Exception {
         session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("TestTopic");
         consumer = session.createDurableSubscriber(topic, "sub1");
@@ -264,7 +266,7 @@ abstract public class DurableSubscriptionTestSupport extends TestSupport {
         assertTextMessageEquals("Msg:2", consumer.receive(5000));
     }
 
-    public void XtestSelectorChange() throws Exception {
+    public void xtestSelectorChange() throws Exception {
         session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
         Topic topic = session.createTopic("TestTopic");
         consumer = session.createDurableSubscriber(topic, "sub1", "color='red'", false);
@@ -299,7 +301,7 @@ abstract public class DurableSubscriptionTestSupport extends TestSupport {
         assertTextMessageEquals("Msg:4", consumer.receive(5000));
     }
 
-    public void XtestDurableSubWorksInNewSession() throws JMSException {
+    public void xtestDurableSubWorksInNewSession() throws JMSException {
 
         // Create the consumer.
         connection.start();
@@ -326,7 +328,7 @@ abstract public class DurableSubscriptionTestSupport extends TestSupport {
 
     }
 
-    public void XtestDurableSubWorksInNewConnection() throws Exception {
+    public void xtestDurableSubWorksInNewConnection() throws Exception {
 
         // Create the consumer.
         connection.start();

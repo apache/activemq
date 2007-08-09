@@ -19,6 +19,9 @@ package org.apache.activemq.xbean;
 import javax.jms.Connection;
 
 import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.test.retroactive.RetroactiveConsumerWithMessageQueryTest;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * 
@@ -26,6 +29,8 @@ import org.apache.activemq.EmbeddedBrokerTestSupport;
  * @version $Revision$
  */
 public class MultipleTestsWithEmbeddedBrokerTest extends EmbeddedBrokerTestSupport {
+    private static final Log LOG = LogFactory.getLog(MultipleTestsWithEmbeddedBrokerTest.class);
+
     protected Connection connection;
 
     public void test1() throws Exception {

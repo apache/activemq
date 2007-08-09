@@ -42,7 +42,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class XBeanConfigTest extends TestCase {
 
-    protected static final Log log = LogFactory.getLog(XBeanConfigTest.class);
+    private static final Log LOG = LogFactory.getLog(XBeanConfigTest.class);
 
     protected BrokerService brokerService;
     protected Broker broker;
@@ -62,9 +62,9 @@ public class XBeanConfigTest extends TestCase {
         assertTrue("subscriptionRecoveryPolicy should be LastImageSubscriptionRecoveryPolicy: " + subscriptionRecoveryPolicy,
                    subscriptionRecoveryPolicy instanceof LastImageSubscriptionRecoveryPolicy);
 
-        log.info("destination: " + topic);
-        log.info("dispatchPolicy: " + dispatchPolicy);
-        log.info("subscriptionRecoveryPolicy: " + subscriptionRecoveryPolicy);
+        LOG.info("destination: " + topic);
+        LOG.info("dispatchPolicy: " + dispatchPolicy);
+        LOG.info("subscriptionRecoveryPolicy: " + subscriptionRecoveryPolicy);
 
         topic = (Topic)broker.addDestination(context, new ActiveMQTopic("ORDERS.BOOKS"));
         dispatchPolicy = topic.getDispatchPolicy();
@@ -76,9 +76,9 @@ public class XBeanConfigTest extends TestCase {
         TimedSubscriptionRecoveryPolicy timedSubcriptionPolicy = (TimedSubscriptionRecoveryPolicy)subscriptionRecoveryPolicy;
         assertEquals("getRecoverDuration()", 60000, timedSubcriptionPolicy.getRecoverDuration());
 
-        log.info("destination: " + topic);
-        log.info("dispatchPolicy: " + dispatchPolicy);
-        log.info("subscriptionRecoveryPolicy: " + subscriptionRecoveryPolicy);
+        LOG.info("destination: " + topic);
+        LOG.info("dispatchPolicy: " + dispatchPolicy);
+        LOG.info("subscriptionRecoveryPolicy: " + subscriptionRecoveryPolicy);
     }
 
     protected void setUp() throws Exception {
@@ -114,7 +114,7 @@ public class XBeanConfigTest extends TestCase {
 
     protected BrokerService createBroker() throws Exception {
         String uri = "org/apache/activemq/xbean/activemq-policy.xml";
-        log.info("Loading broker configuration from the classpath with URI: " + uri);
+        LOG.info("Loading broker configuration from the classpath with URI: " + uri);
         return BrokerFactory.createBroker(new URI("xbean:" + uri));
     }
 

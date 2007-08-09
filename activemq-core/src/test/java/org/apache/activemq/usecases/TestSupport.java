@@ -89,8 +89,9 @@ public class TestSupport extends TestCase {
      */
     protected void assertTextMessageEqual(String message, TextMessage m1, TextMessage m2) throws JMSException {
         assertFalse(message + ": expected {" + m1 + "}, but was {" + m2 + "}", m1 == null ^ m2 == null);
-        if (m1 == null)
+        if (m1 == null) {
             return;
+        }
         assertEquals(message, m1.getText(), m2.getText());
     }
 
@@ -105,8 +106,9 @@ public class TestSupport extends TestCase {
      */
     protected void assertEquals(String message, Message m1, Message m2) throws JMSException {
         assertFalse(message + ": expected {" + m1 + "}, but was {" + m2 + "}", m1 == null ^ m2 == null);
-        if (m1 == null)
+        if (m1 == null) {
             return;
+        }
         assertTrue(message + ": expected {" + m1 + "}, but was {" + m2 + "}", m1.getClass() == m2.getClass());
         if (m1 instanceof TextMessage) {
             assertTextMessageEqual(message, (TextMessage)m1, (TextMessage)m2);

@@ -62,7 +62,7 @@ import org.apache.commons.logging.LogFactory;
 public class JDBCPersistenceAdapter extends DataSourceSupport implements PersistenceAdapter,
     BrokerServiceAware {
 
-    private static final Log log = LogFactory.getLog(JDBCPersistenceAdapter.class);
+    private static final Log LOG = LogFactory.getLog(JDBCPersistenceAdapter.class);
     private static FactoryFinder factoryFinder = new FactoryFinder(
                                                                    "META-INF/services/org/apache/activemq/store/jdbc/");
 
@@ -155,7 +155,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
                 try {
                     getAdapter().doCreateTables(transactionContext);
                 } catch (SQLException e) {
-                    log.warn("Cannot create tables due to: " + e);
+                    LOG.warn("Cannot create tables due to: " + e);
                     JDBCPersistenceAdapter.log("Failure Details: ", e);
                 }
             } finally {
@@ -166,7 +166,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         if (isUseDatabaseLock()) {
             DatabaseLocker service = getDatabaseLocker();
             if (service == null) {
-                log.warn("No databaseLocker configured for the JDBC Persistence Adapter");
+                LOG.warn("No databaseLocker configured for the JDBC Persistence Adapter");
             } else {
                 service.start();
             }
@@ -202,13 +202,13 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     public void cleanup() {
         TransactionContext c = null;
         try {
-            log.debug("Cleaning up old messages.");
+            LOG.debug("Cleaning up old messages.");
             c = getTransactionContext();
             getAdapter().doDeleteOldMessages(c);
         } catch (IOException e) {
-            log.warn("Old message cleanup failed due to: " + e, e);
+            LOG.warn("Old message cleanup failed due to: " + e, e);
         } catch (SQLException e) {
-            log.warn("Old message cleanup failed due to: " + e);
+            LOG.warn("Old message cleanup failed due to: " + e);
             JDBCPersistenceAdapter.log("Failure Details: ", e);
         } finally {
             if (c != null) {
@@ -217,7 +217,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
                 } catch (Throwable e) {
                 }
             }
-            log.debug("Cleanup done.");
+            LOG.debug("Cleanup done.");
         }
     }
 
@@ -290,14 +290,14 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
 
                 try {
                     adapter = (DefaultJDBCAdapter)factoryFinder.newInstance(dirverName);
-                    log.info("Database driver recognized: [" + dirverName + "]");
+                    LOG.info("Database driver recognized: [" + dirverName + "]");
                 } catch (Throwable e) {
-                    log.warn("Database driver NOT recognized: [" + dirverName
+                    LOG.warn("Database driver NOT recognized: [" + dirverName
                              + "].  Will use default JDBC implementation.");
                 }
 
             } catch (SQLException e) {
-                log
+                LOG
                     .warn("JDBC error occurred while trying to detect database type.  Will use default JDBC implementation: "
                           + e.getMessage());
                 JDBCPersistenceAdapter.log("Failure Details: ", e);
@@ -417,13 +417,13 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         this.useDatabaseLock = useDatabaseLock;
     }
 
-    static public void log(String msg, SQLException e) {
+    public static void log(String msg, SQLException e) {
         String s = msg + e.getMessage();
         while (e.getNextException() != null) {
             e = e.getNextException();
             s += ", due to: " + e.getMessage();
         }
-        log.debug(s, e);
+        LOG.debug(s, e);
     }
 
     public Statements getStatements() {
@@ -454,7 +454,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
                 }
             }
         } catch (IOException e) {
-            log.error("Failed to get database when trying keepalive: " + e, e);
+            LOG.error("Failed to get database when trying keepalive: " + e, e);
         }
         if (stop) {
             stopBroker();
@@ -463,11 +463,11 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
 
     protected void stopBroker() {
         // we can no longer keep the lock so lets fail
-        log.info("No longer able to keep the exclusive lock so giving up being a master");
+        LOG.info("No longer able to keep the exclusive lock so giving up being a master");
         try {
             brokerService.stop();
         } catch (Exception e) {
-            log.warn("Failed to stop broker");
+            LOG.warn("Failed to stop broker");
         }
     }
 

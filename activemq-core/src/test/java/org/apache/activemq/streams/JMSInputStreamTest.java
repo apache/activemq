@@ -91,22 +91,22 @@ public class JMSInputStreamTest extends JmsTestSupport {
     }
 
     public void testLarge() throws Exception {
-        final int TEST_DATA = 23;
-        final int DATA_LENGTH = 4096;
-        final int COUNT = 1024;
-        byte[] data = new byte[DATA_LENGTH];
+        final int testData = 23;
+        final int dataLength = 4096;
+        final int count = 1024;
+        byte[] data = new byte[dataLength];
         for (int i = 0; i < data.length; i++) {
-            data[i] = TEST_DATA;
+            data[i] = testData;
         }
         final AtomicBoolean complete = new AtomicBoolean(false);
         Thread runner = new Thread(new Runnable() {
             public void run() {
                 try {
-                    for (int x = 0; x < COUNT; x++) {
+                    for (int x = 0; x < count; x++) {
                         byte[] b = new byte[2048];
                         in.readFully(b);
                         for (int i = 0; i < b.length; i++) {
-                            assertTrue(b[i] == TEST_DATA);
+                            assertTrue(b[i] == testData);
                         }
                     }
                     complete.set(true);
@@ -119,7 +119,7 @@ public class JMSInputStreamTest extends JmsTestSupport {
             }
         });
         runner.start();
-        for (int i = 0; i < COUNT; i++) {
+        for (int i = 0; i < count; i++) {
             out.write(data);
         }
         out.flush();

@@ -28,7 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class DelegatingTransactionalMessageListener implements MessageListener {
-    private static final transient Log log = LogFactory.getLog(DelegatingTransactionalMessageListener.class);
+    private static final transient Log LOG = LogFactory.getLog(DelegatingTransactionalMessageListener.class);
 
     private final MessageListener underlyingListener;
     private boolean transacted = true;
@@ -60,7 +60,7 @@ public class DelegatingTransactionalMessageListener implements MessageListener {
         try {
             session.rollback();
         } catch (JMSException e) {
-            log.error("Failed to rollback: " + e, e);
+            LOG.error("Failed to rollback: " + e, e);
         }
     }
 

@@ -26,7 +26,7 @@ import org.apache.activemq.broker.BrokerTest;
 import org.apache.activemq.broker.StubConnection;
 import org.apache.activemq.broker.TransportConnector;
 
-abstract public class TransportBrokerTestSupport extends BrokerTest {
+public abstract class TransportBrokerTestSupport extends BrokerTest {
 
     private TransportConnector connector;
     ArrayList connections = new ArrayList();

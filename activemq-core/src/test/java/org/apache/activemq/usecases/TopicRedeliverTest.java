@@ -146,7 +146,7 @@ public class TopicRedeliverTest extends TestSupport {
      * @throws Exception
      */
 
-    public void XtestTransactionRollbackOnSessionClose() throws Exception {
+    public void xtestTransactionRollbackOnSessionClose() throws Exception {
         Destination destination = createDestination(getClass().getName());
         Connection connection = createConnection();
         connection.setClientID(idGen.generateId());

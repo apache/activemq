@@ -23,5 +23,5 @@ package org.apache.activemq.advisory;
  */
 public interface ProducerListener {
 
-    public void onProducerEvent(ProducerEvent event);
+    void onProducerEvent(ProducerEvent event);
 }

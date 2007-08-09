@@ -23,5 +23,5 @@ package org.apache.activemq.advisory;
  */
 public interface ConsumerListener {
 
-    public void onConsumerEvent(ConsumerEvent event);
+    void onConsumerEvent(ConsumerEvent event);
 }

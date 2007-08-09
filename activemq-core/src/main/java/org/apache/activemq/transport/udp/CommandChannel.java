@@ -30,24 +30,24 @@ import org.apache.activemq.transport.reliable.Replayer;
  */
 public interface CommandChannel extends Replayer, Service {
 
-    public Command read() throws IOException;
+    Command read() throws IOException;
 
-    public void write(Command command, SocketAddress address) throws IOException;
+    void write(Command command, SocketAddress address) throws IOException;
 
-    public int getDatagramSize();
+    int getDatagramSize();
 
     /**
      * Sets the default size of a datagram on the network.
      */
-    public void setDatagramSize(int datagramSize);
+    void setDatagramSize(int datagramSize);
 
-    public DatagramHeaderMarshaller getHeaderMarshaller();
+    DatagramHeaderMarshaller getHeaderMarshaller();
 
-    public void setHeaderMarshaller(DatagramHeaderMarshaller headerMarshaller);
+    void setHeaderMarshaller(DatagramHeaderMarshaller headerMarshaller);
 
-    public void setTargetAddress(SocketAddress address);
+    void setTargetAddress(SocketAddress address);
 
-    public void setReplayAddress(SocketAddress address);
+    void setReplayAddress(SocketAddress address);
 
-    public void setReplayBuffer(ReplayBuffer replayBuffer);
+    void setReplayBuffer(ReplayBuffer replayBuffer);
 }

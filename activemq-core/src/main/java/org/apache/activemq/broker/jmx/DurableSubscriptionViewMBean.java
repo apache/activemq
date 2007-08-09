@@ -27,7 +27,7 @@ public interface DurableSubscriptionViewMBean extends SubscriptionViewMBean {
     /**
      * @return name of the durable subscription name
      */
-    public String getSubscriptionName();
+    String getSubscriptionName();
 
     /**
      * Browse messages for this durable subscriber
@@ -35,7 +35,7 @@ public interface DurableSubscriptionViewMBean extends SubscriptionViewMBean {
      * @return messages
      * @throws OpenDataException
      */
-    public CompositeData[] browse() throws OpenDataException;
+    CompositeData[] browse() throws OpenDataException;
 
     /**
      * Browse messages for this durable subscriber
@@ -43,11 +43,11 @@ public interface DurableSubscriptionViewMBean extends SubscriptionViewMBean {
      * @return messages
      * @throws OpenDataException
      */
-    public TabularData browseAsTable() throws OpenDataException;
+    TabularData browseAsTable() throws OpenDataException;
 
     /**
      * Destroys the durable subscription so that messages will no longer be
      * stored for this subscription
      */
-    public void destroy() throws Exception;
+    void destroy() throws Exception;
 }
