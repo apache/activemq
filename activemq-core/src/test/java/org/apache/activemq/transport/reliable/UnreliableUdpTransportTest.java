@@ -16,17 +16,15 @@
  */
 package org.apache.activemq.transport.reliable;
 
+import java.net.SocketAddress;
+import java.net.URI;
+
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.CommandJoiner;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.udp.ResponseRedirectInterceptor;
 import org.apache.activemq.transport.udp.UdpTransport;
 import org.apache.activemq.transport.udp.UdpTransportTest;
-
-import java.net.SocketAddress;
-import java.net.URI;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * 

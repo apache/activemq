@@ -17,10 +17,10 @@
 package org.apache.activemq.kaha;
 
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.util.concurrent.CountDownLatch;
+
 import junit.framework.TestCase;
 import org.apache.activemq.kaha.impl.KahaStore;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * Store test

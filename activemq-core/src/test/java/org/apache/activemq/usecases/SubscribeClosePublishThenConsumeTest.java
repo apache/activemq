@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.usecases;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.test.TestSupport;
-
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Message;
@@ -27,6 +24,9 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.test.TestSupport;
 
 /**
  * @author Paul Smith

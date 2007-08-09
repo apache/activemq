@@ -16,26 +16,25 @@
  */
 package org.apache.activemq.usecases;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.CombinationTestSupport;
-import org.apache.activemq.util.MessageIdList;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.xbean.XBeanBrokerFactory;
-
 import java.net.URI;
 import java.util.Arrays;
 
-import junit.framework.Test;
-
-import javax.jms.Destination;
-import javax.jms.ConnectionFactory;
 import javax.jms.Connection;
-import javax.jms.Session;
+import javax.jms.ConnectionFactory;
+import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
+import javax.jms.Session;
 import javax.jms.TextMessage;
+
+import junit.framework.Test;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.CombinationTestSupport;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.util.MessageIdList;
+import org.apache.activemq.xbean.XBeanBrokerFactory;
 
 public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
 

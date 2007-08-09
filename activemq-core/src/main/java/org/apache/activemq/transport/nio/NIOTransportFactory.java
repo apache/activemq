@@ -30,11 +30,11 @@ import java.nio.channels.SocketChannel;
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
 
-import org.apache.activemq.wireformat.WireFormat;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.transport.tcp.TcpTransportFactory;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
+import org.apache.activemq.wireformat.WireFormat;
 
 public class NIOTransportFactory extends TcpTransportFactory {
 

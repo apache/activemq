@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.broker.view;
 
+import java.io.FileWriter;
+import java.io.PrintWriter;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.io.FileWriter;
-import java.io.PrintWriter;
 
 /**
  * Useful base class
@@ -46,8 +46,7 @@ public abstract class DotFileInterceptorSupport extends BrokerFilter {
         PrintWriter writer = new PrintWriter(new FileWriter(file));
         try {
             generateFile(writer);
-        }
-        finally {
+        } finally {
             writer.close();
         }
     }

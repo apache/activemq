@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.broker.virtual;
 
+import java.net.URI;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.xbean.XBeanBrokerFactory;
-
-import java.net.URI;
 
 /**
  *

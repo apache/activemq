@@ -16,8 +16,7 @@
  */
 package org.apache.activemq;
 
-import org.apache.activemq.management.JMSStatsImpl;
-import org.apache.activemq.transport.Transport;
+import java.net.URI;
 
 import javax.jms.JMSException;
 import javax.jms.XAConnection;
@@ -27,7 +26,8 @@ import javax.jms.XAQueueConnectionFactory;
 import javax.jms.XATopicConnection;
 import javax.jms.XATopicConnectionFactory;
 
-import java.net.URI;
+import org.apache.activemq.management.JMSStatsImpl;
+import org.apache.activemq.transport.Transport;
 
 /**
  * A factory of {@link XAConnection} instances

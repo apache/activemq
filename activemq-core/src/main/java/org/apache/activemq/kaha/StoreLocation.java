@@ -23,7 +23,7 @@ package org.apache.activemq.kaha;
  * 
  * @version $Revision: 1.2 $
  */
-public interface StoreLocation{
+public interface StoreLocation {
 
     /**
      * @return Returns the size.

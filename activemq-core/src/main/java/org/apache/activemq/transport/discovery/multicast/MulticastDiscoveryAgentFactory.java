@@ -16,15 +16,15 @@
  */
 package org.apache.activemq.transport.discovery.multicast;
 
+import java.io.IOException;
+import java.net.URI;
+import java.util.Map;
+
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryAgentFactory;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.Map;
 
 public class MulticastDiscoveryAgentFactory extends DiscoveryAgentFactory {
 

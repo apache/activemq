@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.store.jdbc;
 
-import org.apache.derby.jdbc.EmbeddedDataSource;
-import org.apache.activemq.util.IOHelper;
+import java.io.File;
+import java.io.IOException;
 
 import javax.sql.DataSource;
 
-import java.io.File;
-import java.io.IOException;
+import org.apache.activemq.util.IOHelper;
+import org.apache.derby.jdbc.EmbeddedDataSource;
 
 /**
  * A helper class which provides a factory method to create a default

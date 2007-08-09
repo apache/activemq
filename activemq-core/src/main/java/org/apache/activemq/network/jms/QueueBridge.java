@@ -17,7 +17,6 @@
 package org.apache.activemq.network.jms;
 
 import javax.jms.Connection;
-import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -27,7 +26,6 @@ import javax.jms.QueueConnection;
 import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
-import javax.jms.Topic;
 
 /**
  * A Destination bridge is used to bridge between to different JMS systems

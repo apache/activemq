@@ -16,9 +16,9 @@
  */
 package org.apache.activemq.broker.region;
 
-import org.apache.activemq.broker.ConnectionContext;
-
 import javax.jms.JMSException;
+
+import org.apache.activemq.broker.ConnectionContext;
 
 /**
  * Represents a filter on message references

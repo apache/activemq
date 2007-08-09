@@ -16,10 +16,9 @@
  */
 package org.apache.activemq.transport.nio;
 
-import org.apache.activemq.transport.TransportBrokerTestSupport;
-
 import junit.framework.Test;
 import junit.textui.TestRunner;
+import org.apache.activemq.transport.TransportBrokerTestSupport;
 
 public class NIOTransportBrokerTest extends TransportBrokerTestSupport {
 

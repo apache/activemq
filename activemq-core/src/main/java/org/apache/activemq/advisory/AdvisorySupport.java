@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.advisory;
 
+import javax.jms.Destination;
+
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
-
-import javax.jms.Destination;
 
 public class AdvisorySupport {
 
@@ -102,8 +102,9 @@ public class AdvisorySupport {
             return TEMP_QUEUE_ADVISORY_TOPIC;
         case ActiveMQDestination.TEMP_TOPIC_TYPE:
             return TEMP_TOPIC_ADVISORY_TOPIC;
+        default:
+            throw new RuntimeException("Unknown destination type: " + destination.getDestinationType());
         }
-        throw new RuntimeException("Unknown destination type: " + destination.getDestinationType());
     }
 
     public static boolean isDestinationAdvisoryTopic(ActiveMQDestination destination) {

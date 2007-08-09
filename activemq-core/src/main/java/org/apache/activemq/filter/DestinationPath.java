@@ -27,7 +27,7 @@ import org.apache.activemq.command.Message;
 
 /**
  * Helper class for decomposing a Destination into a number of paths
- *
+ * 
  * @version $Revision: 1.3 $
  */
 public class DestinationPath {
@@ -61,7 +61,7 @@ public class DestinationPath {
 
     /**
      * Converts the paths to a single String seperated by dots.
-     *
+     * 
      * @param paths
      * @return
      */
@@ -74,8 +74,7 @@ public class DestinationPath {
             String path = paths[i];
             if (path == null) {
                 buffer.append("*");
-            }
-            else {
+            } else {
                 buffer.append(path);
             }
         }

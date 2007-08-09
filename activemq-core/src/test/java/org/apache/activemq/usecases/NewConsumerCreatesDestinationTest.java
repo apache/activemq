@@ -16,18 +16,16 @@
  */
 package org.apache.activemq.usecases;
 
-import org.apache.activemq.EmbeddedBrokerTestSupport;
+import java.util.Set;
+
+import javax.jms.Destination;
+import javax.jms.Session;
+
 import org.apache.activemq.EmbeddedBrokerAndConnectionTestSupport;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.Session;
-
-import java.util.Set;
 
 /**
  * 

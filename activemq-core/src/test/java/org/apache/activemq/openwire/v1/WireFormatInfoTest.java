@@ -16,12 +16,8 @@
  */
 package org.apache.activemq.openwire.v1;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import org.apache.activemq.openwire.*;
-import org.apache.activemq.command.*;
+import org.apache.activemq.command.WireFormatInfo;
+import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
 
 /**
  * Test case for the OpenWire marshalling for WireFormatInfo NOTE!: This file is

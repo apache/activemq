@@ -16,13 +16,14 @@
  */
 package org.apache.activemq.blob;
 
-import org.apache.activemq.command.ActiveMQBlobMessage;
-
-import javax.jms.JMSException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+
+import javax.jms.JMSException;
+
+import org.apache.activemq.command.ActiveMQBlobMessage;
 
 /**
  * Represents a strategy of uploading a file/stream to some remote

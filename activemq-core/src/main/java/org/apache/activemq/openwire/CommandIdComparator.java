@@ -16,9 +16,9 @@
  */
 package org.apache.activemq.openwire;
 
-import org.apache.activemq.command.Command;
-
 import java.util.Comparator;
+
+import org.apache.activemq.command.Command;
 
 /**
  * A @{link Comparator} of commands using their {@link Command#getCommandId()}

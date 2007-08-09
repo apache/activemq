@@ -16,14 +16,14 @@
  */
 package org.apache.activemq.broker;
 
+import java.net.URI;
+import java.util.Set;
+
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.xbean.XBeanBrokerFactory;
-
-import java.net.URI;
-import java.util.Set;
 
 /**
  * 

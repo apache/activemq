@@ -32,10 +32,10 @@ public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
         boolean result = false;
         if (message != null) {
             result = true;
-            if (message.isPersistent() == false && processNonPersistent == false) {
+            if (!message.isPersistent() && !processNonPersistent) {
                 result = false;
             }
-            if (message.isExpired() && processExpired == false) {
+            if (message.isExpired() && !processExpired) {
                 result = false;
             }
         }

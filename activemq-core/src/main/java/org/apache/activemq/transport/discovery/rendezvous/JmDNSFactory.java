@@ -20,8 +20,9 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
-import javax.jmdns.JmDNS;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.jmdns.JmDNS;
 
 public class JmDNSFactory {
 

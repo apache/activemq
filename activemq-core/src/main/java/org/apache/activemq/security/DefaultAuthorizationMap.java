@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.security;
 
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.filter.DestinationMap;
-
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.filter.DestinationMap;
 
 /**
  * Represents a destination based configuration of policies so that individual

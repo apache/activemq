@@ -16,16 +16,16 @@
  */
 package org.apache.activemq.store;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Set;
+
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.memory.UsageManager;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Set;
 
 /**
  * Adapter to the actual persistence mechanism used with ActiveMQ

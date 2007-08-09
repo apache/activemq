@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.broker.policy;
 
-import org.apache.activemq.TestSupport;
-import org.apache.activemq.broker.BrokerService;
-
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -29,6 +26,9 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
+
+import org.apache.activemq.TestSupport;
+import org.apache.activemq.broker.BrokerService;
 
 /**
  * @version $Revision$

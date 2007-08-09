@@ -16,9 +16,9 @@
  */
 package org.apache.activemq.xbean;
 
-import org.apache.activemq.EmbeddedBrokerTestSupport;
-
 import javax.jms.Connection;
+
+import org.apache.activemq.EmbeddedBrokerTestSupport;
 
 /**
  * 

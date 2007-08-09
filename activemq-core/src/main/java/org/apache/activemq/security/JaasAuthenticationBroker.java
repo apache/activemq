@@ -18,6 +18,7 @@ package org.apache.activemq.security;
 
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
@@ -26,10 +27,7 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ConnectionInfo;
-
 import org.apache.activemq.jaas.JassCredentialCallbackHandler;
-
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Logs a user in using JAAS.

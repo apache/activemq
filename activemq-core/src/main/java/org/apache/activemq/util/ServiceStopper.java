@@ -16,12 +16,12 @@
  */
 package org.apache.activemq.util;
 
+import java.util.Iterator;
+import java.util.List;
+
 import org.apache.activemq.Service;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * A helper class used to stop a bunch of services, catching and logging any

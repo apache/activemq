@@ -16,29 +16,20 @@
  */
 package org.apache.activemq.security;
 
-import org.apache.activemq.filter.DestinationMapEntry;
-import org.apache.activemq.jaas.GroupPrincipal;
-
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.StringTokenizer;
-
 /**
  * Represents an entry in a {@link DefaultAuthorizationMap} for assigning
- * different operations (read, write, admin) of user roles to
- * a temporary destination
+ * different operations (read, write, admin) of user roles to a temporary
+ * destination
  * 
  * @org.apache.xbean.XBean
- * 
  * @version $Revision: 426366 $
  */
 public class TempDestinationAuthorizationEntry extends AuthorizationEntry {
 
-  
     public void afterPropertiesSet() throws Exception {
-       //we don't need to check if destination is specified since
-       //the TempDestinationAuthorizationEntry  should map to all temp destinations	
-    }    
+        // we don't need to check if destination is specified since
+        // the TempDestinationAuthorizationEntry should map to all temp
+        // destinations
+    }
 
 }

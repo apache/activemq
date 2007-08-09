@@ -16,9 +16,9 @@
  */
 package org.apache.activemq.security;
 
-import org.apache.activemq.command.ActiveMQDestination;
-
 import java.util.Set;
+
+import org.apache.activemq.command.ActiveMQDestination;
 
 /**
  *

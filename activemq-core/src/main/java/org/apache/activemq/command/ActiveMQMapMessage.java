@@ -142,7 +142,6 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
      * Builds the message body from data
      * 
      * @throws JMSException
-     * 
      * @throws IOException
      */
     private void loadContent() throws JMSException {
@@ -503,7 +502,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
      */
     public void setBoolean(String name, boolean value) throws JMSException {
         initializeWriting();
-        put(name, (value) ? Boolean.TRUE : Boolean.FALSE);
+        put(name, value ? Boolean.TRUE : Boolean.FALSE);
     }
 
     /**

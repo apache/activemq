@@ -16,8 +16,6 @@
  */
 package org.apache.activemq.util;
 
-import org.apache.activemq.command.ActiveMQDestination;
-
 import java.beans.PropertyEditor;
 import java.beans.PropertyEditorManager;
 import java.lang.reflect.Field;
@@ -30,8 +28,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
+
+import org.apache.activemq.command.ActiveMQDestination;
 
 public class IntrospectionSupport {
 

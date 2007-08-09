@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.security;
 
+import java.net.URL;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerPlugin;
-
-import java.net.URL;
 
 /**
  * Adds a JAAS based authentication security plugin

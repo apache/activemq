@@ -28,7 +28,7 @@ import javax.jms.ConnectionMetaData;
  * the <CODE>Connection</CODE> object.
  */
 
-public class ActiveMQConnectionMetaData implements ConnectionMetaData {
+public final class ActiveMQConnectionMetaData implements ConnectionMetaData {
 
     public static final String PROVIDER_VERSION;
     public static final int PROVIDER_MAJOR_VERSION;

@@ -21,8 +21,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import junit.framework.TestCase;
 
@@ -41,7 +41,7 @@ public class MapContainerTest extends TestCase {
         test.put(key, value);
         store.close();
         store = getStore();
-        assertTrue(store.getMapContainerIds().isEmpty() == false);
+        assertFalse(store.getMapContainerIds().isEmpty());
         test = store.getMapContainer("test", "test");
         assertEquals(value, test.get(key));
 

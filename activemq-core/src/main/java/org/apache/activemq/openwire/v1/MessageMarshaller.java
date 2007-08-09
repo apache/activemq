@@ -21,27 +21,24 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.activemq.openwire.*;
-import org.apache.activemq.command.*;
-
-
+import org.apache.activemq.command.DataStructure;
+import org.apache.activemq.command.Message;
+import org.apache.activemq.openwire.BooleanStream;
+import org.apache.activemq.openwire.OpenWireFormat;
 
 /**
- * Marshalling code for Open Wire Format for MessageMarshaller
- *
- *
- * NOTE!: This file is auto generated - do not modify!
- *        if you need to make a change, please see the modify the groovy scripts in the
- *        under src/gram/script and then use maven openwire:generate to regenerate 
- *        this file.
- *
+ * Marshalling code for Open Wire Format for MessageMarshaller NOTE!: This file
+ * is auto generated - do not modify! if you need to make a change, please see
+ * the modify the groovy scripts in the under src/gram/script and then use maven
+ * openwire:generate to regenerate this file.
+ * 
  * @version $Revision$
  */
 public abstract class MessageMarshaller extends BaseCommandMarshaller {
 
     /**
      * Un-marshal an object instance from the data input stream
-     *
+     * 
      * @param o the object to un-marshal
      * @param dataIn the data input stream to build the object from
      * @throws IOException
@@ -52,38 +49,37 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         Message info = (Message)o;
 
         info.beforeUnmarshall(wireFormat);
-        
-        info.setProducerId((org.apache.activemq.command.ProducerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setDestination((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setTransactionId((org.apache.activemq.command.TransactionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setOriginalDestination((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setMessageId((org.apache.activemq.command.MessageId) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
-        info.setOriginalTransactionId((org.apache.activemq.command.TransactionId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+
+        info.setProducerId((org.apache.activemq.command.ProducerId)tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination)tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setTransactionId((org.apache.activemq.command.TransactionId)tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setOriginalDestination((org.apache.activemq.command.ActiveMQDestination)tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setMessageId((org.apache.activemq.command.MessageId)tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setOriginalTransactionId((org.apache.activemq.command.TransactionId)tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setGroupID(tightUnmarshalString(dataIn, bs));
         info.setGroupSequence(dataIn.readInt());
         info.setCorrelationId(tightUnmarshalString(dataIn, bs));
         info.setPersistent(bs.readBoolean());
         info.setExpiration(tightUnmarshalLong(wireFormat, dataIn, bs));
         info.setPriority(dataIn.readByte());
-        info.setReplyTo((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setReplyTo((org.apache.activemq.command.ActiveMQDestination)tightUnmarsalNestedObject(wireFormat, dataIn, bs));
         info.setTimestamp(tightUnmarshalLong(wireFormat, dataIn, bs));
         info.setType(tightUnmarshalString(dataIn, bs));
         info.setContent(tightUnmarshalByteSequence(dataIn, bs));
         info.setMarshalledProperties(tightUnmarshalByteSequence(dataIn, bs));
-        info.setDataStructure((org.apache.activemq.command.DataStructure) tightUnmarsalNestedObject(wireFormat, dataIn, bs));
-        info.setTargetConsumerId((org.apache.activemq.command.ConsumerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDataStructure((org.apache.activemq.command.DataStructure)tightUnmarsalNestedObject(wireFormat, dataIn, bs));
+        info.setTargetConsumerId((org.apache.activemq.command.ConsumerId)tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setCompressed(bs.readBoolean());
         info.setRedeliveryCounter(dataIn.readInt());
 
         if (bs.readBoolean()) {
             short size = dataIn.readShort();
             org.apache.activemq.command.BrokerId value[] = new org.apache.activemq.command.BrokerId[size];
-            for( int i=0; i < size; i++ ) {
-                value[i] = (org.apache.activemq.command.BrokerId) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
+            for (int i = 0; i < size; i++) {
+                value[i] = (org.apache.activemq.command.BrokerId)tightUnmarsalNestedObject(wireFormat, dataIn, bs);
             }
             info.setBrokerPath(value);
-        }
-        else {
+        } else {
             info.setBrokerPath(null);
         }
         info.setArrival(tightUnmarshalLong(wireFormat, dataIn, bs));
@@ -93,7 +89,6 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         info.afterUnmarshall(wireFormat);
 
     }
-
 
     /**
      * Write the booleans that this object uses to a BooleanStream
@@ -114,9 +109,9 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         rc += tightMarshalString1(info.getGroupID(), bs);
         rc += tightMarshalString1(info.getCorrelationId(), bs);
         bs.writeBoolean(info.isPersistent());
-        rc+=tightMarshalLong1(wireFormat, info.getExpiration(), bs);
+        rc += tightMarshalLong1(wireFormat, info.getExpiration(), bs);
         rc += tightMarshalNestedObject1(wireFormat, (DataStructure)info.getReplyTo(), bs);
-        rc+=tightMarshalLong1(wireFormat, info.getTimestamp(), bs);
+        rc += tightMarshalLong1(wireFormat, info.getTimestamp(), bs);
         rc += tightMarshalString1(info.getType(), bs);
         rc += tightMarshalByteSequence1(info.getContent(), bs);
         rc += tightMarshalByteSequence1(info.getMarshalledProperties(), bs);
@@ -124,7 +119,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getTargetConsumerId(), bs);
         bs.writeBoolean(info.isCompressed());
         rc += tightMarshalObjectArray1(wireFormat, info.getBrokerPath(), bs);
-        rc+=tightMarshalLong1(wireFormat, info.getArrival(), bs);
+        rc += tightMarshalLong1(wireFormat, info.getArrival(), bs);
         rc += tightMarshalString1(info.getUserID(), bs);
         bs.writeBoolean(info.isRecievedByDFBridge());
 
@@ -133,7 +128,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
 
     /**
      * Write a object instance to data output stream
-     *
+     * 
      * @param o the instance to be marshaled
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
@@ -174,7 +169,7 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
 
     /**
      * Un-marshal an object instance from the data input stream
-     *
+     * 
      * @param o the object to un-marshal
      * @param dataIn the data input stream to build the object from
      * @throws IOException
@@ -185,38 +180,37 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         Message info = (Message)o;
 
         info.beforeUnmarshall(wireFormat);
-        
-        info.setProducerId((org.apache.activemq.command.ProducerId) looseUnmarsalCachedObject(wireFormat, dataIn));
-        info.setDestination((org.apache.activemq.command.ActiveMQDestination) looseUnmarsalCachedObject(wireFormat, dataIn));
-        info.setTransactionId((org.apache.activemq.command.TransactionId) looseUnmarsalCachedObject(wireFormat, dataIn));
-        info.setOriginalDestination((org.apache.activemq.command.ActiveMQDestination) looseUnmarsalCachedObject(wireFormat, dataIn));
-        info.setMessageId((org.apache.activemq.command.MessageId) looseUnmarsalNestedObject(wireFormat, dataIn));
-        info.setOriginalTransactionId((org.apache.activemq.command.TransactionId) looseUnmarsalCachedObject(wireFormat, dataIn));
+
+        info.setProducerId((org.apache.activemq.command.ProducerId)looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination)looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setTransactionId((org.apache.activemq.command.TransactionId)looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setOriginalDestination((org.apache.activemq.command.ActiveMQDestination)looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setMessageId((org.apache.activemq.command.MessageId)looseUnmarsalNestedObject(wireFormat, dataIn));
+        info.setOriginalTransactionId((org.apache.activemq.command.TransactionId)looseUnmarsalCachedObject(wireFormat, dataIn));
         info.setGroupID(looseUnmarshalString(dataIn));
         info.setGroupSequence(dataIn.readInt());
         info.setCorrelationId(looseUnmarshalString(dataIn));
         info.setPersistent(dataIn.readBoolean());
         info.setExpiration(looseUnmarshalLong(wireFormat, dataIn));
         info.setPriority(dataIn.readByte());
-        info.setReplyTo((org.apache.activemq.command.ActiveMQDestination) looseUnmarsalNestedObject(wireFormat, dataIn));
+        info.setReplyTo((org.apache.activemq.command.ActiveMQDestination)looseUnmarsalNestedObject(wireFormat, dataIn));
         info.setTimestamp(looseUnmarshalLong(wireFormat, dataIn));
         info.setType(looseUnmarshalString(dataIn));
         info.setContent(looseUnmarshalByteSequence(dataIn));
         info.setMarshalledProperties(looseUnmarshalByteSequence(dataIn));
-        info.setDataStructure((org.apache.activemq.command.DataStructure) looseUnmarsalNestedObject(wireFormat, dataIn));
-        info.setTargetConsumerId((org.apache.activemq.command.ConsumerId) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setDataStructure((org.apache.activemq.command.DataStructure)looseUnmarsalNestedObject(wireFormat, dataIn));
+        info.setTargetConsumerId((org.apache.activemq.command.ConsumerId)looseUnmarsalCachedObject(wireFormat, dataIn));
         info.setCompressed(dataIn.readBoolean());
         info.setRedeliveryCounter(dataIn.readInt());
 
         if (dataIn.readBoolean()) {
             short size = dataIn.readShort();
             org.apache.activemq.command.BrokerId value[] = new org.apache.activemq.command.BrokerId[size];
-            for( int i=0; i < size; i++ ) {
-                value[i] = (org.apache.activemq.command.BrokerId) looseUnmarsalNestedObject(wireFormat,dataIn);
+            for (int i = 0; i < size; i++) {
+                value[i] = (org.apache.activemq.command.BrokerId)looseUnmarsalNestedObject(wireFormat, dataIn);
             }
             info.setBrokerPath(value);
-        }
-        else {
+        } else {
             info.setBrokerPath(null);
         }
         info.setArrival(looseUnmarshalLong(wireFormat, dataIn));
@@ -226,7 +220,6 @@ public abstract class MessageMarshaller extends BaseCommandMarshaller {
         info.afterUnmarshall(wireFormat);
 
     }
-
 
     /**
      * Write the booleans that this object uses to a BooleanStream

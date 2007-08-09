@@ -24,12 +24,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import org.apache.activemq.jaas.GroupPrincipal;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerPlugin;
-
-import java.util.Map;
+import org.apache.activemq.jaas.GroupPrincipal;
 
 /**
  * A simple authentication plugin

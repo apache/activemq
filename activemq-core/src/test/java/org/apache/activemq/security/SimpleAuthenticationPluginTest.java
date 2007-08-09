@@ -19,7 +19,6 @@ package org.apache.activemq.security;
 import java.net.URI;
 
 import junit.framework.Test;
-
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.commons.logging.Log;
@@ -28,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
 public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
 
     private static final Log log = LogFactory.getLog(SimpleAuthenticationPluginTest.class);
-    
+
     public static Test suite() {
         return suite(SimpleAuthenticationPluginTest.class);
     }
@@ -36,7 +35,6 @@ public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
-
 
     protected BrokerService createBroker() throws Exception {
         return createBroker("org/apache/activemq/security/simple-auth-broker.xml");
@@ -47,5 +45,4 @@ public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
         return BrokerFactory.createBroker(new URI("xbean:" + uri));
     }
 
-	
 }

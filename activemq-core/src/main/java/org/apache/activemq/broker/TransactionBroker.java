@@ -16,7 +16,14 @@
  */
 package org.apache.activemq.broker;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.jms.JMSException;
+import javax.transaction.xa.XAException;
 
 import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.command.ConnectionInfo;
@@ -35,15 +42,6 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.WrappedException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import javax.jms.JMSException;
-
-import javax.transaction.xa.XAException;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * This broker filter handles the transaction related operations in the Broker

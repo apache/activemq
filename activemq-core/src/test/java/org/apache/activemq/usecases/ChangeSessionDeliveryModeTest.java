@@ -16,6 +16,7 @@
  */
 
 package org.apache.activemq.usecases;
+
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.IllegalStateException;
@@ -33,8 +34,9 @@ import org.apache.activemq.test.TestSupport;
 public class ChangeSessionDeliveryModeTest extends TestSupport implements MessageListener {
 
     /**
-     * test following condition- which are defined by JMS Spec 1.1: MessageConsumers cannot use a MessageListener and
-     * receive() from the same session
+     * test following condition- which are defined by JMS Spec 1.1:
+     * MessageConsumers cannot use a MessageListener and receive() from the same
+     * session
      * 
      * @throws Exception
      */
@@ -47,12 +49,11 @@ public class ChangeSessionDeliveryModeTest extends TestSupport implements Messag
         consumer1.setMessageListener(this);
         JMSException jmsEx = null;
         MessageConsumer consumer2 = consumerSession.createConsumer(destination);
-        
+
         try {
             consumer2.receive(10);
             fail("Did not receive expected exception.");
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             assertTrue(e instanceof IllegalStateException);
         }
     }

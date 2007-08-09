@@ -415,8 +415,11 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     }
 
     protected void checkValidObject(Object value) throws MessageFormatException {
-        if (!(value instanceof Boolean || value instanceof Byte || value instanceof Short || value instanceof Integer || value instanceof Long || value instanceof Float
-              || value instanceof Double || value instanceof Character || value instanceof String || value == null)) {
+        
+        boolean valid = value instanceof Boolean || value instanceof Byte || value instanceof Short || value instanceof Integer || value instanceof Long ;
+        valid = valid || value instanceof Float || value instanceof Double || value instanceof Character || value instanceof String || value == null;
+        
+        if (!valid) {
 
             ActiveMQConnection conn = getConnection();
             // conn is null if we are in the broker rather than a JMS client

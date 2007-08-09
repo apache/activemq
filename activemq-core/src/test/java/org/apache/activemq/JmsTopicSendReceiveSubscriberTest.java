@@ -28,10 +28,9 @@ public class JmsTopicSendReceiveSubscriberTest extends JmsTopicSendReceiveTest {
     protected MessageConsumer createConsumer() throws JMSException {
         if (durable) {
             return super.createConsumer();
-        }
-        else {
+        } else {
             TopicSession topicSession = (TopicSession)session;
-            return topicSession.createSubscriber((Topic) consumerDestination, null, false);
+            return topicSession.createSubscriber((Topic)consumerDestination, null, false);
         }
     }
 }

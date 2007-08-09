@@ -16,10 +16,11 @@
  */
 package org.apache.activemq.jndi;
 
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-
-import javax.naming.*;
 
 /**
  * @version $Revision: 1.4 $

@@ -161,7 +161,7 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      *      org.apache.activemq.kaha.impl.IndexItem)
      */
     public void add(int index, IndexItem element) {
-        addBefore(element, (index == size ? root : entry(index)));
+        addBefore(element, index == size ? root : entry(index));
     }
 
     /*

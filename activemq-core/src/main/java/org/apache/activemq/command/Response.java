@@ -23,10 +23,10 @@ import org.apache.activemq.state.CommandVisitor;
  * @version $Revision: 1.6 $
  */
 public class Response extends BaseCommand {
-    
-    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.RESPONSE;
+
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.RESPONSE;
     int correlationId;
-    
+
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
@@ -37,11 +37,11 @@ public class Response extends BaseCommand {
     public int getCorrelationId() {
         return correlationId;
     }
-    
+
     public void setCorrelationId(int responseId) {
         this.correlationId = responseId;
     }
-    
+
     public boolean isResponse() {
         return true;
     }

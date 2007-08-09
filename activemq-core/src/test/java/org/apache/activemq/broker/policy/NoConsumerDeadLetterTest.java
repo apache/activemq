@@ -16,14 +16,14 @@
  */
 package org.apache.activemq.broker.policy;
 
+import javax.jms.Destination;
+import javax.jms.Message;
+
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
-
-import javax.jms.Destination;
-import javax.jms.Message;
 
 /**
  * @version $Revision$

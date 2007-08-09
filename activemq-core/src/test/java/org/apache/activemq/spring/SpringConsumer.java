@@ -16,10 +16,6 @@
  */
 package org.apache.activemq.spring;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.jms.core.JmsTemplate;
-
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
@@ -28,6 +24,10 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.Session;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.jms.core.JmsTemplate;
 
 public class SpringConsumer extends ConsumerBean implements MessageListener {
     private static final Log log = LogFactory.getLog(SpringConsumer.class);
@@ -58,8 +58,7 @@ public class SpringConsumer extends ConsumerBean implements MessageListener {
             session = connection.createSession(true, Session.CLIENT_ACKNOWLEDGE);
             consumer = session.createConsumer(destination, selector, false);
             consumer.setMessageListener(this);
-        }
-        catch (JMSException ex) {
+        } catch (JMSException ex) {
             log.error("", ex);
             throw ex;
         }
@@ -81,14 +80,13 @@ public class SpringConsumer extends ConsumerBean implements MessageListener {
         super.onMessage(message);
         try {
             message.acknowledge();
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             log.error("Failed to acknowledge: " + e, e);
         }
     }
 
     // Properties
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     public Destination getDestination() {
         return destination;
     }

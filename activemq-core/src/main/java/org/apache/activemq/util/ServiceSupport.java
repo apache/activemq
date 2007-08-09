@@ -23,8 +23,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * A helper class for working with services together with a useful base class for service implementations.
- *  
+ * A helper class for working with services together with a useful base class
+ * for service implementations.
+ * 
  * @version $Revision: 1.1 $
  */
 public abstract class ServiceSupport implements Service {
@@ -37,8 +38,7 @@ public abstract class ServiceSupport implements Service {
     public static void dispose(Service service) {
         try {
             service.stop();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.debug("Could not stop service: " + service + ". Reason: " + e, e);
         }
     }
@@ -55,8 +55,7 @@ public abstract class ServiceSupport implements Service {
             ServiceStopper stopper = new ServiceStopper();
             try {
                 doStop(stopper);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 stopper.onException(this, e);
             }
             stopped.set(true);
@@ -80,7 +79,6 @@ public abstract class ServiceSupport implements Service {
         return stopping.get();
     }
 
-    
     /**
      * @return true if this service is closed
      */

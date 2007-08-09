@@ -18,17 +18,15 @@ package org.apache.activemq.streams;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Destination;
 
 import junit.framework.Test;
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.JmsTestSupport;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * JMSInputStreamTest

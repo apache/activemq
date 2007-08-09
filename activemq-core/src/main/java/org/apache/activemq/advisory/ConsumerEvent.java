@@ -16,11 +16,11 @@
  */
 package org.apache.activemq.advisory;
 
-import org.apache.activemq.command.ConsumerId;
+import java.util.EventObject;
 
 import javax.jms.Destination;
 
-import java.util.EventObject;
+import org.apache.activemq.command.ConsumerId;
 
 /**
  * An event when the number of consumers on a given destination changes.

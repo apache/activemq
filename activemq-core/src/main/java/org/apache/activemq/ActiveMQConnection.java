@@ -41,7 +41,6 @@ import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.ExceptionListener;
 import javax.jms.IllegalStateException;
-import javax.jms.InvalidDestinationException;
 import javax.jms.JMSException;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
@@ -290,8 +289,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         checkClosedOrFailed();
         ensureConnectionInfoSent();
         boolean doSessionAsync = alwaysSessionAsync || sessions.size() > 0 || transacted || acknowledgeMode == Session.CLIENT_ACKNOWLEDGE;
-        return new ActiveMQSession(this, getNextSessionId(), (transacted ? Session.SESSION_TRANSACTED : (acknowledgeMode == Session.SESSION_TRANSACTED
-            ? Session.AUTO_ACKNOWLEDGE : acknowledgeMode)), dispatchAsync, alwaysSessionAsync);
+        return new ActiveMQSession(this, getNextSessionId(), transacted ? Session.SESSION_TRANSACTED : (acknowledgeMode == Session.SESSION_TRANSACTED
+            ? Session.AUTO_ACKNOWLEDGE : acknowledgeMode), dispatchAsync, alwaysSessionAsync);
     }
 
     /**
@@ -1168,10 +1167,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 Response response = (Response)this.transport.request(command);
                 if (response.isException()) {
                     ExceptionResponse er = (ExceptionResponse)response;
-                    if (er.getException() instanceof JMSException)
+                    if (er.getException() instanceof JMSException) {
                         throw (JMSException)er.getException();
-                    else
+                    } else {
                         throw JMSExceptionSupport.create(er.getException());
+                    }
                 }
                 return response;
             } catch (IOException e) {
@@ -1196,10 +1196,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 Response response = (Response)this.transport.request(command, timeout);
                 if (response != null && response.isException()) {
                     ExceptionResponse er = (ExceptionResponse)response;
-                    if (er.getException() instanceof JMSException)
+                    if (er.getException() instanceof JMSException) {
                         throw (JMSException)er.getException();
-                    else
+                    } else {
                         throw JMSExceptionSupport.create(er.getException());
+                    }
                 }
                 return response;
             } catch (IOException e) {
@@ -1361,9 +1362,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @throws IllegalStateException if the connection is in used.
      */
     public void changeUserInfo(String userName, String password) throws JMSException {
-        if (isConnectionInfoSentToBroker)
+        if (isConnectionInfoSentToBroker) {
             throw new IllegalStateException("changeUserInfo used Connection is not allowed");
-
+        }
         this.info.setUserName(userName);
         this.info.setPassword(password);
     }
@@ -1374,8 +1375,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     public String getResourceManagerId() throws JMSException {
         waitForBrokerInfo();
-        if (brokerInfo == null)
+        if (brokerInfo == null) {
             throw new JMSException("Connection failed before Broker info was received.");
+        }
         return brokerInfo.getBrokerId().getValue();
     }
 
@@ -1580,8 +1582,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                                 onAsyncException(error.getException());
                             }
                         });
-                        new Thread("Async error worker") {
-                        }.start();
                         return null;
                     }
 
@@ -1633,8 +1633,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         if (!closed.get() && !closing.get()) {
             if (this.exceptionListener != null) {
 
-                if (!(error instanceof JMSException))
+                if (!(error instanceof JMSException)) {
                     error = JMSExceptionSupport.create(error);
+                }
                 final JMSException e = (JMSException)error;
 
                 asyncConnectionThread.execute(new Runnable() {
@@ -1744,8 +1745,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
         // If we are not watching the advisories.. then
         // we will assume that the temp destination does exist.
-        if (advisoryConsumer == null)
+        if (advisoryConsumer == null) {
             return false;
+        }
 
         return !activeTempDestinations.contains(dest);
     }

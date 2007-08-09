@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.usecases;
 
+import javax.jms.JMSException;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-
-import javax.jms.JMSException;
 
 /**
  * @version $Revision: 1.1.1.1 $

@@ -16,11 +16,11 @@
  */
 package org.apache.activemq.store.jdbc.adapter;
 
-import org.apache.activemq.store.jdbc.Statements;
-
 import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import org.apache.activemq.store.jdbc.Statements;
 
 /**
  * @version $Revision: 1.2 $

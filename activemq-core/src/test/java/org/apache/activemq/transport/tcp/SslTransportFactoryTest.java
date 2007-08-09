@@ -97,7 +97,7 @@ public class SslTransportFactoryTest extends TestCase {
                 optionSettings[j] = getMthNaryDigit(i, j, 3) - 1;
 
                 if (optionSettings[j] != -1) {
-                    options.put(optionNames[j], (optionSettings[j] == 1 ? "true" : "false"));
+                    options.put(optionNames[j], optionSettings[j] == 1 ? "true" : "false");
                 }
             }
 

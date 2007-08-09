@@ -38,13 +38,12 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 public class SimpleQueueReceiver {
-    
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-            .getLog(SimpleQueueReceiver.class);
+
+    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(SimpleQueueReceiver.class);
 
     /**
      * Main method.
-     *
+     * 
      * @param args the queue used by the example
      */
     public static void main(String[] args) {
@@ -61,83 +60,63 @@ public class SimpleQueueReceiver {
          * Read queue name from command line and display it.
          */
         if (args.length != 1) {
-            log.info("Usage: java " +
-                    "SimpleQueueReceiver <queue-name>");
+            log.info("Usage: java " + "SimpleQueueReceiver <queue-name>");
             System.exit(1);
         }
         queueName = args[0];
         log.info("Queue name is " + queueName);
 
         /*
-         * Create a JNDI API InitialContext object if none exists
-         * yet.
+         * Create a JNDI API InitialContext object if none exists yet.
          */
         try {
             jndiContext = new InitialContext();
-        }
-        catch (NamingException e) {
-            log.info("Could not create JNDI API " +
-                    "context: " + e.toString());
+        } catch (NamingException e) {
+            log.info("Could not create JNDI API " + "context: " + e.toString());
             System.exit(1);
         }
 
         /*
-         * Look up connection factory and queue.  If either does
-         * not exist, exit.
+         * Look up connection factory and queue. If either does not exist, exit.
          */
         try {
-            queueConnectionFactory = (QueueConnectionFactory)
-                    jndiContext.lookup("QueueConnectionFactory");
-            queue = (Queue) jndiContext.lookup(queueName);
-        }
-        catch (NamingException e) {
-            log.info("JNDI API lookup failed: " +
-                    e.toString());
+            queueConnectionFactory = (QueueConnectionFactory)jndiContext.lookup("QueueConnectionFactory");
+            queue = (Queue)jndiContext.lookup(queueName);
+        } catch (NamingException e) {
+            log.info("JNDI API lookup failed: " + e.toString());
             System.exit(1);
         }
 
         /*
-         * Create connection.
-         * Create session from connection; false means session is
-         * not transacted.
-         * Create receiver, then start message delivery.
-         * Receive all text messages from queue until
-         * a non-text message is received indicating end of
-         * message stream.
-         * Close connection.
+         * Create connection. Create session from connection; false means
+         * session is not transacted. Create receiver, then start message
+         * delivery. Receive all text messages from queue until a non-text
+         * message is received indicating end of message stream. Close
+         * connection.
          */
         try {
-            queueConnection =
-                    queueConnectionFactory.createQueueConnection();
-            queueSession =
-                    queueConnection.createQueueSession(false,
-                            Session.AUTO_ACKNOWLEDGE);
+            queueConnection = queueConnectionFactory.createQueueConnection();
+            queueSession = queueConnection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
             queueReceiver = queueSession.createReceiver(queue);
             queueConnection.start();
             while (true) {
                 Message m = queueReceiver.receive(1);
                 if (m != null) {
                     if (m instanceof TextMessage) {
-                        message = (TextMessage) m;
-                        log.info("Reading message: " +
-                                message.getText());
-                    }
-                    else {
+                        message = (TextMessage)m;
+                        log.info("Reading message: " + message.getText());
+                    } else {
                         break;
                     }
                 }
             }
-        }
-        catch (JMSException e) {
-            log.info("Exception occurred: " +
-                    e.toString());
-        }
-        finally {
+        } catch (JMSException e) {
+            log.info("Exception occurred: " + e.toString());
+        } finally {
             if (queueConnection != null) {
                 try {
                     queueConnection.close();
-                }
-                catch (JMSException e) {
+                } catch (JMSException e) {
                 }
             }
         }

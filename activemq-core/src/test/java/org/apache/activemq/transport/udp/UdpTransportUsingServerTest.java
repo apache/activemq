@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.transport.udp;
 
+import java.net.URI;
+
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportServer;
-
-import java.net.URI;
 
 /**
  * 

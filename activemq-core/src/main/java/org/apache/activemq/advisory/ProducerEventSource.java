@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.advisory;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -23,6 +26,7 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.Session;
+
 import org.apache.activemq.Service;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -32,8 +36,6 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * An object which can be used to listen to the number of active consumers
@@ -80,27 +82,24 @@ public class ProducerEventSource implements Service, MessageListener {
 
     public void onMessage(Message message) {
         if (message instanceof ActiveMQMessage) {
-            ActiveMQMessage activeMessage = (ActiveMQMessage) message;
+            ActiveMQMessage activeMessage = (ActiveMQMessage)message;
             Object command = activeMessage.getDataStructure();
             int count = 0;
             if (command instanceof ProducerInfo) {
                 count = producerCount.incrementAndGet();
                 count = extractProducerCountFromMessage(message, count);
-                fireProducerEvent(new ProducerStartedEvent(this, destination, (ProducerInfo) command, count));
-            }
-            else if (command instanceof RemoveInfo) {
-                RemoveInfo removeInfo = (RemoveInfo) command;
+                fireProducerEvent(new ProducerStartedEvent(this, destination, (ProducerInfo)command, count));
+            } else if (command instanceof RemoveInfo) {
+                RemoveInfo removeInfo = (RemoveInfo)command;
                 if (removeInfo.isProducerRemove()) {
                     count = producerCount.decrementAndGet();
                     count = extractProducerCountFromMessage(message, count);
-                    fireProducerEvent(new ProducerStoppedEvent(this, destination, (ProducerId) removeInfo.getObjectId(), count));
+                    fireProducerEvent(new ProducerStoppedEvent(this, destination, (ProducerId)removeInfo.getObjectId(), count));
                 }
-            }
-            else {
+            } else {
                 log.warn("Unknown command: " + command);
             }
-        }
-        else {
+        } else {
             log.warn("Unknown message type: " + message + ". Message ignored");
         }
     }
@@ -109,12 +108,11 @@ public class ProducerEventSource implements Service, MessageListener {
         try {
             Object value = message.getObjectProperty("producerCount");
             if (value instanceof Number) {
-                Number n = (Number) value;
+                Number n = (Number)value;
                 return n.intValue();
             }
             log.warn("No producerCount header available on the message: " + message);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.warn("Failed to extract producerCount from message: " + message + ".Reason: " + e, e);
         }
         return count;

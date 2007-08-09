@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.camel;
 
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.Topic;
+import javax.jms.TopicPublisher;
+
 import org.apache.activemq.ActiveMQSession;
 import org.apache.camel.Endpoint;
-
-import javax.jms.JMSException;
-import javax.jms.TopicPublisher;
-import javax.jms.Topic;
-import javax.jms.Message;
 
 /**
  * A JMS {@link javax.jms.TopicPublisher} which sends message exchanges to a

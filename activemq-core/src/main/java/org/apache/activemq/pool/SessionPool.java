@@ -16,15 +16,14 @@
  */
 package org.apache.activemq.pool;
 
+import javax.jms.JMSException;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.AlreadyClosedException;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.commons.pool.ObjectPool;
 import org.apache.commons.pool.PoolableObjectFactory;
-import org.apache.commons.pool.impl.GenericObjectPool;
-
-import javax.jms.JMSException;
 
 /**
  * Represents the session pool for a given JMS connection.
@@ -53,12 +52,10 @@ public class SessionPool implements PoolableObjectFactory {
     public PooledSession borrowSession() throws JMSException {
         try {
             Object object = getSessionPool().borrowObject();
-            return (PooledSession) object;
-        }
-        catch (JMSException e) {
+            return (PooledSession)object;
+        } catch (JMSException e) {
             throw e;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw JMSExceptionSupport.create(e);
         }
     }
@@ -68,8 +65,7 @@ public class SessionPool implements PoolableObjectFactory {
         getConnection();
         try {
             getSessionPool().returnObject(session);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw JMSExceptionSupport.create("Failed to return session to pool: " + e, e);
         }
     }
@@ -81,7 +77,7 @@ public class SessionPool implements PoolableObjectFactory {
     }
 
     public void destroyObject(Object o) throws Exception {
-        PooledSession session = (PooledSession) o;
+        PooledSession session = (PooledSession)o;
         session.getSession().close();
     }
 
@@ -109,7 +105,7 @@ public class SessionPool implements PoolableObjectFactory {
     }
 
     protected ActiveMQSession createSession() throws JMSException {
-        return (ActiveMQSession) getConnection().createSession(key.isTransacted(), key.getAckMode());
+        return (ActiveMQSession)getConnection().createSession(key.isTransacted(), key.getAckMode());
     }
 
 }

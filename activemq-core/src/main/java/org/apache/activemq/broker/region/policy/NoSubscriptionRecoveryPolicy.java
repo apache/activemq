@@ -18,7 +18,6 @@ package org.apache.activemq.broker.region.policy;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.SubscriptionRecovery;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -28,11 +27,9 @@ import org.apache.activemq.command.Message;
  * This SubscriptionRecoveryPolicy disable recovery of messages.
  * 
  * @org.apache.xbean.XBean
- * 
  * @version $Revision$
  */
 public class NoSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy {
-
 
     public SubscriptionRecoveryPolicy copy() {
         // This object is immutable
@@ -52,7 +49,7 @@ public class NoSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy 
     public void stop() throws Exception {
     }
 
-    public Message[] browse(ActiveMQDestination dest) throws Exception{
+    public Message[] browse(ActiveMQDestination dest) throws Exception {
         return new Message[0];
     }
 

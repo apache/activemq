@@ -16,14 +16,14 @@
  */
 package org.apache.activemq.memory.buffer;
 
-import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.Message;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
+import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.Message;
 
 /**
  * Allows messages to be added to the end of the buffer such that they are kept

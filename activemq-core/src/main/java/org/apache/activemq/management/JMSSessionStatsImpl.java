@@ -17,7 +17,6 @@
 package org.apache.activemq.management;
 
 import java.util.List;
-import javax.management.j2ee.statistics.*;
 
 import org.apache.activemq.ActiveMQMessageConsumer;
 import org.apache.activemq.ActiveMQMessageProducer;
@@ -65,7 +64,7 @@ public class JMSSessionStatsImpl extends StatsImpl {
         int size = producerArray.length;
         JMSProducerStatsImpl[] answer = new JMSProducerStatsImpl[size];
         for (int i = 0; i < size; i++) {
-            ActiveMQMessageProducer producer = (ActiveMQMessageProducer) producerArray[i];
+            ActiveMQMessageProducer producer = (ActiveMQMessageProducer)producerArray[i];
             answer[i] = producer.getProducerStats();
         }
         return answer;
@@ -77,12 +76,12 @@ public class JMSSessionStatsImpl extends StatsImpl {
         int size = consumerArray.length;
         JMSConsumerStatsImpl[] answer = new JMSConsumerStatsImpl[size];
         for (int i = 0; i < size; i++) {
-            ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) consumerArray[i];
+            ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer)consumerArray[i];
             answer[i] = consumer.getConsumerStats();
         }
         return answer;
     }
-    
+
     public void reset() {
         super.reset();
         JMSConsumerStatsImpl[] cstats = getConsumers();
@@ -94,11 +93,11 @@ public class JMSSessionStatsImpl extends StatsImpl {
             pstats[i].reset();
         }
     }
-    
+
     /**
      * @param enabled the enabled to set
      */
-    public void setEnabled(boolean enabled){
+    public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
         JMSConsumerStatsImpl[] cstats = getConsumers();
         for (int i = 0, size = cstats.length; i < size; i++) {
@@ -108,7 +107,7 @@ public class JMSSessionStatsImpl extends StatsImpl {
         for (int i = 0, size = pstats.length; i < size; i++) {
             pstats[i].setEnabled(enabled);
         }
-        
+
     }
 
     public CountStatisticImpl getMessageCount() {
@@ -193,7 +192,7 @@ public class JMSSessionStatsImpl extends StatsImpl {
         out.incrementIndent();
         JMSProducerStatsImpl[] producerArray = getProducers();
         for (int i = 0; i < producerArray.length; i++) {
-            JMSProducerStatsImpl producer = (JMSProducerStatsImpl) producerArray[i];
+            JMSProducerStatsImpl producer = (JMSProducerStatsImpl)producerArray[i];
             producer.dump(out);
         }
         out.decrementIndent();
@@ -205,7 +204,7 @@ public class JMSSessionStatsImpl extends StatsImpl {
         out.incrementIndent();
         JMSConsumerStatsImpl[] consumerArray = getConsumers();
         for (int i = 0; i < consumerArray.length; i++) {
-            JMSConsumerStatsImpl consumer = (JMSConsumerStatsImpl) consumerArray[i];
+            JMSConsumerStatsImpl consumer = (JMSConsumerStatsImpl)consumerArray[i];
             consumer.dump(out);
         }
         out.decrementIndent();

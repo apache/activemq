@@ -16,16 +16,15 @@
  */
 package org.apache.activemq.broker.policy;
 
-import org.apache.activemq.broker.QueueSubscriptionTest;
+import java.util.Iterator;
+
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.QueueSubscriptionTest;
 import org.apache.activemq.broker.region.policy.FixedCountSubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.SimpleDispatchPolicy;
 import org.apache.activemq.util.MessageIdList;
-
-import java.util.Iterator;
-import java.util.List;
 
 public class SimpleDispatchPolicyTest extends QueueSubscriptionTest {
 

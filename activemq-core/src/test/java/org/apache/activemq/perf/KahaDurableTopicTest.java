@@ -18,31 +18,25 @@ package org.apache.activemq.perf;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
+
 /**
  * @version $Revision: 1.3 $
  */
 public class KahaDurableTopicTest extends SimpleDurableTopicTest {
-    
+
     /*
-    protected BrokerService createBroker() throws Exception{
-        Resource resource=new ClassPathResource( "org/apache/activemq/perf/kahaBroker.xml");
-        BrokerFactoryBean factory=new BrokerFactoryBean(resource);
-        factory.afterPropertiesSet();
-        BrokerService result=factory.getBroker();
-        result.start();
-        return result;
-    }
-    */
-    
-    protected void configureBroker(BrokerService answer) throws Exception{
+     * protected BrokerService createBroker() throws Exception{ Resource
+     * resource=new ClassPathResource(
+     * "org/apache/activemq/perf/kahaBroker.xml"); BrokerFactoryBean factory=new
+     * BrokerFactoryBean(resource); factory.afterPropertiesSet(); BrokerService
+     * result=factory.getBroker(); result.start(); return result; }
+     */
+
+    protected void configureBroker(BrokerService answer) throws Exception {
         KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter();
         answer.setPersistenceAdapter(adaptor);
         answer.addConnector(bindAddress);
         answer.setDeleteAllMessagesOnStartup(true);
     }
-
-    
-
-    
 
 }

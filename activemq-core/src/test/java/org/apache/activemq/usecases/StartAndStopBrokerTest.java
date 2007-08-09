@@ -16,14 +16,14 @@
  */
 package org.apache.activemq.usecases;
 
-import junit.framework.TestCase;
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.BrokerFactory;
-import org.apache.activemq.broker.TransportConnector;
+import java.net.URI;
 
 import javax.jms.JMSException;
-import java.net.URI;
+
+import junit.framework.TestCase;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.BrokerService;
 
 /**
  * @author Oliver Belikan

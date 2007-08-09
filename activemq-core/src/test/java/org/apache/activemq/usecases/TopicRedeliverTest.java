@@ -129,7 +129,7 @@ public class TopicRedeliverTest extends TestSupport {
         producerSession.commit();
 
         Message recMsg = consumer.receive(RECEIVE_TIMEOUT);
-        assertTrue(recMsg.getJMSRedelivered() == false);
+        assertFalse(recMsg.getJMSRedelivered());
         recMsg = consumer.receive(RECEIVE_TIMEOUT);
         consumerSession.rollback();
         recMsg = consumer.receive(RECEIVE_TIMEOUT);
@@ -169,7 +169,7 @@ public class TopicRedeliverTest extends TestSupport {
         producerSession.commit();
 
         Message recMsg = consumer.receive(RECEIVE_TIMEOUT);
-        assertTrue(recMsg.getJMSRedelivered() == false);
+        assertFalse(recMsg.getJMSRedelivered());
         consumerSession.close();
         consumerSession = connection.createSession(true, Session.CLIENT_ACKNOWLEDGE);
         consumer = consumerSession.createConsumer(destination);

@@ -16,12 +16,12 @@
  */
 package org.apache.activemq.camel;
 
-import org.apache.activemq.ActiveMQSession;
-
 import javax.jms.JMSException;
 import javax.jms.Topic;
 import javax.jms.TopicPublisher;
 import javax.jms.TopicSubscriber;
+
+import org.apache.activemq.ActiveMQSession;
 
 /**
  * A JMS {@link javax.jms.Topic} object which refers to a Camel endpoint

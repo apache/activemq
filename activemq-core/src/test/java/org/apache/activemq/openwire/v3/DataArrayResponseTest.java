@@ -16,12 +16,8 @@
  */
 package org.apache.activemq.openwire.v3;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import org.apache.activemq.openwire.*;
-import org.apache.activemq.command.*;
+import org.apache.activemq.command.DataArrayResponse;
+import org.apache.activemq.command.DataStructure;
 
 /**
  * Test case for the OpenWire marshalling for DataArrayResponse NOTE!: This file

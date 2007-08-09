@@ -16,13 +16,8 @@
  */
 package org.apache.activemq.test.retroactive;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.EmbeddedBrokerTestSupport;
-import org.apache.activemq.broker.BrokerFactory;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.util.MessageIdList;
-import org.apache.activemq.xbean.BrokerFactoryBean;
-import org.springframework.core.io.ClassPathResource;
+import java.net.URI;
+import java.util.Date;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -31,8 +26,11 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import java.net.URI;
-import java.util.Date;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.util.MessageIdList;
 
 /**
  * @version $Revision$

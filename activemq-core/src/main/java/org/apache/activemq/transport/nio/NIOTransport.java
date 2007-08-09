@@ -29,12 +29,12 @@ import java.nio.channels.SocketChannel;
 
 import javax.net.SocketFactory;
 
-import org.apache.activemq.wireformat.WireFormat;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * An implementation of the {@link Transport} interface using raw tcp/ip

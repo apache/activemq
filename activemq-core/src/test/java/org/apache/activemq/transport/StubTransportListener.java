@@ -16,11 +16,9 @@
  */
 package org.apache.activemq.transport;
 
+import java.io.IOException;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-
-import java.io.IOException;
 
 /**
  * 

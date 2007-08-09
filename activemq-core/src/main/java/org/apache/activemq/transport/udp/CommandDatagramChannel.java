@@ -55,8 +55,7 @@ public class CommandDatagramChannel extends CommandChannelSupport {
     private Object writeLock = new Object();
     private int defaultMarshalBufferSize = 64 * 1024;
 
-    public CommandDatagramChannel(UdpTransport transport, OpenWireFormat wireFormat, int datagramSize,
-                                  SocketAddress targetAddress, DatagramHeaderMarshaller headerMarshaller,
+    public CommandDatagramChannel(UdpTransport transport, OpenWireFormat wireFormat, int datagramSize, SocketAddress targetAddress, DatagramHeaderMarshaller headerMarshaller,
                                   DatagramChannel channel, ByteBufferPool bufferPool) {
         super(transport, wireFormat, datagramSize, targetAddress, headerMarshaller);
         this.channel = channel;
@@ -224,8 +223,7 @@ public class CommandDatagramChannel extends CommandChannelSupport {
 
     // Implementation methods
     // -------------------------------------------------------------------------
-    protected void sendWriteBuffer(int commandId, SocketAddress address, ByteBuffer writeBuffer,
-                                   boolean redelivery) throws IOException {
+    protected void sendWriteBuffer(int commandId, SocketAddress address, ByteBuffer writeBuffer, boolean redelivery) throws IOException {
         // lets put the datagram into the replay buffer first to prevent timing
         // issues
         ReplayBuffer bufferCache = getReplayBuffer();
@@ -236,7 +234,7 @@ public class CommandDatagramChannel extends CommandChannelSupport {
         writeBuffer.flip();
 
         if (log.isDebugEnabled()) {
-            String text = (redelivery) ? "REDELIVERING" : "sending";
+            String text = redelivery ? "REDELIVERING" : "sending";
             log.debug("Channel: " + name + " " + text + " datagram: " + commandId + " to: " + address);
         }
         channel.send(writeBuffer, address);

@@ -16,18 +16,19 @@
  */
 package org.apache.activemq.jndi;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import javax.naming.spi.ObjectFactory;
-import javax.naming.Name;
-import javax.naming.Context;
-import javax.naming.Reference;
-import javax.naming.StringRefAddr;
-import javax.naming.NamingException;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Properties;
-import java.util.Enumeration;
+
+import javax.naming.Context;
+import javax.naming.Name;
+import javax.naming.NamingException;
+import javax.naming.Reference;
+import javax.naming.StringRefAddr;
+import javax.naming.spi.ObjectFactory;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Converts objects implementing JNDIStorable into a property fields so they can
@@ -40,19 +41,19 @@ public class JNDIReferenceFactory implements ObjectFactory {
     /**
      * This will be called by a JNDIprovider when a Reference is retrieved from
      * a JNDI store - and generates the orignal instance
-     *
-     * @param object      the Reference object
-     * @param name        the JNDI name
-     * @param nameCtx     the context
+     * 
+     * @param object the Reference object
+     * @param name the JNDI name
+     * @param nameCtx the context
      * @param environment the environment settings used by JNDI
      * @return the instance built from the Reference object
-     * @throws Exception if building the instance from Reference fails (usually class
-     *                   not found)
+     * @throws Exception if building the instance from Reference fails (usually
+     *                 class not found)
      */
     public Object getObjectInstance(Object object, Name name, Context nameCtx, Hashtable environment) throws Exception {
         Object result = null;
         if (object instanceof Reference) {
-            Reference reference = (Reference) object;
+            Reference reference = (Reference)object;
 
             if (log.isTraceEnabled()) {
                 log.trace("Getting instance of " + reference.getClassName());
@@ -61,19 +62,18 @@ public class JNDIReferenceFactory implements ObjectFactory {
             Class theClass = loadClass(this, reference.getClassName());
             if (JNDIStorableInterface.class.isAssignableFrom(theClass)) {
 
-                JNDIStorableInterface store = (JNDIStorableInterface) theClass.newInstance();
+                JNDIStorableInterface store = (JNDIStorableInterface)theClass.newInstance();
                 Properties properties = new Properties();
                 for (Enumeration iter = reference.getAll(); iter.hasMoreElements();) {
 
-                    StringRefAddr addr = (StringRefAddr) iter.nextElement();
+                    StringRefAddr addr = (StringRefAddr)iter.nextElement();
                     properties.put(addr.getType(), (addr.getContent() == null) ? "" : addr.getContent());
 
                 }
                 store.setProperties(properties);
                 result = store;
             }
-        }
-        else {
+        } else {
             log.error("Object " + object + " is not a reference - cannot load");
             throw new RuntimeException("Object " + object + " is not a reference");
         }
@@ -82,11 +82,11 @@ public class JNDIReferenceFactory implements ObjectFactory {
 
     /**
      * Create a Reference instance from a JNDIStorable object
-     *
+     * 
      * @param instanceClassName
      * @param po
-     * @return @throws
-     *         NamingException
+     * @return
+     * @throws NamingException
      */
 
     public static Reference createReference(String instanceClassName, JNDIStorableInterface po) throws NamingException {
@@ -97,13 +97,12 @@ public class JNDIReferenceFactory implements ObjectFactory {
         try {
             Properties props = po.getProperties();
             for (Enumeration iter = props.propertyNames(); iter.hasMoreElements();) {
-                String key = (String) iter.nextElement();
+                String key = (String)iter.nextElement();
                 String value = props.getProperty(key);
                 javax.naming.StringRefAddr addr = new javax.naming.StringRefAddr(key, value);
                 result.add(addr);
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error(e.getMessage(), e);
             throw new NamingException(e.getMessage());
         }
@@ -112,11 +111,11 @@ public class JNDIReferenceFactory implements ObjectFactory {
 
     /**
      * Retrieve the class loader for a named class
-     *
+     * 
      * @param thisObj
      * @param className
-     * @return @throws
-     *         ClassNotFoundException
+     * @return
+     * @throws ClassNotFoundException
      */
 
     public static Class loadClass(Object thisObj, String className) throws ClassNotFoundException {
@@ -125,8 +124,7 @@ public class JNDIReferenceFactory implements ObjectFactory {
         Class theClass;
         if (loader != null) {
             theClass = loader.loadClass(className);
-        }
-        else {
+        } else {
             // Will be null in jdk1.1.8
             // use default classLoader
             theClass = Class.forName(className);

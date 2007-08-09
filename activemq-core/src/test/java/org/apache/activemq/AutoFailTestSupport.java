@@ -16,9 +16,9 @@
  */
 package org.apache.activemq;
 
-import junit.framework.TestCase;
-
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

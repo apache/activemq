@@ -16,16 +16,17 @@
  */
 package org.apache.activemq.usecases;
 
-import org.apache.activemq.JmsMultipleBrokersTestSupport;
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.ActiveMQPrefetchPolicy;
+import java.net.URI;
 
+import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.Message;
-import javax.jms.Connection;
-import javax.jms.Session;
 import javax.jms.MessageConsumer;
-import java.net.URI;
+import javax.jms.Session;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQPrefetchPolicy;
+import org.apache.activemq.JmsMultipleBrokersTestSupport;
 
 /**
  * @version $Revision: 1.1.1.1 $

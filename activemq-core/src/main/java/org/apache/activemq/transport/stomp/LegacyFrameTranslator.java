@@ -1,15 +1,16 @@
 package org.apache.activemq.transport.stomp;
 
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQBytesMessage;
-import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.activemq.command.ActiveMQDestination;
-
-import javax.jms.JMSException;
-import javax.jms.Destination;
-import java.util.Map;
-import java.util.HashMap;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.jms.Destination;
+import javax.jms.JMSException;
+
+import org.apache.activemq.command.ActiveMQBytesMessage;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQTextMessage;
 
 /**
  * Implements ActiveMQ 4.0 translations

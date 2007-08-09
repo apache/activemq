@@ -16,18 +16,19 @@
  */
 package org.apache.activemq.store.jdbc;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import javax.sql.DataSource;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
- * Represents an exclusive lock on a database to avoid multiple brokers
- * running against the same logical database.
- *
+ * Represents an exclusive lock on a database to avoid multiple brokers running
+ * against the same logical database.
+ * 
  * @version $Revision: $
  */
 public class DefaultDatabaseLocker implements DatabaseLocker {
@@ -57,8 +58,7 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
                 statement = connection.prepareStatement(sql);
                 statement.execute();
                 break;
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 if (stopping) {
                     throw new Exception("Cannot start broker as being asked to shut down. Interrupted attempt to acquire lock: " + e, e);
                 }
@@ -66,8 +66,7 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
                 if (null != statement) {
                     try {
                         statement.close();
-                    }
-                    catch (SQLException e1) {
+                    } catch (SQLException e1) {
                         log.warn("Caught while closing statement: " + e1, e1);
                     }
                     statement = null;
@@ -75,8 +74,7 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
                 if (null != connection) {
                     try {
                         connection.close();
-                    }
-                    catch (SQLException e1) {
+                    } catch (SQLException e1) {
                         log.warn("Caught while closing connection: " + e1, e1);
                     }
                     connection = null;
@@ -106,8 +104,7 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
             if (rows == 1) {
                 return true;
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error("Failed to update database lock: " + e, e);
         }
         return false;

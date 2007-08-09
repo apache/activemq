@@ -25,7 +25,6 @@ import org.apache.activemq.command.ActiveMQTopic;
  * DLQ using the subject naming hierarchy.
  * 
  * @org.apache.xbean.XBean
- * 
  * @version $Revision$
  */
 public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
@@ -38,8 +37,7 @@ public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
     public ActiveMQDestination getDeadLetterQueueFor(ActiveMQDestination originalDestination) {
         if (originalDestination.isQueue()) {
             return createDestination(originalDestination, queuePrefix, useQueueForQueueMessages);
-        }
-        else {
+        } else {
             return createDestination(originalDestination, topicPrefix, useQueueForTopicMessages);
         }
     }
@@ -99,8 +97,7 @@ public class IndividualDeadLetterStrategy extends AbstractDeadLetterStrategy {
         String name = prefix + originalDestination.getPhysicalName();
         if (useQueue) {
             return new ActiveMQQueue(name);
-        }
-        else {
+        } else {
             return new ActiveMQTopic(name);
         }
     }

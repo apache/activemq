@@ -16,9 +16,9 @@
  */
 package org.apache.activemq.broker.region.policy;
 
-import org.apache.activemq.broker.region.MessageReference;
-
 import java.util.LinkedList;
+
+import org.apache.activemq.broker.region.MessageReference;
 
 /**
  * An eviction strategy which evicts the oldest message first (which is the

@@ -16,19 +16,20 @@
  */
 package org.apache.activemq.command;
 
-import org.apache.activemq.BlobMessage;
-import org.apache.activemq.blob.BlobUploader;
-import org.apache.activemq.util.JMSExceptionSupport;
-
-import javax.jms.JMSException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import javax.jms.JMSException;
+
+import org.apache.activemq.BlobMessage;
+import org.apache.activemq.blob.BlobUploader;
+import org.apache.activemq.util.JMSExceptionSupport;
+
 /**
  * An implementation of {@link BlobMessage} for out of band BLOB transfer
- *
+ * 
  * @version $Revision: $
  * @openwire:marshaller code="29"
  */
@@ -44,7 +45,6 @@ public class ActiveMQBlobMessage extends ActiveMQMessage implements BlobMessage 
 
     private transient BlobUploader blobUploader;
     private transient URL url;
-
 
     public Message copy() {
         ActiveMQBlobMessage copy = new ActiveMQBlobMessage();
@@ -76,8 +76,9 @@ public class ActiveMQBlobMessage extends ActiveMQMessage implements BlobMessage 
     }
 
     /**
-     * The MIME type of the BLOB which can be used to apply different content types to messages.
-     *
+     * The MIME type of the BLOB which can be used to apply different content
+     * types to messages.
+     * 
      * @openwire:property version=3 cache=true
      */
     public String getMimeType() {
@@ -96,8 +97,9 @@ public class ActiveMQBlobMessage extends ActiveMQMessage implements BlobMessage 
     }
 
     /**
-     * The name of the attachment which can be useful information if transmitting files over ActiveMQ
-     *
+     * The name of the attachment which can be useful information if
+     * transmitting files over ActiveMQ
+     * 
      * @openwire:property version=3 cache=false
      */
     public void setName(String name) {
@@ -131,8 +133,7 @@ public class ActiveMQBlobMessage extends ActiveMQMessage implements BlobMessage 
         if (url == null && remoteBlobUrl != null) {
             try {
                 url = new URL(remoteBlobUrl);
-            }
-            catch (MalformedURLException e) {
+            } catch (MalformedURLException e) {
                 throw JMSExceptionSupport.create(e);
             }
         }
@@ -143,7 +144,6 @@ public class ActiveMQBlobMessage extends ActiveMQMessage implements BlobMessage 
         this.url = url;
         remoteBlobUrl = url != null ? url.toExternalForm() : null;
     }
-
 
     public BlobUploader getBlobUploader() {
         return blobUploader;
@@ -156,13 +156,13 @@ public class ActiveMQBlobMessage extends ActiveMQMessage implements BlobMessage 
     public void onSend() throws JMSException {
         super.onSend();
 
-        // lets ensure we upload the BLOB first out of band before we send the message
+        // lets ensure we upload the BLOB first out of band before we send the
+        // message
         if (blobUploader != null) {
             try {
                 URL value = blobUploader.upload(this);
                 setURL(value);
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 throw JMSExceptionSupport.create(e);
             }
         }

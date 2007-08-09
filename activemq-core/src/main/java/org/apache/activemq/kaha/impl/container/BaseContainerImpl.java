@@ -21,9 +21,9 @@ package org.apache.activemq.kaha.impl.container;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.activemq.kaha.ContainerId;
 import org.apache.activemq.kaha.RuntimeStoreException;
-import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.kaha.impl.DataManager;
 import org.apache.activemq.kaha.impl.data.Item;

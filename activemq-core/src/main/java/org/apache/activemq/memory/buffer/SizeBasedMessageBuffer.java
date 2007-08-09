@@ -69,7 +69,7 @@ public class SizeBasedMessageBuffer implements MessageBuffer {
 
             size += delta;
             while (size > limit) {
-                MessageQueue biggest = (MessageQueue) bubbleList.get(0);
+                MessageQueue biggest = (MessageQueue)bubbleList.get(0);
                 size -= biggest.evictMessage();
 
                 bubbleDown(biggest, 0);
@@ -80,7 +80,7 @@ public class SizeBasedMessageBuffer implements MessageBuffer {
     public void clear() {
         synchronized (lock) {
             for (Iterator iter = bubbleList.iterator(); iter.hasNext();) {
-                MessageQueue queue = (MessageQueue) iter.next();
+                MessageQueue queue = (MessageQueue)iter.next();
                 queue.clear();
             }
             size = 0;
@@ -91,11 +91,10 @@ public class SizeBasedMessageBuffer implements MessageBuffer {
         // lets bubble up to head of queueif we need to
         int position = queue.getPosition();
         while (--position >= 0) {
-            MessageQueue pivot = (MessageQueue) bubbleList.get(position);
+            MessageQueue pivot = (MessageQueue)bubbleList.get(position);
             if (pivot.getSize() < queueSize) {
                 swap(position, pivot, position + 1, queue);
-            }
-            else {
+            } else {
                 break;
             }
         }
@@ -104,11 +103,10 @@ public class SizeBasedMessageBuffer implements MessageBuffer {
     protected void bubbleDown(MessageQueue biggest, int position) {
         int queueSize = biggest.getSize();
         for (int second = position + 1, end = bubbleList.size(); second < end; second++) {
-            MessageQueue pivot = (MessageQueue) bubbleList.get(second);
+            MessageQueue pivot = (MessageQueue)bubbleList.get(second);
             if (pivot.getSize() > queueSize) {
                 swap(position, biggest, second, pivot);
-            }
-            else {
+            } else {
                 break;
             }
             position = second;

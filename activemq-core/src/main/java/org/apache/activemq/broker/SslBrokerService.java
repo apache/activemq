@@ -17,10 +17,6 @@
 
 package org.apache.activemq.broker;
 
-import org.apache.activemq.transport.TransportFactory;
-import org.apache.activemq.transport.TransportServer;
-import org.apache.activemq.transport.tcp.SslTransportFactory;
-
 import java.io.IOException;
 import java.net.URI;
 import java.security.KeyManagementException;
@@ -28,6 +24,10 @@ import java.security.SecureRandom;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.TrustManager;
+
+import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.tcp.SslTransportFactory;
 
 /**
  * A BrokerService that allows access to the key and trust managers used by SSL

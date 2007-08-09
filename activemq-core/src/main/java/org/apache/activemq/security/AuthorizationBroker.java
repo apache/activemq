@@ -146,7 +146,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
             } else {
                 allowedACLs = authorizationMap.getTempDestinationWriteACLs();
             }
-            if (allowedACLs != null && !subject.isInOneOf(allowedACLs)){
+            if (allowedACLs != null && !subject.isInOneOf(allowedACLs)) {
                 throw new SecurityException("User " + subject.getUserName() + " is not authorized to write to: " + info.getDestination());
             }
             subject.getAuthorizedWriteDests().put(info.getDestination(), info.getDestination());

@@ -16,15 +16,15 @@
  */
 package org.apache.activemq.config;
 
-import junit.framework.TestCase;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.ActiveMQMessageConsumer;
-
 import javax.jms.Connection;
+import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 import javax.jms.Session;
-import javax.jms.InvalidSelectorException;
+
+import junit.framework.TestCase;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQMessageConsumer;
+import org.apache.activemq.command.ActiveMQQueue;
 
 public class ConfigUsingDestinationOptions extends TestCase {
     public void testValidSelectorConfig() throws JMSException {

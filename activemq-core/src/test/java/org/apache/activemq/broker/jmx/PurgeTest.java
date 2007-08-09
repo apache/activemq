@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import org.apache.activemq.EmbeddedBrokerTestSupport;
-import org.apache.activemq.broker.BrokerService;
-
 import javax.jms.Connection;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
@@ -29,10 +26,12 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import junit.textui.TestRunner;
+import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.broker.BrokerService;
 
 /**
  * A specific test of Queue.purge() functionality
- *
+ * 
  * @version $Revision$
  */
 public class PurgeTest extends EmbeddedBrokerTestSupport {
@@ -65,7 +64,7 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
 
         // Now get the QueueViewMBean and purge
         ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + getDestinationString() + ",BrokerName=localhost");
-        QueueViewMBean proxy = (QueueViewMBean) MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+        QueueViewMBean proxy = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
 
         long count = proxy.getQueueSize();
         assertEquals("Queue size", count, messageCount);
@@ -94,8 +93,7 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
         ObjectName objectName = new ObjectName(name);
         if (mbeanServer.isRegistered(objectName)) {
             echo("Bean Registered: " + objectName);
-        }
-        else {
+        } else {
             fail("Could not find MBean!: " + objectName);
         }
         return objectName;
@@ -121,7 +119,7 @@ public class PurgeTest extends EmbeddedBrokerTestSupport {
         answer.setUseJmx(true);
         answer.setEnableStatistics(true);
         answer.setPersistent(false);
-        answer.addConnector(bindAddress);   
+        answer.addConnector(bindAddress);
         return answer;
     }
 

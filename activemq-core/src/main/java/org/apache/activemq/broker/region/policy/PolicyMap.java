@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.broker.region.policy;
 
+import java.util.List;
+
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.filter.DestinationMap;
-
-import java.util.List;
 
 /**
  * Represents a destination based configuration of policies so that individual

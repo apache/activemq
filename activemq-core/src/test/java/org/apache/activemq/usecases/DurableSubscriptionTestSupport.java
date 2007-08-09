@@ -307,8 +307,8 @@ abstract public class DurableSubscriptionTestSupport extends TestSupport {
         Topic topic = session.createTopic("topic-" + getName());
         MessageConsumer consumer = session.createDurableSubscriber(topic, "sub1");
         // Drain any messages that may allready be in the sub
-        while (consumer.receive(1000) != null)
-            ;
+        while (consumer.receive(1000) != null) {
+        }
 
         // See if the durable sub works in a new session.
         session.close();
@@ -334,8 +334,8 @@ abstract public class DurableSubscriptionTestSupport extends TestSupport {
         Topic topic = session.createTopic("topic-" + getName());
         MessageConsumer consumer = session.createDurableSubscriber(topic, "sub1");
         // Drain any messages that may allready be in the sub
-        while (consumer.receive(1000) != null)
-            ;
+        while (consumer.receive(1000) != null) {
+        }
 
         // See if the durable sub works in a new connection.
         // The embeded broker shutsdown when his connections are closed.

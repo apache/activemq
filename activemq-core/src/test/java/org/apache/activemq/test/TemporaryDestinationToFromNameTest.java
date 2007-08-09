@@ -16,11 +16,11 @@
  */
 package org.apache.activemq.test;
 
-import org.apache.activemq.EmbeddedBrokerAndConnectionTestSupport;
-
 import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.Topic;
+
+import org.apache.activemq.EmbeddedBrokerAndConnectionTestSupport;
 
 /**
  * @version $Revision: 1.1 $

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.kaha.ContainerId;
 import org.apache.activemq.kaha.Marshaller;
@@ -31,8 +32,6 @@ import org.apache.activemq.kaha.impl.index.IndexItem;
 import org.apache.activemq.kaha.impl.index.IndexManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A container of roots for other Containers

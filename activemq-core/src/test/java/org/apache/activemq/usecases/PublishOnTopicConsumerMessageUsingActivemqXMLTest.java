@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.usecases;
 
+import java.io.File;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.xbean.BrokerFactoryBean;
@@ -23,8 +25,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-
-import java.io.File;
 
 /**
  * Test Publish/Consume topic  using the release activemq.xml configuration file

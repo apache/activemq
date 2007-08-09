@@ -104,6 +104,7 @@ class DataFile extends LinkedNode implements Comparable<DataFile> {
         return dataFileId - df.dataFileId;
     }
 
+    @Override
     public boolean equals(Object o) {
         boolean result = false;
         if (o instanceof DataFile) {
@@ -112,4 +113,8 @@ class DataFile extends LinkedNode implements Comparable<DataFile> {
         return result;
     }
 
+    @Override
+    public int hashCode() {
+        return dataFileId;
+    }
 }

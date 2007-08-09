@@ -20,13 +20,12 @@ import java.util.*;
 import javax.management.j2ee.statistics.Statistic;
 import javax.management.j2ee.statistics.Stats;
 
-
 /**
  * Base class for a Stats implementation
- *
+ * 
  * @version $Revision: 1.2 $
  */
-public class StatsImpl extends StatisticImpl implements Stats, Resettable{
+public class StatsImpl extends StatisticImpl implements Stats, Resettable {
     private Map map;
 
     public StatsImpl() {
@@ -43,14 +42,14 @@ public class StatsImpl extends StatisticImpl implements Stats, Resettable{
         for (int i = 0, size = stats.length; i < size; i++) {
             Statistic stat = stats[i];
             if (stat instanceof Resettable) {
-                Resettable r = (Resettable) stat;
+                Resettable r = (Resettable)stat;
                 r.reset();
             }
         }
     }
 
     public Statistic getStatistic(String name) {
-        return (Statistic) map.get(name);
+        return (Statistic)map.get(name);
     }
 
     public String[] getStatisticNames() {

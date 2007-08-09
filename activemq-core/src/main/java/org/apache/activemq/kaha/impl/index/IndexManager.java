@@ -15,12 +15,9 @@
 package org.apache.activemq.kaha.impl.index;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.nio.channels.FileLock;
-import java.util.LinkedList;
-import org.apache.activemq.kaha.StoreEntry;
+
 import org.apache.activemq.kaha.impl.DataManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

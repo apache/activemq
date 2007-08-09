@@ -20,23 +20,23 @@ import java.io.File;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.amq.AMQPersistenceAdapter;
+
 /**
  * @version $Revision: 1.3 $
  */
-public class AMQStoreQueueTest extends SimpleQueueTest{
-    
-        
-    protected void configureBroker(BrokerService answer) throws Exception{
-        
-    	File dataFileDir = new File("target/test-amq-data/perfTest/amq");
-    	
+public class AMQStoreQueueTest extends SimpleQueueTest {
+
+    protected void configureBroker(BrokerService answer) throws Exception {
+
+        File dataFileDir = new File("target/test-amq-data/perfTest/amq");
+
         AMQPersistenceAdapter adaptor = new AMQPersistenceAdapter();
         adaptor.setDirectory(dataFileDir);
-        
+
         answer.setPersistenceAdapter(adaptor);
         answer.addConnector(bindAddress);
-        //answer.setDeleteAllMessagesOnStartup(true);
-        
+        // answer.setDeleteAllMessagesOnStartup(true);
+
     }
 
 }

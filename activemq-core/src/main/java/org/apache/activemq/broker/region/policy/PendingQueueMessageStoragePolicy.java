@@ -18,20 +18,20 @@ import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.kaha.Store;
 
-
 /**
- * Abstraction to allow different policies for holding messages awaiting dispatch on a Queue
+ * Abstraction to allow different policies for holding messages awaiting
+ * dispatch on a Queue
  * 
  * @version $Revision$
  */
-public interface PendingQueueMessageStoragePolicy{
+public interface PendingQueueMessageStoragePolicy {
 
     /**
      * Retrieve the configured pending message storage cursor;
-     * @param queue 
+     * 
+     * @param queue
      * @param tmpStore
      * @return the cursor
-     * 
      */
     public PendingMessageCursor getQueuePendingMessageCursor(Queue queue, Store tmpStore);
 }

@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.jndi;
 
-import junit.framework.TestCase;
-
-import org.apache.activemq.ActiveMQConnectionFactory;
-
-import javax.naming.InitialContext;
-import javax.naming.Context;
 import java.util.Properties;
+
+import javax.naming.Context;
+import javax.naming.InitialContext;
+
+import junit.framework.TestCase;
+import org.apache.activemq.ActiveMQConnectionFactory;
 
 /**
  * @version $Revision: 1.3 $

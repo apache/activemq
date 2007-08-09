@@ -202,7 +202,7 @@ public class CommandDatagramSocket extends CommandChannelSupport {
         }
 
         if (log.isDebugEnabled()) {
-            String text = (redelivery) ? "REDELIVERING" : "sending";
+            String text = redelivery ? "REDELIVERING" : "sending";
             log.debug("Channel: " + name + " " + text + " datagram: " + commandId + " to: " + address);
         }
         DatagramPacket packet = new DatagramPacket(data, 0, data.length, address);

@@ -26,13 +26,6 @@ import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.util.Iterator;
 import java.util.Map;
-
-import org.apache.activemq.command.DiscoveryEvent;
-import org.apache.activemq.transport.discovery.DiscoveryAgent;
-import org.apache.activemq.transport.discovery.DiscoveryListener;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -40,7 +33,12 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
+
+import org.apache.activemq.command.DiscoveryEvent;
+import org.apache.activemq.transport.discovery.DiscoveryAgent;
+import org.apache.activemq.transport.discovery.DiscoveryListener;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A {@link DiscoveryAgent} using a multicast address and heartbeat packets
@@ -426,7 +424,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
             if (data == null) {
                 data = new RemoteBrokerData(brokerName, service);
                 brokersByService.put(service, data);
-                ;
+
                 fireServiceAddEvent(data);
                 doAdvertizeSelf();
 

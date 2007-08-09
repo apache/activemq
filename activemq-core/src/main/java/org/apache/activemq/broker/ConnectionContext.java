@@ -16,9 +16,9 @@
  */
 package org.apache.activemq.broker;
 
+import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.ConnectionId;
@@ -28,8 +28,6 @@ import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
 import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.transaction.Transaction;
-
-import java.io.IOException;
 
 /**
  * Used to hold context information needed to process requests sent to a broker.

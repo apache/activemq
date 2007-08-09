@@ -17,10 +17,6 @@
 
 package org.apache.activemq.transport.tcp;
 
-import org.apache.activemq.command.Command;
-import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.wireformat.WireFormat;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.UnknownHostException;
@@ -30,6 +26,10 @@ import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+
+import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * A Transport class that uses SSL and client-side certificate authentication.

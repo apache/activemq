@@ -16,6 +16,15 @@
  */
 package org.apache.activemq;
 
+import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicLong;
+
+import javax.jms.Destination;
+import javax.jms.IllegalStateException;
+import javax.jms.InvalidDestinationException;
+import javax.jms.JMSException;
+import javax.jms.Message;
+
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ProducerAck;
 import org.apache.activemq.command.ProducerId;
@@ -25,14 +34,6 @@ import org.apache.activemq.management.StatsCapable;
 import org.apache.activemq.management.StatsImpl;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.util.IntrospectionSupport;
-
-import javax.jms.Destination;
-import javax.jms.IllegalStateException;
-import javax.jms.InvalidDestinationException;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import java.util.HashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * A client uses a <CODE>MessageProducer</CODE> object to send messages to a
@@ -139,14 +140,14 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      *                 to some internal error.
      */
     public void close() throws JMSException {
-        if (closed == false) {
+        if (!closed) {
             dispose();
             this.session.asyncSendPacket(info.createRemoveCommand());
         }
     }
 
     public void dispose() {
-        if (closed == false) {
+        if (!closed) {
             this.session.removeProducer(this);
             closed = true;
         }

@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.3 $
  */
 public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTestSupport {
-    
+
     protected static final Log log = LogFactory.getLog(JmsTopicSendReceiveWithTwoConnectionsTest.class);
 
     protected Connection sendConnection;
@@ -69,14 +69,12 @@ public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTes
         producer = session.createProducer(null);
         producer.setDeliveryMode(deliveryMode);
 
-        log.info("Created producer: " + producer + " delivery mode = " +
-                (deliveryMode == DeliveryMode.PERSISTENT ? "PERSISTENT" : "NON_PERSISTENT"));
+        log.info("Created producer: " + producer + " delivery mode = " + (deliveryMode == DeliveryMode.PERSISTENT ? "PERSISTENT" : "NON_PERSISTENT"));
 
         if (topic) {
             consumerDestination = session.createTopic(getConsumerSubject());
             producerDestination = session.createTopic(getProducerSubject());
-        }
-        else {
+        } else {
             consumerDestination = session.createQueue(getConsumerSubject());
             producerDestination = session.createQueue(getProducerSubject());
         }
@@ -93,7 +91,7 @@ public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTes
     protected MessageConsumer createConsumer() throws JMSException {
         return receiveSession.createConsumer(consumerDestination);
     }
-    
+
     /*
      * @see junit.framework.TestCase#tearDown()
      */
@@ -117,7 +115,7 @@ public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTes
     /**
      * Creates a connection.
      * 
-     * @return Connection 
+     * @return Connection
      * @throws Exception
      */
     protected Connection createSendConnection() throws Exception {

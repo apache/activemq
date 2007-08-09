@@ -37,15 +37,14 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 /**
- * A simple polymorphic JMS consumer which can work with Queues or Topics
- * which uses JNDI to lookup the JMS connection factory and destination
- *
+ * A simple polymorphic JMS consumer which can work with Queues or Topics which
+ * uses JNDI to lookup the JMS connection factory and destination
+ * 
  * @version $Revision: 1.2 $
  */
 public class SimpleConsumer {
-    
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-            .getLog(SimpleConsumer.class);
+
+    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(SimpleConsumer.class);
 
     /**
      * @param args the queue used by the example
@@ -74,10 +73,8 @@ public class SimpleConsumer {
          */
         try {
             jndiContext = new InitialContext();
-        }
-        catch (NamingException e) {
-            log.info("Could not create JNDI API " +
-                    "context: " + e.toString());
+        } catch (NamingException e) {
+            log.info("Could not create JNDI API " + "context: " + e.toString());
             System.exit(1);
         }
 
@@ -85,25 +82,19 @@ public class SimpleConsumer {
          * Look up connection factory and destination.
          */
         try {
-            connectionFactory = (ConnectionFactory)
-                    jndiContext.lookup("ConnectionFactory");
-            destination = (Destination) jndiContext.lookup(destinationName);
-        }
-        catch (NamingException e) {
-            log.info("JNDI API lookup failed: " +
-                    e.toString());
+            connectionFactory = (ConnectionFactory)jndiContext.lookup("ConnectionFactory");
+            destination = (Destination)jndiContext.lookup(destinationName);
+        } catch (NamingException e) {
+            log.info("JNDI API lookup failed: " + e.toString());
             System.exit(1);
         }
 
         /*
-         * Create connection.
-         * Create session from connection; false means session is
-         * not transacted.
-         * Create receiver, then start message delivery.
-         * Receive all text messages from destination until
-         * a non-text message is received indicating end of
-         * message stream.
-         * Close connection.
+         * Create connection. Create session from connection; false means
+         * session is not transacted. Create receiver, then start message
+         * delivery. Receive all text messages from destination until a non-text
+         * message is received indicating end of message stream. Close
+         * connection.
          */
         try {
             connection = connectionFactory.createConnection();
@@ -114,24 +105,20 @@ public class SimpleConsumer {
                 Message m = consumer.receive(1);
                 if (m != null) {
                     if (m instanceof TextMessage) {
-                        TextMessage message = (TextMessage) m;
+                        TextMessage message = (TextMessage)m;
                         log.info("Reading message: " + message.getText());
-                    }
-                    else {
+                    } else {
                         break;
                     }
                 }
             }
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             log.info("Exception occurred: " + e);
-        }
-        finally {
+        } finally {
             if (connection != null) {
                 try {
                     connection.close();
-                }
-                catch (JMSException e) {
+                } catch (JMSException e) {
                 }
             }
         }

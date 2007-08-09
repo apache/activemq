@@ -28,12 +28,16 @@ package org.apache.activemq.demo;
 
 // START SNIPPET: demo
 
-import org.apache.activemq.ActiveMQConnectionFactory;
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageProducer;
+import javax.jms.QueueSession;
+import javax.jms.Session;
 
-import javax.jms.*;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
+import org.apache.activemq.ActiveMQConnectionFactory;
 
 /**
  * A simple queue sender which does not use JNDI
@@ -42,8 +46,7 @@ import javax.naming.NamingException;
  */
 public class DefaultQueueSender {
 
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-            .getLog(DefaultQueueSender.class);
+    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(DefaultQueueSender.class);
 
     public static void main(String[] args) {
 
@@ -53,7 +56,7 @@ public class DefaultQueueSender {
         Connection connection = null;
         QueueSession queueSession = null;
 
-        if ((args.length < 1)) {
+        if (args.length < 1) {
             printUsage();
             System.exit(1);
         }
@@ -85,16 +88,13 @@ public class DefaultQueueSender {
 
             Message message = session.createTextMessage(text);
             producer.send(message);
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             log.info("Exception occurred: " + e.toString());
-        }
-        finally {
+        } finally {
             if (connection != null) {
                 try {
                     connection.close();
-                }
-                catch (JMSException e) {
+                } catch (JMSException e) {
                 }
             }
         }

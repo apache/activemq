@@ -46,15 +46,14 @@ public class CommandJoiner extends TransportFilter {
     }
 
     public void onCommand(Object o) {
-    	Command command = (Command) o;
+        Command command = (Command)o;
         byte type = command.getDataStructureType();
         if (type == PartialCommand.DATA_STRUCTURE_TYPE || type == LastPartialCommand.DATA_STRUCTURE_TYPE) {
-            PartialCommand header = (PartialCommand) command;
+            PartialCommand header = (PartialCommand)command;
             byte[] partialData = header.getData();
             try {
                 out.write(partialData);
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 getTransportListener().onException(e);
             }
             if (type == LastPartialCommand.DATA_STRUCTURE_TYPE) {
@@ -62,20 +61,18 @@ public class CommandJoiner extends TransportFilter {
                     byte[] fullData = out.toByteArray();
                     out.reset();
                     DataInputStream dataIn = new DataInputStream(new ByteArrayInputStream(fullData));
-                    Command completeCommand = (Command) wireFormat.unmarshal(dataIn);
+                    Command completeCommand = (Command)wireFormat.unmarshal(dataIn);
 
-                    LastPartialCommand lastCommand = (LastPartialCommand) command;
+                    LastPartialCommand lastCommand = (LastPartialCommand)command;
                     lastCommand.configure(completeCommand);
 
                     getTransportListener().onCommand(completeCommand);
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     log.warn("Failed to unmarshal partial command: " + command);
                     getTransportListener().onException(e);
                 }
             }
-        }
-        else {
+        } else {
             getTransportListener().onCommand(command);
         }
     }

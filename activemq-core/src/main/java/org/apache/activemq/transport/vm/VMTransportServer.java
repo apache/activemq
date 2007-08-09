@@ -19,6 +19,7 @@ package org.apache.activemq.transport.vm;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.transport.MutexTransport;
@@ -26,8 +27,6 @@ import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
 import org.apache.activemq.transport.TransportServer;
-
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Broker side of the VMTransport

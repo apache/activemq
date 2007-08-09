@@ -30,11 +30,9 @@ import org.apache.activemq.filter.DestinationMap;
 
 /**
  * Implements <a
- * href="http://activemq.apache.org/virtual-destinations.html">Virtual
- * Topics</a>.
+ * href="http://activemq.apache.org/virtual-destinations.html">Virtual Topics</a>.
  * 
  * @org.apache.xbean.XBean
- * 
  * @version $Revision$
  */
 public class VirtualDestinationInterceptor implements DestinationInterceptor {
@@ -46,15 +44,14 @@ public class VirtualDestinationInterceptor implements DestinationInterceptor {
         Set virtualDestinations = destinationMap.get(destination.getActiveMQDestination());
         List destinations = new ArrayList();
         for (Iterator iter = virtualDestinations.iterator(); iter.hasNext();) {
-            VirtualDestination virtualDestination = (VirtualDestination) iter.next();
+            VirtualDestination virtualDestination = (VirtualDestination)iter.next();
             Destination newNestination = virtualDestination.intercept(destination);
             destinations.add(newNestination);
         }
         if (!destinations.isEmpty()) {
             if (destinations.size() == 1) {
-                return (Destination) destinations.get(0);
-            }
-            else {
+                return (Destination)destinations.get(0);
+            } else {
                 // should rarely be used but here just in case
                 return createCompositeDestination(destination, destinations);
             }
@@ -79,7 +76,7 @@ public class VirtualDestinationInterceptor implements DestinationInterceptor {
         return new DestinationFilter(destination) {
             public void send(ProducerBrokerExchange context, Message messageSend) throws Exception {
                 for (Iterator iter = destinations.iterator(); iter.hasNext();) {
-                    Destination destination = (Destination) iter.next();
+                    Destination destination = (Destination)iter.next();
                     destination.send(context, messageSend);
                 }
             }

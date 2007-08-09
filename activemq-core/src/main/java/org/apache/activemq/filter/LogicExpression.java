@@ -27,17 +27,17 @@ public abstract class LogicExpression extends BinaryExpression implements Boolea
 
     public static BooleanExpression createOR(BooleanExpression lvalue, BooleanExpression rvalue) {
         return new LogicExpression(lvalue, rvalue) {
-        	
+
             public Object evaluate(MessageEvaluationContext message) throws JMSException {
-                
-            	Boolean lv = (Boolean) left.evaluate(message);
+
+                Boolean lv = (Boolean)left.evaluate(message);
                 // Can we do an OR shortcut??
-            	if (lv !=null && lv.booleanValue()) {
+                if (lv != null && lv.booleanValue()) {
                     return Boolean.TRUE;
                 }
-            	
-                Boolean rv = (Boolean) right.evaluate(message);
-                return rv==null ? null : rv;
+
+                Boolean rv = (Boolean)right.evaluate(message);
+                return rv == null ? null : rv;
             }
 
             public String getExpressionSymbol() {
@@ -51,7 +51,7 @@ public abstract class LogicExpression extends BinaryExpression implements Boolea
 
             public Object evaluate(MessageEvaluationContext message) throws JMSException {
 
-                Boolean lv = (Boolean) left.evaluate(message);
+                Boolean lv = (Boolean)left.evaluate(message);
 
                 // Can we do an AND shortcut??
                 if (lv == null)
@@ -60,7 +60,7 @@ public abstract class LogicExpression extends BinaryExpression implements Boolea
                     return Boolean.FALSE;
                 }
 
-                Boolean rv = (Boolean) right.evaluate(message);
+                Boolean rv = (Boolean)right.evaluate(message);
                 return rv == null ? null : rv;
             }
 
@@ -82,7 +82,7 @@ public abstract class LogicExpression extends BinaryExpression implements Boolea
 
     public boolean matches(MessageEvaluationContext message) throws JMSException {
         Object object = evaluate(message);
-        return object!=null && object==Boolean.TRUE;            
+        return object != null && object == Boolean.TRUE;
     }
 
 }

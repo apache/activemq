@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.broker.region.policy;
 
-import org.apache.activemq.broker.region.MessageReference;
-
 import java.io.IOException;
 import java.util.LinkedList;
+
+import org.apache.activemq.broker.region.MessageReference;
 
 /**
  * A strategy for evicting messages from slow consumers.

@@ -16,13 +16,14 @@
  */
 package org.apache.activemq.jndi;
 
-import javax.naming.NamingException;
-import javax.naming.Reference;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Properties;
+
+import javax.naming.NamingException;
+import javax.naming.Reference;
 
 /**
  * Facilitates objects to be stored in JNDI as properties

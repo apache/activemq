@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.advisory;
 
-import java.io.IOException;
 import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
@@ -41,8 +41,6 @@ import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This broker filter handles tracking the state of the broker for purposes of

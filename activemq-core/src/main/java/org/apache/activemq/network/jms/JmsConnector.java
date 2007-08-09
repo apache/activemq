@@ -19,6 +19,8 @@ package org.apache.activemq.network.jms;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -32,9 +34,6 @@ import org.apache.activemq.util.LRUCache;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.jndi.JndiTemplate;
-
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This bridge joins the gap between foreign JMS providers and ActiveMQ As some
@@ -62,29 +61,28 @@ public abstract class JmsConnector implements Service {
     protected String localPassword;
     private String name;
 
-    protected LRUCache replyToBridges = createLRUCache(); 
-    	
-    static private LRUCache createLRUCache() { 
-    	return new LRUCache() {
-	        private static final long serialVersionUID = -7446792754185879286L;
-	
-	        protected boolean removeEldestEntry(Map.Entry enty) {
-	            if (size() > maxCacheSize) {
-	                Iterator iter = entrySet().iterator();
-	                Map.Entry lru = (Map.Entry) iter.next();
-	                remove(lru.getKey());
-	                DestinationBridge bridge = (DestinationBridge) lru.getValue();
-	                try {
-	                    bridge.stop();
-	                    log.info("Expired bridge: " + bridge);
-	                }
-	                catch (Exception e) {
-	                    log.warn("stopping expired bridge" + bridge + " caused an exception", e);
-	                }
-	            }
-	            return false;
-	        }
-	    };
+    protected LRUCache replyToBridges = createLRUCache();
+
+    static private LRUCache createLRUCache() {
+        return new LRUCache() {
+            private static final long serialVersionUID = -7446792754185879286L;
+
+            protected boolean removeEldestEntry(Map.Entry enty) {
+                if (size() > maxCacheSize) {
+                    Iterator iter = entrySet().iterator();
+                    Map.Entry lru = (Map.Entry)iter.next();
+                    remove(lru.getKey());
+                    DestinationBridge bridge = (DestinationBridge)lru.getValue();
+                    try {
+                        bridge.stop();
+                        log.info("Expired bridge: " + bridge);
+                    } catch (Exception e) {
+                        log.warn("stopping expired bridge" + bridge + " caused an exception", e);
+                    }
+                }
+                return false;
+            }
+        };
     }
 
     /**
@@ -113,11 +111,11 @@ public abstract class JmsConnector implements Service {
         init();
         if (started.compareAndSet(false, true)) {
             for (int i = 0; i < inboundBridges.size(); i++) {
-                DestinationBridge bridge = (DestinationBridge) inboundBridges.get(i);
+                DestinationBridge bridge = (DestinationBridge)inboundBridges.get(i);
                 bridge.start();
             }
             for (int i = 0; i < outboundBridges.size(); i++) {
-                DestinationBridge bridge = (DestinationBridge) outboundBridges.get(i);
+                DestinationBridge bridge = (DestinationBridge)outboundBridges.get(i);
                 bridge.start();
             }
             log.info("JMS Connector " + getName() + " Started");
@@ -127,11 +125,11 @@ public abstract class JmsConnector implements Service {
     public void stop() throws Exception {
         if (started.compareAndSet(true, false)) {
             for (int i = 0; i < inboundBridges.size(); i++) {
-                DestinationBridge bridge = (DestinationBridge) inboundBridges.get(i);
+                DestinationBridge bridge = (DestinationBridge)inboundBridges.get(i);
                 bridge.stop();
             }
             for (int i = 0; i < outboundBridges.size(); i++) {
-                DestinationBridge bridge = (DestinationBridge) outboundBridges.get(i);
+                DestinationBridge bridge = (DestinationBridge)outboundBridges.get(i);
                 bridge.stop();
             }
             log.info("JMS Connector " + getName() + " Stopped");
@@ -158,8 +156,7 @@ public abstract class JmsConnector implements Service {
     }
 
     /**
-     * @param jndiTemplate
-     *            The jndiTemplate to set.
+     * @param jndiTemplate The jndiTemplate to set.
      */
     public void setJndiLocalTemplate(JndiTemplate jndiTemplate) {
         this.jndiLocalTemplate = jndiTemplate;
@@ -173,8 +170,7 @@ public abstract class JmsConnector implements Service {
     }
 
     /**
-     * @param jndiOutboundTemplate
-     *            The jndiOutboundTemplate to set.
+     * @param jndiOutboundTemplate The jndiOutboundTemplate to set.
      */
     public void setJndiOutboundTemplate(JndiTemplate jndiOutboundTemplate) {
         this.jndiOutboundTemplate = jndiOutboundTemplate;
@@ -188,8 +184,7 @@ public abstract class JmsConnector implements Service {
     }
 
     /**
-     * @param inboundMessageConvertor
-     *            The inboundMessageConvertor to set.
+     * @param inboundMessageConvertor The inboundMessageConvertor to set.
      */
     public void setInboundMessageConvertor(JmsMesageConvertor jmsMessageConvertor) {
         this.inboundMessageConvertor = jmsMessageConvertor;
@@ -203,8 +198,7 @@ public abstract class JmsConnector implements Service {
     }
 
     /**
-     * @param outboundMessageConvertor
-     *            The outboundMessageConvertor to set.
+     * @param outboundMessageConvertor The outboundMessageConvertor to set.
      */
     public void setOutboundMessageConvertor(JmsMesageConvertor outboundMessageConvertor) {
         this.outboundMessageConvertor = outboundMessageConvertor;
@@ -218,8 +212,8 @@ public abstract class JmsConnector implements Service {
     }
 
     /**
-     * @param replyToDestinationCacheSize
-     *            The replyToDestinationCacheSize to set.
+     * @param replyToDestinationCacheSize The replyToDestinationCacheSize to
+     *                set.
      */
     public void setReplyToDestinationCacheSize(int replyToDestinationCacheSize) {
         this.replyToDestinationCacheSize = replyToDestinationCacheSize;
@@ -233,8 +227,7 @@ public abstract class JmsConnector implements Service {
     }
 
     /**
-     * @param localPassword
-     *            The localPassword to set.
+     * @param localPassword The localPassword to set.
      */
     public void setLocalPassword(String localPassword) {
         this.localPassword = localPassword;
@@ -248,8 +241,7 @@ public abstract class JmsConnector implements Service {
     }
 
     /**
-     * @param localUsername
-     *            The localUsername to set.
+     * @param localUsername The localUsername to set.
      */
     public void setLocalUsername(String localUsername) {
         this.localUsername = localUsername;
@@ -263,8 +255,7 @@ public abstract class JmsConnector implements Service {
     }
 
     /**
-     * @param outboundPassword
-     *            The outboundPassword to set.
+     * @param outboundPassword The outboundPassword to set.
      */
     public void setOutboundPassword(String outboundPassword) {
         this.outboundPassword = outboundPassword;
@@ -278,8 +269,7 @@ public abstract class JmsConnector implements Service {
     }
 
     /**
-     * @param outboundUsername
-     *            The outboundUsername to set.
+     * @param outboundUsername The outboundUsername to set.
      */
     public void setOutboundUsername(String outboundUsername) {
         this.outboundUsername = outboundUsername;

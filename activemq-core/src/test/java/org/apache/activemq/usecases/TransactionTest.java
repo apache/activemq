@@ -17,6 +17,7 @@
 package org.apache.activemq.usecases;
 
 import java.util.Date;
+import java.util.concurrent.CountDownLatch;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -29,20 +30,17 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.util.concurrent.CountDownLatch;
 
 /**
  * @author pragmasoft
  * @version $Revision: 1.1.1.1 $
  */
 public final class TransactionTest extends TestCase {
-    
+
     private static final Log log = LogFactory.getLog(TransactionTest.class);
 
     private volatile String receivedText;
@@ -72,20 +70,18 @@ public final class TransactionTest extends TestCase {
 
             public void onMessage(Message m) {
                 try {
-                    TextMessage tm = (TextMessage) m;
+                    TextMessage tm = (TextMessage)m;
                     receivedText = tm.getText();
                     latch.countDown();
 
                     log.info("consumer received message :" + receivedText);
                     consumerSession.commit();
                     log.info("committed transaction");
-                }
-                catch (JMSException e) {
+                } catch (JMSException e) {
                     try {
                         consumerSession.rollback();
                         log.info("rolled back transaction");
-                    }
-                    catch (JMSException e1) {
+                    } catch (JMSException e1) {
                         log.info(e1);
                         e1.printStackTrace();
                     }
@@ -103,8 +99,7 @@ public final class TransactionTest extends TestCase {
             tm.setText("Hello, " + new Date());
             producer.send(tm);
             log.info("producer sent message :" + tm.getText());
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             e.printStackTrace();
         }
 

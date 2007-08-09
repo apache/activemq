@@ -19,9 +19,6 @@ package org.apache.activemq.usecases;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerService;
-
 import javax.jms.Connection;
 import javax.jms.Queue;
 import javax.jms.QueueConnection;
@@ -32,6 +29,8 @@ import javax.jms.Session;
 import javax.jms.Topic;
 
 import junit.framework.TestCase;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerService;
 
 /**
  * @author Peter Henning

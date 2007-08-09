@@ -18,7 +18,7 @@ package org.apache.activemq.broker.region;
 
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
-import org.apache.activemq.broker.Broker;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTempDestination;

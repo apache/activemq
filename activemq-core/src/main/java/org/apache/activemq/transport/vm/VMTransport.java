@@ -16,10 +16,6 @@ package org.apache.activemq.transport.vm;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 

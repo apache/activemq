@@ -19,10 +19,10 @@ package org.apache.activemq.store.kahadaptor;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.activemq.command.BaseCommand;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.store.MessageStore;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

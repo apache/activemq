@@ -15,24 +15,24 @@
  * limitations under the License.
  */
 package org.apache.activemq;
-import javax.jms.MessageConsumer;
 
+import javax.jms.MessageConsumer;
 
 /**
  * @version $Revision: 1.2 $
  */
-public class JmsQueueSendReceiveMultipleConsumersTest extends JmsQueueSendReceiveTest{
+public class JmsQueueSendReceiveMultipleConsumersTest extends JmsQueueSendReceiveTest {
     MessageConsumer consumer1;
     MessageConsumer consumer2;
-    
+
     protected void setUp() throws Exception {
         messageCount = 5000;
         super.setUp();
-       
+
         consumer1 = createConsumer();
         consumer1.setMessageListener(this);
         consumer2 = createConsumer();
         consumer2.setMessageListener(this);
-        
+
     }
 }

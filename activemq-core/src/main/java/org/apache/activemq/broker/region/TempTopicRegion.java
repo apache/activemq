@@ -15,9 +15,8 @@
 package org.apache.activemq.broker.region;
 
 import javax.jms.JMSException;
+
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
@@ -31,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class TempTopicRegion extends AbstractRegion {
 
-    private static final Log log = LogFactory.getLog(TempTopicRegion.class);
+    private static final Log LOG = LogFactory.getLog(TempTopicRegion.class);
 
     public TempTopicRegion(RegionBroker broker, DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory,
                            DestinationFactory destinationFactory) {
@@ -58,7 +57,7 @@ public class TempTopicRegion extends AbstractRegion {
             answer.init();
             return answer;
         } catch (Exception e) {
-            log.error("Failed to create TopicSubscription ", e);
+            LOG.error("Failed to create TopicSubscription ", e);
             JMSException jmsEx = new JMSException("Couldn't create TopicSubscription");
             jmsEx.setLinkedException(e);
             throw jmsEx;

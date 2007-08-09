@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.broker.region.policy;
 
+import javax.jms.MessageListener;
+
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
-
-import javax.jms.MessageListener;
 
 /**
  * Represents some kind of query which will load initial messages from some source for a new topic subscriber.

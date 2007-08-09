@@ -16,14 +16,14 @@
  */
 package org.apache.activemq.config;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
-
-import javax.naming.InitialContext;
-import javax.naming.Context;
-
 import java.io.File;
 import java.util.Hashtable;
+
+import javax.naming.Context;
+import javax.naming.InitialContext;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
 
 /**
  * @version $Revision$

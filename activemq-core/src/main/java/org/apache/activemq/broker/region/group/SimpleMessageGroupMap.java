@@ -16,12 +16,11 @@
  */
 package org.apache.activemq.broker.region.group;
 
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.command.ConsumerId;
-
-import java.util.Iterator;
-import java.util.Map;
 
 /**
  * A simple implementation which tracks every individual GroupID value but

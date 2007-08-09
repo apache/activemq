@@ -16,15 +16,6 @@
  */
 package org.apache.activemq.camel;
 
-import junit.framework.Assert;
-import org.apache.activemq.demo.DefaultQueueSender;
-import org.apache.camel.CamelTemplate;
-import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.spring.SpringTestSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
@@ -34,6 +25,14 @@ import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+
+import junit.framework.Assert;
+import org.apache.camel.CamelTemplate;
+import org.apache.camel.component.mock.MockEndpoint;
+import org.apache.camel.spring.SpringTestSupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
  * @version $Revision: $

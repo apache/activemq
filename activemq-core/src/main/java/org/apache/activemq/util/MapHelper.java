@@ -20,7 +20,7 @@ import java.util.Map;
 
 /**
  * A bunch of utility methods for working with maps
- *
+ * 
  * @version $Revision$
  */
 public class MapHelper {
@@ -33,16 +33,15 @@ public class MapHelper {
     }
 
     /**
-     * Extracts the value from the map and coerces to an int value
-     * or returns a default value if one could not be found or coerced
+     * Extracts the value from the map and coerces to an int value or returns a
+     * default value if one could not be found or coerced
      */
     public static int getInt(Map map, String key, int defaultValue) {
         Object value = map.get(key);
         if (value instanceof Number) {
-            return ((Number) value).intValue();
-        }
-        else if (value instanceof String) {
-            return Integer.parseInt((String) value);
+            return ((Number)value).intValue();
+        } else if (value instanceof String) {
+            return Integer.parseInt((String)value);
         }
         return defaultValue;
     }

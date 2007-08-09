@@ -181,7 +181,7 @@ public class ConfigTest extends TestCase {
             // Check transport connectors list
             // System.out.print("Checking transport connectors... ");
             List connectors = broker.getTransportConnectors();
-            assertTrue("Should have created at least 3 connectors", (connectors.size() >= 3));
+            assertTrue("Should have created at least 3 connectors", connectors.size() >= 3);
             assertTrue("1st connector should be TcpTransportServer", ((TransportConnector)connectors.get(0)).getServer() instanceof TcpTransportServer);
             assertTrue("2nd connector should be TcpTransportServer", ((TransportConnector)connectors.get(1)).getServer() instanceof TcpTransportServer);
             assertTrue("3rd connector should be TcpTransportServer", ((TransportConnector)connectors.get(2)).getServer() instanceof TcpTransportServer);

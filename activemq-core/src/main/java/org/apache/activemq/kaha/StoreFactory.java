@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.kaha;
 
-import java.io.File;
 import java.io.IOException;
+
 import org.apache.activemq.kaha.impl.KahaStore;
 
 /**

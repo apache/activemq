@@ -20,14 +20,13 @@ import javax.jms.DeliveryMode;
 
 import org.apache.activemq.test.JmsTopicSendReceiveTest;
 
-
 /**
  * @version $Revision: 1.2 $
  */
 public class JmsDurableQueueWildcardSendReceiveTest extends JmsTopicSendReceiveTest {
 
     /**
-     * Set up the test with a queue and persistent delivery mode. 
+     * Set up the test with a queue and persistent delivery mode.
      * 
      * @see junit.framework.TestCase#setUp()
      */
@@ -36,18 +35,18 @@ public class JmsDurableQueueWildcardSendReceiveTest extends JmsTopicSendReceiveT
         deliveryMode = DeliveryMode.PERSISTENT;
         super.setUp();
     }
-    
+
     /**
-     * Returns the consumer subject. 
+     * Returns the consumer subject.
      */
-    protected String getConsumerSubject(){
+    protected String getConsumerSubject() {
         return "FOO.>";
     }
-    
+
     /**
-     * Returns the producer subject. 
+     * Returns the producer subject.
      */
-    protected String getProducerSubject(){
+    protected String getProducerSubject() {
         return "FOO.BAR.HUMBUG";
     }
 }

@@ -19,13 +19,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.util.IntSequenceGenerator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Adds the incrementing sequence number to commands along with performing the

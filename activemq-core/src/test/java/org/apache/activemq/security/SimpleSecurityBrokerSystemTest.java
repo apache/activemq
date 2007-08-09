@@ -16,6 +16,12 @@
  */
 package org.apache.activemq.security;
 
+import java.net.URL;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+
+import junit.framework.Test;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerPlugin;
@@ -24,14 +30,6 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.filter.DestinationMap;
 import org.apache.activemq.jaas.GroupPrincipal;
-
-import java.net.URL;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
-
-import junit.framework.Test;
 
 /**
  * Tests that the broker allows/fails access to destinations based on the

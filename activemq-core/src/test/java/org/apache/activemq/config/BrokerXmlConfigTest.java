@@ -19,8 +19,6 @@ package org.apache.activemq.config;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
 
-import java.net.URI;
-
 /**
  * @version $Revision$
  */

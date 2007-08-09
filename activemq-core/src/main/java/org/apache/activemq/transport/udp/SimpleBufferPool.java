@@ -68,8 +68,7 @@ public class SimpleBufferPool implements ByteBufferPool {
     protected ByteBuffer createBuffer() {
         if (useDirect) {
             return ByteBuffer.allocateDirect(defaultSize);
-        }
-        else {
+        } else {
             return ByteBuffer.allocate(defaultSize);
         }
     }

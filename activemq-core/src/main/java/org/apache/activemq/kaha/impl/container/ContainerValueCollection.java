@@ -19,7 +19,6 @@ package org.apache.activemq.kaha.impl.container;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.activemq.kaha.impl.index.IndexItem;

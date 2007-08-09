@@ -27,9 +27,8 @@ import javax.jms.Topic;
  * @version $Revision: 1.2 $
  */
 public class JmsTopicSendReceiveTest extends JmsSendReceiveTestSupport {
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-            .getLog(JmsTopicSendReceiveTest.class);
-    
+    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(JmsTopicSendReceiveTest.class);
+
     protected Connection connection;
 
     protected void setUp() throws Exception {
@@ -51,14 +50,12 @@ public class JmsTopicSendReceiveTest extends JmsSendReceiveTestSupport {
         producer = session.createProducer(null);
         producer.setDeliveryMode(deliveryMode);
 
-        log.info("Created producer: " + producer + " delivery mode = " +
-                (deliveryMode == DeliveryMode.PERSISTENT ? "PERSISTENT" : "NON_PERSISTENT"));
+        log.info("Created producer: " + producer + " delivery mode = " + (deliveryMode == DeliveryMode.PERSISTENT ? "PERSISTENT" : "NON_PERSISTENT"));
 
         if (topic) {
             consumerDestination = session.createTopic(getConsumerSubject());
             producerDestination = session.createTopic(getProducerSubject());
-        }
-        else {
+        } else {
             consumerDestination = session.createQueue(getConsumerSubject());
             producerDestination = session.createQueue(getProducerSubject());
         }
@@ -78,33 +75,32 @@ public class JmsTopicSendReceiveTest extends JmsSendReceiveTestSupport {
 
     protected void tearDown() throws Exception {
         log.info("Dumping stats...");
-        //TODO
-        //connectionFactory.getFactoryStats().dump(new IndentPrinter());
+        // TODO
+        // connectionFactory.getFactoryStats().dump(new IndentPrinter());
 
         log.info("Closing down connection");
 
         /** TODO we should be able to shut down properly */
         session.close();
         connection.close();
-    }    
-    
+    }
+
     /**
-     * Creates a session. 
+     * Creates a session.
      * 
-     * @return session 
+     * @return session
      * @throws JMSException
      */
     protected Session createConsumerSession() throws JMSException {
         if (useSeparateSession) {
             return connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        }
-        else {
+        } else {
             return session;
         }
     }
 
     /**
-     * Creates a durable suscriber or a consumer. 
+     * Creates a durable suscriber or a consumer.
      * 
      * @return MessageConsumer - durable suscriber or consumer.
      * @throws JMSException
@@ -112,7 +108,7 @@ public class JmsTopicSendReceiveTest extends JmsSendReceiveTestSupport {
     protected MessageConsumer createConsumer() throws JMSException {
         if (durable) {
             log.info("Creating durable consumer");
-            return consumeSession.createDurableSubscriber((Topic) consumerDestination, getName());
+            return consumeSession.createDurableSubscriber((Topic)consumerDestination, getName());
         }
         return consumeSession.createConsumer(consumerDestination);
     }

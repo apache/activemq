@@ -16,9 +16,9 @@
  */
 package org.apache.activemq.broker.region.virtual;
 
-import org.apache.activemq.broker.region.Destination;
-
 import java.util.Collection;
+
+import org.apache.activemq.broker.region.Destination;
 
 /**
  * 

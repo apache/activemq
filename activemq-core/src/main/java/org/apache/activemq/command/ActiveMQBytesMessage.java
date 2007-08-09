@@ -16,16 +16,28 @@
  */
 package org.apache.activemq.command;
 
-import org.apache.activemq.ActiveMQConnection;
-import org.apache.activemq.util.ByteArrayInputStream;
-import org.apache.activemq.util.ByteArrayOutputStream;
-import org.apache.activemq.util.*;
-
-import javax.jms.*;
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.FilterOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
+
+import javax.jms.BytesMessage;
+import javax.jms.JMSException;
+import javax.jms.MessageFormatException;
+import javax.jms.MessageNotReadableException;
+
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.util.ByteArrayInputStream;
+import org.apache.activemq.util.ByteArrayOutputStream;
+import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.ByteSequenceData;
+import org.apache.activemq.util.JMSExceptionSupport;
 
 /**
  * A <CODE>BytesMessage</CODE> object is used to send a message containing a

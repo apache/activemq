@@ -17,7 +17,6 @@
 
 package org.apache.activemq.broker.region;
 
-
 import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.management.StatsImpl;
 
@@ -53,7 +52,7 @@ public class ConnectionStatistics extends StatsImpl {
         enqueues.reset();
         dequeues.reset();
     }
-    
+
     public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
         enqueues.setEnabled(enabled);
@@ -64,12 +63,10 @@ public class ConnectionStatistics extends StatsImpl {
         if (parent != null) {
             enqueues.setParent(parent.getEnqueues());
             dequeues.setParent(parent.getDequeues());
-        }
-        else {
+        } else {
             enqueues.setParent(null);
             dequeues.setParent(null);
         }
     }
-
 
 }

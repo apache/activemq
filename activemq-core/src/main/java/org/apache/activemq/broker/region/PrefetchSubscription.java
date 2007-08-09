@@ -17,14 +17,14 @@ package org.apache.activemq.broker.region;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
+
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
-import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
-import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
@@ -36,7 +36,6 @@ import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.transaction.Synchronization;
-import org.apache.activemq.util.BrokerSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

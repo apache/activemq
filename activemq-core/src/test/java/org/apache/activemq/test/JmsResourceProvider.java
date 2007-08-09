@@ -19,13 +19,13 @@ package org.apache.activemq.test;
 import javax.jms.Connection;
 import javax.jms.ConnectionConsumer;
 import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.ServerSessionPool;
 import javax.jms.Session;
-import javax.jms.DeliveryMode;
 import javax.jms.Topic;
 
 import org.apache.activemq.ActiveMQConnectionFactory;

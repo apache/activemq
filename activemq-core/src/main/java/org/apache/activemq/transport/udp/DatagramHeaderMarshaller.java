@@ -17,9 +17,6 @@
 package org.apache.activemq.transport.udp;
 
 
-import org.apache.activemq.command.Command;
-import org.apache.activemq.command.Endpoint;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.DatagramPacket;
@@ -27,6 +24,9 @@ import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.activemq.command.Command;
+import org.apache.activemq.command.Endpoint;
 
 /**
  * 

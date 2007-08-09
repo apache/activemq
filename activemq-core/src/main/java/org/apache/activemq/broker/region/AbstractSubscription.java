@@ -16,11 +16,12 @@
  */
 package org.apache.activemq.broker.region;
 
+import java.io.IOException;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 import javax.management.ObjectName;
-
-import java.io.IOException;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
@@ -35,8 +36,6 @@ import org.apache.activemq.filter.NoLocalExpression;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.util.concurrent.CopyOnWriteArrayList;
 
 abstract public class AbstractSubscription implements Subscription {
 

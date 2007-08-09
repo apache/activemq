@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
 import javax.jms.Session;
@@ -32,8 +33,6 @@ import javax.transaction.xa.XAResource;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.commons.pool.ObjectPoolFactory;
-
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Holds a real JMS connection along with the session pools associated with it.

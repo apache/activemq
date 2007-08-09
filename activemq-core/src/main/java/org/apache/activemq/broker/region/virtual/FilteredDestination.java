@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.broker.region.virtual;
 
+import javax.jms.InvalidSelectorException;
+import javax.jms.JMSException;
+
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.selector.SelectorParser;
-
-import javax.jms.InvalidSelectorException;
-import javax.jms.JMSException;
 
 /**
  * Represents a destination which is filtered using some predicate such as a selector

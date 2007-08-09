@@ -16,14 +16,12 @@
  */
 package org.apache.activemq.transport.stomp;
 
-import org.apache.activemq.transport.tcp.SslSocketHelper;
-
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.SSLSocket;
-import javax.net.SocketFactory;
+import java.io.IOException;
 import java.net.Socket;
 import java.net.URI;
-import java.io.IOException;
+
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocketFactory;
 
 /**
  * @version $Revision$

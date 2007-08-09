@@ -16,12 +16,12 @@
  */
 package org.apache.activemq.transport;
 
+import java.net.URI;
+
 import org.apache.activemq.ThreadPriorities;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.net.URI;
 
 /**
  * A useful base class for implementations of {@link TransportServer} which uses

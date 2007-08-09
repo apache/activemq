@@ -21,32 +21,30 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.activemq.openwire.*;
-import org.apache.activemq.command.*;
-
-
+import org.apache.activemq.command.DataStructure;
+import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.openwire.BooleanStream;
+import org.apache.activemq.openwire.OpenWireFormat;
 
 /**
- * Marshalling code for Open Wire Format for ProducerInfoMarshaller
- *
- *
- * NOTE!: This file is auto generated - do not modify!
- *        if you need to make a change, please see the modify the groovy scripts in the
- *        under src/gram/script and then use maven openwire:generate to regenerate 
- *        this file.
- *
+ * Marshalling code for Open Wire Format for ProducerInfoMarshaller NOTE!: This
+ * file is auto generated - do not modify! if you need to make a change, please
+ * see the modify the groovy scripts in the under src/gram/script and then use
+ * maven openwire:generate to regenerate this file.
+ * 
  * @version $Revision$
  */
 public class ProducerInfoMarshaller extends BaseCommandMarshaller {
 
     /**
      * Return the type of Data Structure we marshal
+     * 
      * @return short representation of the type data structure
      */
     public byte getDataStructureType() {
         return ProducerInfo.DATA_STRUCTURE_TYPE;
     }
-    
+
     /**
      * @return a new object instance
      */
@@ -56,7 +54,7 @@ public class ProducerInfoMarshaller extends BaseCommandMarshaller {
 
     /**
      * Un-marshal an object instance from the data input stream
-     *
+     * 
      * @param o the object to un-marshal
      * @param dataIn the data input stream to build the object from
      * @throws IOException
@@ -65,23 +63,21 @@ public class ProducerInfoMarshaller extends BaseCommandMarshaller {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         ProducerInfo info = (ProducerInfo)o;
-        info.setProducerId((org.apache.activemq.command.ProducerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
-        info.setDestination((org.apache.activemq.command.ActiveMQDestination) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setProducerId((org.apache.activemq.command.ProducerId)tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination)tightUnmarsalCachedObject(wireFormat, dataIn, bs));
 
         if (bs.readBoolean()) {
             short size = dataIn.readShort();
             org.apache.activemq.command.BrokerId value[] = new org.apache.activemq.command.BrokerId[size];
-            for( int i=0; i < size; i++ ) {
-                value[i] = (org.apache.activemq.command.BrokerId) tightUnmarsalNestedObject(wireFormat,dataIn, bs);
+            for (int i = 0; i < size; i++) {
+                value[i] = (org.apache.activemq.command.BrokerId)tightUnmarsalNestedObject(wireFormat, dataIn, bs);
             }
             info.setBrokerPath(value);
-        }
-        else {
+        } else {
             info.setBrokerPath(null);
         }
 
     }
-
 
     /**
      * Write the booleans that this object uses to a BooleanStream
@@ -100,7 +96,7 @@ public class ProducerInfoMarshaller extends BaseCommandMarshaller {
 
     /**
      * Write a object instance to data output stream
-     *
+     * 
      * @param o the instance to be marshaled
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
@@ -117,7 +113,7 @@ public class ProducerInfoMarshaller extends BaseCommandMarshaller {
 
     /**
      * Un-marshal an object instance from the data input stream
-     *
+     * 
      * @param o the object to un-marshal
      * @param dataIn the data input stream to build the object from
      * @throws IOException
@@ -126,23 +122,21 @@ public class ProducerInfoMarshaller extends BaseCommandMarshaller {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         ProducerInfo info = (ProducerInfo)o;
-        info.setProducerId((org.apache.activemq.command.ProducerId) looseUnmarsalCachedObject(wireFormat, dataIn));
-        info.setDestination((org.apache.activemq.command.ActiveMQDestination) looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setProducerId((org.apache.activemq.command.ProducerId)looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setDestination((org.apache.activemq.command.ActiveMQDestination)looseUnmarsalCachedObject(wireFormat, dataIn));
 
         if (dataIn.readBoolean()) {
             short size = dataIn.readShort();
             org.apache.activemq.command.BrokerId value[] = new org.apache.activemq.command.BrokerId[size];
-            for( int i=0; i < size; i++ ) {
-                value[i] = (org.apache.activemq.command.BrokerId) looseUnmarsalNestedObject(wireFormat,dataIn);
+            for (int i = 0; i < size; i++) {
+                value[i] = (org.apache.activemq.command.BrokerId)looseUnmarsalNestedObject(wireFormat, dataIn);
             }
             info.setBrokerPath(value);
-        }
-        else {
+        } else {
             info.setBrokerPath(null);
         }
 
     }
-
 
     /**
      * Write the booleans that this object uses to a BooleanStream

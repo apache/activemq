@@ -17,6 +17,7 @@
 package org.apache.activemq;
 
 import java.util.Enumeration;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.IllegalStateException;
 import javax.jms.JMSException;
@@ -27,8 +28,6 @@ import javax.jms.QueueBrowser;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.MessageDispatch;
-
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * A client uses a <CODE>QueueBrowser</CODE> object to look at messages on a

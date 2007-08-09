@@ -19,6 +19,7 @@ package org.apache.activemq.store.memory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.transaction.xa.XAException;
 
@@ -33,8 +34,6 @@ import org.apache.activemq.store.ProxyTopicMessageStore;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionRecoveryListener;
 import org.apache.activemq.store.TransactionStore;
-
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Provides a TransactionStore implementation that can create transaction aware

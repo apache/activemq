@@ -30,14 +30,14 @@ public class IOHelper {
     }
 
     /**
-     * Allows a system property to be used to overload the default data directory
-     * which can be useful for forcing the test cases to use a target/ prefix
+     * Allows a system property to be used to overload the default data
+     * directory which can be useful for forcing the test cases to use a target/
+     * prefix
      */
     public static String getDefaultDirectoryPrefix() {
         try {
             return System.getProperty("org.apache.activemq.default.directory.prefix", "");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             return "";
         }
     }

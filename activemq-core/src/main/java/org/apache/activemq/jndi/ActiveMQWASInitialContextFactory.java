@@ -16,11 +16,12 @@
  */
 package org.apache.activemq.jndi;
 
-import javax.naming.Context;
-import javax.naming.NamingException;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
+
+import javax.naming.Context;
+import javax.naming.NamingException;
 
 /**
  * This implementation of <CODE>InitialContextFactory</CODE> should be used
@@ -30,7 +31,8 @@ import java.util.Map;
  * only if it begins with java.naming or javax.naming prefix. Additionaly
  * provider url for the JMS provider can not contain ',' character that is
  * necessary when the list of nodes is provided. So the role of this class is to
- * transform properties before passing it to <CODE>ActiveMQInitialContextFactory</CODE>.
+ * transform properties before passing it to
+ * <CODE>ActiveMQInitialContextFactory</CODE>.
  * 
  * @author Pawel Tucholski
  */
@@ -53,8 +55,7 @@ public class ActiveMQWASInitialContextFactory extends ActiveMQInitialContextFact
      * <li>(java.naming.provider.url,url1;url2)=>java.naming.provider.url,url1,url1)
      * <ul>
      * 
-     * @param environment
-     *            properties for transformation
+     * @param environment properties for transformation
      * @return environment after transformation
      */
     protected Hashtable transformEnvironment(Hashtable environment) {
@@ -64,36 +65,31 @@ public class ActiveMQWASInitialContextFactory extends ActiveMQInitialContextFact
         Iterator it = environment.entrySet().iterator();
 
         while (it.hasNext()) {
-            Map.Entry entry = (Map.Entry) it.next();
-            String key = (String) entry.getKey();
-            String value = (String) entry.getValue();
+            Map.Entry entry = (Map.Entry)it.next();
+            String key = (String)entry.getKey();
+            String value = (String)entry.getValue();
 
             if (key.startsWith("java.naming.queue")) {
                 String key1 = key.substring("java.naming.queue.".length());
                 key1 = key1.replace('.', '/');
                 environment1.put("queue." + key1, value);
-            }
-            else if (key.startsWith("java.naming.topic")) {
+            } else if (key.startsWith("java.naming.topic")) {
                 String key1 = key.substring("java.naming.topic.".length());
                 key1 = key1.replace('.', '/');
                 environment1.put("topic." + key1, value);
-            }
-            else if (key.startsWith("java.naming.connectionFactoryNames")) {
+            } else if (key.startsWith("java.naming.connectionFactoryNames")) {
                 String key1 = key.substring("java.naming.".length());
                 environment1.put(key1, value);
-            }
-            else if (key.startsWith("java.naming.connection")) {
+            } else if (key.startsWith("java.naming.connection")) {
                 String key1 = key.substring("java.naming.".length());
                 environment1.put(key1, value);
-            }
-            else if (key.startsWith(Context.PROVIDER_URL)) {
+            } else if (key.startsWith(Context.PROVIDER_URL)) {
                 // websphere administration console does not exept , character
                 // in provider url, so ; must be used
                 // all ; to ,
                 value = value.replace(';', ',');
                 environment1.put(Context.PROVIDER_URL, value);
-            }
-            else {
+            } else {
                 environment1.put(key, value);
             }
         }

@@ -16,12 +16,12 @@
  */
 package org.apache.activemq.camel;
 
-import org.apache.activemq.ActiveMQSession;
-
 import javax.jms.JMSException;
 import javax.jms.Queue;
-import javax.jms.QueueSender;
 import javax.jms.QueueReceiver;
+import javax.jms.QueueSender;
+
+import org.apache.activemq.ActiveMQSession;
 
 /**
  * A JMS {@link Queue} object which refers to a Camel endpoint

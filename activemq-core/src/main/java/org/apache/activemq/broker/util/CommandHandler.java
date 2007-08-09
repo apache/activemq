@@ -17,7 +17,6 @@
 package org.apache.activemq.broker.util;
 
 import javax.jms.TextMessage;
-import javax.jms.JMSException;
 
 /**
  * Represents a processor of text based commands

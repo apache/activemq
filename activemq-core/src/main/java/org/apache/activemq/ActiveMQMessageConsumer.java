@@ -16,7 +16,29 @@
  */
 package org.apache.activemq;
 
-import org.apache.activemq.command.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.jms.IllegalStateException;
+import javax.jms.InvalidDestinationException;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageListener;
+
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQTempDestination;
+import org.apache.activemq.command.ConsumerId;
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.management.JMSConsumerStatsImpl;
 import org.apache.activemq.management.StatsCapable;
 import org.apache.activemq.management.StatsImpl;
@@ -28,18 +50,6 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import javax.jms.IllegalStateException;
-import javax.jms.*;
-import javax.jms.Message;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * A client uses a <CODE>MessageConsumer</CODE> object to receive messages
@@ -612,7 +622,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     Thread.currentThread().interrupt();
                 }
             }
-            if ((session.isTransacted() || session.isDupsOkAcknowledge())) {
+            if (session.isTransacted() || session.isDupsOkAcknowledge()) {
                 acknowledge();
             }
             if (session.isClientAcknowledge()) {
@@ -885,7 +895,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     }
                 }
                 if (!unconsumedMessages.isClosed()) {
-                    if (this.info.isBrowser() || session.connection.isDuplicate(this, md.getMessage()) == false) {
+                    if (this.info.isBrowser() || !session.connection.isDuplicate(this, md.getMessage())) {
                         if (listener != null && unconsumedMessages.isRunning()) {
                             ActiveMQMessage message = createActiveMQMessage(md);
                             beforeMessageIsConsumed(md);

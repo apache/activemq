@@ -17,10 +17,10 @@
 
 package org.apache.activemq.transport.tcp;
 
-import junit.framework.TestCase;
-
 import java.io.IOException;
 import java.net.URI;
+
+import junit.framework.TestCase;
 
 public class SslTransportServerTest extends TestCase {
     private SslTransportServer sslTransportServer;

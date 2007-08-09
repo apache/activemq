@@ -16,12 +16,8 @@
  */
 package org.apache.activemq.openwire.v2;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
-import org.apache.activemq.openwire.*;
-import org.apache.activemq.command.*;
+import org.apache.activemq.command.ProducerId;
+import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
 
 
 /**

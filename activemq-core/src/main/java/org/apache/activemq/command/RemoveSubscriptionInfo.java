@@ -19,18 +19,16 @@ package org.apache.activemq.command;
 import org.apache.activemq.state.CommandVisitor;
 
 /**
- *
  * @openwire:marshaller code="9"
  * @version $Revision: 1.7 $
  */
 public class RemoveSubscriptionInfo extends BaseCommand {
 
-    public static final byte DATA_STRUCTURE_TYPE=CommandTypes.REMOVE_SUBSCRIPTION_INFO;
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.REMOVE_SUBSCRIPTION_INFO;
 
     protected ConnectionId connectionId;
     protected String clientId;
     protected String subscriptionName;
-
 
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
@@ -42,6 +40,7 @@ public class RemoveSubscriptionInfo extends BaseCommand {
     public ConnectionId getConnectionId() {
         return connectionId;
     }
+
     public void setConnectionId(ConnectionId connectionId) {
         this.connectionId = connectionId;
     }
@@ -60,7 +59,7 @@ public class RemoveSubscriptionInfo extends BaseCommand {
     public void setSubcriptionName(String subscriptionName) {
         this.subscriptionName = subscriptionName;
     }
-    
+
     public String getSubscriptionName() {
         return subscriptionName;
     }
@@ -81,7 +80,7 @@ public class RemoveSubscriptionInfo extends BaseCommand {
     }
 
     public Response visit(CommandVisitor visitor) throws Exception {
-        return visitor.processRemoveSubscription( this );
+        return visitor.processRemoveSubscription(this);
     }
 
 }

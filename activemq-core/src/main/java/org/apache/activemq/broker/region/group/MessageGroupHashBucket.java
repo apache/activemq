@@ -80,8 +80,7 @@ public class MessageGroupHashBucket implements MessageGroupMap {
         final MessageGroupSet answer = createMessageGroupSet(bucketNumber);
         if (parent == null) {
             return answer;
-        }
-        else {
+        } else {
             // union the two sets together
             return new MessageGroupSet() {
                 public boolean contains(String groupID) {
@@ -103,7 +102,7 @@ public class MessageGroupHashBucket implements MessageGroupMap {
     protected int getBucketNumber(String groupId) {
         int bucket = groupId.hashCode() % bucketCount;
         // bucket could be negative
-        if( bucket < 0 )
+        if (bucket < 0)
             bucket *= -1;
         return bucket;
     }

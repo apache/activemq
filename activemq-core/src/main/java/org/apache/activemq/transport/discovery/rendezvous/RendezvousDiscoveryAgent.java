@@ -22,6 +22,7 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceEvent;
@@ -35,8 +36,6 @@ import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.MapHelper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * A {@link DiscoveryAgent} using <a href="http://www.zeroconf.org/">Zeroconf</a>
