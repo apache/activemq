@@ -23,37 +23,37 @@ public interface ConnectorViewMBean extends Service {
     /**
      * Resets the statistics
      */
-    public void resetStatistics();
+    void resetStatistics();
     
     /**
      * enable statistics gathering
      */   
-    public void enableStatistics();
+    void enableStatistics();
 
     /**
      * disable statistics gathering
      */  
-    public void disableStatistics();
+    void disableStatistics();
     
     /**
      * Returns true if statistics is enabled
      * 
      * @return true if statistics is enabled
      */  
-    public boolean isStatisticsEnabled();
+    boolean isStatisticsEnabled();
 
     /**
      * Returns the number of messages enqueued on this connector
      * 
      * @return the number of messages enqueued on this connector
      */
-    public long getEnqueueCount();
+    long getEnqueueCount();
 
     /**
      * Returns the number of messages dequeued on this connector
      * 
      * @return the number of messages dequeued on this connector
      */
-    public long getDequeueCount();
+    long getDequeueCount();
 
 }

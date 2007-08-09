@@ -82,8 +82,9 @@ public class FactoryFinder {
 
         // lets try the thread context class loader first
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        if (classLoader == null)
+        if (classLoader == null) {
             classLoader = getClass().getClassLoader();
+        }
         InputStream in = classLoader.getResourceAsStream(uri);
         if (in == null) {
             in = FactoryFinder.class.getClassLoader().getResourceAsStream(uri);

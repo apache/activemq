@@ -32,5 +32,5 @@ public interface Callback {
      * else a rollback is performed
      * @throws Exception TODO
      */
-    public void execute() throws Exception;
+    void execute() throws Exception;
 }

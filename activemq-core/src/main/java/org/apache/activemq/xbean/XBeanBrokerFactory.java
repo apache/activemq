@@ -39,7 +39,7 @@ import org.springframework.util.ResourceUtils;
  * @version $Revision$
  */
 public class XBeanBrokerFactory implements BrokerFactoryHandler {
-    private static final transient Log log = LogFactory.getLog(XBeanBrokerFactory.class);
+    private static final transient Log LOG = LogFactory.getLog(XBeanBrokerFactory.class);
 
     static {
         PropertyEditorManager.registerEditor(URI.class, URIEditor.class);
@@ -77,7 +77,7 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
     }
 
     protected ApplicationContext createApplicationContext(String uri) throws MalformedURLException {
-        log.debug("Now attempting to figure out the type of resource: " + uri);
+        LOG.debug("Now attempting to figure out the type of resource: " + uri);
 
         Resource resource;
         File file = new File(uri);

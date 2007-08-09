@@ -216,15 +216,17 @@ public final class DataByteArrayOutputStream extends OutputStream implements Dat
                 encodedsize += 2;
             }
         }
-        if (encodedsize > 65535)
+        if (encodedsize > 65535){
             throw new UTFDataFormatException("encoded string too long: " + encodedsize + " bytes");
+        }
         ensureEnoughBuffer(pos + encodedsize + 2);
         writeShort(encodedsize);
         int i = 0;
         for (i = 0; i < strlen; i++) {
             c = str.charAt(i);
-            if (!((c >= 0x0001) && (c <= 0x007F)))
+            if (!((c >= 0x0001) && (c <= 0x007F))) {
                 break;
+            }
             buf[pos++] = (byte)c;
         }
         for (; i < strlen; i++) {

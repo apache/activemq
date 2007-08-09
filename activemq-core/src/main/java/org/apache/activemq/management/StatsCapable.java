@@ -27,5 +27,5 @@ public interface StatsCapable {
     /**
      * @return the Stats for this object
      */
-    public StatsImpl getStats();
+    StatsImpl getStats();
 }

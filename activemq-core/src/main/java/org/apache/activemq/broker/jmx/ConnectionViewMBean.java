@@ -22,52 +22,52 @@ public interface ConnectionViewMBean extends Service {
     /**
      * @return true if the Connection is slow
      */
-    public boolean isSlow();
+    boolean isSlow();
 
     /**
      * @return if after being marked, the Connection is still writing
      */
-    public boolean isBlocked();
+    boolean isBlocked();
 
     /**
      * @return true if the Connection is connected
      */
-    public boolean isConnected();
+    boolean isConnected();
 
     /**
      * @return true if the Connection is active
      */
-    public boolean isActive();
+    boolean isActive();
 
     /**
      * Returns the number of messages to be dispatched to this connection
      */
-    public int getDispatchQueueSize();
+    int getDispatchQueueSize();
     
     /**
      * Resets the statistics
      */
-    public void resetStatistics();
+    void resetStatistics();
 
     /**
      * Returns the number of messages enqueued on this connection
      * 
      * @return the number of messages enqueued on this connection
      */
-    public long getEnqueueCount();
+    long getEnqueueCount();
 
     /**
      * Returns the number of messages dequeued on this connection
      * 
      * @return the number of messages dequeued on this connection
      */
-    public long getDequeueCount();
+    long getDequeueCount();
     
     /**
      * Returns the source address for this connection
      * 
      * @return the souce address for this connection
      */
-    public String getRemoteAddress();
+    String getRemoteAddress();
 
 }

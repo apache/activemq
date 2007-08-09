@@ -63,18 +63,21 @@ public class VMTransportServer implements TransportServer {
     public VMTransport connect() throws IOException {
         TransportAcceptListener al;
         synchronized (this) {
-            if (disposed)
+            if (disposed) {
                 throw new IOException("Server has been disposed.");
+            }
             al = acceptListener;
         }
-        if (al == null)
+        if (al == null) {
             throw new IOException("Server TransportAcceptListener is null.");
+        }
 
         connectionCount.incrementAndGet();
         VMTransport client = new VMTransport(location) {
             public void stop() throws Exception {
-                if (disposed)
+                if (disposed) {
                     return;
+                }
                 super.stop();
                 if (connectionCount.decrementAndGet() == 0 && disposeOnDisconnect) {
                     VMTransportServer.this.stop();
@@ -106,7 +109,7 @@ public class VMTransportServer implements TransportServer {
      * 
      * @param acceptListener
      */
-    synchronized public void setAcceptListener(TransportAcceptListener acceptListener) {
+    public synchronized void setAcceptListener(TransportAcceptListener acceptListener) {
         this.acceptListener = acceptListener;
     }
 

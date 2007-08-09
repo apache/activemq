@@ -41,10 +41,11 @@ import org.apache.activemq.util.IdGenerator;
  */
 public class LargeMessageTestSupport extends ClientTestSupport implements MessageListener {
 
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(LargeMessageTestSupport.class);
-
     protected static final int LARGE_MESSAGE_SIZE = 128 * 1024;
     protected static final int MESSAGE_COUNT = 100;
+
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(LargeMessageTestSupport.class);
+
     protected Connection producerConnection;
     protected Connection consumerConnection;
     protected MessageConsumer consumer;
@@ -82,7 +83,7 @@ public class LargeMessageTestSupport extends ClientTestSupport implements Messag
     public void setUp() throws Exception {
         super.setUp();
         ClientTestSupport.removeMessageStore();
-        log.info("Setting up . . . . . ");
+        LOG.info("Setting up . . . . . ");
         messageCount.set(0);
 
         destination = createDestination();
@@ -117,7 +118,7 @@ public class LargeMessageTestSupport extends ClientTestSupport implements Messag
         consumerSession = consumerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         consumer = createConsumer();
         consumer.setMessageListener(this);
-        log.info("Setup complete");
+        LOG.info("Setup complete");
     }
 
     protected void setPrefetchPolicy(ActiveMQConnection activeMQConnection) {
@@ -144,8 +145,9 @@ public class LargeMessageTestSupport extends ClientTestSupport implements Messag
 
         for (int i = 0; i < LARGE_MESSAGE_SIZE; i++) {
             result = msg1.readByte() == largeMessageData[i];
-            if (!result)
+            if (!result) {
                 break;
+            }
         }
 
         return result;
@@ -161,9 +163,9 @@ public class LargeMessageTestSupport extends ClientTestSupport implements Messag
                     messageCount.notify();
                 }
             }
-            log.info("got message = " + messageCount);
+            LOG.info("got message = " + messageCount);
             if (messageCount.get() % 50 == 0) {
-                log.info("count = " + messageCount);
+                LOG.info("count = " + messageCount);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -172,22 +174,22 @@ public class LargeMessageTestSupport extends ClientTestSupport implements Messag
 
     public void testLargeMessages() throws Exception {
         for (int i = 0; i < MESSAGE_COUNT; i++) {
-            log.info("Sending message: " + i);
+            LOG.info("Sending message: " + i);
             BytesMessage msg = producerSession.createBytesMessage();
             msg.writeBytes(largeMessageData);
             producer.send(msg);
         }
         long now = System.currentTimeMillis();
         while (now + 60000 > System.currentTimeMillis() && messageCount.get() < MESSAGE_COUNT) {
-            log.info("message count = " + messageCount);
+            LOG.info("message count = " + messageCount);
             synchronized (messageCount) {
                 messageCount.wait(1000);
             }
         }
-        log.info("Finished count = " + messageCount);
+        LOG.info("Finished count = " + messageCount);
         assertTrue("Not enough messages - expected " + MESSAGE_COUNT + " but got " + messageCount, messageCount.get() == MESSAGE_COUNT);
         assertTrue("received messages are not valid", validMessageConsumption);
         Thread.sleep(1000);
-        log.info("FINAL count = " + messageCount);
+        LOG.info("FINAL count = " + messageCount);
     }
 }

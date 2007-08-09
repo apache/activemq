@@ -55,7 +55,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class ForwardingBridge implements Service {
 
-    static final private Log log = LogFactory.getLog(ForwardingBridge.class);
+    private static final Log LOG = LogFactory.getLog(ForwardingBridge.class);
 
     private final Transport localBroker;
     private final Transport remoteBroker;
@@ -88,7 +88,7 @@ public class ForwardingBridge implements Service {
     }
 
     public void start() throws Exception {
-        log.info("Starting a network connection between " + localBroker + " and " + remoteBroker
+        LOG.info("Starting a network connection between " + localBroker + " and " + remoteBroker
                  + " has been established.");
 
         localBroker.setTransportListener(new DefaultTransportListener() {
@@ -123,7 +123,7 @@ public class ForwardingBridge implements Service {
                 try {
                     startBridge();
                 } catch (IOException e) {
-                    log.error("Failed to start network bridge: " + e, e);
+                    LOG.error("Failed to start network bridge: " + e, e);
                 }
             }
         };
@@ -165,7 +165,7 @@ public class ForwardingBridge implements Service {
             topicConsumerInfo.setPriority(ConsumerInfo.NETWORK_CONSUMER_PRIORITY);
             localBroker.oneway(topicConsumerInfo);
         }
-        log.info("Network connection between " + localBroker + " and " + remoteBroker
+        LOG.info("Network connection between " + localBroker + " and " + remoteBroker
                  + " has been established.");
     }
 
@@ -188,8 +188,8 @@ public class ForwardingBridge implements Service {
     }
 
     public void serviceRemoteException(Throwable error) {
-        log.info("Unexpected remote exception: " + error);
-        log.debug("Exception trace: ", error);
+        LOG.info("Unexpected remote exception: " + error);
+        LOG.debug("Exception trace: ", error);
     }
 
     protected void serviceRemoteCommand(Command command) {
@@ -200,7 +200,7 @@ public class ForwardingBridge implements Service {
                     remoteBrokerId = remoteBrokerInfo.getBrokerId();
                     if (localBrokerId != null) {
                         if (localBrokerId.equals(remoteBrokerId)) {
-                            log.info("Disconnecting loop back connection.");
+                            LOG.info("Disconnecting loop back connection.");
                             ServiceSupport.dispose(this);
                         } else {
                             triggerStartBridge();
@@ -208,7 +208,7 @@ public class ForwardingBridge implements Service {
                     }
                 }
             } else {
-                log.warn("Unexpected remote command: " + command);
+                LOG.warn("Unexpected remote command: " + command);
             }
         } catch (IOException e) {
             serviceLocalException(e);
@@ -216,8 +216,8 @@ public class ForwardingBridge implements Service {
     }
 
     public void serviceLocalException(Throwable error) {
-        log.info("Unexpected local exception: " + error);
-        log.debug("Exception trace: ", error);
+        LOG.info("Unexpected local exception: " + error);
+        LOG.debug("Exception trace: ", error);
         fireBridgeFailed();
     }
 
@@ -303,7 +303,7 @@ public class ForwardingBridge implements Service {
                     localBrokerId = localBrokerInfo.getBrokerId();
                     if (remoteBrokerId != null) {
                         if (remoteBrokerId.equals(localBrokerId)) {
-                            log.info("Disconnecting loop back connection.");
+                            LOG.info("Disconnecting loop back connection.");
                             ServiceSupport.dispose(this);
                         } else {
                             triggerStartBridge();
@@ -311,7 +311,7 @@ public class ForwardingBridge implements Service {
                     }
                 }
             } else {
-                log.debug("Unexpected local command: " + command);
+                LOG.debug("Unexpected local command: " + command);
             }
         } catch (IOException e) {
             serviceLocalException(e);

@@ -1,17 +1,19 @@
 /**
- * 
- * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE
- * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
- * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
- * License. You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
@@ -44,11 +46,11 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.15 $
  */
-abstract public class PrefetchSubscription extends AbstractSubscription {
+public abstract class PrefetchSubscription extends AbstractSubscription {
 
-    static private final Log LOG = LogFactory.getLog(PrefetchSubscription.class);
+    private static final Log LOG = LogFactory.getLog(PrefetchSubscription.class);
     protected PendingMessageCursor pending;
-    final protected LinkedList dispatched = new LinkedList();
+    protected final LinkedList dispatched = new LinkedList();
     protected int prefetchExtension;
     protected long enqueueCounter;
     protected long dispatchCounter;
@@ -317,15 +319,15 @@ abstract public class PrefetchSubscription extends AbstractSubscription {
         return dispatched.size();
     }
 
-    synchronized public long getDequeueCounter() {
+    public synchronized long getDequeueCounter() {
         return dequeueCounter;
     }
 
-    synchronized public long getDispatchedCounter() {
+    public synchronized long getDispatchedCounter() {
         return dispatchCounter;
     }
 
-    synchronized public long getEnqueueCounter() {
+    public synchronized long getEnqueueCounter() {
         return enqueueCounter;
     }
 
@@ -499,7 +501,7 @@ abstract public class PrefetchSubscription extends AbstractSubscription {
      *         (another sub may have already dispatched it for example).
      * @throws IOException
      */
-    abstract protected boolean canDispatch(MessageReference node) throws IOException;
+    protected abstract boolean canDispatch(MessageReference node) throws IOException;
 
     /**
      * Used during acknowledgment to remove the message.

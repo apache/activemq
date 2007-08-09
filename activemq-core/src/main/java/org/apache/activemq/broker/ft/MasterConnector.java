@@ -55,7 +55,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class MasterConnector implements Service, BrokerServiceAware {
 
-    private static final Log log = LogFactory.getLog(MasterConnector.class);
+    private static final Log LOG = LogFactory.getLog(MasterConnector.class);
     private BrokerService broker;
     private URI remoteURI;
     private URI localURI;
@@ -104,7 +104,7 @@ public class MasterConnector implements Service, BrokerServiceAware {
         }
         localBroker = TransportFactory.connect(localURI);
         remoteBroker = TransportFactory.connect(remoteURI);
-        log.info("Starting a network connection between " + localBroker + " and " + remoteBroker + " has been established.");
+        LOG.info("Starting a network connection between " + localBroker + " and " + remoteBroker + " has been established.");
         localBroker.setTransportListener(new DefaultTransportListener() {
 
             public void onCommand(Object command) {
@@ -141,7 +141,7 @@ public class MasterConnector implements Service, BrokerServiceAware {
                     startBridge();
                 } catch (Exception e) {
                     masterActive.set(false);
-                    log.error("Failed to start network bridge: " + e, e);
+                    LOG.error("Failed to start network bridge: " + e, e);
                 }
             }
         };
@@ -175,7 +175,7 @@ public class MasterConnector implements Service, BrokerServiceAware {
         brokerInfo.setPeerBrokerInfos(broker.getBroker().getPeerBrokerInfos());
         brokerInfo.setSlaveBroker(true);
         remoteBroker.oneway(brokerInfo);
-        log.info("Slave connection between " + localBroker + " and " + remoteBroker + " has been established.");
+        LOG.info("Slave connection between " + localBroker + " and " + remoteBroker + " has been established.");
     }
 
     public void stop() throws Exception {
@@ -192,7 +192,7 @@ public class MasterConnector implements Service, BrokerServiceAware {
             remoteBroker.oneway(new ShutdownInfo());
             localBroker.oneway(new ShutdownInfo());
         } catch (IOException e) {
-            log.debug("Caught exception stopping", e);
+            LOG.debug("Caught exception stopping", e);
         } finally {
             ServiceStopper ss = new ServiceStopper();
             ss.stop(localBroker);
@@ -202,7 +202,7 @@ public class MasterConnector implements Service, BrokerServiceAware {
     }
 
     protected void serviceRemoteException(IOException error) {
-        log.error("Network connection between " + localBroker + " and " + remoteBroker + " shutdown: " + error.getMessage(), error);
+        LOG.error("Network connection between " + localBroker + " and " + remoteBroker + " shutdown: " + error.getMessage(), error);
         shutDown();
     }
 
@@ -213,7 +213,7 @@ public class MasterConnector implements Service, BrokerServiceAware {
                 command = md.getMessage();
             }
             if (command.getDataStructureType() == CommandTypes.SHUTDOWN_INFO) {
-                log.warn("The Master has shutdown");
+                LOG.warn("The Master has shutdown");
                 shutDown();
             } else {
                 boolean responseRequired = command.isResponseRequired();
@@ -232,7 +232,7 @@ public class MasterConnector implements Service, BrokerServiceAware {
     }
 
     protected void serviceLocalException(Throwable error) {
-        log.info("Network connection between " + localBroker + " and " + remoteBroker + " shutdown: " + error.getMessage(), error);
+        LOG.info("Network connection between " + localBroker + " and " + remoteBroker + " shutdown: " + error.getMessage(), error);
         ServiceSupport.dispose(this);
     }
 

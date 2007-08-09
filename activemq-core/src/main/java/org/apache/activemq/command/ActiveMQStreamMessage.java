@@ -113,10 +113,10 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_STREAM_MESSAGE;
 
-    transient protected DataOutputStream dataOut;
-    transient protected ByteArrayOutputStream bytesOut;
-    transient protected DataInputStream dataIn;
-    transient protected int remainingBytes = -1;
+    protected transient DataOutputStream dataOut;
+    protected transient ByteArrayOutputStream bytesOut;
+    protected transient DataInputStream dataIn;
+    protected transient int remainingBytes = -1;
 
     public Message copy() {
         ActiveMQStreamMessage copy = new ActiveMQStreamMessage();

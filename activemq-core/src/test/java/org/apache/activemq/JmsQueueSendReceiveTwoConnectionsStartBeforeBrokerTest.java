@@ -20,12 +20,14 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.activemq.broker.BrokerService;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision$
  */
-public class JmsQueueSendReceiveTwoConnectionsStartBeforeBrokerTest extends
-    JmsQueueSendReceiveTwoConnectionsTest {
+public class JmsQueueSendReceiveTwoConnectionsStartBeforeBrokerTest extends JmsQueueSendReceiveTwoConnectionsTest {
+    private static final Log LOG = LogFactory.getLog(JmsQueueSendReceiveTwoConnectionsStartBeforeBrokerTest.class);
 
     private Queue errors = new ConcurrentLinkedQueue();
     private int delayBeforeStartingBroker = 1000;
@@ -33,28 +35,27 @@ public class JmsQueueSendReceiveTwoConnectionsStartBeforeBrokerTest extends
 
     public void startBroker() {
         // Initialize the broker
-        log.info("Lets wait: " + delayBeforeStartingBroker + " millis  before creating the broker");
+        LOG.info("Lets wait: " + delayBeforeStartingBroker + " millis  before creating the broker");
         try {
             Thread.sleep(delayBeforeStartingBroker);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        log.info("Now starting the broker");
+        LOG.info("Now starting the broker");
         try {
             broker = new BrokerService();
             broker.setPersistent(false);
             broker.addConnector("tcp://localhost:61616");
             broker.start();
         } catch (Exception e) {
-            log.info("Caught: " + e);
+            LOG.info("Caught: " + e);
             errors.add(e);
         }
     }
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
-        return new ActiveMQConnectionFactory(
-                                             "failover:(tcp://localhost:61616)?maxReconnectAttempts=10&useExponentialBackOff=false&initialReconnectDelay=200");
+        return new ActiveMQConnectionFactory("failover:(tcp://localhost:61616)?maxReconnectAttempts=10&useExponentialBackOff=false&initialReconnectDelay=200");
     }
 
     protected void setUp() throws Exception {

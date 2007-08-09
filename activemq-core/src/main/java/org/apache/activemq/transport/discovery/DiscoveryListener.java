@@ -20,12 +20,13 @@ import org.apache.activemq.command.DiscoveryEvent;
 
 /**
  * A listener of services being added or removed from a network
- *
+ * 
  * @version $Revision$
  */
 public interface DiscoveryListener {
-    
-    public void onServiceAdd(DiscoveryEvent event);
-    public void onServiceRemove(DiscoveryEvent event);
-    
+
+    void onServiceAdd(DiscoveryEvent event);
+
+    void onServiceRemove(DiscoveryEvent event);
+
 }

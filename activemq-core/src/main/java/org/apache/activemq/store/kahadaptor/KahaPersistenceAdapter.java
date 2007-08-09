@@ -1,17 +1,19 @@
 /**
- * 
- * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE
- * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
- * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
- * License. You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package org.apache.activemq.store.kahadaptor;
 
 import java.io.File;
@@ -54,7 +56,7 @@ import org.apache.commons.logging.LogFactory;
 public class KahaPersistenceAdapter implements PersistenceAdapter {
 
     private static final int STORE_LOCKED_WAIT_DELAY = 10 * 1000;
-    private static final Log log = LogFactory.getLog(KahaPersistenceAdapter.class);
+    private static final Log LOG = LogFactory.getLog(KahaPersistenceAdapter.class);
     static final String PREPARED_TRANSACTIONS_NAME = "PreparedTransactions";
     KahaTransactionStore transactionStore;
     ConcurrentHashMap<ActiveMQTopic, TopicMessageStore> topics = new ConcurrentHashMap<ActiveMQTopic, TopicMessageStore>();
@@ -79,7 +81,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
                 }
             }
         } catch (IOException e) {
-            log.error("Failed to get destinations ", e);
+            LOG.error("Failed to get destinations ", e);
         }
         return rc;
     }
@@ -136,7 +138,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
                     transactionStore = new KahaTransactionStore(this, container);
                     break;
                 } catch (StoreLockedExcpetion e) {
-                    log.info("Store is locked... waiting " + (STORE_LOCKED_WAIT_DELAY / 1000)
+                    LOG.info("Store is locked... waiting " + (STORE_LOCKED_WAIT_DELAY / 1000)
                              + " seconds for the Store to be unlocked.");
                     try {
                         Thread.sleep(STORE_LOCKED_WAIT_DELAY);
@@ -200,7 +202,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
         throws IOException {
         Store store = getStore();
         MapContainer<String, Object> container = store.getMapContainer(id, containerName);
-        container.setKeyMarshaller(Store.StringMarshaller);
+        container.setKeyMarshaller(Store.STRING_MARSHALLER);
         container.setValueMarshaller(createMessageMarshaller());
         container.load();
         return container;

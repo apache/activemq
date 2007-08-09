@@ -40,8 +40,8 @@ import org.apache.commons.logging.LogFactory;
  */
 
 class IndexRootContainer {
-    private static final Log log = LogFactory.getLog(IndexRootContainer.class);
-    protected static final Marshaller rootMarshaller = Store.ObjectMarshaller;
+    private static final Log LOG = LogFactory.getLog(IndexRootContainer.class);
+    protected static final Marshaller ROOT_MARSHALLER = Store.OBJECT_MARSHALLER;
     protected IndexItem root;
     protected IndexManager indexManager;
     protected DataManager dataManager;
@@ -56,7 +56,7 @@ class IndexRootContainer {
         while (nextItem != Item.POSITION_NOT_SET) {
             StoreEntry item = indexManager.getIndex(nextItem);
             StoreLocation data = item.getKeyDataItem();
-            Object key = dataManager.readItem(rootMarshaller, data);
+            Object key = dataManager.readItem(ROOT_MARSHALLER, data);
             map.put(key, item);
             list.add(item);
             nextItem = item.getNextItem();
@@ -73,7 +73,7 @@ class IndexRootContainer {
             removeRoot(containerIndexManager, key);
         }
 
-        StoreLocation data = dataManager.storeDataItem(rootMarshaller, key);
+        StoreLocation data = dataManager.storeDataItem(ROOT_MARSHALLER, key);
         IndexItem newRoot = indexManager.createNewIndex();
         newRoot.setKeyData(data);
         IndexItem containerRoot = containerIndexManager.createNewIndex();

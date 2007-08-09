@@ -38,7 +38,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class StompSubscriptionRemoveTest extends TestCase {
-    private static final Log log = LogFactory.getLog(StompSubscriptionRemoveTest.class);
+    private static final Log LOG = LogFactory.getLog(StompSubscriptionRemoveTest.class);
     private static final String COMMAND_MESSAGE = "MESSAGE";
     private static final String HEADER_MESSAGE_ID = "message-id";
     private static final int STOMP_PORT = 61613;
@@ -60,7 +60,7 @@ public class StompSubscriptionRemoveTest extends TestCase {
         Message message = session.createTextMessage("Testas");
         for (int idx = 0; idx < 2000; ++idx) {
             producer.send(message);
-            log.debug("Sending: " + idx);
+            LOG.debug("Sending: " + idx);
         }
         producer.close();
         session.close();
@@ -68,8 +68,8 @@ public class StompSubscriptionRemoveTest extends TestCase {
 
         stompConnection.open("localhost", STOMP_PORT);
 
-        String connect_frame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n" + "\n";
-        stompConnection.sendFrame(connect_frame);
+        String connectFrame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n" + "\n";
+        stompConnection.sendFrame(connectFrame);
 
         stompConnection.receiveFrame();
         String frame = "SUBSCRIBE\n" + "destination:/queue/" + getDestinationName() + "\n" + "ack:client\n\n";
@@ -79,7 +79,7 @@ public class StompSubscriptionRemoveTest extends TestCase {
         int count = 0;
         while (count < 2) {
             String receiveFrame = stompConnection.receiveFrame();
-            log.debug("Received: " + receiveFrame);
+            LOG.debug("Received: " + receiveFrame);
             assertEquals("Unexpected frame received", COMMAND_MESSAGE, getCommand(receiveFrame));
             String messageId = getHeaderValue(receiveFrame, HEADER_MESSAGE_ID);
             String ackmessage = "ACK\n" + HEADER_MESSAGE_ID + ":" + messageId + "\n\n";
@@ -95,8 +95,8 @@ public class StompSubscriptionRemoveTest extends TestCase {
 
         stompConnection.open("localhost", STOMP_PORT);
 
-        connect_frame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n" + "\n";
-        stompConnection.sendFrame(connect_frame);
+        connectFrame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n" + "\n";
+        stompConnection.sendFrame(connectFrame);
 
         stompConnection.receiveFrame();
 
@@ -105,7 +105,7 @@ public class StompSubscriptionRemoveTest extends TestCase {
         try {
             while (count != 2000) {
                 String receiveFrame = stompConnection.receiveFrame();
-                log.debug("Received: " + receiveFrame);
+                LOG.debug("Received: " + receiveFrame);
                 assertEquals("Unexpected frame received", COMMAND_MESSAGE, getCommand(receiveFrame));
                 String messageId = getHeaderValue(receiveFrame, HEADER_MESSAGE_ID);
                 String ackmessage = "ACK\n" + HEADER_MESSAGE_ID + ":" + messageId.trim() + "\n\n";
@@ -122,7 +122,7 @@ public class StompSubscriptionRemoveTest extends TestCase {
         stompConnection.close();
         broker.stop();
 
-        log.info("Total messages received: " + messagesCount);
+        LOG.info("Total messages received: " + messagesCount);
         assertTrue("Messages received after connection loss: " + messagesCount, messagesCount >= 2000);
 
         // The first ack messages has no chance complete, so we receiving more

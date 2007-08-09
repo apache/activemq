@@ -30,7 +30,7 @@ import org.apache.activemq.command.ConnectionControl;
  */
 public class ConnectionControlTest extends BaseCommandTestSupport {
 
-    public static ConnectionControlTest SINGLETON = new ConnectionControlTest();
+    public static final ConnectionControlTest SINGLETON = new ConnectionControlTest();
 
     public Object createObject() throws Exception {
         ConnectionControl info = new ConnectionControl();

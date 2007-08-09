@@ -42,7 +42,7 @@ public class MultiBrokersMultiClientsUsingTcpTest extends MultiBrokersMultiClien
             }
         }
 
-        MAX_SETUP_TIME = 5000;
+        maxSetupTime = 5000;
     }
 
     protected void bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker) throws Exception {

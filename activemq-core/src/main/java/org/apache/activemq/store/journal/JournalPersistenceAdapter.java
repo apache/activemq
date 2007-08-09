@@ -79,7 +79,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEventListener, UsageListener {
 
-    private static final Log log = LogFactory.getLog(JournalPersistenceAdapter.class);
+    private static final Log LOG = LogFactory.getLog(JournalPersistenceAdapter.class);
 
     private final Journal journal;
     private final PersistenceAdapter longTermPersistence;
@@ -233,8 +233,9 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     public void stop() throws Exception {
 
         this.usageManager.removeUsageListener(this);
-        if (!started.compareAndSet(true, false))
+        if (!started.compareAndSet(true, false)) {
             return;
+        }
 
         Scheduler.cancel(periodicCheckpointTask);
 
@@ -293,8 +294,9 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
      */
     public void checkpoint(boolean sync, boolean fullCheckpoint) {
         try {
-            if (journal == null)
+            if (journal == null) {
                 throw new IllegalStateException("Journal is closed.");
+            }
 
             long now = System.currentTimeMillis();
             CountDownLatch latch = null;
@@ -309,12 +311,12 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
             checkpointTask.wakeup();
 
             if (sync) {
-                log.debug("Waking for checkpoint to complete.");
+                LOG.debug("Waking for checkpoint to complete.");
                 latch.await();
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.warn("Request to start checkpoint failed: " + e, e);
+            LOG.warn("Request to start checkpoint failed: " + e, e);
         }
     }
 
@@ -338,7 +340,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         }
         try {
 
-            log.debug("Checkpoint started.");
+            LOG.debug("Checkpoint started.");
             RecordLocation newMark = null;
 
             ArrayList futureTasks = new ArrayList(queues.size() + topics.size());
@@ -367,7 +369,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
                         futureTasks.add(task);
                         checkpointExecutor.execute(task);
                     } catch (Exception e) {
-                        log.error("Failed to checkpoint a message store: " + e, e);
+                        LOG.error("Failed to checkpoint a message store: " + e, e);
                     }
                 }
             }
@@ -384,7 +386,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
                     futureTasks.add(task);
                     checkpointExecutor.execute(task);
                 } catch (Exception e) {
-                    log.error("Failed to checkpoint a message store: " + e, e);
+                    LOG.error("Failed to checkpoint a message store: " + e, e);
                 }
             }
 
@@ -400,17 +402,17 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
                     }
                 }
             } catch (Throwable e) {
-                log.error("Failed to checkpoint a message store: " + e, e);
+                LOG.error("Failed to checkpoint a message store: " + e, e);
             }
 
             if (fullCheckpoint) {
                 try {
                     if (newMark != null) {
-                        log.debug("Marking journal at: " + newMark);
+                        LOG.debug("Marking journal at: " + newMark);
                         journal.setMark(newMark, true);
                     }
                 } catch (Exception e) {
-                    log.error("Failed to mark the Journal: " + e, e);
+                    LOG.error("Failed to mark the Journal: " + e, e);
                 }
 
                 if (longTermPersistence instanceof JDBCPersistenceAdapter) {
@@ -425,7 +427,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
                 }
             }
 
-            log.debug("Checkpoint done.");
+            LOG.debug("Checkpoint done.");
         } finally {
             latch.countDown();
         }
@@ -465,7 +467,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         RecordLocation pos = null;
         int transactionCounter = 0;
 
-        log.info("Journal Recovery Started from: " + journal);
+        LOG.info("Journal Recovery Started from: " + journal);
         ConnectionContext context = new ConnectionContext();
 
         // While we have records in the journal.
@@ -517,8 +519,9 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
                         case JournalTransaction.XA_COMMIT:
                         case JournalTransaction.LOCAL_COMMIT:
                             Tx tx = transactionStore.replayCommit(command.getTransactionId(), command.getWasPrepared());
-                            if (tx == null)
+                            if (tx == null) {
                                 break; // We may be trying to replay a commit
+                            }
                             // that
                             // was already committed.
 
@@ -547,16 +550,16 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
                             throw new IOException("Invalid journal command type: " + command.getType());
                         }
                     } catch (IOException e) {
-                        log.error("Recovery Failure: Could not replay: " + c + ", reason: " + e, e);
+                        LOG.error("Recovery Failure: Could not replay: " + c + ", reason: " + e, e);
                     }
                 }
                     break;
                 case JournalTrace.DATA_STRUCTURE_TYPE:
                     JournalTrace trace = (JournalTrace)c;
-                    log.debug("TRACE Entry: " + trace.getMessage());
+                    LOG.debug("TRACE Entry: " + trace.getMessage());
                     break;
                 default:
-                    log.error("Unknown type of record in transaction log which will be discarded: " + c);
+                    LOG.error("Unknown type of record in transaction log which will be discarded: " + c);
                 }
             }
         }
@@ -564,7 +567,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         RecordLocation location = writeTraceMessage("RECOVERED", true);
         journal.setMark(location, true);
 
-        log.info("Journal Recovered: " + transactionCounter + " message(s) in transactions recovered.");
+        LOG.info("Journal Recovered: " + transactionCounter + " message(s) in transactions recovered.");
     }
 
     private IOException createReadException(RecordLocation location, Exception e) {
@@ -590,8 +593,9 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
      * @throws IOException
      */
     public RecordLocation writeCommand(DataStructure command, boolean sync) throws IOException {
-        if (started.get())
+        if (started.get()) {
             return journal.write(toPacket(wireFormat.marshal(command)), sync);
+        }
         throw new IOException("closed");
     }
 
@@ -620,7 +624,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
             trace.setMessage("DELETED");
             RecordLocation location = journal.write(toPacket(wireFormat.marshal(trace)), false);
             journal.setMark(location, true);
-            log.info("Journal deleted: ");
+            LOG.info("Journal deleted: ");
         } catch (IOException e) {
             throw e;
         } catch (Throwable e) {
@@ -654,8 +658,9 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     }
 
     public void setUseExternalMessageReferences(boolean enable) {
-        if (enable)
+        if (enable) {
             throw new IllegalArgumentException("The journal does not support message references.");
+        }
     }
 
     public Packet toPacket(ByteSequence sequence) {

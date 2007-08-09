@@ -73,7 +73,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class ManagedRegionBroker extends RegionBroker {
-    private static final Log log = LogFactory.getLog(ManagedRegionBroker.class);
+    private static final Log LOG = LogFactory.getLog(ManagedRegionBroker.class);
     private final MBeanServer mbeanServer;
     private final ObjectName brokerObjectName;
     private final Map topics = new ConcurrentHashMap();
@@ -113,7 +113,7 @@ public class ManagedRegionBroker extends RegionBroker {
             try {
                 mbeanServer.unregisterMBean(name);
             } catch (InstanceNotFoundException e) {
-                log.warn("The MBean: " + name + " is no longer registered with JMX");
+                LOG.warn("The MBean: " + name + " is no longer registered with JMX");
             } catch (Exception e) {
                 stopper.onException(this, e);
             }
@@ -148,13 +148,13 @@ public class ManagedRegionBroker extends RegionBroker {
                 view = new TopicView(this, (Topic)destination);
             } else {
                 view = null;
-                log.warn("JMX View is not supported for custom destination: " + destination);
+                LOG.warn("JMX View is not supported for custom destination: " + destination);
             }
             if (view != null) {
                 registerDestination(objectName, destName, view);
             }
         } catch (Exception e) {
-            log.error("Failed to register destination " + destName, e);
+            LOG.error("Failed to register destination " + destName, e);
         }
     }
 
@@ -163,7 +163,7 @@ public class ManagedRegionBroker extends RegionBroker {
             ObjectName objectName = createObjectName(destName);
             unregisterDestination(objectName);
         } catch (Exception e) {
-            log.error("Failed to unregister " + destName, e);
+            LOG.error("Failed to unregister " + destName, e);
         }
     }
 
@@ -205,7 +205,7 @@ public class ManagedRegionBroker extends RegionBroker {
             subscriptionMap.put(sub, objectName);
             return objectName;
         } catch (Exception e) {
-            log.error("Failed to register subscription " + sub, e);
+            LOG.error("Failed to register subscription " + sub, e);
             return null;
         }
     }
@@ -216,7 +216,7 @@ public class ManagedRegionBroker extends RegionBroker {
             try {
                 unregisterSubscription(name);
             } catch (Exception e) {
-                log.error("Failed to unregister subscription " + sub, e);
+                LOG.error("Failed to unregister subscription " + sub, e);
             }
         }
     }
@@ -239,8 +239,8 @@ public class ManagedRegionBroker extends RegionBroker {
             mbeanServer.registerMBean(view, key);
             registeredMBeans.add(key);
         } catch (Throwable e) {
-            log.warn("Failed to register MBean: " + key);
-            log.debug("Failure reason: " + e, e);
+            LOG.warn("Failed to register MBean: " + key);
+            LOG.debug("Failure reason: " + e, e);
         }
     }
 
@@ -253,8 +253,8 @@ public class ManagedRegionBroker extends RegionBroker {
             try {
                 mbeanServer.unregisterMBean(key);
             } catch (Throwable e) {
-                log.warn("Failed to unregister MBean: " + key);
-                log.debug("Failure reason: " + e, e);
+                LOG.warn("Failed to unregister MBean: " + key);
+                LOG.debug("Failure reason: " + e, e);
             }
         }
     }
@@ -282,7 +282,7 @@ public class ManagedRegionBroker extends RegionBroker {
                             mbeanServer.unregisterMBean(inactiveName);
                         }
                     } catch (Throwable e) {
-                        log.error("Unable to unregister inactive durable subscriber: " + subscriptionKey, e);
+                        LOG.error("Unable to unregister inactive durable subscriber: " + subscriptionKey, e);
                     }
                 } else {
                     topicSubscribers.put(key, view);
@@ -294,8 +294,8 @@ public class ManagedRegionBroker extends RegionBroker {
             mbeanServer.registerMBean(view, key);
             registeredMBeans.add(key);
         } catch (Throwable e) {
-            log.warn("Failed to register MBean: " + key);
-            log.debug("Failure reason: " + e, e);
+            LOG.warn("Failed to register MBean: " + key);
+            LOG.debug("Failure reason: " + e, e);
         }
 
     }
@@ -310,8 +310,8 @@ public class ManagedRegionBroker extends RegionBroker {
             try {
                 mbeanServer.unregisterMBean(key);
             } catch (Throwable e) {
-                log.warn("Failed to unregister MBean: " + key);
-                log.debug("Failure reason: " + e, e);
+                LOG.warn("Failed to unregister MBean: " + key);
+                LOG.debug("Failure reason: " + e, e);
             }
         }
         DurableSubscriptionView view = (DurableSubscriptionView)durableTopicSubscribers.remove(key);
@@ -337,7 +337,7 @@ public class ManagedRegionBroker extends RegionBroker {
                     if (infos != null) {
                         for (int i = 0; i < infos.length; i++) {
                             SubscriptionInfo info = infos[i];
-                            log.debug("Restoring durable subscription: " + info);
+                            LOG.debug("Restoring durable subscription: " + info);
                             SubscriptionKey key = new SubscriptionKey(info);
                             subscriptions.put(key, info);
                         }
@@ -364,14 +364,14 @@ public class ManagedRegionBroker extends RegionBroker {
                 mbeanServer.registerMBean(view, objectName);
                 registeredMBeans.add(objectName);
             } catch (Throwable e) {
-                log.warn("Failed to register MBean: " + key);
-                log.debug("Failure reason: " + e, e);
+                LOG.warn("Failed to register MBean: " + key);
+                LOG.debug("Failure reason: " + e, e);
             }
 
             inactiveDurableTopicSubscribers.put(objectName, view);
             subscriptionKeys.put(key, objectName);
         } catch (Exception e) {
-            log.error("Failed to register subscription " + info, e);
+            LOG.error("Failed to register subscription " + info, e);
         }
     }
 
@@ -382,7 +382,7 @@ public class ManagedRegionBroker extends RegionBroker {
             try {
                 c[i] = OpenTypeSupport.convert((Message)messages.get(i));
             } catch (Throwable e) {
-                log.error("failed to browse : " + view, e);
+                LOG.error("failed to browse : " + view, e);
             }
         }
         return c;
@@ -428,7 +428,7 @@ public class ManagedRegionBroker extends RegionBroker {
                 }
             });
         } catch (Throwable e) {
-            log.error("Failed to browse messages for Subscription " + view, e);
+            LOG.error("Failed to browse messages for Subscription " + view, e);
         }
         return result;
 

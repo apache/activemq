@@ -33,7 +33,7 @@ import org.apache.activemq.command.SessionInfo;
 public class SessionInfoTest extends BaseCommandTestSupport {
 
 
-    public static SessionInfoTest SINGLETON = new SessionInfoTest();
+    public static final SessionInfoTest SINGLETON = new SessionInfoTest();
 
     public Object createObject() throws Exception {
         SessionInfo info = new SessionInfo();

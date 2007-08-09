@@ -23,7 +23,7 @@ import javax.jms.TextMessage;
  */
 public class JmsTopicSendSameMessageTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
 
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory
         .getLog(JmsTopicSendSameMessageTest.class);
 
     public void testSendReceive() throws Exception {
@@ -37,7 +37,7 @@ public class JmsTopicSendSameMessageTest extends JmsTopicSendReceiveWithTwoConne
             message.setIntProperty("intProperty", i);
 
             if (verbose) {
-                log.info("About to send a message: " + message + " with text: " + data[i]);
+                LOG.info("About to send a message: " + message + " with text: " + data[i]);
             }
 
             producer.send(producerDestination, message);

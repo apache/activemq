@@ -33,7 +33,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
     /**
      * BrokerA -> BrokerB -> BrokerC
      */
-    public void test_AB_BC_BrokerNetwork() throws Exception {
+    public void testABandBCbrokerNetwork() throws Exception {
         // Setup broker networks
         bridgeBrokers("BrokerA", "BrokerB");
         bridgeBrokers("BrokerB", "BrokerC");
@@ -60,7 +60,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
     /**
      * BrokerA <- BrokerB -> BrokerC
      */
-    public void test_BA_BC_BrokerNetwork() throws Exception {
+    public void testBAandBCbrokerNetwork() throws Exception {
         // Setup broker networks
         bridgeBrokers("BrokerB", "BrokerA");
         bridgeBrokers("BrokerB", "BrokerC");
@@ -91,7 +91,7 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
     /**
      * BrokerA -> BrokerB <- BrokerC
      */
-    public void test_AB_CB_BrokerNetwork() throws Exception {
+    public void testABandCBbrokerNetwork() throws Exception {
         // Setup broker networks
         bridgeBrokers("BrokerA", "BrokerB");
         bridgeBrokers("BrokerC", "BrokerB");

@@ -40,7 +40,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.2 $
  */
 public abstract class JmsSendReceiveTestSupport extends TestSupport implements MessageListener {
-    protected static final Log LOG = LogFactory.getLog(JmsSendReceiveTestSupport.class);
+    private static final Log LOG = LogFactory.getLog(JmsSendReceiveTestSupport.class);
 
     protected int messageCount = 100;
     protected String[] data;

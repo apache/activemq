@@ -22,9 +22,9 @@ package org.apache.activemq.kaha.impl.data;
  * @version $Revision: 1.2 $
  */
 public interface Item {
-    static final long POSITION_NOT_SET = -1;
-    static final short MAGIC = 31317;
-    static final int ACTIVE = 22;
-    static final int FREE = 33;
-    static final int LOCATION_SIZE = 24;
+    long POSITION_NOT_SET = -1;
+    short MAGIC = 31317;
+    int ACTIVE = 22;
+    int FREE = 33;
+    int LOCATION_SIZE = 24;
 }

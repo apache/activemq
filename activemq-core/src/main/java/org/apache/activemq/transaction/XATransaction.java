@@ -33,7 +33,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class XATransaction extends Transaction {
 
-    private static final Log log = LogFactory.getLog(XATransaction.class);
+    private static final Log LOG = LogFactory.getLog(XATransaction.class);
 
     private final TransactionStore transactionStore;
     private final XATransactionId xid;
@@ -46,8 +46,9 @@ public class XATransaction extends Transaction {
     }
 
     public void commit(boolean onePhase) throws XAException, IOException {
-        if (log.isDebugEnabled())
-            log.debug("XA Transaction commit: " + xid);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("XA Transaction commit: " + xid);
+        }
 
         switch (getState()) {
         case START_STATE:
@@ -95,7 +96,7 @@ public class XATransaction extends Transaction {
         } catch (XAException e) {
             throw e;
         } catch (Throwable e) {
-            log.warn("PRE-PREPARE FAILED: ", e);
+            LOG.warn("PRE-PREPARE FAILED: ", e);
             rollback();
             XAException xae = new XAException("PRE-PREPARE FAILED: Transaction rolled back.");
             xae.errorCode = XAException.XA_RBOTHER;
@@ -110,7 +111,7 @@ public class XATransaction extends Transaction {
         } catch (Throwable e) {
             // I guess this could happen. Post commit task failed
             // to execute properly.
-            log.warn("POST COMMIT FAILED: ", e);
+            LOG.warn("POST COMMIT FAILED: ", e);
             XAException xae = new XAException("POST COMMIT FAILED");
             xae.errorCode = XAException.XAER_RMERR;
             xae.initCause(e);
@@ -120,8 +121,9 @@ public class XATransaction extends Transaction {
 
     public void rollback() throws XAException, IOException {
 
-        if (log.isDebugEnabled())
-            log.debug("XA Transaction rollback: " + xid);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("XA Transaction rollback: " + xid);
+        }
 
         switch (getState()) {
         case START_STATE:
@@ -152,7 +154,7 @@ public class XATransaction extends Transaction {
         } catch (Throwable e) {
             // I guess this could happen. Post commit task failed
             // to execute properly.
-            log.warn("POST ROLLBACK FAILED: ", e);
+            LOG.warn("POST ROLLBACK FAILED: ", e);
             XAException xae = new XAException("POST ROLLBACK FAILED");
             xae.errorCode = XAException.XAER_RMERR;
             xae.initCause(e);
@@ -161,8 +163,9 @@ public class XATransaction extends Transaction {
     }
 
     public int prepare() throws XAException, IOException {
-        if (log.isDebugEnabled())
-            log.debug("XA Transaction prepare: " + xid);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("XA Transaction prepare: " + xid);
+        }
 
         switch (getState()) {
         case START_STATE:

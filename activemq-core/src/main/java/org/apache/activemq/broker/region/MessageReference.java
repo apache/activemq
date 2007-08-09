@@ -31,29 +31,29 @@ import org.apache.activemq.command.MessageId;
  */
 public interface MessageReference {
     
-    public MessageId getMessageId();
-    public Message getMessageHardRef();
-    public Message getMessage() throws IOException;
-    public boolean isPersistent();
+    MessageId getMessageId();
+    Message getMessageHardRef();
+    Message getMessage() throws IOException;
+    boolean isPersistent();
     
-    public Destination getRegionDestination();
+    Destination getRegionDestination();
     
-    public int getRedeliveryCounter();
-    public void incrementRedeliveryCounter();
+    int getRedeliveryCounter();
+    void incrementRedeliveryCounter();
     
-    public int getReferenceCount();
+    int getReferenceCount();
     
-    public int incrementReferenceCount();
-    public int decrementReferenceCount();
-    public ConsumerId getTargetConsumerId();
-    public int getSize();
-    public long getExpiration();
-    public String getGroupID();
-    public int getGroupSequence();
+    int incrementReferenceCount();
+    int decrementReferenceCount();
+    ConsumerId getTargetConsumerId();
+    int getSize();
+    long getExpiration();
+    String getGroupID();
+    int getGroupSequence();
     
     /**
      * Returns true if this message is expired
      */
-    public boolean isExpired();
+    boolean isExpired();
     
 }

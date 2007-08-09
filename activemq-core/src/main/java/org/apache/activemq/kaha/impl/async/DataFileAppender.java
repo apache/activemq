@@ -37,9 +37,9 @@ class DataFileAppender {
 
     protected static final byte[] RESERVED_SPACE = new byte[AsyncDataManager.ITEM_HEAD_RESERVED_SPACE];
     protected static final String SHUTDOWN_COMMAND = "SHUTDOWN";
-    int MAX_WRITE_BATCH_SIZE = 1024 * 1024 * 4;
+    int maxWriteBatchSize = 1024 * 1024 * 4;
 
-    static public class WriteKey {
+    public static class WriteKey {
         private final int file;
         private final long offset;
         private final int hash;
@@ -80,7 +80,7 @@ class DataFileAppender {
         public boolean canAppend(DataFile dataFile, WriteCommand write) {
             if (dataFile != this.dataFile)
                 return false;
-            if (size + write.location.getSize() >= MAX_WRITE_BATCH_SIZE)
+            if (size + write.location.getSize() >= maxWriteBatchSize)
                 return false;
             return true;
         }
@@ -263,7 +263,7 @@ class DataFileAppender {
         RandomAccessFile file = null;
         try {
 
-            DataByteArrayOutputStream buff = new DataByteArrayOutputStream(MAX_WRITE_BATCH_SIZE);
+            DataByteArrayOutputStream buff = new DataByteArrayOutputStream(maxWriteBatchSize);
             while (true) {
 
                 Object o = null;

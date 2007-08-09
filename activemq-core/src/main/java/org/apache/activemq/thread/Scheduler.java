@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class Scheduler {
 
-    public static final ScheduledThreadPoolExecutor clockDaemon = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
+    public static final ScheduledThreadPoolExecutor CLOCK_DAEMON = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
         public Thread newThread(Runnable runnable) {
             Thread thread = new Thread(runnable, "ActiveMQ Scheduler");
             thread.setDaemon(true);
@@ -36,27 +36,27 @@ public class Scheduler {
         }
     });
     static {
-        clockDaemon.setKeepAliveTime(5, TimeUnit.SECONDS);
+        CLOCK_DAEMON.setKeepAliveTime(5, TimeUnit.SECONDS);
     }
-    static HashMap clockTickets = new HashMap();
+    private static final HashMap CLOCK_TICKETS = new HashMap();
 
-    synchronized static public void executePeriodically(final Runnable task, long period) {
-        ScheduledFuture ticket = clockDaemon.scheduleAtFixedRate(task, period, period, TimeUnit.MILLISECONDS);
-        clockTickets.put(task, ticket);
+    public static synchronized void executePeriodically(final Runnable task, long period) {
+        ScheduledFuture ticket = CLOCK_DAEMON.scheduleAtFixedRate(task, period, period, TimeUnit.MILLISECONDS);
+        CLOCK_TICKETS.put(task, ticket);
     }
 
-    synchronized static public void cancel(Runnable task) {
-        ScheduledFuture ticket = (ScheduledFuture)clockTickets.remove(task);
+    public static synchronized void cancel(Runnable task) {
+        ScheduledFuture ticket = (ScheduledFuture)CLOCK_TICKETS.remove(task);
         if (ticket != null) {
             ticket.cancel(false);
-
-            if (ticket instanceof Runnable)
-                clockDaemon.remove((Runnable)ticket);
+            if (ticket instanceof Runnable) {
+                CLOCK_DAEMON.remove((Runnable)ticket);
+            }
         }
     }
 
     public static void executeAfterDelay(final Runnable task, long redeliveryDelay) {
-        clockDaemon.schedule(task, redeliveryDelay, TimeUnit.MILLISECONDS);
+        CLOCK_DAEMON.schedule(task, redeliveryDelay, TimeUnit.MILLISECONDS);
     }
 
 }

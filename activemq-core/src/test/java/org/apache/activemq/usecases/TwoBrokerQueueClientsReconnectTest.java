@@ -27,6 +27,8 @@ import javax.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision: 1.1.1.1 $
@@ -34,6 +36,8 @@ import org.apache.activemq.JmsMultipleBrokersTestSupport;
 public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSupport {
     protected static final int MESSAGE_COUNT = 100; // Best if a factor of 100
     protected static final int PREFETCH_COUNT = 1;
+    private static final Log LOG = LogFactory.getLog(TwoBrokerQueueClientsReconnectTest.class);
+
 
     protected int msgsClient1, msgsClient2;
     protected String broker1, broker2;
@@ -313,7 +317,7 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         for (i = 0; i < msgCount; i++) {
             msg = consumer.receive(1000);
             if (msg == null) {
-                log.error("Consumer failed to receive exactly " + msgCount + " messages. Actual messages received is: " + i);
+                LOG.error("Consumer failed to receive exactly " + msgCount + " messages. Actual messages received is: " + i);
                 break;
             }
         }

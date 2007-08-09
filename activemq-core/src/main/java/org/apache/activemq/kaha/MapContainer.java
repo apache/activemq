@@ -33,18 +33,18 @@ public interface MapContainer<K, V> extends Map<K, V> {
      * populates the container will all the indexes used etc and should be
      * called before any operations on the container
      */
-    public void load();
+    void load();
 
     /**
      * unload indexes from the container
      * 
      */
-    public void unload();
+    void unload();
 
     /**
      * @return true if the indexes are loaded
      */
-    public boolean isLoaded();
+    boolean isLoaded();
 
     /**
      * For homogenous containers can set a custom marshaller for loading keys
@@ -52,7 +52,7 @@ public interface MapContainer<K, V> extends Map<K, V> {
      * 
      * @param keyMarshaller
      */
-    public void setKeyMarshaller(Marshaller<K> keyMarshaller);
+    void setKeyMarshaller(Marshaller<K> keyMarshaller);
 
     /**
      * For homogenous containers can set a custom marshaller for loading values
@@ -61,28 +61,28 @@ public interface MapContainer<K, V> extends Map<K, V> {
      * @param valueMarshaller
      * 
      */
-    public void setValueMarshaller(Marshaller<V> valueMarshaller);
+    void setValueMarshaller(Marshaller<V> valueMarshaller);
 
     /**
      * @return the id the MapContainer was create with
      */
-    public Object getId();
+    Object getId();
 
     /**
      * @return the number of values in the container
      */
-    public int size();
+    int size();
 
     /**
      * @return true if there are no values stored in the container
      */
-    public boolean isEmpty();
+    boolean isEmpty();
 
     /**
      * @param key
      * @return true if the container contains the key
      */
-    public boolean containsKey(K key);
+    boolean containsKey(K key);
 
     /**
      * Get the value associated with the key
@@ -90,37 +90,37 @@ public interface MapContainer<K, V> extends Map<K, V> {
      * @param key
      * @return the value associated with the key from the store
      */
-    public V get(K key);
+    V get(K key);
 
     /**
      * @param o
      * @return true if the MapContainer contains the value o
      */
-    public boolean containsValue(K o);
+    boolean containsValue(K o);
 
     /**
      * Add add entries in the supplied Map
      * 
      * @param map
      */
-    public void putAll(Map<K, V> map);
+    void putAll(Map<K, V> map);
 
     /**
      * @return a Set of all the keys
      */
-    public Set<K> keySet();
+    Set<K> keySet();
 
     /**
      * @return a collection of all the values - the values will be lazily pulled
      *         out of the store if iterated etc.
      */
-    public Collection<V> values();
+    Collection<V> values();
 
     /**
      * @return a Set of all the Map.Entry instances - the values will be lazily
      *         pulled out of the store if iterated etc.
      */
-    public Set<Map.Entry<K, V>> entrySet();
+    Set<Map.Entry<K, V>> entrySet();
 
     /**
      * Add an entry
@@ -129,7 +129,7 @@ public interface MapContainer<K, V> extends Map<K, V> {
      * @param value
      * @return the old value for the key
      */
-    public V put(K key, V value);
+    V put(K key, V value);
 
     /**
      * remove an entry associated with the key
@@ -137,12 +137,12 @@ public interface MapContainer<K, V> extends Map<K, V> {
      * @param key
      * @return the old value assocaited with the key or null
      */
-    public V remove(K key);
+    V remove(K key);
 
     /**
      * empty the container
      */
-    public void clear();
+    void clear();
 
     /**
      * Add an entry to the Store Map
@@ -151,14 +151,14 @@ public interface MapContainer<K, V> extends Map<K, V> {
      * @param Value
      * @return the StoreEntry associated with the entry
      */
-    public StoreEntry place(K key, V Value);
+    StoreEntry place(K key, V value);
 
     /**
      * Remove an Entry from ther Map
      * 
      * @param entry
      */
-    public void remove(StoreEntry entry);
+    void remove(StoreEntry entry);
 
     /**
      * Get the Key object from it's location
@@ -166,7 +166,7 @@ public interface MapContainer<K, V> extends Map<K, V> {
      * @param keyLocation
      * @return the key for the entry
      */
-    public K getKey(StoreEntry keyLocation);
+    K getKey(StoreEntry keyLocation);
 
     /**
      * Get the value from it's location
@@ -174,21 +174,21 @@ public interface MapContainer<K, V> extends Map<K, V> {
      * @param Valuelocation
      * @return the Object
      */
-    public V getValue(StoreEntry Valuelocation);
+    V getValue(StoreEntry valueLocation);
 
     /**
      * Get the StoreEntry for the first value in the Map
      * 
      * @return the first StoreEntry or null if the map is empty
      */
-    public StoreEntry getFirst();
+    StoreEntry getFirst();
 
     /**
      * Get the StoreEntry for the last value item of the Map
      * 
      * @return the last StoreEntry or null if the list is empty
      */
-    public StoreEntry getLast();
+    StoreEntry getLast();
 
     /**
      * Get the next StoreEntry value from the map
@@ -196,7 +196,7 @@ public interface MapContainer<K, V> extends Map<K, V> {
      * @param entry
      * @return the next StoreEntry or null
      */
-    public StoreEntry getNext(StoreEntry entry);
+    StoreEntry getNext(StoreEntry entry);
 
     /**
      * Get the previous StoreEntry from the map
@@ -204,7 +204,7 @@ public interface MapContainer<K, V> extends Map<K, V> {
      * @param entry
      * @return the previous store entry or null
      */
-    public StoreEntry getPrevious(StoreEntry entry);
+    StoreEntry getPrevious(StoreEntry entry);
 
     /**
      * It's possible that a StoreEntry could be come stale this will return an
@@ -213,7 +213,7 @@ public interface MapContainer<K, V> extends Map<K, V> {
      * @param entry old entry
      * @return a refreshed StoreEntry
      */
-    public StoreEntry refresh(StoreEntry entry);
+    StoreEntry refresh(StoreEntry entry);
 
     /**
      * Get the StoreEntry associated with the key
@@ -221,5 +221,5 @@ public interface MapContainer<K, V> extends Map<K, V> {
      * @param key
      * @return the StoreEntry
      */
-    public StoreEntry getEntry(K key);
+    StoreEntry getEntry(K key);
 }

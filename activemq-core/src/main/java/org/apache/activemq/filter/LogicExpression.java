@@ -78,7 +78,7 @@ public abstract class LogicExpression extends BinaryExpression implements Boolea
         super(left, right);
     }
 
-    abstract public Object evaluate(MessageEvaluationContext message) throws JMSException;
+    public abstract Object evaluate(MessageEvaluationContext message) throws JMSException;
 
     public boolean matches(MessageEvaluationContext message) throws JMSException {
         Object object = evaluate(message);

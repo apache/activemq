@@ -30,30 +30,30 @@ public interface NetworkBridge extends Service {
      * Service an exception
      * @param error
      */
-    public void serviceRemoteException(Throwable error);
+    void serviceRemoteException(Throwable error);
     
     /**
      * servicee an exception
      * @param error
      */
-    public void serviceLocalException(Throwable error);
+    void serviceLocalException(Throwable error);
     
     /**
      * Set the NetworkBridgeFailedListener
      * @param listener
      */
-    public void setNetworkBridgeListener(NetworkBridgeListener listener);
+    void setNetworkBridgeListener(NetworkBridgeListener listener);
     
     
-    public String getRemoteAddress();
+    String getRemoteAddress();
 
-    public String getRemoteBrokerName();
+    String getRemoteBrokerName();
 
-    public String getLocalAddress();
+    String getLocalAddress();
 
-    public String getLocalBrokerName();
+    String getLocalBrokerName();
 
-    public long getEnqueueCounter();
+    long getEnqueueCounter();
 
-    public long getDequeueCounter();
+    long getDequeueCounter();
 }

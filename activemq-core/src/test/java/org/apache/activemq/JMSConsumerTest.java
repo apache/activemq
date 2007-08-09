@@ -41,7 +41,7 @@ import org.apache.activemq.command.ActiveMQQueue;
  */
 public class JMSConsumerTest extends JmsTestSupport {
 
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory
         .getLog(JMSConsumerTest.class);
 
     public static Test suite() {
@@ -83,10 +83,12 @@ public class JMSConsumerTest extends JmsTestSupport {
         consumer.setMessageListener(new MessageListener() {
             public void onMessage(Message m) {
                 counter.incrementAndGet();
-                if (counter.get() == 1)
+                if (counter.get() == 1) {
                     done1.countDown();
-                if (counter.get() == 2)
+                }
+                if (counter.get() == 2) {
                     done2.countDown();
+                }
             }
         });
 
@@ -254,8 +256,9 @@ public class JMSConsumerTest extends JmsTestSupport {
         consumer.setMessageListener(new MessageListener() {
             public void onMessage(Message m) {
                 counter.incrementAndGet();
-                if (counter.get() == 4)
+                if (counter.get() == 4) {
                     done.countDown();
+                }
             }
         });
 
@@ -298,7 +301,7 @@ public class JMSConsumerTest extends JmsTestSupport {
             public void onMessage(Message m) {
                 try {
                     TextMessage tm = (TextMessage)m;
-                    log.info("Got in first listener: " + tm.getText());
+                    LOG.info("Got in first listener: " + tm.getText());
                     assertEquals("" + counter.get(), tm.getText());
                     counter.incrementAndGet();
                     m.acknowledge();
@@ -335,11 +338,12 @@ public class JMSConsumerTest extends JmsTestSupport {
             public void onMessage(Message m) {
                 try {
                     TextMessage tm = (TextMessage)m;
-                    log.info("Got in second listener: " + tm.getText());
+                    LOG.info("Got in second listener: " + tm.getText());
                     assertEquals("" + counter.get(), tm.getText());
                     counter.incrementAndGet();
-                    if (counter.get() == 4)
+                    if (counter.get() == 4) {
                         done2.countDown();
+                    }
                 } catch (Throwable e) {
                     e.printStackTrace();
                 }
@@ -379,8 +383,9 @@ public class JMSConsumerTest extends JmsTestSupport {
         consumer.setMessageListener(new MessageListener() {
             public void onMessage(Message m) {
                 counter.incrementAndGet();
-                if (counter.get() == 4)
+                if (counter.get() == 4) {
                     done.countDown();
+                }
             }
         });
 
@@ -417,8 +422,9 @@ public class JMSConsumerTest extends JmsTestSupport {
         consumer.setMessageListener(new MessageListener() {
             public void onMessage(Message m) {
                 counter.incrementAndGet();
-                if (counter.get() == 4)
+                if (counter.get() == 4) {
                     done.countDown();
+                }
             }
         });
 

@@ -21,11 +21,17 @@ import javax.jms.Session;
 import javax.jms.Topic;
 
 import org.apache.activemq.EmbeddedBrokerAndConnectionTestSupport;
+import org.apache.activemq.broker.jmx.PurgeTest;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision: 1.1 $
  */
 public class TemporaryDestinationToFromNameTest extends EmbeddedBrokerAndConnectionTestSupport {
+
+    private static final Log LOG = LogFactory.getLog(TemporaryDestinationToFromNameTest.class);
+
     public void testCreateTemporaryQueueThenCreateAQueueFromItsName() throws Exception {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 

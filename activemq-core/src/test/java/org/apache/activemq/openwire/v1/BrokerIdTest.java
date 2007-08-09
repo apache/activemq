@@ -31,7 +31,7 @@ import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
  */
 public class BrokerIdTest extends DataFileGeneratorTestSupport {
 
-    public static BrokerIdTest SINGLETON = new BrokerIdTest();
+    public static final BrokerIdTest SINGLETON = new BrokerIdTest();
 
     public Object createObject() throws Exception {
         BrokerId info = new BrokerId();

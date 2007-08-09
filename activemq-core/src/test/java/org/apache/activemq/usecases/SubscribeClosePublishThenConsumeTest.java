@@ -27,12 +27,15 @@ import javax.jms.TopicSubscriber;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.test.TestSupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @author Paul Smith
  * @version $Revision: 1.1.1.1 $
  */
 public class SubscribeClosePublishThenConsumeTest extends TestSupport {
+    private static final Log LOG = LogFactory.getLog(SubscribeClosePublishThenConsumeTest.class);
 
     public void testDurableTopic() throws Exception {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://locahost");
@@ -92,13 +95,13 @@ public class SubscribeClosePublishThenConsumeTest extends TestSupport {
         subscriber = session.createDurableSubscriber(topic, subscriberName);
         connection.start();
 
-        log.info("Started connection - now about to try receive the textMessage");
+        LOG.info("Started connection - now about to try receive the textMessage");
 
         long time = System.currentTimeMillis();
         Message message = subscriber.receive(15000L);
         long elapsed = System.currentTimeMillis() - time;
 
-        log.info("Waited for: " + elapsed + " millis");
+        LOG.info("Waited for: " + elapsed + " millis");
 
         assertNotNull("Should have received the message we published by now", message);
         assertTrue("should be text textMessage", message instanceof TextMessage);

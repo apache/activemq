@@ -29,7 +29,7 @@ import org.apache.activemq.command.ProducerInfo;
  */
 public class ProducerInfoTest extends BaseCommandTestSupport {
 
-    public static ProducerInfoTest SINGLETON = new ProducerInfoTest();
+    public static final ProducerInfoTest SINGLETON = new ProducerInfoTest();
 
     public Object createObject() throws Exception {
         ProducerInfo info = new ProducerInfo();

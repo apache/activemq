@@ -33,10 +33,10 @@ public interface MessageTransformer {
     /**
      * Transforms the given message inside the producer before it is sent to the JMS bus.
      */
-    public Message producerTransform(Session session, MessageProducer producer, Message message) throws JMSException;
+    Message producerTransform(Session session, MessageProducer producer, Message message) throws JMSException;
 
     /**
      * Transforms the given message inside the consumer before being dispatched to the client code
      */
-    public Message consumerTransform(Session session, MessageConsumer consumer, Message message)throws JMSException;
+    Message consumerTransform(Session session, MessageConsumer consumer, Message message)throws JMSException;
 }

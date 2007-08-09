@@ -21,9 +21,9 @@ package org.apache.activemq;
  * @version $Revision: 1.2 $
  */
 public interface LocalTransactionEventListener {
-    public void beginEvent();
+    void beginEvent();
 
-    public void commitEvent();
+    void commitEvent();
 
-    public void rollbackEvent();
+    void rollbackEvent();
 }

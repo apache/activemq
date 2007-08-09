@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -41,7 +41,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class CompositeQueueTest extends EmbeddedBrokerTestSupport {
 
-    private static final Log log = LogFactory.getLog(CompositeQueueTest.class);
+    private static final Log LOG = LogFactory.getLog(CompositeQueueTest.class);
     
     private Connection connection;
 
@@ -65,8 +65,8 @@ public class CompositeQueueTest extends EmbeddedBrokerTestSupport {
         Destination destination1 = getConsumer1Dsetination();
         Destination destination2 = getConsumer2Dsetination();
         
-        log.info("Sending to: " + producerDestination);
-        log.info("Consuming from: " + destination1 + " and " + destination2);
+        LOG.info("Sending to: " + producerDestination);
+        LOG.info("Consuming from: " + destination1 + " and " + destination2);
         
         MessageConsumer c1 = session.createConsumer(destination1);
         MessageConsumer c2 = session.createConsumer(destination2);

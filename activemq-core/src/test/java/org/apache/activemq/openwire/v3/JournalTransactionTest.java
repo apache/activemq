@@ -34,7 +34,7 @@ import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
 public class JournalTransactionTest extends DataFileGeneratorTestSupport {
 
 
-    public static JournalTransactionTest SINGLETON = new JournalTransactionTest();
+    public static final JournalTransactionTest SINGLETON = new JournalTransactionTest();
 
     public Object createObject() throws Exception {
         JournalTransaction info = new JournalTransaction();

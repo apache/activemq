@@ -31,15 +31,19 @@ import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.state.CommandVisitor;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.wireformat.WireFormat;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision$
  */
 public class ActiveMQMessageTest extends TestCase {
 
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(ActiveMQMessageTest.class);
+    private static final Log LOG = LogFactory.getLog(ActiveMQMessageTest.class);
 
-    private String jmsMessageID;
+    protected boolean readOnlyMessage;
+
+        private String jmsMessageID;
     private String jmsCorrelationID;
     private ActiveMQDestination jmsDestination;
     private ActiveMQDestination jmsReplyTo;
@@ -49,7 +53,6 @@ public class ActiveMQMessageTest extends TestCase {
     private long jmsExpiration;
     private int jmsPriority;
     private long jmsTimestamp;
-    protected boolean readOnlyMessage;
     private long[] consumerIDs;
 
     public static void main(String[] args) {
@@ -183,7 +186,7 @@ public class ActiveMQMessageTest extends TestCase {
         assertTrue(msg1.getJMSPriority() == msg2.getJMSPriority());
         assertTrue(msg1.getJMSTimestamp() == msg2.getJMSTimestamp());
 
-        log.info("Message is:  " + msg1);
+        LOG.info("Message is:  " + msg1);
     }
 
     public void testGetAndSetJMSMessageID() throws Exception {
@@ -443,7 +446,7 @@ public class ActiveMQMessageTest extends TestCase {
             msg.setStringProperty(null, "Cheese");
             fail("Should have thrown exception");
         } catch (IllegalArgumentException e) {
-            log.info("Worked, caught: " + e);
+            LOG.info("Worked, caught: " + e);
         }
     }
 
@@ -454,7 +457,7 @@ public class ActiveMQMessageTest extends TestCase {
             msg.setStringProperty("", "Cheese");
             fail("Should have thrown exception");
         } catch (IllegalArgumentException e) {
-            log.info("Worked, caught: " + e);
+            LOG.info("Worked, caught: " + e);
         }
     }
 

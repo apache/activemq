@@ -33,7 +33,7 @@ import org.apache.activemq.command.LocalTransactionId;
 public class LocalTransactionIdTest extends TransactionIdTestSupport {
 
 
-    public static LocalTransactionIdTest SINGLETON = new LocalTransactionIdTest();
+    public static final LocalTransactionIdTest SINGLETON = new LocalTransactionIdTest();
 
     public Object createObject() throws Exception {
         LocalTransactionId info = new LocalTransactionId();

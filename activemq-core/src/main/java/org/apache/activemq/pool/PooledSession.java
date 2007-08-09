@@ -55,7 +55,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1 $
  */
 public class PooledSession implements TopicSession, QueueSession {
-    private static final transient Log log = LogFactory.getLog(PooledSession.class);
+    private static final transient Log LOG = LogFactory.getLog(PooledSession.class);
 
     private ActiveMQSession session;
     private SessionPool sessionPool;
@@ -107,14 +107,14 @@ public class PooledSession implements TopicSession, QueueSession {
                 try {
                     getSession().rollback();
                 } catch (JMSException e) {
-                    log.warn("Caught exception trying rollback() when putting session back into the pool: " + e, e);
+                    LOG.warn("Caught exception trying rollback() when putting session back into the pool: " + e, e);
 
                     // lets close the session and not put the session back into
                     // the pool
                     try {
                         session.close();
                     } catch (JMSException e1) {
-                        log.trace("Ignoring exception as discarding session: " + e1, e1);
+                        LOG.trace("Ignoring exception as discarding session: " + e1, e1);
                     }
                     session = null;
                     return;

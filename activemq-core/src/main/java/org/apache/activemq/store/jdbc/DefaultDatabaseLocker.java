@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -32,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: $
  */
 public class DefaultDatabaseLocker implements DatabaseLocker {
-    private static final Log log = LogFactory.getLog(DefaultDatabaseLocker.class);
+    private static final Log LOG = LogFactory.getLog(DefaultDatabaseLocker.class);
     private final DataSource dataSource;
     private final Statements statements;
     private long sleepTime = 1000;
@@ -48,7 +48,7 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
     public void start() throws Exception {
         stopping = false;
 
-        log.info("Attempting to acquire the exclusive lock to become the Master broker");
+        LOG.info("Attempting to acquire the exclusive lock to become the Master broker");
 
         while (true) {
             try {
@@ -62,12 +62,12 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
                 if (stopping) {
                     throw new Exception("Cannot start broker as being asked to shut down. Interrupted attempt to acquire lock: " + e, e);
                 }
-                log.error("Failed to acquire lock: " + e, e);
+                LOG.error("Failed to acquire lock: " + e, e);
                 if (null != statement) {
                     try {
                         statement.close();
                     } catch (SQLException e1) {
-                        log.warn("Caught while closing statement: " + e1, e1);
+                        LOG.warn("Caught while closing statement: " + e1, e1);
                     }
                     statement = null;
                 }
@@ -75,17 +75,17 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
                     try {
                         connection.close();
                     } catch (SQLException e1) {
-                        log.warn("Caught while closing connection: " + e1, e1);
+                        LOG.warn("Caught while closing connection: " + e1, e1);
                     }
                     connection = null;
                 }
             }
 
-            log.debug("Sleeping for " + sleepTime + " milli(s) before trying again to get the lock...");
+            LOG.debug("Sleeping for " + sleepTime + " milli(s) before trying again to get the lock...");
             Thread.sleep(sleepTime);
         }
 
-        log.info("Becoming the master on dataSource: " + dataSource);
+        LOG.info("Becoming the master on dataSource: " + dataSource);
     }
 
     public void stop() throws Exception {
@@ -105,7 +105,7 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
                 return true;
             }
         } catch (Exception e) {
-            log.error("Failed to update database lock: " + e, e);
+            LOG.error("Failed to update database lock: " + e, e);
         }
         return false;
     }

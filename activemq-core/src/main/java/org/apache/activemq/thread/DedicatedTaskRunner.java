@@ -46,8 +46,9 @@ class DedicatedTaskRunner implements TaskRunner {
      */
     public void wakeup() throws InterruptedException {
         synchronized (mutex) {
-            if (shutdown)
+            if (shutdown) {
                 return;
+            }
             pending = true;
             mutex.notifyAll();
         }

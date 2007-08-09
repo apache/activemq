@@ -37,14 +37,19 @@ import org.apache.activemq.broker.ProgressPrinter;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.memory.list.SimpleMessageList;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision$
  */
 public class LoadTester extends JmsTestSupport {
 
-    protected int MESSAGE_SIZE = 1024 * 64;
-    protected int PRODUCE_COUNT = 10000;
+    private static final Log LOG = LogFactory.getLog(LoadTester.class);
+    
+    protected int messageSize = 1024 * 64;
+    protected int produceCount = 10000;
 
     protected BrokerService createBroker() throws Exception {
         return BrokerFactory.createBroker(new URI("xbean:org/apache/activemq/broker/store/loadtester.xml"));
@@ -57,7 +62,7 @@ public class LoadTester extends JmsTestSupport {
     }
 
     public void testQueueSendThenAddConsumer() throws Exception {
-        ProgressPrinter printer = new ProgressPrinter(PRODUCE_COUNT, 20);
+        ProgressPrinter printer = new ProgressPrinter(produceCount, 20);
 
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
 
@@ -68,29 +73,29 @@ public class LoadTester extends JmsTestSupport {
         MessageProducer producer = session.createProducer(destination);
         producer.setDeliveryMode(DeliveryMode.PERSISTENT);
 
-        log.info("Sending " + PRODUCE_COUNT + " messages that are " + (MESSAGE_SIZE / 1024.0) + "k large, for a total of " + (PRODUCE_COUNT * MESSAGE_SIZE / (1024.0 * 1024.0))
+        LOG.info("Sending " + produceCount + " messages that are " + (messageSize / 1024.0) + "k large, for a total of " + (produceCount * messageSize / (1024.0 * 1024.0))
                  + " megs of data.");
         // Send a message to the broker.
         long start = System.currentTimeMillis();
-        for (int i = 0; i < PRODUCE_COUNT; i++) {
+        for (int i = 0; i < produceCount; i++) {
             printer.increment();
             BytesMessage msg = session.createBytesMessage();
-            msg.writeBytes(new byte[MESSAGE_SIZE]);
+            msg.writeBytes(new byte[messageSize]);
             producer.send(msg);
         }
         long end1 = System.currentTimeMillis();
 
-        log.info("Produced messages/sec: " + (PRODUCE_COUNT * 1000.0 / (end1 - start)));
+        LOG.info("Produced messages/sec: " + (produceCount * 1000.0 / (end1 - start)));
 
-        printer = new ProgressPrinter(PRODUCE_COUNT, 10);
+        printer = new ProgressPrinter(produceCount, 10);
         start = System.currentTimeMillis();
         MessageConsumer consumer = session.createConsumer(destination);
-        for (int i = 0; i < PRODUCE_COUNT; i++) {
+        for (int i = 0; i < produceCount; i++) {
             printer.increment();
             assertNotNull("Getting message: " + i, consumer.receive(20000));
         }
         end1 = System.currentTimeMillis();
-        log.info("Consumed messages/sec: " + (PRODUCE_COUNT * 1000.0 / (end1 - start)));
+        LOG.info("Consumed messages/sec: " + (produceCount * 1000.0 / (end1 - start)));
 
     }
 

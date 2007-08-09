@@ -34,7 +34,7 @@ import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
 public class MessageIdTest extends DataFileGeneratorTestSupport {
 
 
-    public static MessageIdTest SINGLETON = new MessageIdTest();
+    public static final MessageIdTest SINGLETON = new MessageIdTest();
 
     public Object createObject() throws Exception {
         MessageId info = new MessageId();

@@ -62,7 +62,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public static final String DEFAULT_PASSWORD = null;
     public static final int DEFAULT_PRODUCER_WINDOW_SIZE = 0;
 
-    static protected final Executor DEFAULT_CONNECTION_EXECUTOR = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
+    protected static final Executor DEFAULT_CONNECTION_EXECUTOR = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
         public Thread newThread(Runnable run) {
             Thread thread = new Thread(run);
             thread.setPriority(ThreadPriorities.INBOUND_CLIENT_CONNECTION);
@@ -772,11 +772,11 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         this.factoryStats.setEnabled(statsEnabled);
     }
 
-    synchronized public int getProducerWindowSize() {
+    public synchronized int getProducerWindowSize() {
         return producerWindowSize;
     }
 
-    synchronized public void setProducerWindowSize(int producerWindowSize) {
+    public synchronized void setProducerWindowSize(int producerWindowSize) {
         this.producerWindowSize = producerWindowSize;
     }
 

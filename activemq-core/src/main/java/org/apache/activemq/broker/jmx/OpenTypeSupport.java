@@ -48,7 +48,7 @@ public class OpenTypeSupport {
         Map getFields(Object o) throws OpenDataException;
     }
 
-    private static final HashMap openTypeFactories = new HashMap();
+    private static final HashMap OPEN_TYPE_FACTORIES = new HashMap();
 
     abstract static class AbstractOpenTypeFactory implements OpenTypeFactory {
 
@@ -75,7 +75,7 @@ public class OpenTypeSupport {
             return new CompositeType(getTypeName(), getDescription(), itemNames, itemDescriptions, itemTypes);
         }
 
-        abstract protected String getTypeName();
+        protected abstract String getTypeName();
 
         protected void addItem(String name, String description, OpenType type) {
             itemNamesList.add(name);
@@ -257,16 +257,16 @@ public class OpenTypeSupport {
     }
 
     static {
-        openTypeFactories.put(ActiveMQMessage.class, new MessageOpenTypeFactory());
-        openTypeFactories.put(ActiveMQBytesMessage.class, new ByteMessageOpenTypeFactory());
-        openTypeFactories.put(ActiveMQMapMessage.class, new MapMessageOpenTypeFactory());
-        openTypeFactories.put(ActiveMQObjectMessage.class, new ObjectMessageOpenTypeFactory());
-        openTypeFactories.put(ActiveMQStreamMessage.class, new StreamMessageOpenTypeFactory());
-        openTypeFactories.put(ActiveMQTextMessage.class, new TextMessageOpenTypeFactory());
+        OPEN_TYPE_FACTORIES.put(ActiveMQMessage.class, new MessageOpenTypeFactory());
+        OPEN_TYPE_FACTORIES.put(ActiveMQBytesMessage.class, new ByteMessageOpenTypeFactory());
+        OPEN_TYPE_FACTORIES.put(ActiveMQMapMessage.class, new MapMessageOpenTypeFactory());
+        OPEN_TYPE_FACTORIES.put(ActiveMQObjectMessage.class, new ObjectMessageOpenTypeFactory());
+        OPEN_TYPE_FACTORIES.put(ActiveMQStreamMessage.class, new StreamMessageOpenTypeFactory());
+        OPEN_TYPE_FACTORIES.put(ActiveMQTextMessage.class, new TextMessageOpenTypeFactory());
     }
 
     public static OpenTypeFactory getFactory(Class clazz) throws OpenDataException {
-        return (OpenTypeFactory)openTypeFactories.get(clazz);
+        return (OpenTypeFactory)OPEN_TYPE_FACTORIES.get(clazz);
     }
 
     public static CompositeData convert(Message message) throws OpenDataException {

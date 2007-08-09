@@ -39,9 +39,11 @@ import org.apache.activemq.test.TestSupport;
 /**
  * @version $Revision: 1.9 $
  */
-abstract public class JmsTransactionTestSupport extends TestSupport implements MessageListener {
+public abstract class JmsTransactionTestSupport extends TestSupport implements MessageListener {
 
     private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(JmsTransactionTestSupport.class);
+    private static final int MESSAGE_COUNT = 5;
+    private static final String MESSAGE_TEXT = "message";
 
     protected ConnectionFactory connectionFactory;
     protected Connection connection;
@@ -52,10 +54,8 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
     protected Destination destination;
 
     // for message listener test
-    private static final int messageCount = 5;
-    private static final String messageText = "message";
-    private List unackMessages = new ArrayList(messageCount);
-    private List ackMessages = new ArrayList(messageCount);
+    private List unackMessages = new ArrayList(MESSAGE_COUNT);
+    private List ackMessages = new ArrayList(MESSAGE_COUNT);
     private boolean resendPhase;
     protected int batchCount = 10;
     protected int batchSize = 20;
@@ -402,8 +402,9 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
      * @throws Exception
      */
     public void testReceiveTwoThenRollbackManyTimes() throws Exception {
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 5; i++) {
             testReceiveTwoThenRollback();
+        }
     }
 
     /**
@@ -559,17 +560,17 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
 
     public void testMessageListener() throws Exception {
         // send messages
-        for (int i = 0; i < messageCount; i++) {
-            producer.send(session.createTextMessage(messageText + i));
+        for (int i = 0; i < MESSAGE_COUNT; i++) {
+            producer.send(session.createTextMessage(MESSAGE_TEXT + i));
         }
         session.commit();
         consumer.setMessageListener(this);
         // wait receive
         waitReceiveUnack();
-        assertEquals(unackMessages.size(), messageCount);
+        assertEquals(unackMessages.size(), MESSAGE_COUNT);
         // resend phase
         waitReceiveAck();
-        assertEquals(ackMessages.size(), messageCount);
+        assertEquals(ackMessages.size(), MESSAGE_COUNT);
         // should no longer re-receive
         consumer.setMessageListener(null);
         assertNull(consumer.receive(500));
@@ -579,7 +580,7 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
     public void onMessage(Message message) {
         if (!resendPhase) {
             unackMessages.add(message);
-            if (unackMessages.size() == messageCount) {
+            if (unackMessages.size() == MESSAGE_COUNT) {
                 try {
                     session.rollback();
                     resendPhase = true;
@@ -589,7 +590,7 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
             }
         } else {
             ackMessages.add(message);
-            if (ackMessages.size() == messageCount) {
+            if (ackMessages.size() == MESSAGE_COUNT) {
                 try {
                     session.commit();
                 } catch (Exception e) {
@@ -607,9 +608,9 @@ abstract public class JmsTransactionTestSupport extends TestSupport implements M
     }
 
     private void waitReceiveAck() throws Exception {
-        for (int i = 0; i < 100 && ackMessages.size() < messageCount; i++) {
+        for (int i = 0; i < 100 && ackMessages.size() < MESSAGE_COUNT; i++) {
             Thread.sleep(100);
         }
-        assertFalse(ackMessages.size() < messageCount);
+        assertFalse(ackMessages.size() < MESSAGE_COUNT);
     }
 }

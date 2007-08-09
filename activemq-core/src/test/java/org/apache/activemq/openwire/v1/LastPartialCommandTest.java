@@ -30,7 +30,7 @@ import org.apache.activemq.command.LastPartialCommand;
  */
 public class LastPartialCommandTest extends PartialCommandTest {
 
-    public static LastPartialCommandTest SINGLETON = new LastPartialCommandTest();
+    public static final LastPartialCommandTest SINGLETON = new LastPartialCommandTest();
 
     public Object createObject() throws Exception {
         LastPartialCommand info = new LastPartialCommand();

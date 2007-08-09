@@ -138,7 +138,7 @@ public class TwoBrokerMessageNotSentToRemoteWhenNoConsumerTest extends JmsMultip
             throw new Exception("Remote broker or local broker has no registered connectors.");
         }
 
-        MAX_SETUP_TIME = 2000;
+        maxSetupTime = 2000;
     }
 
     public void setUp() throws Exception {

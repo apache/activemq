@@ -27,8 +27,8 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.3 $
  */
 public class ActiveMQPrefetchPolicy implements Serializable {
-    private static final Log log = LogFactory.getLog(ActiveMQPrefetchPolicy.class);
-    private static final int MAX_PREFETCH_SIZE = (Short.MAX_VALUE - 1);
+    private static final Log LOG = LogFactory.getLog(ActiveMQPrefetchPolicy.class);
+    private static final int MAX_PREFETCH_SIZE = Short.MAX_VALUE - 1;
     private int queuePrefetch;
     private int queueBrowserPrefetch;
     private int topicPrefetch;
@@ -135,7 +135,7 @@ public class ActiveMQPrefetchPolicy implements Serializable {
     private int getMaxPrefetchLimit(int value) {
         int result = Math.min(value, MAX_PREFETCH_SIZE);
         if (result < value) {
-            log.warn("maximum prefetch limit has been reset from " + value + " to " + MAX_PREFETCH_SIZE);
+            LOG.warn("maximum prefetch limit has been reset from " + value + " to " + MAX_PREFETCH_SIZE);
         }
         return result;
     }

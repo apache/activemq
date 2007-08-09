@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -20,17 +20,21 @@ import java.net.SocketAddress;
 import java.net.URI;
 
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.test.JmsTopicSendReceiveWithEmbeddedBrokerAndUserIDTest;
 import org.apache.activemq.transport.CommandJoiner;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.udp.ResponseRedirectInterceptor;
 import org.apache.activemq.transport.udp.UdpTransport;
 import org.apache.activemq.transport.udp.UdpTransportTest;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * 
  * @version $Revision: $
  */
 public class UnreliableUdpTransportTest extends UdpTransportTest {
+    private static final Log LOG = LogFactory.getLog(UnreliableUdpTransportTest.class);
 
     protected DropCommandStrategy dropStrategy = new DropCommandStrategy() {
         
@@ -43,7 +47,7 @@ public class UnreliableUdpTransportTest extends UdpTransportTest {
     };
 
     protected Transport createProducer() throws Exception {
-        log.info("Producer using URI: " + producerURI);
+        LOG.info("Producer using URI: " + producerURI);
 
         OpenWireFormat wireFormat = createWireFormat();
         UnreliableUdpTransport transport = new UnreliableUdpTransport(wireFormat, new URI(producerURI));
@@ -57,7 +61,7 @@ public class UnreliableUdpTransportTest extends UdpTransportTest {
     }
 
     protected Transport createConsumer() throws Exception {
-        log.info("Consumer on port: " + consumerPort);
+        LOG.info("Consumer on port: " + consumerPort);
         OpenWireFormat wireFormat = createWireFormat();
         UdpTransport transport = new UdpTransport(wireFormat, consumerPort);
 

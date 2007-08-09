@@ -45,10 +45,11 @@ class StubSSLSession implements SSLSession {
     }
 
     public Certificate[] getPeerCertificates() throws SSLPeerUnverifiedException {
-        if (this.isVerified)
+        if (this.isVerified) {
             return new X509Certificate[] {this.cert};
-        else
+        } else {
             throw new SSLPeerUnverifiedException("Socket is unverified.");
+        }
     }
 
     // --- Stubbed methods ---

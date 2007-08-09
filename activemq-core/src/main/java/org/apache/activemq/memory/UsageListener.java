@@ -17,5 +17,5 @@
 package org.apache.activemq.memory;
 
 public interface UsageListener {
-    public void onMemoryUseChanged( UsageManager memoryManager, int oldPercentUsage, int newPercentUsage );
+    void onMemoryUseChanged( UsageManager memoryManager, int oldPercentUsage, int newPercentUsage );
 }

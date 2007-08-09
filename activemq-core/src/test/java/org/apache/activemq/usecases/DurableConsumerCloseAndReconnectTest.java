@@ -29,12 +29,15 @@ import javax.jms.Topic;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.test.TestSupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision: 1.1.1.1 $
  */
 public class DurableConsumerCloseAndReconnectTest extends TestSupport {
     protected static final long RECEIVE_TIMEOUT = 5000L;
+    private static final Log LOG = LogFactory.getLog(DurableConsumerCloseAndReconnectTest.class);
 
     private Connection connection;
     private Session session;
@@ -81,7 +84,7 @@ public class DurableConsumerCloseAndReconnectTest extends TestSupport {
 
         closeConsumer();
 
-        log.info("Now lets create the consumer again and because we didn't ack, we should get it again");
+        LOG.info("Now lets create the consumer again and because we didn't ack, we should get it again");
         makeConsumer();
 
         message = consumer.receive(RECEIVE_TIMEOUT);
@@ -90,7 +93,7 @@ public class DurableConsumerCloseAndReconnectTest extends TestSupport {
 
         closeConsumer();
 
-        log.info("Now lets create the consumer again and because we didn't ack, we should get it again");
+        LOG.info("Now lets create the consumer again and because we didn't ack, we should get it again");
         makeConsumer();
 
         message = consumer.receive(2000);
@@ -98,7 +101,7 @@ public class DurableConsumerCloseAndReconnectTest extends TestSupport {
 
         closeConsumer();
 
-        log.info("Lets publish one more message now");
+        LOG.info("Lets publish one more message now");
         publish();
 
         makeConsumer();
@@ -154,7 +157,7 @@ public class DurableConsumerCloseAndReconnectTest extends TestSupport {
     protected void makeConsumer() throws Exception {
         String durableName = getName();
         String clientID = getSubject();
-        log.info("Creating a durable subscribe for clientID: " + clientID + " and durable name: " + durableName);
+        LOG.info("Creating a durable subscribe for clientID: " + clientID + " and durable name: " + durableName);
         createSession(clientID);
         consumer = createConsumer(durableName);
     }

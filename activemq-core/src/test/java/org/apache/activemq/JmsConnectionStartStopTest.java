@@ -30,7 +30,7 @@ import javax.jms.Topic;
  */
 public class JmsConnectionStartStopTest extends TestSupport {
 
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory
         .getLog(JmsConnectionStartStopTest.class);
 
     private Connection startedConnection;
@@ -41,7 +41,7 @@ public class JmsConnectionStartStopTest extends TestSupport {
      */
     protected void setUp() throws Exception {
 
-        log.info(getClass().getClassLoader().getResource("log4j.properties"));
+        LOG.info(getClass().getClassLoader().getResource("log4j.properties"));
 
         ActiveMQConnectionFactory factory = createConnectionFactory();
         startedConnection = factory.createConnection();

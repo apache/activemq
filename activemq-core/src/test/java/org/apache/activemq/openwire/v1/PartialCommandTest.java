@@ -31,7 +31,7 @@ import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
  */
 public class PartialCommandTest extends DataFileGeneratorTestSupport {
 
-    public static PartialCommandTest SINGLETON = new PartialCommandTest();
+    public static final PartialCommandTest SINGLETON = new PartialCommandTest();
 
     public Object createObject() throws Exception {
         PartialCommand info = new PartialCommand();

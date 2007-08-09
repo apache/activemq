@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -40,7 +40,7 @@ import org.springframework.beans.factory.InitializingBean;
  * @org.apache.xbean.XBean
  */
 public class CommandAgent implements Service, InitializingBean, DisposableBean, FactoryBean {
-    private static final Log log = LogFactory.getLog(CommandAgent.class);
+    private static final Log LOG = LogFactory.getLog(CommandAgent.class);
 
     private String brokerUrl = "vm://localhost";
     private ConnectionFactory connectionFactory;
@@ -54,8 +54,8 @@ public class CommandAgent implements Service, InitializingBean, DisposableBean, 
         session = getConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
         listener = new CommandMessageListener(session);
         Destination destination = getCommandDestination();
-        if (log.isDebugEnabled()) {
-            log.debug("Agent subscribing to control destination: " + destination);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Agent subscribing to control destination: " + destination);
         }
         consumer = session.createConsumer(destination);
         consumer.setMessageListener(listener);

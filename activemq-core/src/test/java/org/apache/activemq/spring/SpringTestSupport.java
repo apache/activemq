@@ -20,6 +20,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import junit.framework.TestCase;
+import org.apache.activemq.test.JmsTopicSendReceiveTest;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -27,7 +30,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
  * @version $Revision: 1.1 $
  */
 public class SpringTestSupport extends TestCase {
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(SpringTest.class);
+    private static final Log LOG = LogFactory.getLog(SpringTest.class);
     protected AbstractApplicationContext context;
     protected SpringConsumer consumer;
     protected SpringProducer producer;
@@ -62,10 +65,10 @@ public class SpringTestSupport extends TestCase {
 
         // now lets check that the consumer has received some messages
         List messages = consumer.flushMessages();
-        log.info("Consumer has received messages....");
+        LOG.info("Consumer has received messages....");
         for (Iterator iter = messages.iterator(); iter.hasNext();) {
             Object message = iter.next();
-            log.info("Received: " + message);
+            LOG.info("Received: " + message);
         }
 
         assertEquals("Message count", producer.getMessageCount(), messages.size());

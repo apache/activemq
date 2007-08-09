@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -36,7 +36,7 @@ import java.io.InputStreamReader;
  * @version $Revision: $
  */
 public class CommandMessageListener implements MessageListener {
-    private static final Log log = LogFactory.getLog(CommandMessageListener.class);
+    private static final Log LOG = LogFactory.getLog(CommandMessageListener.class);
 
     private Session session;
     private MessageProducer producer;
@@ -47,15 +47,15 @@ public class CommandMessageListener implements MessageListener {
     }
 
     public void onMessage(Message message) {
-        if (log.isDebugEnabled()) {
-            log.debug("Received command: " + message);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Received command: " + message);
         }
         if (message instanceof TextMessage) {
             TextMessage request = (TextMessage) message;
             try {
                 Destination replyTo = message.getJMSReplyTo();
                 if (replyTo == null) {
-                    log.warn("Ignored message as no JMSReplyTo set: " + message);
+                    LOG.warn("Ignored message as no JMSReplyTo set: " + message);
                     return;
                 }
                 Message response = processCommand(request);
@@ -63,11 +63,11 @@ public class CommandMessageListener implements MessageListener {
                 getProducer().send(replyTo, response);
             }
             catch (Exception e) {
-                log.error("Failed to process message due to: " + e + ". Message: " + message, e);
+                LOG.error("Failed to process message due to: " + e + ". Message: " + message, e);
             }
         }
         else {
-            log.warn("Ignoring invalid message: " + message);
+            LOG.warn("Ignoring invalid message: " + message);
         }
     }
 

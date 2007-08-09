@@ -19,7 +19,7 @@ package org.apache.activemq.management;
 
 public class RangeStatisticTest extends StatisticTestSupport {
     
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory
             .getLog(RangeStatisticTest.class);
 
     /**
@@ -62,7 +62,7 @@ public class RangeStatisticTest extends StatisticTestSupport {
 
         assertLastTimeNotStartTime(stat);
 
-        log.info("Stat is: " + stat);
+        LOG.info("Stat is: " + stat);
 
         stat.reset();
 

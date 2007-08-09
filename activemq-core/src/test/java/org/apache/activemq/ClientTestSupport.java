@@ -132,12 +132,13 @@ public class ClientTestSupport extends TestCase {
         return ack;
     }
 
-    protected Message receiveMessage(StubConnection connection, int MAX_WAIT) throws InterruptedException {
+    protected Message receiveMessage(StubConnection connection, int maxWait) throws InterruptedException {
         while (true) {
-            Object o = connection.getDispatchQueue().poll(MAX_WAIT, TimeUnit.MILLISECONDS);
+            Object o = connection.getDispatchQueue().poll(maxWait, TimeUnit.MILLISECONDS);
 
-            if (o == null)
+            if (o == null) {
                 return null;
+            }
 
             if (o instanceof MessageDispatch) {
                 MessageDispatch dispatch = (MessageDispatch)o;

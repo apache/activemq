@@ -33,7 +33,7 @@ public class TransportLogger extends TransportFilter {
         this(next, LogFactory.getLog(TransportLogger.class.getName() + ".Connection:" + getNextId()));
     }
 
-    synchronized private static int getNextId() {
+    private static synchronized int getNextId() {
         return ++lastId;
     }
 

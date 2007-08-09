@@ -33,7 +33,7 @@ import org.apache.activemq.command.MessagePull;
 public class MessagePullTest extends BaseCommandTestSupport {
 
 
-    public static MessagePullTest SINGLETON = new MessagePullTest();
+    public static final MessagePullTest SINGLETON = new MessagePullTest();
 
     public Object createObject() throws Exception {
         MessagePull info = new MessagePull();

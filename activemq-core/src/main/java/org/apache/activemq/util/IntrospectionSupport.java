@@ -35,16 +35,19 @@ import org.apache.activemq.command.ActiveMQDestination;
 
 public class IntrospectionSupport {
 
-    static public boolean getProperties(Object target, Map props, String optionPrefix) {
+    public static boolean getProperties(Object target, Map props, String optionPrefix) {
 
         boolean rc = false;
-        if (target == null)
+        if (target == null) {
             throw new IllegalArgumentException("target was null.");
-        if (props == null)
+        }
+        if (props == null) {
             throw new IllegalArgumentException("props was null.");
+        }
 
-        if (optionPrefix == null)
+        if (optionPrefix == null) {
             optionPrefix = "";
+        }
 
         Class clazz = target.getClass();
         Method[] methods = clazz.getMethods();
@@ -58,12 +61,14 @@ public class IntrospectionSupport {
                 try {
 
                     Object value = method.invoke(target, new Object[] {});
-                    if (value == null)
+                    if (value == null) {
                         continue;
+                    }
 
                     String strValue = convertToString(value, type);
-                    if (strValue == null)
+                    if (strValue == null) {
                         continue;
+                    }
 
                     name = name.substring(3, 4).toLowerCase() + name.substring(4);
                     props.put(optionPrefix + name, strValue);
@@ -78,12 +83,14 @@ public class IntrospectionSupport {
         return rc;
     }
 
-    static public boolean setProperties(Object target, Map props, String optionPrefix) {
+    public static boolean setProperties(Object target, Map props, String optionPrefix) {
         boolean rc = false;
-        if (target == null)
+        if (target == null) {
             throw new IllegalArgumentException("target was null.");
-        if (props == null)
+        }
+        if (props == null) {
             throw new IllegalArgumentException("props was null.");
+        }
 
         for (Iterator iter = props.keySet().iterator(); iter.hasNext();) {
             String name = (String)iter.next();
@@ -100,8 +107,9 @@ public class IntrospectionSupport {
     }
 
     public static Map extractProperties(Map props, String optionPrefix) {
-        if (props == null)
+        if (props == null) {
             throw new IllegalArgumentException("props was null.");
+        }
 
         HashMap rc = new HashMap(props.size());
 
@@ -121,10 +129,12 @@ public class IntrospectionSupport {
     public static boolean setProperties(Object target, Map props) {
         boolean rc = false;
 
-        if (target == null)
+        if (target == null) {
             throw new IllegalArgumentException("target was null.");
-        if (props == null)
+        }
+        if (props == null) {
             throw new IllegalArgumentException("props was null.");
+        }
 
         for (Iterator iter = props.entrySet().iterator(); iter.hasNext();) {
             Map.Entry entry = (Entry)iter.next();
@@ -141,8 +151,9 @@ public class IntrospectionSupport {
         try {
             Class clazz = target.getClass();
             Method setter = findSetterMethod(clazz, name);
-            if (setter == null)
+            if (setter == null) {
                 return false;
+            }
 
             // If the type is null or it matches the needed type, just use the
             // value directly
@@ -197,20 +208,23 @@ public class IntrospectionSupport {
     }
 
     private static boolean isSettableType(Class clazz) {
-        if (PropertyEditorManager.findEditor(clazz) != null)
+        if (PropertyEditorManager.findEditor(clazz) != null) {
             return true;
-        if (clazz == URI.class)
+        }
+        if (clazz == URI.class) {
             return true;
-        if (clazz == Boolean.class)
+        }
+        if (clazz == Boolean.class) {
             return true;
+        }
         return false;
     }
 
-    static public String toString(Object target) {
+    public static String toString(Object target) {
         return toString(target, Object.class);
     }
 
-    static public String toString(Object target, Class stopClass) {
+    public static String toString(Object target, Class stopClass) {
         LinkedHashMap map = new LinkedHashMap();
         addFields(target, target.getClass(), stopClass, map);
         StringBuffer buffer = new StringBuffer(simpleName(target.getClass()));
@@ -241,7 +255,7 @@ public class IntrospectionSupport {
         }
     }
 
-    static public String simpleName(Class clazz) {
+    public static String simpleName(Class clazz) {
         String name = clazz.getName();
         int p = name.lastIndexOf(".");
         if (p >= 0) {
@@ -250,10 +264,11 @@ public class IntrospectionSupport {
         return name;
     }
 
-    static private void addFields(Object target, Class startClass, Class stopClass, LinkedHashMap map) {
+    private static void addFields(Object target, Class startClass, Class stopClass, LinkedHashMap map) {
 
-        if (startClass != stopClass)
+        if (startClass != stopClass) {
             addFields(target, startClass.getSuperclass(), stopClass, map);
+        }
 
         Field[] fields = startClass.getDeclaredFields();
         for (int i = 0; i < fields.length; i++) {

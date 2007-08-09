@@ -30,6 +30,8 @@ import org.apache.activemq.transport.discovery.DiscoveryAgentFactory;
 import org.apache.activemq.transport.discovery.DiscoveryListener;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A network connector which uses a discovery agent to detect the remote brokers
@@ -40,6 +42,7 @@ import org.apache.activemq.util.ServiceSupport;
  * @version $Revision$
  */
 public class DiscoveryNetworkConnector extends NetworkConnector implements DiscoveryListener {
+    private static final Log LOG = LogFactory.getLog(DiscoveryNetworkConnector.class);
 
     private DiscoveryAgent discoveryAgent;
     private ConcurrentHashMap bridges = new ConcurrentHashMap();
@@ -66,7 +69,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             try {
                 uri = new URI(url);
             } catch (URISyntaxException e) {
-                log.warn("Could not connect to remote URI: " + url + " due to bad URI syntax: " + e, e);
+                LOG.warn("Could not connect to remote URI: " + url + " due to bad URI syntax: " + e, e);
                 return;
             }
             // Should we try to connect to that URI?
@@ -74,13 +77,13 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 || (connectionFilter != null && !connectionFilter.connectTo(uri)))
                 return;
             URI connectUri = uri;
-            log.info("Establishing network connection between from " + localURIName + " to " + connectUri);
+            LOG.info("Establishing network connection between from " + localURIName + " to " + connectUri);
             Transport remoteTransport;
             try {
                 remoteTransport = TransportFactory.connect(connectUri);
             } catch (Exception e) {
-                log.warn("Could not connect to remote URI: " + localURIName + ": " + e.getMessage());
-                log.debug("Connection failure exception: " + e, e);
+                LOG.warn("Could not connect to remote URI: " + localURIName + ": " + e.getMessage());
+                LOG.debug("Connection failure exception: " + e, e);
                 return;
             }
             Transport localTransport;
@@ -88,8 +91,8 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 localTransport = createLocalTransport();
             } catch (Exception e) {
                 ServiceSupport.dispose(remoteTransport);
-                log.warn("Could not connect to local URI: " + localURIName + ": " + e.getMessage());
-                log.debug("Connection failure exception: " + e, e);
+                LOG.warn("Could not connect to local URI: " + localURIName + ": " + e.getMessage());
+                LOG.debug("Connection failure exception: " + e, e);
                 return;
             }
             NetworkBridge bridge = createBridge(localTransport, remoteTransport, event);
@@ -99,9 +102,9 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             } catch (Exception e) {
                 ServiceSupport.dispose(localTransport);
                 ServiceSupport.dispose(remoteTransport);
-                log.warn("Could not start network bridge between: " + localURIName + " and: " + uri
+                LOG.warn("Could not start network bridge between: " + localURIName + " and: " + uri
                          + " due to: " + e);
-                log.debug("Start failure exception: " + e, e);
+                LOG.debug("Start failure exception: " + e, e);
                 try {
                     discoveryAgent.serviceFailed(event);
                 } catch (IOException e1) {
@@ -118,7 +121,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             try {
                 uri = new URI(url);
             } catch (URISyntaxException e) {
-                log.warn("Could not connect to remote URI: " + url + " due to bad URI syntax: " + e, e);
+                LOG.warn("Could not connect to remote URI: " + url + " due to bad URI syntax: " + e, e);
                 return;
             }
 

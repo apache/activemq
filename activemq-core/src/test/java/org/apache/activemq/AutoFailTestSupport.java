@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
  */
 
 public abstract class AutoFailTestSupport extends TestCase {
-    protected static final Log LOG = LogFactory.getLog(AutoFailTestSupport.class);
+    private static final Log LOG = LogFactory.getLog(AutoFailTestSupport.class);
 
     public static final int EXIT_SUCCESS = 0;
     public static final int EXIT_ERROR = 1;

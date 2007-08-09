@@ -1,3 +1,19 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.activemq.transport.stomp;
 
 import java.io.IOException;
@@ -67,24 +83,24 @@ public class LegacyFrameTranslator implements FrameTranslator {
         if (d == null) {
             return null;
         }
-        ActiveMQDestination amq_d = (ActiveMQDestination)d;
-        String p_name = amq_d.getPhysicalName();
+        ActiveMQDestination activeMQDestination = (ActiveMQDestination)d;
+        String physicalName = activeMQDestination.getPhysicalName();
 
         StringBuffer buffer = new StringBuffer();
-        if (amq_d.isQueue()) {
-            if (amq_d.isTemporary()) {
+        if (activeMQDestination.isQueue()) {
+            if (activeMQDestination.isTemporary()) {
                 buffer.append("/temp-queue/");
             } else {
                 buffer.append("/queue/");
             }
         } else {
-            if (amq_d.isTemporary()) {
+            if (activeMQDestination.isTemporary()) {
                 buffer.append("/temp-topic/");
             } else {
                 buffer.append("/topic/");
             }
         }
-        buffer.append(p_name);
+        buffer.append(physicalName);
         return buffer.toString();
     }
 
@@ -92,17 +108,17 @@ public class LegacyFrameTranslator implements FrameTranslator {
         if (name == null) {
             return null;
         } else if (name.startsWith("/queue/")) {
-            String q_name = name.substring("/queue/".length(), name.length());
-            return ActiveMQDestination.createDestination(q_name, ActiveMQDestination.QUEUE_TYPE);
+            String qName = name.substring("/queue/".length(), name.length());
+            return ActiveMQDestination.createDestination(qName, ActiveMQDestination.QUEUE_TYPE);
         } else if (name.startsWith("/topic/")) {
-            String t_name = name.substring("/topic/".length(), name.length());
-            return ActiveMQDestination.createDestination(t_name, ActiveMQDestination.TOPIC_TYPE);
+            String tName = name.substring("/topic/".length(), name.length());
+            return ActiveMQDestination.createDestination(tName, ActiveMQDestination.TOPIC_TYPE);
         } else if (name.startsWith("/temp-queue/")) {
-            String t_name = name.substring("/temp-queue/".length(), name.length());
-            return ActiveMQDestination.createDestination(t_name, ActiveMQDestination.TEMP_QUEUE_TYPE);
+            String tName = name.substring("/temp-queue/".length(), name.length());
+            return ActiveMQDestination.createDestination(tName, ActiveMQDestination.TEMP_QUEUE_TYPE);
         } else if (name.startsWith("/temp-topic/")) {
-            String t_name = name.substring("/temp-topic/".length(), name.length());
-            return ActiveMQDestination.createDestination(t_name, ActiveMQDestination.TEMP_TOPIC_TYPE);
+            String tName = name.substring("/temp-topic/".length(), name.length());
+            return ActiveMQDestination.createDestination(tName, ActiveMQDestination.TEMP_TOPIC_TYPE);
         } else {
             throw new ProtocolException("Illegal destination name: [" + name + "] -- ActiveMQ STOMP destinations "
                                         + "must begine with one of: /queue/ /topic/ /temp-queue/ /temp-topic/");

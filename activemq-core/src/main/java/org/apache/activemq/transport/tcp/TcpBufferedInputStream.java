@@ -47,15 +47,17 @@ public class TcpBufferedInputStream extends FilterInputStream {
         byte[] buffer = internalBuffer;
         count = position = 0;
         int n = in.read(buffer, position, buffer.length - position);
-        if (n > 0)
+        if (n > 0) {
             count = n + position;
+        }
     }
 
     public int read() throws IOException {
         if (position >= count) {
             fill();
-            if (position >= count)
+            if (position >= count) {
                 return -1;
+            }
         }
         return internalBuffer[position++] & 0xff;
     }
@@ -68,8 +70,9 @@ public class TcpBufferedInputStream extends FilterInputStream {
             }
             fill();
             avail = count - position;
-            if (avail <= 0)
+            if (avail <= 0) {
                 return -1;
+            }
         }
         int cnt = (avail < len) ? avail : len;
         System.arraycopy(internalBuffer, position, b, off, cnt);
@@ -86,15 +89,18 @@ public class TcpBufferedInputStream extends FilterInputStream {
         int n = 0;
         for (;;) {
             int nread = readStream(b, off + n, len - n);
-            if (nread <= 0)
+            if (nread <= 0) {
                 return (n == 0) ? nread : n;
+            }
             n += nread;
-            if (n >= len)
+            if (n >= len) {
                 return n;
+            }
             // if not closed but no bytes available, return
             InputStream input = in;
-            if (input != null && input.available() <= 0)
+            if (input != null && input.available() <= 0) {
                 return n;
+            }
         }
     }
 
@@ -120,7 +126,8 @@ public class TcpBufferedInputStream extends FilterInputStream {
     }
 
     public void close() throws IOException {
-        if (in != null)
+        if (in != null) {
             in.close();
+        }
     }
 }

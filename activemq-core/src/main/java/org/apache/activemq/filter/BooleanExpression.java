@@ -32,6 +32,6 @@ public interface BooleanExpression extends Expression {
      * @return true if the expression evaluates to Boolean.TRUE.
      * @throws JMSException
      */
-    public boolean matches(MessageEvaluationContext message) throws JMSException;
+    boolean matches(MessageEvaluationContext message) throws JMSException;
 
 }

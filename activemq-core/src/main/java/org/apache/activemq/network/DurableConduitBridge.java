@@ -33,7 +33,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1 $
  */
 public class DurableConduitBridge extends ConduitBridge {
-    static final private Log log = LogFactory.getLog(DurableConduitBridge.class);
+    private static final Log LOG = LogFactory.getLog(DurableConduitBridge.class);
 
     /**
      * Constructor
@@ -66,10 +66,10 @@ public class DurableConduitBridge extends ConduitBridge {
                     try {
                         addSubscription(sub);
                     } catch (IOException e) {
-                        log.error("Failed to add static destination " + dest, e);
+                        LOG.error("Failed to add static destination " + dest, e);
                     }
-                    if (log.isTraceEnabled())
-                        log.trace("Forwarding messages for durable destination: " + dest);
+                    if (LOG.isTraceEnabled())
+                        LOG.trace("Forwarding messages for durable destination: " + dest);
                 }
             }
         }

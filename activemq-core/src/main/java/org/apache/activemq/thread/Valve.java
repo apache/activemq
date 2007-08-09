@@ -22,7 +22,7 @@ package org.apache.activemq.thread;
  * 
  * @version $Revision: 1.2 $
  */
-final public class Valve {
+public final class Valve {
 
     private final Object mutex = new Object();
     private boolean on;

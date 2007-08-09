@@ -26,6 +26,8 @@ import org.apache.activemq.command.Endpoint;
 import org.apache.activemq.command.NetworkBridgeFilter;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.ServiceSupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A demand forwarding bridge which works with multicast style transports where
@@ -36,6 +38,7 @@ import org.apache.activemq.util.ServiceSupport;
  * @version $Revision$
  */
 public class CompositeDemandForwardingBridge extends DemandForwardingBridgeSupport {
+    private static final Log LOG = LogFactory.getLog(CompositeDemandForwardingBridge.class);
 
     protected final BrokerId remoteBrokerPath[] = new BrokerId[] {null};
     protected Object brokerInfoMutex = new Object();
@@ -56,13 +59,13 @@ public class CompositeDemandForwardingBridge extends DemandForwardingBridgeSuppo
             // refer to it later
             Endpoint from = command.getFrom();
             if (from == null) {
-                log.warn("Incoming command does not have a from endpoint: " + command);
+                LOG.warn("Incoming command does not have a from endpoint: " + command);
             } else {
                 from.setBrokerInfo(remoteBrokerInfo);
             }
             if (localBrokerId != null) {
                 if (localBrokerId.equals(remoteBrokerId)) {
-                    log.info("Disconnecting loop back connection.");
+                    LOG.info("Disconnecting loop back connection.");
                     // waitStarted();
                     ServiceSupport.dispose(this);
                 }
@@ -84,7 +87,7 @@ public class CompositeDemandForwardingBridge extends DemandForwardingBridgeSuppo
         BrokerId answer = null;
         Endpoint from = command.getFrom();
         if (from == null) {
-            log.warn("Incoming command does not have a from endpoint: " + command);
+            LOG.warn("Incoming command does not have a from endpoint: " + command);
         } else {
             answer = from.getBrokerId();
         }

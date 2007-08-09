@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1 $
  */
 public abstract class MemoryBufferTestSupport extends TestCase {
-    protected static final Log log = LogFactory.getLog(MemoryBufferTestSupport.class);
+    private static final Log LOG = LogFactory.getLog(MemoryBufferTestSupport.class);
 
     protected abstract MessageBuffer createMessageBuffer();
 
@@ -45,14 +45,14 @@ public abstract class MemoryBufferTestSupport extends TestCase {
     }
 
     protected void dump() {
-        log.info("Dumping current state");
+        LOG.info("Dumping current state");
         dumpQueue(qA, "A");
         dumpQueue(qB, "B");
         dumpQueue(qC, "C");
     }
 
     protected void dumpQueue(MessageQueue queue, String name) {
-        log.info("  " + name + " = " + queue.getList());
+        LOG.info("  " + name + " = " + queue.getList());
     }
 
     protected ActiveMQMessage createMessage(int size) throws Exception {

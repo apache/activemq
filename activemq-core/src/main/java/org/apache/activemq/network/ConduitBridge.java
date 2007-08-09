@@ -34,7 +34,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1 $
  */
 public class ConduitBridge extends DemandForwardingBridge {
-    static final private Log log = LogFactory.getLog(ConduitBridge.class);
+    private static final Log LOG = LogFactory.getLog(ConduitBridge.class);
 
     /**
      * Constructor
@@ -91,8 +91,8 @@ public class ConduitBridge extends DemandForwardingBridge {
             DemandSubscription ds = (DemandSubscription)i.next();
             subscriptionMapByLocalId.remove(ds.getRemoteInfo().getConsumerId());
             removeSubscription(ds);
-            if (log.isTraceEnabled())
-                log.trace("removing sub on " + localBroker + " from " + remoteBrokerName + " :  "
+            if (LOG.isTraceEnabled())
+                LOG.trace("removing sub on " + localBroker + " from " + remoteBrokerName + " :  "
                           + ds.getRemoteInfo());
         }
 

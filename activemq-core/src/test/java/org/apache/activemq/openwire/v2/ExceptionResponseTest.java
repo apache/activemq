@@ -33,7 +33,7 @@ import org.apache.activemq.command.ExceptionResponse;
 public class ExceptionResponseTest extends ResponseTest {
 
 
-    public static ExceptionResponseTest SINGLETON = new ExceptionResponseTest();
+    public static final ExceptionResponseTest SINGLETON = new ExceptionResponseTest();
 
     public Object createObject() throws Exception {
         ExceptionResponse info = new ExceptionResponse();

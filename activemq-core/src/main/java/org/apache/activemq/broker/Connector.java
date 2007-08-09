@@ -31,10 +31,10 @@ public interface Connector extends Service {
      * 
      * @return
      */
-    public BrokerInfo getBrokerInfo();
+    BrokerInfo getBrokerInfo();
 
     /**
      * @return the statistics for this connector
      */
-    public ConnectorStatistics getStatistics();
+    ConnectorStatistics getStatistics();
 }

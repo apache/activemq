@@ -31,7 +31,7 @@ import java.nio.channels.WritableByteChannel;
 
 public class NIOOutputStream extends OutputStream {
 
-    private final static int BUFFER_SIZE = 8192;
+    private static final int BUFFER_SIZE = 8192;
 
     private final WritableByteChannel out;
     private final byte[] buffer;

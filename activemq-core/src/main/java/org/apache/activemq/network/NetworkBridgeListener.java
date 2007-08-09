@@ -26,16 +26,16 @@ public interface NetworkBridgeListener {
     /**
      * called when the transport fails
      */
-    public void bridgeFailed();
+    void bridgeFailed();
 
     /**
      * called after the bridge is started.
      */
-    public void onStart(NetworkBridge bridge);
+    void onStart(NetworkBridge bridge);
 
     /**
      * called before the bridge is stopped.
      */
-    public void onStop(NetworkBridge bridge);
+    void onStop(NetworkBridge bridge);
 
 }

@@ -27,7 +27,7 @@ import java.util.logging.Logger;
 
 public class IdGenerator {
 
-    private static final Logger log = Logger.getLogger(IdGenerator.class.getName());
+    private static final Logger LOG = Logger.getLogger(IdGenerator.class.getName());
     private static final String UNIQUE_STUB;
     private static int instanceCount;
     private static String hostName;
@@ -54,7 +54,7 @@ public class IdGenerator {
                 Thread.sleep(100);
                 ss.close();
             } catch (Exception ioe) {
-                log.log(Level.WARNING, "could not generate unique stub", ioe);
+                LOG.log(Level.WARNING, "could not generate unique stub", ioe);
             }
         } else {
             hostName = "localhost";

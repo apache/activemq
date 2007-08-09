@@ -31,78 +31,78 @@ public interface Connection extends Service {
     /**
      * @return the connector that created this connection.
      */
-    public Connector getConnector();
+    Connector getConnector();
 
     /**
      * Sends a message to the client.
      * 
      * @param message the message to send to the client.
      */
-    public void dispatchSync(Command message);
+    void dispatchSync(Command message);
 
     /**
      * Sends a message to the client.
      * 
      * @param command
      */
-    public void dispatchAsync(Command command);
+    void dispatchAsync(Command command);
 
     /**
      * Services a client command and submits it to the broker.
      * 
      * @param command
      */
-    public Response service(Command command);
+    Response service(Command command);
 
     /**
      * Handles an unexpected error associated with a connection.
      * 
      * @param error
      */
-    public void serviceException(Throwable error);
+    void serviceException(Throwable error);
 
     /**
      * @return true if the Connection is slow
      */
-    public boolean isSlow();
+    boolean isSlow();
 
     /**
      * @return if after being marked, the Connection is still writing
      */
-    public boolean isBlocked();
+    boolean isBlocked();
 
     /**
      * @return true if the Connection is connected
      */
-    public boolean isConnected();
+    boolean isConnected();
 
     /**
      * @return true if the Connection is active
      */
-    public boolean isActive();
+    boolean isActive();
 
     /**
      * Returns the number of messages to be dispatched to this connection
      */
-    public int getDispatchQueueSize();
+    int getDispatchQueueSize();
 
     /**
      * Returns the statistics for this connection
      */
-    public ConnectionStatistics getStatistics();
+    ConnectionStatistics getStatistics();
 
     /**
      * @return true if the Connection will process control commands
      */
-    public boolean isManageable();
+    boolean isManageable();
 
     /**
      * @return the source address for this connection
      */
-    public String getRemoteAddress();
+    String getRemoteAddress();
 
-    public void serviceExceptionAsync(IOException e);
+    void serviceExceptionAsync(IOException e);
 
-    public String getConnectionId();
+    String getConnectionId();
 
 }

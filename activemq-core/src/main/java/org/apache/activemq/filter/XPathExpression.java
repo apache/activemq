@@ -32,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public final class XPathExpression implements BooleanExpression {
 
-    private static final Log log = LogFactory.getLog(XPathExpression.class);
+    private static final Log LOG = LogFactory.getLog(XPathExpression.class);
     private static final String EVALUATOR_SYSTEM_PROPERTY = "org.apache.activemq.XPathEvaluatorClassName";
     private static final String DEFAULT_EVALUATOR_CLASS_NAME = XalanXPathEvaluator.class.getName();
 
@@ -45,13 +45,13 @@ public final class XPathExpression implements BooleanExpression {
             try {
                 m = getXPathEvaluatorConstructor(cn);
             } catch (Throwable e) {
-                log.warn("Invalid " + XPathEvaluator.class.getName() + " implementation: " + cn
+                LOG.warn("Invalid " + XPathEvaluator.class.getName() + " implementation: " + cn
                          + ", reason: " + e, e);
                 cn = DEFAULT_EVALUATOR_CLASS_NAME;
                 try {
                     m = getXPathEvaluatorConstructor(cn);
                 } catch (Throwable e2) {
-                    log.error("Default XPath evaluator could not be loaded", e);
+                    LOG.error("Default XPath evaluator could not be loaded", e);
                 }
             }
         } finally {
@@ -71,8 +71,8 @@ public final class XPathExpression implements BooleanExpression {
     private final String xpath;
     private final XPathEvaluator evaluator;
 
-    static public interface XPathEvaluator {
-        public boolean evaluate(Message message) throws JMSException;
+    public static interface XPathEvaluator {
+        boolean evaluate(Message message) throws JMSException;
     }
 
     XPathExpression(String xpath) {

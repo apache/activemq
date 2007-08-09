@@ -33,7 +33,7 @@ import org.apache.activemq.command.ProducerAck;
 public class ProducerAckTest extends BaseCommandTestSupport {
 
 
-    public static ProducerAckTest SINGLETON = new ProducerAckTest();
+    public static final ProducerAckTest SINGLETON = new ProducerAckTest();
 
     public Object createObject() throws Exception {
         ProducerAck info = new ProducerAck();

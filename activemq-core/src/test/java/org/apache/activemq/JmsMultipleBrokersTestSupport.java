@@ -59,7 +59,7 @@ import org.springframework.core.io.Resource;
  */
 public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     public static final String AUTO_ASSIGN_TRANSPORT = "tcp://localhost:0";
-    public static int MAX_SETUP_TIME = 5000;
+    public static int maxSetupTime = 5000;
 
     protected Map brokers;
     protected Map destinations;
@@ -99,7 +99,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
             connector.setDynamicOnly(dynamicOnly);
             connector.setNetworkTTL(networkTTL);
             localBroker.addNetworkConnector(connector);
-            MAX_SETUP_TIME = 2000;
+            maxSetupTime = 2000;
             return connector;
         } else {
             throw new Exception("Remote broker has no registered connectors.");
@@ -129,7 +129,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         }
 
         // Multicasting may take longer to setup
-        MAX_SETUP_TIME = 8000;
+        maxSetupTime = 8000;
     }
 
     protected void startAllBrokers() throws Exception {
@@ -139,7 +139,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
             broker.start();
         }
 
-        Thread.sleep(MAX_SETUP_TIME);
+        Thread.sleep(maxSetupTime);
     }
 
     protected BrokerService createBroker(String brokerName) throws Exception {

@@ -32,9 +32,9 @@ public class MessageDispatch extends BaseCommand {
     protected Message message;
     protected int redeliveryCounter;
 
-    transient protected long deliverySequenceId;
-    transient protected Object consumer;
-    transient protected Runnable transmitCallback;
+    protected transient long deliverySequenceId;
+    protected transient Object consumer;
+    protected transient Runnable transmitCallback;
 
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;

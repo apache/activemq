@@ -34,7 +34,7 @@ import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
 public class SessionIdTest extends DataFileGeneratorTestSupport {
 
 
-    public static SessionIdTest SINGLETON = new SessionIdTest();
+    public static final SessionIdTest SINGLETON = new SessionIdTest();
 
     public Object createObject() throws Exception {
         SessionId info = new SessionId();

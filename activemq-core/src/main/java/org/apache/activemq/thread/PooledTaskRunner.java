@@ -61,8 +61,9 @@ class PooledTaskRunner implements TaskRunner {
             // queued=true, iterating=true : wakeup() called after task
             // execution was started.
 
-            if (queued || shutdown)
+            if (queued || shutdown) {
                 return;
+            }
 
             queued = true;
 
@@ -130,8 +131,9 @@ class PooledTaskRunner implements TaskRunner {
 
             // If we could not iterate all the items
             // then we need to re-queue.
-            if (!done)
+            if (!done) {
                 queued = true;
+            }
 
             if (queued) {
                 executor.execute(runable);

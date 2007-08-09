@@ -25,8 +25,8 @@ import org.apache.activemq.util.IOExceptionSupport;
 
 public abstract class DiscoveryAgentFactory {
 
-    static final private FactoryFinder discoveryAgentFinder = new FactoryFinder("META-INF/services/org/apache/activemq/transport/discoveryagent/");
-    static final private ConcurrentHashMap discoveryAgentFactorys = new ConcurrentHashMap();
+    private static final FactoryFinder DISCOVERY_AGENT_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/discoveryagent/");
+    private static final ConcurrentHashMap DISCOVERY_AGENT_FACTORYS = new ConcurrentHashMap();
 
     /**
      * @param uri
@@ -35,14 +35,15 @@ public abstract class DiscoveryAgentFactory {
      */
     private static DiscoveryAgentFactory findDiscoveryAgentFactory(URI uri) throws IOException {
         String scheme = uri.getScheme();
-        if (scheme == null)
+        if (scheme == null) {
             throw new IOException("DiscoveryAgent scheme not specified: [" + uri + "]");
-        DiscoveryAgentFactory daf = (DiscoveryAgentFactory)discoveryAgentFactorys.get(scheme);
+        }
+        DiscoveryAgentFactory daf = (DiscoveryAgentFactory)DISCOVERY_AGENT_FACTORYS.get(scheme);
         if (daf == null) {
             // Try to load if from a META-INF property.
             try {
-                daf = (DiscoveryAgentFactory)discoveryAgentFinder.newInstance(scheme);
-                discoveryAgentFactorys.put(scheme, daf);
+                daf = (DiscoveryAgentFactory)DISCOVERY_AGENT_FINDER.newInstance(scheme);
+                DISCOVERY_AGENT_FACTORYS.put(scheme, daf);
             } catch (Throwable e) {
                 throw IOExceptionSupport.create("DiscoveryAgent scheme NOT recognized: [" + scheme + "]", e);
             }
@@ -56,7 +57,7 @@ public abstract class DiscoveryAgentFactory {
 
     }
 
-    abstract protected DiscoveryAgent doCreateDiscoveryAgent(URI uri) throws IOException;
+    protected abstract DiscoveryAgent doCreateDiscoveryAgent(URI uri) throws IOException;
     // {
     // try {
     // String type = ( uri.getScheme() == null ) ? uri.getPath() :

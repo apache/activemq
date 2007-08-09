@@ -33,7 +33,7 @@ import org.apache.activemq.command.DataResponse;
 public class DataResponseTest extends ResponseTest {
 
 
-    public static DataResponseTest SINGLETON = new DataResponseTest();
+    public static final DataResponseTest SINGLETON = new DataResponseTest();
 
     public Object createObject() throws Exception {
         DataResponse info = new DataResponse();

@@ -37,18 +37,18 @@ import org.apache.activemq.selector.SelectorParser;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-abstract public class AbstractSubscription implements Subscription {
+public abstract class AbstractSubscription implements Subscription {
 
-    static private final Log log = LogFactory.getLog(AbstractSubscription.class);
+    private static final Log LOG = LogFactory.getLog(AbstractSubscription.class);
 
     protected Broker broker;
     protected ConnectionContext context;
     protected ConsumerInfo info;
-    final protected DestinationFilter destinationFilter;
+    protected final DestinationFilter destinationFilter;
+    protected final CopyOnWriteArrayList destinations = new CopyOnWriteArrayList();
     private BooleanExpression selectorExpression;
     private ObjectName objectName;
 
-    final protected CopyOnWriteArrayList destinations = new CopyOnWriteArrayList();
 
     public AbstractSubscription(Broker broker, ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
         this.broker = broker;
@@ -58,7 +58,7 @@ abstract public class AbstractSubscription implements Subscription {
         this.selectorExpression = parseSelector(info);
     }
 
-    static private BooleanExpression parseSelector(ConsumerInfo info) throws InvalidSelectorException {
+    private static BooleanExpression parseSelector(ConsumerInfo info) throws InvalidSelectorException {
         BooleanExpression rc = null;
         if (info.getSelector() != null) {
             rc = new SelectorParser().parse(info.getSelector());
@@ -89,7 +89,7 @@ abstract public class AbstractSubscription implements Subscription {
         try {
             return (selectorExpression == null || selectorExpression.matches(context)) && this.context.isAllowedToConsume(node);
         } catch (JMSException e) {
-            log.info("Selector failed to evaluate: " + e.getMessage(), e);
+            LOG.info("Selector failed to evaluate: " + e.getMessage(), e);
             return false;
         }
     }

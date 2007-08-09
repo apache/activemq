@@ -32,7 +32,10 @@ import javax.management.openmbean.TabularData;
 
 import junit.textui.TestRunner;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.advisory.TempDestDeleteTest;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A test case of the various MBeans in ActiveMQ. If you want to look at the
@@ -42,6 +45,7 @@ import org.apache.activemq.broker.BrokerService;
  * @version $Revision$
  */
 public class MBeanTest extends EmbeddedBrokerTestSupport {
+    private static final Log LOG = LogFactory.getLog(MBeanTest.class);
 
     private static boolean waitForKeyPress;
 

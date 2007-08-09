@@ -50,20 +50,20 @@ import org.apache.commons.logging.LogFactory;
  */
 public class AdvisoryBroker extends BrokerFilter {
 
-    private static final Log log = LogFactory.getLog(AdvisoryBroker.class);
+    private static final Log LOG = LogFactory.getLog(AdvisoryBroker.class);
+    private static final IdGenerator ID_GENERATOR = new IdGenerator();
 
     protected final ConcurrentHashMap connections = new ConcurrentHashMap();
     protected final ConcurrentHashMap consumers = new ConcurrentHashMap();
     protected final ConcurrentHashMap producers = new ConcurrentHashMap();
     protected final ConcurrentHashMap destinations = new ConcurrentHashMap();
-
-    static final private IdGenerator idGenerator = new IdGenerator();
     protected final ProducerId advisoryProducerId = new ProducerId();
-    final private LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
+    
+    private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
 
     public AdvisoryBroker(Broker next) {
         super(next);
-        advisoryProducerId.setConnectionId(idGenerator.generateId());
+        advisoryProducerId.setConnectionId(ID_GENERATOR.generateId());
     }
 
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
@@ -238,7 +238,7 @@ public class AdvisoryBroker extends BrokerFilter {
             ActiveMQTopic topic = AdvisorySupport.getExpiredMessageTopic(messageReference.getMessage().getDestination());
             fireAdvisory(context, topic, messageReference.getMessage());
         } catch (Exception e) {
-            log.warn("Failed to fire message expired advisory");
+            LOG.warn("Failed to fire message expired advisory");
         }
     }
 

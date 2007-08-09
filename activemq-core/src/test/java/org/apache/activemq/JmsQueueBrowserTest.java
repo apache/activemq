@@ -32,7 +32,7 @@ import org.apache.activemq.command.ActiveMQQueue;
  * @version $Revision: 1.4 $
  */
 public class JmsQueueBrowserTest extends JmsTestSupport {
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory
             .getLog(JmsQueueBrowserTest.class);
     
 
@@ -81,7 +81,7 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
         // There should be no more.
         boolean tooMany = false;
         while (enumeration.hasMoreElements()) {
-            log.info("Got extra message: " + ((TextMessage) enumeration.nextElement()).getText());
+            LOG.info("Got extra message: " + ((TextMessage) enumeration.nextElement()).getText());
             tooMany = true;
         }
         assertFalse(tooMany);

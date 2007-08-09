@@ -29,7 +29,7 @@ import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
  */
 public class WireFormatInfoTest extends DataFileGeneratorTestSupport {
 
-    public static WireFormatInfoTest SINGLETON = new WireFormatInfoTest();
+    public static final WireFormatInfoTest SINGLETON = new WireFormatInfoTest();
 
     public Object createObject() throws Exception {
         WireFormatInfo info = new WireFormatInfo();

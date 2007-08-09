@@ -42,7 +42,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class JournalTopicMessageStore extends JournalMessageStore implements TopicMessageStore {
 
-    private static final Log log = LogFactory.getLog(JournalTopicMessageStore.class);
+    private static final Log LOG = LogFactory.getLog(JournalTopicMessageStore.class);
 
     private TopicMessageStore longTermStore;
     private HashMap ackedLastAckLocations = new HashMap();
@@ -83,7 +83,7 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
      */
     public void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
                             final MessageId messageId) throws IOException {
-        final boolean debug = log.isDebugEnabled();
+        final boolean debug = LOG.isDebugEnabled();
 
         JournalTopicAck ack = new JournalTopicAck();
         ack.setDestination(destination);
@@ -97,20 +97,23 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
 
         final SubscriptionKey key = new SubscriptionKey(clientId, subscriptionName);
         if (!context.isInTransaction()) {
-            if (debug)
-                log.debug("Journalled acknowledge for: " + messageId + ", at: " + location);
+            if (debug) {
+                LOG.debug("Journalled acknowledge for: " + messageId + ", at: " + location);
+            }
             acknowledge(messageId, location, key);
         } else {
-            if (debug)
-                log.debug("Journalled transacted acknowledge for: " + messageId + ", at: " + location);
+            if (debug) {
+                LOG.debug("Journalled transacted acknowledge for: " + messageId + ", at: " + location);
+            }
             synchronized (this) {
                 inFlightTxLocations.add(location);
             }
             transactionStore.acknowledge(this, ack, location);
             context.getTransaction().addSynchronization(new Synchronization() {
                 public void afterCommit() throws Exception {
-                    if (debug)
-                        log.debug("Transacted acknowledge commit for: " + messageId + ", at: " + location);
+                    if (debug) {
+                        LOG.debug("Transacted acknowledge commit for: " + messageId + ", at: " + location);
+                    }
                     synchronized (JournalTopicMessageStore.this) {
                         inFlightTxLocations.remove(location);
                         acknowledge(messageId, location, key);
@@ -118,8 +121,9 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
                 }
 
                 public void afterRollback() throws Exception {
-                    if (debug)
-                        log.debug("Transacted acknowledge rollback for: " + messageId + ", at: " + location);
+                    if (debug) {
+                        LOG.debug("Transacted acknowledge rollback for: " + messageId + ", at: " + location);
+                    }
                     synchronized (JournalTopicMessageStore.this) {
                         inFlightTxLocations.remove(location);
                     }
@@ -137,7 +141,7 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
                 longTermStore.acknowledge(context, clientId, subscritionName, messageId);
             }
         } catch (Throwable e) {
-            log.debug("Could not replay acknowledge for message '" + messageId
+            LOG.debug("Could not replay acknowledge for message '" + messageId
                       + "'.  Message may have already been acknowledged. reason: " + e);
         }
     }

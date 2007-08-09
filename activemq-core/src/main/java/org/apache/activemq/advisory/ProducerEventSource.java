@@ -44,7 +44,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 359679 $
  */
 public class ProducerEventSource implements Service, MessageListener {
-    private static final Log log = LogFactory.getLog(ProducerEventSource.class);
+    private static final Log LOG = LogFactory.getLog(ProducerEventSource.class);
 
     private final Connection connection;
     private final ActiveMQDestination destination;
@@ -97,10 +97,10 @@ public class ProducerEventSource implements Service, MessageListener {
                     fireProducerEvent(new ProducerStoppedEvent(this, destination, (ProducerId)removeInfo.getObjectId(), count));
                 }
             } else {
-                log.warn("Unknown command: " + command);
+                LOG.warn("Unknown command: " + command);
             }
         } else {
-            log.warn("Unknown message type: " + message + ". Message ignored");
+            LOG.warn("Unknown message type: " + message + ". Message ignored");
         }
     }
 
@@ -111,9 +111,9 @@ public class ProducerEventSource implements Service, MessageListener {
                 Number n = (Number)value;
                 return n.intValue();
             }
-            log.warn("No producerCount header available on the message: " + message);
+            LOG.warn("No producerCount header available on the message: " + message);
         } catch (Exception e) {
-            log.warn("Failed to extract producerCount from message: " + message + ".Reason: " + e, e);
+            LOG.warn("Failed to extract producerCount from message: " + message + ".Reason: " + e, e);
         }
         return count;
     }

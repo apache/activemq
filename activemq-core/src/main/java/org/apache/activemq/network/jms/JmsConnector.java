@@ -44,7 +44,7 @@ import org.springframework.jndi.JndiTemplate;
  */
 public abstract class JmsConnector implements Service {
 
-    private static final Log log = LogFactory.getLog(JmsConnector.class);
+    private static final Log LOG = LogFactory.getLog(JmsConnector.class);
     protected JndiTemplate jndiLocalTemplate;
     protected JndiTemplate jndiOutboundTemplate;
     protected JmsMesageConvertor inboundMessageConvertor;
@@ -63,7 +63,7 @@ public abstract class JmsConnector implements Service {
 
     protected LRUCache replyToBridges = createLRUCache();
 
-    static private LRUCache createLRUCache() {
+    private static LRUCache createLRUCache() {
         return new LRUCache() {
             private static final long serialVersionUID = -7446792754185879286L;
 
@@ -75,9 +75,9 @@ public abstract class JmsConnector implements Service {
                     DestinationBridge bridge = (DestinationBridge)lru.getValue();
                     try {
                         bridge.stop();
-                        log.info("Expired bridge: " + bridge);
+                        LOG.info("Expired bridge: " + bridge);
                     } catch (Exception e) {
-                        log.warn("stopping expired bridge" + bridge + " caused an exception", e);
+                        LOG.warn("stopping expired bridge" + bridge + " caused an exception", e);
                     }
                 }
                 return false;
@@ -118,7 +118,7 @@ public abstract class JmsConnector implements Service {
                 DestinationBridge bridge = (DestinationBridge)outboundBridges.get(i);
                 bridge.start();
             }
-            log.info("JMS Connector " + getName() + " Started");
+            LOG.info("JMS Connector " + getName() + " Started");
         }
     }
 
@@ -132,7 +132,7 @@ public abstract class JmsConnector implements Service {
                 DestinationBridge bridge = (DestinationBridge)outboundBridges.get(i);
                 bridge.stop();
             }
-            log.info("JMS Connector " + getName() + " Stopped");
+            LOG.info("JMS Connector " + getName() + " Stopped");
         }
     }
 
@@ -300,7 +300,7 @@ public abstract class JmsConnector implements Service {
 
     static int nextId;
 
-    static private synchronized int getNextId() {
+    private static synchronized int getNextId() {
         return nextId++;
     }
 

@@ -22,7 +22,7 @@ import java.io.IOException;
  * @version $Revision: 1.5 $
  */
 public class TransportFilter implements TransportListener, Transport {
-    final protected Transport next;
+    protected final Transport next;
     protected TransportListener transportListener;
 
     public TransportFilter(Transport next) {
@@ -35,10 +35,11 @@ public class TransportFilter implements TransportListener, Transport {
 
     public void setTransportListener(TransportListener channelListener) {
         this.transportListener = channelListener;
-        if (channelListener == null)
+        if (channelListener == null) {
             next.setTransportListener(null);
-        else
+        } else {
             next.setTransportListener(this);
+        }
     }
 
     /**
@@ -46,10 +47,12 @@ public class TransportFilter implements TransportListener, Transport {
      * @throws IOException if the next channel has not been set.
      */
     public void start() throws Exception {
-        if (next == null)
+        if (next == null) {
             throw new IOException("The next channel has not been set.");
-        if (transportListener == null)
+        }
+        if (transportListener == null) {
             throw new IOException("The command listener has not been set.");
+        }
         next.start();
     }
 

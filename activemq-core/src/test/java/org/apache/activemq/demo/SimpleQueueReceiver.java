@@ -39,7 +39,7 @@ import javax.naming.NamingException;
 
 public class SimpleQueueReceiver {
 
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(SimpleQueueReceiver.class);
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(SimpleQueueReceiver.class);
 
     /**
      * Main method.
@@ -60,11 +60,11 @@ public class SimpleQueueReceiver {
          * Read queue name from command line and display it.
          */
         if (args.length != 1) {
-            log.info("Usage: java " + "SimpleQueueReceiver <queue-name>");
+            LOG.info("Usage: java " + "SimpleQueueReceiver <queue-name>");
             System.exit(1);
         }
         queueName = args[0];
-        log.info("Queue name is " + queueName);
+        LOG.info("Queue name is " + queueName);
 
         /*
          * Create a JNDI API InitialContext object if none exists yet.
@@ -72,7 +72,7 @@ public class SimpleQueueReceiver {
         try {
             jndiContext = new InitialContext();
         } catch (NamingException e) {
-            log.info("Could not create JNDI API " + "context: " + e.toString());
+            LOG.info("Could not create JNDI API " + "context: " + e.toString());
             System.exit(1);
         }
 
@@ -83,7 +83,7 @@ public class SimpleQueueReceiver {
             queueConnectionFactory = (QueueConnectionFactory)jndiContext.lookup("QueueConnectionFactory");
             queue = (Queue)jndiContext.lookup(queueName);
         } catch (NamingException e) {
-            log.info("JNDI API lookup failed: " + e.toString());
+            LOG.info("JNDI API lookup failed: " + e.toString());
             System.exit(1);
         }
 
@@ -104,14 +104,14 @@ public class SimpleQueueReceiver {
                 if (m != null) {
                     if (m instanceof TextMessage) {
                         message = (TextMessage)m;
-                        log.info("Reading message: " + message.getText());
+                        LOG.info("Reading message: " + message.getText());
                     } else {
                         break;
                     }
                 }
             }
         } catch (JMSException e) {
-            log.info("Exception occurred: " + e.toString());
+            LOG.info("Exception occurred: " + e.toString());
         } finally {
             if (queueConnection != null) {
                 try {

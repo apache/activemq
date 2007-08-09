@@ -33,7 +33,7 @@ import org.apache.activemq.command.FlushCommand;
 public class FlushCommandTest extends BaseCommandTestSupport {
 
 
-    public static FlushCommandTest SINGLETON = new FlushCommandTest();
+    public static final FlushCommandTest SINGLETON = new FlushCommandTest();
 
     public Object createObject() throws Exception {
         FlushCommand info = new FlushCommand();

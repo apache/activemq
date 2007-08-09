@@ -35,7 +35,7 @@ public class BooleanStreamTest extends TestCase {
     int numberOfBytes = 8 * 200;
 
     interface BooleanValueSet {
-        public boolean getBooleanValueFor(int index, int count);
+        boolean getBooleanValueFor(int index, int count);
     }
 
     public void testBooleanMarshallingUsingAllTrue() throws Exception {

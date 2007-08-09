@@ -18,7 +18,7 @@ package org.apache.activemq.broker.region;
 
 public interface LockOwner {
 
-    public static final LockOwner HIGH_PRIORITY_LOCK_OWNER = new LockOwner() {
+    LockOwner HIGH_PRIORITY_LOCK_OWNER = new LockOwner() {
         public int getLockPriority() {
             return Integer.MAX_VALUE;
         }

@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -29,6 +29,6 @@ public interface DatabaseLocker extends Service {
      * Used by a timer to keep alive the lock.
      * If the method returns false the broker should be terminated
      */
-    public boolean keepAlive();
+    boolean keepAlive();
     
 }

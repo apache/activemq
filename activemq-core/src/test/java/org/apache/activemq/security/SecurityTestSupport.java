@@ -138,8 +138,9 @@ public class SecurityTestSupport extends JmsTestSupport {
         }
 
         Message m = consumer.receive(1000);
-        if (fail)
+        if (fail) {
             assertNull(m);
+        }
         else {
             assertNotNull(m);
             assertEquals("0", ((TextMessage)m).getText());
@@ -158,11 +159,13 @@ public class SecurityTestSupport extends JmsTestSupport {
         MessageConsumer consumer = null;
         try {
             consumer = session.createConsumer(destination);
-            if (fail)
+            if (fail) {
                 fail("Expected failure due to security constraint.");
+            }
         } catch (JMSException e) {
-            if (fail && e.getCause() instanceof SecurityException)
+            if (fail && e.getCause() instanceof SecurityException) {
                 return null;
+            }
             throw e;
         }
 

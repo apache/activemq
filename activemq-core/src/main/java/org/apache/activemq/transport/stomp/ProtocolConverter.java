@@ -56,8 +56,9 @@ import org.apache.activemq.util.LongSequenceGenerator;
  */
 public class ProtocolConverter {
 
-    private static final IdGenerator connectionIdGenerator = new IdGenerator();
-    private final ConnectionId connectionId = new ConnectionId(connectionIdGenerator.generateId());
+    private static final IdGenerator CONNECTION_ID_GENERATOR = new IdGenerator();
+
+    private final ConnectionId connectionId = new ConnectionId(CONNECTION_ID_GENERATOR.generateId());
     private final SessionId sessionId = new SessionId(connectionId, -1);
     private final ProducerId producerId = new ProducerId(sessionId, 1);
 
@@ -129,26 +130,27 @@ public class ProtocolConverter {
             }
 
             String action = command.getAction();
-            if (action.startsWith(Stomp.Commands.SEND))
+            if (action.startsWith(Stomp.Commands.SEND)) {
                 onStompSend(command);
-            else if (action.startsWith(Stomp.Commands.ACK))
+            } else if (action.startsWith(Stomp.Commands.ACK)) {
                 onStompAck(command);
-            else if (action.startsWith(Stomp.Commands.BEGIN))
+            } else if (action.startsWith(Stomp.Commands.BEGIN)) {
                 onStompBegin(command);
-            else if (action.startsWith(Stomp.Commands.COMMIT))
+            } else if (action.startsWith(Stomp.Commands.COMMIT)) {
                 onStompCommit(command);
-            else if (action.startsWith(Stomp.Commands.ABORT))
+            } else if (action.startsWith(Stomp.Commands.ABORT)) {
                 onStompAbort(command);
-            else if (action.startsWith(Stomp.Commands.SUBSCRIBE))
+            } else if (action.startsWith(Stomp.Commands.SUBSCRIBE)) {
                 onStompSubscribe(command);
-            else if (action.startsWith(Stomp.Commands.UNSUBSCRIBE))
+            } else if (action.startsWith(Stomp.Commands.UNSUBSCRIBE)) {
                 onStompUnsubscribe(command);
-            else if (action.startsWith(Stomp.Commands.CONNECT))
+            } else if (action.startsWith(Stomp.Commands.CONNECT)) {
                 onStompConnect(command);
-            else if (action.startsWith(Stomp.Commands.DISCONNECT))
+            } else if (action.startsWith(Stomp.Commands.DISCONNECT)) {
                 onStompDisconnect(command);
-            else
+            } else {
                 throw new ProtocolException("Unknown STOMP action: " + action);
+            }
 
         } catch (ProtocolException e) {
 
@@ -169,8 +171,9 @@ public class ProtocolConverter {
             StompFrame errorMessage = new StompFrame(Stomp.Responses.ERROR, headers, baos.toByteArray());
             sendToStomp(errorMessage);
 
-            if (e.isFatal())
+            if (e.isFatal()) {
                 getTransportFilter().onException(e);
+            }
         }
     }
 
@@ -189,8 +192,9 @@ public class ProtocolConverter {
 
         if (stompTx != null) {
             TransactionId activemqTx = (TransactionId)transactions.get(stompTx);
-            if (activemqTx == null)
+            if (activemqTx == null) {
                 throw new ProtocolException("Invalid transaction id: " + stompTx);
+            }
             message.setTransactionId(activemqTx);
         }
 
@@ -210,15 +214,17 @@ public class ProtocolConverter {
 
         Map headers = command.getHeaders();
         String messageId = (String)headers.get(Stomp.Headers.Ack.MESSAGE_ID);
-        if (messageId == null)
+        if (messageId == null) {
             throw new ProtocolException("ACK received without a message-id to acknowledge!");
+        }
 
         TransactionId activemqTx = null;
         String stompTx = (String)headers.get(Stomp.Headers.TRANSACTION);
         if (stompTx != null) {
             activemqTx = (TransactionId)transactions.get(stompTx);
-            if (activemqTx == null)
+            if (activemqTx == null) {
                 throw new ProtocolException("Invalid transaction id: " + stompTx);
+            }
         }
 
         boolean acked = false;
@@ -233,8 +239,9 @@ public class ProtocolConverter {
             }
         }
 
-        if (!acked)
+        if (!acked) {
             throw new ProtocolException("Unexpected ACK received for message-id [" + messageId + "]");
+        }
 
     }
 
@@ -318,7 +325,7 @@ public class ProtocolConverter {
         String subscriptionId = (String)headers.get(Stomp.Headers.Subscribe.ID);
         String destination = (String)headers.get(Stomp.Headers.Subscribe.DESTINATION);
 
-        ActiveMQDestination actual_dest = frameTranslator.convertDestination(destination);
+        ActiveMQDestination actualDest = frameTranslator.convertDestination(destination);
         ConsumerId id = new ConsumerId(sessionId, consumerIdGenerator.getNextSequenceId());
         ConsumerInfo consumerInfo = new ConsumerInfo(id);
         consumerInfo.setPrefetchSize(1000);
@@ -332,7 +339,7 @@ public class ProtocolConverter {
         consumerInfo.setDestination(frameTranslator.convertDestination(destination));
 
         StompSubscription stompSubscription = new StompSubscription(this, subscriptionId, consumerInfo);
-        stompSubscription.setDestination(actual_dest);
+        stompSubscription.setDestination(actualDest);
 
         String ackMode = (String)headers.get(Stomp.Headers.Subscribe.ACK_MODE);
         if (Stomp.Headers.Subscribe.AckModeValues.CLIENT.equals(ackMode)) {
@@ -352,8 +359,9 @@ public class ProtocolConverter {
 
         ActiveMQDestination destination = null;
         Object o = headers.get(Stomp.Headers.Unsubscribe.DESTINATION);
-        if (o != null)
+        if (o != null) {
             destination = frameTranslator.convertDestination((String)o);
+        }
 
         String subscriptionId = (String)headers.get(Stomp.Headers.Unsubscribe.ID);
 
@@ -396,10 +404,11 @@ public class ProtocolConverter {
         IntrospectionSupport.setProperties(connectionInfo, headers, "activemq.");
 
         connectionInfo.setConnectionId(connectionId);
-        if (clientId != null)
+        if (clientId != null) {
             connectionInfo.setClientId(clientId);
-        else
+        } else {
             connectionInfo.setClientId("" + connectionInfo.getConnectionId().toString());
+        }
 
         connectionInfo.setResponseRequired(true);
         connectionInfo.setUserName(login);

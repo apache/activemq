@@ -35,7 +35,7 @@ import org.apache.activemq.filter.DestinationFilter;
  */
 public class LastImageSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy {
 
-    volatile private MessageReference lastImage;
+    private volatile MessageReference lastImage;
 
     public boolean add(ConnectionContext context, MessageReference node) throws Exception {
         lastImage = node;

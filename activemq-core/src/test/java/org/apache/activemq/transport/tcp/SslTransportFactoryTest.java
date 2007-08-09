@@ -28,7 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class SslTransportFactoryTest extends TestCase {
-    private static final transient Log log = LogFactory.getLog(SslTransportFactoryTest.class);
+    private static final Log LOG = LogFactory.getLog(SslTransportFactoryTest.class);
 
     private SslTransportFactory factory;
     private boolean verbose;
@@ -111,11 +111,11 @@ public class SslTransportFactoryTest extends TestCase {
             }
 
             if (verbose) {
-                log.info("");
-                log.info("Iteration: " + i);
-                log.info("Map settings: " + options);
+                LOG.info("");
+                LOG.info("Iteration: " + i);
+                LOG.info("Map settings: " + options);
                 for (int x = 0; x < optionSettings.length; x++) {
-                    log.info("optionSetting[" + x + "] = " + optionSettings[x]);
+                    LOG.info("optionSetting[" + x + "] = " + optionSettings[x]);
                 }
             }
 
@@ -129,7 +129,7 @@ public class SslTransportFactoryTest extends TestCase {
             }
 
             if (socketStub.getWantClientAuthStatus() != optionSettings[2]) {
-                log.info("sheiite");
+                LOG.info("sheiite");
             }
 
             assertEquals("wantClientAuth was not properly set for iteration: " + i, optionSettings[0],

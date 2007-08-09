@@ -99,15 +99,20 @@ import org.apache.commons.logging.LogFactory;
 
 public class ActiveMQConnection implements Connection, TopicConnection, QueueConnection, StatsCapable, Closeable, StreamConnection, TransportListener {
 
-    private TaskRunnerFactory sessionTaskRunner = new TaskRunnerFactory("ActiveMQ Session Task", ThreadPriorities.INBOUND_CLIENT_SESSION, true, 1000);
-    private final ThreadPoolExecutor asyncConnectionThread;
-
-    private static final Log LOG = LogFactory.getLog(ActiveMQConnection.class);
-    private static final IdGenerator connectionIdGenerator = new IdGenerator();
-
     public static final String DEFAULT_USER = ActiveMQConnectionFactory.DEFAULT_USER;
     public static final String DEFAULT_PASSWORD = ActiveMQConnectionFactory.DEFAULT_PASSWORD;
     public static final String DEFAULT_BROKER_URL = ActiveMQConnectionFactory.DEFAULT_BROKER_URL;
+
+    private static final Log LOG = LogFactory.getLog(ActiveMQConnection.class);
+    private static final IdGenerator CONNECTION_ID_GENERATOR = new IdGenerator();
+
+    public final ConcurrentHashMap activeTempDestinations = new ConcurrentHashMap();
+
+    protected boolean dispatchAsync;
+    protected boolean alwaysSessionAsync = true;
+
+    private TaskRunnerFactory sessionTaskRunner = new TaskRunnerFactory("ActiveMQ Session Task", ThreadPriorities.INBOUND_CLIENT_SESSION, true, 1000);
+    private final ThreadPoolExecutor asyncConnectionThread;
 
     // Connection state variables
     private final ConnectionInfo info;
@@ -127,8 +132,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean copyMessageOnSend = true;
     private boolean useCompression;
     private boolean objectMessageSerializationDefered;
-    protected boolean dispatchAsync;
-    protected boolean alwaysSessionAsync = true;
     private boolean useAsyncSend;
     private boolean optimizeAcknowledge;
     private boolean nestedMapAndListEnabled = true;
@@ -163,7 +166,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private final LongSequenceGenerator producerIdGenerator = new LongSequenceGenerator();
     private final LongSequenceGenerator tempDestinationIdGenerator = new LongSequenceGenerator();
     private final LongSequenceGenerator localTransactionIdGenerator = new LongSequenceGenerator();
-    final ConcurrentHashMap activeTempDestinations = new ConcurrentHashMap();
 
     private AdvisoryConsumer advisoryConsumer;
     private final CountDownLatch brokerInfoReceived = new CountDownLatch(1);
@@ -201,7 +203,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         });
         // asyncConnectionThread.allowCoreThreadTimeOut(true);
 
-        this.info = new ConnectionInfo(new ConnectionId(connectionIdGenerator.generateId()));
+        this.info = new ConnectionInfo(new ConnectionId(CONNECTION_ID_GENERATOR.generateId()));
         this.info.setManageable(true);
         this.connectionSessionId = new SessionId(info.getConnectionId(), -1);
 

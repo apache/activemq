@@ -24,5 +24,5 @@ import java.net.URI;
  * @version $Revision$
 */
 public interface BrokerFactoryHandler {
-    public BrokerService createBroker(URI brokerURI) throws Exception;
+    BrokerService createBroker(URI brokerURI) throws Exception;
 }

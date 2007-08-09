@@ -29,6 +29,6 @@ public interface PersistenceAdapterFactory {
      * Creates a persistence Adapter that can use a given directory to store it's data.
      * @throws IOException 
      */
-    public PersistenceAdapter createPersistenceAdapter() throws IOException;
+    PersistenceAdapter createPersistenceAdapter() throws IOException;
     
 }

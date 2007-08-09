@@ -33,7 +33,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.4 $
  */
 class KahaTransaction {
-    private static final Log log = LogFactory.getLog(KahaTransaction.class);
+    private static final Log LOG = LogFactory.getLog(KahaTransaction.class);
     protected List list = new ArrayList();
 
     void add(KahaMessageStore store, BaseCommand command) {

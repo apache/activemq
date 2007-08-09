@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class ReliableTransportTest extends TestCase {
 
-    protected static final Log log = LogFactory.getLog(ReliableTransportTest.class);
+    private static final Log LOG = LogFactory.getLog(ReliableTransportTest.class);
 
     protected ReliableTransport transport;
     protected StubTransportListener listener = new StubTransportListener();
@@ -49,7 +49,7 @@ public class ReliableTransportTest extends TestCase {
         transport.setExpectedCounter(value);
 
         for (int i = 0; i < 10; i++) {
-            log.info("command: " + i + " = " + value);
+            LOG.info("command: " + i + " = " + value);
             sequenceNumbers[i] = value++;
         }
 
@@ -117,7 +117,7 @@ public class ReliableTransportTest extends TestCase {
         } else {
             assertTrue("Should have received an exception!", exceptions.size() > 0);
             Exception e = (Exception)exceptions.remove();
-            log.info("Caught expected response: " + e);
+            LOG.info("Caught expected response: " + e);
         }
     }
 

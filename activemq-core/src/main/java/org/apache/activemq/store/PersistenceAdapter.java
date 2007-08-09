@@ -40,7 +40,7 @@ public interface PersistenceAdapter extends Service {
      *
      * @return active destinations
      */
-    public Set<ActiveMQDestination> getDestinations();
+    Set<ActiveMQDestination> getDestinations();
 
     /**
      * Factory method to create a new queue message store with the given destination name
@@ -48,7 +48,7 @@ public interface PersistenceAdapter extends Service {
      * @return the message store
      * @throws IOException 
      */
-    public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException;
+    MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException;
 
     /**
      * Factory method to create a new topic message store with the given destination name
@@ -56,14 +56,14 @@ public interface PersistenceAdapter extends Service {
      * @return the topic message store
      * @throws IOException 
      */
-    public TopicMessageStore createTopicMessageStore(ActiveMQTopic destination) throws IOException;
+    TopicMessageStore createTopicMessageStore(ActiveMQTopic destination) throws IOException;
 
     /**
      * Factory method to create a new persistent prepared transaction store for XA recovery
      * @return transaction store
      * @throws IOException 
      */
-    public TransactionStore createTransactionStore() throws IOException;
+    TransactionStore createTransactionStore() throws IOException;
 
     /**
      * This method starts a transaction on the persistent storage - which is nothing to
@@ -77,7 +77,7 @@ public interface PersistenceAdapter extends Service {
      * @param context 
      * @throws IOException 
      */
-    public void beginTransaction(ConnectionContext context) throws IOException;
+    void beginTransaction(ConnectionContext context) throws IOException;
 
 
     /**
@@ -87,7 +87,7 @@ public interface PersistenceAdapter extends Service {
      *
      * @see PersistenceAdapter#beginTransaction(ConnectionContext context)
      */
-    public void commitTransaction(ConnectionContext context) throws IOException;
+    void commitTransaction(ConnectionContext context) throws IOException;
 
     /**
      * Rollback a persistence transaction
@@ -96,38 +96,38 @@ public interface PersistenceAdapter extends Service {
      *
      * @see PersistenceAdapter#beginTransaction(ConnectionContext context)
      */
-    public void rollbackTransaction(ConnectionContext context) throws IOException;
+    void rollbackTransaction(ConnectionContext context) throws IOException;
     
     /**
      * 
      * @return last broker sequence
      * @throws IOException
      */
-    public long getLastMessageBrokerSequenceId() throws IOException;
+    long getLastMessageBrokerSequenceId() throws IOException;
     
     /**
      * Delete's all the messages in the persistent store.
      * 
      * @throws IOException
      */
-    public void deleteAllMessages() throws IOException;
+    void deleteAllMessages() throws IOException;
         
     /**
      * @param usageManager The UsageManager that is controlling the broker's memory usage.
      */
-    public void setUsageManager(UsageManager usageManager);
+    void setUsageManager(UsageManager usageManager);
     
     /**
      * Set the name of the broker using the adapter
      * @param brokerName
      */
-    public void setBrokerName(String brokerName);
+    void setBrokerName(String brokerName);
     
     /**
      * Set the directory where any data files should be created
      * @param dir
      */
-    public void setDirectory(File dir);
+    void setDirectory(File dir);
     
     /**
      * checkpoint any
@@ -135,5 +135,5 @@ public interface PersistenceAdapter extends Service {
      * @throws IOException 
      *
      */
-    public void checkpoint(boolean sync) throws IOException;
+    void checkpoint(boolean sync) throws IOException;
 }

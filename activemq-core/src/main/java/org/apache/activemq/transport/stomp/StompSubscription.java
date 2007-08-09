@@ -97,8 +97,9 @@ public class StompSubscription {
             String id = (String)entry.getKey();
             MessageId msgid = (MessageId)entry.getValue();
 
-            if (ack.getFirstMessageId() == null)
+            if (ack.getFirstMessageId() == null) {
                 ack.setFirstMessageId(msgid);
+            }
 
             iter.remove();
             count++;

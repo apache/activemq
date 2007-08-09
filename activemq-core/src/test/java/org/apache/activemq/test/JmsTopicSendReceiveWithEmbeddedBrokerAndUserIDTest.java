@@ -24,16 +24,18 @@ import javax.jms.Message;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.security.SimpleSecurityBrokerSystemTest;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
- * 
  * @version $Revision: 1.1 $
  */
-public class JmsTopicSendReceiveWithEmbeddedBrokerAndUserIDTest extends
-        JmsTopicSendReceiveWithTwoConnectionsAndEmbeddedBrokerTest {
+public class JmsTopicSendReceiveWithEmbeddedBrokerAndUserIDTest extends JmsTopicSendReceiveWithTwoConnectionsAndEmbeddedBrokerTest {
+    private static final Log log = LogFactory.getLog(JmsTopicSendReceiveWithEmbeddedBrokerAndUserIDTest.class);
 
     protected String userName = "James";
-    
+
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         ActiveMQConnectionFactory answer = super.createConnectionFactory();
         answer.setUserName(userName);
@@ -50,7 +52,7 @@ public class JmsTopicSendReceiveWithEmbeddedBrokerAndUserIDTest extends
 
         // lets assert that the user ID is set
         for (Iterator iter = receivedMessages.iterator(); iter.hasNext();) {
-            Message message = (Message) iter.next();
+            Message message = (Message)iter.next();
             String userID = message.getStringProperty("JMSXUserID");
 
             log.info("Received message with userID: " + userID);

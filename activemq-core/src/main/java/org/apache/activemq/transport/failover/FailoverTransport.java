@@ -52,7 +52,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class FailoverTransport implements CompositeTransport {
 
-    private static final Log log = LogFactory.getLog(FailoverTransport.class);
+    private static final Log LOG = LogFactory.getLog(FailoverTransport.class);
 
     private TransportListener transportListener;
     private boolean disposed;
@@ -166,7 +166,7 @@ public class FailoverTransport implements CompositeTransport {
                             for (int i = 0; iter.hasNext() && connectedTransport == null && !disposed; i++) {
                                 URI uri = (URI)iter.next();
                                 try {
-                                    log.debug("Attempting connect to: " + uri);
+                                    LOG.debug("Attempting connect to: " + uri);
                                     Transport t = TransportFactory.compositeConnect(uri);
                                     t.setTransportListener(myTransportListener);
                                     t.start();
@@ -175,7 +175,7 @@ public class FailoverTransport implements CompositeTransport {
                                         restoreTransport(t);
                                     }
 
-                                    log.debug("Connection established");
+                                    LOG.debug("Connection established");
                                     reconnectDelay = initialReconnectDelay;
                                     connectedTransportURI = uri;
                                     connectedTransport = t;
@@ -184,18 +184,18 @@ public class FailoverTransport implements CompositeTransport {
                                     if (transportListener != null) {
                                         transportListener.transportResumed();
                                     }
-                                    log.info("Successfully reconnected to " + uri);
+                                    LOG.info("Successfully reconnected to " + uri);
                                     return false;
                                 } catch (Exception e) {
                                     failure = e;
-                                    log.debug("Connect fail to: " + uri + ", reason: " + e);
+                                    LOG.debug("Connect fail to: " + uri + ", reason: " + e);
                                 }
                             }
                         }
                     }
 
                     if (maxReconnectAttempts > 0 && ++connectFailures >= maxReconnectAttempts) {
-                        log.error("Failed to connect to transport after: " + connectFailures + " attempt(s)");
+                        LOG.error("Failed to connect to transport after: " + connectFailures + " attempt(s)");
                         connectionFailure = failure;
                         reconnectMutex.notifyAll();
                         return false;
@@ -204,7 +204,7 @@ public class FailoverTransport implements CompositeTransport {
 
                 if (!disposed) {
 
-                    log.debug("Waiting " + reconnectDelay + " ms before attempting connection. ");
+                    LOG.debug("Waiting " + reconnectDelay + " ms before attempting connection. ");
                     synchronized (sleepMutex) {
                         try {
                             sleepMutex.wait(reconnectDelay);
@@ -216,8 +216,9 @@ public class FailoverTransport implements CompositeTransport {
                     if (useExponentialBackOff) {
                         // Exponential increment of reconnect delay.
                         reconnectDelay *= backOffMultiplier;
-                        if (reconnectDelay > maxReconnectDelay)
+                        if (reconnectDelay > maxReconnectDelay) {
                             reconnectDelay = maxReconnectDelay;
+                        }
                     }
                 }
                 return !disposed;
@@ -231,7 +232,7 @@ public class FailoverTransport implements CompositeTransport {
             transportListener.transportInterupted();
         }
         synchronized (reconnectMutex) {
-            log.warn("Transport failed, attempting to automatically reconnect due to: " + e, e);
+            LOG.warn("Transport failed, attempting to automatically reconnect due to: " + e, e);
             if (connectedTransport != null) {
                 initialized = false;
                 ServiceSupport.dispose(connectedTransport);
@@ -244,9 +245,10 @@ public class FailoverTransport implements CompositeTransport {
 
     public void start() throws Exception {
         synchronized (reconnectMutex) {
-            log.debug("Started.");
-            if (started)
+            LOG.debug("Started.");
+            if (started) {
                 return;
+            }
             started = true;
             if (connectedTransport != null) {
                 stateTracker.restore(connectedTransport);
@@ -256,9 +258,10 @@ public class FailoverTransport implements CompositeTransport {
 
     public void stop() throws Exception {
         synchronized (reconnectMutex) {
-            log.debug("Stopped.");
-            if (!started)
+            LOG.debug("Stopped.");
+            if (!started) {
                 return;
+            }
             started = false;
             disposed = true;
 
@@ -348,12 +351,12 @@ public class FailoverTransport implements CompositeTransport {
 
                         // Wait for transport to be connected.
                         while (connectedTransport == null && !disposed && connectionFailure == null) {
-                            log.trace("Waiting for transport to reconnect.");
+                            LOG.trace("Waiting for transport to reconnect.");
                             try {
                                 reconnectMutex.wait(1000);
                             } catch (InterruptedException e) {
                                 Thread.currentThread().interrupt();
-                                log.debug("Interupted: " + e, e);
+                                LOG.debug("Interupted: " + e, e);
                             }
                         }
 
@@ -408,7 +411,7 @@ public class FailoverTransport implements CompositeTransport {
                         return;
 
                     } catch (IOException e) {
-                        log.debug("Send oneway attempt: " + i + " failed.");
+                        LOG.debug("Send oneway attempt: " + i + " failed.");
                         handleTransportFailure(e);
                     }
                 }
@@ -420,8 +423,9 @@ public class FailoverTransport implements CompositeTransport {
         }
         if (!disposed) {
             if (error != null) {
-                if (error instanceof IOException)
+                if (error instanceof IOException) {
                     throw (IOException)error;
+                }
                 throw IOExceptionSupport.create(error);
             }
         }
@@ -441,8 +445,9 @@ public class FailoverTransport implements CompositeTransport {
 
     public void add(URI u[]) {
         for (int i = 0; i < u.length; i++) {
-            if (!uris.contains(u[i]))
+            if (!uris.contains(u[i])) {
                 uris.add(u[i]);
+            }
         }
         reconnect();
     }
@@ -457,17 +462,18 @@ public class FailoverTransport implements CompositeTransport {
     public void add(String u) {
         try {
             URI uri = new URI(u);
-            if (!uris.contains(uri))
+            if (!uris.contains(uri)) {
                 uris.add(uri);
+            }
 
             reconnect();
         } catch (Exception e) {
-            log.error("Failed to parse URI: " + u);
+            LOG.error("Failed to parse URI: " + u);
         }
     }
 
     public void reconnect() {
-        log.debug("Waking up reconnect task");
+        LOG.debug("Waking up reconnect task");
         try {
             reconnectTask.wakeup();
         } catch (InterruptedException e) {

@@ -23,36 +23,36 @@ package org.apache.activemq.kaha;
  */
 public interface StoreEntry {
 
-    public abstract StoreLocation getKeyDataItem();
+    StoreLocation getKeyDataItem();
 
-    public abstract StoreLocation getValueDataItem();
+    StoreLocation getValueDataItem();
 
     /**
      * @return next item
      */
-    public abstract long getNextItem();
+    long getNextItem();
 
     /**
      * @return Returns the keyFile.
      */
-    public abstract int getKeyFile();
+    int getKeyFile();
 
     /**
      * @return Returns the valueFile.
      */
-    public abstract int getValueFile();
+    int getValueFile();
 
     /**
      * @return Returns the valueOffset.
      */
-    public abstract long getValueOffset();
+    long getValueOffset();
 
     /**
      * @return Returns the offset.
      */
-    public abstract long getOffset();
+    long getOffset();
 
-    public abstract int getKeySize();
+    int getKeySize();
 
-    public abstract int getValueSize();
+    int getValueSize();
 }

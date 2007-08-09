@@ -54,11 +54,11 @@ public interface WireFormat {
     /**
      * @param the version of the wire format
      */
-    public void setVersion(int version);
+    void setVersion(int version);
     
     /**
      * @return the version of the wire format
      */
-    public int getVersion();
+    int getVersion();
     
 }

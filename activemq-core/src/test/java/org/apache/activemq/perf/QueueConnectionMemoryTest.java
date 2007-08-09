@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.3 $
  */
 public class QueueConnectionMemoryTest extends SimpleQueueTest {
-    private static final transient Log log = LogFactory.getLog(QueueConnectionMemoryTest.class);
+    private static final transient Log LOG = LogFactory.getLog(QueueConnectionMemoryTest.class);
 
     protected void setUp() throws Exception {
     }
@@ -69,7 +69,7 @@ public class QueueConnectionMemoryTest extends SimpleQueueTest {
             Session s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             Destination dest = s.createTemporaryQueue();
             MessageConsumer consumer = s.createConsumer(dest);
-            log.debug("Created connnection: " + i);
+            LOG.debug("Created connnection: " + i);
             Thread.sleep(1000);
         }
 

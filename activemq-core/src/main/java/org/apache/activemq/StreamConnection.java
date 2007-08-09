@@ -36,21 +36,21 @@ import javax.jms.Topic;
  */
 public interface StreamConnection extends Connection {
 
-    public InputStream createInputStream(Destination dest) throws JMSException;
+    InputStream createInputStream(Destination dest) throws JMSException;
 
-    public InputStream createInputStream(Destination dest, String messageSelector) throws JMSException;
+    InputStream createInputStream(Destination dest, String messageSelector) throws JMSException;
 
-    public InputStream createInputStream(Destination dest, String messageSelector, boolean noLocal) throws JMSException;
+    InputStream createInputStream(Destination dest, String messageSelector, boolean noLocal) throws JMSException;
 
-    public InputStream createDurableInputStream(Topic dest, String name) throws JMSException;
+    InputStream createDurableInputStream(Topic dest, String name) throws JMSException;
 
-    public InputStream createDurableInputStream(Topic dest, String name, String messageSelector) throws JMSException;
+    InputStream createDurableInputStream(Topic dest, String name, String messageSelector) throws JMSException;
 
-    public InputStream createDurableInputStream(Topic dest, String name, String messageSelector, boolean noLocal) throws JMSException;
+    InputStream createDurableInputStream(Topic dest, String name, String messageSelector, boolean noLocal) throws JMSException;
 
-    public OutputStream createOutputStream(Destination dest) throws JMSException;
+    OutputStream createOutputStream(Destination dest) throws JMSException;
 
-    public OutputStream createOutputStream(Destination dest, Map streamProperties, int deliveryMode, int priority, long timeToLive) throws JMSException;
+    OutputStream createOutputStream(Destination dest, Map streamProperties, int deliveryMode, int priority, long timeToLive) throws JMSException;
 
     /**
      * Unsubscribes a durable subscription that has been created by a client.
@@ -71,5 +71,5 @@ public interface StreamConnection extends Connection {
      *                 specified.
      * @since 1.1
      */
-    public void unsubscribe(String name) throws JMSException;
+    void unsubscribe(String name) throws JMSException;
 }

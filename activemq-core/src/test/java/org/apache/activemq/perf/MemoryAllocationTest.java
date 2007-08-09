@@ -39,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class MemoryAllocationTest extends TestCase {
 
-    protected static final Log LOG = LogFactory.getLog(MemoryAllocationTest.class);
+    private static final Log LOG = LogFactory.getLog(MemoryAllocationTest.class);
 
     protected static final int MESSAGE_COUNT = 2000;
     protected BrokerService broker;
@@ -59,8 +59,9 @@ public class MemoryAllocationTest extends TestCase {
             mp.send(msg);
             session.close();
             releaseDestination(dest);
-            if (i % 500 == 0)
+            if (i % 500 == 0) {
                 LOG.info("Iterator " + i);
+            }
         }
         connection.close();
     }

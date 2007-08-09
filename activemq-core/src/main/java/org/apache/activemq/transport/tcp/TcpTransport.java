@@ -49,7 +49,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class TcpTransport extends TransportThreadSupport implements Transport, Service, Runnable {
-    private static final Log log = LogFactory.getLog(TcpTransport.class);
+    private static final Log LOG = LogFactory.getLog(TcpTransport.class);
 
     protected final URI remoteLocation;
     protected final URI localLocation;
@@ -130,7 +130,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      * reads packets from a Socket
      */
     public void run() {
-        log.trace("TCP consumer thread starting");
+        LOG.trace("TCP consumer thread starting");
         try {
             while (!isStopped()) {
                 doRun();
@@ -284,8 +284,8 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
             sock.setReceiveBufferSize(socketBufferSize);
             sock.setSendBufferSize(socketBufferSize);
         } catch (SocketException se) {
-            log.warn("Cannot set socket buffer size = " + socketBufferSize);
-            log.debug("Cannot set socket buffer size. Reason: " + se, se);
+            LOG.warn("Cannot set socket buffer size = " + socketBufferSize);
+            LOG.debug("Cannot set socket buffer size. Reason: " + se, se);
         }
         sock.setSoTimeout(soTimeout);
 
@@ -352,8 +352,8 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     }
 
     protected void doStop(ServiceStopper stopper) throws Exception {
-        if (log.isDebugEnabled()) {
-            log.debug("Stopping transport " + this);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Stopping transport " + this);
         }
 
         // Closing the streams flush the sockets before closing.. if the socket

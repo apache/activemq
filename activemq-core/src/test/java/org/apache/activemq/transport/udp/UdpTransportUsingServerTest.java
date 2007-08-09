@@ -23,12 +23,16 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.tcp.WireformatNegociationTest;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * 
  * @version $Revision$
  */
 public class UdpTransportUsingServerTest extends UdpTestSupport {
+    private static final Log LOG = LogFactory.getLog(UdpTransportUsingServerTest.class);
 
     protected int consumerPort = 9123;
     protected String producerURI = "udp://localhost:" + consumerPort;
@@ -38,16 +42,16 @@ public class UdpTransportUsingServerTest extends UdpTestSupport {
         ConsumerInfo expected = new ConsumerInfo();
         expected.setSelector("Edam");
         expected.setResponseRequired(true);
-        log.info("About to send: " + expected);
+        LOG.info("About to send: " + expected);
         Response response = (Response) producer.request(expected, 2000);
 
-        log.info("Received: " + response);
+        LOG.info("Received: " + response);
         assertNotNull("Received a response", response);
         assertTrue("Should not be an exception", !response.isException());
     }
 
     protected Transport createProducer() throws Exception {
-        log.info("Producer using URI: " + producerURI);
+        LOG.info("Producer using URI: " + producerURI);
         URI uri = new URI(producerURI);
         return TransportFactory.connect(uri);
     }

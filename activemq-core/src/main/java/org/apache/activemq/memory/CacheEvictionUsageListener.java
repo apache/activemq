@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
 
 public class CacheEvictionUsageListener implements UsageListener {
 
-    private final static Log log = LogFactory.getLog(CacheEvictionUsageListener.class);
+    private static final Log LOG = LogFactory.getLog(CacheEvictionUsageListener.class);
 
     private final CopyOnWriteArrayList evictors = new CopyOnWriteArrayList();
     private final int usageHighMark;
@@ -52,7 +52,7 @@ public class CacheEvictionUsageListener implements UsageListener {
     boolean evictMessages() {
         // Try to take the memory usage down below the low mark.
         try {
-            log.debug("Evicting cache memory usage: " + usageManager.getPercentUsage());
+            LOG.debug("Evicting cache memory usage: " + usageManager.getPercentUsage());
 
             LinkedList list = new LinkedList(evictors);
             while (list.size() > 0 && usageManager.getPercentUsage() > usageLowMark) {

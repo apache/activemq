@@ -396,7 +396,7 @@ public class JmsRedeliveredTest extends TestCase {
     /**
      * Run the JmsRedeliverTest with the delivery mode set as persistent.
      */
-    static final public class PersistentCase extends JmsRedeliveredTest {
+    public static final class PersistentCase extends JmsRedeliveredTest {
 
         /**
          * Returns delivery mode.
@@ -411,7 +411,7 @@ public class JmsRedeliveredTest extends TestCase {
     /**
      * Run the JmsRedeliverTest with the delivery mode set as non-persistent.
      */
-    static final public class TransientCase extends JmsRedeliveredTest {
+    public static final class TransientCase extends JmsRedeliveredTest {
 
         /**
          * Returns delivery mode.

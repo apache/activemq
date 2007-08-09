@@ -33,7 +33,7 @@ import org.apache.activemq.command.ConsumerControl;
 public class ConsumerControlTest extends BaseCommandTestSupport {
 
 
-    public static ConsumerControlTest SINGLETON = new ConsumerControlTest();
+    public static final ConsumerControlTest SINGLETON = new ConsumerControlTest();
 
     public Object createObject() throws Exception {
         ConsumerControl info = new ConsumerControl();

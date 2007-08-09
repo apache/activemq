@@ -30,7 +30,7 @@ import org.apache.activemq.command.MessageDispatchNotification;
  */
 public class MessageDispatchNotificationTest extends BaseCommandTestSupport {
 
-    public static MessageDispatchNotificationTest SINGLETON = new MessageDispatchNotificationTest();
+    public static final MessageDispatchNotificationTest SINGLETON = new MessageDispatchNotificationTest();
 
     public Object createObject() throws Exception {
         MessageDispatchNotification info = new MessageDispatchNotification();

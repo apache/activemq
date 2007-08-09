@@ -32,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.5 $
  */
 public class TransportStatusDetector implements Service, Runnable {
-    private static final Log log = LogFactory.getLog(TransportStatusDetector.class);
+    private static final Log LOG = LogFactory.getLog(TransportStatusDetector.class);
     private TransportConnector connector;
     private Set collectionCandidates = new CopyOnWriteArraySet();
     private AtomicBoolean started = new AtomicBoolean(false);
@@ -86,11 +86,11 @@ public class TransportStatusDetector implements Service, Runnable {
     }
 
     protected void doCollection(TransportConnection tc) {
-        log.warn("found a blocked client - stopping: " + tc);
+        LOG.warn("found a blocked client - stopping: " + tc);
         try {
             tc.stop();
         } catch (Exception e) {
-            log.error("Error stopping " + tc, e);
+            LOG.error("Error stopping " + tc, e);
         }
     }
 
@@ -101,7 +101,7 @@ public class TransportStatusDetector implements Service, Runnable {
                 doSweep();
                 Thread.sleep(sweepInterval);
             } catch (Throwable e) {
-                log.error("failed to complete a sweep for blocked clients", e);
+                LOG.error("failed to complete a sweep for blocked clients", e);
             }
         }
     }

@@ -29,16 +29,16 @@ import java.util.Iterator;
 
 import junit.framework.Assert;
 
-abstract public class DataFileGenerator extends Assert {
+public abstract class DataFileGenerator extends Assert {
 
-    static final File moduleBaseDir;
-    static final File controlDir;
-    static final File classFileDir;
+    static final File MODULE_BASE_DIR;
+    static final File CONTROL_DIR;
+    static final File CLASS_FILE_DIR;
 
     static {
-        moduleBaseDir = new File(System.getProperty("basedir", "."));
-        controlDir = new File(moduleBaseDir, "src/test/resources/openwire-control");
-        classFileDir = new File(moduleBaseDir, "src/test/java/org/apache/activemq/openwire");
+        MODULE_BASE_DIR = new File(System.getProperty("basedir", "."));
+        CONTROL_DIR = new File(MODULE_BASE_DIR, "src/test/resources/openwire-control");
+        CLASS_FILE_DIR = new File(MODULE_BASE_DIR, "src/test/java/org/apache/activemq/openwire");
     }
 
     public static void main(String[] args) throws Exception {
@@ -55,7 +55,7 @@ abstract public class DataFileGenerator extends Assert {
     public static ArrayList getAllDataFileGenerators() throws Exception {
         // System.out.println("Looking for generators in : "+classFileDir);
         ArrayList l = new ArrayList();
-        File[] files = classFileDir.listFiles();
+        File[] files = CLASS_FILE_DIR.listFiles();
         for (int i = 0; files != null && i < files.length; i++) {
             File file = files[i];
             if (file.getName().endsWith("Data.java")) {
@@ -83,8 +83,8 @@ abstract public class DataFileGenerator extends Assert {
     }
 
     public void generateControlFile() throws Exception {
-        controlDir.mkdirs();
-        File dataFile = new File(controlDir, getClass().getName() + ".bin");
+        CONTROL_DIR.mkdirs();
+        File dataFile = new File(CONTROL_DIR, getClass().getName() + ".bin");
 
         OpenWireFormat wf = new OpenWireFormat();
         wf.setCacheEnabled(false);
@@ -121,7 +121,7 @@ abstract public class DataFileGenerator extends Assert {
     }
 
     public void assertControlFileIsEqual() throws Exception {
-        File dataFile = new File(controlDir, getClass().getName() + ".bin");
+        File dataFile = new File(CONTROL_DIR, getClass().getName() + ".bin");
         FileInputStream is1 = new FileInputStream(dataFile);
         int pos = 0;
         try {
@@ -142,5 +142,5 @@ abstract public class DataFileGenerator extends Assert {
         }
     }
 
-    abstract protected Object createObject() throws IOException;
+    protected abstract Object createObject() throws IOException;
 }

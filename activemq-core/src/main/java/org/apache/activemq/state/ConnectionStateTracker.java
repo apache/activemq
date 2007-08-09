@@ -45,7 +45,7 @@ import org.apache.activemq.util.IOExceptionSupport;
  */
 public class ConnectionStateTracker extends CommandVisitorAdapter {
 
-    private final static Tracked TRACKED_RESPONSE_MARKER = new Tracked(null);
+    private static final Tracked TRACKED_RESPONSE_MARKER = new Tracked(null);
 
     private boolean trackTransactions = false;
 

@@ -31,7 +31,7 @@ import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
  */
 public class ConsumerIdTest extends DataFileGeneratorTestSupport {
 
-    public static ConsumerIdTest SINGLETON = new ConsumerIdTest();
+    public static final ConsumerIdTest SINGLETON = new ConsumerIdTest();
 
     public Object createObject() throws Exception {
         ConsumerId info = new ConsumerId();

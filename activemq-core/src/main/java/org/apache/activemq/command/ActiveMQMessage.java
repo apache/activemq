@@ -50,7 +50,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         return DATA_STRUCTURE_TYPE;
     }
 
-    transient protected Callback acknowledgeCallback;
+    protected transient Callback acknowledgeCallback;
 
     public Message copy() {
         ActiveMQMessage copy = new ActiveMQMessage();
@@ -180,7 +180,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         return "jms/message";
     }
 
-    static protected String decodeString(byte[] data) throws JMSException {
+    protected static String decodeString(byte[] data) throws JMSException {
         try {
             if (data == null) {
                 return null;
@@ -191,7 +191,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         }
     }
 
-    static protected byte[] encodeString(String data) throws JMSException {
+    protected static byte[] encodeString(String data) throws JMSException {
         try {
             if (data == null) {
                 return null;
@@ -280,10 +280,10 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     }
 
     interface PropertySetter {
-        public void set(Message message, Object value) throws MessageFormatException;
+        void set(Message message, Object value) throws MessageFormatException;
     }
 
-    static final private HashMap JMS_PROPERTY_SETERS = new HashMap();
+    private static final HashMap JMS_PROPERTY_SETERS = new HashMap();
     static {
         JMS_PROPERTY_SETERS.put("JMSXDeliveryCount", new PropertySetter() {
             public void set(Message message, Object value) throws MessageFormatException {

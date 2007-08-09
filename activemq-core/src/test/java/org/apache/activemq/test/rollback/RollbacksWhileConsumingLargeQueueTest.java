@@ -38,7 +38,7 @@ import org.springframework.jms.core.MessageCreator;
  */
 public class RollbacksWhileConsumingLargeQueueTest extends EmbeddedBrokerTestSupport implements MessageListener {
 
-    private static final transient Log log = LogFactory.getLog(RollbacksWhileConsumingLargeQueueTest.class);
+    private static final transient Log LOG = LogFactory.getLog(RollbacksWhileConsumingLargeQueueTest.class);
 
     protected int numberOfMessagesOnQueue = 6500;
     private Connection connection;
@@ -59,12 +59,14 @@ public class RollbacksWhileConsumingLargeQueueTest extends EmbeddedBrokerTestSup
             }
 
             // Are we done receiving all the messages.
-            if (ackCounter.get() == numberOfMessagesOnQueue)
+            if (ackCounter.get() == numberOfMessagesOnQueue) {
                 return;
+            }
 
             Message message = consumer.receive(1000);
-            if (message == null)
+            if (message == null) {
                 continue;
+            }
 
             try {
                 onMessage(message);
@@ -89,7 +91,7 @@ public class RollbacksWhileConsumingLargeQueueTest extends EmbeddedBrokerTestSup
             }
 
             if (latch.await(1, TimeUnit.SECONDS)) {
-                log.debug("Received: " + deliveryCounter.get() + "  message(s)");
+                LOG.debug("Received: " + deliveryCounter.get() + "  message(s)");
                 return;
             }
 
@@ -147,11 +149,11 @@ public class RollbacksWhileConsumingLargeQueueTest extends EmbeddedBrokerTestSup
 
         int value = deliveryCounter.incrementAndGet();
         if (value % 2 == 0) {
-            log.info("Rolling Back message: " + ackCounter.get() + " id: " + msgId + ", content: " + msgText);
+            LOG.info("Rolling Back message: " + ackCounter.get() + " id: " + msgId + ", content: " + msgText);
             throw new RuntimeException("Dummy exception on message: " + value);
         }
 
-        log.info("Received message: " + ackCounter.get() + " id: " + msgId + ", content: " + msgText);
+        LOG.info("Received message: " + ackCounter.get() + " id: " + msgId + ", content: " + msgText);
         ackCounter.incrementAndGet();
         latch.countDown();
     }

@@ -149,8 +149,9 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         // Wait for messages to be received. Make it proportional to the
         // messages delivered.
         int totalMessageCount = messageCount * producerCount;
-        if (dest.isTopic())
+        if (dest.isTopic()) {
             totalMessageCount *= consumerCount;
+        }
         waitForAllMessagesToBeReceived(totalMessageCount);
     }
 }

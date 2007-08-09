@@ -31,13 +31,13 @@ import org.apache.commons.logging.LogFactory;
  */
 public class DummyMessageQuery implements MessageQuery {
     
-    protected static final Log log = LogFactory.getLog(DummyMessageQuery.class);
+    private static final Log LOG = LogFactory.getLog(DummyMessageQuery.class);
 
-    public static final int messageCount = 10;
+    public static final int MESSAGE_COUNT = 10;
     
     public void execute(ActiveMQDestination destination, MessageListener listener) throws Exception {
-        log.info("Initial query is creating: " + messageCount + " messages");
-        for (int i = 0; i < messageCount; i++) {
+        LOG.info("Initial query is creating: " + MESSAGE_COUNT + " messages");
+        for (int i = 0; i < MESSAGE_COUNT; i++) {
             ActiveMQTextMessage message = new ActiveMQTextMessage();
             message.setText("Initial message: " + i + " loaded from query");
             listener.onMessage(message);

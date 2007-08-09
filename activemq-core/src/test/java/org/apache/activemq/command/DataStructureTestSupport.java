@@ -59,13 +59,16 @@ public abstract class DataStructureTestSupport extends CombinationTestSupport {
         // }
     }
 
-    static public void assertEquals(Object expect, Object was) {
-        if (expect == null ^ was == null)
+    public static void assertEquals(Object expect, Object was) {
+        if (expect == null ^ was == null) {
             throw new AssertionFailedError("Not equals, expected: " + expect + ", was: " + was);
-        if (expect == null)
+        }
+        if (expect == null) {
             return;
-        if (expect.getClass() != was.getClass())
+        }
+        if (expect.getClass() != was.getClass()) {
             throw new AssertionFailedError("Not equals, classes don't match. expected: " + expect.getClass() + ", was: " + was.getClass());
+        }
         if (expect.getClass().isArray()) {
             Class componentType = expect.getClass().getComponentType();
             if (componentType.isPrimitive()) {
@@ -97,8 +100,9 @@ public abstract class DataStructureTestSupport extends CombinationTestSupport {
             } else {
                 Object expectArray[] = (Object[])expect;
                 Object wasArray[] = (Object[])was;
-                if (expectArray.length != wasArray.length)
+                if (expectArray.length != wasArray.length) {
                     throw new AssertionFailedError("Not equals, array lengths don't match. expected: " + expectArray.length + ", was: " + wasArray.length);
+                }
                 for (int i = 0; i < wasArray.length; i++) {
                     assertEquals(expectArray[i], wasArray[i]);
                 }

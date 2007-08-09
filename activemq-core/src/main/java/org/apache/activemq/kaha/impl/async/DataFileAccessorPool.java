@@ -32,7 +32,7 @@ public class DataFileAccessorPool {
     private final HashMap<Integer, Pool> pools = new HashMap<Integer, Pool>();
     private boolean closed;
 
-    int MAX_OPEN_READERS_PER_FILE = 5;
+    int maxOpenReadersPerFile = 5;
 
     class Pool {
 
@@ -61,7 +61,7 @@ public class DataFileAccessorPool {
         public void closeDataFileReader(DataFileAccessor reader) {
             openCounter--;
             used = true;
-            if (pool.size() >= MAX_OPEN_READERS_PER_FILE || disposed) {
+            if (pool.size() >= maxOpenReadersPerFile || disposed) {
                 reader.dispose();
             } else {
                 pool.add(reader);
@@ -148,7 +148,7 @@ public class DataFileAccessorPool {
         }
     }
 
-    synchronized public void close() {
+    public synchronized void close() {
         if (closed)
             return;
         closed = true;

@@ -47,9 +47,7 @@ import org.apache.activemq.command.ActiveMQTopic;
  */
 public class ActiveMQInitialContextFactory implements InitialContextFactory {
 
-    private static final String[] defaultConnectionFactoryNames = {"ConnectionFactory",
-                                                                   "QueueConnectionFactory",
-                                                                   "TopicConnectionFactory"};
+    private static final String[] DEFAULT_CONNECTION_FACTORY_NAMES = {"ConnectionFactory", "QueueConnectionFactory", "TopicConnectionFactory"};
 
     private String connectionPrefix = "connection.";
     private String queuePrefix = "queue.";
@@ -126,8 +124,7 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
         return new ReadOnlyContext(environment, data);
     }
 
-    protected ActiveMQConnectionFactory createConnectionFactory(String name, Hashtable environment)
-        throws URISyntaxException {
+    protected ActiveMQConnectionFactory createConnectionFactory(String name, Hashtable environment) throws URISyntaxException {
         Hashtable temp = new Hashtable(environment);
         String prefix = connectionPrefix + name + ".";
         for (Iterator iter = environment.entrySet().iterator(); iter.hasNext();) {
@@ -147,8 +144,7 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
         String factoryNames = (String)environment.get("connectionFactoryNames");
         if (factoryNames != null) {
             List list = new ArrayList();
-            for (StringTokenizer enumeration = new StringTokenizer(factoryNames, ","); enumeration
-                .hasMoreTokens();) {
+            for (StringTokenizer enumeration = new StringTokenizer(factoryNames, ","); enumeration.hasMoreTokens();) {
                 list.add(enumeration.nextToken().trim());
             }
             int size = list.size();
@@ -158,7 +154,7 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
                 return answer;
             }
         }
-        return defaultConnectionFactoryNames;
+        return DEFAULT_CONNECTION_FACTORY_NAMES;
     }
 
     protected void createQueues(Map data, Hashtable environment) {
@@ -201,8 +197,7 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
      * Factory method to create a new connection factory from the given
      * environment
      */
-    protected ActiveMQConnectionFactory createConnectionFactory(Hashtable environment)
-        throws URISyntaxException {
+    protected ActiveMQConnectionFactory createConnectionFactory(Hashtable environment) throws URISyntaxException {
         ActiveMQConnectionFactory answer = new ActiveMQConnectionFactory();
         Properties properties = new Properties();
         properties.putAll(environment);

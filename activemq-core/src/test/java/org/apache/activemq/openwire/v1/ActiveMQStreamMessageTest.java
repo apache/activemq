@@ -28,7 +28,7 @@ import org.apache.activemq.command.ActiveMQStreamMessage;
  */
 public class ActiveMQStreamMessageTest extends ActiveMQMessageTest {
 
-    public static ActiveMQStreamMessageTest SINGLETON = new ActiveMQStreamMessageTest();
+    public static final ActiveMQStreamMessageTest SINGLETON = new ActiveMQStreamMessageTest();
 
     public Object createObject() throws Exception {
         ActiveMQStreamMessage info = new ActiveMQStreamMessage();

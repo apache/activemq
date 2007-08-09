@@ -62,10 +62,10 @@ import org.apache.commons.logging.LogFactory;
  */
 public class TransactionContext implements XAResource {
 
-    static final private Log log = LogFactory.getLog(TransactionContext.class);
+    private static final Log LOG = LogFactory.getLog(TransactionContext.class);
 
     // XATransactionId -> ArrayList of TransactionContext objects
-    private static final ConcurrentHashMap endedXATransactionContexts = new ConcurrentHashMap();
+    private static final ConcurrentHashMap ENDED_XA_TRANSACTION_CONTEXTS = new ConcurrentHashMap();
 
     private final ActiveMQConnection connection;
     private final LongSequenceGenerator localTransactionIdGenerator;
@@ -267,12 +267,12 @@ public class TransactionContext implements XAResource {
      */
     public void start(Xid xid, int flags) throws XAException {
 
-        if (log.isDebugEnabled())
-            log.debug("Start: " + xid);
-
-        if (isInLocalTransaction())
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Start: " + xid);
+        }
+        if (isInLocalTransaction()) {
             throw new XAException(XAException.XAER_PROTO);
-
+        }
         // Are we already associated?
         if (associatedXid != null) {
             throw new XAException(XAException.XAER_PROTO);
@@ -299,8 +299,8 @@ public class TransactionContext implements XAResource {
 
     public void end(Xid xid, int flags) throws XAException {
 
-        if (log.isDebugEnabled())
-            log.debug("End: " + xid);
+        if (LOG.isDebugEnabled())
+            LOG.debug("End: " + xid);
 
         if (isInLocalTransaction())
             throw new XAException(XAException.XAER_PROTO);
@@ -344,8 +344,8 @@ public class TransactionContext implements XAResource {
     }
 
     public int prepare(Xid xid) throws XAException {
-        if (log.isDebugEnabled())
-            log.debug("Prepare: " + xid);
+        if (LOG.isDebugEnabled())
+            LOG.debug("Prepare: " + xid);
 
         // We allow interleaving multiple transactions, so
         // we don't limit prepare to the associated xid.
@@ -373,8 +373,8 @@ public class TransactionContext implements XAResource {
 
     public void rollback(Xid xid) throws XAException {
 
-        if (log.isDebugEnabled())
-            log.debug("Rollback: " + xid);
+        if (LOG.isDebugEnabled())
+            LOG.debug("Rollback: " + xid);
 
         // We allow interleaving multiple transactions, so
         // we don't limit rollback to the associated xid.
@@ -398,7 +398,7 @@ public class TransactionContext implements XAResource {
             TransactionInfo info = new TransactionInfo(getConnectionId(), x, TransactionInfo.ROLLBACK);
             this.connection.syncSendPacket(info);
 
-            ArrayList l = (ArrayList)endedXATransactionContexts.remove(x);
+            ArrayList l = (ArrayList)ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
             if (l != null && !l.isEmpty()) {
                 for (Iterator iter = l.iterator(); iter.hasNext();) {
                     TransactionContext ctx = (TransactionContext)iter.next();
@@ -414,8 +414,8 @@ public class TransactionContext implements XAResource {
     // XAResource interface
     public void commit(Xid xid, boolean onePhase) throws XAException {
 
-        if (log.isDebugEnabled())
-            log.debug("Commit: " + xid);
+        if (LOG.isDebugEnabled())
+            LOG.debug("Commit: " + xid);
 
         // We allow interleaving multiple transactions, so
         // we don't limit commit to the associated xid.
@@ -437,7 +437,7 @@ public class TransactionContext implements XAResource {
 
             this.connection.syncSendPacket(info);
 
-            ArrayList l = (ArrayList)endedXATransactionContexts.remove(x);
+            ArrayList l = (ArrayList)ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
             if (l != null && !l.isEmpty()) {
                 for (Iterator iter = l.iterator(); iter.hasNext();) {
                     TransactionContext ctx = (TransactionContext)iter.next();
@@ -452,8 +452,8 @@ public class TransactionContext implements XAResource {
     }
 
     public void forget(Xid xid) throws XAException {
-        if (log.isDebugEnabled())
-            log.debug("Forget: " + xid);
+        if (LOG.isDebugEnabled())
+            LOG.debug("Forget: " + xid);
 
         // We allow interleaving multiple transactions, so
         // we don't limit forget to the associated xid.
@@ -494,8 +494,8 @@ public class TransactionContext implements XAResource {
     }
 
     public Xid[] recover(int flag) throws XAException {
-        if (log.isDebugEnabled())
-            log.debug("Recover: " + flag);
+        if (LOG.isDebugEnabled())
+            LOG.debug("Recover: " + flag);
 
         TransactionInfo info = new TransactionInfo(getConnectionId(), null, TransactionInfo.RECOVER);
         try {
@@ -551,8 +551,8 @@ public class TransactionContext implements XAResource {
             TransactionInfo info = new TransactionInfo(connectionId, transactionId, TransactionInfo.BEGIN);
             try {
                 this.connection.asyncSendPacket(info);
-                if (log.isDebugEnabled())
-                    log.debug("Started XA transaction: " + transactionId);
+                if (LOG.isDebugEnabled())
+                    LOG.debug("Started XA transaction: " + transactionId);
             } catch (JMSException e) {
                 throw toXAException(e);
             }
@@ -563,18 +563,18 @@ public class TransactionContext implements XAResource {
                 TransactionInfo info = new TransactionInfo(connectionId, transactionId, TransactionInfo.END);
                 try {
                     this.connection.syncSendPacket(info);
-                    if (log.isDebugEnabled())
-                        log.debug("Ended XA transaction: " + transactionId);
+                    if (LOG.isDebugEnabled())
+                        LOG.debug("Ended XA transaction: " + transactionId);
                 } catch (JMSException e) {
                     throw toXAException(e);
                 }
 
                 // Add our self to the list of contexts that are interested in
                 // post commit/rollback events.
-                ArrayList l = (ArrayList)endedXATransactionContexts.get(transactionId);
+                ArrayList l = (ArrayList)ENDED_XA_TRANSACTION_CONTEXTS.get(transactionId);
                 if (l == null) {
                     l = new ArrayList(3);
-                    endedXATransactionContexts.put(transactionId, l);
+                    ENDED_XA_TRANSACTION_CONTEXTS.put(transactionId, l);
                     l.add(this);
                 } else if (!l.contains(this)) {
                     l.add(this);

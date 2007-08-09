@@ -30,7 +30,7 @@ import org.apache.activemq.command.ConnectionError;
  */
 public class ConnectionErrorTest extends BaseCommandTestSupport {
 
-    public static ConnectionErrorTest SINGLETON = new ConnectionErrorTest();
+    public static final ConnectionErrorTest SINGLETON = new ConnectionErrorTest();
 
     public Object createObject() throws Exception {
         ConnectionError info = new ConnectionError();

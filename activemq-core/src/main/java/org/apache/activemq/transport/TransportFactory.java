@@ -45,10 +45,10 @@ public abstract class TransportFactory {
         return doCompositeConnect(location);
     }
 
-    static final private FactoryFinder transportFactoryFinder = new FactoryFinder("META-INF/services/org/apache/activemq/transport/");
-    static final private FactoryFinder wireFormatFactoryFinder = new FactoryFinder("META-INF/services/org/apache/activemq/wireformat/");
+    private static final FactoryFinder TRANSPORT_FACTORY_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/");
+    private static final FactoryFinder WIREFORMAT_FACTORY_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/wireformat/");
 
-    static final private ConcurrentHashMap transportFactorys = new ConcurrentHashMap();
+    private static final ConcurrentHashMap TRANSPORT_FACTORYS = new ConcurrentHashMap();
 
     /**
      * Creates a normal transport.
@@ -155,14 +155,15 @@ public abstract class TransportFactory {
      */
     private static TransportFactory findTransportFactory(URI location) throws IOException {
         String scheme = location.getScheme();
-        if (scheme == null)
+        if (scheme == null) {
             throw new IOException("Transport not scheme specified: [" + location + "]");
-        TransportFactory tf = (TransportFactory)transportFactorys.get(scheme);
+        }
+        TransportFactory tf = (TransportFactory)TRANSPORT_FACTORYS.get(scheme);
         if (tf == null) {
             // Try to load if from a META-INF property.
             try {
-                tf = (TransportFactory)transportFactoryFinder.newInstance(scheme);
-                transportFactorys.put(scheme, tf);
+                tf = (TransportFactory)TRANSPORT_FACTORY_FINDER.newInstance(scheme);
+                TRANSPORT_FACTORYS.put(scheme, tf);
             } catch (Throwable e) {
                 throw IOExceptionSupport.create("Transport scheme NOT recognized: [" + scheme + "]", e);
             }
@@ -178,11 +179,12 @@ public abstract class TransportFactory {
 
     protected WireFormatFactory createWireFormatFactory(Map options) throws IOException {
         String wireFormat = (String)options.get("wireFormat");
-        if (wireFormat == null)
+        if (wireFormat == null) {
             wireFormat = getDefaultWireFormatType();
+        }
 
         try {
-            WireFormatFactory wff = (WireFormatFactory)wireFormatFactoryFinder.newInstance(wireFormat);
+            WireFormatFactory wff = (WireFormatFactory)WIREFORMAT_FACTORY_FINDER.newInstance(wireFormat);
             IntrospectionSupport.setProperties(wff, options, "wireFormat.");
             return wff;
         } catch (Throwable e) {

@@ -36,7 +36,7 @@ public interface DiscoveryAgent extends Service {
      * Sets the discovery listener
      * @param listener
      */
-    public void setDiscoveryListener(DiscoveryListener listener);
+    void setDiscoveryListener(DiscoveryListener listener);
 
     /**
      * register a service
@@ -57,6 +57,6 @@ public interface DiscoveryAgent extends Service {
     
     void setGroup(String group);
 
-    public void setBrokerName(String brokerName);
+    void setBrokerName(String brokerName);
     
 }

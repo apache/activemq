@@ -22,11 +22,14 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.activemq.transport.TopicClusterTest;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import junit.framework.TestCase;
 
 public class TaskRunnerTest extends TestCase {
-
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(TaskRunnerTest.class);
+    private static final Log LOG = LogFactory.getLog(TaskRunnerTest.class);
 
     public void testWakeupPooled() throws InterruptedException, BrokenBarrierException {
         System.setProperty("org.apache.activemq.UseDedicatedTaskRunner", "false");
@@ -47,11 +50,11 @@ public class TaskRunnerTest extends TestCase {
      */
     public void doTestWakeup() throws InterruptedException, BrokenBarrierException {
 
+        final int enqueueCount = 100000;
         final AtomicInteger iterations = new AtomicInteger(0);
         final AtomicInteger counter = new AtomicInteger(0);
         final AtomicInteger queue = new AtomicInteger(0);
         final CountDownLatch doneCountDownLatch = new CountDownLatch(1);
-        final int ENQUEUE_COUNT = 100000;
 
         TaskRunnerFactory factory = new TaskRunnerFactory();
         final TaskRunner runner = factory.createTaskRunner(new Task() {
@@ -64,22 +67,23 @@ public class TaskRunnerTest extends TestCase {
                         counter.incrementAndGet();
                     }
                     iterations.incrementAndGet();
-                    if (counter.get() == ENQUEUE_COUNT)
+                    if (counter.get() == enqueueCount) {
                         doneCountDownLatch.countDown();
+                    }
                     return true;
                 }
             }
         }, "Thread Name");
 
         long start = System.currentTimeMillis();
-        final int WORKER_COUNT = 5;
-        final CyclicBarrier barrier = new CyclicBarrier(WORKER_COUNT + 1);
-        for (int i = 0; i < WORKER_COUNT; i++) {
+        final int workerCount = 5;
+        final CyclicBarrier barrier = new CyclicBarrier(workerCount + 1);
+        for (int i = 0; i < workerCount; i++) {
             new Thread() {
                 public void run() {
                     try {
                         barrier.await();
-                        for (int i = 0; i < ENQUEUE_COUNT / WORKER_COUNT; i++) {
+                        for (int i = 0; i < enqueueCount / workerCount; i++) {
                             queue.incrementAndGet();
                             runner.wakeup();
                             yield();
@@ -94,10 +98,10 @@ public class TaskRunnerTest extends TestCase {
 
         boolean b = doneCountDownLatch.await(30, TimeUnit.SECONDS);
         long end = System.currentTimeMillis();
-        log.info("Iterations: " + iterations.get());
-        log.info("counter: " + counter.get());
-        log.info("Dequeues/s: " + (1000.0 * ENQUEUE_COUNT / (end - start)));
-        log.info("duration: " + ((end - start) / 1000.0));
+        LOG.info("Iterations: " + iterations.get());
+        LOG.info("counter: " + counter.get());
+        LOG.info("Dequeues/s: " + (1000.0 * enqueueCount / (end - start)));
+        LOG.info("duration: " + ((end - start) / 1000.0));
         assertTrue(b);
 
         runner.shutdown();

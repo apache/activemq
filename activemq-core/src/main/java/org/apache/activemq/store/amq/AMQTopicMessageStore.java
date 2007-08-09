@@ -1,17 +1,19 @@
 /**
- * 
- * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE
- * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
- * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
- * License. You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package org.apache.activemq.store.amq;
 
 import java.io.IOException;
@@ -41,7 +43,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessageStore {
 
-    private static final Log log = LogFactory.getLog(AMQTopicMessageStore.class);
+    private static final Log LOG = LogFactory.getLog(AMQTopicMessageStore.class);
     private TopicReferenceStore topicReferenceStore;
     private HashMap<SubscriptionKey, MessageId> ackedLastAckLocations = new HashMap<SubscriptionKey, MessageId>();
 
@@ -75,7 +77,7 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
     /**
      */
     public void acknowledge(ConnectionContext context, String clientId, String subscriptionName, final MessageId messageId) throws IOException {
-        final boolean debug = log.isDebugEnabled();
+        final boolean debug = LOG.isDebugEnabled();
         JournalTopicAck ack = new JournalTopicAck();
         ack.setDestination(destination);
         ack.setMessageId(messageId);
@@ -87,12 +89,12 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
         final SubscriptionKey key = new SubscriptionKey(clientId, subscriptionName);
         if (!context.isInTransaction()) {
             if (debug) {
-                log.debug("Journalled acknowledge for: " + messageId + ", at: " + location);
+                LOG.debug("Journalled acknowledge for: " + messageId + ", at: " + location);
             }
             acknowledge(messageId, location, key);
         } else {
             if (debug) {
-                log.debug("Journalled transacted acknowledge for: " + messageId + ", at: " + location);
+                LOG.debug("Journalled transacted acknowledge for: " + messageId + ", at: " + location);
             }
             synchronized (this) {
                 inFlightTxLocations.add(location);
@@ -102,7 +104,7 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
 
                 public void afterCommit() throws Exception {
                     if (debug) {
-                        log.debug("Transacted acknowledge commit for: " + messageId + ", at: " + location);
+                        LOG.debug("Transacted acknowledge commit for: " + messageId + ", at: " + location);
                     }
                     synchronized (AMQTopicMessageStore.this) {
                         inFlightTxLocations.remove(location);
@@ -112,7 +114,7 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
 
                 public void afterRollback() throws Exception {
                     if (debug) {
-                        log.debug("Transacted acknowledge rollback for: " + messageId + ", at: " + location);
+                        LOG.debug("Transacted acknowledge rollback for: " + messageId + ", at: " + location);
                     }
                     synchronized (AMQTopicMessageStore.this) {
                         inFlightTxLocations.remove(location);
@@ -130,7 +132,7 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
                 return true;
             }
         } catch (Throwable e) {
-            log.debug("Could not replay acknowledge for message '" + messageId + "'.  Message may have already been acknowledged. reason: " + e);
+            LOG.debug("Could not replay acknowledge for message '" + messageId + "'.  Message may have already been acknowledged. reason: " + e);
         }
         return false;
     }

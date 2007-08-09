@@ -34,7 +34,7 @@ import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
 public class DiscoveryEventTest extends DataFileGeneratorTestSupport {
 
 
-    public static DiscoveryEventTest SINGLETON = new DiscoveryEventTest();
+    public static final DiscoveryEventTest SINGLETON = new DiscoveryEventTest();
 
     public Object createObject() throws Exception {
         DiscoveryEvent info = new DiscoveryEvent();

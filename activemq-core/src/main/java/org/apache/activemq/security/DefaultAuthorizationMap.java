@@ -31,7 +31,6 @@ import org.apache.activemq.filter.DestinationMap;
  * for each operation.
  * 
  * @org.apache.xbean.XBean element="authorizationMap"
- * 
  * @version $Revision$
  */
 public class DefaultAuthorizationMap extends DestinationMap implements AuthorizationMap {
@@ -48,8 +47,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
 
     }
 
-    public void setTempDestinationAuthorizationEntry(
-                                                     TempDestinationAuthorizationEntry tempDestinationAuthorizationEntry) {
+    public void setTempDestinationAuthorizationEntry(TempDestinationAuthorizationEntry tempDestinationAuthorizationEntry) {
         this.tempDestinationAuthorizationEntry = tempDestinationAuthorizationEntry;
     }
 
@@ -58,24 +56,27 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
     }
 
     public Set getTempDestinationAdminACLs() {
-        if (tempDestinationAuthorizationEntry != null)
+        if (tempDestinationAuthorizationEntry != null) {
             return tempDestinationAuthorizationEntry.getAdminACLs();
-        else
+        } else {
             return null;
+        }
     }
 
     public Set getTempDestinationReadACLs() {
-        if (tempDestinationAuthorizationEntry != null)
+        if (tempDestinationAuthorizationEntry != null) {
             return tempDestinationAuthorizationEntry.getReadACLs();
-        else
+        } else {
             return null;
+        }
     }
 
     public Set getTempDestinationWriteACLs() {
-        if (tempDestinationAuthorizationEntry != null)
+        if (tempDestinationAuthorizationEntry != null) {
             return tempDestinationAuthorizationEntry.getWriteACLs();
-        else
+        } else {
             return null;
+        }
     }
 
     public Set getAdminACLs(ActiveMQDestination destination) {

@@ -42,7 +42,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class MulticastTransport extends UdpTransport {
 
-    private static final Log log = LogFactory.getLog(MulticastTransport.class);
+    private static final Log LOG = LogFactory.getLog(MulticastTransport.class);
 
     private static final int DEFAULT_IDLE_TIME = 5000;
 
@@ -109,7 +109,7 @@ public class MulticastTransport extends UdpTransport {
         socket.setLoopbackMode(loopBackMode);
         socket.setTimeToLive(timeToLive);
 
-        log.debug("Joining multicast address: " + getMulticastAddress());
+        LOG.debug("Joining multicast address: " + getMulticastAddress());
         socket.joinGroup(getMulticastAddress());
         socket.setSoTimeout((int)keepAliveInterval);
 

@@ -1,17 +1,19 @@
 /**
- * 
- * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE
- * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
- * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
- * License. You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-
 package org.apache.activemq.broker.ft;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -51,7 +53,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class MasterBroker extends InsertableMutableBrokerFilter {
 
-    private static final Log log = LogFactory.getLog(MasterBroker.class);
+    private static final Log LOG = LogFactory.getLog(MasterBroker.class);
     private Transport slave;
     private AtomicBoolean started = new AtomicBoolean(false);
 
@@ -86,7 +88,7 @@ public class MasterBroker extends InsertableMutableBrokerFilter {
                 }
             }
         } catch (Exception e) {
-            log.error("Failed to get Connections", e);
+            LOG.error("Failed to get Connections", e);
         }
     }
 
@@ -344,7 +346,7 @@ public class MasterBroker extends InsertableMutableBrokerFilter {
         try {
             slave.oneway(command);
         } catch (Throwable e) {
-            log.error("Slave Failed", e);
+            LOG.error("Slave Failed", e);
             stopProcessing();
         }
     }
@@ -354,10 +356,10 @@ public class MasterBroker extends InsertableMutableBrokerFilter {
             Response response = (Response)slave.request(command);
             if (response.isException()) {
                 ExceptionResponse er = (ExceptionResponse)response;
-                log.error("Slave Failed", er.getException());
+                LOG.error("Slave Failed", er.getException());
             }
         } catch (Throwable e) {
-            log.error("Slave Failed", e);
+            LOG.error("Slave Failed", e);
         }
     }
 }

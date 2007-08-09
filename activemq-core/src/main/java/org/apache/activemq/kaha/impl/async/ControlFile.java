@@ -31,9 +31,9 @@ import org.apache.activemq.util.ByteSequence;
  * 
  * @version $Revision: 1.1 $
  */
-final public class ControlFile {
+public final class ControlFile {
 
-    private final static boolean DISABLE_FILE_LOCK = "true".equals(System.getProperty("java.nio.channels.FileLock.broken", "false"));
+    private static final boolean DISABLE_FILE_LOCK = "true".equals(System.getProperty("java.nio.channels.FileLock.broken", "false"));
     private final File file;
 
     /** The File that holds the control data. */
@@ -96,7 +96,7 @@ final public class ControlFile {
         }
     }
 
-    synchronized public ByteSequence load() throws IOException {
+    public synchronized ByteSequence load() throws IOException {
         long l = randomAccessFile.length();
         if (l < maxRecordSize) {
             return null;

@@ -28,7 +28,7 @@ import org.apache.activemq.test.JmsTopicSendReceiveTest;
  * @version $Revision: 1.3 $
  */
 public class JmsTopicCompositeSendReceiveTest extends JmsTopicSendReceiveTest {
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory
             .getLog(JmsTopicCompositeSendReceiveTest.class);
     
     Destination consumerDestination2;
@@ -43,9 +43,9 @@ public class JmsTopicCompositeSendReceiveTest extends JmsTopicSendReceiveTest {
         deliveryMode = DeliveryMode.NON_PERSISTENT;
         super.setUp();
         consumerDestination2 = consumeSession.createTopic("FOO.BAR.HUMBUG2");
-        log.info("Created  consumer destination: " + consumerDestination2 + " of type: " + consumerDestination2.getClass());
+        LOG.info("Created  consumer destination: " + consumerDestination2 + " of type: " + consumerDestination2.getClass());
         if (durable) {
-            log.info("Creating durable consumer");
+            LOG.info("Creating durable consumer");
             consumer2 = consumeSession.createDurableSubscriber((Topic) consumerDestination2, getName());
         } else {
             consumer2 = consumeSession.createConsumer(consumerDestination2);
@@ -83,6 +83,6 @@ public class JmsTopicCompositeSendReceiveTest extends JmsTopicSendReceiveTest {
         messages.clear();
         consumer2.setMessageListener(this);
         assertMessagesAreReceived();
-        log.info("" + data.length + " messages(s) received, closing down connections");
+        LOG.info("" + data.length + " messages(s) received, closing down connections");
     }
 }

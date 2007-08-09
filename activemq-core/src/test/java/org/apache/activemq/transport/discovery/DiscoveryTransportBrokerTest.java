@@ -41,7 +41,7 @@ import org.apache.commons.logging.LogFactory;
 
 public class DiscoveryTransportBrokerTest extends NetworkTestSupport {
 
-    static final private Log log = LogFactory.getLog(DiscoveryTransportBrokerTest.class);
+    private static final Log LOG = LogFactory.getLog(DiscoveryTransportBrokerTest.class);
 
     public void setUp() throws Exception {
         super.setAutoFail(true);
@@ -103,10 +103,10 @@ public class DiscoveryTransportBrokerTest extends NetworkTestSupport {
         assertNoMessagesLeft(connectionB);
 
         // Dispose the server so that it fails over to the other server.
-        log.info("Disconnecting active server");
+        LOG.info("Disconnecting active server");
         serverA.stop();
 
-        log.info("Sending request that should failover");
+        LOG.info("Sending request that should failover");
         connection3.request(createMessage(producerInfo3, destination, deliveryMode));
 
         assertNotNull(receiveMessage(connectionB));

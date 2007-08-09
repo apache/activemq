@@ -125,14 +125,15 @@ public class ActiveMQQueueSession implements QueueSession {
     /**
      * @param destination
      * @param messageSelector
-     * @param NoLocal
+     * @param noLocal
      * @return
      * @throws JMSException
      */
-    public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean NoLocal) throws JMSException {
-        if (destination instanceof Topic)
+    public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean noLocal) throws JMSException {
+        if (destination instanceof Topic) {
             throw new InvalidDestinationException("Topics are not supported by a QueueSession");
-        return next.createConsumer(destination, messageSelector, NoLocal);
+        }
+        return next.createConsumer(destination, messageSelector, noLocal);
     }
 
     /**

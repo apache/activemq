@@ -42,7 +42,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class CommandDatagramChannel extends CommandChannelSupport {
 
-    private static final Log log = LogFactory.getLog(CommandDatagramChannel.class);
+    private static final Log LOG = LogFactory.getLog(CommandDatagramChannel.class);
 
     private DatagramChannel channel;
     private ByteBufferPool bufferPool;
@@ -103,8 +103,8 @@ public class CommandDatagramChannel extends CommandChannelSupport {
         if (answer != null) {
             answer.setFrom(from);
 
-            if (log.isDebugEnabled()) {
-                log.debug("Channel: " + name + " received from: " + from + " about to process: " + answer);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Channel: " + name + " received from: " + from + " about to process: " + answer);
             }
         }
         return answer;
@@ -233,9 +233,9 @@ public class CommandDatagramChannel extends CommandChannelSupport {
 
         writeBuffer.flip();
 
-        if (log.isDebugEnabled()) {
+        if (LOG.isDebugEnabled()) {
             String text = redelivery ? "REDELIVERING" : "sending";
-            log.debug("Channel: " + name + " " + text + " datagram: " + commandId + " to: " + address);
+            LOG.debug("Channel: " + name + " " + text + " datagram: " + commandId + " to: " + address);
         }
         channel.send(writeBuffer, address);
     }
@@ -245,8 +245,8 @@ public class CommandDatagramChannel extends CommandChannelSupport {
             ByteBuffer writeBuffer = (ByteBuffer)buffer;
             sendWriteBuffer(commandId, getReplayAddress(), writeBuffer, true);
         } else {
-            if (log.isWarnEnabled()) {
-                log.warn("Request for buffer: " + commandId + " is no longer present");
+            if (LOG.isWarnEnabled()) {
+                LOG.warn("Request for buffer: " + commandId + " is no longer present");
             }
         }
     }

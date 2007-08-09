@@ -40,7 +40,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1 $
  */
 public class ManagedTransportConnection extends TransportConnection {
-    private static final Log log = LogFactory.getLog(ManagedTransportConnection.class);
+    private static final Log LOG = LogFactory.getLog(ManagedTransportConnection.class);
 
     private final MBeanServer server;
     private final ObjectName connectorName;
@@ -101,8 +101,8 @@ public class ManagedTransportConnection extends TransportConnection {
             try {
                 server.registerMBean(mbean, name);
             } catch (Throwable e) {
-                log.warn("Failed to register MBean: " + name);
-                log.debug("Failure reason: " + e, e);
+                LOG.warn("Failed to register MBean: " + name);
+                LOG.debug("Failure reason: " + e, e);
             }
         }
     }
@@ -112,8 +112,8 @@ public class ManagedTransportConnection extends TransportConnection {
             try {
                 server.unregisterMBean(name);
             } catch (Throwable e) {
-                log.warn("Failed to unregister mbean: " + name);
-                log.debug("Failure reason: " + e, e);
+                LOG.warn("Failed to unregister mbean: " + name);
+                LOG.debug("Failure reason: " + e, e);
             }
         }
     }

@@ -32,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class RoundRobinDispatchPolicy implements DispatchPolicy {
-    static final Log log = LogFactory.getLog(RoundRobinDispatchPolicy.class);
+    static final Log LOG = LogFactory.getLog(RoundRobinDispatchPolicy.class);
 
     /**
      * @param node

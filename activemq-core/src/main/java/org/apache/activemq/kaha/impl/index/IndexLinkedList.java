@@ -28,42 +28,42 @@ public interface IndexLinkedList {
     /**
      * @return the root used by the List
      */
-    public IndexItem getRoot();
+    IndexItem getRoot();
 
     /**
      * Returns the first element in this list.
      * 
      * @return the first element in this list.
      */
-    public IndexItem getFirst();
+    IndexItem getFirst();
 
     /**
      * Returns the last element in this list.
      * 
      * @return the last element in this list.
      */
-    public IndexItem getLast();
+    IndexItem getLast();
 
     /**
      * Removes and returns the first element from this list.
      * 
      * @return the first element from this list.
      */
-    public StoreEntry removeFirst();
+    StoreEntry removeFirst();
 
     /**
      * Removes and returns the last element from this list.
      * 
      * @return the last element from this list.
      */
-    public Object removeLast();
+    Object removeLast();
 
     /**
      * Inserts the given element at the beginning of this list.
      * 
      * @param item
      */
-    public void addFirst(IndexItem item);
+    void addFirst(IndexItem item);
 
     /**
      * Appends the given element to the end of this list. (Identical in function
@@ -71,21 +71,21 @@ public interface IndexLinkedList {
      * 
      * @param item
      */
-    public void addLast(IndexItem item);
+    void addLast(IndexItem item);
 
     /**
      * Returns the number of elements in this list.
      * 
      * @return the number of elements in this list.
      */
-    public int size();
+    int size();
 
     /**
      * is the list empty?
      * 
      * @return true if there are no elements in the list
      */
-    public boolean isEmpty();
+    boolean isEmpty();
 
     /**
      * Appends the specified element to the end of this list.
@@ -95,12 +95,12 @@ public interface IndexLinkedList {
      * @return <tt>true</tt> (as per the general contract of
      *         <tt>Collection.add</tt>).
      */
-    public boolean add(IndexItem item);
+    boolean add(IndexItem item);
 
     /**
      * Removes all of the elements from this list.
      */
-    public void clear();
+    void clear();
 
     // Positional Access Operations
     /**
@@ -112,7 +112,7 @@ public interface IndexLinkedList {
      * @throws IndexOutOfBoundsException if the specified index is is out of
      *                 range (<tt>index &lt; 0 || index &gt;= size()</tt>).
      */
-    public IndexItem get(int index);
+    IndexItem get(int index);
 
     /**
      * Inserts the specified element at the specified position in this list.
@@ -124,7 +124,7 @@ public interface IndexLinkedList {
      * 
      * @throws IndexOutOfBoundsException if the specified index is out of range (<tt>index &lt; 0 || index &gt; size()</tt>).
      */
-    public void add(int index, IndexItem element);
+    void add(int index, IndexItem element);
 
     /**
      * Removes the element at the specified position in this list. Shifts any
@@ -136,7 +136,7 @@ public interface IndexLinkedList {
      * 
      * @throws IndexOutOfBoundsException if the specified index is out of range (<tt>index &lt; 0 || index &gt;= size()</tt>).
      */
-    public Object remove(int index);
+    Object remove(int index);
 
     // Search Operations
     /**
@@ -150,7 +150,7 @@ public interface IndexLinkedList {
      * @return the index in this list of the first occurrence of the specified
      *         element, or -1 if the list does not contain this element.
      */
-    public int indexOf(StoreEntry o);
+    int indexOf(StoreEntry o);
 
     /**
      * Retrieve the next entry after this entry
@@ -158,7 +158,7 @@ public interface IndexLinkedList {
      * @param entry
      * @return next entry
      */
-    public IndexItem getNextEntry(IndexItem entry);
+    IndexItem getNextEntry(IndexItem entry);
 
     /**
      * Retrive the prev entry after this entry
@@ -166,14 +166,14 @@ public interface IndexLinkedList {
      * @param entry
      * @return prev entry
      */
-    public IndexItem getPrevEntry(IndexItem entry);
+    IndexItem getPrevEntry(IndexItem entry);
 
     /**
      * remove an entry
      * 
      * @param e
      */
-    public void remove(IndexItem e);
+    void remove(IndexItem e);
 
     /**
      * Ensure we have the up to date entry
@@ -181,7 +181,7 @@ public interface IndexLinkedList {
      * @param entry
      * @return the entry
      */
-    public StoreEntry getEntry(StoreEntry entry);
+    StoreEntry getEntry(StoreEntry entry);
 
     /**
      * Update the indexes of a StoreEntry
@@ -189,5 +189,5 @@ public interface IndexLinkedList {
      * @param current
      * @return update StoreEntry
      */
-    public StoreEntry refreshEntry(StoreEntry current);
+    StoreEntry refreshEntry(StoreEntry current);
 }

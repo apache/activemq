@@ -37,7 +37,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class SlowConsumerTest extends TestCase {
-    private static final Log log = LogFactory.getLog(SlowConsumerTest.class);
+    private static final Log LOG = LogFactory.getLog(SlowConsumerTest.class);
     private Socket stompSocket;
     private ByteArrayOutputStream inputBuffer;
 
@@ -70,7 +70,7 @@ public class SlowConsumerTest extends TestCase {
                     for (int idx = 0; idx < MESSAGES_COUNT; ++idx) {
                         Message message = session.createTextMessage("" + idx);
                         producer.send(message);
-                        log.debug("Sending: " + idx);
+                        LOG.debug("Sending: " + idx);
                     }
                     producer.close();
                     session.close();
@@ -93,20 +93,20 @@ public class SlowConsumerTest extends TestCase {
                     while (messagesCount != MESSAGES_COUNT) {
                         Message msg = consumer.receive(messageReceiveTimeout);
                         if (msg == null) {
-                            log.warn("Got null message at count: " + messagesCount + ". Continuing...");
+                            LOG.warn("Got null message at count: " + messagesCount + ". Continuing...");
                             break;
                         }
                         String text = ((TextMessage)msg).getText();
                         int currentMsgIdx = Integer.parseInt(text);
-                        log.debug("Received: " + text + " messageCount: " + messagesCount);
+                        LOG.debug("Received: " + text + " messageCount: " + messagesCount);
                         msg.acknowledge();
                         if ((messagesCount + diff) != currentMsgIdx) {
-                            log.debug("Message(s) skipped!! Should be message no.: " + messagesCount + " but got: " + currentMsgIdx);
+                            LOG.debug("Message(s) skipped!! Should be message no.: " + messagesCount + " but got: " + currentMsgIdx);
                             diff = currentMsgIdx - messagesCount;
                         }
                         ++messagesCount;
                         if (messagesCount % messageLogFrequency == 0) {
-                            log.info("Received: " + messagesCount + " messages so far");
+                            LOG.info("Received: " + messagesCount + " messages so far");
                         }
                         // Thread.sleep(70);
                     }

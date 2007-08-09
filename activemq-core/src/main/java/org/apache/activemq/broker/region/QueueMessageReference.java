@@ -24,19 +24,19 @@ package org.apache.activemq.broker.region;
  */
 public interface QueueMessageReference extends MessageReference {
 
-    public static final QueueMessageReference NULL_MESSAGE = new NullMessageReference();
+    QueueMessageReference NULL_MESSAGE = new NullMessageReference();
 
-    public boolean isAcked();
+    boolean isAcked();
     
-    public void setAcked(boolean b);
+    void setAcked(boolean b);
     
-    public void drop();
+    void drop();
  
-    public boolean isDropped();
+    boolean isDropped();
         
-    public boolean lock(LockOwner subscription);
+    boolean lock(LockOwner subscription);
     
-    public void unlock();
+    void unlock();
     
-    public LockOwner getLockOwner();
+    LockOwner getLockOwner();
 }

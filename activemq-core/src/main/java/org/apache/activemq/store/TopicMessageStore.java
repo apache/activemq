@@ -1,15 +1,18 @@
 /**
- * 
- * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE
- * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
- * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
- * License. You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.activemq.store;
 
@@ -37,8 +40,7 @@ public interface TopicMessageStore extends MessageStore {
      * @param subscriptionPersistentId
      * @throws IOException
      */
-    public void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
-                            MessageId messageId) throws IOException;
+    void acknowledge(ConnectionContext context, String clientId, String subscriptionName, MessageId messageId) throws IOException;
 
     /**
      * @param clientId
@@ -47,7 +49,7 @@ public interface TopicMessageStore extends MessageStore {
      * @throws IOException
      * @throws JMSException
      */
-    public void deleteSubscription(String clientId, String subscriptionName) throws IOException;
+    void deleteSubscription(String clientId, String subscriptionName) throws IOException;
 
     /**
      * For the new subscription find the last acknowledged message ID and then
@@ -60,11 +62,9 @@ public interface TopicMessageStore extends MessageStore {
      * @param subscriptionName
      * @param listener
      * @param subscription
-     * 
      * @throws Exception
      */
-    public void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener)
-        throws Exception;
+    void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener) throws Exception;
 
     /**
      * For an active subscription - retrieve messages from the store for the
@@ -74,20 +74,17 @@ public interface TopicMessageStore extends MessageStore {
      * @param subscriptionName
      * @param maxReturned
      * @param listener
-     * 
      * @throws Exception
      */
-    public void recoverNextMessages(String clientId, String subscriptionName, int maxReturned,
-                                    MessageRecoveryListener listener) throws Exception;
+    void recoverNextMessages(String clientId, String subscriptionName, int maxReturned, MessageRecoveryListener listener) throws Exception;
 
     /**
      * A hint to the Store to reset any batching state for a durable subsriber
      * 
      * @param clientId
      * @param subscriptionName
-     * 
      */
-    public void resetBatching(String clientId, String subscriptionName);
+    void resetBatching(String clientId, String subscriptionName);
 
     /**
      * Get the number of messages ready to deliver from the store to a durable
@@ -98,7 +95,7 @@ public interface TopicMessageStore extends MessageStore {
      * @return the outstanding message count
      * @throws IOException
      */
-    public int getMessageCount(String clientId, String subscriberName) throws IOException;
+    int getMessageCount(String clientId, String subscriberName) throws IOException;
 
     /**
      * Finds the subscriber entry for the given consumer info
@@ -108,7 +105,7 @@ public interface TopicMessageStore extends MessageStore {
      * @return the SubscriptionInfo
      * @throws IOException
      */
-    public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException;
+    SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException;
 
     /**
      * Lists all the durable subscriptions for a given destination.
@@ -116,7 +113,7 @@ public interface TopicMessageStore extends MessageStore {
      * @return an array SubscriptionInfos
      * @throws IOException
      */
-    public SubscriptionInfo[] getAllSubscriptions() throws IOException;
+    SubscriptionInfo[] getAllSubscriptions() throws IOException;
 
     /**
      * Inserts the subscriber info due to a subscription change <p/> If this is
@@ -131,7 +128,6 @@ public interface TopicMessageStore extends MessageStore {
      * @param selector
      * @param retroactive
      * @throws IOException
-     * 
      */
-    public void addSubsciption(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException;
+    void addSubsciption(SubscriptionInfo subscriptionInfo, boolean retroactive) throws IOException;
 }

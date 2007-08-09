@@ -56,13 +56,15 @@ public class ClassLoading {
 
         // Check if it is a primitive type
         type = getPrimitiveType(className);
-        if (type != null)
+        if (type != null) {
             return type;
+        }
 
         // Check if it is a vm primitive
         type = getVMPrimitiveType(className);
-        if (type != null)
+        if (type != null) {
             return type;
+        }
 
         // Handle VM class syntax (Lclassname;)
         if (className.charAt(0) == 'L' && className.charAt(className.length() - 1) == ';') {
@@ -105,10 +107,11 @@ public class ClassLoading {
     }
 
     private static Class load(final String className, final ClassLoader classLoader) throws ClassNotFoundException {
-        if (classLoader == null)
+        if (classLoader == null) {
             return Class.forName(className);
-        else
+        } else {
             return classLoader.loadClass(className);
+        }
     }
 
     public static String getClassName(Class clazz) {

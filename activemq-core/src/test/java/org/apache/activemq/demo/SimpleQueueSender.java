@@ -42,7 +42,7 @@ import javax.naming.NamingException;
 
 public class SimpleQueueSender {
 
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(SimpleQueueSender.class);
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(SimpleQueueSender.class);
 
     /**
      * Main method.
@@ -59,18 +59,18 @@ public class SimpleQueueSender {
         Queue queue = null;
         QueueSender queueSender = null;
         TextMessage message = null;
-        final int NUM_MSGS;
+        final int numMsgs;
 
         if ((args.length < 1) || (args.length > 2)) {
-            log.info("Usage: java SimpleQueueSender " + "<queue-name> [<number-of-messages>]");
+            LOG.info("Usage: java SimpleQueueSender " + "<queue-name> [<number-of-messages>]");
             System.exit(1);
         }
         queueName = args[0];
-        log.info("Queue name is " + queueName);
+        LOG.info("Queue name is " + queueName);
         if (args.length == 2) {
-            NUM_MSGS = (new Integer(args[1])).intValue();
+            numMsgs = (new Integer(args[1])).intValue();
         } else {
-            NUM_MSGS = 1;
+            numMsgs = 1;
         }
 
         /*
@@ -79,7 +79,7 @@ public class SimpleQueueSender {
         try {
             jndiContext = new InitialContext();
         } catch (NamingException e) {
-            log.info("Could not create JNDI API context: " + e.toString());
+            LOG.info("Could not create JNDI API context: " + e.toString());
             System.exit(1);
         }
 
@@ -90,7 +90,7 @@ public class SimpleQueueSender {
             queueConnectionFactory = (QueueConnectionFactory)jndiContext.lookup("QueueConnectionFactory");
             queue = (Queue)jndiContext.lookup(queueName);
         } catch (NamingException e) {
-            log.info("JNDI API lookup failed: " + e);
+            LOG.info("JNDI API lookup failed: " + e);
             System.exit(1);
         }
 
@@ -105,9 +105,9 @@ public class SimpleQueueSender {
             queueSession = queueConnection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
             queueSender = queueSession.createSender(queue);
             message = queueSession.createTextMessage();
-            for (int i = 0; i < NUM_MSGS; i++) {
+            for (int i = 0; i < numMsgs; i++) {
                 message.setText("This is message " + (i + 1));
-                log.info("Sending message: " + message.getText());
+                LOG.info("Sending message: " + message.getText());
                 queueSender.send(message);
             }
 
@@ -116,7 +116,7 @@ public class SimpleQueueSender {
              */
             queueSender.send(queueSession.createMessage());
         } catch (JMSException e) {
-            log.info("Exception occurred: " + e.toString());
+            LOG.info("Exception occurred: " + e.toString());
         } finally {
             if (queueConnection != null) {
                 try {

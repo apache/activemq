@@ -57,7 +57,7 @@ public class PerfProducer implements Runnable {
         return rate;
     }
 
-    synchronized public void start() throws JMSException {
+    public synchronized void start() throws JMSException {
         if (!running) {
             rate.reset();
             running = true;
@@ -74,7 +74,7 @@ public class PerfProducer implements Runnable {
         connection.stop();
     }
 
-    synchronized public boolean isRunning() {
+    public synchronized boolean isRunning() {
         return running;
     }
 

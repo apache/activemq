@@ -25,7 +25,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1 $
  */
 public class CreateConsumerButDontStartConnectionWarningTest extends JmsQueueSendReceiveTest {
-    private static final transient Log log = LogFactory.getLog(CreateConsumerButDontStartConnectionWarningTest.class);
+    private static final transient Log LOG = LogFactory.getLog(CreateConsumerButDontStartConnectionWarningTest.class);
 
     @Override
     protected void startConnection() throws JMSException {
@@ -37,7 +37,7 @@ public class CreateConsumerButDontStartConnectionWarningTest extends JmsQueueSen
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
-            log.warn("Caught: " + e, e);
+            LOG.warn("Caught: " + e, e);
         }
     }
 }

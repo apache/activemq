@@ -22,7 +22,7 @@ package org.apache.activemq.thread;
  * @version $Revision: 1.3 $
  */
 public interface TaskRunner {
-    public abstract void wakeup() throws InterruptedException;
-    public abstract void shutdown() throws InterruptedException;
-    public abstract void shutdown(long timeout) throws InterruptedException;
+    void wakeup() throws InterruptedException;
+    void shutdown() throws InterruptedException;
+    void shutdown(long timeout) throws InterruptedException;
 }

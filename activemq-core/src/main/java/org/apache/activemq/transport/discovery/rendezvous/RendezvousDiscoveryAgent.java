@@ -44,7 +44,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener {
-    private static final Log log = LogFactory.getLog(RendezvousDiscoveryAgent.class);
+    private static final Log LOG = LogFactory.getLog(RendezvousDiscoveryAgent.class);
 
     private static final String TYPE_SUFFIX = "ActiveMQ-4.";
 
@@ -66,14 +66,14 @@ public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener
         }
         String type = getType();
         if (!type.endsWith(".")) {
-            log.warn("The type '" + type + "' should end with '.' to be a valid Rendezvous type");
+            LOG.warn("The type '" + type + "' should end with '.' to be a valid Rendezvous type");
             type += ".";
         }
         try {
             // force lazy construction
             getJmdns();
             if (listener != null) {
-                log.info("Discovering service of type: " + type);
+                LOG.info("Discovering service of type: " + type);
                 jmdns.addServiceListener(type, this);
             }
         } catch (IOException e) {
@@ -112,20 +112,22 @@ public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener
     // ServiceListener interface
     // -------------------------------------------------------------------------
     public void addService(JmDNS jmDNS, String type, String name) {
-        if (log.isDebugEnabled()) {
-            log.debug("addService with type: " + type + " name: " + name);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("addService with type: " + type + " name: " + name);
         }
-        if (listener != null)
+        if (listener != null) {
             listener.onServiceAdd(new DiscoveryEvent(name));
+        }
         jmDNS.requestServiceInfo(type, name);
     }
 
     public void removeService(JmDNS jmDNS, String type, String name) {
-        if (log.isDebugEnabled()) {
-            log.debug("removeService with type: " + type + " name: " + name);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("removeService with type: " + type + " name: " + name);
         }
-        if (listener != null)
+        if (listener != null) {
             listener.onServiceRemove(new DiscoveryEvent(name));
+        }
     }
 
     public void serviceAdded(ServiceEvent event) {
@@ -195,8 +197,8 @@ public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener
 
         String type = getType();
 
-        if (log.isDebugEnabled()) {
-            log.debug("Registering service type: " + type + " name: " + name + " details: " + map);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Registering service type: " + type + " name: " + name + " details: " + map);
         }
         return new ServiceInfo(type, name + "." + type, port, weight, priority, "");
     }

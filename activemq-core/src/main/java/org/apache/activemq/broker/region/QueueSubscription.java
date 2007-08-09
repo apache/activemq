@@ -33,7 +33,7 @@ import org.apache.commons.logging.LogFactory;
 
 public class QueueSubscription extends PrefetchSubscription implements LockOwner {
 
-    private static final Log log = LogFactory.getLog(QueueSubscription.class);
+    private static final Log LOG = LogFactory.getLog(QueueSubscription.class);
 
     public QueueSubscription(Broker broker, ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
         super(broker, context, info);
@@ -132,7 +132,7 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
             try {
                 activeMessage.setBooleanProperty("JMSXGroupFirstForConsumer", true, false);
             } catch (JMSException e) {
-                log.warn("Failed to set boolean header: " + e, e);
+                LOG.warn("Failed to set boolean header: " + e, e);
             }
         }
     }

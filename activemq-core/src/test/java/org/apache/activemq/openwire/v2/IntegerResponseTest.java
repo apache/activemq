@@ -33,7 +33,7 @@ import org.apache.activemq.command.IntegerResponse;
 public class IntegerResponseTest extends ResponseTest {
 
 
-    public static IntegerResponseTest SINGLETON = new IntegerResponseTest();
+    public static final IntegerResponseTest SINGLETON = new IntegerResponseTest();
 
     public Object createObject() throws Exception {
         IntegerResponse info = new IntegerResponse();

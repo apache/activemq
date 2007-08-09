@@ -30,10 +30,10 @@ public interface VirtualDestination extends DestinationInterceptor {
     /**
      * Returns the virtual destination
      */
-    public ActiveMQDestination getVirtualDestination();
+    ActiveMQDestination getVirtualDestination();
 
     /**
      * Creates a virtual destination from the physical destination
      */
-    public Destination intercept(Destination destination);
+    Destination intercept(Destination destination);
 }

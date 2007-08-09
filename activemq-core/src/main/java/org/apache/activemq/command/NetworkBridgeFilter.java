@@ -32,8 +32,8 @@ import org.apache.commons.logging.LogFactory;
  */
 public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
 
-    static final Log log = LogFactory.getLog(NetworkBridgeFilter.class);
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.NETWORK_BRIDGE_FILTER;
+    static final Log LOG = LogFactory.getLog(NetworkBridgeFilter.class);
 
     private BrokerId networkBrokerId;
     private int networkTTL;
@@ -74,8 +74,8 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
     protected boolean matchesForwardingFilter(Message message) {
 
         if (contains(message.getBrokerPath(), networkBrokerId)) {
-            if (log.isTraceEnabled()) {
-                log.trace("Message all ready routed once through this broker - ignoring: " + message);
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("Message all ready routed once through this broker - ignoring: " + message);
             }
             return false;
         }
@@ -83,8 +83,8 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
         int hops = message.getBrokerPath() == null ? 0 : message.getBrokerPath().length;
 
         if (hops >= networkTTL) {
-            if (log.isTraceEnabled()) {
-                log.trace("Message restricted to " + networkTTL + " network hops ignoring: " + message);
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("Message restricted to " + networkTTL + " network hops ignoring: " + message);
             }
             return false;
         }
@@ -94,8 +94,8 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
             ConsumerInfo info = (ConsumerInfo)message.getDataStructure();
             hops = info.getBrokerPath() == null ? 0 : info.getBrokerPath().length;
             if (hops >= networkTTL) {
-                if (log.isTraceEnabled()) {
-                    log.trace("ConsumerInfo advisory restricted to " + networkTTL + " network hops ignoring: " + message);
+                if (LOG.isTraceEnabled()) {
+                    LOG.trace("ConsumerInfo advisory restricted to " + networkTTL + " network hops ignoring: " + message);
                 }
                 return false;
             }

@@ -39,7 +39,8 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.4 $
  */
 public abstract class TestSupport extends TestCase {
-    final static protected Log log = LogFactory.getLog(TestSupport.class);
+    private static final Log LOG = LogFactory.getLog(TestSupport.class);
+    
     protected ActiveMQConnectionFactory connectionFactory;
     protected boolean topic = true;
 

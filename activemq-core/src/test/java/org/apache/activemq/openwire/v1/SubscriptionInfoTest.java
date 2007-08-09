@@ -31,7 +31,7 @@ import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
  */
 public class SubscriptionInfoTest extends DataFileGeneratorTestSupport {
 
-    public static SubscriptionInfoTest SINGLETON = new SubscriptionInfoTest();
+    public static final SubscriptionInfoTest SINGLETON = new SubscriptionInfoTest();
 
     public Object createObject() throws Exception {
         SubscriptionInfo info = new SubscriptionInfo();

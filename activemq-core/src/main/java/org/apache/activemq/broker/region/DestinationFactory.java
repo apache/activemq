@@ -35,21 +35,21 @@ public abstract class DestinationFactory {
     /**
      * Create destination implementation.
      */
-    abstract public Destination createDestination(ConnectionContext context, ActiveMQDestination destination, DestinationStatistics destinationStatistics) throws Exception;
+    public abstract Destination createDestination(ConnectionContext context, ActiveMQDestination destination, DestinationStatistics destinationStatistics) throws Exception;
 
     /**
      * Returns a set of all the {@link org.apache.activemq.command.ActiveMQDestination}
      * objects that the persistence store is aware exist.
      */
-    abstract public Set getDestinations();
+    public abstract Set getDestinations();
 
     /**
      * Lists all the durable subscirptions for a given destination.
      */
-    abstract public SubscriptionInfo[] getAllDurableSubscriptions(ActiveMQTopic topic) throws IOException;
+    public abstract SubscriptionInfo[] getAllDurableSubscriptions(ActiveMQTopic topic) throws IOException;
 
     
-    abstract public long getLastMessageBrokerSequenceId() throws IOException;
+    public abstract long getLastMessageBrokerSequenceId() throws IOException;
 
-    abstract public void setRegionBroker(RegionBroker regionBroker);
+    public abstract void setRegionBroker(RegionBroker regionBroker);
 }

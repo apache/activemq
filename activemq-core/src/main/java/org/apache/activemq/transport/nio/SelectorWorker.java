@@ -25,13 +25,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class SelectorWorker implements Runnable {
 
-    private final static AtomicInteger NEXT_ID = new AtomicInteger();
+    private static final AtomicInteger NEXT_ID = new AtomicInteger();
 
     final SelectorManager manager;
     final Selector selector;
     final int id = NEXT_ID.getAndIncrement();
     final AtomicInteger useCounter = new AtomicInteger();
-    final private int maxChannelsPerWorker;
+    private final int maxChannelsPerWorker;
 
     public SelectorWorker(SelectorManager manager) throws IOException {
         this.manager = manager;
@@ -69,11 +69,13 @@ public class SelectorWorker implements Runnable {
             while (isRunning()) {
 
                 int count = selector.select(10);
-                if (count == 0)
+                if (count == 0) {
                     continue;
+                }
 
-                if (!isRunning())
+                if (!isRunning()) {
                     return;
+                }
 
                 // Get a java.util.Set containing the SelectionKey objects
                 // for all channels that are ready for I/O.

@@ -133,8 +133,9 @@ public class JournalTransactionStore implements TransactionStore {
         synchronized (inflightTransactions) {
             tx = (Tx)inflightTransactions.remove(txid);
         }
-        if (tx == null)
+        if (tx == null) {
             return;
+        }
         peristenceAdapter.writeCommand(new JournalTransaction(JournalTransaction.XA_PREPARE, txid, false),
                                        true);
         synchronized (preparedTransactions) {
@@ -151,8 +152,9 @@ public class JournalTransactionStore implements TransactionStore {
         synchronized (inflightTransactions) {
             tx = (Tx)inflightTransactions.remove(txid);
         }
-        if (tx == null)
+        if (tx == null) {
             return;
+        }
         synchronized (preparedTransactions) {
             preparedTransactions.put(txid, tx);
         }
@@ -185,8 +187,9 @@ public class JournalTransactionStore implements TransactionStore {
                 tx = (Tx)inflightTransactions.remove(txid);
             }
         }
-        if (tx == null)
+        if (tx == null) {
             return;
+        }
         if (txid.isXATransaction()) {
             peristenceAdapter.writeCommand(new JournalTransaction(JournalTransaction.XA_COMMIT, txid,
                                                                   wasPrepared), true);
@@ -221,10 +224,11 @@ public class JournalTransactionStore implements TransactionStore {
         synchronized (inflightTransactions) {
             tx = (Tx)inflightTransactions.remove(txid);
         }
-        if (tx != null)
+        if (tx != null) {
             synchronized (preparedTransactions) {
                 tx = (Tx)preparedTransactions.remove(txid);
             }
+        }
         if (tx != null) {
             if (txid.isXATransaction()) {
                 peristenceAdapter.writeCommand(new JournalTransaction(JournalTransaction.XA_ROLLBACK, txid,
@@ -258,7 +262,7 @@ public class JournalTransactionStore implements TransactionStore {
     public void stop() throws Exception {
     }
 
-    synchronized public void recover(TransactionRecoveryListener listener) throws IOException {
+    public synchronized void recover(TransactionRecoveryListener listener) throws IOException {
         // All the in-flight transactions get rolled back..
         synchronized (inflightTransactions) {
             inflightTransactions.clear();

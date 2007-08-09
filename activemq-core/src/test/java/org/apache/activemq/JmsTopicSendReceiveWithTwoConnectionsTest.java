@@ -28,7 +28,7 @@ import javax.jms.Session;
  */
 public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTestSupport {
 
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory
         .getLog(JmsTopicSendReceiveWithTwoConnectionsTest.class);
 
     protected Connection sendConnection;
@@ -46,19 +46,19 @@ public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTes
         receiveConnection = createReceiveConnection();
         receiveConnection.start();
 
-        log.info("Created sendConnection: " + sendConnection);
-        log.info("Created receiveConnection: " + receiveConnection);
+        LOG.info("Created sendConnection: " + sendConnection);
+        LOG.info("Created receiveConnection: " + receiveConnection);
 
         session = sendConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         receiveSession = receiveConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-        log.info("Created sendSession: " + session);
-        log.info("Created receiveSession: " + receiveSession);
+        LOG.info("Created sendSession: " + session);
+        LOG.info("Created receiveSession: " + receiveSession);
 
         producer = session.createProducer(null);
         producer.setDeliveryMode(deliveryMode);
 
-        log.info("Created producer: " + producer + " delivery mode = "
+        LOG.info("Created producer: " + producer + " delivery mode = "
                  + (deliveryMode == DeliveryMode.PERSISTENT ? "PERSISTENT" : "NON_PERSISTENT"));
 
         if (topic) {
@@ -69,15 +69,15 @@ public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTes
             producerDestination = session.createQueue(getProducerSubject());
         }
 
-        log.info("Created  consumer destination: " + consumerDestination + " of type: "
+        LOG.info("Created  consumer destination: " + consumerDestination + " of type: "
                  + consumerDestination.getClass());
-        log.info("Created  producer destination: " + producerDestination + " of type: "
+        LOG.info("Created  producer destination: " + producerDestination + " of type: "
                  + producerDestination.getClass());
 
         consumer = createConsumer(receiveSession, consumerDestination);
         consumer.setMessageListener(this);
 
-        log.info("Started connections");
+        LOG.info("Started connections");
     }
 
     protected Connection createReceiveConnection() throws Exception {

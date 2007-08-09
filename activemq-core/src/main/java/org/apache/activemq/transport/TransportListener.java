@@ -30,24 +30,24 @@ public interface TransportListener {
      * called to process a command
      * @param command
      */
-    public void onCommand(Object command);
+    void onCommand(Object command);
     /**
      * An unrecoverable exception has occured on the transport
      * @param error
      */
-    public void onException(IOException error);
+    void onException(IOException error);
     
     /**
      * The transport has suffered an interuption from which it hopes to recover
      *
      */
-    public void transportInterupted();
+    void transportInterupted();
     
     
     /**
      * The transport has resumed after an interuption
      *
      */
-    public void transportResumed();
+    void transportResumed();
     
 }

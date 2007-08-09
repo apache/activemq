@@ -41,7 +41,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public final class TransactionTest extends TestCase {
 
-    private static final Log log = LogFactory.getLog(TransactionTest.class);
+    private static final Log LOG = LogFactory.getLog(TransactionTest.class);
 
     private volatile String receivedText;
 
@@ -74,18 +74,18 @@ public final class TransactionTest extends TestCase {
                     receivedText = tm.getText();
                     latch.countDown();
 
-                    log.info("consumer received message :" + receivedText);
+                    LOG.info("consumer received message :" + receivedText);
                     consumerSession.commit();
-                    log.info("committed transaction");
+                    LOG.info("committed transaction");
                 } catch (JMSException e) {
                     try {
                         consumerSession.rollback();
-                        log.info("rolled back transaction");
+                        LOG.info("rolled back transaction");
                     } catch (JMSException e1) {
-                        log.info(e1);
+                        LOG.info(e1);
                         e1.printStackTrace();
                     }
-                    log.info(e);
+                    LOG.info(e);
                     e.printStackTrace();
                 }
             }
@@ -98,15 +98,15 @@ public final class TransactionTest extends TestCase {
             tm = producerSession.createTextMessage();
             tm.setText("Hello, " + new Date());
             producer.send(tm);
-            log.info("producer sent message :" + tm.getText());
+            LOG.info("producer sent message :" + tm.getText());
         } catch (JMSException e) {
             e.printStackTrace();
         }
 
-        log.info("Waiting for latch");
+        LOG.info("Waiting for latch");
         latch.await();
 
-        log.info("test completed, destination=" + receivedText);
+        LOG.info("test completed, destination=" + receivedText);
     }
 
     protected void tearDown() throws Exception {

@@ -52,7 +52,7 @@ class NIODataFileAppender extends DataFileAppender {
 
             ByteBuffer header = ByteBuffer.allocateDirect(AsyncDataManager.ITEM_HEAD_SPACE);
             ByteBuffer footer = ByteBuffer.allocateDirect(AsyncDataManager.ITEM_FOOT_SPACE);
-            ByteBuffer buffer = ByteBuffer.allocateDirect(MAX_WRITE_BATCH_SIZE);
+            ByteBuffer buffer = ByteBuffer.allocateDirect(maxWriteBatchSize);
 
             // Populate the static parts of the headers and footers..
             header.putInt(0); // size

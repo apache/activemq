@@ -31,7 +31,7 @@ import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
  */
 public class JournalTraceTest extends DataFileGeneratorTestSupport {
 
-    public static JournalTraceTest SINGLETON = new JournalTraceTest();
+    public static final JournalTraceTest SINGLETON = new JournalTraceTest();
 
     public Object createObject() throws Exception {
         JournalTrace info = new JournalTrace();

@@ -20,7 +20,7 @@ import javax.jms.JMSException;
 import javax.jms.MessageEOFException;
 import javax.jms.MessageFormatException;
 
-final public class JMSExceptionSupport {
+public final class JMSExceptionSupport {
 
     public static JMSException create(String msg, Throwable cause) {
         JMSException exception = new JMSException(msg);
@@ -40,8 +40,9 @@ final public class JMSExceptionSupport {
             return (JMSException)cause;
         }
         String msg = cause.getMessage();
-        if (msg == null || msg.length() == 0)
+        if (msg == null || msg.length() == 0) {
             msg = cause.toString();
+        }
         JMSException exception = new JMSException(msg);
         exception.initCause(cause);
         return exception;
@@ -52,8 +53,9 @@ final public class JMSExceptionSupport {
             return (JMSException)cause;
         }
         String msg = cause.getMessage();
-        if (msg == null || msg.length() == 0)
+        if (msg == null || msg.length() == 0) {
             msg = cause.toString();
+        }
         JMSException exception = new JMSException(msg);
         exception.setLinkedException(cause);
         exception.initCause(cause);
@@ -62,8 +64,9 @@ final public class JMSExceptionSupport {
 
     public static MessageEOFException createMessageEOFException(Exception cause) {
         String msg = cause.getMessage();
-        if (msg == null || msg.length() == 0)
+        if (msg == null || msg.length() == 0) {
             msg = cause.toString();
+        }
         MessageEOFException exception = new MessageEOFException(msg);
         exception.setLinkedException(cause);
         exception.initCause(cause);
@@ -72,8 +75,9 @@ final public class JMSExceptionSupport {
 
     public static MessageFormatException createMessageFormatException(Exception cause) {
         String msg = cause.getMessage();
-        if (msg == null || msg.length() == 0)
+        if (msg == null || msg.length() == 0) {
             msg = cause.toString();
+        }
         MessageFormatException exception = new MessageFormatException(msg);
         exception.setLinkedException(cause);
         exception.initCause(cause);

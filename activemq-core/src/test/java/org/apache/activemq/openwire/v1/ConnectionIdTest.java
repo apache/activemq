@@ -31,7 +31,7 @@ import org.apache.activemq.openwire.DataFileGeneratorTestSupport;
  */
 public class ConnectionIdTest extends DataFileGeneratorTestSupport {
 
-    public static ConnectionIdTest SINGLETON = new ConnectionIdTest();
+    public static final ConnectionIdTest SINGLETON = new ConnectionIdTest();
 
     public Object createObject() throws Exception {
         ConnectionId info = new ConnectionId();

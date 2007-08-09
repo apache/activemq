@@ -35,7 +35,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class ActiveMQMapMessageTest extends TestCase {
-    private static final transient Log log = LogFactory.getLog(ActiveMQMapMessageTest.class);
+    private static final Log LOG = LogFactory.getLog(ActiveMQMapMessageTest.class);
 
     private String name = "testName";
 
@@ -252,7 +252,7 @@ public class ActiveMQMapMessageTest extends TestCase {
             msg.setObject("short", shortValue);
             msg.setObject("string", stringValue);
         } catch (MessageFormatException mfe) {
-            log.warn("Caught: " + mfe);
+            LOG.warn("Caught: " + mfe);
             mfe.printStackTrace();
             fail("object formats should be correct");
         }

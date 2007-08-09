@@ -35,7 +35,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class CommandJoiner extends TransportFilter {
-    private static final Log log = LogFactory.getLog(CommandJoiner.class);
+    private static final Log LOG = LogFactory.getLog(CommandJoiner.class);
 
     private ByteArrayOutputStream out = new ByteArrayOutputStream();
     private OpenWireFormat wireFormat;
@@ -68,7 +68,7 @@ public class CommandJoiner extends TransportFilter {
 
                     getTransportListener().onCommand(completeCommand);
                 } catch (IOException e) {
-                    log.warn("Failed to unmarshal partial command: " + command);
+                    LOG.warn("Failed to unmarshal partial command: " + command);
                     getTransportListener().onException(e);
                 }
             }

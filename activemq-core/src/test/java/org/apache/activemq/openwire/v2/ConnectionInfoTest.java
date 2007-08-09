@@ -29,7 +29,7 @@ import org.apache.activemq.command.ConnectionInfo;
  */
 public class ConnectionInfoTest extends BaseCommandTestSupport {
 
-    public static ConnectionInfoTest SINGLETON = new ConnectionInfoTest();
+    public static final ConnectionInfoTest SINGLETON = new ConnectionInfoTest();
 
     public Object createObject() throws Exception {
         ConnectionInfo info = new ConnectionInfo();

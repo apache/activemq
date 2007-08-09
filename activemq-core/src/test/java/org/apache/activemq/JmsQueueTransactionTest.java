@@ -33,7 +33,7 @@ import org.apache.activemq.test.JmsResourceProvider;
  * @version $Revision: 1.2 $
  */
 public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(JmsQueueTransactionTest.class);
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(JmsQueueTransactionTest.class);
 
     /**
      * @see org.apache.activemq.JmsTransactionTestSupport#getJmsResourceProvider()
@@ -62,8 +62,8 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
         producer.send(outbound[1]);
         session.commit();
 
-        log.info("Sent 0: " + outbound[0]);
-        log.info("Sent 1: " + outbound[1]);
+        LOG.info("Sent 0: " + outbound[0]);
+        LOG.info("Sent 1: " + outbound[1]);
 
         ArrayList messages = new ArrayList();
         Message message = consumer.receive(1000);
@@ -170,7 +170,7 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
         // There should be no more.
         boolean tooMany = false;
         while (enumeration.hasMoreElements()) {
-            log.info("Got extra message: " + ((TextMessage)enumeration.nextElement()).getText());
+            LOG.info("Got extra message: " + ((TextMessage)enumeration.nextElement()).getText());
             tooMany = true;
         }
         assertFalse(tooMany);

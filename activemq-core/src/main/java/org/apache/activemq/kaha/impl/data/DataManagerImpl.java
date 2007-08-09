@@ -40,9 +40,10 @@ import org.apache.commons.logging.LogFactory;
  */
 public final class DataManagerImpl implements DataManager {
 
-    private static final Log log = LogFactory.getLog(DataManagerImpl.class);
     public static final long MAX_FILE_LENGTH = 1024 * 1024 * 32;
+    private static final Log LOG = LogFactory.getLog(DataManagerImpl.class);
     private static final String NAME_PREFIX = "data-";
+    
     private final File directory;
     private final String name;
     private SyncDataFileReader reader;
@@ -119,7 +120,7 @@ public final class DataManagerImpl implements DataManager {
         Integer key = Integer.valueOf(item.getFile());
         DataFile dataFile = (DataFile)fileMap.get(key);
         if (dataFile == null) {
-            log.error("Looking for key " + key + " but not found in fileMap: " + fileMap);
+            LOG.error("Looking for key " + key + " but not found in fileMap: " + fileMap);
             throw new IOException("Could not locate data file " + NAME_PREFIX + name + "-" + item.getFile());
         }
         return dataFile;
@@ -184,7 +185,7 @@ public final class DataManagerImpl implements DataManager {
             try {
                 type = getReader().readDataItemSize(item);
             } catch (IOException ignore) {
-                log.trace("End of data file reached at (header was invalid): " + item);
+                LOG.trace("End of data file reached at (header was invalid): " + item);
                 return;
             }
             if (type == REDO_ITEM_TYPE) {
@@ -193,7 +194,7 @@ public final class DataManagerImpl implements DataManager {
                 try {
                     object = readItem(redoMarshaller, item);
                 } catch (IOException e1) {
-                    log.trace("End of data file reached at (payload was invalid): " + item);
+                    LOG.trace("End of data file reached at (payload was invalid): " + item);
                     return;
                 }
                 try {
@@ -325,7 +326,7 @@ public final class DataManagerImpl implements DataManager {
             writer.force(dataFile);
         }
         boolean result = dataFile.delete();
-        log.debug("discarding data file " + dataFile + (result ? "successful " : "failed"));
+        LOG.debug("discarding data file " + dataFile + (result ? "successful " : "failed"));
     }
 
     /*

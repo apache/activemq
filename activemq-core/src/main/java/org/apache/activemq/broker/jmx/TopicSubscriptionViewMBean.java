@@ -25,12 +25,12 @@ public interface TopicSubscriptionViewMBean extends SubscriptionViewMBean {
     /**
      * @return the number of messages discarded due to being a slow consumer
      */
-    public int getDiscardedCount();
+    int getDiscardedCount();
 
     /**
      * @return the maximun number of messages that can be pending.
      */
-    public int getMaximumPendingQueueSize();
-    public void setMaximumPendingQueueSize(int max);
+    int getMaximumPendingQueueSize();
+    void setMaximumPendingQueueSize(int max);
     
 }

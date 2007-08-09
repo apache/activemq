@@ -38,7 +38,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class UsageManager implements Service {
 
-    private static final Log log = LogFactory.getLog(UsageManager.class);
+    private static final Log LOG = LogFactory.getLog(UsageManager.class);
 
     private final UsageManager parent;
     private long limit;
@@ -58,7 +58,7 @@ public class UsageManager implements Service {
      * manager
      */
     private boolean sendFailIfNoSpaceExplicitySet;
-    private final boolean debug = log.isDebugEnabled();
+    private final boolean debug = LOG.isDebugEnabled();
     private String name = "";
     private float usagePortion = 1.0f;
     private List<UsageManager> children = new CopyOnWriteArrayList<UsageManager>();
@@ -331,7 +331,7 @@ public class UsageManager implements Service {
 
     private void fireEvent(int oldPercentUsage, int newPercentUsage) {
         if (debug) {
-            log.debug("Memory usage change.  from: " + oldPercentUsage + ", to: " + newPercentUsage);
+            LOG.debug("Memory usage change.  from: " + oldPercentUsage + ", to: " + newPercentUsage);
         }
         // Switching from being full to not being full..
         if (oldPercentUsage >= 100 && newPercentUsage < 100) {

@@ -32,13 +32,13 @@ import org.apache.commons.logging.LogFactory;
  */
 public class MulticastTransportTest extends UdpTransportTest {
     
-    protected static final Log log = LogFactory.getLog(MulticastTransportTest.class);
+    private static final Log LOG = LogFactory.getLog(MulticastTransportTest.class);
 
     private String multicastURI = "multicast://224.1.2.3:6255";
     
 
     protected Transport createProducer() throws Exception {
-        log.info("Producer using URI: " + multicastURI);
+        LOG.info("Producer using URI: " + multicastURI);
         
         // we are not using the TransportFactory as this assumes that
         // transports talk to a server using a WireFormat Negotiation step

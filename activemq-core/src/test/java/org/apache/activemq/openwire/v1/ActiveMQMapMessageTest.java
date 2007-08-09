@@ -30,7 +30,7 @@ import org.apache.activemq.command.ActiveMQMapMessage;
  */
 public class ActiveMQMapMessageTest extends ActiveMQMessageTest {
 
-    public static ActiveMQMapMessageTest SINGLETON = new ActiveMQMapMessageTest();
+    public static final ActiveMQMapMessageTest SINGLETON = new ActiveMQMapMessageTest();
 
     public Object createObject() throws Exception {
         ActiveMQMapMessage info = new ActiveMQMapMessage();

@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -31,7 +31,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: $
  */
 public class UnreliableCommandDatagramSocket extends CommandDatagramSocket {
-    private static final Log log = LogFactory.getLog(UnreliableCommandDatagramSocket.class);
+    private static final Log LOG = LogFactory.getLog(UnreliableCommandDatagramSocket.class);
 
     private DropCommandStrategy dropCommandStrategy;
 
@@ -43,7 +43,7 @@ public class UnreliableCommandDatagramSocket extends CommandDatagramSocket {
 
     protected void sendWriteBuffer(int commandId, SocketAddress address, byte[] data, boolean redelivery) throws IOException {
         if (dropCommandStrategy.shouldDropCommand(commandId, address, redelivery)) {
-            log.info("Dropping datagram with command: " + commandId);
+            LOG.info("Dropping datagram with command: " + commandId);
 
             // lets still add it to the replay buffer though!
             ReplayBuffer bufferCache = getReplayBuffer();

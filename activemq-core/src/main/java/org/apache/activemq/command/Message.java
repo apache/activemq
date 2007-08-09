@@ -38,7 +38,7 @@ import org.apache.activemq.wireformat.WireFormat;
  * @openwire:marshaller
  * @version $Revision$
  */
-abstract public class Message extends BaseCommand implements MarshallAware, MessageReference {
+public abstract class Message extends BaseCommand implements MarshallAware, MessageReference {
 
     public static final int AVERAGE_MESSAGE_SIZE_OVERHEAD = 500;
 
@@ -85,7 +85,7 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
     protected boolean droppable;
     private BrokerId[] cluster;
 
-    abstract public Message copy();
+    public abstract Message copy();
 
     protected void copy(Message copy) {
         super.copy(copy);
@@ -108,10 +108,11 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
         copy.userID = userID;
         copy.groupSequence = groupSequence;
 
-        if (properties != null)
+        if (properties != null) {
             copy.properties = new HashMap(properties);
-        else
+        } else {
             copy.properties = properties;
+        }
 
         copy.content = content;
         copy.marshalledProperties = marshalledProperties;
@@ -585,7 +586,7 @@ abstract public class Message extends BaseCommand implements MarshallAware, Mess
         return rc;
     }
 
-    synchronized public int decrementReferenceCount() {
+    public synchronized int decrementReferenceCount() {
         int rc;
         int size;
         synchronized (this) {

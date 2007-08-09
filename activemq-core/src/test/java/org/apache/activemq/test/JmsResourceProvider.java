@@ -112,10 +112,11 @@ public class JmsResourceProvider {
      *      java.lang.String)
      */
     public Destination createDestination(Session session, String name) throws JMSException {
-        if (isTopic)
+        if (isTopic) {
             return session.createTopic("TOPIC." + name);
-        else
+        } else {
             return session.createQueue("QUEUE." + name);
+        }
     }
 
     /**

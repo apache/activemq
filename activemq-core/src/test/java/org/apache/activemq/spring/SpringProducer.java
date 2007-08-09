@@ -22,12 +22,13 @@ import javax.jms.Message;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
 
 public class SpringProducer {
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-            .getLog(SpringProducer.class);
+    private static final Log LOG = LogFactory.getLog(SpringProducer.class);
     private JmsTemplate template;
     private Destination destination;
     private int messageCount = 10;
@@ -37,7 +38,7 @@ public class SpringProducer {
             final String text = "Text for message: " + i;
             template.send(destination, new MessageCreator() {
                 public Message createMessage(Session session) throws JMSException {
-                    log.info("Sending message: " + text);
+                    LOG.info("Sending message: " + text);
                     TextMessage message = session.createTextMessage(text);
                     message.setStringProperty("next", "foo");
                     return message;

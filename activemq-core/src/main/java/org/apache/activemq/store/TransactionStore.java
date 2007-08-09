@@ -21,18 +21,20 @@ import java.io.IOException;
 import org.apache.activemq.Service;
 import org.apache.activemq.command.TransactionId;
 
-
 /**
- * Represents the durable store of the commit/rollback operations taken against the
- * broker.
- *
+ * Represents the durable store of the commit/rollback operations taken against
+ * the broker.
+ * 
  * @version $Revision: 1.2 $
  */
 public interface TransactionStore extends Service {
 
-    public void prepare(TransactionId txid) throws IOException;    
-    public void commit(TransactionId txid, boolean wasPrepared) throws IOException;    
-    public void rollback(TransactionId txid) throws IOException; 
-    public void recover(TransactionRecoveryListener listener) throws IOException;
-    
+    void prepare(TransactionId txid) throws IOException;
+
+    void commit(TransactionId txid, boolean wasPrepared) throws IOException;
+
+    void rollback(TransactionId txid) throws IOException;
+
+    void recover(TransactionRecoveryListener listener) throws IOException;
+
 }

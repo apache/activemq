@@ -28,7 +28,7 @@ import org.apache.activemq.command.BrokerInfo;
  */
 public class BrokerInfoTest extends BaseCommandTestSupport {
 
-    public static BrokerInfoTest SINGLETON = new BrokerInfoTest();
+    public static final BrokerInfoTest SINGLETON = new BrokerInfoTest();
 
     public Object createObject() throws Exception {
         BrokerInfo info = new BrokerInfo();

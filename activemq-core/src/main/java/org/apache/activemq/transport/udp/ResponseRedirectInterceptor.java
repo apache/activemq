@@ -22,7 +22,6 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
 
 /**
- *
  * @version $Revision: $
  */
 public class ResponseRedirectInterceptor extends TransportFilter {
@@ -34,11 +33,11 @@ public class ResponseRedirectInterceptor extends TransportFilter {
     }
 
     public void onCommand(Object o) {
-    	final Command command = (Command) o;
+        final Command command = (Command)o;
         // redirect to the endpoint that the last response came from
         Endpoint from = command.getFrom();
         transport.setTargetEndpoint(from);
-    
+
         super.onCommand(command);
     }
 }

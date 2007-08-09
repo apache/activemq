@@ -30,7 +30,7 @@ import org.apache.activemq.command.ControlCommand;
  */
 public class ControlCommandTest extends BaseCommandTestSupport {
 
-    public static ControlCommandTest SINGLETON = new ControlCommandTest();
+    public static final ControlCommandTest SINGLETON = new ControlCommandTest();
 
     public Object createObject() throws Exception {
         ControlCommand info = new ControlCommand();

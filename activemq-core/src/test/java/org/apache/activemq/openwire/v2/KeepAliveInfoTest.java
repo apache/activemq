@@ -33,7 +33,7 @@ import org.apache.activemq.command.KeepAliveInfo;
 public class KeepAliveInfoTest extends BaseCommandTestSupport {
 
 
-    public static KeepAliveInfoTest SINGLETON = new KeepAliveInfoTest();
+    public static final KeepAliveInfoTest SINGLETON = new KeepAliveInfoTest();
 
     public Object createObject() throws Exception {
         KeepAliveInfo info = new KeepAliveInfo();

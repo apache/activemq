@@ -71,8 +71,9 @@ public class JournalImplTest extends TestCase {
 
     protected void tearDown() throws Exception {
         journal.close();
-        if (logDirectory.exists())
+        if (logDirectory.exists()) {
             deleteDir(logDirectory);
+        }
         // assertTrue( !logDirectory.exists() );
     }
 
@@ -165,12 +166,15 @@ public class JournalImplTest extends TestCase {
 
         // System.out.println("Comparing: "+new String(arg0)+" and "+new
         // String(arg1));
-        if (arg0 == null ^ arg1 == null)
+        if (arg0 == null ^ arg1 == null) {
             fail("Not equal: " + arg0 + " != " + arg1);
-        if (arg0 == null)
+        }
+        if (arg0 == null) {
             return;
-        if (arg0.length != arg1.length)
+        }
+        if (arg0.length != arg1.length) {
             fail("Array lenght not equal: " + arg0.length + " != " + arg1.length);
+        }
         for (int i = 0; i < arg0.length; i++) {
             if (arg0[i] != arg1[i]) {
                 fail("Array item not equal at index " + i + ": " + arg0[i] + " != " + arg1[i]);

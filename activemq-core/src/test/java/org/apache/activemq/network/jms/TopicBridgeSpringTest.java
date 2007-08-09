@@ -38,7 +38,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class TopicBridgeSpringTest extends TestCase implements MessageListener {
 
-    protected static final Log log = LogFactory.getLog(TopicBridgeSpringTest.class);
+    private static final Log LOG = LogFactory.getLog(TopicBridgeSpringTest.class);
 
     protected static final int MESSAGE_COUNT = 10;
     protected AbstractApplicationContext context;
@@ -81,10 +81,10 @@ public class TopicBridgeSpringTest extends TestCase implements MessageListener {
     public void testTopicRequestorOverBridge() throws JMSException {
         for (int i = 0; i < MESSAGE_COUNT; i++) {
             TextMessage msg = requestServerSession.createTextMessage("test msg: " + i);
-            log.info("Making request: " + msg);
+            LOG.info("Making request: " + msg);
             TextMessage result = (TextMessage)requestor.request(msg);
             assertNotNull(result);
-            log.info("Received result: " + result.getText());
+            LOG.info("Received result: " + result.getText());
         }
     }
 
@@ -96,7 +96,7 @@ public class TopicBridgeSpringTest extends TestCase implements MessageListener {
             replyTo = msg.getJMSReplyTo();
             textMsg.clearBody();
             textMsg.setText(payload);
-            log.info("Sending response: " + textMsg);
+            LOG.info("Sending response: " + textMsg);
             requestServerProducer.send(replyTo, textMsg);
         } catch (JMSException e) {
             // TODO Auto-generated catch block

@@ -48,7 +48,7 @@ public class TypeConversionSupport {
         Object convert(Object value);
     }
 
-    static final private HashMap CONVERSION_MAP = new HashMap();
+    private static final HashMap CONVERSION_MAP = new HashMap();
     static {
         Converter toStringConverter = new Converter() {
             public Object convert(Object value) {
@@ -139,16 +139,18 @@ public class TypeConversionSupport {
         });
     }
 
-    static public Object convert(Object value, Class clazz) {
+    public static Object convert(Object value, Class clazz) {
 
         assert value != null && clazz != null;
 
-        if (value.getClass() == clazz)
+        if (value.getClass() == clazz) {
             return value;
+        }
 
         Converter c = (Converter) CONVERSION_MAP.get(new ConversionKey(value.getClass(), clazz));
-        if (c == null)
+        if (c == null) {
             return null;
+        }
         return c.convert(value);
 
     }

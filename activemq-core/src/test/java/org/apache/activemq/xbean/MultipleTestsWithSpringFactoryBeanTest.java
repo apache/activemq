@@ -35,7 +35,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
  */
 public class MultipleTestsWithSpringFactoryBeanTest extends TestCase {
     
-    protected static final Log log = LogFactory.getLog(MultipleTestsWithSpringFactoryBeanTest.class);
+    private static final Log LOG = LogFactory.getLog(MultipleTestsWithSpringFactoryBeanTest.class);
     
     protected AbstractApplicationContext context;
     protected BrokerService service;
@@ -48,7 +48,7 @@ public class MultipleTestsWithSpringFactoryBeanTest extends TestCase {
     }
     
     protected void setUp() throws Exception {
-        log.info("### starting up the test case: " + getName());
+        LOG.info("### starting up the test case: " + getName());
         
         super.setUp();
         context = new ClassPathXmlApplicationContext("org/apache/activemq/xbean/spring2.xml");
@@ -59,7 +59,7 @@ public class MultipleTestsWithSpringFactoryBeanTest extends TestCase {
         
         connection = createConnectionFactory().createConnection();
         connection.start();
-        log.info("### started up the test case: " + getName());
+        LOG.info("### started up the test case: " + getName());
     }
 
     protected void tearDown() throws Exception {
@@ -70,7 +70,7 @@ public class MultipleTestsWithSpringFactoryBeanTest extends TestCase {
         context.close();
         super.tearDown();
         
-        log.info("### closed down the test case: " + getName());
+        LOG.info("### closed down the test case: " + getName());
     }
 
     protected ConnectionFactory createConnectionFactory() {

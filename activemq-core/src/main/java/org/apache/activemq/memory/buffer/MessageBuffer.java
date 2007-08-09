@@ -25,12 +25,12 @@ package org.apache.activemq.memory.buffer;
  */
 public interface MessageBuffer {
 
-    public int getSize();
+    int getSize();
 
     /**
      * Creates a new message queue instance
      */
-    public MessageQueue createMessageQueue();
+    MessageQueue createMessageQueue();
 
     /**
      * After a message queue has changed we may need to perform some evictions
@@ -38,8 +38,8 @@ public interface MessageBuffer {
      * @param delta
      * @param queueSize
      */
-    public void onSizeChanged(MessageQueue queue, int delta, int queueSize);
+    void onSizeChanged(MessageQueue queue, int delta, int queueSize);
 
-    public void clear();
+    void clear();
 
 }

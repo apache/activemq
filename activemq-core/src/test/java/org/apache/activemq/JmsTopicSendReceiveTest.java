@@ -27,7 +27,7 @@ import javax.jms.Topic;
  * @version $Revision: 1.3 $
  */
 public class JmsTopicSendReceiveTest extends JmsSendReceiveTestSupport {
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(JmsTopicSendReceiveTest.class);
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(JmsTopicSendReceiveTest.class);
 
     protected Connection connection;
 
@@ -40,15 +40,15 @@ public class JmsTopicSendReceiveTest extends JmsSendReceiveTestSupport {
             connection.setClientID(getClass().getName());
         }
 
-        log.info("Created connection: " + connection);
+        LOG.info("Created connection: " + connection);
 
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-        log.info("Created session: " + session);
+        LOG.info("Created session: " + session);
         producer = session.createProducer(null);
         producer.setDeliveryMode(deliveryMode);
 
-        log.info("Created producer: " + producer + " delivery mode = " + (deliveryMode == DeliveryMode.PERSISTENT ? "PERSISTENT" : "NON_PERSISTENT"));
+        LOG.info("Created producer: " + producer + " delivery mode = " + (deliveryMode == DeliveryMode.PERSISTENT ? "PERSISTENT" : "NON_PERSISTENT"));
 
         if (topic) {
             consumerDestination = session.createTopic(getConsumerSubject());
@@ -58,8 +58,8 @@ public class JmsTopicSendReceiveTest extends JmsSendReceiveTestSupport {
             producerDestination = session.createQueue(getProducerSubject());
         }
 
-        log.info("Created  consumer destination: " + consumerDestination + " of type: " + consumerDestination.getClass());
-        log.info("Created  producer destination: " + producerDestination + " of type: " + producerDestination.getClass());
+        LOG.info("Created  consumer destination: " + consumerDestination + " of type: " + consumerDestination.getClass());
+        LOG.info("Created  producer destination: " + producerDestination + " of type: " + producerDestination.getClass());
         consumer = createConsumer();
         consumer.setMessageListener(this);
         connection.start();
@@ -69,17 +69,17 @@ public class JmsTopicSendReceiveTest extends JmsSendReceiveTestSupport {
 
     protected MessageConsumer createConsumer() throws JMSException {
         if (durable) {
-            log.info("Creating durable consumer");
+            LOG.info("Creating durable consumer");
             return session.createDurableSubscriber((Topic)consumerDestination, getName());
         }
         return session.createConsumer(consumerDestination);
     }
 
     protected void tearDown() throws Exception {
-        log.info("Dumping stats...");
+        LOG.info("Dumping stats...");
         // connectionFactory.getStats().reset();
 
-        log.info("Closing down connection");
+        LOG.info("Closing down connection");
 
         /** TODO we should be able to shut down properly */
         session.close();

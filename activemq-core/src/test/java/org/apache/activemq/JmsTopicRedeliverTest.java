@@ -31,7 +31,7 @@ import javax.jms.Topic;
  */
 public class JmsTopicRedeliverTest extends TestSupport {
 
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(JmsTopicRedeliverTest.class);
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(JmsTopicRedeliverTest.class);
 
     protected Connection connection;
     protected Session session;
@@ -56,17 +56,17 @@ public class JmsTopicRedeliverTest extends TestSupport {
             connection.setClientID(getClass().getName());
         }
 
-        log.info("Created connection: " + connection);
+        LOG.info("Created connection: " + connection);
 
         session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
         consumeSession = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
 
-        log.info("Created session: " + session);
-        log.info("Created consumeSession: " + consumeSession);
+        LOG.info("Created session: " + session);
+        LOG.info("Created consumeSession: " + consumeSession);
         producer = session.createProducer(null);
         // producer.setDeliveryMode(deliveryMode);
 
-        log.info("Created producer: " + producer);
+        LOG.info("Created producer: " + producer);
 
         if (topic) {
             consumerDestination = session.createTopic(getConsumerSubject());
@@ -76,12 +76,12 @@ public class JmsTopicRedeliverTest extends TestSupport {
             producerDestination = session.createQueue(getProducerSubject());
         }
 
-        log.info("Created  consumer destination: " + consumerDestination + " of type: " + consumerDestination.getClass());
-        log.info("Created  producer destination: " + producerDestination + " of type: " + producerDestination.getClass());
+        LOG.info("Created  consumer destination: " + consumerDestination + " of type: " + consumerDestination.getClass());
+        LOG.info("Created  producer destination: " + producerDestination + " of type: " + producerDestination.getClass());
         consumer = createConsumer();
         connection.start();
 
-        log.info("Created connection: " + connection);
+        LOG.info("Created connection: " + connection);
     }
 
     protected void tearDown() throws Exception {
@@ -121,7 +121,7 @@ public class JmsTopicRedeliverTest extends TestSupport {
         Message sendMessage = session.createTextMessage(text);
 
         if (verbose) {
-            log.info("About to send a message: " + sendMessage + " with text: " + text);
+            LOG.info("About to send a message: " + sendMessage + " with text: " + text);
         }
         producer.send(producerDestination, sendMessage);
 
@@ -149,7 +149,7 @@ public class JmsTopicRedeliverTest extends TestSupport {
 
     protected MessageConsumer createConsumer() throws JMSException {
         if (durable) {
-            log.info("Creating durable consumer");
+            LOG.info("Creating durable consumer");
             return consumeSession.createDurableSubscriber((Topic)consumerDestination, getName());
         }
         return consumeSession.createConsumer(consumerDestination);

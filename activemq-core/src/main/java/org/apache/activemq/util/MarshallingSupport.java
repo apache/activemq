@@ -52,7 +52,7 @@ public class MarshallingSupport {
     public static final byte LIST_TYPE = 12;
     public static final byte BIG_STRING_TYPE = 13;
 
-    static public void marshalPrimitiveMap(Map map, DataOutputStream out) throws IOException {
+    public static void marshalPrimitiveMap(Map map, DataOutputStream out) throws IOException {
         if (map == null) {
             out.writeInt(-1);
         } else {
@@ -66,7 +66,7 @@ public class MarshallingSupport {
         }
     }
 
-    static public Map unmarshalPrimitiveMap(DataInputStream in) throws IOException {
+    public static Map unmarshalPrimitiveMap(DataInputStream in) throws IOException {
         return unmarshalPrimitiveMap(in, Integer.MAX_VALUE);
     }
 
@@ -76,9 +76,9 @@ public class MarshallingSupport {
      * @throws IOException
      * @throws IOException
      */
-    public static Map unmarshalPrimitiveMap(DataInputStream in, int max_property_size) throws IOException {
+    public static Map unmarshalPrimitiveMap(DataInputStream in, int maxPropertySize) throws IOException {
         int size = in.readInt();
-        if (size > max_property_size) {
+        if (size > maxPropertySize) {
             throw new IOException("Primitive map is larger than the allowed size: " + size);
         }
         if (size < 0) {
@@ -111,7 +111,7 @@ public class MarshallingSupport {
         return answer;
     }
 
-    static public void marshalPrimitive(DataOutputStream out, Object value) throws IOException {
+    public static void marshalPrimitive(DataOutputStream out, Object value) throws IOException {
         if (value == null) {
             marshalNull(out);
         } else if (value.getClass() == Boolean.class) {
@@ -145,7 +145,7 @@ public class MarshallingSupport {
         }
     }
 
-    static public Object unmarshalPrimitive(DataInputStream in) throws IOException {
+    public static Object unmarshalPrimitive(DataInputStream in) throws IOException {
         Object value = null;
         byte type = in.readByte();
         switch (type) {
@@ -260,7 +260,7 @@ public class MarshallingSupport {
         }
     }
 
-    static public void writeUTF8(DataOutput dataOut, String text) throws IOException {
+    public static void writeUTF8(DataOutput dataOut, String text) throws IOException {
         if (text != null) {
             int strlen = text.length();
             int utflen = 0;
@@ -307,7 +307,7 @@ public class MarshallingSupport {
         }
     }
 
-    static public String readUTF8(DataInput dataIn) throws IOException {
+    public static String readUTF8(DataInput dataIn) throws IOException {
         int utflen = dataIn.readInt(); // TODO diff: Sun code
         if (utflen > -1) {
             StringBuffer str = new StringBuffer(utflen);

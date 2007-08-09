@@ -211,7 +211,7 @@ public class MessageExpirationTest extends BrokerTestSupport {
         connection.send(closeConnectionInfo(connectionInfo));
     }
 
-    public void TestMessagesInSubscriptionPendingListExpire() {
+    public void xinitCombosForTestMessagesInSubscriptionPendingListExpire() {
         addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});
         addCombinationValues("destinationType", new Object[] {Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), Byte.valueOf(ActiveMQDestination.TOPIC_TYPE),
                                                               Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE), Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)});

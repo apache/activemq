@@ -31,7 +31,7 @@ import org.apache.activemq.test.JmsTopicSendReceiveTest;
  * @version $Revision: 1.5 $
  */
 public class JmsDurableTopicSendReceiveTest extends JmsTopicSendReceiveTest {
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory.getLog(JmsDurableTopicSendReceiveTest.class);
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(JmsDurableTopicSendReceiveTest.class);
 
     protected Connection connection2;
     protected Session session2;
@@ -75,7 +75,7 @@ public class JmsDurableTopicSendReceiveTest extends JmsTopicSendReceiveTest {
         message.setStringProperty("test", "test");
         message.setJMSType("test");
         producer2.send(producerDestination2, message);
-        log.info("Creating durable consumer");
+        LOG.info("Creating durable consumer");
         consumer2 = consumeSession2.createDurableSubscriber((Topic)consumerDestination2, getName());
         Message msg = consumer2.receive(1000);
         assertNotNull(msg);

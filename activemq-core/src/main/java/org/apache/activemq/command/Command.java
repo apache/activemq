@@ -51,14 +51,14 @@ public interface Command extends DataStructure {
      * The endpoint within the transport where this message came from which could be null if the 
      * transport only supports a single endpoint.
      */
-    public Endpoint getFrom();
+    Endpoint getFrom();
 
-    public void setFrom(Endpoint from);
+    void setFrom(Endpoint from);
 
     /**
      * The endpoint within the transport where this message is going to - null means all endpoints.
      */
-    public Endpoint getTo();
+    Endpoint getTo();
 
-    public void setTo(Endpoint to);
+    void setTo(Endpoint to);
 }

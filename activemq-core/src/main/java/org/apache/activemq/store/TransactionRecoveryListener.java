@@ -21,5 +21,5 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.XATransactionId;
 
 public interface TransactionRecoveryListener {
-    public void recover(XATransactionId xid, Message[] addedMessages, MessageAck aks[]);        
+    void recover(XATransactionId xid, Message[] addedMessages, MessageAck aks[]);
 }

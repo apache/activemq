@@ -42,7 +42,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class MessageIdList extends Assert implements MessageListener {
 
-    protected static final Log log = LogFactory.getLog(MessageIdList.class);
+    private static final Log LOG = LogFactory.getLog(MessageIdList.class);
 
     private List messageIds = new ArrayList();
     private Object semaphore;
@@ -101,16 +101,17 @@ public class MessageIdList extends Assert implements MessageListener {
     public void onMessage(Message message) {
         String id = null;
         try {
-            if (countDownLatch != null)
+            if (countDownLatch != null) {
                 countDownLatch.countDown();
+            }
 
             id = message.getJMSMessageID();
             synchronized (semaphore) {
                 messageIds.add(id);
                 semaphore.notifyAll();
             }
-            if (log.isDebugEnabled()) {
-                log.debug("Received message: " + message);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Received message: " + message);
             }
         } catch (JMSException e) {
             e.printStackTrace();
@@ -133,7 +134,7 @@ public class MessageIdList extends Assert implements MessageListener {
     }
 
     public void waitForMessagesToArrive(int messageCount) {
-        log.info("Waiting for " + messageCount + " message(s) to arrive");
+        LOG.info("Waiting for " + messageCount + " message(s) to arrive");
 
         long start = System.currentTimeMillis();
 
@@ -150,12 +151,12 @@ public class MessageIdList extends Assert implements MessageListener {
                     semaphore.wait(maximumDuration - duration);
                 }
             } catch (InterruptedException e) {
-                log.info("Caught: " + e);
+                LOG.info("Caught: " + e);
             }
         }
         long end = System.currentTimeMillis() - start;
 
-        log.info("End of wait for " + end + " millis and received: " + getMessageCount() + " messages");
+        LOG.info("End of wait for " + end + " millis and received: " + getMessageCount() + " messages");
     }
 
     /**

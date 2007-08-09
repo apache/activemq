@@ -50,7 +50,7 @@ import org.apache.commons.logging.LogFactory;
 
 public class TcpTransportServer extends TransportServerThreadSupport {
 
-    private static final Log log = LogFactory.getLog(TcpTransportServer.class);
+    private static final Log LOG = LogFactory.getLog(TcpTransportServer.class);
     protected ServerSocket serverSocket;
     protected int backlog = 5000;
     protected WireFormatFactory wireFormatFactory = new OpenWireFormatFactory();
@@ -176,7 +176,7 @@ public class TcpTransportServer extends TransportServerThreadSupport {
                 if (!isStopping()) {
                     onAcceptError(e);
                 } else if (!isStopped()) {
-                    log.warn("run()", e);
+                    LOG.warn("run()", e);
                     onAcceptError(e);
                 }
             }

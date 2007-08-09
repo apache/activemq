@@ -28,19 +28,18 @@ import org.apache.activemq.ActiveMQConnectionFactory;
  * @version $Revision: 1.3 $
  */
 public class InitialContextTest extends TestCase {
-    
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-            .getLog(InitialContextTest.class);
-    
+
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(InitialContextTest.class);
+
     public void testInitialContext() throws Exception {
         InitialContext context = new InitialContext();
         assertTrue("Created context", context != null);
 
-        ActiveMQConnectionFactory connectionFactory = (ActiveMQConnectionFactory) context.lookup("ConnectionFactory");
+        ActiveMQConnectionFactory connectionFactory = (ActiveMQConnectionFactory)context.lookup("ConnectionFactory");
 
         assertTrue("Should have created a ConnectionFactory", connectionFactory != null);
 
-        log.info("Created with brokerURL: " + connectionFactory.getBrokerURL());
+        LOG.info("Created with brokerURL: " + connectionFactory.getBrokerURL());
 
     }
 
@@ -53,17 +52,15 @@ public class InitialContextTest extends TestCase {
         InitialContext context = new InitialContext(properties);
         assertTrue("Created context", context != null);
 
-        ActiveMQConnectionFactory connectionFactory = (ActiveMQConnectionFactory) context.lookup("ConnectionFactory");
+        ActiveMQConnectionFactory connectionFactory = (ActiveMQConnectionFactory)context.lookup("ConnectionFactory");
 
         assertTrue("Should have created a ConnectionFactory", connectionFactory != null);
 
         assertEquals("the brokerURL should match", expected, connectionFactory.getBrokerURL());
     }
-    
-    
-    
+
     public void testConnectionFactoryPolicyConfig() throws Exception {
-    	
+
         Properties properties = new Properties();
         properties.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.activemq.jndi.ActiveMQInitialContextFactory");
         properties.put(Context.PROVIDER_URL, "tcp://localhost:65432");
@@ -74,7 +71,7 @@ public class InitialContextTest extends TestCase {
         InitialContext context = new InitialContext(properties);
         assertTrue("Created context", context != null);
 
-        ActiveMQConnectionFactory connectionFactory = (ActiveMQConnectionFactory) context.lookup("ConnectionFactory");
+        ActiveMQConnectionFactory connectionFactory = (ActiveMQConnectionFactory)context.lookup("ConnectionFactory");
 
         assertTrue("Should have created a ConnectionFactory", connectionFactory != null);
 

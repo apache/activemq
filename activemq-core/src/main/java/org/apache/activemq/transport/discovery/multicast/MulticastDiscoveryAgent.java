@@ -47,7 +47,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
-    private static final Log log = LogFactory.getLog(MulticastDiscoveryAgent.class);
+    private static final Log LOG = LogFactory.getLog(MulticastDiscoveryAgent.class);
     public static final String DEFAULT_DISCOVERY_URI_STRING = "multicast://239.255.2.3:6155";
     private static final String TYPE_SUFFIX = "ActiveMQ-4.";
     private static final String ALIVE = "alive.";
@@ -77,24 +77,25 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
             this.lastHeartBeat = System.currentTimeMillis();
         }
 
-        synchronized public void updateHeartBeat() {
+        public synchronized void updateHeartBeat() {
             lastHeartBeat = System.currentTimeMillis();
 
             // Consider that the broker recovery has succeeded if it has not
             // failed in 60 seconds.
             if (!failed && failureCount > 0 && (lastHeartBeat - recoveryTime) > 1000 * 60) {
-                if (log.isDebugEnabled())
-                    log.debug("I now think that the " + service + " service has recovered.");
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("I now think that the " + service + " service has recovered.");
+                }
                 failureCount = 0;
                 recoveryTime = 0;
             }
         }
 
-        synchronized public long getLastHeartBeat() {
+        public synchronized long getLastHeartBeat() {
             return lastHeartBeat;
         }
 
-        synchronized public boolean markFailed() {
+        public synchronized boolean markFailed() {
             if (!failed) {
                 failed = true;
                 failureCount++;
@@ -104,16 +105,15 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
                     reconnectDelay = initialReconnectDelay;
                 } else {
                     reconnectDelay = (long)Math.pow(backOffMultiplier, failureCount);
-                    if (reconnectDelay > maxReconnectDelay)
+                    if (reconnectDelay > maxReconnectDelay) {
                         reconnectDelay = maxReconnectDelay;
+                    }
                 }
 
-                if (log.isDebugEnabled())
-                    log
-                        .debug("Remote failure of "
-                               + service
-                               + " while still receiving multicast advertisements.  Advertising events will be suppressed for "
-                               + reconnectDelay + " ms, the current failure count is: " + failureCount);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Remote failure of " + service + " while still receiving multicast advertisements.  Advertising events will be suppressed for " + reconnectDelay
+                              + " ms, the current failure count is: " + failureCount);
+                }
 
                 recoveryTime = System.currentTimeMillis() + reconnectDelay;
                 return true;
@@ -125,24 +125,27 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
          * @return true if this broker is marked failed and it is now the right
          *         time to start recovery.
          */
-        synchronized public boolean doRecovery() {
-            if (!failed)
+        public synchronized boolean doRecovery() {
+            if (!failed) {
                 return false;
+            }
 
             // Are we done trying to recover this guy?
             if (maxReconnectAttempts > 0 && failureCount > maxReconnectAttempts) {
-                if (log.isDebugEnabled())
-                    log.debug("Max reconnect attempts of the " + service + " service has been reached.");
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Max reconnect attempts of the " + service + " service has been reached.");
+                }
                 return false;
             }
 
             // Is it not yet time?
-            if (System.currentTimeMillis() < recoveryTime)
+            if (System.currentTimeMillis() < recoveryTime) {
                 return false;
+            }
 
-            if (log.isDebugEnabled())
-                log.debug("Resuming event advertisement of the " + service + " service.");
-
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Resuming event advertisement of the " + service + " service.");
+            }
             failed = false;
             return true;
         }
@@ -169,15 +172,13 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
     private AtomicBoolean started = new AtomicBoolean(false);
     private boolean reportAdvertizeFailed = true;
 
-    private final Executor executor = new ThreadPoolExecutor(1, 1, 30, TimeUnit.SECONDS,
-                                                             new LinkedBlockingQueue(), new ThreadFactory() {
-                                                                 public Thread newThread(Runnable runable) {
-                                                                     Thread t = new Thread(runable,
-                                                                                           "Multicast Discovery Agent Notifier");
-                                                                     t.setDaemon(true);
-                                                                     return t;
-                                                                 }
-                                                             });
+    private final Executor executor = new ThreadPoolExecutor(1, 1, 30, TimeUnit.SECONDS, new LinkedBlockingQueue(), new ThreadFactory() {
+        public Thread newThread(Runnable runable) {
+            Thread t = new Thread(runable, "Multicast Discovery Agent Notifier");
+            t.setDaemon(true);
+            return t;
+        }
+    });
 
     /**
      * Set the discovery listener
@@ -298,11 +299,11 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
                 throw new IOException("You must specify a group to discover");
             }
             if (brokerName == null || brokerName.length() == 0) {
-                log.warn("brokerName not set");
+                LOG.warn("brokerName not set");
             }
             String type = getType();
             if (!type.endsWith(".")) {
-                log.warn("The type '" + type + "' should end with '.' to be a valid Discovery type");
+                LOG.warn("The type '" + type + "' should end with '.' to be a valid Discovery type");
                 type += ".";
             }
             if (discoveryURI == null) {
@@ -354,7 +355,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
                 // ignore
             } catch (IOException e) {
                 if (started.get()) {
-                    log.error("failed to process packet: " + e);
+                    LOG.error("failed to process packet: " + e);
                 }
             }
         }
@@ -408,9 +409,9 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
                 // same error over and over.
                 if (reportAdvertizeFailed) {
                     reportAdvertizeFailed = false;
-                    log.error("Failed to advertise our service: " + payload, e);
+                    LOG.error("Failed to advertise our service: " + payload, e);
                     if ("Operation not permitted".equals(e.getMessage())) {
-                        log.error("The 'Operation not permitted' error has been know to be caused by improper firewall/network setup.  "
+                        LOG.error("The 'Operation not permitted' error has been know to be caused by improper firewall/network setup.  "
                                   + "Please make sure that the OS is properly configured to allow multicast traffic over: " + mcast.getLocalAddress());
                     }
                 }

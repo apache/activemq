@@ -38,7 +38,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class ReliableTransport extends ResponseCorrelator {
-    private static final Log log = LogFactory.getLog(ReliableTransport.class);
+    private static final Log LOG = LogFactory.getLog(ReliableTransport.class);
 
     private ReplayStrategy replayStrategy;
     private SortedSet commands = new TreeSet(new CommandIdComparator());
@@ -132,8 +132,8 @@ public class ReliableTransport extends ResponseCorrelator {
 
                     if (keep) {
                         // lets add it to the list for later on
-                        if (log.isDebugEnabled()) {
-                            log.debug("Received out of order command which is being buffered for later: " + command);
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Received out of order command which is being buffered for later: " + command);
                         }
                         commands.add(command);
                     }
@@ -261,7 +261,7 @@ public class ReliableTransport extends ResponseCorrelator {
      * Lets attempt to replay the request as a command may have disappeared
      */
     protected void onMissingResponse(Command command, FutureResponse response) {
-        log.debug("Still waiting for response on: " + this + " to command: " + command + " sending replay message");
+        LOG.debug("Still waiting for response on: " + this + " to command: " + command + " sending replay message");
 
         int commandId = command.getCommandId();
         requestReplay(commandId, commandId);
@@ -276,8 +276,8 @@ public class ReliableTransport extends ResponseCorrelator {
             if (replayer == null) {
                 onException(new IOException("Cannot replay commands. No replayer property configured"));
             }
-            if (log.isDebugEnabled()) {
-                log.debug("Processing replay command: " + command);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Processing replay command: " + command);
             }
             getReplayBuffer().replayMessages(command.getFirstNakNumber(), command.getLastNakNumber(), replayer);
 

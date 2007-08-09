@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.3 $
  */
 public class SlowConsumer extends PerfConsumer {
-    private static final transient Log log = LogFactory.getLog(SlowConsumer.class);
+    private static final transient Log LOG = LogFactory.getLog(SlowConsumer.class);
 
     public SlowConsumer(ConnectionFactory fac, Destination dest, String consumerName) throws JMSException {
         super(fac, dest, consumerName);
@@ -40,7 +40,7 @@ public class SlowConsumer extends PerfConsumer {
 
     public void onMessage(Message msg) {
         super.onMessage(msg);
-        log.debug("GOT A MSG " + msg);
+        LOG.debug("GOT A MSG " + msg);
         try {
             Thread.sleep(10000);
         } catch (InterruptedException e) {
