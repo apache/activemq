@@ -54,10 +54,12 @@ public class ConnectionId implements DataStructure, Comparable<ConnectionId> {
     }
 
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || o.getClass() != ConnectionId.class)
+        }
+        if (o == null || o.getClass() != ConnectionId.class) {
             return false;
+        }
         ConnectionId id = (ConnectionId)o;
         return value.equals(id.value);
     }

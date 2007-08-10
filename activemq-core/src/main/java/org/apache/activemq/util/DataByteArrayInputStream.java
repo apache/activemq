@@ -49,7 +49,8 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
      */
     public DataByteArrayInputStream(ByteSequence sequence) {
         this.buf = sequence.getData();
-        this.offset = this.pos = sequence.getOffset();
+        this.offset = sequence.getOffset();
+        this.pos =  this.offset;
     }
 
     /**
@@ -200,7 +201,7 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
     public int readUnsignedShort() {
         int ch1 = read();
         int ch2 = read();
-        return ((ch1 << 8) + (ch2 << 0));
+        return (ch1 << 8) + (ch2 << 0);
     }
 
     public char readChar() {
@@ -214,7 +215,7 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
         int ch2 = read();
         int ch3 = read();
         int ch4 = read();
-        return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0));
+        return (ch1 << 24) + (ch2 << 16) + (ch3 << 8) + (ch4 << 0);
     }
 
     public long readLong() {

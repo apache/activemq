@@ -24,12 +24,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class VolumeTest extends TestCase {
+
+    protected static final int NUMBER = 1;
     private static final transient Log LOG = LogFactory.getLog(VolumeTest.class);
 
     protected Store store;
     protected String name;
-
-    protected static final int NUMBER = 1;
 
     /*
      * dump a large number of messages into a list - then retreive them

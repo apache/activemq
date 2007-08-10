@@ -23,7 +23,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -57,20 +60,22 @@ import org.apache.commons.logging.LogFactory;
 public class AMQMessageStore implements MessageStore {
 
     private static final Log LOG = LogFactory.getLog(AMQMessageStore.class);
+    
     protected final AMQPersistenceAdapter peristenceAdapter;
     protected final AMQTransactionStore transactionStore;
     protected final ReferenceStore referenceStore;
     protected final ActiveMQDestination destination;
     protected final TransactionTemplate transactionTemplate;
-    private LinkedHashMap<MessageId, ReferenceData> messages = new LinkedHashMap<MessageId, ReferenceData>();
-    private ArrayList<MessageAck> messageAcks = new ArrayList<MessageAck>();
-    /** A MessageStore that we can use to retrieve messages quickly. */
-    private LinkedHashMap<MessageId, ReferenceData> cpAddedMessageIds;
     protected Location lastLocation;
     protected Location lastWrittenLocation;
-    protected HashSet<Location> inFlightTxLocations = new HashSet<Location>();
+    protected Set<Location> inFlightTxLocations = new HashSet<Location>();
     protected final TaskRunner asyncWriteTask;
     protected CountDownLatch flushLatch;
+    
+    private Map<MessageId, ReferenceData> messages = new LinkedHashMap<MessageId, ReferenceData>();
+    private List<MessageAck> messageAcks = new ArrayList<MessageAck>();
+    /** A MessageStore that we can use to retrieve messages quickly. */
+    private Map<MessageId, ReferenceData> cpAddedMessageIds;
     private final boolean debug = LOG.isDebugEnabled();
     private final AtomicReference<Location> mark = new AtomicReference<Location>();
 
@@ -304,8 +309,8 @@ public class AMQMessageStore implements MessageStore {
      * @throws IOException
      */
     protected Location doAsyncWrite() throws IOException {
-        final ArrayList<MessageAck> cpRemovedMessageLocations;
-        final ArrayList<Location> cpActiveJournalLocations;
+        final List<MessageAck> cpRemovedMessageLocations;
+        final List<Location> cpActiveJournalLocations;
         final int maxCheckpointMessageAddSize = peristenceAdapter.getMaxCheckpointMessageAddSize();
         final Location lastLocation;
         // swap out the message hash maps..

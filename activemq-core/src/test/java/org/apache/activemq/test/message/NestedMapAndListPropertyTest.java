@@ -41,7 +41,7 @@ public class NestedMapAndListPropertyTest extends JmsTopicSendReceiveWithTwoConn
         Object value = message.getObjectProperty("textField");
         assertEquals("textField", data[index], value);
 
-        Map map = (Map) message.getObjectProperty("mapField");
+        Map map = (Map)message.getObjectProperty("mapField");
         assertNotNull(map);
         assertEquals("mapField.a", "foo", map.get("a"));
         assertEquals("mapField.b", new Integer(23), map.get("b"));
@@ -49,18 +49,18 @@ public class NestedMapAndListPropertyTest extends JmsTopicSendReceiveWithTwoConn
 
         value = map.get("d");
         assertTrue("mapField.d should be a Map", value instanceof Map);
-        map = (Map) value;
+        map = (Map)value;
 
         assertEquals("mapField.d.x", "abc", map.get("x"));
         value = map.get("y");
         assertTrue("mapField.d.y is a List", value instanceof List);
-        List list = (List) value;
+        List list = (List)value;
         LOG.debug("mapField.d.y: " + list);
         assertEquals("listField.size", 3, list.size());
 
         LOG.debug("Found map: " + map);
 
-        list = (List) message.getObjectProperty("listField");
+        list = (List)message.getObjectProperty("listField");
         LOG.debug("listField: " + list);
         assertEquals("listField.size", 3, list.size());
         assertEquals("listField[0]", "a", list.get(0));
@@ -73,18 +73,18 @@ public class NestedMapAndListPropertyTest extends JmsTopicSendReceiveWithTwoConn
 
         answer.setStringProperty("textField", data[index]);
 
-        Map grandChildMap = new HashMap();
+        Map<String, Object> grandChildMap = new HashMap<String, Object>();
         grandChildMap.put("x", "abc");
-        grandChildMap.put("y", Arrays.asList(new Object[] { "a", "b", "c" }));
+        grandChildMap.put("y", Arrays.asList(new Object[] {"a", "b", "c"}));
 
-        Map nestedMap = new HashMap();
+        Map<String, Object> nestedMap = new HashMap<String, Object>();
         nestedMap.put("a", "foo");
         nestedMap.put("b", new Integer(23));
         nestedMap.put("c", new Long(45));
         nestedMap.put("d", grandChildMap);
 
         answer.setObjectProperty("mapField", nestedMap);
-        answer.setObjectProperty("listField", Arrays.asList(new Object[] { "a", "b", "c" }));
+        answer.setObjectProperty("listField", Arrays.asList(new Object[] {"a", "b", "c"}));
 
         return answer;
     }

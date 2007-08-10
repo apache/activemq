@@ -25,6 +25,14 @@ import javax.jms.JMSException;
  */
 public abstract class LogicExpression extends BinaryExpression implements BooleanExpression {
 
+    /**
+     * @param left
+     * @param right
+     */
+    public LogicExpression(BooleanExpression left, BooleanExpression right) {
+        super(left, right);
+    }
+
     public static BooleanExpression createOR(BooleanExpression lvalue, BooleanExpression rvalue) {
         return new LogicExpression(lvalue, rvalue) {
 
@@ -54,8 +62,9 @@ public abstract class LogicExpression extends BinaryExpression implements Boolea
                 Boolean lv = (Boolean)left.evaluate(message);
 
                 // Can we do an AND shortcut??
-                if (lv == null)
+                if (lv == null) {
                     return null;
+                }
                 if (!lv.booleanValue()) {
                     return Boolean.FALSE;
                 }
@@ -68,14 +77,6 @@ public abstract class LogicExpression extends BinaryExpression implements Boolea
                 return "AND";
             }
         };
-    }
-
-    /**
-     * @param left
-     * @param right
-     */
-    public LogicExpression(BooleanExpression left, BooleanExpression right) {
-        super(left, right);
     }
 
     public abstract Object evaluate(MessageEvaluationContext message) throws JMSException;

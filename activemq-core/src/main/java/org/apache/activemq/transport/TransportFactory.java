@@ -35,6 +35,10 @@ import org.apache.activemq.wireformat.WireFormatFactory;
 
 public abstract class TransportFactory {
 
+    private static final FactoryFinder TRANSPORT_FACTORY_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/");
+    private static final FactoryFinder WIREFORMAT_FACTORY_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/wireformat/");
+    private static final ConcurrentHashMap TRANSPORT_FACTORYS = new ConcurrentHashMap();
+
     public abstract TransportServer doBind(String brokerId, URI location) throws IOException;
 
     public Transport doConnect(URI location, Executor ex) throws Exception {
@@ -44,11 +48,6 @@ public abstract class TransportFactory {
     public Transport doCompositeConnect(URI location, Executor ex) throws Exception {
         return doCompositeConnect(location);
     }
-
-    private static final FactoryFinder TRANSPORT_FACTORY_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/");
-    private static final FactoryFinder WIREFORMAT_FACTORY_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/wireformat/");
-
-    private static final ConcurrentHashMap TRANSPORT_FACTORYS = new ConcurrentHashMap();
 
     /**
      * Creates a normal transport.

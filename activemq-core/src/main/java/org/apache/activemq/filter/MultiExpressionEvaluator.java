@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import javax.jms.JMSException;
 
@@ -66,8 +68,8 @@ import javax.jms.JMSException;
  */
 public class MultiExpressionEvaluator {
 
-    HashMap rootExpressions = new HashMap();
-    HashMap cachedExpressions = new HashMap();
+    Map<String, ExpressionListenerSet> rootExpressions = new HashMap<String, ExpressionListenerSet>();
+    Map<Expression, CacheExpression> cachedExpressions = new HashMap<Expression, CacheExpression>();
 
     int view;
 
@@ -104,8 +106,9 @@ public class MultiExpressionEvaluator {
         }
 
         public boolean equals(Object o) {
-            if (o == null)
+            if (o == null) {
                 return false;
+            }
             return ((CacheExpression)o).right.equals(right);
         }
 
@@ -125,7 +128,7 @@ public class MultiExpressionEvaluator {
      */
     static class ExpressionListenerSet {
         Expression expression;
-        ArrayList listeners = new ArrayList();
+        List<ExpressionListener> listeners = new ArrayList<ExpressionListener>();
     }
 
     /**
@@ -142,7 +145,7 @@ public class MultiExpressionEvaluator {
      * Expression applied to the evaluated message.
      */
     public void addExpressionListner(Expression selector, ExpressionListener c) {
-        ExpressionListenerSet data = (ExpressionListenerSet)rootExpressions.get(selector.toString());
+        ExpressionListenerSet data = rootExpressions.get(selector.toString());
         if (data == null) {
             data = new ExpressionListenerSet();
             data.expression = addToCache(selector);
@@ -157,19 +160,19 @@ public class MultiExpressionEvaluator {
      */
     public boolean removeEventListner(String selector, ExpressionListener c) {
         String expKey = selector;
-        ExpressionListenerSet d = (ExpressionListenerSet)rootExpressions.get(expKey);
-        if (d == null) // that selector had not been added.
-        {
+        ExpressionListenerSet d = rootExpressions.get(expKey);
+        // that selector had not been added.
+        if (d == null) {
             return false;
         }
-        if (!d.listeners.remove(c)) // that selector did not have that listner..
-        {
+        // that selector did not have that listeners..
+        if (!d.listeners.remove(c)) {
             return false;
         }
 
-        // If there are no more listners for this expression....
+        // If there are no more listeners for this expression....
         if (d.listeners.size() == 0) {
-            // Uncache it...
+            // Un-cache it...
             removeFromCache((CacheExpression)d.expression);
             rootExpressions.remove(expKey);
         }
@@ -185,7 +188,7 @@ public class MultiExpressionEvaluator {
      */
     private CacheExpression addToCache(Expression expr) {
 
-        CacheExpression n = (CacheExpression)cachedExpressions.get(expr);
+        CacheExpression n = cachedExpressions.get(expr);
         if (n == null) {
             n = new CacheExpression(expr);
             cachedExpressions.put(expr, n);
@@ -239,13 +242,13 @@ public class MultiExpressionEvaluator {
      * @param message
      */
     public void evaluate(MessageEvaluationContext message) {
-        Collection expressionListeners = rootExpressions.values();
-        for (Iterator iter = expressionListeners.iterator(); iter.hasNext();) {
-            ExpressionListenerSet els = (ExpressionListenerSet)iter.next();
+        Collection<ExpressionListenerSet> expressionListeners = rootExpressions.values();
+        for (Iterator<ExpressionListenerSet> iter = expressionListeners.iterator(); iter.hasNext();) {
+            ExpressionListenerSet els = iter.next();
             try {
                 Object result = els.expression.evaluate(message);
-                for (Iterator iterator = els.listeners.iterator(); iterator.hasNext();) {
-                    ExpressionListener l = (ExpressionListener)iterator.next();
+                for (Iterator<ExpressionListener> iterator = els.listeners.iterator(); iterator.hasNext();) {
+                    ExpressionListener l = iterator.next();
                     l.evaluateResultEvent(els.expression, message, result);
                 }
             } catch (Throwable e) {

@@ -24,65 +24,64 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 
 public class StubSSLSocket extends SSLSocket {
-    
+
     public static final int UNTOUCHED = -1;
     public static final int FALSE = 0;
     public static final int TRUE = 1;
-    
+
     private int wantClientAuthStatus = UNTOUCHED;
     private int needClientAuthStatus = UNTOUCHED;
     private int useClientModeStatus = UNTOUCHED;
-    
-    final StubSSLSession session; 
-        
+
+    final StubSSLSession session;
+
     public StubSSLSocket(StubSSLSession ses) {
         this.session = ses;
     }
-    
+
     public void setWantClientAuth(boolean arg0) {
-        this.wantClientAuthStatus = (arg0 ? TRUE : FALSE);
+        this.wantClientAuthStatus = arg0 ? TRUE : FALSE;
     }
-    
+
     public void setNeedClientAuth(boolean arg0) {
-        this.needClientAuthStatus = (arg0 ? TRUE : FALSE);
-        if ( session != null ) {
+        this.needClientAuthStatus = arg0 ? TRUE : FALSE;
+        if (session != null) {
             this.session.setIsVerified(arg0);
         }
     }
-    
+
     public void setUseClientMode(boolean arg0) {
-        useClientModeStatus = (arg0 ? TRUE : FALSE);
+        useClientModeStatus = arg0 ? TRUE : FALSE;
     }
-    
+
     public boolean getWantClientAuth() {
-        return (wantClientAuthStatus == TRUE);
+        return wantClientAuthStatus == TRUE;
     }
 
     public boolean getNeedClientAuth() {
-        return (needClientAuthStatus == TRUE);
+        return needClientAuthStatus == TRUE;
     }
-    
+
     public boolean getUseClientMode() {
-        return (useClientModeStatus == TRUE );
+        return useClientModeStatus == TRUE;
     }
-    
+
     public int getWantClientAuthStatus() {
         return wantClientAuthStatus;
     }
-    
+
     public int getNeedClientAuthStatus() {
         return needClientAuthStatus;
     }
-    
+
     public int getUseClientModeStatus() {
         return useClientModeStatus;
     }
-    
+
     public SSLSession getSession() {
         return this.session;
     }
-    
-    
+
     // --- Stubbed methods ---
 
     public String[] getSupportedCipherSuites() {

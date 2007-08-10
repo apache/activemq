@@ -32,12 +32,14 @@ import org.apache.activemq.transport.TransportAcceptListener;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.TransportServer;
-import org.apache.activemq.transport.stomp.StompTest;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class InactivityMonitorTest extends CombinationTestSupport implements TransportAcceptListener {
     private static final Log LOG = LogFactory.getLog(InactivityMonitorTest.class);
+
+    public Runnable serverRunOnCommand;
+    public Runnable clientRunOnCommand;
 
     private TransportServer server;
     private Transport clientTransport;
@@ -50,9 +52,6 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
 
     private final AtomicBoolean ignoreClientError = new AtomicBoolean(false);
     private final AtomicBoolean ignoreServerError = new AtomicBoolean(false);
-
-    public Runnable serverRunOnCommand;
-    public Runnable clientRunOnCommand;
 
     protected void setUp() throws Exception {
         super.setUp();

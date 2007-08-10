@@ -69,10 +69,12 @@ public class LocalTransactionId extends TransactionId implements Comparable<Loca
     }
 
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || o.getClass() != LocalTransactionId.class)
+        }
+        if (o == null || o.getClass() != LocalTransactionId.class) {
             return false;
+        }
         LocalTransactionId tx = (LocalTransactionId)o;
         return value == tx.value && connectionId.equals(tx.connectionId);
     }

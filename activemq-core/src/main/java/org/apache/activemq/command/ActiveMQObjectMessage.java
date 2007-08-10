@@ -63,10 +63,10 @@ import org.apache.activemq.util.JMSExceptionSupport;
  * @see javax.jms.TextMessage
  */
 public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMessage {
-    static final ClassLoader ACTIVEMQ_CLASSLOADER = ActiveMQObjectMessage.class.getClassLoader(); // TODO
-                                                                                                    // verify
-                                                                                                    // classloader
+    
+    // TODO: verify classloader
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_OBJECT_MESSAGE;
+    static final ClassLoader ACTIVEMQ_CLASSLOADER = ActiveMQObjectMessage.class.getClassLoader(); 
 
     protected transient Serializable object;
 

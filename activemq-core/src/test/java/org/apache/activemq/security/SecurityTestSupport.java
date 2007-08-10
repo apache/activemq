@@ -32,7 +32,6 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 
 /**
- * 
  * @version $Revision$
  */
 public class SecurityTestSupport extends JmsTestSupport {
@@ -140,8 +139,7 @@ public class SecurityTestSupport extends JmsTestSupport {
         Message m = consumer.receive(1000);
         if (fail) {
             assertNull(m);
-        }
-        else {
+        } else {
             assertNotNull(m);
             assertEquals("0", ((TextMessage)m).getText());
             assertNull(consumer.receiveNoWait());
@@ -188,10 +186,7 @@ public class SecurityTestSupport extends JmsTestSupport {
     public void initCombosForTestUserReceiveFails() {
         addCombinationValues("userName", new Object[] {"user"});
         addCombinationValues("password", new Object[] {"password"});
-        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"),
-                                                          new ActiveMQTopic("TEST"),
-                                                          new ActiveMQQueue("GUEST.BAR"),
-                                                          new ActiveMQTopic("GUEST.BAR"),});
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"), new ActiveMQQueue("GUEST.BAR"), new ActiveMQTopic("GUEST.BAR"),});
     }
 
     /**
@@ -208,8 +203,7 @@ public class SecurityTestSupport extends JmsTestSupport {
     public void initCombosForTestUserReceiveSucceeds() {
         addCombinationValues("userName", new Object[] {"user"});
         addCombinationValues("password", new Object[] {"password"});
-        addCombinationValues("destination", new Object[] {new ActiveMQQueue("USERS.FOO"),
-                                                          new ActiveMQTopic("USERS.FOO"),});
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("USERS.FOO"), new ActiveMQTopic("USERS.FOO"),});
     }
 
     /**
@@ -218,8 +212,7 @@ public class SecurityTestSupport extends JmsTestSupport {
     public void initCombosForTestGuestReceiveSucceeds() {
         addCombinationValues("userName", new Object[] {"guest"});
         addCombinationValues("password", new Object[] {"password"});
-        addCombinationValues("destination", new Object[] {new ActiveMQQueue("GUEST.BAR"),
-                                                          new ActiveMQTopic("GUEST.BAR"),});
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("GUEST.BAR"), new ActiveMQTopic("GUEST.BAR"),});
     }
 
     /**
@@ -228,10 +221,7 @@ public class SecurityTestSupport extends JmsTestSupport {
     public void initCombosForTestGuestReceiveFails() {
         addCombinationValues("userName", new Object[] {"guest"});
         addCombinationValues("password", new Object[] {"password"});
-        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"),
-                                                          new ActiveMQTopic("TEST"),
-                                                          new ActiveMQQueue("USERS.FOO"),
-                                                          new ActiveMQTopic("USERS.FOO"),});
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"), new ActiveMQQueue("USERS.FOO"), new ActiveMQTopic("USERS.FOO"),});
     }
 
     /**
@@ -240,9 +230,7 @@ public class SecurityTestSupport extends JmsTestSupport {
     public void initCombosForTestUserSendSucceeds() {
         addCombinationValues("userName", new Object[] {"user"});
         addCombinationValues("password", new Object[] {"password"});
-        addCombinationValues("destination", new Object[] {new ActiveMQQueue("USERS.FOO"),
-                                                          new ActiveMQQueue("GUEST.BAR"),
-                                                          new ActiveMQTopic("USERS.FOO"),
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("USERS.FOO"), new ActiveMQQueue("GUEST.BAR"), new ActiveMQTopic("USERS.FOO"),
                                                           new ActiveMQTopic("GUEST.BAR"),});
     }
 
@@ -252,8 +240,7 @@ public class SecurityTestSupport extends JmsTestSupport {
     public void initCombosForTestUserSendFails() {
         addCombinationValues("userName", new Object[] {"user"});
         addCombinationValues("password", new Object[] {"password"});
-        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"),
-                                                          new ActiveMQTopic("TEST"),});
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"),});
     }
 
     /**
@@ -262,10 +249,7 @@ public class SecurityTestSupport extends JmsTestSupport {
     public void initCombosForTestGuestSendFails() {
         addCombinationValues("userName", new Object[] {"guest"});
         addCombinationValues("password", new Object[] {"password"});
-        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"),
-                                                          new ActiveMQTopic("TEST"),
-                                                          new ActiveMQQueue("USERS.FOO"),
-                                                          new ActiveMQTopic("USERS.FOO")});
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST"), new ActiveMQQueue("USERS.FOO"), new ActiveMQTopic("USERS.FOO")});
     }
 
     /**
@@ -274,7 +258,6 @@ public class SecurityTestSupport extends JmsTestSupport {
     public void initCombosForTestGuestSendSucceeds() {
         addCombinationValues("userName", new Object[] {"guest"});
         addCombinationValues("password", new Object[] {"password"});
-        addCombinationValues("destination", new Object[] {new ActiveMQQueue("GUEST.BAR"),
-                                                          new ActiveMQTopic("GUEST.BAR"),});
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("GUEST.BAR"), new ActiveMQTopic("GUEST.BAR"),});
     }
 }

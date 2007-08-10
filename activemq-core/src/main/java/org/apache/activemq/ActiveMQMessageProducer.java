@@ -17,6 +17,7 @@
 package org.apache.activemq;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.jms.Destination;
@@ -70,10 +71,10 @@ import org.apache.activemq.util.IntrospectionSupport;
 public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport implements StatsCapable, Disposable {
 
     protected ProducerInfo info;
+    protected boolean closed;
+
     private JMSProducerStatsImpl stats;
     private AtomicLong messageSequence;
-
-    protected boolean closed;
     private long startTime;
     private MessageTransformer transformer;
     private UsageManager producerWindow;
@@ -83,7 +84,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         this.info = new ProducerInfo(producerId);
         this.info.setWindowSize(session.connection.getProducerWindowSize());
         if (destination != null && destination.getOptions() != null) {
-            HashMap options = new HashMap(destination.getOptions());
+            Map<String, String> options = new HashMap<String, String>(destination.getOptions());
             IntrospectionSupport.setProperties(this.info, options, "producer.");
         }
         this.info.setDestination(destination);

@@ -26,10 +26,12 @@ import org.apache.activemq.kaha.impl.index.IndexLinkedList;
  * @version $Revision: 1.2 $
  */
 public class ContainerKeySetIterator implements Iterator {
-    private MapContainerImpl container;
-    private IndexLinkedList list;
+    
     protected IndexItem nextItem;
     protected IndexItem currentItem;
+
+    private MapContainerImpl container;
+    private IndexLinkedList list;
 
     ContainerKeySetIterator(MapContainerImpl container) {
         this.container = container;

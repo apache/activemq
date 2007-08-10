@@ -22,9 +22,10 @@ package org.apache.activemq.command;
  */
 public class DataArrayResponse extends Response {
 
+    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.DATA_ARRAY_RESPONSE;
+
     DataStructure data[];
 
-    public static final byte DATA_STRUCTURE_TYPE = CommandTypes.DATA_ARRAY_RESPONSE;
 
     public DataArrayResponse() {
     }

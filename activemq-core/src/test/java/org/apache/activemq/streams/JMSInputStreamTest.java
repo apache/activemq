@@ -33,11 +33,11 @@ import org.apache.activemq.command.ActiveMQTopic;
  */
 public class JMSInputStreamTest extends JmsTestSupport {
 
+    public Destination destination;
     protected DataOutputStream out;
     protected DataInputStream in;
     private ActiveMQConnection connection2;
 
-    public Destination destination;
 
     public static Test suite() {
         return suite(JMSInputStreamTest.class);

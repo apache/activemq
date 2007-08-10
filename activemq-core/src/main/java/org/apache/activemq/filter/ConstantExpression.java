@@ -47,8 +47,9 @@ public class ConstantExpression implements Expression {
     public static ConstantExpression createFromDecimal(String text) {
 
         // Strip off the 'l' or 'L' if needed.
-        if (text.endsWith("l") || text.endsWith("L"))
+        if (text.endsWith("l") || text.endsWith("L")) {
             text = text.substring(0, text.length() - 1);
+        }
 
         Number value;
         try {

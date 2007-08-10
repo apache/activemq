@@ -35,7 +35,7 @@ public class SimpleAuthenticationBroker extends BrokerFilter {
 
     private final Map userPasswords;
     private final Map userGroups;
-    private final CopyOnWriteArrayList securityContexts = new CopyOnWriteArrayList();
+    private final CopyOnWriteArrayList<SecurityContext> securityContexts = new CopyOnWriteArrayList<SecurityContext>();
 
     public SimpleAuthenticationBroker(Broker next, Map userPasswords, Map userGroups) {
         super(next);
@@ -48,8 +48,9 @@ public class SimpleAuthenticationBroker extends BrokerFilter {
         if (context.getSecurityContext() == null) {
             // Check the username and password.
             String pw = (String)userPasswords.get(info.getUserName());
-            if (pw == null || !pw.equals(info.getPassword()))
+            if (pw == null || !pw.equals(info.getPassword())) {
                 throw new SecurityException("User name or password is invalid.");
+            }
 
             final Set groups = (Set)userGroups.get(info.getUserName());
             SecurityContext s = new SecurityContext(info.getUserName()) {
@@ -77,8 +78,8 @@ public class SimpleAuthenticationBroker extends BrokerFilter {
      * Refresh all the logged into users.
      */
     public void refresh() {
-        for (Iterator iter = securityContexts.iterator(); iter.hasNext();) {
-            SecurityContext sc = (SecurityContext)iter.next();
+        for (Iterator<SecurityContext> iter = securityContexts.iterator(); iter.hasNext();) {
+            SecurityContext sc = iter.next();
             sc.getAuthorizedReadDests().clear();
             sc.getAuthorizedWriteDests().clear();
         }

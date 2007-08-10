@@ -87,8 +87,9 @@ public class UDPTraceBrokerPlugin extends BrokerPluginSupport {
 
     public void start() throws Exception {
         super.start();
-        if (getWireFormat() == null)
+        if (getWireFormat() == null) {
             throw new IllegalArgumentException("Wireformat must be specifed.");
+        }
         if (address == null) {
             address = createSocketAddress(destination);
         }

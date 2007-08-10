@@ -47,8 +47,9 @@ public class FixedCountSubscriptionRecoveryPolicy implements SubscriptionRecover
 
     public synchronized boolean add(ConnectionContext context, MessageReference node) throws Exception {
         messages[tail++] = node;
-        if (tail >= messages.length)
+        if (tail >= messages.length) {
             tail = 0;
+        }
         return true;
     }
 
@@ -56,18 +57,21 @@ public class FixedCountSubscriptionRecoveryPolicy implements SubscriptionRecover
         // Re-dispatch the last message seen.
         int t = tail;
         // The buffer may not have rolled over yet..., start from the front
-        if (messages[t] == null)
+        if (messages[t] == null) {
             t = 0;
+        }
         // Well the buffer is really empty then.
-        if (messages[t] == null)
+        if (messages[t] == null) {
             return;
+        }
         // Keep dispatching until t hit's tail again.
         do {
             MessageReference node = messages[t];
             sub.addRecoveredMessage(context, node);
             t++;
-            if (t >= messages.length)
+            if (t >= messages.length) {
                 t = 0;
+            }
         } while (t != tail);
     }
 
@@ -92,11 +96,12 @@ public class FixedCountSubscriptionRecoveryPolicy implements SubscriptionRecover
     }
 
     public synchronized Message[] browse(ActiveMQDestination destination) throws Exception {
-        List result = new ArrayList();
+        List<Message> result = new ArrayList<Message>();
         DestinationFilter filter = DestinationFilter.parseFilter(destination);
         int t = tail;
-        if (messages[t] == null)
+        if (messages[t] == null) {
             t = 0;
+        }
         if (messages[t] != null) {
             do {
                 MessageReference ref = messages[t];
@@ -105,11 +110,12 @@ public class FixedCountSubscriptionRecoveryPolicy implements SubscriptionRecover
                     result.add(message);
                 }
                 t++;
-                if (t >= messages.length)
+                if (t >= messages.length) {
                     t = 0;
+                }
             } while (t != tail);
         }
-        return (Message[])result.toArray(new Message[result.size()]);
+        return result.toArray(new Message[result.size()]);
     }
 
 }

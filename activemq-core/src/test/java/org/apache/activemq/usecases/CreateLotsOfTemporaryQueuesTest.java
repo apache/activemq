@@ -27,7 +27,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * 
  * @version $Revision: 1.1 $
  */
 public class CreateLotsOfTemporaryQueuesTest extends EmbeddedBrokerAndConnectionTestSupport {
@@ -36,12 +35,11 @@ public class CreateLotsOfTemporaryQueuesTest extends EmbeddedBrokerAndConnection
     private static int numberToCreate = 500;
     private static long sleep = 20;
 
-
     public static void main(String[] args) {
         configure(args);
         TestRunner.run(suite());
     }
-    
+
     public static Test suite() {
         return new TestSuite(CreateLotsOfTemporaryQueuesTest.class);
     }
@@ -56,7 +54,7 @@ public class CreateLotsOfTemporaryQueuesTest extends EmbeddedBrokerAndConnection
             }
             TemporaryQueue temporaryQueue = session.createTemporaryQueue();
             temporaryQueue.delete();
-            Thread.sleep(sleep );
+            Thread.sleep(sleep);
         }
         LOG.info("Created " + numberToCreate + " temporary queue(s)");
     }

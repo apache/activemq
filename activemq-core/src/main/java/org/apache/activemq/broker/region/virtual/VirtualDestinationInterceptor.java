@@ -42,7 +42,7 @@ public class VirtualDestinationInterceptor implements DestinationInterceptor {
 
     public Destination intercept(Destination destination) {
         Set virtualDestinations = destinationMap.get(destination.getActiveMQDestination());
-        List destinations = new ArrayList();
+        List<Destination> destinations = new ArrayList<Destination>();
         for (Iterator iter = virtualDestinations.iterator(); iter.hasNext();) {
             VirtualDestination virtualDestination = (VirtualDestination)iter.next();
             Destination newNestination = virtualDestination.intercept(destination);
@@ -50,7 +50,7 @@ public class VirtualDestinationInterceptor implements DestinationInterceptor {
         }
         if (!destinations.isEmpty()) {
             if (destinations.size() == 1) {
-                return (Destination)destinations.get(0);
+                return destinations.get(0);
             } else {
                 // should rarely be used but here just in case
                 return createCompositeDestination(destination, destinations);
@@ -72,11 +72,11 @@ public class VirtualDestinationInterceptor implements DestinationInterceptor {
         }
     }
 
-    protected Destination createCompositeDestination(Destination destination, final List destinations) {
+    protected Destination createCompositeDestination(Destination destination, final List<Destination> destinations) {
         return new DestinationFilter(destination) {
             public void send(ProducerBrokerExchange context, Message messageSend) throws Exception {
-                for (Iterator iter = destinations.iterator(); iter.hasNext();) {
-                    Destination destination = (Destination)iter.next();
+                for (Iterator<Destination> iter = destinations.iterator(); iter.hasNext();) {
+                    Destination destination = iter.next();
                     destination.send(context, messageSend);
                 }
             }

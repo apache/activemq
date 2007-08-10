@@ -18,6 +18,7 @@ package org.apache.activemq.management;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.management.j2ee.statistics.CountStatistic;
 
@@ -29,7 +30,7 @@ import javax.management.j2ee.statistics.CountStatistic;
 public class PollCountStatisticImpl extends StatisticImpl implements CountStatistic {
 
     private PollCountStatisticImpl parent;
-    private ArrayList children;
+    private List<PollCountStatisticImpl> children;
 
     public PollCountStatisticImpl(PollCountStatisticImpl parent, String name, String description) {
         this(name, description);
@@ -59,22 +60,25 @@ public class PollCountStatisticImpl extends StatisticImpl implements CountStatis
     }
 
     private synchronized void removeChild(PollCountStatisticImpl child) {
-        if (children != null)
+        if (children != null) {
             children.remove(child);
+        }
     }
 
     private synchronized void addChild(PollCountStatisticImpl child) {
-        if (children == null)
-            children = new ArrayList();
+        if (children == null) {
+            children = new ArrayList<PollCountStatisticImpl>();
+        }
         children.add(child);
     }
 
     public synchronized long getCount() {
-        if (children == null)
+        if (children == null) {
             return 0;
+        }
         long count = 0;
-        for (Iterator iter = children.iterator(); iter.hasNext();) {
-            PollCountStatisticImpl child = (PollCountStatisticImpl)iter.next();
+        for (Iterator<PollCountStatisticImpl> iter = children.iterator(); iter.hasNext();) {
+            PollCountStatisticImpl child = iter.next();
             count += child.getCount();
         }
         return count;
@@ -92,10 +96,11 @@ public class PollCountStatisticImpl extends StatisticImpl implements CountStatis
      */
     public double getPeriod() {
         double count = getCount();
-        if (count == 0)
+        if (count == 0) {
             return 0;
-        double time = (System.currentTimeMillis() - getStartTime());
-        return (time / (count * 1000.0));
+        }
+        double time = System.currentTimeMillis() - getStartTime();
+        return time / (count * 1000.0);
     }
 
     /**
@@ -104,8 +109,8 @@ public class PollCountStatisticImpl extends StatisticImpl implements CountStatis
      */
     public double getFrequency() {
         double count = getCount();
-        double time = (System.currentTimeMillis() - getStartTime());
-        return (count * 1000.0 / time);
+        double time = System.currentTimeMillis() - getStartTime();
+        return count * 1000.0 / time;
     }
 
 }

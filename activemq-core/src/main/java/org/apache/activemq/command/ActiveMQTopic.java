@@ -27,8 +27,8 @@ import javax.jms.Topic;
  */
 public class ActiveMQTopic extends ActiveMQDestination implements Topic {
 
-    private static final long serialVersionUID = 7300307405896488588L;
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_TOPIC;
+    private static final long serialVersionUID = 7300307405896488588L;
 
     public ActiveMQTopic() {
     }

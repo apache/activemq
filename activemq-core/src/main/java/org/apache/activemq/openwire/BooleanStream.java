@@ -51,7 +51,7 @@ public final class BooleanStream {
             }
         }
         if (value) {
-            data[arrayPos] |= (0x01 << bytePos);
+            data[arrayPos] |= 0x01 << bytePos;
         }
         bytePos++;
         if (bytePos >= 8) {

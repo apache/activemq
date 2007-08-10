@@ -118,6 +118,22 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         this(createURI(brokerURL));
     }
 
+    public ActiveMQConnectionFactory(URI brokerURL) {
+        setBrokerURL(brokerURL.toString());
+    }
+
+    public ActiveMQConnectionFactory(String userName, String password, URI brokerURL) {
+        setUserName(userName);
+        setPassword(password);
+        setBrokerURL(brokerURL.toString());
+    }
+
+    public ActiveMQConnectionFactory(String userName, String password, String brokerURL) {
+        setUserName(userName);
+        setPassword(password);
+        setBrokerURL(brokerURL);
+    }
+
     /**
      * Returns a copy of the given connection factory
      */
@@ -140,22 +156,6 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         } catch (URISyntaxException e) {
             throw (IllegalArgumentException)new IllegalArgumentException("Invalid broker URI: " + brokerURL).initCause(e);
         }
-    }
-
-    public ActiveMQConnectionFactory(URI brokerURL) {
-        setBrokerURL(brokerURL.toString());
-    }
-
-    public ActiveMQConnectionFactory(String userName, String password, URI brokerURL) {
-        setUserName(userName);
-        setPassword(password);
-        setBrokerURL(brokerURL.toString());
-    }
-
-    public ActiveMQConnectionFactory(String userName, String password, String brokerURL) {
-        setUserName(userName);
-        setPassword(password);
-        setBrokerURL(brokerURL);
     }
 
     /**
@@ -252,8 +252,9 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
             transport.start();
 
-            if (clientID != null)
+            if (clientID != null) {
                 connection.setDefaultClientID(clientID);
+            }
 
             return connection;
         } catch (JMSException e) {

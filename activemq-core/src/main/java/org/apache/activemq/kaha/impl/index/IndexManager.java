@@ -71,7 +71,8 @@ public final class IndexManager {
         item.reset();
         item.setActive(false);
         if (lastFree == null) {
-            firstFree = lastFree = item;
+            firstFree = item;
+            lastFree = item;
         } else {
             lastFree.setNextItem(item.getOffset());
         }
@@ -124,7 +125,8 @@ public final class IndexManager {
     }
 
     public synchronized boolean delete() throws IOException {
-        firstFree = lastFree = null;
+        firstFree = null;
+        lastFree = null;
         if (indexFile != null) {
             indexFile.close();
             indexFile = null;
@@ -137,7 +139,8 @@ public final class IndexManager {
         if (firstFree != null) {
             if (firstFree.equals(lastFree)) {
                 result = firstFree;
-                firstFree = lastFree = null;
+                firstFree = null;
+                lastFree = null;
             } else {
                 result = firstFree;
                 firstFree = getIndex(firstFree.getNextItem());
@@ -177,7 +180,8 @@ public final class IndexManager {
                     updateIndexes(lastFree);
                     lastFree = index;
                 } else {
-                    lastFree = firstFree = index;
+                    lastFree = index;
+                    firstFree = index;
                 }
             }
             offset += IndexItem.INDEX_SIZE;

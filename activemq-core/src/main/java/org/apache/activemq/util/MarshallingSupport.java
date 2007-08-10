@@ -35,7 +35,7 @@ import java.util.Properties;
  * 
  * @version $Revision$
  */
-public class MarshallingSupport {
+public final class MarshallingSupport {
 
     public static final byte NULL = 0;
     public static final byte BOOLEAN_TYPE = 1;
@@ -52,6 +52,9 @@ public class MarshallingSupport {
     public static final byte LIST_TYPE = 12;
     public static final byte BIG_STRING_TYPE = 13;
 
+    private MarshallingSupport() {
+    }
+    
     public static void marshalPrimitiveMap(Map map, DataOutputStream out) throws IOException {
         if (map == null) {
             out.writeInt(-1);
@@ -66,7 +69,7 @@ public class MarshallingSupport {
         }
     }
 
-    public static Map unmarshalPrimitiveMap(DataInputStream in) throws IOException {
+    public static Map<String, Object> unmarshalPrimitiveMap(DataInputStream in) throws IOException {
         return unmarshalPrimitiveMap(in, Integer.MAX_VALUE);
     }
 
@@ -76,7 +79,7 @@ public class MarshallingSupport {
      * @throws IOException
      * @throws IOException
      */
-    public static Map unmarshalPrimitiveMap(DataInputStream in, int maxPropertySize) throws IOException {
+    public static Map<String, Object> unmarshalPrimitiveMap(DataInputStream in, int maxPropertySize) throws IOException {
         int size = in.readInt();
         if (size > maxPropertySize) {
             throw new IOException("Primitive map is larger than the allowed size: " + size);
@@ -84,7 +87,7 @@ public class MarshallingSupport {
         if (size < 0) {
             return null;
         } else {
-            HashMap rc = new HashMap(size);
+            Map<String, Object> rc = new HashMap<String, Object>(size);
             for (int i = 0; i < size; i++) {
                 String name = in.readUTF();
                 rc.put(name, unmarshalPrimitive(in));
@@ -102,9 +105,9 @@ public class MarshallingSupport {
         }
     }
 
-    public static List unmarshalPrimitiveList(DataInputStream in) throws IOException {
+    public static List<Object> unmarshalPrimitiveList(DataInputStream in) throws IOException {
         int size = in.readInt();
-        List answer = new ArrayList(size);
+        List<Object> answer = new ArrayList<Object>(size);
         while (size-- > 0) {
             answer.add(unmarshalPrimitive(in));
         }
@@ -150,7 +153,7 @@ public class MarshallingSupport {
         byte type = in.readByte();
         switch (type) {
         case BYTE_TYPE:
-            value = Byte.valueOf(type);
+            value = Byte.valueOf(in.readByte());
             break;
         case BOOLEAN_TYPE:
             value = in.readBoolean() ? Boolean.TRUE : Boolean.FALSE;
@@ -265,7 +268,8 @@ public class MarshallingSupport {
             int strlen = text.length();
             int utflen = 0;
             char[] charr = new char[strlen];
-            int c, count = 0;
+            int c = 0;
+            int count = 0;
 
             text.getChars(0, strlen, charr, 0);
 
@@ -312,7 +316,9 @@ public class MarshallingSupport {
         if (utflen > -1) {
             StringBuffer str = new StringBuffer(utflen);
             byte bytearr[] = new byte[utflen];
-            int c, char2, char3;
+            int c;
+            int char2;
+            int char3;
             int count = 0;
 
             dataIn.readFully(bytearr, 0, utflen);

@@ -45,7 +45,8 @@ public class TcpBufferedInputStream extends FilterInputStream {
 
     private void fill() throws IOException {
         byte[] buffer = internalBuffer;
-        count = position = 0;
+        count = 0;
+        position = 0;
         int n = in.read(buffer, position, buffer.length - position);
         if (n > 0) {
             count = n + position;

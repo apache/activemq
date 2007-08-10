@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
@@ -41,7 +42,7 @@ public class ConnectionContext {
     private Broker broker;
     private boolean inRecoveryMode;
     private Transaction transaction;
-    private ConcurrentHashMap transactions;
+    private ConcurrentHashMap<TransactionId, Transaction> transactions;
     private SecurityContext securityContext;
     private ConnectionId connectionId;
     private String clientId;
@@ -158,11 +159,11 @@ public class ConnectionContext {
         this.inRecoveryMode = inRecoveryMode;
     }
 
-    public ConcurrentHashMap getTransactions() {
+    public ConcurrentHashMap<TransactionId, Transaction> getTransactions() {
         return transactions;
     }
 
-    public void setTransactions(ConcurrentHashMap transactions) {
+    public void setTransactions(ConcurrentHashMap<TransactionId, Transaction> transactions) {
         this.transactions = transactions;
     }
 

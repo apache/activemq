@@ -36,9 +36,10 @@ import org.apache.activemq.store.TransactionStore;
  */
 public class AMQTransactionStore implements TransactionStore {
 
-    private final AMQPersistenceAdapter peristenceAdapter;
     Map<TransactionId, AMQTx> inflightTransactions = new LinkedHashMap<TransactionId, AMQTx>();
     Map<TransactionId, AMQTx> preparedTransactions = new LinkedHashMap<TransactionId, AMQTx>();
+
+    private final AMQPersistenceAdapter peristenceAdapter;
     private boolean doingRecover;
 
     public AMQTransactionStore(AMQPersistenceAdapter adapter) {

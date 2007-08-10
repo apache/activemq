@@ -22,11 +22,9 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.activemq.transport.TopicClusterTest;
+import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import junit.framework.TestCase;
 
 public class TaskRunnerTest extends TestCase {
     private static final Log LOG = LogFactory.getLog(TaskRunnerTest.class);

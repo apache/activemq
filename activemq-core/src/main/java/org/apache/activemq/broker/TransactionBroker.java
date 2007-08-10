@@ -19,6 +19,7 @@ package org.apache.activemq.broker;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -55,8 +56,8 @@ public class TransactionBroker extends BrokerFilter {
 
     // The prepared XA transactions.
     private TransactionStore transactionStore;
-    private Map xaTransactions = new LinkedHashMap();
-    ActiveMQMessageAudit audit;
+    private Map<TransactionId, Transaction> xaTransactions = new LinkedHashMap<TransactionId, Transaction>();
+    private ActiveMQMessageAudit audit;
 
     public TransactionBroker(Broker next, TransactionStore transactionStore) {
         super(next);
@@ -78,7 +79,7 @@ public class TransactionBroker extends BrokerFilter {
             final ConnectionContext context = new ConnectionContext();
             context.setBroker(this);
             context.setInRecoveryMode(true);
-            context.setTransactions(new ConcurrentHashMap());
+            context.setTransactions(new ConcurrentHashMap<TransactionId, Transaction>());
             context.setProducerFlowControl(false);
             final ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
             producerExchange.setMutable(true);
@@ -119,12 +120,13 @@ public class TransactionBroker extends BrokerFilter {
     //
     // ////////////////////////////////////////////////////////////////////////////
     public TransactionId[] getPreparedTransactions(ConnectionContext context) throws Exception {
-        ArrayList txs = new ArrayList();
+        List<TransactionId> txs = new ArrayList<TransactionId>();
         synchronized (xaTransactions) {
-            for (Iterator iter = xaTransactions.values().iterator(); iter.hasNext();) {
-                Transaction tx = (Transaction)iter.next();
-                if (tx.isPrepared())
+            for (Iterator<Transaction> iter = xaTransactions.values().iterator(); iter.hasNext();) {
+                Transaction tx = iter.next();
+                if (tx.isPrepared()) {
                     txs.add(tx.getTransactionId());
+                }
             }
         }
         XATransactionId rc[] = new XATransactionId[txs.size()];
@@ -137,17 +139,19 @@ public class TransactionBroker extends BrokerFilter {
         if (xid.isXATransaction()) {
             Transaction transaction = null;
             synchronized (xaTransactions) {
-                transaction = (Transaction)xaTransactions.get(xid);
-                if (transaction != null)
+                transaction = xaTransactions.get(xid);
+                if (transaction != null) {
                     return;
+                }
                 transaction = new XATransaction(transactionStore, (XATransactionId)xid, this);
                 xaTransactions.put(xid, transaction);
             }
         } else {
-            Map transactionMap = context.getTransactions();
-            Transaction transaction = (Transaction)transactionMap.get(xid);
-            if (transaction != null)
+            Map<TransactionId, Transaction> transactionMap = context.getTransactions();
+            Transaction transaction = transactionMap.get(xid);
+            if (transaction != null) {
                 throw new JMSException("Transaction '" + xid + "' has already been started.");
+            }
             transaction = new LocalTransaction(transactionStore, (LocalTransactionId)xid, context);
             transactionMap.put(xid, transaction);
         }
@@ -229,9 +233,9 @@ public class TransactionBroker extends BrokerFilter {
     }
 
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
-        for (Iterator iter = context.getTransactions().values().iterator(); iter.hasNext();) {
+        for (Iterator<Transaction> iter = context.getTransactions().values().iterator(); iter.hasNext();) {
             try {
-                Transaction transaction = (Transaction)iter.next();
+                Transaction transaction = iter.next();
                 transaction.rollback();
             } catch (Exception e) {
                 LOG.warn("ERROR Rolling back disconnected client's transactions: ", e);
@@ -252,8 +256,9 @@ public class TransactionBroker extends BrokerFilter {
             transactionMap = xid.isXATransaction() ? xaTransactions : context.getTransactions();
         }
         Transaction transaction = (Transaction)transactionMap.get(xid);
-        if (transaction != null)
+        if (transaction != null) {
             return transaction;
+        }
         if (xid.isXATransaction()) {
             XAException e = new XAException("Transaction '" + xid + "' has not been started.");
             e.errorCode = XAException.XAER_NOTA;

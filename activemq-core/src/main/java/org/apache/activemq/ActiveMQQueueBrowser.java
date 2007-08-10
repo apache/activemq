@@ -109,8 +109,9 @@ public class ActiveMQQueueBrowser implements QueueBrowser, Enumeration {
     }
 
     private void destroyConsumer() {
-        if (consumer == null)
+        if (consumer == null) {
             return;
+        }
         try {
             consumer.close();
             consumer = null;
@@ -130,8 +131,9 @@ public class ActiveMQQueueBrowser implements QueueBrowser, Enumeration {
 
     public Enumeration getEnumeration() throws JMSException {
         checkClosed();
-        if (consumer == null)
+        if (consumer == null) {
             consumer = createConsumer();
+        }
         return this;
     }
 
@@ -148,8 +150,9 @@ public class ActiveMQQueueBrowser implements QueueBrowser, Enumeration {
         while (true) {
 
             synchronized (this) {
-                if (consumer == null)
+                if (consumer == null) {
                     return false;
+                }
             }
 
             if (consumer.getMessageSize() > 0) {
@@ -172,14 +175,16 @@ public class ActiveMQQueueBrowser implements QueueBrowser, Enumeration {
         while (true) {
 
             synchronized (this) {
-                if (consumer == null)
+                if (consumer == null) {
                     return null;
+                }
             }
 
             try {
                 Message answer = consumer.receiveNoWait();
-                if (answer != null)
+                if (answer != null) {
                     return answer;
+                }
             } catch (JMSException e) {
                 this.session.connection.onAsyncException(e);
                 return null;

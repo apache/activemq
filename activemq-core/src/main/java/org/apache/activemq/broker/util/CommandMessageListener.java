@@ -16,10 +16,7 @@
  */
 package org.apache.activemq.broker.util;
 
-import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.activemq.util.FactoryFinder;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.io.IOException;
 
 import javax.jms.Destination;
 import javax.jms.JMSException;
@@ -28,9 +25,11 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+
+import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.util.FactoryFinder;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision: $
@@ -51,7 +50,7 @@ public class CommandMessageListener implements MessageListener {
             LOG.debug("Received command: " + message);
         }
         if (message instanceof TextMessage) {
-            TextMessage request = (TextMessage) message;
+            TextMessage request = (TextMessage)message;
             try {
                 Destination replyTo = message.getJMSReplyTo();
                 if (replyTo == null) {
@@ -61,12 +60,10 @@ public class CommandMessageListener implements MessageListener {
                 Message response = processCommand(request);
                 addReplyHeaders(request, response);
                 getProducer().send(replyTo, response);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 LOG.error("Failed to process message due to: " + e + ". Message: " + message, e);
             }
-        }
-        else {
+        } else {
             LOG.warn("Ignoring invalid message: " + message);
         }
     }
@@ -88,7 +85,8 @@ public class CommandMessageListener implements MessageListener {
     }
 
     /**
-     * Processes an incoming command from a console and returning the text to output
+     * Processes an incoming command from a console and returning the text to
+     * output
      */
     public String processCommandText(String line) throws Exception {
         TextMessage request = new ActiveMQTextMessage();
@@ -118,6 +116,6 @@ public class CommandMessageListener implements MessageListener {
 
     private CommandHandler createHandler() throws IllegalAccessException, IOException, ClassNotFoundException, InstantiationException {
         FactoryFinder factoryFinder = new FactoryFinder("META-INF/services/org/apache/activemq/broker/");
-        return (CommandHandler) factoryFinder.newInstance("agent");
+        return (CommandHandler)factoryFinder.newInstance("agent");
     }
 }

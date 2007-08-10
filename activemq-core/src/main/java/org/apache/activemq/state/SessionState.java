@@ -18,6 +18,7 @@
 package org.apache.activemq.state;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,8 +32,8 @@ import org.apache.activemq.command.SessionInfo;
 public class SessionState {
     final SessionInfo info;
 
-    public final ConcurrentHashMap producers = new ConcurrentHashMap();
-    public final ConcurrentHashMap consumers = new ConcurrentHashMap();
+    private final Map<ProducerId, ProducerState> producers = new ConcurrentHashMap<ProducerId, ProducerState>();
+    private final Map<ConsumerId, ConsumerState> consumers = new ConcurrentHashMap<ConsumerId, ConsumerState>();
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
 
     public SessionState(SessionInfo info) {
@@ -49,7 +50,7 @@ public class SessionState {
     }
 
     public ProducerState removeProducer(ProducerId id) {
-        return (ProducerState)producers.remove(id);
+        return producers.remove(id);
     }
 
     public void addConsumer(ConsumerInfo info) {
@@ -58,40 +59,41 @@ public class SessionState {
     }
 
     public ConsumerState removeConsumer(ConsumerId id) {
-        return (ConsumerState)consumers.remove(id);
+        return consumers.remove(id);
     }
 
     public SessionInfo getInfo() {
         return info;
     }
 
-    public Set getConsumerIds() {
+    public Set<ConsumerId> getConsumerIds() {
         return consumers.keySet();
     }
 
-    public Set getProducerIds() {
+    public Set<ProducerId> getProducerIds() {
         return producers.keySet();
     }
 
-    public Collection getProducerStates() {
+    public Collection<ProducerState> getProducerStates() {
         return producers.values();
     }
 
     public ProducerState getProducerState(ProducerId producerId) {
-        return (ProducerState)producers.get(producerId);
+        return producers.get(producerId);
     }
 
-    public Collection getConsumerStates() {
+    public Collection<ConsumerState> getConsumerStates() {
         return consumers.values();
     }
 
     public ConsumerState getConsumerState(ConsumerId consumerId) {
-        return (ConsumerState)consumers.get(consumerId);
+        return consumers.get(consumerId);
     }
 
     private void checkShutdown() {
-        if (shutdown.get())
+        if (shutdown.get()) {
             throw new IllegalStateException("Disposed");
+        }
     }
 
     public void shutdown() {

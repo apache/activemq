@@ -75,8 +75,9 @@ public class TempTopicRegion extends AbstractRegion {
         // Force a timeout value so that we don't get an error that
         // there is still an active sub. Temp destination may be removed
         // while a network sub is still active which is valid.
-        if (timeout == 0)
+        if (timeout == 0) {
             timeout = 1;
+        }
 
         super.removeDestination(context, destination, timeout);
     }

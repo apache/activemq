@@ -95,8 +95,9 @@ public class JDBCMessageStore implements MessageStore {
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
             byte data[] = adapter.doGetMessage(c, id);
-            if (data == null)
+            if (data == null) {
                 return null;
+            }
 
             Message answer = (Message)wireFormat.unmarshal(new ByteSequence(data));
             return answer;

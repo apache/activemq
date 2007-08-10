@@ -76,6 +76,10 @@ public class RegionBroker implements Broker {
     private static final Log LOG = LogFactory.getLog(RegionBroker.class);
     private static final IdGenerator BROKER_ID_GENERATOR = new IdGenerator();
 
+    protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
+    protected DestinationFactory destinationFactory;
+    protected final Map<ConnectionId, ConnectionState> connectionStates = Collections.synchronizedMap(new HashMap<ConnectionId, ConnectionState>());
+
     private final Region queueRegion;
     private final Region topicRegion;
     private final Region tempQueueRegion;
@@ -84,23 +88,16 @@ public class RegionBroker implements Broker {
     private boolean started;
     private boolean keepDurableSubsActive;
 
-    protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
-
-    private final CopyOnWriteArrayList connections = new CopyOnWriteArrayList();
-    private final Map destinations = new ConcurrentHashMap();
-    private final CopyOnWriteArrayList brokerInfos = new CopyOnWriteArrayList();
+    private final CopyOnWriteArrayList<Connection> connections = new CopyOnWriteArrayList<Connection>();
+    private final Map<ActiveMQDestination, Destination> destinations = new ConcurrentHashMap<ActiveMQDestination, Destination>();
+    private final CopyOnWriteArrayList<BrokerInfo> brokerInfos = new CopyOnWriteArrayList<BrokerInfo>();
 
     private final LongSequenceGenerator sequenceGenerator = new LongSequenceGenerator();
     private BrokerId brokerId;
     private String brokerName;
-    private Map<String, ConnectionContext> clientIdSet = new HashMap<String, ConnectionContext>(); // we
-    // will
-    // synchronize
-    // access
+    private Map<String, ConnectionContext> clientIdSet = new HashMap<String, ConnectionContext>(); 
     private final DestinationInterceptor destinationInterceptor;
     private ConnectionContext adminConnectionContext;
-    protected DestinationFactory destinationFactory;
-    protected final Map<ConnectionId, ConnectionState> connectionStates = Collections.synchronizedMap(new HashMap<ConnectionId, ConnectionState>());
 
     public RegionBroker(BrokerService brokerService, TaskRunnerFactory taskRunnerFactory, UsageManager memoryManager, DestinationFactory destinationFactory,
                         DestinationInterceptor destinationInterceptor) throws IOException {
@@ -243,7 +240,7 @@ public class RegionBroker implements Broker {
     }
 
     public Connection[] getClients() throws Exception {
-        ArrayList l = new ArrayList(connections);
+        ArrayList<Connection> l = new ArrayList<Connection>(connections);
         Connection rc[] = new Connection[l.size()];
         l.toArray(rc);
         return rc;
@@ -253,9 +250,10 @@ public class RegionBroker implements Broker {
 
         Destination answer;
 
-        answer = (Destination)destinations.get(destination);
-        if (answer != null)
+        answer = destinations.get(destination);
+        if (answer != null) {
             return answer;
+        }
 
         switch (destination.getDestinationType()) {
         case ActiveMQDestination.QUEUE_TYPE:
@@ -313,9 +311,9 @@ public class RegionBroker implements Broker {
     }
 
     public ActiveMQDestination[] getDestinations() throws Exception {
-        ArrayList l;
+        ArrayList<Destination> l;
 
-        l = new ArrayList(destinations.values());
+        l = new ArrayList<Destination>(destinations.values());
 
         ActiveMQDestination rc[] = new ActiveMQDestination[l.size()];
         l.toArray(rc);
@@ -530,7 +528,7 @@ public class RegionBroker implements Broker {
 
     public synchronized BrokerInfo[] getPeerBrokerInfos() {
         BrokerInfo[] result = new BrokerInfo[brokerInfos.size()];
-        result = (BrokerInfo[])brokerInfos.toArray(result);
+        result = brokerInfos.toArray(result);
         return result;
     }
 

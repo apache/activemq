@@ -39,8 +39,8 @@ import org.apache.activemq.jaas.GroupPrincipal;
  * @version $Revision$
  */
 public class SimpleAuthenticationPlugin implements BrokerPlugin {
-    private Map userPasswords;
-    private Map userGroups;
+    private Map<String, String> userPasswords;
+    private Map<String, Set<GroupPrincipal>> userGroups;
 
     public SimpleAuthenticationPlugin() {
     }
@@ -53,7 +53,7 @@ public class SimpleAuthenticationPlugin implements BrokerPlugin {
         return new SimpleAuthenticationBroker(broker, userPasswords, userGroups);
     }
 
-    public Map getUserGroups() {
+    public Map<String, Set<GroupPrincipal>> getUserGroups() {
         return userGroups;
     }
 
@@ -63,12 +63,12 @@ public class SimpleAuthenticationPlugin implements BrokerPlugin {
      * @org.apache.xbean.ElementType class="org.apache.activemq.security.AuthenticationUser"
      */
     public void setUsers(List users) {
-        userPasswords = new HashMap();
-        userGroups = new HashMap();
+        userPasswords = new HashMap<String, String>();
+        userGroups = new HashMap<String, Set<GroupPrincipal>>();
         for (Iterator it = users.iterator(); it.hasNext();) {
             AuthenticationUser user = (AuthenticationUser)it.next();
             userPasswords.put(user.getUsername(), user.getPassword());
-            Set groups = new HashSet();
+            Set<GroupPrincipal> groups = new HashSet<GroupPrincipal>();
             StringTokenizer iter = new StringTokenizer(user.getGroups(), ",");
             while (iter.hasMoreTokens()) {
                 String name = iter.nextToken().trim();
@@ -82,18 +82,18 @@ public class SimpleAuthenticationPlugin implements BrokerPlugin {
      * Sets the groups a user is in. The key is the user name and the value is a
      * Set of groups
      */
-    public void setUserGroups(Map userGroups) {
+    public void setUserGroups(Map<String, Set<GroupPrincipal>> userGroups) {
         this.userGroups = userGroups;
     }
 
-    public Map getUserPasswords() {
+    public Map<String, String> getUserPasswords() {
         return userPasswords;
     }
 
     /**
      * Sets the map indexed by user name with the value the password
      */
-    public void setUserPasswords(Map userPasswords) {
+    public void setUserPasswords(Map<String, String> userPasswords) {
         this.userPasswords = userPasswords;
     }
 

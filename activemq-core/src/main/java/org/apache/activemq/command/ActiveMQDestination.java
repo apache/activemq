@@ -22,6 +22,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -41,10 +42,7 @@ import org.apache.activemq.util.URISupport;
  * @openwire:marshaller
  * @version $Revision: 1.10 $
  */
-public abstract class ActiveMQDestination extends JNDIBaseStorable implements DataStructure, Destination,
-    Externalizable, Comparable {
-
-    private static final long serialVersionUID = -3885260014960795889L;
+public abstract class ActiveMQDestination extends JNDIBaseStorable implements DataStructure, Destination, Externalizable, Comparable {
 
     public static final String PATH_SEPERATOR = ".";
     public static final char COMPOSITE_SEPERATOR = ',';
@@ -62,13 +60,27 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
 
     public static final String TEMP_DESTINATION_NAME_PREFIX = "ID:";
 
+    private static final long serialVersionUID = -3885260014960795889L;
+
     protected String physicalName;
 
     protected transient ActiveMQDestination[] compositeDestinations;
     protected transient String[] destinationPaths;
     protected transient boolean isPattern;
     protected transient int hashValue;
-    protected Map options;
+    protected Map<String, String> options;
+    
+    public ActiveMQDestination() {
+    }
+
+    protected ActiveMQDestination(String name) {
+        setPhysicalName(name);
+    }
+
+    public ActiveMQDestination(ActiveMQDestination composites[]) {
+        setCompositeDestinations(composites);
+    }
+
 
     // static helper methods for working with destinations
     // -------------------------------------------------------------------------
@@ -99,18 +111,24 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
     }
 
     public static ActiveMQDestination transform(Destination dest) throws JMSException {
-        if (dest == null)
+        if (dest == null) {
             return null;
-        if (dest instanceof ActiveMQDestination)
+        }
+        if (dest instanceof ActiveMQDestination) {
             return (ActiveMQDestination)dest;
-        if (dest instanceof TemporaryQueue)
+        }
+        if (dest instanceof TemporaryQueue) {
             return new ActiveMQTempQueue(((TemporaryQueue)dest).getQueueName());
-        if (dest instanceof TemporaryTopic)
+        }
+        if (dest instanceof TemporaryTopic) {
             return new ActiveMQTempTopic(((TemporaryTopic)dest).getTopicName());
-        if (dest instanceof Queue)
+        }
+        if (dest instanceof Queue) {
             return new ActiveMQQueue(((Queue)dest).getQueueName());
-        if (dest instanceof Topic)
+        }
+        if (dest instanceof Topic) {
             return new ActiveMQTopic(((Topic)dest).getTopicName());
+        }
         throw new JMSException("Could not transform the destination into a ActiveMQ destination: " + dest);
     }
 
@@ -129,17 +147,6 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
                 return destination.isQueue() ? -1 : 1;
             }
         }
-    }
-
-    public ActiveMQDestination() {
-    }
-
-    protected ActiveMQDestination(String name) {
-        setPhysicalName(name);
-    }
-
-    public ActiveMQDestination(ActiveMQDestination composites[]) {
-        setCompositeDestinations(composites);
     }
 
     public int compareTo(Object that) {
@@ -169,8 +176,9 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
 
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < destinations.length; i++) {
-            if (i != 0)
+            if (i != 0) {
                 sb.append(COMPOSITE_SEPERATOR);
+            }
             if (getDestinationType() == destinations[i].getDestinationType()) {
                 sb.append(destinations[i].getPhysicalName());
             } else {
@@ -181,8 +189,9 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
     }
 
     public String getQualifiedName() {
-        if (isComposite())
+        if (isComposite()) {
             return physicalName;
+        }
         return getQualifiedPrefix() + physicalName;
     }
 
@@ -221,8 +230,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
             try {
                 options = URISupport.parseQuery(optstring);
             } catch (URISyntaxException e) {
-                throw new IllegalArgumentException("Invalid destination name: " + physicalName
-                                                   + ", it's options are not encoded properly: " + e);
+                throw new IllegalArgumentException("Invalid destination name: " + physicalName + ", it's options are not encoded properly: " + e);
             }
         }
         this.physicalName = physicalName;
@@ -230,12 +238,13 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
         this.hashValue = 0;
         if (composite) {
             // Check to see if it is a composite.
-            ArrayList<String> l = new ArrayList<String>();
+            List<String> l = new ArrayList<String>();
             StringTokenizer iter = new StringTokenizer(physicalName, "" + COMPOSITE_SEPERATOR);
             while (iter.hasMoreTokens()) {
                 String name = iter.nextToken().trim();
-                if (name.length() == 0)
+                if (name.length() == 0) {
                     continue;
+                }
                 l.add(name);
             }
             if (l.size() > 1) {
@@ -254,15 +263,17 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
 
     public String[] getDestinationPaths() {
 
-        if (destinationPaths != null)
+        if (destinationPaths != null) {
             return destinationPaths;
+        }
 
-        ArrayList l = new ArrayList();
+        List<String> l = new ArrayList<String>();
         StringTokenizer iter = new StringTokenizer(physicalName, PATH_SEPERATOR);
         while (iter.hasMoreTokens()) {
             String name = iter.nextToken().trim();
-            if (name.length() == 0)
+            if (name.length() == 0) {
                 continue;
+            }
             l.add(name);
         }
 
@@ -286,10 +297,12 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
     }
 
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
+        }
 
         ActiveMQDestination d = (ActiveMQDestination)o;
         return physicalName.equals(d.physicalName);
@@ -331,7 +344,7 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
         }
     }
 
-    public Map getOptions() {
+    public Map<String, String> getOptions() {
         return options;
     }
 

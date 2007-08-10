@@ -43,11 +43,12 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1.1.1 $
  */
 public class PeerTransportTest extends TestCase {
-    protected Log log = LogFactory.getLog(getClass());
-    protected ActiveMQDestination destination;
-    protected boolean topic = true;
     protected static final int MESSAGE_COUNT = 50;
     protected static final int NUMBER_IN_CLUSTER = 3;
+    private static final Log LOG = LogFactory.getLog(PeerTransportTest.class);
+    
+    protected ActiveMQDestination destination;
+    protected boolean topic = true;
     protected int deliveryMode = DeliveryMode.NON_PERSISTENT;
     protected MessageProducer[] producers;
     protected Connection[] connections;
@@ -75,7 +76,7 @@ public class PeerTransportTest extends TestCase {
             consumer.setMessageListener(messageIdList[i]);
         }
 
-        log.info("Waiting for cluster to be fully connected");
+        LOG.info("Waiting for cluster to be fully connected");
 
         // Each connection should see that NUMBER_IN_CLUSTER consumers get
         // registered on the destination.
@@ -98,7 +99,7 @@ public class PeerTransportTest extends TestCase {
             session.close();
         }
 
-        log.info("Cluster is online.");
+        LOG.info("Cluster is online.");
     }
 
     protected void tearDown() throws Exception {
@@ -114,7 +115,7 @@ public class PeerTransportTest extends TestCase {
     }
 
     protected Connection createConnection(int i) throws JMSException {
-        log.info("creating connection ....");
+        LOG.info("creating connection ....");
         ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory("peer://" + getClass().getName() + "/node" + i);
         return fac.createConnection();
     }

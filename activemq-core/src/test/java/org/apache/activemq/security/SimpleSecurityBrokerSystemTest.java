@@ -114,9 +114,9 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
             u.put("guest", "password");
 
             HashMap groups = new HashMap();
-            groups.put("system", new HashSet(Arrays.asList(new Object[] { ADMINS, USERS })));
-            groups.put("user", new HashSet(Arrays.asList(new Object[] { USERS })));
-            groups.put("guest", new HashSet(Arrays.asList(new Object[] { GUESTS })));
+            groups.put("system", new HashSet(Arrays.asList(new Object[] {ADMINS, USERS})));
+            groups.put("user", new HashSet(Arrays.asList(new Object[] {USERS})));
+            groups.put("guest", new HashSet(Arrays.asList(new Object[] {GUESTS})));
 
             return new SimpleAuthenticationBroker(broker, u, groups);
         }
@@ -130,16 +130,15 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
      * @see {@link CombinationTestSupport}
      */
     public void initCombos() {
-        addCombinationValues("authorizationPlugin", new Object[] { new AuthorizationPlugin(createAuthorizationMap()), });
-        addCombinationValues("authenticationPlugin", new Object[] { new SimpleAuthenticationFactory(), new JaasAuthenticationPlugin(), });
+        addCombinationValues("authorizationPlugin", new Object[] {new AuthorizationPlugin(createAuthorizationMap()),});
+        addCombinationValues("authenticationPlugin", new Object[] {new SimpleAuthenticationFactory(), new JaasAuthenticationPlugin(),});
     }
 
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = super.createBroker();
-        broker.setPlugins(new BrokerPlugin[] { authorizationPlugin, authenticationPlugin });
+        broker.setPlugins(new BrokerPlugin[] {authorizationPlugin, authenticationPlugin});
         broker.setPersistent(false);
         return broker;
     }
-
 
 }

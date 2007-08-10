@@ -106,8 +106,9 @@ public class NetworkBridgeFilter implements DataStructure, BooleanExpression {
     public static boolean contains(BrokerId[] brokerPath, BrokerId brokerId) {
         if (brokerPath != null && brokerId != null) {
             for (int i = 0; i < brokerPath.length; i++) {
-                if (brokerId.equals(brokerPath[i]))
+                if (brokerId.equals(brokerPath[i])) {
                     return true;
+                }
             }
         }
         return false;

@@ -43,7 +43,7 @@ public class ThroughputReportPlugin implements ReportPlugin {
     public static final String KEY_MIN_CLIENT_AVE_EMM_TP = "MinClientAveEMMTP";
     public static final String KEY_MAX_CLIENT_AVE_EMM_TP = "MaxClientAveEMMTP";
 
-    protected Map clientThroughputs = new HashMap();
+    protected Map<String, List> clientThroughputs = new HashMap<String, List>();
 
     public void handleCsvData(String csvData) {
         StringTokenizer tokenizer = new StringTokenizer(csvData, ",");
@@ -65,10 +65,10 @@ public class ThroughputReportPlugin implements ReportPlugin {
         addToClientTPList(clientName, throughput);
     }
 
-    public Map getSummary() {
+    public Map<String, String> getSummary() {
         // Check if tp sampler wasn't used.
         if (clientThroughputs.size() == 0) {
-            return new HashMap();
+            return new HashMap<String, String>();
         }
 
         long   minClientTP = Long.MAX_VALUE, // TP = throughput
@@ -93,15 +93,15 @@ public class ThroughputReportPlugin implements ReportPlugin {
                nameMinClientAveEMMTP = "",
                nameMaxClientAveEMMTP = "";
 
-        Set clientNames = clientThroughputs.keySet();
+        Set<String> clientNames = clientThroughputs.keySet();
         String clientName;
         List   clientTPList;
         long tempLong;
         double tempDouble;
         int clientCount = 0;
-        for (Iterator i=clientNames.iterator(); i.hasNext();) {
-            clientName = (String)i.next();
-            clientTPList = (List)clientThroughputs.get(clientName);
+        for (Iterator<String> i=clientNames.iterator(); i.hasNext();) {
+            clientName = i.next();
+            clientTPList = clientThroughputs.get(clientName);
             clientCount++;
 
             tempLong = PerformanceStatisticsUtil.getMin(clientTPList);
@@ -153,7 +153,7 @@ public class ThroughputReportPlugin implements ReportPlugin {
             }
         }
 
-        Map summary = new HashMap();
+        Map<String, String> summary = new HashMap<String, String>();
         summary.put(KEY_SYS_TOTAL_TP, String.valueOf(systemTotalTP));
         summary.put(KEY_SYS_TOTAL_CLIENTS, String.valueOf(clientCount));
         summary.put(KEY_SYS_AVE_TP, String.valueOf(systemAveTP));
@@ -178,9 +178,9 @@ public class ThroughputReportPlugin implements ReportPlugin {
             throw new IllegalArgumentException("Invalid Throughput CSV Data: clientName=" + clientName + ", throughput=" + throughput);
         }
 
-        List clientTPList = (List)clientThroughputs.get(clientName);
+        List<Long> clientTPList = clientThroughputs.get(clientName);
         if (clientTPList == null) {
-            clientTPList = new ArrayList();
+            clientTPList = new ArrayList<Long>();
             clientThroughputs.put(clientName, clientTPList);
         }
         clientTPList.add(throughput);

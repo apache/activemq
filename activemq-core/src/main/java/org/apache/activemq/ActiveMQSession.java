@@ -194,8 +194,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     protected final ActiveMQSessionExecutor executor = new ActiveMQSessionExecutor(this);
     protected final AtomicBoolean started = new AtomicBoolean(false);
 
-    protected final CopyOnWriteArrayList consumers = new CopyOnWriteArrayList();
-    protected final CopyOnWriteArrayList producers = new CopyOnWriteArrayList();
+    protected final CopyOnWriteArrayList<ActiveMQMessageConsumer> consumers = new CopyOnWriteArrayList<ActiveMQMessageConsumer>();
+    protected final CopyOnWriteArrayList<ActiveMQMessageProducer> producers = new CopyOnWriteArrayList<ActiveMQMessageProducer>();
 
     protected boolean closed;
     protected boolean asyncDispatch;
@@ -235,8 +235,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         setTransformer(connection.getTransformer());
         setBlobTransferPolicy(connection.getBlobTransferPolicy());
 
-        if (connection.isStarted())
+        if (connection.isStarted()) {
             start();
+        }
 
     }
 
@@ -495,7 +496,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     public boolean getTransacted() throws JMSException {
         checkClosed();
-        return ((acknowledgementMode == Session.SESSION_TRANSACTED) || (transactionContext.isInXATransaction()));
+        return (acknowledgementMode == Session.SESSION_TRANSACTED) || (transactionContext.isInXATransaction());
     }
 
     /**
@@ -588,15 +589,15 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
     void clearMessagesInProgress() {
         executor.clearMessagesInProgress();
-        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-            ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer)iter.next();
+        for (Iterator<ActiveMQMessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
+            ActiveMQMessageConsumer consumer = iter.next();
             consumer.clearMessagesInProgress();
         }
     }
 
     void deliverAcks() {
-        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-            ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer)iter.next();
+        for (Iterator<ActiveMQMessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
+            ActiveMQMessageConsumer consumer = iter.next();
             consumer.deliverAcks();
         }
     }
@@ -607,14 +608,14 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             try {
                 executor.stop();
 
-                for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-                    ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer)iter.next();
+                for (Iterator<ActiveMQMessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
+                    ActiveMQMessageConsumer consumer = iter.next();
                     consumer.dispose();
                 }
                 consumers.clear();
 
-                for (Iterator iter = producers.iterator(); iter.hasNext();) {
-                    ActiveMQMessageProducer producer = (ActiveMQMessageProducer)iter.next();
+                for (Iterator<ActiveMQMessageProducer> iter = producers.iterator(); iter.hasNext();) {
+                    ActiveMQMessageProducer producer = iter.next();
                     producer.dispose();
                 }
                 producers.clear();
@@ -684,8 +685,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             throw new IllegalStateException("This session is transacted");
         }
 
-        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer)iter.next();
+        for (Iterator<ActiveMQMessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
+            ActiveMQMessageConsumer c = iter.next();
             c.rollback();
         }
 
@@ -1422,8 +1423,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @see javax.jms.Session#CLIENT_ACKNOWLEDGE
      */
     public void acknowledge() throws JMSException {
-        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer)iter.next();
+        for (Iterator<ActiveMQMessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
+            ActiveMQMessageConsumer c = iter.next();
             c.acknowledge();
         }
     }
@@ -1486,8 +1487,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     protected void start() throws JMSException {
         started.set(true);
-        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer)iter.next();
+        for (Iterator<ActiveMQMessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
+            ActiveMQMessageConsumer c = iter.next();
             c.start();
         }
         executor.start();
@@ -1500,8 +1501,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     protected void stop() throws JMSException {
 
-        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer)iter.next();
+        for (Iterator<ActiveMQMessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
+            ActiveMQMessageConsumer c = iter.next();
             c.stop();
         }
 
@@ -1716,8 +1717,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         }
         Collections.reverse(c);
 
-        for (Iterator iter = c.iterator(); iter.hasNext();) {
-            MessageDispatch md = (MessageDispatch)iter.next();
+        for (Iterator<MessageDispatch> iter = c.iterator(); iter.hasNext();) {
+            MessageDispatch md = iter.next();
             executor.executeFirst(md);
         }
 
@@ -1790,8 +1791,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         if (messageListener != null) {
             throw new IllegalStateException("Cannot synchronously receive a message when a MessageListener is set");
         }
-        for (Iterator i = consumers.iterator(); i.hasNext();) {
-            ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer)i.next();
+        for (Iterator<ActiveMQMessageConsumer> i = consumers.iterator(); i.hasNext();) {
+            ActiveMQMessageConsumer consumer = i.next();
             if (consumer.getMessageListener() != null) {
                 throw new IllegalStateException("Cannot synchronously receive a message when a MessageListener is set");
             }
@@ -1799,15 +1800,15 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     protected void setOptimizeAcknowledge(boolean value) {
-        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer)iter.next();
+        for (Iterator<ActiveMQMessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
+            ActiveMQMessageConsumer c = iter.next();
             c.setOptimizeAcknowledge(value);
         }
     }
 
     protected void setPrefetchSize(ConsumerId id, int prefetch) {
-        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer)iter.next();
+        for (Iterator<ActiveMQMessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
+            ActiveMQMessageConsumer c = iter.next();
             if (c.getConsumerId().equals(id)) {
                 c.setPrefetchSize(prefetch);
                 break;
@@ -1816,8 +1817,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     protected void close(ConsumerId id) {
-        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer)iter.next();
+        for (Iterator<ActiveMQMessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
+            ActiveMQMessageConsumer c = iter.next();
             if (c.getConsumerId().equals(id)) {
                 try {
                     c.close();
@@ -1831,8 +1832,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     public boolean isInUse(ActiveMQTempDestination destination) {
-        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-            ActiveMQMessageConsumer c = (ActiveMQMessageConsumer)iter.next();
+        for (Iterator<ActiveMQMessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
+            ActiveMQMessageConsumer c = iter.next();
             if (c.isInUse(destination)) {
                 return true;
             }

@@ -55,32 +55,28 @@ import org.apache.commons.logging.LogFactory;
  */
 public class ForwardingBridge implements Service {
 
+    private static final IdGenerator ID_GENERATOR = new IdGenerator();
     private static final Log LOG = LogFactory.getLog(ForwardingBridge.class);
 
-    private final Transport localBroker;
-    private final Transport remoteBroker;
-
-    IdGenerator idGenerator = new IdGenerator();
+    final AtomicLong enqueueCounter = new AtomicLong();
+    final AtomicLong dequeueCounter = new AtomicLong();
     ConnectionInfo connectionInfo;
     SessionInfo sessionInfo;
     ProducerInfo producerInfo;
     ConsumerInfo queueConsumerInfo;
     ConsumerInfo topicConsumerInfo;
+    BrokerId localBrokerId;
+    BrokerId remoteBrokerId;
+    BrokerInfo localBrokerInfo;
+    BrokerInfo remoteBrokerInfo;
 
+    private final Transport localBroker;
+    private final Transport remoteBroker;
     private String clientId;
     private int prefetchSize = 1000;
     private boolean dispatchAsync;
     private String destinationFilter = ">";
-
-    BrokerId localBrokerId;
-    BrokerId remoteBrokerId;
     private NetworkBridgeListener bridgeFailedListener;
-
-    BrokerInfo localBrokerInfo;
-    BrokerInfo remoteBrokerInfo;
-
-    final AtomicLong enqueueCounter = new AtomicLong();
-    final AtomicLong dequeueCounter = new AtomicLong();
 
     public ForwardingBridge(Transport localBroker, Transport remoteBroker) {
         this.localBroker = localBroker;
@@ -135,7 +131,7 @@ public class ForwardingBridge implements Service {
      */
     final void startBridge() throws IOException {
         connectionInfo = new ConnectionInfo();
-        connectionInfo.setConnectionId(new ConnectionId(idGenerator.generateId()));
+        connectionInfo.setConnectionId(new ConnectionId(ID_GENERATOR.generateId()));
         connectionInfo.setClientId(clientId);
         localBroker.oneway(connectionInfo);
         remoteBroker.oneway(connectionInfo);
@@ -196,7 +192,7 @@ public class ForwardingBridge implements Service {
         try {
             if (command.isBrokerInfo()) {
                 synchronized (this) {
-                    remoteBrokerInfo = ((BrokerInfo)command);
+                    remoteBrokerInfo = (BrokerInfo)command;
                     remoteBrokerId = remoteBrokerInfo.getBrokerId();
                     if (localBrokerId != null) {
                         if (localBrokerId.equals(remoteBrokerId)) {
@@ -231,8 +227,9 @@ public class ForwardingBridge implements Service {
                 Message message = md.getMessage();
                 message.setProducerId(producerInfo.getProducerId());
 
-                if (message.getOriginalTransactionId() == null)
+                if (message.getOriginalTransactionId() == null) {
                     message.setOriginalTransactionId(message.getTransactionId());
+                }
                 message.setTransactionId(null);
 
                 if (!message.isResponseRequired()) {
@@ -299,7 +296,7 @@ public class ForwardingBridge implements Service {
                 // }
             } else if (command.isBrokerInfo()) {
                 synchronized (this) {
-                    localBrokerInfo = ((BrokerInfo)command);
+                    localBrokerInfo = (BrokerInfo)command;
                     localBrokerId = localBrokerInfo.getBrokerId();
                     if (remoteBrokerId != null) {
                         if (remoteBrokerId.equals(localBrokerId)) {

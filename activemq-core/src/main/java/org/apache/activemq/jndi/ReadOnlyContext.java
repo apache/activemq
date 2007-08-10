@@ -65,37 +65,37 @@ public class ReadOnlyContext implements Context, Serializable {
     protected static final NameParser NAME_PARSER = new NameParserImpl();
     private static final long serialVersionUID = -5754338187296859149L;
 
-    protected final Hashtable environment; // environment for this context
-    protected final Map bindings; // bindings at my level
-    protected final Map treeBindings; // all bindings under me
+    protected final Hashtable<String, Object> environment; // environment for this context
+    protected final Map<String, Object> bindings; // bindings at my level
+    protected final Map<String, Object> treeBindings; // all bindings under me
 
     private boolean frozen;
     private String nameInNamespace = "";
 
     public ReadOnlyContext() {
-        environment = new Hashtable();
-        bindings = new HashMap();
-        treeBindings = new HashMap();
+        environment = new Hashtable<String, Object>();
+        bindings = new HashMap<String, Object>();
+        treeBindings = new HashMap<String, Object>();
     }
 
     public ReadOnlyContext(Hashtable env) {
         if (env == null) {
-            this.environment = new Hashtable();
+            this.environment = new Hashtable<String, Object>();
         } else {
-            this.environment = new Hashtable(env);
+            this.environment = new Hashtable<String, Object>(env);
         }
         this.bindings = Collections.EMPTY_MAP;
         this.treeBindings = Collections.EMPTY_MAP;
     }
 
-    public ReadOnlyContext(Hashtable environment, Map bindings) {
+    public ReadOnlyContext(Hashtable environment, Map<String, Object> bindings) {
         if (environment == null) {
-            this.environment = new Hashtable();
+            this.environment = new Hashtable<String, Object>();
         } else {
-            this.environment = new Hashtable(environment);
+            this.environment = new Hashtable<String, Object>(environment);
         }
         this.bindings = bindings;
-        treeBindings = new HashMap();
+        treeBindings = new HashMap<String, Object>();
         frozen = true;
     }
 
@@ -107,10 +107,10 @@ public class ReadOnlyContext implements Context, Serializable {
     protected ReadOnlyContext(ReadOnlyContext clone, Hashtable env) {
         this.bindings = clone.bindings;
         this.treeBindings = clone.treeBindings;
-        this.environment = new Hashtable(env);
+        this.environment = new Hashtable<String, Object>(env);
     }
 
-    protected ReadOnlyContext(ReadOnlyContext clone, Hashtable env, String nameInNamespace) {
+    protected ReadOnlyContext(ReadOnlyContext clone, Hashtable<String, Object> env, String nameInNamespace) {
         this(clone, env);
         this.nameInNamespace = nameInNamespace;
     }
@@ -138,11 +138,11 @@ public class ReadOnlyContext implements Context, Serializable {
      * @return
      * @throws javax.naming.NamingException
      */
-    protected Map internalBind(String name, Object value) throws NamingException {
+    protected Map<String, Object> internalBind(String name, Object value) throws NamingException {
         assert name != null && name.length() > 0;
         assert !frozen;
 
-        Map newBindings = new HashMap();
+        Map<String, Object> newBindings = new HashMap<String, Object>();
         int pos = name.indexOf('/');
         if (pos == -1) {
             if (treeBindings.put(name, value) != null) {
@@ -165,7 +165,7 @@ public class ReadOnlyContext implements Context, Serializable {
             }
             ReadOnlyContext readOnlyContext = (ReadOnlyContext)o;
             String remainder = name.substring(pos + 1);
-            Map subBindings = readOnlyContext.internalBind(remainder, value);
+            Map<String, Object> subBindings = readOnlyContext.internalBind(remainder, value);
             for (Iterator iterator = subBindings.entrySet().iterator(); iterator.hasNext();) {
                 Map.Entry entry = (Map.Entry)iterator.next();
                 String subName = segment + "/" + (String)entry.getKey();
@@ -185,8 +185,8 @@ public class ReadOnlyContext implements Context, Serializable {
         return environment.put(propName, propVal);
     }
 
-    public Hashtable getEnvironment() throws NamingException {
-        return (Hashtable)environment.clone();
+    public Hashtable<String, Object> getEnvironment() throws NamingException {
+        return (Hashtable<String, Object>)environment.clone();
     }
 
     public Object removeFromEnvironment(String propName) throws NamingException {

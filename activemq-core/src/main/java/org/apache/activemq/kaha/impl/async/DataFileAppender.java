@@ -19,6 +19,7 @@ package org.apache.activemq.kaha.impl.async;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.io.RandomAccessFile;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
@@ -37,7 +38,19 @@ class DataFileAppender {
 
     protected static final byte[] RESERVED_SPACE = new byte[AsyncDataManager.ITEM_HEAD_RESERVED_SPACE];
     protected static final String SHUTDOWN_COMMAND = "SHUTDOWN";
-    int maxWriteBatchSize = 1024 * 1024 * 4;
+
+    protected final AsyncDataManager dataManager;
+    protected final Map<WriteKey, WriteCommand> inflightWrites;
+    protected final Object enqueueMutex = new Object();
+    protected WriteBatch nextWriteBatch;
+
+    protected boolean shutdown;
+    protected IOException firstAsyncException;
+    protected final CountDownLatch shutdownDone = new CountDownLatch(1);
+    protected int maxWriteBatchSize = 1024 * 1024 * 4;
+
+    private boolean running;
+    private Thread thread;
 
     public static class WriteKey {
         private final int file;
@@ -78,10 +91,12 @@ class DataFileAppender {
         }
 
         public boolean canAppend(DataFile dataFile, WriteCommand write) {
-            if (dataFile != this.dataFile)
+            if (dataFile != this.dataFile) {
                 return false;
-            if (size + write.location.getSize() >= maxWriteBatchSize)
+            }
+            if (size + write.location.getSize() >= maxWriteBatchSize) {
                 return false;
+            }
             return true;
         }
 
@@ -103,18 +118,6 @@ class DataFileAppender {
         }
     }
 
-    protected final AsyncDataManager dataManager;
-
-    protected final ConcurrentHashMap<WriteKey, WriteCommand> inflightWrites;
-
-    protected final Object enqueueMutex = new Object();
-    protected WriteBatch nextWriteBatch;
-
-    private boolean running;
-    protected boolean shutdown;
-    protected IOException firstAsyncException;
-    protected final CountDownLatch shutdownDone = new CountDownLatch(1);
-    private Thread thread;
 
     /**
      * Construct a Store writer
@@ -180,8 +183,9 @@ class DataFileAppender {
             if (shutdown) {
                 throw new IOException("Async Writter Thread Shutdown");
             }
-            if (firstAsyncException != null)
+            if (firstAsyncException != null) {
                 throw firstAsyncException;
+            }
 
             if (!running) {
                 running = true;
@@ -368,7 +372,7 @@ class DataFileAppender {
                 if (file != null) {
                     dataFile.closeRandomAccessFile(file);
                 }
-            } catch (IOException e) {
+            } catch (Throwable ignore) {
             }
             shutdownDone.countDown();
         }

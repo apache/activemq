@@ -18,6 +18,7 @@ package org.apache.activemq.usecases;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -176,7 +177,7 @@ public class AMQDeadlockTestW4Brokers extends TestCase {
         memoryManager.setLimit(100000000);
         brokerService.setMemoryManager(memoryManager);
 
-        final ArrayList<PolicyEntry> policyEntries = new ArrayList<PolicyEntry>();
+        final List<PolicyEntry> policyEntries = new ArrayList<PolicyEntry>();
 
         final PolicyEntry entry = new PolicyEntry();
         entry.setQueue(">");
@@ -232,8 +233,8 @@ public class AMQDeadlockTestW4Brokers extends TestCase {
     }
 
     private static class TestMessageListener1 implements MessageListener {
-        private final long waitTime;
         final AtomicInteger count = new AtomicInteger(0);
+        private final long waitTime;
 
         public TestMessageListener1(long waitTime) {
             this.waitTime = waitTime;

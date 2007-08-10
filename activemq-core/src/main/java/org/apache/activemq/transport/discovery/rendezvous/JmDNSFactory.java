@@ -26,7 +26,7 @@ import javax.jmdns.JmDNS;
 
 public class JmDNSFactory {
 
-    static Map registry = new HashMap();
+    static Map<InetAddress, UsageTracker> registry = new HashMap<InetAddress, UsageTracker>();
 
     static class UsageTracker {
         AtomicInteger count = new AtomicInteger(0);
@@ -34,7 +34,7 @@ public class JmDNSFactory {
     }
 
     static synchronized JmDNS create(final InetAddress address) throws IOException {
-        UsageTracker tracker = (UsageTracker)registry.get(address);
+        UsageTracker tracker = registry.get(address);
         if (tracker == null) {
             tracker = new UsageTracker();
             tracker.jmDNS = new JmDNS(address) {
@@ -51,7 +51,7 @@ public class JmDNSFactory {
     }
 
     static synchronized boolean onClose(InetAddress address) {
-        UsageTracker tracker = (UsageTracker)registry.get(address);
+        UsageTracker tracker = registry.get(address);
         if (tracker != null) {
             if (tracker.count.decrementAndGet() == 0) {
                 registry.remove(address);

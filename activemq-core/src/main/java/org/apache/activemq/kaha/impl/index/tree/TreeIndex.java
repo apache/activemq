@@ -183,7 +183,8 @@ public class TreeIndex implements Index {
                             indexFile.write(dataOut.getData(), 0, TreePage.PAGE_HEADER_SIZE);
                             lastFree = page;
                         } else {
-                            lastFree = firstFree = page;
+                            lastFree = page;
+                            firstFree = page;
                         }
                     } else if (root == null && page.isRoot()) {
                         root = getFullPage(offset);
@@ -208,7 +209,8 @@ public class TreeIndex implements Index {
                 indexFile = null;
                 pageCache.clear();
                 root = null;
-                firstFree = lastFree = null;
+                firstFree = null;
+                lastFree = null;
             }
         }
     }
@@ -312,7 +314,8 @@ public class TreeIndex implements Index {
         page.reset();
         page.setActive(false);
         if (lastFree == null) {
-            firstFree = lastFree = page;
+            firstFree = page;
+            lastFree = page;
         } else {
             lastFree.setNextFreePageId(page.getId());
             writePage(lastFree);
@@ -325,7 +328,8 @@ public class TreeIndex implements Index {
         if (firstFree != null) {
             if (firstFree.equals(lastFree)) {
                 result = firstFree;
-                firstFree = lastFree = null;
+                firstFree = null;
+                lastFree = null;
             } else {
                 result = firstFree;
                 firstFree = getPage(firstFree.getNextFreePageId());

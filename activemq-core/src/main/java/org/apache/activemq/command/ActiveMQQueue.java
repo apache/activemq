@@ -29,18 +29,18 @@ import javax.jms.Queue;
  */
 public class ActiveMQQueue extends ActiveMQDestination implements Queue {
 
-    private static final long serialVersionUID = -3885260014960795889L;
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_QUEUE;
+    private static final long serialVersionUID = -3885260014960795889L;
 
     public ActiveMQQueue() {
     }
 
-    public byte getDataStructureType() {
-        return DATA_STRUCTURE_TYPE;
-    }
-
     public ActiveMQQueue(String name) {
         super(name);
+    }
+
+    public byte getDataStructureType() {
+        return DATA_STRUCTURE_TYPE;
     }
 
     public boolean isQueue() {

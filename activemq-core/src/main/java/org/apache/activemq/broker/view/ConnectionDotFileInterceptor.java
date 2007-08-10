@@ -57,8 +57,8 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
     private MBeanServer mbeanServer;
 
     // until we have some MBeans for producers, lets do it all ourselves
-    private Map producers = new HashMap();
-    private Map producerDestinations = new HashMap();
+    private Map<ProducerId, ProducerInfo> producers = new HashMap<ProducerId, ProducerInfo>();
+    private Map<ProducerId, Set> producerDestinations = new HashMap<ProducerId, Set>();
     private Object lock = new Object();
 
     public ConnectionDotFileInterceptor(Broker next, String file, boolean redrawOnRemove) throws MalformedObjectNameException {
@@ -109,9 +109,9 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
         ProducerId producerId = messageSend.getProducerId();
         ActiveMQDestination destination = messageSend.getDestination();
         synchronized (lock) {
-            Set destinations = (Set)producerDestinations.get(producerId);
+            Set<ActiveMQDestination> destinations = producerDestinations.get(producerId);
             if (destinations == null) {
-                destinations = new HashSet();
+                destinations = new HashSet<ActiveMQDestination>();
             }
             producerDestinations.put(producerId, destinations);
             destinations.add(destination);
@@ -127,9 +127,9 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
         writer.println("node [style = \"rounded,filled\", fillcolor = yellow, fontname=\"Helvetica-Oblique\"];");
         writer.println();
 
-        Map clients = new HashMap();
-        Map queues = new HashMap();
-        Map topics = new HashMap();
+        Map<String, String> clients = new HashMap<String, String>();
+        Map<String, String> queues = new HashMap<String, String>();
+        Map<String, String> topics = new HashMap<String, String>();
 
         printSubscribers(writer, clients, queues, "queue_", brokerView.getQueueSubscribers());
         writer.println();
@@ -152,7 +152,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
         }
     }
 
-    protected void printProducers(PrintWriter writer, Map clients, Map queues, Map topics) {
+    protected void printProducers(PrintWriter writer, Map<String, String> clients, Map<String, String> queues, Map<String, String> topics) {
         synchronized (lock) {
             for (Iterator iter = producerDestinations.entrySet().iterator(); iter.hasNext();) {
                 Map.Entry entry = (Map.Entry)iter.next();
@@ -163,7 +163,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
         }
     }
 
-    protected void printProducers(PrintWriter writer, Map clients, Map queues, Map topics, ProducerId producerId, Set destinationSet) {
+    protected void printProducers(PrintWriter writer, Map<String, String> clients, Map<String, String> queues, Map<String, String> topics, ProducerId producerId, Set destinationSet) {
         for (Iterator iter = destinationSet.iterator(); iter.hasNext();) {
             ActiveMQDestination destination = (ActiveMQDestination)iter.next();
 
@@ -206,7 +206,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
         }
     }
 
-    protected void printSubscribers(PrintWriter writer, Map clients, Map destinations, String type, ObjectName[] subscribers) {
+    protected void printSubscribers(PrintWriter writer, Map<String, String> clients, Map<String, String> destinations, String type, ObjectName[] subscribers) {
         for (int i = 0; i < subscribers.length; i++) {
             ObjectName name = subscribers[i];
             SubscriptionViewMBean subscriber = (SubscriptionViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, name, SubscriptionViewMBean.class, true);
@@ -246,7 +246,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
         }
     }
 
-    protected void writeLabels(PrintWriter writer, String color, String prefix, Map map) {
+    protected void writeLabels(PrintWriter writer, String color, String prefix, Map<String, String> map) {
         for (Iterator iter = map.entrySet().iterator(); iter.hasNext();) {
             Map.Entry entry = (Map.Entry)iter.next();
             String id = (String)entry.getKey();

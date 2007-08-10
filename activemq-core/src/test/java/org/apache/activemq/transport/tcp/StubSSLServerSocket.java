@@ -42,11 +42,11 @@ public class StubSSLServerSocket extends SSLServerSocket {
     }
     
     public void setWantClientAuth(boolean want) {
-        wantClientAuthStatus = (want ? TRUE : FALSE);
+        wantClientAuthStatus = want ? TRUE : FALSE;
     }
     
     public void setNeedClientAuth(boolean need) {
-        needClientAuthStatus = (need ? TRUE : FALSE);
+        needClientAuthStatus = need ? TRUE : FALSE;
     }
 
     // --- Stubbed methods ---

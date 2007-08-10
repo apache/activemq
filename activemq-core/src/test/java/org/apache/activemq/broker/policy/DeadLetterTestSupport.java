@@ -41,7 +41,6 @@ public abstract class DeadLetterTestSupport extends TestSupport {
     protected Session session;
     protected MessageConsumer consumer;
     protected MessageProducer producer;
-    private Destination destination;
     protected int deliveryMode = DeliveryMode.PERSISTENT;
     protected boolean durableSubscriber;
     protected Destination dlqDestination;
@@ -49,6 +48,7 @@ public abstract class DeadLetterTestSupport extends TestSupport {
     protected BrokerService broker;
     protected boolean transactedMode;
     protected int acknowledgeMode = Session.CLIENT_ACKNOWLEDGE;
+    private Destination destination;
 
     protected void setUp() throws Exception {
         super.setUp();

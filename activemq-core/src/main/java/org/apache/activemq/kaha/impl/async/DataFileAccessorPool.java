@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Used to pool DataFileAccessors.
@@ -29,15 +31,14 @@ import java.util.Iterator;
 public class DataFileAccessorPool {
 
     private final AsyncDataManager dataManager;
-    private final HashMap<Integer, Pool> pools = new HashMap<Integer, Pool>();
+    private final Map<Integer, Pool> pools = new HashMap<Integer, Pool>();
     private boolean closed;
-
-    int maxOpenReadersPerFile = 5;
+    private int maxOpenReadersPerFile = 5;
 
     class Pool {
 
         private final DataFile file;
-        private final ArrayList<DataFileAccessor> pool = new ArrayList<DataFileAccessor>();
+        private final List<DataFileAccessor> pool = new ArrayList<DataFileAccessor>();
         private boolean used;
         private int openCounter;
         private boolean disposed;
@@ -149,8 +150,9 @@ public class DataFileAccessorPool {
     }
 
     public synchronized void close() {
-        if (closed)
+        if (closed) {
             return;
+        }
         closed = true;
         for (Iterator<Pool> iter = pools.values().iterator(); iter.hasNext();) {
             Pool pool = iter.next();

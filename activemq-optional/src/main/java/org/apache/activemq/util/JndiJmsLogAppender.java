@@ -137,7 +137,7 @@ public class JndiJmsLogAppender extends JmsLogAppenderSupport {
             return new InitialContext();
         }
         else {
-            Hashtable env = new Hashtable();
+            Hashtable<String, String> env = new Hashtable<String, String>();
             env.put(Context.INITIAL_CONTEXT_FACTORY, initialContextFactoryName);
             if (providerURL != null) {
                 env.put(Context.PROVIDER_URL, providerURL);

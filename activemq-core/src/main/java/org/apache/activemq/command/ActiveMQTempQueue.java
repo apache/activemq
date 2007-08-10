@@ -25,8 +25,8 @@ import javax.jms.TemporaryQueue;
  */
 public class ActiveMQTempQueue extends ActiveMQTempDestination implements TemporaryQueue {
 
-    private static final long serialVersionUID = 6683049467527633867L;
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_TEMP_QUEUE;
+    private static final long serialVersionUID = 6683049467527633867L;
 
     public ActiveMQTempQueue() {
     }

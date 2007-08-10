@@ -22,6 +22,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.activeio.journal.RecordLocation;
 import org.apache.activemq.broker.ConnectionContext;
@@ -47,22 +50,22 @@ import org.apache.commons.logging.LogFactory;
  */
 public class JournalMessageStore implements MessageStore {
 
-    private static final Log log = LogFactory.getLog(JournalMessageStore.class);
+    private static final Log LOG = LogFactory.getLog(JournalMessageStore.class);
 
     protected final JournalPersistenceAdapter peristenceAdapter;
     protected final JournalTransactionStore transactionStore;
     protected final MessageStore longTermStore;
     protected final ActiveMQDestination destination;
     protected final TransactionTemplate transactionTemplate;
+    protected RecordLocation lastLocation;
+    protected Set<RecordLocation> inFlightTxLocations = new HashSet<RecordLocation>();
 
-    private LinkedHashMap messages = new LinkedHashMap();
-    private ArrayList messageAcks = new ArrayList();
+    private Map<MessageId, Message> messages = new LinkedHashMap<MessageId, Message>();
+    private List<MessageAck> messageAcks = new ArrayList<MessageAck>();
 
     /** A MessageStore that we can use to retrieve messages quickly. */
-    private LinkedHashMap cpAddedMessageIds;
+    private Map<MessageId, Message> cpAddedMessageIds;
 
-    protected RecordLocation lastLocation;
-    protected HashSet inFlightTxLocations = new HashSet();
 
     private UsageManager usageManager;
 
@@ -87,18 +90,18 @@ public class JournalMessageStore implements MessageStore {
 
         final MessageId id = message.getMessageId();
 
-        final boolean debug = log.isDebugEnabled();
+        final boolean debug = LOG.isDebugEnabled();
         message.incrementReferenceCount();
 
         final RecordLocation location = peristenceAdapter.writeCommand(message, message.isResponseRequired());
         if (!context.isInTransaction()) {
             if (debug) {
-                log.debug("Journalled message add for: " + id + ", at: " + location);
+                LOG.debug("Journalled message add for: " + id + ", at: " + location);
             }
             addMessage(message, location);
         } else {
             if (debug) {
-                log.debug("Journalled transacted message add for: " + id + ", at: " + location);
+                LOG.debug("Journalled transacted message add for: " + id + ", at: " + location);
             }
             synchronized (this) {
                 inFlightTxLocations.add(location);
@@ -107,7 +110,7 @@ public class JournalMessageStore implements MessageStore {
             context.getTransaction().addSynchronization(new Synchronization() {
                 public void afterCommit() throws Exception {
                     if (debug) {
-                        log.debug("Transacted message add commit for: " + id + ", at: " + location);
+                        LOG.debug("Transacted message add commit for: " + id + ", at: " + location);
                     }
                     synchronized (JournalMessageStore.this) {
                         inFlightTxLocations.remove(location);
@@ -117,7 +120,7 @@ public class JournalMessageStore implements MessageStore {
 
                 public void afterRollback() throws Exception {
                     if (debug) {
-                        log.debug("Transacted message add rollback for: " + id + ", at: " + location);
+                        LOG.debug("Transacted message add rollback for: " + id + ", at: " + location);
                     }
                     synchronized (JournalMessageStore.this) {
                         inFlightTxLocations.remove(location);
@@ -144,14 +147,14 @@ public class JournalMessageStore implements MessageStore {
                 longTermStore.addMessage(context, message);
             }
         } catch (Throwable e) {
-            log.warn("Could not replay add for message '" + message.getMessageId() + "'.  Message may have already been added. reason: " + e);
+            LOG.warn("Could not replay add for message '" + message.getMessageId() + "'.  Message may have already been added. reason: " + e);
         }
     }
 
     /**
      */
     public void removeMessage(ConnectionContext context, final MessageAck ack) throws IOException {
-        final boolean debug = log.isDebugEnabled();
+        final boolean debug = LOG.isDebugEnabled();
         JournalQueueAck remove = new JournalQueueAck();
         remove.setDestination(destination);
         remove.setMessageAck(ack);
@@ -159,13 +162,12 @@ public class JournalMessageStore implements MessageStore {
         final RecordLocation location = peristenceAdapter.writeCommand(remove, ack.isResponseRequired());
         if (!context.isInTransaction()) {
             if (debug) {
-                log.debug("Journalled message remove for: " + ack.getLastMessageId() + ", at: " + location);
+                LOG.debug("Journalled message remove for: " + ack.getLastMessageId() + ", at: " + location);
             }
             removeMessage(ack, location);
         } else {
             if (debug) {
-                log.debug("Journalled transacted message remove for: " + ack.getLastMessageId() + ", at: "
-                          + location);
+                LOG.debug("Journalled transacted message remove for: " + ack.getLastMessageId() + ", at: " + location);
             }
             synchronized (this) {
                 inFlightTxLocations.add(location);
@@ -174,8 +176,7 @@ public class JournalMessageStore implements MessageStore {
             context.getTransaction().addSynchronization(new Synchronization() {
                 public void afterCommit() throws Exception {
                     if (debug) {
-                        log.debug("Transacted message remove commit for: " + ack.getLastMessageId()
-                                  + ", at: " + location);
+                        LOG.debug("Transacted message remove commit for: " + ack.getLastMessageId() + ", at: " + location);
                     }
                     synchronized (JournalMessageStore.this) {
                         inFlightTxLocations.remove(location);
@@ -184,9 +185,9 @@ public class JournalMessageStore implements MessageStore {
                 }
 
                 public void afterRollback() throws Exception {
-                    if (debug)
-                        log.debug("Transacted message remove rollback for: " + ack.getLastMessageId()
-                                  + ", at: " + location);
+                    if (debug) {
+                        LOG.debug("Transacted message remove rollback for: " + ack.getLastMessageId() + ", at: " + location);
+                    }
                     synchronized (JournalMessageStore.this) {
                         inFlightTxLocations.remove(location);
                     }
@@ -200,7 +201,7 @@ public class JournalMessageStore implements MessageStore {
         synchronized (this) {
             lastLocation = location;
             MessageId id = ack.getLastMessageId();
-            Message message = (Message)messages.remove(id);
+            Message message = messages.remove(id);
             if (message == null) {
                 messageAcks.add(ack);
             } else {
@@ -217,7 +218,7 @@ public class JournalMessageStore implements MessageStore {
                 longTermStore.removeMessage(context, messageAck);
             }
         } catch (Throwable e) {
-            log.warn("Could not replay acknowledge for message '" + messageAck.getLastMessageId() + "'.  Message may have already been acknowledged. reason: " + e);
+            LOG.warn("Could not replay acknowledge for message '" + messageAck.getLastMessageId() + "'.  Message may have already been acknowledged. reason: " + e);
         }
     }
 
@@ -235,9 +236,8 @@ public class JournalMessageStore implements MessageStore {
      */
     public RecordLocation checkpoint(final Callback postCheckpointTest) throws IOException {
 
-        RecordLocation rc;
-        final ArrayList cpRemovedMessageLocations;
-        final ArrayList cpActiveJournalLocations;
+        final List<MessageAck> cpRemovedMessageLocations;
+        final List<RecordLocation> cpActiveJournalLocations;
         final int maxCheckpointMessageAddSize = peristenceAdapter.getMaxCheckpointMessageAddSize();
 
         // swap out the message hash maps..
@@ -245,10 +245,10 @@ public class JournalMessageStore implements MessageStore {
             cpAddedMessageIds = this.messages;
             cpRemovedMessageLocations = this.messageAcks;
 
-            cpActiveJournalLocations = new ArrayList(inFlightTxLocations);
+            cpActiveJournalLocations = new ArrayList<RecordLocation>(inFlightTxLocations);
 
-            this.messages = new LinkedHashMap();
-            this.messageAcks = new ArrayList();
+            this.messages = new LinkedHashMap<MessageId, Message>();
+            this.messageAcks = new ArrayList<MessageAck>();
         }
 
         transactionTemplate.run(new Callback() {
@@ -261,13 +261,13 @@ public class JournalMessageStore implements MessageStore {
 
                 // Checkpoint the added messages.
                 synchronized (JournalMessageStore.this) {
-                    Iterator iterator = cpAddedMessageIds.values().iterator();
+                    Iterator<Message> iterator = cpAddedMessageIds.values().iterator();
                     while (iterator.hasNext()) {
-                        Message message = (Message)iterator.next();
+                        Message message = iterator.next();
                         try {
                             longTermStore.addMessage(context, message);
                         } catch (Throwable e) {
-                            log.warn("Message could not be added to long term store: " + e.getMessage(), e);
+                            LOG.warn("Message could not be added to long term store: " + e.getMessage(), e);
                         }
                         size += message.getSize();
                         message.decrementReferenceCount();
@@ -284,13 +284,13 @@ public class JournalMessageStore implements MessageStore {
                 persitanceAdapter.beginTransaction(context);
 
                 // Checkpoint the removed messages.
-                Iterator iterator = cpRemovedMessageLocations.iterator();
+                Iterator<MessageAck> iterator = cpRemovedMessageLocations.iterator();
                 while (iterator.hasNext()) {
                     try {
-                        MessageAck ack = (MessageAck)iterator.next();
+                        MessageAck ack = iterator.next();
                         longTermStore.removeMessage(transactionTemplate.getContext(), ack);
                     } catch (Throwable e) {
-                        log.debug("Message could not be removed from long term store: " + e.getMessage(), e);
+                        LOG.debug("Message could not be removed from long term store: " + e.getMessage(), e);
                     }
                 }
 
@@ -307,7 +307,7 @@ public class JournalMessageStore implements MessageStore {
 
         if (cpActiveJournalLocations.size() > 0) {
             Collections.sort(cpActiveJournalLocations);
-            return (RecordLocation)cpActiveJournalLocations.get(0);
+            return cpActiveJournalLocations.get(0);
         }
         synchronized (this) {
             return lastLocation;
@@ -322,9 +322,10 @@ public class JournalMessageStore implements MessageStore {
 
         synchronized (this) {
             // Do we have a still have it in the journal?
-            answer = (Message)messages.get(identity);
-            if (answer == null && cpAddedMessageIds != null)
-                answer = (Message)cpAddedMessageIds.get(identity);
+            answer = messages.get(identity);
+            if (answer == null && cpAddedMessageIds != null) {
+                answer = cpAddedMessageIds.get(identity);
+            }
         }
 
         if (answer != null) {
@@ -349,15 +350,17 @@ public class JournalMessageStore implements MessageStore {
     }
 
     public void start() throws Exception {
-        if (this.usageManager != null)
+        if (this.usageManager != null) {
             this.usageManager.addUsageListener(peristenceAdapter);
+        }
         longTermStore.start();
     }
 
     public void stop() throws Exception {
         longTermStore.stop();
-        if (this.usageManager != null)
+        if (this.usageManager != null) {
             this.usageManager.removeUsageListener(peristenceAdapter);
+        }
     }
 
     /**

@@ -40,8 +40,9 @@ public abstract class DestinationFilter implements BooleanExpression {
 
     public boolean matches(MessageEvaluationContext message) throws JMSException {
         try {
-            if (message.isDropped())
+            if (message.isDropped()) {
                 return false;
+            }
             return matches(message.getMessage().getDestination());
         } catch (IOException e) {
             throw JMSExceptionSupport.create(e);

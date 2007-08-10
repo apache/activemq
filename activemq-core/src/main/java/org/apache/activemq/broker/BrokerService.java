@@ -95,11 +95,12 @@ import org.apache.commons.logging.LogFactory;
  */
 public class BrokerService implements Service {
 
+    public static final String DEFAULT_PORT = "61616";
+    public static final String LOCAL_HOST_NAME;
+    public static final String DEFAULT_BROKER_NAME = "localhost";
+
     private static final Log LOG = LogFactory.getLog(BrokerService.class);
     private static final long serialVersionUID = 7353129142305630237L;
-    public static final String DEFAULT_PORT = "61616";
-    static final String DEFAULT_BROKER_NAME = "localhost";
-    public static final String LOCAL_HOST_NAME;
 
     private boolean useJmx = true;
     private boolean enableStatistics = true;
@@ -124,11 +125,11 @@ public class BrokerService implements Service {
     private PersistenceAdapterFactory persistenceFactory;
     private DestinationFactory destinationFactory;
     private MessageAuthorizationPolicy messageAuthorizationPolicy;
-    private List transportConnectors = new CopyOnWriteArrayList();
-    private List networkConnectors = new CopyOnWriteArrayList();
-    private List proxyConnectors = new CopyOnWriteArrayList();
-    private List registeredMBeanNames = new CopyOnWriteArrayList();
-    private List jmsConnectors = new CopyOnWriteArrayList();
+    private List<TransportConnector> transportConnectors = new CopyOnWriteArrayList<TransportConnector>();
+    private List<NetworkConnector> networkConnectors = new CopyOnWriteArrayList<NetworkConnector>();
+    private List<ProxyConnector> proxyConnectors = new CopyOnWriteArrayList<ProxyConnector>();
+    private List<ObjectName> registeredMBeanNames = new CopyOnWriteArrayList<ObjectName>();
+    private List<JmsConnector> jmsConnectors = new CopyOnWriteArrayList<JmsConnector>();
     private Service[] services;
     private MasterConnector masterConnector;
     private String masterConnectorURI;
@@ -282,7 +283,7 @@ public class BrokerService implements Service {
     public NetworkConnector addNetworkConnector(NetworkConnector connector) throws Exception {
         connector.setBrokerService(this);
         URI uri = getVmConnectorURI();
-        HashMap map = new HashMap(URISupport.parseParamters(uri));
+        Map<String, String> map = new HashMap<String, String>(URISupport.parseParamters(uri));
         map.put("network", "true");
         map.put("async", "false");
         uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
@@ -292,10 +293,10 @@ public class BrokerService implements Service {
         // back connections.
         connector.setConnectionFilter(new ConnectionFilter() {
             public boolean connectTo(URI location) {
-                List transportConnectors = getTransportConnectors();
-                for (Iterator iter = transportConnectors.iterator(); iter.hasNext();) {
+                List<TransportConnector> transportConnectors = getTransportConnectors();
+                for (Iterator<TransportConnector> iter = transportConnectors.iterator(); iter.hasNext();) {
                     try {
-                        TransportConnector tc = (TransportConnector)iter.next();
+                        TransportConnector tc = iter.next();
                         if (location.equals(tc.getConnectUri())) {
                             return false;
                         }
@@ -470,8 +471,8 @@ public class BrokerService implements Service {
         if (isUseJmx()) {
             MBeanServer mbeanServer = getManagementContext().getMBeanServer();
             if (mbeanServer != null) {
-                for (Iterator iter = registeredMBeanNames.iterator(); iter.hasNext();) {
-                    ObjectName name = (ObjectName)iter.next();
+                for (Iterator<ObjectName> iter = registeredMBeanNames.iterator(); iter.hasNext();) {
+                    ObjectName name = iter.next();
                     try {
                         mbeanServer.unregisterMBean(name);
                     } catch (Exception e) {
@@ -872,8 +873,8 @@ public class BrokerService implements Service {
         this.advisorySupport = advisorySupport;
     }
 
-    public List getTransportConnectors() {
-        return new ArrayList(transportConnectors);
+    public List<TransportConnector> getTransportConnectors() {
+        return new ArrayList<TransportConnector>(transportConnectors);
     }
 
     /**
@@ -882,19 +883,19 @@ public class BrokerService implements Service {
      * 
      * @org.apache.xbean.Property nestedType="org.apache.activemq.broker.TransportConnector"
      */
-    public void setTransportConnectors(List transportConnectors) throws Exception {
-        for (Iterator iter = transportConnectors.iterator(); iter.hasNext();) {
-            TransportConnector connector = (TransportConnector)iter.next();
+    public void setTransportConnectors(List<TransportConnector> transportConnectors) throws Exception {
+        for (Iterator<TransportConnector> iter = transportConnectors.iterator(); iter.hasNext();) {
+            TransportConnector connector = iter.next();
             addConnector(connector);
         }
     }
 
-    public List getNetworkConnectors() {
-        return new ArrayList(networkConnectors);
+    public List<NetworkConnector> getNetworkConnectors() {
+        return new ArrayList<NetworkConnector>(networkConnectors);
     }
 
-    public List getProxyConnectors() {
-        return new ArrayList(proxyConnectors);
+    public List<ProxyConnector> getProxyConnectors() {
+        return new ArrayList<ProxyConnector>(proxyConnectors);
     }
 
     /**
@@ -1182,24 +1183,24 @@ public class BrokerService implements Service {
 
     protected void stopAllConnectors(ServiceStopper stopper) {
 
-        for (Iterator iter = getNetworkConnectors().iterator(); iter.hasNext();) {
-            NetworkConnector connector = (NetworkConnector)iter.next();
+        for (Iterator<NetworkConnector> iter = getNetworkConnectors().iterator(); iter.hasNext();) {
+            NetworkConnector connector = iter.next();
             unregisterNetworkConnectorMBean(connector);
             stopper.stop(connector);
         }
 
-        for (Iterator iter = getProxyConnectors().iterator(); iter.hasNext();) {
-            ProxyConnector connector = (ProxyConnector)iter.next();
+        for (Iterator<ProxyConnector> iter = getProxyConnectors().iterator(); iter.hasNext();) {
+            ProxyConnector connector = iter.next();
             stopper.stop(connector);
         }
 
-        for (Iterator iter = jmsConnectors.iterator(); iter.hasNext();) {
-            JmsConnector connector = (JmsConnector)iter.next();
+        for (Iterator<JmsConnector> iter = jmsConnectors.iterator(); iter.hasNext();) {
+            JmsConnector connector = iter.next();
             stopper.stop(connector);
         }
 
-        for (Iterator iter = getTransportConnectors().iterator(); iter.hasNext();) {
-            TransportConnector connector = (TransportConnector)iter.next();
+        for (Iterator<TransportConnector> iter = getTransportConnectors().iterator(); iter.hasNext();) {
+            TransportConnector connector = iter.next();
             stopper.stop(connector);
         }
     }
@@ -1584,10 +1585,10 @@ public class BrokerService implements Service {
     protected void startAllConnectors() throws Exception {
         if (!isSlave()) {
 
-            ArrayList al = new ArrayList();
+            List<TransportConnector> al = new ArrayList<TransportConnector>();
 
-            for (Iterator iter = getTransportConnectors().iterator(); iter.hasNext();) {
-                TransportConnector connector = (TransportConnector)iter.next();
+            for (Iterator<TransportConnector> iter = getTransportConnectors().iterator(); iter.hasNext();) {
+                TransportConnector connector = iter.next();
                 al.add(startTransportConnector(connector));
             }
 
@@ -1598,26 +1599,26 @@ public class BrokerService implements Service {
                 setTransportConnectors(al);
             }
             URI uri = getVmConnectorURI();
-            HashMap map = new HashMap(URISupport.parseParamters(uri));
+            Map<String, String> map = new HashMap<String, String>(URISupport.parseParamters(uri));
             map.put("network", "true");
             map.put("async", "false");
             uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
 
-            for (Iterator iter = getNetworkConnectors().iterator(); iter.hasNext();) {
-                NetworkConnector connector = (NetworkConnector)iter.next();
+            for (Iterator<NetworkConnector> iter = getNetworkConnectors().iterator(); iter.hasNext();) {
+                NetworkConnector connector = iter.next();
                 connector.setLocalUri(uri);
                 connector.setBrokerName(getBrokerName());
                 connector.setDurableDestinations(getBroker().getDurableDestinations());
                 connector.start();
             }
 
-            for (Iterator iter = getProxyConnectors().iterator(); iter.hasNext();) {
-                ProxyConnector connector = (ProxyConnector)iter.next();
+            for (Iterator<ProxyConnector> iter = getProxyConnectors().iterator(); iter.hasNext();) {
+                ProxyConnector connector = iter.next();
                 connector.start();
             }
 
-            for (Iterator iter = jmsConnectors.iterator(); iter.hasNext();) {
-                JmsConnector connector = (JmsConnector)iter.next();
+            for (Iterator<JmsConnector> iter = jmsConnectors.iterator(); iter.hasNext();) {
+                JmsConnector connector = iter.next();
                 connector.start();
             }
 

@@ -96,7 +96,7 @@ public class ConnectionPool {
 
     public Session createSession(boolean transacted, int ackMode) throws JMSException {
         try {
-            boolean isXa = (transactionManager != null && transactionManager.getStatus() != Status.STATUS_NO_TRANSACTION);
+            boolean isXa = transactionManager != null && transactionManager.getStatus() != Status.STATUS_NO_TRANSACTION;
             if (isXa) {
                 transacted = true;
                 ackMode = Session.SESSION_TRANSACTED;

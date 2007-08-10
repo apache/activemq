@@ -18,8 +18,9 @@ package org.apache.activemq.network;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -47,14 +48,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
 
     private static final Log LOG = LogFactory.getLog(NetworkConnector.class);
     protected URI localURI;
-    private Set durableDestinations;
-    private List excludedDestinations = new CopyOnWriteArrayList();
-    private List dynamicallyIncludedDestinations = new CopyOnWriteArrayList();
-    private List staticallyIncludedDestinations = new CopyOnWriteArrayList();
     protected ConnectionFilter connectionFilter;
-    private BrokerService brokerService;
-    private ObjectName objectName;
-
     protected ServiceSupport serviceSupport = new ServiceSupport() {
 
         protected void doStart() throws Exception {
@@ -65,6 +59,13 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
             handleStop(stopper);
         }
     };
+
+    private Set<ActiveMQDestination> durableDestinations;
+    private List<ActiveMQDestination> excludedDestinations = new CopyOnWriteArrayList<ActiveMQDestination>();
+    private List<ActiveMQDestination> dynamicallyIncludedDestinations = new CopyOnWriteArrayList<ActiveMQDestination>();
+    private List<ActiveMQDestination> staticallyIncludedDestinations = new CopyOnWriteArrayList<ActiveMQDestination>();
+    private BrokerService brokerService;
+    private ObjectName objectName;
 
     public NetworkConnector() {
     }
@@ -91,21 +92,21 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     /**
      * @param durableDestinations The durableDestinations to set.
      */
-    public void setDurableDestinations(Set durableDestinations) {
+    public void setDurableDestinations(Set<ActiveMQDestination> durableDestinations) {
         this.durableDestinations = durableDestinations;
     }
 
     /**
      * @return Returns the excludedDestinations.
      */
-    public List getExcludedDestinations() {
+    public List<ActiveMQDestination> getExcludedDestinations() {
         return excludedDestinations;
     }
 
     /**
      * @param excludedDestinations The excludedDestinations to set.
      */
-    public void setExcludedDestinations(List excludedDestinations) {
+    public void setExcludedDestinations(List<ActiveMQDestination> excludedDestinations) {
         this.excludedDestinations = excludedDestinations;
     }
 
@@ -116,7 +117,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     /**
      * @return Returns the staticallyIncludedDestinations.
      */
-    public List getStaticallyIncludedDestinations() {
+    public List<ActiveMQDestination> getStaticallyIncludedDestinations() {
         return staticallyIncludedDestinations;
     }
 
@@ -124,7 +125,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
      * @param staticallyIncludedDestinations The staticallyIncludedDestinations
      *                to set.
      */
-    public void setStaticallyIncludedDestinations(List staticallyIncludedDestinations) {
+    public void setStaticallyIncludedDestinations(List<ActiveMQDestination> staticallyIncludedDestinations) {
         this.staticallyIncludedDestinations = staticallyIncludedDestinations;
     }
 
@@ -135,7 +136,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     /**
      * @return Returns the dynamicallyIncludedDestinations.
      */
-    public List getDynamicallyIncludedDestinations() {
+    public List<ActiveMQDestination> getDynamicallyIncludedDestinations() {
         return dynamicallyIncludedDestinations;
     }
 
@@ -143,7 +144,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
      * @param dynamicallyIncludedDestinations The
      *                dynamicallyIncludedDestinations to set.
      */
-    public void setDynamicallyIncludedDestinations(List dynamicallyIncludedDestinations) {
+    public void setDynamicallyIncludedDestinations(List<ActiveMQDestination> dynamicallyIncludedDestinations) {
         this.dynamicallyIncludedDestinations = dynamicallyIncludedDestinations;
     }
 
@@ -162,15 +163,14 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     // Implementation methods
     // -------------------------------------------------------------------------
     protected NetworkBridge configureBridge(DemandForwardingBridgeSupport result) {
-        List destsList = getDynamicallyIncludedDestinations();
-        ActiveMQDestination dests[] = (ActiveMQDestination[])destsList
-            .toArray(new ActiveMQDestination[destsList.size()]);
+        List<ActiveMQDestination> destsList = getDynamicallyIncludedDestinations();
+        ActiveMQDestination dests[] = destsList.toArray(new ActiveMQDestination[destsList.size()]);
         result.setDynamicallyIncludedDestinations(dests);
         destsList = getExcludedDestinations();
-        dests = (ActiveMQDestination[])destsList.toArray(new ActiveMQDestination[destsList.size()]);
+        dests = destsList.toArray(new ActiveMQDestination[destsList.size()]);
         result.setExcludedDestinations(dests);
         destsList = getStaticallyIncludedDestinations();
-        dests = (ActiveMQDestination[])destsList.toArray(new ActiveMQDestination[destsList.size()]);
+        dests = destsList.toArray(new ActiveMQDestination[destsList.size()]);
         result.setStaticallyIncludedDestinations(dests);
         if (durableDestinations != null) {
             ActiveMQDestination[] dest = new ActiveMQDestination[durableDestinations.size()];
@@ -222,8 +222,9 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     }
 
     protected void registerNetworkBridgeMBean(NetworkBridge bridge) {
-        if (!getBrokerService().isUseJmx())
+        if (!getBrokerService().isUseJmx()) {
             return;
+        }
 
         MBeanServer mbeanServer = getBrokerService().getManagementContext().getMBeanServer();
         if (mbeanServer != null) {
@@ -238,8 +239,9 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     }
 
     protected void unregisterNetworkBridgeMBean(NetworkBridge bridge) {
-        if (!getBrokerService().isUseJmx())
+        if (!getBrokerService().isUseJmx()) {
             return;
+        }
 
         MBeanServer mbeanServer = getBrokerService().getManagementContext().getMBeanServer();
         if (mbeanServer != null) {
@@ -252,22 +254,13 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
         }
     }
 
-    protected ObjectName createNetworkBridgeObjectName(NetworkBridge bridge)
-        throws MalformedObjectNameException {
+    @SuppressWarnings("unchecked")
+    protected ObjectName createNetworkBridgeObjectName(NetworkBridge bridge) throws MalformedObjectNameException {
         ObjectName connectorName = getObjectName();
-        Hashtable map = connectorName.getKeyPropertyList();
-        return new ObjectName(connectorName.getDomain()
-                              + ":"
-                              + "BrokerName="
-                              + JMXSupport.encodeObjectNamePart((String)map.get("BrokerName"))
-                              + ","
-                              + "Type=NetworkBridge,"
-                              + "NetworkConnectorName="
-                              + JMXSupport.encodeObjectNamePart((String)map.get("NetworkConnectorName"))
-                              + ","
-                              + "Name="
-                              + JMXSupport.encodeObjectNamePart(JMXSupport.encodeObjectNamePart(bridge
-                                  .getRemoteAddress())));
+        Map<String, String> map = new HashMap<String, String>(connectorName.getKeyPropertyList());
+        return new ObjectName(connectorName.getDomain() + ":" + "BrokerName=" + JMXSupport.encodeObjectNamePart((String)map.get("BrokerName")) + "," + "Type=NetworkBridge,"
+                              + "NetworkConnectorName=" + JMXSupport.encodeObjectNamePart((String)map.get("NetworkConnectorName")) + "," + "Name="
+                              + JMXSupport.encodeObjectNamePart(JMXSupport.encodeObjectNamePart(bridge.getRemoteAddress())));
     }
 
 }

@@ -22,10 +22,9 @@ import java.util.List;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 
+import junit.framework.Assert;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import junit.framework.Assert;
 
 public class ConsumerBean extends Assert implements MessageListener {
     private static final Log LOG = LogFactory.getLog(ConsumerBean.class);

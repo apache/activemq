@@ -18,6 +18,7 @@ package org.apache.activemq.kaha.impl.async;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.kaha.impl.async.DataFileAppender.WriteCommand;
@@ -33,7 +34,7 @@ import org.apache.activemq.util.ByteSequence;
 final class DataFileAccessor {
 
     private final DataFile dataFile;
-    private final ConcurrentHashMap<WriteKey, WriteCommand> inflightWrites;
+    private final Map<WriteKey, WriteCommand> inflightWrites;
     private final RandomAccessFile file;
     private boolean disposed;
 
@@ -54,8 +55,9 @@ final class DataFileAccessor {
     }
 
     public void dispose() {
-        if (disposed)
+        if (disposed) {
             return;
+        }
         disposed = true;
         try {
             dataFile.closeRandomAccessFile(file);
@@ -66,8 +68,9 @@ final class DataFileAccessor {
 
     public ByteSequence readRecord(Location location) throws IOException {
 
-        if (!location.isValid())
+        if (!location.isValid()) {
             throw new IOException("Invalid location: " + location);
+        }
 
         WriteCommand asyncWrite = (WriteCommand)inflightWrites.get(new WriteKey(location));
         if (asyncWrite != null) {

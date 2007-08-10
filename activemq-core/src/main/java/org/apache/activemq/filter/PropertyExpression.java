@@ -19,6 +19,7 @@ package org.apache.activemq.filter;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
@@ -35,28 +36,32 @@ import org.apache.activemq.util.JMSExceptionSupport;
  */
 public class PropertyExpression implements Expression {
 
+    private static final Map<String, SubExpression> JMS_PROPERTY_EXPRESSIONS = new HashMap<String, SubExpression>();
+
     interface SubExpression {
         Object evaluate(Message message);
     }
 
-    private static final HashMap JMS_PROPERTY_EXPRESSIONS = new HashMap();
     static {
         JMS_PROPERTY_EXPRESSIONS.put("JMSDestination", new SubExpression() {
 
             public Object evaluate(Message message) {
                 ActiveMQDestination dest = message.getOriginalDestination();
-                if (dest == null)
+                if (dest == null) {
                     dest = message.getDestination();
-                if (dest == null)
+                }
+                if (dest == null) {
                     return null;
+                }
                 return dest.toString();
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSReplyTo", new SubExpression() {
 
             public Object evaluate(Message message) {
-                if (message.getReplyTo() == null)
+                if (message.getReplyTo() == null) {
                     return null;
+                }
                 return message.getReplyTo().toString();
             }
         });
@@ -69,8 +74,7 @@ public class PropertyExpression implements Expression {
         JMS_PROPERTY_EXPRESSIONS.put("JMSDeliveryMode", new SubExpression() {
 
             public Object evaluate(Message message) {
-                return Integer.valueOf(message.isPersistent()
-                    ? DeliveryMode.PERSISTENT : DeliveryMode.NON_PERSISTENT);
+                return Integer.valueOf(message.isPersistent() ? DeliveryMode.PERSISTENT : DeliveryMode.NON_PERSISTENT);
             }
         });
         JMS_PROPERTY_EXPRESSIONS.put("JMSPriority", new SubExpression() {
@@ -82,8 +86,9 @@ public class PropertyExpression implements Expression {
         JMS_PROPERTY_EXPRESSIONS.put("JMSMessageID", new SubExpression() {
 
             public Object evaluate(Message message) {
-                if (message.getMessageId() == null)
+                if (message.getMessageId() == null) {
                     return null;
+                }
                 return message.getMessageId().toString();
             }
         });
@@ -133,10 +138,12 @@ public class PropertyExpression implements Expression {
 
             public Object evaluate(Message message) {
                 TransactionId txId = message.getOriginalTransactionId();
-                if (txId == null)
+                if (txId == null) {
                     txId = message.getTransactionId();
-                if (txId == null)
+                }
+                if (txId == null) {
                     return null;
+                }
                 return new Integer(txId.toString());
             }
         });
@@ -159,21 +166,22 @@ public class PropertyExpression implements Expression {
 
     public PropertyExpression(String name) {
         this.name = name;
-        jmsPropertyExpression = (SubExpression)JMS_PROPERTY_EXPRESSIONS.get(name);
+        jmsPropertyExpression = JMS_PROPERTY_EXPRESSIONS.get(name);
     }
 
     public Object evaluate(MessageEvaluationContext message) throws JMSException {
         try {
-            if (message.isDropped())
+            if (message.isDropped()) {
                 return null;
+            }
 
-            if (jmsPropertyExpression != null)
+            if (jmsPropertyExpression != null) {
                 return jmsPropertyExpression.evaluate(message.getMessage());
+            }
             try {
                 return message.getMessage().getProperty(name);
             } catch (IOException ioe) {
-                throw JMSExceptionSupport.create("Could not get property: " + name + " reason: "
-                                                 + ioe.getMessage(), ioe);
+                throw JMSExceptionSupport.create("Could not get property: " + name + " reason: " + ioe.getMessage(), ioe);
             }
         } catch (IOException e) {
             throw JMSExceptionSupport.create(e);
@@ -182,8 +190,9 @@ public class PropertyExpression implements Expression {
     }
 
     public Object evaluate(Message message) throws JMSException {
-        if (jmsPropertyExpression != null)
+        if (jmsPropertyExpression != null) {
             return jmsPropertyExpression.evaluate(message);
+        }
         try {
             return message.getProperty(name);
         } catch (IOException ioe) {

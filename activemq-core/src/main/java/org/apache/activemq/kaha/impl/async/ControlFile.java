@@ -56,8 +56,9 @@ public final class ControlFile {
      * @throws IOException
      */
     public void lock() throws IOException {
-        if (DISABLE_FILE_LOCK)
+        if (DISABLE_FILE_LOCK) {
             return;
+        }
 
         if (lock == null) {
             lock = randomAccessFile.getChannel().tryLock();
@@ -73,8 +74,9 @@ public final class ControlFile {
      * @throws IOException
      */
     public void unlock() throws IOException {
-        if (DISABLE_FILE_LOCK)
+        if (DISABLE_FILE_LOCK) {
             return;
+        }
 
         if (lock != null) {
             lock.release();
@@ -83,16 +85,17 @@ public final class ControlFile {
     }
 
     public void dispose() {
-        if (disposed)
+        if (disposed) {
             return;
+        }
         disposed = true;
         try {
             unlock();
-        } catch (IOException e) {
+        } catch (IOException ignore) {
         }
         try {
             randomAccessFile.close();
-        } catch (IOException e) {
+        } catch (IOException ignore) {
         }
     }
 

@@ -105,8 +105,9 @@ public class NetworkConnectorView implements NetworkConnectorViewMBean {
     public String getPassword() {
         String pw = connector.getPassword();
         // Hide the password for security reasons.
-        if (pw != null)
+        if (pw != null) {
             pw = pw.replaceAll(".", "*");
+        }
         return pw;
     }
 

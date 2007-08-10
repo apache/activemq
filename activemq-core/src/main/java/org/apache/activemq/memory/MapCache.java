@@ -28,13 +28,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class MapCache implements Cache {
     
-    protected final Map map;
+    protected final Map<Object, Object> map;
     
     public MapCache() {
         this(new ConcurrentHashMap());
     }
     
-    public MapCache(Map map) {
+    public MapCache(Map<Object, Object> map) {
         this.map = map;
     }
 

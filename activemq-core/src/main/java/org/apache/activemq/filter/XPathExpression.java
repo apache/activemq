@@ -45,8 +45,7 @@ public final class XPathExpression implements BooleanExpression {
             try {
                 m = getXPathEvaluatorConstructor(cn);
             } catch (Throwable e) {
-                LOG.warn("Invalid " + XPathEvaluator.class.getName() + " implementation: " + cn
-                         + ", reason: " + e, e);
+                LOG.warn("Invalid " + XPathEvaluator.class.getName() + " implementation: " + cn + ", reason: " + e, e);
                 cn = DEFAULT_EVALUATOR_CLASS_NAME;
                 try {
                     m = getXPathEvaluatorConstructor(cn);
@@ -59,15 +58,6 @@ public final class XPathExpression implements BooleanExpression {
         }
     }
 
-    private static Constructor getXPathEvaluatorConstructor(String cn) throws ClassNotFoundException,
-        SecurityException, NoSuchMethodException {
-        Class c = XPathExpression.class.getClassLoader().loadClass(cn);
-        if (!XPathEvaluator.class.isAssignableFrom(c)) {
-            throw new ClassCastException("" + c + " is not an instance of " + XPathEvaluator.class);
-        }
-        return c.getConstructor(new Class[] {String.class});
-    }
-
     private final String xpath;
     private final XPathEvaluator evaluator;
 
@@ -78,6 +68,14 @@ public final class XPathExpression implements BooleanExpression {
     XPathExpression(String xpath) {
         this.xpath = xpath;
         this.evaluator = createEvaluator(xpath);
+    }
+
+    private static Constructor getXPathEvaluatorConstructor(String cn) throws ClassNotFoundException, SecurityException, NoSuchMethodException {
+        Class c = XPathExpression.class.getClassLoader().loadClass(cn);
+        if (!XPathEvaluator.class.isAssignableFrom(c)) {
+            throw new ClassCastException("" + c + " is not an instance of " + XPathEvaluator.class);
+        }
+        return c.getConstructor(new Class[] {String.class});
     }
 
     private XPathEvaluator createEvaluator(String xpath2) {
@@ -96,8 +94,9 @@ public final class XPathExpression implements BooleanExpression {
 
     public Object evaluate(MessageEvaluationContext message) throws JMSException {
         try {
-            if (message.isDropped())
+            if (message.isDropped()) {
                 return null;
+            }
             return evaluator.evaluate(message.getMessage()) ? Boolean.TRUE : Boolean.FALSE;
         } catch (IOException e) {
             throw JMSExceptionSupport.create(e);

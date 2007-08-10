@@ -37,7 +37,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * 
  * @version $Revision: 397249 $
  */
 public class TempDestDeleteTest extends EmbeddedBrokerTestSupport implements ConsumerListener {
@@ -60,14 +59,15 @@ public class TempDestDeleteTest extends EmbeddedBrokerTestSupport implements Con
         assertConsumerEvent(1, true);
 
         Topic advisoryTopic = AdvisorySupport.getConsumerAdvisoryTopic(tempTopic);
-        assertTrue( destinationExists(advisoryTopic) );
-        
+        assertTrue(destinationExists(advisoryTopic));
+
         consumer.close();
-        
-        // Once we delete the topic, the advisory topic for the destination should also be deleted.
+
+        // Once we delete the topic, the advisory topic for the destination
+        // should also be deleted.
         tempTopic.delete();
-        
-        assertFalse( destinationExists(advisoryTopic) );
+
+        assertFalse(destinationExists(advisoryTopic));
     }
 
     public void testDeleteTempQueueDeletesAvisoryTopics() throws Exception {
@@ -77,22 +77,21 @@ public class TempDestDeleteTest extends EmbeddedBrokerTestSupport implements Con
         assertConsumerEvent(1, true);
 
         Topic advisoryTopic = AdvisorySupport.getConsumerAdvisoryTopic(tempQueue);
-        assertTrue( destinationExists(advisoryTopic) );
-        
+        assertTrue(destinationExists(advisoryTopic));
+
         consumer.close();
-        
-        // Once we delete the queue, the advisory topic for the destination should also be deleted.
+
+        // Once we delete the queue, the advisory topic for the destination
+        // should also be deleted.
         tempQueue.delete();
-        
-        assertFalse( destinationExists(advisoryTopic) );
+
+        assertFalse(destinationExists(advisoryTopic));
     }
 
     private boolean destinationExists(Destination dest) throws Exception {
-        RegionBroker rb = (RegionBroker) broker.getBroker().getAdaptor(RegionBroker.class);
-        return rb.getTopicRegion().getDestinationMap().containsKey(dest)
-                || rb.getQueueRegion().getDestinationMap().containsKey(dest)
-                || rb.getTempTopicRegion().getDestinationMap().containsKey(dest)
-                || rb.getTempQueueRegion().getDestinationMap().containsKey(dest);
+        RegionBroker rb = (RegionBroker)broker.getBroker().getAdaptor(RegionBroker.class);
+        return rb.getTopicRegion().getDestinationMap().containsKey(dest) || rb.getQueueRegion().getDestinationMap().containsKey(dest)
+               || rb.getTempTopicRegion().getDestinationMap().containsKey(dest) || rb.getTempQueueRegion().getDestinationMap().containsKey(dest);
     }
 
     public void onConsumerEvent(ConsumerEvent event) {
@@ -103,14 +102,14 @@ public class TempDestDeleteTest extends EmbeddedBrokerTestSupport implements Con
         super.setUp();
         connection = createConnection();
         connection.start();
-        
+
         session = connection.createSession(false, 0);
-        
-        tempTopic = (ActiveMQTempTopic) session.createTemporaryTopic();
+
+        tempTopic = (ActiveMQTempTopic)session.createTemporaryTopic();
         topicConsumerEventSource = new ConsumerEventSource(connection, tempTopic);
         topicConsumerEventSource.setConsumerListener(this);
-    
-        tempQueue = (ActiveMQTempQueue) session.createTemporaryQueue();
+
+        tempQueue = (ActiveMQTempQueue)session.createTemporaryQueue();
         queueConsumerEventSource = new ConsumerEventSource(connection, tempQueue);
         queueConsumerEventSource.setConsumerListener(this);
     }
@@ -131,7 +130,7 @@ public class TempDestDeleteTest extends EmbeddedBrokerTestSupport implements Con
     protected MessageConsumer createConsumer(Destination dest) throws JMSException {
         final String consumerText = "Consumer: " + (++consumerCounter);
         LOG.info("Creating consumer: " + consumerText + " on destination: " + dest);
-        
+
         MessageConsumer consumer = session.createConsumer(dest);
         consumer.setMessageListener(new MessageListener() {
             public void onMessage(Message message) {
@@ -142,7 +141,7 @@ public class TempDestDeleteTest extends EmbeddedBrokerTestSupport implements Con
     }
 
     protected ConsumerEvent waitForConsumerEvent() throws InterruptedException {
-        ConsumerEvent answer = (ConsumerEvent) eventQueue.poll(1000, TimeUnit.MILLISECONDS);
+        ConsumerEvent answer = (ConsumerEvent)eventQueue.poll(1000, TimeUnit.MILLISECONDS);
         assertTrue("Should have received a consumer event!", answer != null);
         return answer;
     }

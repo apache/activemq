@@ -24,11 +24,13 @@ import java.util.ListIterator;
 import junit.framework.TestCase;
 
 public class ListContainerTest extends TestCase {
+    
+    protected static final int COUNT = 10;
+
     protected String name = "test";
     protected Store store;
-    protected ListContainer container;
-    protected LinkedList testList;
-    protected static final int COUNT = 10;
+    protected ListContainer<Object> container;
+    protected LinkedList<Object> testList;
 
     /*
      * Test method for 'org.apache.activemq.kaha.ListContainer.size()'
@@ -93,10 +95,10 @@ public class ListContainerTest extends TestCase {
      */
     public void testIterator() throws Exception {
         container.addAll(testList);
-        for (Iterator i = testList.iterator(), j = container.iterator(); i.hasNext();) {
+        for (Iterator<Object> i = testList.iterator(), j = container.iterator(); i.hasNext();) {
             assertEquals(i.next(), j.next());
         }
-        for (Iterator i = container.iterator(); i.hasNext();) {
+        for (Iterator<Object> i = container.iterator(); i.hasNext();) {
             i.next();
             i.remove();
         }
@@ -115,7 +117,7 @@ public class ListContainerTest extends TestCase {
      */
     public void testContains() throws Exception {
         container.addAll(testList);
-        for (Iterator i = testList.iterator(), j = container.iterator(); i.hasNext();) {
+        for (Iterator<Object> i = testList.iterator(), j = container.iterator(); i.hasNext();) {
             assertTrue(container.contains(i.next()));
         }
     }
@@ -250,8 +252,8 @@ public class ListContainerTest extends TestCase {
      */
     public void testListIterator() throws Exception {
         container.addAll(testList);
-        ListIterator containerIter = container.listIterator();
-        ListIterator testIter = testList.listIterator();
+        ListIterator<Object> containerIter = container.listIterator();
+        ListIterator<Object> testIter = testList.listIterator();
         assertTrue(testIter.hasNext());
         assertTrue(containerIter.hasNext());
         while (testIter.hasNext()) {
@@ -271,8 +273,8 @@ public class ListContainerTest extends TestCase {
     public void testListIteratorInt() throws Exception {
         container.addAll(testList);
         int start = testList.size() / 2;
-        ListIterator containerIter = container.listIterator(start);
-        ListIterator testIter = testList.listIterator(start);
+        ListIterator<Object> containerIter = container.listIterator(start);
+        ListIterator<Object> testIter = testList.listIterator(start);
         assertTrue(testIter.hasNext());
         assertTrue(containerIter.hasNext());
         while (testIter.hasNext()) {
@@ -288,8 +290,8 @@ public class ListContainerTest extends TestCase {
     public void testSubList() throws Exception {
         container.addAll(testList);
         int start = testList.size() / 2;
-        List l1 = testList.subList(start, testList.size());
-        List l2 = container.subList(start, testList.size());
+        List<Object> l1 = testList.subList(start, testList.size());
+        List<Object> l2 = container.subList(start, testList.size());
         assertEquals(l1.size(), l2.size());
         assertEquals(l1, l2);
     }
@@ -306,7 +308,7 @@ public class ListContainerTest extends TestCase {
         store.deleteListContainer(name);
         container = store.getListContainer(name);
         container.load();
-        testList = new LinkedList();
+        testList = new LinkedList<Object>();
         for (int i = 0; i < COUNT; i++) {
             String value = "value:" + i;
             testList.add(value);

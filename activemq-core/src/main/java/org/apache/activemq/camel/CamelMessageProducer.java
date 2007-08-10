@@ -36,9 +36,11 @@ import org.apache.camel.util.ObjectHelper;
  * @version $Revision: $
  */
 public class CamelMessageProducer extends ActiveMQMessageProducerSupport {
+    
+    protected Producer producer;
+
     private final CamelDestination destination;
     private final Endpoint endpoint;
-    protected Producer producer;
     private boolean closed;
 
     public CamelMessageProducer(CamelDestination destination, Endpoint endpoint, ActiveMQSession session) throws JMSException {

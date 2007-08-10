@@ -24,13 +24,11 @@ import org.apache.activemq.command.Command;
 import org.apache.activemq.command.TransactionId;
 
 public class TransactionState {
-    final TransactionId id;
 
-    public final ArrayList commands = new ArrayList();
+    private final List<Command> commands = new ArrayList<Command>();
+    private final TransactionId id;
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
-
     private boolean prepared;
-
     private int preparedResult;
 
     public TransactionState(TransactionId id) {
@@ -46,13 +44,14 @@ public class TransactionState {
         commands.add(operation);
     }
 
-    public List getCommands() {
+    public List<Command> getCommands() {
         return commands;
     }
 
     private void checkShutdown() {
-        if (shutdown.get())
+        if (shutdown.get()) {
             throw new IllegalStateException("Disposed");
+        }
     }
 
     public void shutdown() {

@@ -33,7 +33,7 @@ class DataFile extends LinkedNode implements Comparable<DataFile> {
     private final Integer dataFileId;
     private final int preferedSize;
 
-    int length;
+    private int length;
     private int referenceCount;
 
     DataFile(File file, int number, int preferedSize) {

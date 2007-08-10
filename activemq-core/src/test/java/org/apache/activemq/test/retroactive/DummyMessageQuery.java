@@ -31,9 +31,9 @@ import org.apache.commons.logging.LogFactory;
  */
 public class DummyMessageQuery implements MessageQuery {
     
+    public static final int MESSAGE_COUNT = 10;
     private static final Log LOG = LogFactory.getLog(DummyMessageQuery.class);
 
-    public static final int MESSAGE_COUNT = 10;
     
     public void execute(ActiveMQDestination destination, MessageListener listener) throws Exception {
         LOG.info("Initial query is creating: " + MESSAGE_COUNT + " messages");

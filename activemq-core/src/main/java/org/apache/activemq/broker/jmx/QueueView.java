@@ -34,8 +34,9 @@ public class QueueView extends DestinationView implements QueueViewMBean {
 
     public CompositeData getMessage(String messageId) throws OpenDataException {
         Message rc = ((Queue)destination).getMessage(messageId);
-        if (rc == null)
+        if (rc == null) {
             return null;
+        }
         return OpenTypeSupport.convert(rc);
     }
 

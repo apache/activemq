@@ -105,8 +105,9 @@ public class ActiveMQQueueSession implements QueueSession {
      * @throws JMSException
      */
     public MessageConsumer createConsumer(Destination destination) throws JMSException {
-        if (destination instanceof Topic)
+        if (destination instanceof Topic) {
             throw new InvalidDestinationException("Topics are not supported by a QueueSession");
+        }
         return next.createConsumer(destination);
     }
 
@@ -117,8 +118,9 @@ public class ActiveMQQueueSession implements QueueSession {
      * @throws JMSException
      */
     public MessageConsumer createConsumer(Destination destination, String messageSelector) throws JMSException {
-        if (destination instanceof Topic)
+        if (destination instanceof Topic) {
             throw new InvalidDestinationException("Topics are not supported by a QueueSession");
+        }
         return next.createConsumer(destination, messageSelector);
     }
 
@@ -197,8 +199,9 @@ public class ActiveMQQueueSession implements QueueSession {
      * @throws JMSException
      */
     public MessageProducer createProducer(Destination destination) throws JMSException {
-        if (destination instanceof Topic)
+        if (destination instanceof Topic) {
             throw new InvalidDestinationException("Topics are not supported by a QueueSession");
+        }
         return next.createProducer(destination);
     }
 

@@ -52,8 +52,8 @@ public class InactiveDurableTopicTest extends TestCase {
     private TopicSubscriber subscriber;
     private Topic topic;
     private Session session;
-    ActiveMQConnectionFactory connectionFactory;
-    BrokerService broker;
+    private ActiveMQConnectionFactory connectionFactory;
+    private BrokerService broker;
 
     protected void setUp() throws Exception {
         super.setUp();

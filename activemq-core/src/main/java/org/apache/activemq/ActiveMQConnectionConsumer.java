@@ -61,8 +61,6 @@ public class ActiveMQConnectionConsumer implements ConnectionConsumer, ActiveMQD
     private ConsumerInfo consumerInfo;
     private boolean closed;
 
-    protected final List messageQueue = Collections.synchronizedList(new LinkedList());
-
     /**
      * Create a ConnectionConsumer
      * 

@@ -40,7 +40,11 @@ import org.apache.commons.logging.LogFactory;
  */
 public final class DataManagerImpl implements DataManager {
 
+    public static final int ITEM_HEAD_SIZE = 5; // type + length
+    public static final byte DATA_ITEM_TYPE = 1;
+    public static final byte REDO_ITEM_TYPE = 2;
     public static final long MAX_FILE_LENGTH = 1024 * 1024 * 32;
+    
     private static final Log LOG = LogFactory.getLog(DataManagerImpl.class);
     private static final String NAME_PREFIX = "data-";
     
@@ -50,13 +54,8 @@ public final class DataManagerImpl implements DataManager {
     private SyncDataFileWriter writer;
     private DataFile currentWriteFile;
     private long maxFileLength = MAX_FILE_LENGTH;
-    Map fileMap = new HashMap();
-
-    public static final int ITEM_HEAD_SIZE = 5; // type + length
-    public static final byte DATA_ITEM_TYPE = 1;
-    public static final byte REDO_ITEM_TYPE = 2;
-
-    Marshaller redoMarshaller = RedoStoreIndexItem.MARSHALLER;
+    private Map<Integer, DataFile> fileMap = new HashMap<Integer, DataFile>();
+    private Marshaller redoMarshaller = RedoStoreIndexItem.MARSHALLER;
     private String dataFilePrefix;
 
     public DataManagerImpl(File dir, final String name) {
@@ -118,7 +117,7 @@ public final class DataManagerImpl implements DataManager {
 
     DataFile getDataFile(StoreLocation item) throws IOException {
         Integer key = Integer.valueOf(item.getFile());
-        DataFile dataFile = (DataFile)fileMap.get(key);
+        DataFile dataFile = fileMap.get(key);
         if (dataFile == null) {
             LOG.error("Looking for key " + key + " but not found in fileMap: " + fileMap);
             throw new IOException("Could not locate data file " + NAME_PREFIX + name + "-" + item.getFile());
@@ -174,8 +173,9 @@ public final class DataManagerImpl implements DataManager {
     public synchronized void recoverRedoItems(RedoListener listener) throws IOException {
 
         // Nothing to recover if there is no current file.
-        if (currentWriteFile == null)
+        if (currentWriteFile == null) {
             return;
+        }
 
         DataItem item = new DataItem();
         item.setFile(currentWriteFile.getNumber().intValue());
@@ -221,8 +221,8 @@ public final class DataManagerImpl implements DataManager {
      */
     public synchronized void close() throws IOException {
         getWriter().close();
-        for (Iterator i = fileMap.values().iterator(); i.hasNext();) {
-            DataFile dataFile = (DataFile)i.next();
+        for (Iterator<DataFile> i = fileMap.values().iterator(); i.hasNext();) {
+            DataFile dataFile = i.next();
             getWriter().force(dataFile);
             dataFile.close();
         }
@@ -235,8 +235,8 @@ public final class DataManagerImpl implements DataManager {
      * @see org.apache.activemq.kaha.impl.data.IDataManager#force()
      */
     public synchronized void force() throws IOException {
-        for (Iterator i = fileMap.values().iterator(); i.hasNext();) {
-            DataFile dataFile = (DataFile)i.next();
+        for (Iterator<DataFile> i = fileMap.values().iterator(); i.hasNext();) {
+            DataFile dataFile = i.next();
             getWriter().force(dataFile);
         }
     }
@@ -248,8 +248,8 @@ public final class DataManagerImpl implements DataManager {
      */
     public synchronized boolean delete() throws IOException {
         boolean result = true;
-        for (Iterator i = fileMap.values().iterator(); i.hasNext();) {
-            DataFile dataFile = (DataFile)i.next();
+        for (Iterator<DataFile> i = fileMap.values().iterator(); i.hasNext();) {
+            DataFile dataFile = i.next();
             result &= dataFile.delete();
         }
         fileMap.clear();
@@ -264,7 +264,7 @@ public final class DataManagerImpl implements DataManager {
     public synchronized void addInterestInFile(int file) throws IOException {
         if (file >= 0) {
             Integer key = Integer.valueOf(file);
-            DataFile dataFile = (DataFile)fileMap.get(key);
+            DataFile dataFile = fileMap.get(key);
             if (dataFile == null) {
                 dataFile = createAndAddDataFile(file);
             }
@@ -286,7 +286,7 @@ public final class DataManagerImpl implements DataManager {
     public synchronized void removeInterestInFile(int file) throws IOException {
         if (file >= 0) {
             Integer key = Integer.valueOf(file);
-            DataFile dataFile = (DataFile)fileMap.get(key);
+            DataFile dataFile = fileMap.get(key);
             removeInterestInFile(dataFile);
         }
     }
@@ -307,15 +307,15 @@ public final class DataManagerImpl implements DataManager {
      * @see org.apache.activemq.kaha.impl.data.IDataManager#consolidateDataFiles()
      */
     public synchronized void consolidateDataFiles() throws IOException {
-        List purgeList = new ArrayList();
-        for (Iterator i = fileMap.values().iterator(); i.hasNext();) {
-            DataFile dataFile = (DataFile)i.next();
+        List<DataFile> purgeList = new ArrayList<DataFile>();
+        for (Iterator<DataFile> i = fileMap.values().iterator(); i.hasNext();) {
+            DataFile dataFile = i.next();
             if (dataFile.isUnused() && dataFile != currentWriteFile) {
                 purgeList.add(dataFile);
             }
         }
         for (int i = 0; i < purgeList.size(); i++) {
-            DataFile dataFile = (DataFile)purgeList.get(i);
+            DataFile dataFile = purgeList.get(i);
             removeDataFile(dataFile);
         }
     }
