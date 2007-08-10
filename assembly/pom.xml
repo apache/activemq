@@ -120,6 +120,16 @@
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-activemq</artifactId>
     </dependency>
+    <!-- for the XML parsing -->
+    <dependency>
+      <groupId>javax.xml</groupId>
+      <artifactId>jaxb-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
+    </dependency>
+
 
     <!-- commons -->
     <dependency>
