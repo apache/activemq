@@ -309,6 +309,7 @@
           <excludes>
 
             <!-- These tests run too slow to execute as part of the unit tests -->
+            <exclude>**/TransactionNotStartedErrorTest.*</exclude>
             <exclude>**/DefaultStoreBrokerTest.*</exclude>
             <exclude>**/TcpTransportBrokerTest.*</exclude>
             <exclude>**/activeio/*</exclude>
