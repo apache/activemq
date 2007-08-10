@@ -36,9 +36,9 @@ import org.apache.activemq.command.TransactionId;
 public class ConnectionState {
 
     ConnectionInfo info;
-    private final ConcurrentHashMap transactions = new ConcurrentHashMap();
-    private final ConcurrentHashMap sessions = new ConcurrentHashMap();
-    private final List tempDestinations = Collections.synchronizedList(new ArrayList());
+    private final ConcurrentHashMap<TransactionId, TransactionState> transactions = new ConcurrentHashMap<TransactionId, TransactionState>();
+    private final ConcurrentHashMap<SessionId, SessionState> sessions = new ConcurrentHashMap<SessionId, SessionState>();
+    private final List<DestinationInfo> tempDestinations = Collections.synchronizedList(new ArrayList<DestinationInfo>());
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
 
     public ConnectionState(ConnectionInfo info) {
@@ -65,8 +65,8 @@ public class ConnectionState {
     }
 
     public void removeTempDestination(ActiveMQDestination destination) {
-        for (Iterator iter = tempDestinations.iterator(); iter.hasNext();) {
-            DestinationInfo di = (DestinationInfo)iter.next();
+        for (Iterator<DestinationInfo> iter = tempDestinations.iterator(); iter.hasNext();) {
+            DestinationInfo di = iter.next();
             if (di.getDestination().equals(destination)) {
                 iter.remove();
             }
@@ -79,15 +79,15 @@ public class ConnectionState {
     }
 
     public TransactionState getTransactionState(TransactionId id) {
-        return (TransactionState)transactions.get(id);
+        return transactions.get(id);
     }
 
-    public Collection getTransactionStates() {
+    public Collection<TransactionState> getTransactionStates() {
         return transactions.values();
     }
 
     public TransactionState removeTransactionState(TransactionId id) {
-        return (TransactionState)transactions.remove(id);
+        return transactions.remove(id);
     }
 
     public void addSession(SessionInfo info) {
@@ -96,38 +96,39 @@ public class ConnectionState {
     }
 
     public SessionState removeSession(SessionId id) {
-        return (SessionState)sessions.remove(id);
+        return sessions.remove(id);
     }
 
     public SessionState getSessionState(SessionId id) {
-        return (SessionState)sessions.get(id);
+        return sessions.get(id);
     }
 
     public ConnectionInfo getInfo() {
         return info;
     }
 
-    public Set getSessionIds() {
+    public Set<SessionId> getSessionIds() {
         return sessions.keySet();
     }
 
-    public List getTempDesinations() {
+    public List<DestinationInfo> getTempDesinations() {
         return tempDestinations;
     }
 
-    public Collection getSessionStates() {
+    public Collection<SessionState> getSessionStates() {
         return sessions.values();
     }
 
     private void checkShutdown() {
-        if (shutdown.get())
+        if (shutdown.get()) {
             throw new IllegalStateException("Disposed");
+        }
     }
 
     public void shutdown() {
         if (shutdown.compareAndSet(false, true)) {
-            for (Iterator iter = sessions.values().iterator(); iter.hasNext();) {
-                SessionState ss = (SessionState)iter.next();
+            for (Iterator<SessionState> iter = sessions.values().iterator(); iter.hasNext();) {
+                SessionState ss = iter.next();
                 ss.shutdown();
             }
         }

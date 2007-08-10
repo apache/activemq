@@ -30,7 +30,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.activemq.kaha.ContainerId;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.MapContainer;
-import org.apache.activemq.kaha.RuntimeStoreException;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StoreLocation;
 import org.apache.activemq.kaha.impl.async.AsyncDataManager;
@@ -58,7 +57,7 @@ public class KahaStore implements Store {
     private static final boolean DISABLE_LOCKING = "true".equals(System.getProperty(PROPERTY_PREFIX + ".DisableLocking", "false"));
 
     private static final Log LOG = LogFactory.getLog(KahaStore.class);
-    
+
     private final File directory;
     private final String mode;
     private IndexRootContainer mapsContainer;
@@ -74,7 +73,7 @@ public class KahaStore implements Store {
     private boolean useAsyncDataManager;
     private long maxDataFileLength = 1024 * 1024 * 32;
     private FileLock lock;
-    private boolean persistentIndex;
+    private boolean persistentIndex=true;
     private RandomAccessFile lockFile;
 
     public KahaStore(String name, String mode) throws IOException {
@@ -108,8 +107,9 @@ public class KahaStore implements Store {
                     iter.remove();
                 }
             }
-            if (lockFile != null)
+            if (lockFile != null) {
                 lockFile.close();
+            }
         }
     }
 
@@ -415,8 +415,9 @@ public class KahaStore implements Store {
     }
 
     public synchronized void initialize() throws IOException {
-        if (closed)
+        if (closed) {
             throw new IOException("Store has been closed.");
+        }
         if (!initialized) {
 
             LOG.info("Kaha Store using data directory " + directory);
@@ -484,12 +485,6 @@ public class KahaStore implements Store {
     private String getPropertyKey() throws IOException {
         // Is replaceAll() needed? Should test without it.
         return getClass().getName() + ".lock." + directory.getCanonicalPath();
-    }
-
-    private void checkClosed() {
-        if (closed) {
-            throw new RuntimeStoreException("The store is closed");
-        }
     }
 
     /**

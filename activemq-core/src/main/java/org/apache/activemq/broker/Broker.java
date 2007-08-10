@@ -221,7 +221,7 @@ public interface Broker extends Region, Service {
     /**
      * @return a Set of all durable destinations
      */
-    Set getDurableDestinations();
+    Set<ActiveMQDestination> getDurableDestinations();
 
     /**
      * Add and process a DestinationInfo object

@@ -32,8 +32,9 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1.1.1 $
  */
 class HashPage {
-    private static final transient Log LOG = LogFactory.getLog(HashPage.class);
     static final int PAGE_HEADER_SIZE = 17;
+    private static final transient Log LOG = LogFactory.getLog(HashPage.class);
+
     private int maximumEntries;
     private long id;
     private int binId;
@@ -152,7 +153,7 @@ class HashPage {
     }
 
     boolean isFull() {
-        return (hashIndexEntries.size() >= maximumEntries);
+        return hashIndexEntries.size() >= maximumEntries;
     }
 
     boolean isUnderflowed() {

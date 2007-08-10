@@ -43,7 +43,7 @@ public class ActiveMQMessageTest extends TestCase {
 
     protected boolean readOnlyMessage;
 
-        private String jmsMessageID;
+    private String jmsMessageID;
     private String jmsCorrelationID;
     private ActiveMQDestination jmsDestination;
     private ActiveMQDestination jmsReplyTo;
@@ -787,8 +787,8 @@ public class ActiveMQMessageTest extends TestCase {
         Object obj = new Object();
         try {
             ((org.apache.activemq.command.Message)msg).setProperty(propertyName, obj); // bypass
-                                                                                        // object
-                                                                                        // check
+            // object
+            // check
         } catch (IOException e) {
         }
         try {

@@ -34,11 +34,13 @@ public class IndexItem implements Item, StoreEntry {
 
     public static final int INDEX_SIZE = 51;
     public static final int INDEXES_ONLY_SIZE = 19;
+
+    protected long offset = POSITION_NOT_SET;
+
     // used by linked list
     IndexItem next;
     IndexItem prev;
 
-    protected long offset = POSITION_NOT_SET;
     private long previousItem = POSITION_NOT_SET;
     private long nextItem = POSITION_NOT_SET;
     private boolean active = true;

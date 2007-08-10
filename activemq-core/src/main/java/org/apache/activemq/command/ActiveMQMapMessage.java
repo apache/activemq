@@ -99,7 +99,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_MAP_MESSAGE;
 
-    protected transient Map map = new HashMap();
+    protected transient Map<String, Object> map = new HashMap<String, Object>();
 
     public Message copy() {
         ActiveMQMapMessage copy = new ActiveMQMapMessage();
@@ -474,7 +474,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
      * @return an enumeration of all the names in this <CODE>MapMessage</CODE>
      * @throws JMSException
      */
-    public Enumeration getMapNames() throws JMSException {
+    public Enumeration<String> getMapNames() throws JMSException {
         initializeReading();
         return Collections.enumeration(map.keySet());
     }
@@ -732,7 +732,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
         return super.toString() + " ActiveMQMapMessage{ " + "theTable = " + map + " }";
     }
 
-    public Map getContentMap() throws JMSException {
+    public Map<String, Object> getContentMap() throws JMSException {
         initializeReading();
         return map;
     }

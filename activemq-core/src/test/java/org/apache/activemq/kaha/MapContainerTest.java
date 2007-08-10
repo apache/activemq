@@ -28,16 +28,17 @@ import junit.framework.TestCase;
 
 public class MapContainerTest extends TestCase {
 
+    protected static final int COUNT = 10;
+
     protected String name = "test";
     protected Store store;
-    protected MapContainer container;
-    protected Map testMap;
-    protected static final int COUNT = 10;
+    protected MapContainer<String, String> container;
+    protected Map<String, String> testMap;
 
     public void testBasicAllocations() throws Exception {
         String key = "key";
         Object value = testMap;
-        MapContainer test = store.getMapContainer("test", "test");
+        MapContainer<String, Object> test = store.getMapContainer("test", "test");
         test.put(key, value);
         store.close();
         store = getStore();
@@ -126,9 +127,9 @@ public class MapContainerTest extends TestCase {
      */
     public void testKeySet() throws Exception {
         container.putAll(testMap);
-        Set keys = container.keySet();
+        Set<String> keys = container.keySet();
         assertTrue(keys.size() == testMap.size());
-        for (Iterator i = testMap.keySet().iterator(); i.hasNext();) {
+        for (Iterator<String> i = testMap.keySet().iterator(); i.hasNext();) {
             Object key = i.next();
             assertTrue(keys.contains(key));
             keys.remove(key);
@@ -142,9 +143,9 @@ public class MapContainerTest extends TestCase {
      */
     public void testValues() throws Exception {
         container.putAll(testMap);
-        Collection values = container.values();
+        Collection<String> values = container.values();
         assertTrue(values.size() == testMap.size());
-        for (Iterator i = testMap.values().iterator(); i.hasNext();) {
+        for (Iterator<String> i = testMap.values().iterator(); i.hasNext();) {
             Object value = i.next();
             assertTrue(values.contains(value));
             assertTrue(values.remove(value));
@@ -173,7 +174,7 @@ public class MapContainerTest extends TestCase {
      */
     public void testRemoveObject() throws Exception {
         container.putAll(testMap);
-        for (Iterator i = testMap.keySet().iterator(); i.hasNext();) {
+        for (Iterator<String> i = testMap.keySet().iterator(); i.hasNext();) {
             container.remove(i.next());
         }
         assertTrue(container.isEmpty());
@@ -189,7 +190,7 @@ public class MapContainerTest extends TestCase {
         store = getStore();
         container = store.getMapContainer("test", "test", true);
         container.load();
-        testMap = new HashMap();
+        testMap = new HashMap<String, String>();
         for (int i = 0; i < COUNT; i++) {
             String key = "key:" + i;
             String value = "value:" + i;

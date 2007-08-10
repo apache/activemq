@@ -62,16 +62,18 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
             s.setString(3, messageID);
             s.setString(4, " ");
 
-            if (s.executeUpdate() != 1)
+            if (s.executeUpdate() != 1) {
                 throw new JMSException("Failed to broker message: " + messageID + " in container.");
+            }
             s.close();
 
             // Select the blob record so that we can update it.
             s = c.prepareStatement(statements.getFindMessageStatement());
             s.setLong(1, seq);
             rs = s.executeQuery();
-            if (!rs.next())
+            if (!rs.next()) {
                 throw new JMSException("Failed to broker message: " + messageID + " in container.");
+            }
 
             // Update the blob
             Blob blob = rs.getBlob(1);
@@ -90,11 +92,11 @@ public class BlobJDBCAdapter extends DefaultJDBCAdapter {
         } finally {
             try {
                 rs.close();
-            } catch (Throwable e) {
+            } catch (Throwable ignore) {
             }
             try {
                 s.close();
-            } catch (Throwable e) {
+            } catch (Throwable ignore) {
             }
         }
     }

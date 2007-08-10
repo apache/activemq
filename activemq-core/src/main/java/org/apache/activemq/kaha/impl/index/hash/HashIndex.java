@@ -59,7 +59,7 @@ public class HashIndex implements Index {
     private HashPage lastFree;
     private AtomicBoolean loaded = new AtomicBoolean();
     private LRUCache<Long, HashPage> pageCache;
-    private boolean enablePageCaching = false;
+    private boolean enablePageCaching;
     private int pageCacheSize = 10;
 
     /**
@@ -88,8 +88,9 @@ public class HashIndex implements Index {
         this.name = name;
         this.indexManager = indexManager;
         int capacity = 1;
-        while (capacity < numberOfBins)
+        while (capacity < numberOfBins) {
             capacity <<= 1;
+        }
         this.bins = new HashBin[capacity];
         openIndexFile();
         pageCache = new LRUCache<Long, HashPage>(pageCacheSize, pageCacheSize, 0.75f, true);
@@ -196,7 +197,8 @@ public class HashIndex implements Index {
                             indexFile.write(dataOut.getData(), 0, HashPage.PAGE_HEADER_SIZE);
                             lastFree = page;
                         } else {
-                            lastFree = firstFree = page;
+                            lastFree = page;
+                            firstFree = page;
                         }
                     } else {
                         addToBin(page);
@@ -216,7 +218,8 @@ public class HashIndex implements Index {
             if (indexFile != null) {
                 indexFile.close();
                 indexFile = null;
-                firstFree = lastFree = null;
+                firstFree = null;
+                lastFree = null;
                 bins = new HashBin[bins.length];
             }
         }
@@ -304,7 +307,8 @@ public class HashIndex implements Index {
         page.reset();
         page.setActive(false);
         if (lastFree == null) {
-            firstFree = lastFree = page;
+            firstFree = page;
+            lastFree = page;
         } else {
             lastFree.setNextFreePageId(page.getId());
             writePageHeader(lastFree);
@@ -317,7 +321,8 @@ public class HashIndex implements Index {
         if (firstFree != null) {
             if (firstFree.equals(lastFree)) {
                 result = firstFree;
-                firstFree = lastFree = null;
+                firstFree = null;
+                lastFree = null;
             } else {
                 result = firstFree;
                 firstFree = getPageHeader(firstFree.getNextFreePageId());
@@ -419,9 +424,9 @@ public class HashIndex implements Index {
     static int hash(Object x) {
         int h = x.hashCode();
         h += ~(h << 9);
-        h ^= (h >>> 14);
-        h += (h << 4);
-        h ^= (h >>> 10);
+        h ^= h >>> 14;
+        h += h << 4;
+        h ^= h >>> 10;
         return h;
     }
 

@@ -49,7 +49,7 @@ public class UsageManager implements Service {
 
     private final Object usageMutex = new Object();
 
-    private final CopyOnWriteArrayList listeners = new CopyOnWriteArrayList();
+    private final List<UsageListener> listeners = new CopyOnWriteArrayList<UsageListener>();
 
     private boolean sendFailIfNoSpace;
 
@@ -62,7 +62,7 @@ public class UsageManager implements Service {
     private String name = "";
     private float usagePortion = 1.0f;
     private List<UsageManager> children = new CopyOnWriteArrayList<UsageManager>();
-    private final LinkedList<Runnable> callbacks = new LinkedList<Runnable>();
+    private final List<Runnable> callbacks = new LinkedList<Runnable>();
 
     public UsageManager() {
         this(null, "default");
@@ -112,8 +112,9 @@ public class UsageManager implements Service {
      * @throws InterruptedException
      */
     public void waitForSpace() throws InterruptedException {
-        if (parent != null)
+        if (parent != null) {
             parent.waitForSpace();
+        }
         synchronized (usageMutex) {
             for (int i = 0; percentUsage >= 100; i++) {
                 usageMutex.wait();
@@ -128,8 +129,9 @@ public class UsageManager implements Service {
      */
     public boolean waitForSpace(long timeout) throws InterruptedException {
         if (parent != null) {
-            if (!parent.waitForSpace(timeout))
+            if (!parent.waitForSpace(timeout)) {
                 return false;
+            }
         }
         synchronized (usageMutex) {
             if (percentUsage >= 100) {
@@ -145,10 +147,12 @@ public class UsageManager implements Service {
      * @param value
      */
     public void increaseUsage(long value) {
-        if (value == 0)
+        if (value == 0) {
             return;
-        if (parent != null)
+        }
+        if (parent != null) {
             parent.increaseUsage(value);
+        }
         int percentUsage;
         synchronized (usageMutex) {
             usage += value;
@@ -163,10 +167,12 @@ public class UsageManager implements Service {
      * @param value
      */
     public void decreaseUsage(long value) {
-        if (value == 0)
+        if (value == 0) {
             return;
-        if (parent != null)
+        }
+        if (parent != null) {
             parent.decreaseUsage(value);
+        }
         int percentUsage;
         synchronized (usageMutex) {
             usage -= value;
@@ -176,8 +182,9 @@ public class UsageManager implements Service {
     }
 
     public boolean isFull() {
-        if (parent != null && parent.isFull())
+        if (parent != null && parent.isFull()) {
             return true;
+        }
         synchronized (usageMutex) {
             return percentUsage >= 100;
         }
@@ -324,8 +331,9 @@ public class UsageManager implements Service {
     }
 
     private int caclPercentUsage() {
-        if (limit == 0)
+        if (limit == 0) {
             return 0;
+        }
         return (int)((((usage * 100) / limit) / percentUsageMinDelta) * percentUsageMinDelta);
     }
 
@@ -337,16 +345,16 @@ public class UsageManager implements Service {
         if (oldPercentUsage >= 100 && newPercentUsage < 100) {
             synchronized (usageMutex) {
                 usageMutex.notifyAll();
-                for (Iterator iter = new ArrayList<Runnable>(callbacks).iterator(); iter.hasNext();) {
-                    Runnable callback = (Runnable)iter.next();
+                for (Iterator<Runnable> iter = new ArrayList<Runnable>(callbacks).iterator(); iter.hasNext();) {
+                    Runnable callback = iter.next();
                     callback.run();
                 }
                 callbacks.clear();
             }
         }
         // Let the listeners know
-        for (Iterator iter = listeners.iterator(); iter.hasNext();) {
-            UsageListener l = (UsageListener)iter.next();
+        for (Iterator<UsageListener> iter = listeners.iterator(); iter.hasNext();) {
+            UsageListener l = iter.next();
             l.onMemoryUseChanged(this, oldPercentUsage, newPercentUsage);
         }
     }

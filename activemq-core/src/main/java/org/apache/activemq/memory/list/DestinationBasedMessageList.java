@@ -42,7 +42,7 @@ import org.apache.activemq.memory.buffer.OrderBasedMessageBuffer;
 public class DestinationBasedMessageList implements MessageList {
 
     private MessageBuffer messageBuffer;
-    private Map queueIndex = new HashMap();
+    private Map<ActiveMQDestination, MessageQueue> queueIndex = new HashMap<ActiveMQDestination, MessageQueue>();
     private DestinationMap subscriptionIndex = new DestinationMap();
     private Object lock = new Object();
 
@@ -59,7 +59,7 @@ public class DestinationBasedMessageList implements MessageList {
         ActiveMQDestination destination = message.getDestination();
         MessageQueue queue = null;
         synchronized (lock) {
-            queue = (MessageQueue) queueIndex.get(destination);
+            queue = queueIndex.get(destination);
             if (queue == null) {
                 queue = messageBuffer.createMessageQueue();
                 queueIndex.put(destination, queue);

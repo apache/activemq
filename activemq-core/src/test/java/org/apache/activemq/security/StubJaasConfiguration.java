@@ -22,13 +22,13 @@ import javax.security.auth.login.Configuration;
 
 public class StubJaasConfiguration extends Configuration {
     private AppConfigurationEntry configEntry;
-    
+
     public StubJaasConfiguration(AppConfigurationEntry configEntry) {
         this.configEntry = configEntry;
     }
-    
+
     public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
-        return new AppConfigurationEntry[] { configEntry };
+        return new AppConfigurationEntry[] {configEntry};
     }
 
     public void refresh() {

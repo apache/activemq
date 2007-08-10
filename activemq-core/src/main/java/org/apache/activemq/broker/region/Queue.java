@@ -76,12 +76,12 @@ public class Queue implements Destination, Task {
 
     private final Log log;
     private final ActiveMQDestination destination;
-    private final List consumers = new CopyOnWriteArrayList();
+    private final List<Subscription> consumers = new CopyOnWriteArrayList<Subscription>();
     private final Valve dispatchValve = new Valve(true);
     private final UsageManager usageManager;
     private final DestinationStatistics destinationStatistics = new DestinationStatistics();
     private PendingMessageCursor messages;
-    private final LinkedList pagedInMessages = new LinkedList();
+    private final LinkedList<MessageReference> pagedInMessages = new LinkedList<MessageReference>();
     private LockOwner exclusiveOwner;
     private MessageGroupMap messageGroupOwners;
 
@@ -96,7 +96,16 @@ public class Queue implements Destination, Task {
     private final Object exclusiveLockMutex = new Object();
     private final Object doDispatchMutex = new Object();
     private TaskRunner taskRunner;
-    private boolean started;
+    
+    private final LinkedList<Runnable> messagesWaitingForSpace = new LinkedList<Runnable>();
+    private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
+        public void run() {
+            try {
+                taskRunner.wakeup();
+            } catch (InterruptedException e) {
+            }
+        };
+    };
 
     public Queue(Broker broker, ActiveMQDestination destination, final UsageManager memoryManager, MessageStore store, DestinationStatistics parentStats,
                  TaskRunnerFactory taskFactory, Store tmpStore) throws Exception {
@@ -161,9 +170,6 @@ public class Queue implements Destination, Task {
                         throw new RuntimeException("Should not be called.");
                     }
 
-                    public void finished() {
-                    }
-
                     public boolean hasSpace() {
                         return true;
                     }
@@ -183,10 +189,12 @@ public class Queue implements Destination, Task {
      */
     public boolean lock(MessageReference node, LockOwner lockOwner) {
         synchronized (exclusiveLockMutex) {
-            if (exclusiveOwner == lockOwner)
+            if (exclusiveOwner == lockOwner) {
                 return true;
-            if (exclusiveOwner != null)
+            }
+            if (exclusiveOwner != null) {
                 return false;
+            }
         }
         return true;
     }
@@ -225,7 +233,7 @@ public class Queue implements Destination, Task {
                 synchronized (pagedInMessages) {
                     // Add all the matching messages in the queue to the
                     // subscription.
-                    for (Iterator i = pagedInMessages.iterator(); i.hasNext();) {
+                    for (Iterator<MessageReference> i = pagedInMessages.iterator(); i.hasNext();) {
                         QueueMessageReference node = (QueueMessageReference)i.next();
                         if (node.isDropped()) {
                             continue;
@@ -269,11 +277,12 @@ public class Queue implements Destination, Task {
                         // Find the exclusive consumer with the higest Lock
                         // Priority.
                         exclusiveOwner = null;
-                        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-                            Subscription s = (Subscription)iter.next();
+                        for (Iterator<Subscription> iter = consumers.iterator(); iter.hasNext();) {
+                            Subscription s = iter.next();
                             LockOwner so = (LockOwner)s;
-                            if (s.getConsumerInfo().isExclusive() && (exclusiveOwner == null || so.getLockPriority() > exclusiveOwner.getLockPriority()))
+                            if (s.getConsumerInfo().isExclusive() && (exclusiveOwner == null || so.getLockPriority() > exclusiveOwner.getLockPriority())) {
                                 exclusiveOwner = so;
+                            }
                         }
                     }
                 }
@@ -299,9 +308,9 @@ public class Queue implements Destination, Task {
                     msgContext.setDestination(destination);
 
                     // lets copy the messages to dispatch to avoid deadlock
-                    List messagesToDispatch = new ArrayList();
+                    List<QueueMessageReference> messagesToDispatch = new ArrayList<QueueMessageReference>();
                     synchronized (pagedInMessages) {
-                        for (Iterator i = pagedInMessages.iterator(); i.hasNext();) {
+                        for (Iterator<MessageReference> i = pagedInMessages.iterator(); i.hasNext();) {
                             QueueMessageReference node = (QueueMessageReference)i.next();
                             if (node.isDropped()) {
                                 continue;
@@ -318,8 +327,8 @@ public class Queue implements Destination, Task {
 
                     // now lets dispatch from the copy of the collection to
                     // avoid deadlocks
-                    for (Iterator iter = messagesToDispatch.iterator(); iter.hasNext();) {
-                        QueueMessageReference node = (QueueMessageReference)iter.next();
+                    for (Iterator<QueueMessageReference> iter = messagesToDispatch.iterator(); iter.hasNext();) {
+                        QueueMessageReference node = iter.next();
                         node.incrementRedeliveryCounter();
                         node.unlock();
                         msgContext.setMessageReference(node);
@@ -334,16 +343,6 @@ public class Queue implements Destination, Task {
         }
 
     }
-
-    private final LinkedList<Runnable> messagesWaitingForSpace = new LinkedList<Runnable>();
-    private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
-        public void run() {
-            try {
-                taskRunner.wakeup();
-            } catch (InterruptedException e) {
-            }
-        };
-    };
 
     public void send(final ProducerBrokerExchange producerExchange, final Message message) throws Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
@@ -419,8 +418,9 @@ public class Queue implements Destination, Task {
                 // control at the broker
                 // by blocking this thread until there is space available.
                 while (!usageManager.waitForSpace(1000)) {
-                    if (context.getStopping().get())
+                    if (context.getStopping().get()) {
                         throw new IOException("Connection closed, send aborted.");
+                    }
                 }
 
                 // The usage manager could have delayed us by the time
@@ -508,7 +508,7 @@ public class Queue implements Destination, Task {
 
     public void gc() {
         synchronized (pagedInMessages) {
-            for (Iterator i = pagedInMessages.iterator(); i.hasNext();) {
+            for (Iterator<MessageReference> i = pagedInMessages.iterator(); i.hasNext();) {
                 // Remove dropped messages from the queue.
                 QueueMessageReference node = (QueueMessageReference)i.next();
                 if (node.isDropped()) {
@@ -557,7 +557,6 @@ public class Queue implements Destination, Task {
     }
 
     public void start() throws Exception {
-        started = true;
         if (usageManager != null) {
             usageManager.start();
         }
@@ -566,7 +565,6 @@ public class Queue implements Destination, Task {
     }
 
     public void stop() throws Exception {
-        started = false;
         if (taskRunner != null) {
             taskRunner.shutdown();
         }
@@ -652,15 +650,15 @@ public class Queue implements Destination, Task {
     }
 
     public Message[] browse() {
-        ArrayList l = new ArrayList();
+        List<Message> l = new ArrayList<Message>();
         try {
             doPageIn(true);
         } catch (Exception e) {
             log.error("caught an exception browsing " + this, e);
         }
         synchronized (pagedInMessages) {
-            for (Iterator i = pagedInMessages.iterator(); i.hasNext();) {
-                MessageReference r = (MessageReference)i.next();
+            for (Iterator<MessageReference> i = pagedInMessages.iterator(); i.hasNext();) {
+                MessageReference r = i.next();
                 r.incrementReferenceCount();
                 try {
                     Message m = r.getMessage();
@@ -698,7 +696,7 @@ public class Queue implements Destination, Task {
             }
         }
 
-        return (Message[])l.toArray(new Message[l.size()]);
+        return l.toArray(new Message[l.size()]);
     }
 
     public Message getMessage(String messageId) {
@@ -737,7 +735,7 @@ public class Queue implements Destination, Task {
 
         synchronized (pagedInMessages) {
             ConnectionContext c = createConnectionContext();
-            for (Iterator i = pagedInMessages.iterator(); i.hasNext();) {
+            for (Iterator<MessageReference> i = pagedInMessages.iterator(); i.hasNext();) {
                 try {
                     QueueMessageReference r = (QueueMessageReference)i.next();
 
@@ -798,7 +796,7 @@ public class Queue implements Destination, Task {
         int counter = 0;
         synchronized (pagedInMessages) {
             ConnectionContext c = createConnectionContext();
-            for (Iterator i = pagedInMessages.iterator(); i.hasNext();) {
+            for (Iterator<MessageReference> i = pagedInMessages.iterator(); i.hasNext();) {
                 IndirectMessageReference r = (IndirectMessageReference)i.next();
                 if (filter.evaluate(c, r)) {
                     removeMessage(c, r);
@@ -848,8 +846,8 @@ public class Queue implements Destination, Task {
         pageInMessages();
         int counter = 0;
         synchronized (pagedInMessages) {
-            for (Iterator i = pagedInMessages.iterator(); i.hasNext();) {
-                MessageReference r = (MessageReference)i.next();
+            for (Iterator<MessageReference> i = pagedInMessages.iterator(); i.hasNext();) {
+                MessageReference r = i.next();
                 if (filter.evaluate(context, r)) {
                     r.incrementReferenceCount();
                     try {
@@ -899,7 +897,7 @@ public class Queue implements Destination, Task {
         pageInMessages();
         int counter = 0;
         synchronized (pagedInMessages) {
-            for (Iterator i = pagedInMessages.iterator(); i.hasNext();) {
+            for (Iterator<MessageReference> i = pagedInMessages.iterator(); i.hasNext();) {
                 IndirectMessageReference r = (IndirectMessageReference)i.next();
                 if (filter.evaluate(context, r)) {
                     // We should only move messages that can be locked.
@@ -995,20 +993,20 @@ public class Queue implements Destination, Task {
         pageInMessages(false);
     }
 
-    private List doPageIn() throws Exception {
+    private List<MessageReference> doPageIn() throws Exception {
         return doPageIn(true);
     }
 
-    private List doPageIn(boolean force) throws Exception {
+    private List<MessageReference> doPageIn(boolean force) throws Exception {
 
         final int toPageIn = maximumPagedInMessages - pagedInMessages.size();
-        List result = null;
+        List<MessageReference> result = null;
         if ((force || !consumers.isEmpty()) && toPageIn > 0) {
             messages.setMaxBatchSize(toPageIn);
             try {
                 dispatchValve.increment();
                 int count = 0;
-                result = new ArrayList(toPageIn);
+                result = new ArrayList<MessageReference>(toPageIn);
                 synchronized (messages) {
 
                     try {
@@ -1040,12 +1038,12 @@ public class Queue implements Destination, Task {
         return result;
     }
 
-    private void doDispatch(List list) throws Exception {
+    private void doDispatch(List<MessageReference> list) throws Exception {
         if (list != null && !list.isEmpty()) {
             try {
                 dispatchValve.increment();
                 for (int i = 0; i < list.size(); i++) {
-                    MessageReference node = (MessageReference)list.get(i);
+                    MessageReference node = list.get(i);
                     queueMsgConext.setDestination(destination);
                     queueMsgConext.setMessageReference(node);
                     dispatchPolicy.dispatch(node, queueMsgConext, consumers);

@@ -212,9 +212,9 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
         return new CommandMarshaller(wireFormat);
     }
 
-    protected ListContainer getListContainer(Object id, String containerName) throws IOException {
+    protected ListContainer<TopicSubAck> getListContainer(Object id, String containerName) throws IOException {
         Store store = getStore();
-        ListContainer container = store.getListContainer(id, containerName);
+        ListContainer<TopicSubAck> container = store.getListContainer(id, containerName);
         container.setMarshaller(createMessageMarshaller());
         container.load();
         return container;

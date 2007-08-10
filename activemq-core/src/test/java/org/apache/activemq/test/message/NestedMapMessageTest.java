@@ -30,7 +30,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * 
  * @version $Revision$
  */
 public class NestedMapMessageTest extends JmsTopicSendReceiveWithTwoConnectionsAndEmbeddedBrokerTest {
@@ -40,12 +39,12 @@ public class NestedMapMessageTest extends JmsTopicSendReceiveWithTwoConnectionsA
     protected void assertMessageValid(int index, Message message) throws JMSException {
         assertTrue("Should be a MapMessage: " + message, message instanceof MapMessage);
 
-        MapMessage mapMessage = (MapMessage) message;
+        MapMessage mapMessage = (MapMessage)message;
 
         Object value = mapMessage.getObject("textField");
         assertEquals("textField", data[index], value);
 
-        Map map = (Map) mapMessage.getObject("mapField");
+        Map map = (Map)mapMessage.getObject("mapField");
         assertNotNull(map);
         assertEquals("mapField.a", "foo", map.get("a"));
         assertEquals("mapField.b", Integer.valueOf(23), map.get("b"));
@@ -53,18 +52,18 @@ public class NestedMapMessageTest extends JmsTopicSendReceiveWithTwoConnectionsA
 
         value = map.get("d");
         assertTrue("mapField.d should be a Map", value instanceof Map);
-        map = (Map) value;
+        map = (Map)value;
 
         assertEquals("mapField.d.x", "abc", map.get("x"));
         value = map.get("y");
         assertTrue("mapField.d.y is a List", value instanceof List);
-        List list = (List) value;
+        List list = (List)value;
         LOG.debug("mapField.d.y: " + list);
         assertEquals("listField.size", 3, list.size());
 
         LOG.debug("Found map: " + map);
 
-        list = (List) mapMessage.getObject("listField");
+        list = (List)mapMessage.getObject("listField");
         LOG.debug("listField: " + list);
         assertEquals("listField.size", 3, list.size());
         assertEquals("listField[0]", "a", list.get(0));
@@ -79,7 +78,7 @@ public class NestedMapMessageTest extends JmsTopicSendReceiveWithTwoConnectionsA
 
         Map grandChildMap = new HashMap();
         grandChildMap.put("x", "abc");
-        grandChildMap.put("y", Arrays.asList(new Object[] { "a", "b", "c" }));
+        grandChildMap.put("y", Arrays.asList(new Object[] {"a", "b", "c"}));
 
         Map nestedMap = new HashMap();
         nestedMap.put("a", "foo");
@@ -88,7 +87,7 @@ public class NestedMapMessageTest extends JmsTopicSendReceiveWithTwoConnectionsA
         nestedMap.put("d", grandChildMap);
 
         answer.setObject("mapField", nestedMap);
-        answer.setObject("listField", Arrays.asList(new Object[] { "a", "b", "c" }));
+        answer.setObject("listField", Arrays.asList(new Object[] {"a", "b", "c"}));
 
         return answer;
     }

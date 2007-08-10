@@ -27,7 +27,8 @@ public class CacheEntryList {
     public final CacheEntry tail = new CacheEntry(null, null);
 
     public CacheEntryList() {
-        tail.next = tail.previous = tail;
+        tail.next = tail;
+        tail.previous = tail;
     }
 
     public void add(CacheEntry ce) {
@@ -48,7 +49,8 @@ public class CacheEntryList {
 
     public void clear() {
         synchronized (tail) {
-            tail.next = tail.previous = tail;
+            tail.next = tail;
+            tail.previous = tail;
         }
     }
 

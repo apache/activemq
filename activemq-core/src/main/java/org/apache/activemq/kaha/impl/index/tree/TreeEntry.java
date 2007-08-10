@@ -56,7 +56,8 @@ class TreeEntry implements Comparable {
     }
 
     void reset() {
-        prevPageId = nextPageId = NOT_SET;
+        prevPageId = NOT_SET;
+        nextPageId = NOT_SET;
     }
 
     TreeEntry copy() {

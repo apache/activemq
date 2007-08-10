@@ -27,13 +27,14 @@ public class NoLocalExpression implements BooleanExpression {
     private final String connectionId;
 
     public NoLocalExpression(String connectionId) {
-        this.connectionId = connectionId;        
+        this.connectionId = connectionId;
     }
-    
+
     public boolean matches(MessageEvaluationContext message) throws JMSException {
         try {
-            if( message.isDropped() )
+            if (message.isDropped()) {
                 return false;
+            }
             return !connectionId.equals(message.getMessage().getMessageId().getProducerId().getConnectionId());
         } catch (IOException e) {
             throw JMSExceptionSupport.create(e);

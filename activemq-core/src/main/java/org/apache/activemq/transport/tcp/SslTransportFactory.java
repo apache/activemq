@@ -57,11 +57,12 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: $
  */
 public class SslTransportFactory extends TcpTransportFactory {
-    // The context used to creat ssl sockets.
-    private SSLContext sslContext = null;
-
     // The log this uses.,
     private static final Log LOG = LogFactory.getLog(SslTransportFactory.class);
+
+    // The context used to creat ssl sockets.
+    private SSLContext sslContext;
+
 
     /**
      * Constructor. Nothing special.

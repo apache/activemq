@@ -37,14 +37,16 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class SlowConsumerTest extends TestCase {
-    private static final Log LOG = LogFactory.getLog(SlowConsumerTest.class);
-    private Socket stompSocket;
-    private ByteArrayOutputStream inputBuffer;
 
+    private static final Log LOG = LogFactory.getLog(SlowConsumerTest.class);
     private static final int MESSAGES_COUNT = 10000;
-    private int messagesCount;
+
     protected int messageLogFrequency = 2500;
     protected long messageReceiveTimeout = 10000L;
+
+    private Socket stompSocket;
+    private ByteArrayOutputStream inputBuffer;
+    private int messagesCount;
 
     /**
      * @param args

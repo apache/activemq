@@ -50,7 +50,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
     private static final Log LOG = LogFactory.getLog(PrefetchSubscription.class);
     protected PendingMessageCursor pending;
-    protected final LinkedList dispatched = new LinkedList();
+    protected final LinkedList<MessageReference> dispatched = new LinkedList<MessageReference>();
     protected int prefetchExtension;
     protected long enqueueCounter;
     protected long dispatchCounter;
@@ -158,8 +158,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             // acknowledgment.
             int index = 0;
             boolean inAckRange = false;
-            for (Iterator iter = dispatched.iterator(); iter.hasNext();) {
-                final MessageReference node = (MessageReference)iter.next();
+            for (Iterator<MessageReference> iter = dispatched.iterator(); iter.hasNext();) {
+                final MessageReference node = iter.next();
                 MessageId messageId = node.getMessageId();
                 if (ack.getFirstMessageId() == null || ack.getFirstMessageId().equals(messageId)) {
                     inAckRange = true;
@@ -219,8 +219,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             // Acknowledge all dispatched messages up till the message id of the
             // acknowledgment.
             int index = 0;
-            for (Iterator iter = dispatched.iterator(); iter.hasNext(); index++) {
-                final MessageReference node = (MessageReference)iter.next();
+            for (Iterator<MessageReference> iter = dispatched.iterator(); iter.hasNext(); index++) {
+                final MessageReference node = iter.next();
                 if (ack.getLastMessageId().equals(node.getMessageId())) {
                     prefetchExtension = Math.max(prefetchExtension, index + 1);
                     callDispatchMatched = true;
@@ -233,14 +233,15 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         } else if (ack.isPoisonAck()) {
             // TODO: what if the message is already in a DLQ???
             // Handle the poison ACK case: we need to send the message to a DLQ
-            if (ack.isInTransaction())
+            if (ack.isInTransaction()) {
                 throw new JMSException("Poison ack cannot be transacted: " + ack);
+            }
             // Acknowledge all dispatched messages up till the message id of the
             // acknowledgment.
             int index = 0;
             boolean inAckRange = false;
-            for (Iterator iter = dispatched.iterator(); iter.hasNext();) {
-                final MessageReference node = (MessageReference)iter.next();
+            for (Iterator<MessageReference> iter = dispatched.iterator(); iter.hasNext();) {
+                final MessageReference node = iter.next();
                 MessageId messageId = node.getMessageId();
                 if (ack.getFirstMessageId() == null || ack.getFirstMessageId().equals(messageId)) {
                     inAckRange = true;
@@ -380,8 +381,9 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     pending.reset();
                     while (pending.hasNext() && !isFull() && count < numberToDispatch) {
                         MessageReference node = pending.next();
-                        if (node == null)
+                        if (node == null) {
                             break;
+                        }
                         if (canDispatch(node)) {
                             pending.remove();
                             // Message may have been sitting in the pending list

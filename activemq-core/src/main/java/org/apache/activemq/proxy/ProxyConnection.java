@@ -66,8 +66,9 @@ class ProxyConnection implements Service {
                 }
                 try {
                     remoteTransport.oneway(command);
-                    if (shutdown)
+                    if (shutdown) {
                         stop();
+                    }
                 } catch (IOException error) {
                     onFailure(error);
                 } catch (Exception error) {

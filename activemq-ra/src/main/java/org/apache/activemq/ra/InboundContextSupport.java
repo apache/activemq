@@ -26,7 +26,7 @@ package org.apache.activemq.ra;
  * @version $Revision$
  */
 public class InboundContextSupport {
-    private static final ThreadLocal threadLocal = new ThreadLocal();
+    private static final ThreadLocal<InboundContext> threadLocal = new ThreadLocal<InboundContext>();
 
     /**
      * Returns the current {@link InboundContext} used by the current thread which is processing a message.
@@ -36,7 +36,7 @@ public class InboundContextSupport {
      * @return
      */
     public static InboundContext getActiveSessionAndProducer() {
-        return (InboundContext) threadLocal.get();
+        return threadLocal.get();
     }
 
 

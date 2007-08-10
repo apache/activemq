@@ -66,9 +66,9 @@ public class ProtocolConverter {
     private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
     private final LongSequenceGenerator transactionIdGenerator = new LongSequenceGenerator();
 
-    private final ConcurrentHashMap resposeHandlers = new ConcurrentHashMap();
-    private final ConcurrentHashMap subscriptionsByConsumerId = new ConcurrentHashMap();
-    private final Map transactions = new ConcurrentHashMap();
+    private final ConcurrentHashMap<Integer, ResponseHandler> resposeHandlers = new ConcurrentHashMap<Integer, ResponseHandler>();
+    private final ConcurrentHashMap<ConsumerId, StompSubscription> subscriptionsByConsumerId = new ConcurrentHashMap<ConsumerId, StompSubscription>();
+    private final Map<String, LocalTransactionId> transactions = new ConcurrentHashMap<String, LocalTransactionId>();
     private final StompTransportFilter transportFilter;
 
     private final Object commnadIdMutex = new Object();
@@ -88,14 +88,14 @@ public class ProtocolConverter {
     }
 
     protected ResponseHandler createResponseHandler(StompFrame command) {
-        final String receiptId = (String)command.getHeaders().get(Stomp.Headers.RECEIPT_REQUESTED);
+        final String receiptId = command.getHeaders().get(Stomp.Headers.RECEIPT_REQUESTED);
         // A response may not be needed.
         if (receiptId != null) {
             return new ResponseHandler() {
                 public void onResponse(ProtocolConverter converter, Response response) throws IOException {
                     StompFrame sc = new StompFrame();
                     sc.setAction(Stomp.Responses.RECEIPT);
-                    sc.setHeaders(new HashMap(1));
+                    sc.setHeaders(new HashMap<String, String>(1));
                     sc.getHeaders().put(Stomp.Headers.Response.RECEIPT_ID, receiptId);
                     transportFilter.sendToStomp(sc);
                 }
@@ -160,10 +160,10 @@ public class ProtocolConverter {
             e.printStackTrace(stream);
             stream.close();
 
-            HashMap headers = new HashMap();
+            HashMap<String, String> headers = new HashMap<String, String>();
             headers.put(Stomp.Headers.Error.MESSAGE, e.getMessage());
 
-            final String receiptId = (String)command.getHeaders().get(Stomp.Headers.RECEIPT_REQUESTED);
+            final String receiptId = command.getHeaders().get(Stomp.Headers.RECEIPT_REQUESTED);
             if (receiptId != null) {
                 headers.put(Stomp.Headers.Response.RECEIPT_ID, receiptId);
             }
@@ -180,8 +180,8 @@ public class ProtocolConverter {
     protected void onStompSend(StompFrame command) throws IOException, JMSException {
         checkConnected();
 
-        Map headers = command.getHeaders();
-        String stompTx = (String)headers.get(Stomp.Headers.TRANSACTION);
+        Map<String, String> headers = command.getHeaders();
+        String stompTx = headers.get(Stomp.Headers.TRANSACTION);
 
         ActiveMQMessage message = convertMessage(command);
 
@@ -191,7 +191,7 @@ public class ProtocolConverter {
         message.setJMSTimestamp(System.currentTimeMillis());
 
         if (stompTx != null) {
-            TransactionId activemqTx = (TransactionId)transactions.get(stompTx);
+            TransactionId activemqTx = transactions.get(stompTx);
             if (activemqTx == null) {
                 throw new ProtocolException("Invalid transaction id: " + stompTx);
             }
@@ -212,24 +212,24 @@ public class ProtocolConverter {
         // on the same stomp connection. For example, when 2 subs are created on
         // the same topic.
 
-        Map headers = command.getHeaders();
-        String messageId = (String)headers.get(Stomp.Headers.Ack.MESSAGE_ID);
+        Map<String, String> headers = command.getHeaders();
+        String messageId = headers.get(Stomp.Headers.Ack.MESSAGE_ID);
         if (messageId == null) {
             throw new ProtocolException("ACK received without a message-id to acknowledge!");
         }
 
         TransactionId activemqTx = null;
-        String stompTx = (String)headers.get(Stomp.Headers.TRANSACTION);
+        String stompTx = headers.get(Stomp.Headers.TRANSACTION);
         if (stompTx != null) {
-            activemqTx = (TransactionId)transactions.get(stompTx);
+            activemqTx = transactions.get(stompTx);
             if (activemqTx == null) {
                 throw new ProtocolException("Invalid transaction id: " + stompTx);
             }
         }
 
         boolean acked = false;
-        for (Iterator iter = subscriptionsByConsumerId.values().iterator(); iter.hasNext();) {
-            StompSubscription sub = (StompSubscription)iter.next();
+        for (Iterator<StompSubscription> iter = subscriptionsByConsumerId.values().iterator(); iter.hasNext();) {
+            StompSubscription sub = iter.next();
             MessageAck ack = sub.onStompMessageAck(messageId);
             if (ack != null) {
                 ack.setTransactionId(activemqTx);
@@ -248,9 +248,9 @@ public class ProtocolConverter {
     protected void onStompBegin(StompFrame command) throws ProtocolException {
         checkConnected();
 
-        Map headers = command.getHeaders();
+        Map<String, String> headers = command.getHeaders();
 
-        String stompTx = (String)headers.get(Stomp.Headers.TRANSACTION);
+        String stompTx = headers.get(Stomp.Headers.TRANSACTION);
 
         if (!headers.containsKey(Stomp.Headers.TRANSACTION)) {
             throw new ProtocolException("Must specify the transaction you are beginning");
@@ -275,14 +275,14 @@ public class ProtocolConverter {
     protected void onStompCommit(StompFrame command) throws ProtocolException {
         checkConnected();
 
-        Map headers = command.getHeaders();
+        Map<String, String> headers = command.getHeaders();
 
-        String stompTx = (String)headers.get(Stomp.Headers.TRANSACTION);
+        String stompTx = headers.get(Stomp.Headers.TRANSACTION);
         if (stompTx == null) {
             throw new ProtocolException("Must specify the transaction you are committing");
         }
 
-        TransactionId activemqTx = (TransactionId)transactions.remove(stompTx);
+        TransactionId activemqTx = transactions.remove(stompTx);
         if (activemqTx == null) {
             throw new ProtocolException("Invalid transaction id: " + stompTx);
         }
@@ -297,14 +297,14 @@ public class ProtocolConverter {
 
     protected void onStompAbort(StompFrame command) throws ProtocolException {
         checkConnected();
-        Map headers = command.getHeaders();
+        Map<String, String> headers = command.getHeaders();
 
-        String stompTx = (String)headers.get(Stomp.Headers.TRANSACTION);
+        String stompTx = headers.get(Stomp.Headers.TRANSACTION);
         if (stompTx == null) {
             throw new ProtocolException("Must specify the transaction you are committing");
         }
 
-        TransactionId activemqTx = (TransactionId)transactions.remove(stompTx);
+        TransactionId activemqTx = transactions.remove(stompTx);
         if (activemqTx == null) {
             throw new ProtocolException("Invalid transaction id: " + stompTx);
         }
@@ -320,10 +320,10 @@ public class ProtocolConverter {
 
     protected void onStompSubscribe(StompFrame command) throws ProtocolException {
         checkConnected();
-        Map headers = command.getHeaders();
+        Map<String, String> headers = command.getHeaders();
 
-        String subscriptionId = (String)headers.get(Stomp.Headers.Subscribe.ID);
-        String destination = (String)headers.get(Stomp.Headers.Subscribe.DESTINATION);
+        String subscriptionId = headers.get(Stomp.Headers.Subscribe.ID);
+        String destination = headers.get(Stomp.Headers.Subscribe.DESTINATION);
 
         ActiveMQDestination actualDest = frameTranslator.convertDestination(destination);
         ConsumerId id = new ConsumerId(sessionId, consumerIdGenerator.getNextSequenceId());
@@ -331,7 +331,7 @@ public class ProtocolConverter {
         consumerInfo.setPrefetchSize(1000);
         consumerInfo.setDispatchAsync(true);
 
-        String selector = (String)headers.remove(Stomp.Headers.Subscribe.SELECTOR);
+        String selector = headers.remove(Stomp.Headers.Subscribe.SELECTOR);
         consumerInfo.setSelector(selector);
 
         IntrospectionSupport.setProperties(consumerInfo, headers, "activemq.");
@@ -341,7 +341,7 @@ public class ProtocolConverter {
         StompSubscription stompSubscription = new StompSubscription(this, subscriptionId, consumerInfo);
         stompSubscription.setDestination(actualDest);
 
-        String ackMode = (String)headers.get(Stomp.Headers.Subscribe.ACK_MODE);
+        String ackMode = headers.get(Stomp.Headers.Subscribe.ACK_MODE);
         if (Stomp.Headers.Subscribe.AckModeValues.CLIENT.equals(ackMode)) {
             stompSubscription.setAckMode(StompSubscription.CLIENT_ACK);
         } else {
@@ -355,7 +355,7 @@ public class ProtocolConverter {
 
     protected void onStompUnsubscribe(StompFrame command) throws ProtocolException {
         checkConnected();
-        Map headers = command.getHeaders();
+        Map<String, String> headers = command.getHeaders();
 
         ActiveMQDestination destination = null;
         Object o = headers.get(Stomp.Headers.Unsubscribe.DESTINATION);
@@ -363,7 +363,7 @@ public class ProtocolConverter {
             destination = frameTranslator.convertDestination((String)o);
         }
 
-        String subscriptionId = (String)headers.get(Stomp.Headers.Unsubscribe.ID);
+        String subscriptionId = headers.get(Stomp.Headers.Unsubscribe.ID);
 
         if (subscriptionId == null && destination == null) {
             throw new ProtocolException("Must specify the subscriptionId or the destination you are unsubscribing from");
@@ -374,8 +374,8 @@ public class ProtocolConverter {
         // are created with the same destination. Perhaps this should be
         // removed.
         //
-        for (Iterator iter = subscriptionsByConsumerId.values().iterator(); iter.hasNext();) {
-            StompSubscription sub = (StompSubscription)iter.next();
+        for (Iterator<StompSubscription> iter = subscriptionsByConsumerId.values().iterator(); iter.hasNext();) {
+            StompSubscription sub = iter.next();
             if ((subscriptionId != null && subscriptionId.equals(sub.getSubscriptionId())) || (destination != null && destination.equals(sub.getDestination()))) {
                 sendToActiveMQ(sub.getConsumerInfo().createRemoveCommand(), createResponseHandler(command));
                 iter.remove();
@@ -392,12 +392,12 @@ public class ProtocolConverter {
             throw new ProtocolException("Allready connected.");
         }
 
-        final Map headers = command.getHeaders();
+        final Map<String, String> headers = command.getHeaders();
 
         // allow anyone to login for now
-        String login = (String)headers.get(Stomp.Headers.Connect.LOGIN);
-        String passcode = (String)headers.get(Stomp.Headers.Connect.PASSCODE);
-        String clientId = (String)headers.get(Stomp.Headers.Connect.CLIENT_ID);
+        String login = headers.get(Stomp.Headers.Connect.LOGIN);
+        String passcode = headers.get(Stomp.Headers.Connect.PASSCODE);
+        String clientId = headers.get(Stomp.Headers.Connect.CLIENT_ID);
 
         final ConnectionInfo connectionInfo = new ConnectionInfo();
 
@@ -425,13 +425,13 @@ public class ProtocolConverter {
                     public void onResponse(ProtocolConverter converter, Response response) throws IOException {
 
                         connected.set(true);
-                        HashMap responseHeaders = new HashMap();
+                        HashMap<String, String> responseHeaders = new HashMap<String, String>();
 
                         responseHeaders.put(Stomp.Headers.Connected.SESSION, connectionInfo.getClientId());
-                        String requestId = (String)headers.get(Stomp.Headers.Connect.REQUEST_ID);
+                        String requestId = headers.get(Stomp.Headers.Connect.REQUEST_ID);
                         if (requestId == null) {
                             // TODO legacy
-                            requestId = (String)headers.get(Stomp.Headers.RECEIPT_REQUESTED);
+                            requestId = headers.get(Stomp.Headers.RECEIPT_REQUESTED);
                         }
                         if (requestId != null) {
                             // TODO legacy
@@ -473,7 +473,7 @@ public class ProtocolConverter {
         if (command.isResponse()) {
 
             Response response = (Response)command;
-            ResponseHandler rh = (ResponseHandler)resposeHandlers.remove(Integer.valueOf(response.getCorrelationId()));
+            ResponseHandler rh = resposeHandlers.remove(Integer.valueOf(response.getCorrelationId()));
             if (rh != null) {
                 rh.onResponse(this, response);
             }
@@ -481,7 +481,7 @@ public class ProtocolConverter {
         } else if (command.isMessageDispatch()) {
 
             MessageDispatch md = (MessageDispatch)command;
-            StompSubscription sub = (StompSubscription)subscriptionsByConsumerId.get(md.getConsumerId());
+            StompSubscription sub = subscriptionsByConsumerId.get(md.getConsumerId());
             if (sub != null) {
                 sub.onMessageDispatch(md);
             }

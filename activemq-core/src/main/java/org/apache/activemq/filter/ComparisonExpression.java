@@ -18,6 +18,7 @@ package org.apache.activemq.filter;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.jms.JMSException;
@@ -29,16 +30,23 @@ import javax.jms.JMSException;
  */
 public abstract class ComparisonExpression extends BinaryExpression implements BooleanExpression {
 
+    private static final Set<Character> REGEXP_CONTROL_CHARS = new HashSet<Character>();
+
+    /**
+     * @param left
+     * @param right
+     */
+    public ComparisonExpression(Expression left, Expression right) {
+        super(left, right);
+    }
+
     public static BooleanExpression createBetween(Expression value, Expression left, Expression right) {
-        return LogicExpression.createAND(createGreaterThanEqual(value, left), createLessThanEqual(value,
-                                                                                                  right));
+        return LogicExpression.createAND(createGreaterThanEqual(value, left), createLessThanEqual(value, right));
     }
 
     public static BooleanExpression createNotBetween(Expression value, Expression left, Expression right) {
         return LogicExpression.createOR(createLessThan(value, left), createGreaterThan(value, right));
     }
-
-    private static final HashSet REGEXP_CONTROL_CHARS = new HashSet();
 
     static {
         REGEXP_CONTROL_CHARS.add(Character.valueOf('.'));
@@ -138,9 +146,7 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
 
     public static BooleanExpression createLike(Expression left, String right, String escape) {
         if (escape != null && escape.length() != 1) {
-            throw new RuntimeException(
-                                       "The ESCAPE string litteral is invalid.  It can only be one character.  Litteral used: "
-                                           + escape);
+            throw new RuntimeException("The ESCAPE string litteral is invalid.  It can only be one character.  Litteral used: " + escape);
         }
         int c = -1;
         if (escape != null) {
@@ -156,16 +162,18 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
 
     public static BooleanExpression createInFilter(Expression left, List elements) {
 
-        if (!(left instanceof PropertyExpression))
+        if (!(left instanceof PropertyExpression)) {
             throw new RuntimeException("Expected a property for In expression, got: " + left);
+        }
         return UnaryExpression.createInExpression((PropertyExpression)left, elements, false);
 
     }
 
     public static BooleanExpression createNotInFilter(Expression left, List elements) {
 
-        if (!(left instanceof PropertyExpression))
+        if (!(left instanceof PropertyExpression)) {
             throw new RuntimeException("Expected a property for In expression, got: " + left);
+        }
         return UnaryExpression.createInExpression((PropertyExpression)left, elements, true);
 
     }
@@ -286,8 +294,9 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
     public static void checkLessThanOperand(Expression expr) {
         if (expr instanceof ConstantExpression) {
             Object value = ((ConstantExpression)expr).getValue();
-            if (value instanceof Number)
+            if (value instanceof Number) {
                 return;
+            }
 
             // Else it's boolean or a String..
             throw new RuntimeException("Value '" + expr + "' cannot be compared.");
@@ -306,33 +315,26 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
     public static void checkEqualOperand(Expression expr) {
         if (expr instanceof ConstantExpression) {
             Object value = ((ConstantExpression)expr).getValue();
-            if (value == null)
+            if (value == null) {
                 throw new RuntimeException("'" + expr + "' cannot be compared.");
+            }
         }
     }
 
     /**
-     * 
      * @param left
      * @param right
      */
     private static void checkEqualOperandCompatability(Expression left, Expression right) {
         if (left instanceof ConstantExpression && right instanceof ConstantExpression) {
-            if (left instanceof BooleanExpression && !(right instanceof BooleanExpression))
+            if (left instanceof BooleanExpression && !(right instanceof BooleanExpression)) {
                 throw new RuntimeException("'" + left + "' cannot be compared with '" + right + "'");
+            }
         }
     }
 
-    /**
-     * @param left
-     * @param right
-     */
-    public ComparisonExpression(Expression left, Expression right) {
-        super(left, right);
-    }
-
     public Object evaluate(MessageEvaluationContext message) throws JMSException {
-        Comparable lv = (Comparable)left.evaluate(message);
+        Comparable<Comparable> lv = (Comparable)left.evaluate(message);
         if (lv == null) {
             return null;
         }
@@ -344,8 +346,8 @@ public abstract class ComparisonExpression extends BinaryExpression implements B
     }
 
     protected Boolean compare(Comparable lv, Comparable rv) {
-        Class lc = lv.getClass();
-        Class rc = rv.getClass();
+        Class<? extends Comparable> lc = lv.getClass();
+        Class<? extends Comparable> rc = rv.getClass();
         // If the the objects are not of the same type,
         // try to convert up to allow the comparison.
         if (lc != rc) {

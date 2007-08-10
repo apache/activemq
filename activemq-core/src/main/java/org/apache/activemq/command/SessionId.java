@@ -70,10 +70,12 @@ public class SessionId implements DataStructure {
     }
 
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || o.getClass() != SessionId.class)
+        }
+        if (o == null || o.getClass() != SessionId.class) {
             return false;
+        }
         SessionId id = (SessionId)o;
         return value == id.value && connectionId.equals(id.connectionId);
     }

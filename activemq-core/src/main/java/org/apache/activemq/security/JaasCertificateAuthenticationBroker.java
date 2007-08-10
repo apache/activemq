@@ -33,69 +33,70 @@ import org.apache.activemq.jaas.JaasCertificateCallbackHandler;
 import org.apache.activemq.jaas.UserPrincipal;
 
 /**
- * A JAAS Authentication Broker that uses SSL Certificates.
- * 
- * This class will provide the JAAS framework with a JaasCertificateCallbackHandler that will grant JAAS access to
- *      incoming connections' SSL certificate chains. 
- * NOTE: There is a chance that the incoming connection does not have a valid certificate (has null).
+ * A JAAS Authentication Broker that uses SSL Certificates. This class will
+ * provide the JAAS framework with a JaasCertificateCallbackHandler that will
+ * grant JAAS access to incoming connections' SSL certificate chains. NOTE:
+ * There is a chance that the incoming connection does not have a valid
+ * certificate (has null).
  * 
  * @author sepandm@gmail.com (Sepand)
  */
 public class JaasCertificateAuthenticationBroker extends BrokerFilter {
     private final String jaasConfiguration;
-    
+
     /**
      * Simple constructor. Leaves everything to superclass.
      * 
      * @param next The Broker that does the actual work for this Filter.
-     * @param jassConfiguration The JAAS domain configuration name (refere to JAAS documentation).
+     * @param jassConfiguration The JAAS domain configuration name (refere to
+     *                JAAS documentation).
      */
     public JaasCertificateAuthenticationBroker(Broker next, String jaasConfiguration) {
         super(next);
-        
-        this.jaasConfiguration = jaasConfiguration; 
+
+        this.jaasConfiguration = jaasConfiguration;
     }
-    
+
     /**
      * Overridden to allow for authentication based on client certificates.
-     * 
-     * Connections being added will be authenticated based on their certificate chain and the JAAS module specified
-     *      through the JAAS framework.
-     * NOTE: The security context's username will be set to the first UserPrincipal created by the login module.
+     * Connections being added will be authenticated based on their certificate
+     * chain and the JAAS module specified through the JAAS framework. NOTE: The
+     * security context's username will be set to the first UserPrincipal
+     * created by the login module.
      * 
      * @param context The context for the incoming Connection.
-     * @param info The ConnectionInfo Command representing the incoming connection.
+     * @param info The ConnectionInfo Command representing the incoming
+     *                connection.
      */
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
 
         if (context.getSecurityContext() == null) {
-            if (!( info.getTransportContext() instanceof X509Certificate[] )) {
+            if (!(info.getTransportContext() instanceof X509Certificate[])) {
                 throw new SecurityException("Unable to authenticate transport without SSL certificate.");
             }
-            
-            // Set the TCCL since it seems JAAS needs it to find the login module classes.
+
+            // Set the TCCL since it seems JAAS needs it to find the login
+            // module classes.
             ClassLoader original = Thread.currentThread().getContextClassLoader();
             Thread.currentThread().setContextClassLoader(JaasAuthenticationBroker.class.getClassLoader());
             try {
                 // Do the login.
                 try {
-                    CallbackHandler callback =
-                        new JaasCertificateCallbackHandler((X509Certificate[])info.getTransportContext());
+                    CallbackHandler callback = new JaasCertificateCallbackHandler((X509Certificate[])info.getTransportContext());
                     LoginContext lc = new LoginContext(jaasConfiguration, callback);
                     lc.login();
                     Subject subject = lc.getSubject();
-                    
+
                     String dnName = "";
-                    
-                    for (Iterator iter = subject.getPrincipals().iterator(); iter.hasNext(); ) {
+
+                    for (Iterator iter = subject.getPrincipals().iterator(); iter.hasNext();) {
                         Principal nextPrincipal = (Principal)iter.next();
                         if (nextPrincipal instanceof UserPrincipal) {
                             dnName = ((UserPrincipal)nextPrincipal).getName();
                             break;
                         }
                     }
-                    SecurityContext s = new JaasCertificateSecurityContext(
-                        dnName, subject, (X509Certificate[])info.getTransportContext());
+                    SecurityContext s = new JaasCertificateSecurityContext(dnName, subject, (X509Certificate[])info.getTransportContext());
                     context.setSecurityContext(s);
                 } catch (Exception e) {
                     throw new SecurityException("User name or password is invalid: " + e.getMessage(), e);
@@ -106,13 +107,13 @@ public class JaasCertificateAuthenticationBroker extends BrokerFilter {
         }
         super.addConnection(context, info);
     }
-    
+
     /**
      * Overriding removeConnection to make sure the security context is cleaned.
      */
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
         super.removeConnection(context, info, error);
-        
+
         context.setSecurityContext(null);
     }
 }

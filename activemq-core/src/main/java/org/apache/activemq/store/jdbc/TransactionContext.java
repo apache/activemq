@@ -88,8 +88,9 @@ public class TransactionContext {
     }
 
     private void executeBatch(PreparedStatement p, String message) throws SQLException {
-        if (p == null)
+        if (p == null) {
             return;
+        }
 
         try {
             int[] rc = p.executeBatch();
@@ -143,19 +144,22 @@ public class TransactionContext {
     }
 
     public void begin() throws IOException {
-        if (inTx)
+        if (inTx) {
             throw new IOException("Already started.");
+        }
         inTx = true;
         connection = getConnection();
     }
 
     public void commit() throws IOException {
-        if (!inTx)
+        if (!inTx) {
             throw new IOException("Not started.");
+        }
         try {
             executeBatch();
-            if (!connection.getAutoCommit())
+            if (!connection.getAutoCommit()) {
                 connection.commit();
+            }
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("Commit failed: ", e);
             throw IOExceptionSupport.create(e);
@@ -166,8 +170,9 @@ public class TransactionContext {
     }
 
     public void rollback() throws IOException {
-        if (!inTx)
+        if (!inTx) {
             throw new IOException("Not started.");
+        }
         try {
             if (addMessageStatement != null) {
                 addMessageStatement.close();

@@ -18,6 +18,7 @@ package org.apache.activemq.memory;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.activemq.thread.Task;
@@ -30,15 +31,14 @@ public class CacheEvictionUsageListener implements UsageListener {
 
     private static final Log LOG = LogFactory.getLog(CacheEvictionUsageListener.class);
 
-    private final CopyOnWriteArrayList evictors = new CopyOnWriteArrayList();
+    private final List<CacheEvictor> evictors = new CopyOnWriteArrayList<CacheEvictor>();
     private final int usageHighMark;
     private final int usageLowMark;
 
     private final TaskRunner evictionTask;
     private final UsageManager usageManager;
 
-    public CacheEvictionUsageListener(UsageManager usageManager, int usageHighMark, int usageLowMark,
-                                      TaskRunnerFactory taskRunnerFactory) {
+    public CacheEvictionUsageListener(UsageManager usageManager, int usageHighMark, int usageLowMark, TaskRunnerFactory taskRunnerFactory) {
         this.usageManager = usageManager;
         this.usageHighMark = usageHighMark;
         this.usageLowMark = usageLowMark;
@@ -51,20 +51,18 @@ public class CacheEvictionUsageListener implements UsageListener {
 
     boolean evictMessages() {
         // Try to take the memory usage down below the low mark.
-        try {
-            LOG.debug("Evicting cache memory usage: " + usageManager.getPercentUsage());
+        LOG.debug("Evicting cache memory usage: " + usageManager.getPercentUsage());
 
-            LinkedList list = new LinkedList(evictors);
-            while (list.size() > 0 && usageManager.getPercentUsage() > usageLowMark) {
+        List<CacheEvictor> list = new LinkedList<CacheEvictor>(evictors);
+        while (list.size() > 0 && usageManager.getPercentUsage() > usageLowMark) {
 
-                // Evenly evict messages from all evictors
-                for (Iterator iter = list.iterator(); iter.hasNext();) {
-                    CacheEvictor evictor = (CacheEvictor)iter.next();
-                    if (evictor.evictCacheEntry() == null)
-                        iter.remove();
+            // Evenly evict messages from all evictors
+            for (Iterator<CacheEvictor> iter = list.iterator(); iter.hasNext();) {
+                CacheEvictor evictor = iter.next();
+                if (evictor.evictCacheEntry() == null) {
+                    iter.remove();
                 }
             }
-        } finally {
         }
         return false;
     }

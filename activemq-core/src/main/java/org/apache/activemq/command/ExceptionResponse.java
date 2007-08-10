@@ -22,9 +22,9 @@ package org.apache.activemq.command;
  */
 public class ExceptionResponse extends Response {
 
-    Throwable exception;
-
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.EXCEPTION_RESPONSE;
+
+    Throwable exception;
 
     public ExceptionResponse() {
     }

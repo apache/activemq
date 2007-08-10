@@ -37,12 +37,12 @@ public class MessageSendTest extends DataStructureTestSupport {
     }
 
     public void initCombosForTestMessageSendMarshaling() {
-        addCombinationValues("cacheEnabled", new Object[] { Boolean.TRUE, Boolean.FALSE });
+        addCombinationValues("cacheEnabled", new Object[] {Boolean.TRUE, Boolean.FALSE});
     }
 
     public void testMessageSendMarshaling() throws IOException {
         ActiveMQMessage message = new ActiveMQMessage();
-        message.setCommandId((short) 1);
+        message.setCommandId((short)1);
         message.setDestination(new ActiveMQQueue("queue"));
         message.setGroupID("group");
         message.setGroupSequence(4);
@@ -58,7 +58,7 @@ public class MessageSendTest extends DataStructureTestSupport {
         ActiveMQMessage message = new ActiveMQMessage();
         message.setProducerId(new ProducerId(new SessionId(new ConnectionId(new ConnectionId("test")), 1), 1));
         message.setMessageId(new MessageId(message.getProducerId(), 1));
-        message.setCommandId((short) 1);
+        message.setCommandId((short)1);
         message.setGroupID("group");
         message.setGroupSequence(4);
         message.setCorrelationId("correlation");

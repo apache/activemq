@@ -32,21 +32,20 @@ import org.apache.activemq.util.MarshallingSupport;
 import org.apache.activemq.wireformat.WireFormat;
 
 /**
- * 
  * @openwire:marshaller code="1"
  * @version $Revision$
  */
 public class WireFormatInfo implements Command, MarshallAware {
 
-    private static final int MAX_PROPERTY_SIZE = 1024 * 4;
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.WIREFORMAT_INFO;
+    private static final int MAX_PROPERTY_SIZE = 1024 * 4;
     private static final byte MAGIC[] = new byte[] {'A', 'c', 't', 'i', 'v', 'e', 'M', 'Q'};
 
     protected byte magic[] = MAGIC;
     protected int version;
     protected ByteSequence marshalledProperties;
 
-    protected transient Map properties;
+    protected transient Map<String, Object> properties;
     private transient Endpoint from;
     private transient Endpoint to;
 
@@ -126,17 +125,20 @@ public class WireFormatInfo implements Command, MarshallAware {
 
     public Object getProperty(String name) throws IOException {
         if (properties == null) {
-            if (marshalledProperties == null)
+            if (marshalledProperties == null) {
                 return null;
+            }
             properties = unmarsallProperties(marshalledProperties);
         }
         return properties.get(name);
     }
 
-    public Map getProperties() throws IOException {
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getProperties() throws IOException {
         if (properties == null) {
-            if (marshalledProperties == null)
+            if (marshalledProperties == null) {
                 return Collections.EMPTY_MAP;
+            }
             properties = unmarsallProperties(marshalledProperties);
         }
         return Collections.unmodifiableMap(properties);
@@ -155,7 +157,7 @@ public class WireFormatInfo implements Command, MarshallAware {
     protected void lazyCreateProperties() throws IOException {
         if (properties == null) {
             if (marshalledProperties == null) {
-                properties = new HashMap();
+                properties = new HashMap<String, Object>();
             } else {
                 properties = unmarsallProperties(marshalledProperties);
                 marshalledProperties = null;
@@ -163,10 +165,8 @@ public class WireFormatInfo implements Command, MarshallAware {
         }
     }
 
-    private Map unmarsallProperties(ByteSequence marshalledProperties) throws IOException {
-        return MarshallingSupport
-            .unmarshalPrimitiveMap(new DataInputStream(new ByteArrayInputStream(marshalledProperties)),
-                                   MAX_PROPERTY_SIZE);
+    private Map<String, Object> unmarsallProperties(ByteSequence marshalledProperties) throws IOException {
+        return MarshallingSupport.unmarshalPrimitiveMap(new DataInputStream(new ByteArrayInputStream(marshalledProperties)), MAX_PROPERTY_SIZE);
     }
 
     public void beforeMarshall(WireFormat wireFormat) throws IOException {
@@ -280,13 +280,12 @@ public class WireFormatInfo implements Command, MarshallAware {
     }
 
     public String toString() {
-        Map p = null;
+        Map<String, Object> p = null;
         try {
             p = getProperties();
-        } catch (IOException e) {
+        } catch (IOException ignore) {
         }
-        return "WireFormatInfo { version=" + version + ", properties=" + p + ", magic=" + toString(magic)
-               + "}";
+        return "WireFormatInfo { version=" + version + ", properties=" + p + ", magic=" + toString(magic) + "}";
     }
 
     private String toString(byte[] data) {

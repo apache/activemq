@@ -43,9 +43,8 @@ public class CompositeQueueTest extends EmbeddedBrokerTestSupport {
 
     private static final Log LOG = LogFactory.getLog(CompositeQueueTest.class);
     
-    private Connection connection;
-
     protected int total = 10;
+    private Connection connection;
 
 
     public void testVirtualTopicCreation() throws Exception {

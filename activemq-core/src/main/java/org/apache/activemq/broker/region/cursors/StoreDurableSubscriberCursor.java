@@ -45,7 +45,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     private int pendingCount;
     private String clientId;
     private String subscriberName;
-    private Map topics = new HashMap();
+    private Map<Destination, TopicStorePrefetch> topics = new HashMap<Destination, TopicStorePrefetch>();
     private LinkedList<PendingMessageCursor> storePrefetches = new LinkedList<PendingMessageCursor>();
     private boolean started;
     private PendingMessageCursor nonPersistent;
@@ -129,7 +129,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
 
     public boolean isEmpty(Destination destination) {
         boolean result = true;
-        TopicStorePrefetch tsp = (TopicStorePrefetch)topics.get(destination);
+        TopicStorePrefetch tsp = topics.get(destination);
         if (tsp != null) {
             result = tsp.size() <= 0;
         }
@@ -158,7 +158,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
             }
             if (msg.isPersistent()) {
                 Destination dest = msg.getRegionDestination();
-                TopicStorePrefetch tsp = (TopicStorePrefetch)topics.get(dest);
+                TopicStorePrefetch tsp = topics.get(dest);
                 if (tsp != null) {
                     tsp.addMessageLast(node);
                 }
@@ -212,14 +212,14 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     }
 
     public synchronized void reset() {
-        for (Iterator i = storePrefetches.iterator(); i.hasNext();) {
+        for (Iterator<PendingMessageCursor> i = storePrefetches.iterator(); i.hasNext();) {
             AbstractPendingMessageCursor tsp = (AbstractPendingMessageCursor)i.next();
             tsp.reset();
         }
     }
 
     public synchronized void release() {
-        for (Iterator i = storePrefetches.iterator(); i.hasNext();) {
+        for (Iterator<PendingMessageCursor> i = storePrefetches.iterator(); i.hasNext();) {
             AbstractPendingMessageCursor tsp = (AbstractPendingMessageCursor)i.next();
             tsp.release();
         }
@@ -230,7 +230,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     }
 
     public synchronized void setMaxBatchSize(int maxBatchSize) {
-        for (Iterator i = storePrefetches.iterator(); i.hasNext();) {
+        for (Iterator<PendingMessageCursor> i = storePrefetches.iterator(); i.hasNext();) {
             AbstractPendingMessageCursor tsp = (AbstractPendingMessageCursor)i.next();
             tsp.setMaxBatchSize(maxBatchSize);
         }
@@ -238,16 +238,16 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     }
 
     public synchronized void gc() {
-        for (Iterator i = storePrefetches.iterator(); i.hasNext();) {
-            PendingMessageCursor tsp = (PendingMessageCursor)i.next();
+        for (Iterator<PendingMessageCursor> i = storePrefetches.iterator(); i.hasNext();) {
+            PendingMessageCursor tsp = i.next();
             tsp.gc();
         }
     }
 
     public synchronized void setUsageManager(UsageManager usageManager) {
         super.setUsageManager(usageManager);
-        for (Iterator i = storePrefetches.iterator(); i.hasNext();) {
-            PendingMessageCursor tsp = (PendingMessageCursor)i.next();
+        for (Iterator<PendingMessageCursor> i = storePrefetches.iterator(); i.hasNext();) {
+            PendingMessageCursor tsp = i.next();
             tsp.setUsageManager(usageManager);
         }
     }
@@ -255,7 +255,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     protected synchronized PendingMessageCursor getNextCursor() throws Exception {
         if (currentCursor == null || currentCursor.isEmpty()) {
             currentCursor = null;
-            for (Iterator i = storePrefetches.iterator(); i.hasNext();) {
+            for (Iterator<PendingMessageCursor> i = storePrefetches.iterator(); i.hasNext();) {
                 AbstractPendingMessageCursor tsp = (AbstractPendingMessageCursor)i.next();
                 if (tsp.hasNext()) {
                     currentCursor = tsp;

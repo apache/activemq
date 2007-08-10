@@ -30,10 +30,9 @@ import org.apache.commons.logging.LogFactory;
  */
 
 public abstract class AutoFailTestSupport extends TestCase {
-    private static final Log LOG = LogFactory.getLog(AutoFailTestSupport.class);
-
     public static final int EXIT_SUCCESS = 0;
     public static final int EXIT_ERROR = 1;
+    private static final Log LOG = LogFactory.getLog(AutoFailTestSupport.class);
 
     private long maxTestTime = 5 * 60 * 1000; // 5 mins by default
     private Thread autoFailThread;

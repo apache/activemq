@@ -52,7 +52,7 @@ public class AxionJDBCAdapter extends StreamJDBCAdapter {
                 + ", SELECTOR " + statements.getStringIdDataType()
                 + ", LAST_ACKED_ID " + statements.getSequenceDataType()
                 + ", PRIMARY KEY ( CONTAINER, CLIENT_ID, SUB_NAME))"
-            };
+        };
         statements.setCreateSchemaStatements(createStatements);
         statements.setDeleteOldMessagesStatement("DELETE FROM " + statements.getFullMessageTableName() + " WHERE ( EXPIRATION<>0 AND EXPIRATION<?)");
         statements.setLongDataType("LONG");

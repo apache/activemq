@@ -62,10 +62,12 @@ public class ConsumerId implements DataStructure {
     }
 
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || o.getClass() != ConsumerId.class)
+        }
+        if (o == null || o.getClass() != ConsumerId.class) {
             return false;
+        }
         ConsumerId id = (ConsumerId)o;
         return sessionId == id.sessionId && value == id.value && connectionId.equals(id.connectionId);
     }

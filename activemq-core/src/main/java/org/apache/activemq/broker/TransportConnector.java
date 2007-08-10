@@ -49,6 +49,9 @@ public class TransportConnector implements Connector {
 
     private static final Log LOG = LogFactory.getLog(TransportConnector.class);
 
+    protected CopyOnWriteArrayList<TransportConnection> connections = new CopyOnWriteArrayList<TransportConnection>();
+    protected TransportStatusDetector statusDector;
+
     private Broker broker;
     private TransportServer server;
     private URI uri;
@@ -56,21 +59,12 @@ public class TransportConnector implements Connector {
     private TaskRunnerFactory taskRunnerFactory;
     private MessageAuthorizationPolicy messageAuthorizationPolicy;
     private DiscoveryAgent discoveryAgent;
-    protected CopyOnWriteArrayList connections = new CopyOnWriteArrayList();
-    protected TransportStatusDetector statusDector;
     private ConnectorStatistics statistics = new ConnectorStatistics();
     private URI discoveryUri;
     private URI connectUri;
     private String name;
     private boolean disableAsyncDispatch;
     private boolean enableStatusMonitor = true;
-
-    /**
-     * @return Returns the connections.
-     */
-    public CopyOnWriteArrayList getConnections() {
-        return connections;
-    }
 
     public TransportConnector() {
     }
@@ -86,6 +80,14 @@ public class TransportConnector implements Connector {
             }
         }
 
+    }
+
+
+    /**
+     * @return Returns the connections.
+     */
+    public CopyOnWriteArrayList<TransportConnection> getConnections() {
+        return connections;
     }
 
     /**
@@ -251,8 +253,8 @@ public class TransportConnector implements Connector {
             this.statusDector.stop();
         }
 
-        for (Iterator iter = connections.iterator(); iter.hasNext();) {
-            TransportConnection c = (TransportConnection)iter.next();
+        for (Iterator<TransportConnection> iter = connections.iterator(); iter.hasNext();) {
+            TransportConnection c = iter.next();
             ss.stop(c);
         }
         ss.throwFirstException();
@@ -342,8 +344,9 @@ public class TransportConnector implements Connector {
 
     public String toString() {
         String rc = getName();
-        if (rc == null)
+        if (rc == null) {
             rc = super.toString();
+        }
         return rc;
     }
 

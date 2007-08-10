@@ -70,13 +70,12 @@ public class ContainerKeySet extends ContainerCollectionSupport implements Set {
     }
 
     public boolean containsAll(Collection c) {
-        boolean result = true;
         for (Object key : c) {
-            if (!(result &= container.containsKey(key))) {
-                break;
+            if (!container.containsKey(key)) {
+                return false;
             }
         }
-        return result;
+        return true;
     }
 
     public boolean addAll(Collection c) {

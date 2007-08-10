@@ -42,8 +42,7 @@ public class ConduitBridge extends DemandForwardingBridge {
      * @param localBroker
      * @param remoteBroker
      */
-    public ConduitBridge(NetworkBridgeConfiguration configuration, Transport localBroker,
-                         Transport remoteBroker) {
+    public ConduitBridge(NetworkBridgeConfiguration configuration, Transport localBroker, Transport remoteBroker) {
         super(configuration, localBroker, remoteBroker);
     }
 
@@ -57,8 +56,9 @@ public class ConduitBridge extends DemandForwardingBridge {
 
     protected boolean addToAlreadyInterestedConsumers(ConsumerInfo info) {
 
-        if (info.getSelector() != null)
+        if (info.getSelector() != null) {
             return false;
+        }
 
         // search through existing subscriptions and see if we have a match
         boolean matched = false;
@@ -78,7 +78,7 @@ public class ConduitBridge extends DemandForwardingBridge {
     }
 
     protected void removeDemandSubscription(ConsumerId id) throws IOException {
-        List tmpList = new ArrayList();
+        List<DemandSubscription> tmpList = new ArrayList<DemandSubscription>();
 
         for (Iterator i = subscriptionMapByLocalId.values().iterator(); i.hasNext();) {
             DemandSubscription ds = (DemandSubscription)i.next();
@@ -87,13 +87,13 @@ public class ConduitBridge extends DemandForwardingBridge {
                 tmpList.add(ds);
             }
         }
-        for (Iterator i = tmpList.iterator(); i.hasNext();) {
-            DemandSubscription ds = (DemandSubscription)i.next();
+        for (Iterator<DemandSubscription> i = tmpList.iterator(); i.hasNext();) {
+            DemandSubscription ds = i.next();
             subscriptionMapByLocalId.remove(ds.getRemoteInfo().getConsumerId());
             removeSubscription(ds);
-            if (LOG.isTraceEnabled())
-                LOG.trace("removing sub on " + localBroker + " from " + remoteBrokerName + " :  "
-                          + ds.getRemoteInfo());
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("removing sub on " + localBroker + " from " + remoteBrokerName + " :  " + ds.getRemoteInfo());
+            }
         }
 
     }

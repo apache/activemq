@@ -68,8 +68,9 @@ public class DurableConduitBridge extends ConduitBridge {
                     } catch (IOException e) {
                         LOG.error("Failed to add static destination " + dest, e);
                     }
-                    if (LOG.isTraceEnabled())
+                    if (LOG.isTraceEnabled()) {
                         LOG.trace("Forwarding messages for durable destination: " + dest);
+                    }
                 }
             }
         }

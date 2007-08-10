@@ -40,7 +40,8 @@ public class ByteArrayInputStream extends InputStream {
 
     public ByteArrayInputStream(byte data[], int offset, int size) {
         this.buffer = data;
-        this.mark = this.pos = offset;
+        this.mark = offset;
+        this.pos = offset;
         this.limit = offset + size;
     }
 

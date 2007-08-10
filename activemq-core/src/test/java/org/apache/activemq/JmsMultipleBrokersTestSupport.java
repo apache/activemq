@@ -61,8 +61,8 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     public static final String AUTO_ASSIGN_TRANSPORT = "tcp://localhost:0";
     public static int maxSetupTime = 5000;
 
-    protected Map brokers;
-    protected Map destinations;
+    protected Map<String, BrokerItem> brokers;
+    protected Map<String, Destination> destinations;
 
     protected int messageSize = 1;
 
@@ -74,15 +74,15 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     }
 
     protected void bridgeBrokers(String localBrokerName, String remoteBrokerName, boolean dynamicOnly) throws Exception {
-        BrokerService localBroker = ((BrokerItem)brokers.get(localBrokerName)).broker;
-        BrokerService remoteBroker = ((BrokerItem)brokers.get(remoteBrokerName)).broker;
+        BrokerService localBroker = brokers.get(localBrokerName).broker;
+        BrokerService remoteBroker = brokers.get(remoteBrokerName).broker;
 
         bridgeBrokers(localBroker, remoteBroker, dynamicOnly, 1);
     }
 
     protected NetworkConnector bridgeBrokers(String localBrokerName, String remoteBrokerName, boolean dynamicOnly, int networkTTL) throws Exception {
-        BrokerService localBroker = ((BrokerItem)brokers.get(localBrokerName)).broker;
-        BrokerService remoteBroker = ((BrokerItem)brokers.get(remoteBrokerName)).broker;
+        BrokerService localBroker = brokers.get(localBrokerName).broker;
+        BrokerService remoteBroker = brokers.get(remoteBrokerName).broker;
 
         return bridgeBrokers(localBroker, remoteBroker, dynamicOnly, networkTTL);
     }
@@ -113,9 +113,9 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     }
 
     protected void bridgeAllBrokers(String groupName) throws Exception {
-        Collection brokerList = brokers.values();
-        for (Iterator i = brokerList.iterator(); i.hasNext();) {
-            BrokerService broker = ((BrokerItem)i.next()).broker;
+        Collection<BrokerItem> brokerList = brokers.values();
+        for (Iterator<BrokerItem> i = brokerList.iterator(); i.hasNext();) {
+            BrokerService broker = i.next().broker;
             List transportConnectors = broker.getTransportConnectors();
 
             if (transportConnectors.isEmpty()) {
@@ -133,9 +133,9 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     }
 
     protected void startAllBrokers() throws Exception {
-        Collection brokerList = brokers.values();
-        for (Iterator i = brokerList.iterator(); i.hasNext();) {
-            BrokerService broker = ((BrokerItem)i.next()).broker;
+        Collection<BrokerItem> brokerList = brokers.values();
+        for (Iterator<BrokerItem> i = brokerList.iterator(); i.hasNext();) {
+            BrokerService broker = i.next().broker;
             broker.start();
         }
 
@@ -168,7 +168,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     }
 
     protected ConnectionFactory getConnectionFactory(String brokerName) throws Exception {
-        BrokerItem brokerItem = (BrokerItem)brokers.get(brokerName);
+        BrokerItem brokerItem = brokers.get(brokerName);
         if (brokerItem != null) {
             return brokerItem.factory;
         }
@@ -176,7 +176,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     }
 
     protected Connection createConnection(String brokerName) throws Exception {
-        BrokerItem brokerItem = (BrokerItem)brokers.get(brokerName);
+        BrokerItem brokerItem = brokers.get(brokerName);
         if (brokerItem != null) {
             return brokerItem.createConnection();
         }
@@ -188,7 +188,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     }
 
     protected MessageConsumer createConsumer(String brokerName, Destination dest, CountDownLatch latch) throws Exception {
-        BrokerItem brokerItem = (BrokerItem)brokers.get(brokerName);
+        BrokerItem brokerItem = brokers.get(brokerName);
         if (brokerItem != null) {
             return brokerItem.createConsumer(dest, latch);
         }
@@ -196,7 +196,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     }
 
     protected MessageConsumer createDurableSubscriber(String brokerName, Topic dest, String name) throws Exception {
-        BrokerItem brokerItem = (BrokerItem)brokers.get(brokerName);
+        BrokerItem brokerItem = brokers.get(brokerName);
         if (brokerItem != null) {
             return brokerItem.createDurableSubscriber(dest, name);
         }
@@ -204,7 +204,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     }
 
     protected MessageIdList getBrokerMessages(String brokerName) {
-        BrokerItem brokerItem = (BrokerItem)brokers.get(brokerName);
+        BrokerItem brokerItem = brokers.get(brokerName);
         if (brokerItem != null) {
             return brokerItem.getAllMessages();
         }
@@ -212,7 +212,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     }
 
     protected MessageIdList getConsumerMessages(String brokerName, MessageConsumer consumer) {
-        BrokerItem brokerItem = (BrokerItem)brokers.get(brokerName);
+        BrokerItem brokerItem = brokers.get(brokerName);
         if (brokerItem != null) {
             return brokerItem.getConsumerMessages(consumer);
         }
@@ -220,7 +220,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     }
 
     protected void sendMessages(String brokerName, Destination destination, int count) throws Exception {
-        BrokerItem brokerItem = (BrokerItem)brokers.get(brokerName);
+        BrokerItem brokerItem = brokers.get(brokerName);
 
         Connection conn = brokerItem.createConnection();
         conn.start();
@@ -273,8 +273,8 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
 
     protected void setUp() throws Exception {
         super.setUp();
-        brokers = new HashMap();
-        destinations = new HashMap();
+        brokers = new HashMap<String, BrokerItem>();
+        destinations = new HashMap<String, Destination>();
     }
 
     protected void tearDown() throws Exception {
@@ -283,7 +283,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     }
 
     protected void destroyBroker(String brokerName) throws Exception {
-        BrokerItem brokerItem = (BrokerItem)brokers.remove(brokerName);
+        BrokerItem brokerItem = brokers.remove(brokerName);
 
         if (brokerItem != null) {
             brokerItem.destroy();
@@ -291,8 +291,8 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     }
 
     protected void destroyAllBrokers() throws Exception {
-        for (Iterator i = brokers.values().iterator(); i.hasNext();) {
-            BrokerItem brokerItem = (BrokerItem)i.next();
+        for (Iterator<BrokerItem> i = brokers.values().iterator(); i.hasNext();) {
+            BrokerItem brokerItem = i.next();
             brokerItem.destroy();
         }
         brokers.clear();
@@ -302,20 +302,18 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     public class BrokerItem {
         public BrokerService broker;
         public ActiveMQConnectionFactory factory;
-        public List connections;
-        public Map consumers;
+        public List<Connection> connections;
+        public Map<MessageConsumer, MessageIdList> consumers;
         public MessageIdList allMessages = new MessageIdList();
-
-        private IdGenerator id;
-
         public boolean persistent;
+        private IdGenerator id;
 
         public BrokerItem(BrokerService broker) throws Exception {
             this.broker = broker;
 
             factory = new ActiveMQConnectionFactory(broker.getVmConnectorURI());
-            consumers = Collections.synchronizedMap(new HashMap());
-            connections = Collections.synchronizedList(new ArrayList());
+            consumers = Collections.synchronizedMap(new HashMap<MessageConsumer, MessageIdList>());
+            connections = Collections.synchronizedList(new ArrayList<Connection>());
             allMessages.setVerbose(verbose);
             id = new IdGenerator(broker.getBrokerName() + ":");
         }
@@ -375,7 +373,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         }
 
         public MessageIdList getConsumerMessages(MessageConsumer consumer) {
-            return (MessageIdList)consumers.get(consumer);
+            return consumers.get(consumer);
         }
 
         public MessageProducer createProducer(Destination dest) throws Exception {
@@ -393,7 +391,7 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
 
         public void destroy() throws Exception {
             while (!connections.isEmpty()) {
-                Connection c = (Connection)connections.remove(0);
+                Connection c = connections.remove(0);
                 try {
                     c.close();
                 } catch (ConnectionClosedException e) {

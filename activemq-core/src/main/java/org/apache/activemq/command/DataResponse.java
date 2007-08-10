@@ -23,9 +23,9 @@ package org.apache.activemq.command;
  */
 public class DataResponse extends Response {
 
-    DataStructure data;
-
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.DATA_RESPONSE;
+
+    DataStructure data;
 
     public DataResponse() {
     }

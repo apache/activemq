@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -33,12 +34,12 @@ import java.util.Map;
 public class URISupport {
 
     public static class CompositeData {
-        String scheme;
-        String path;
-        URI components[];
-        Map parameters;
-        String fragment;
-        public String host;
+        private String host;
+        private String scheme;
+        private String path;
+        private URI components[];
+        private Map<String, String> parameters;
+        private String fragment;
 
         public URI[] getComponents() {
             return components;
@@ -48,7 +49,7 @@ public class URISupport {
             return fragment;
         }
 
-        public Map getParameters() {
+        public Map<String, String> getParameters() {
             return parameters;
         }
 
@@ -100,9 +101,9 @@ public class URISupport {
         }
     }
 
-    public static Map parseQuery(String uri) throws URISyntaxException {
+    public static Map<String, String> parseQuery(String uri) throws URISyntaxException {
         try {
-            Map rc = new HashMap();
+            Map<String, String> rc = new HashMap<String, String>();
             if (uri != null) {
                 String[] parameters = uri.split("&");
                 for (int i = 0; i < parameters.length; i++) {
@@ -122,7 +123,7 @@ public class URISupport {
         }
     }
 
-    public static Map parseParamters(URI uri) throws URISyntaxException {
+    public static Map<String,String> parseParamters(URI uri) throws URISyntaxException {
         return uri.getQuery() == null ? Collections.EMPTY_MAP : parseQuery(stripPrefix(uri.getQuery(), "?"));
     }
 
@@ -210,7 +211,7 @@ public class URISupport {
      * @return
      */
     private static String[] splitComponents(String str) {
-        ArrayList l = new ArrayList();
+        List<String> l = new ArrayList<String>();
 
         int last = 0;
         int depth = 0;

@@ -39,14 +39,16 @@ public class CacheEntry {
 
         // Cannot remove if this is a tail pointer.
         // Or not linked.
-        if (owner == null || this.key == null || this.next == null)
+        if (owner == null || this.key == null || this.next == null) {
             return false;
+        }
 
         synchronized (owner.tail) {
             this.next.previous = this.previous;
             this.previous.next = this.next;
             this.owner = null;
-            this.next = this.previous = null;
+            this.next = null;
+            this.previous = null;
         }
 
         return true;

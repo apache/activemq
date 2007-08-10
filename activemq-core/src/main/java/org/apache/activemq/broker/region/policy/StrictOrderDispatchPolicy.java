@@ -50,8 +50,9 @@ public class StrictOrderDispatchPolicy implements DispatchPolicy {
                 Subscription sub = (Subscription)iter.next();
 
                 // Only dispatch to interested subscriptions
-                if (!sub.matches(node, msgContext))
+                if (!sub.matches(node, msgContext)) {
                     continue;
+                }
 
                 sub.add(node);
                 count++;

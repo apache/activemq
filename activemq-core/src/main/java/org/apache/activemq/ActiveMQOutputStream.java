@@ -39,11 +39,12 @@ import org.apache.activemq.util.IOExceptionSupport;
 public class ActiveMQOutputStream extends OutputStream implements Disposable {
 
     // Send down 64k messages.
-    final byte buffer[] = new byte[64 * 1024];
     protected int count;
 
+    final byte buffer[] = new byte[64 * 1024];
+
     private final ActiveMQConnection connection;
-    private final HashMap properties;
+    private final Map<String, Object> properties;
     private final ProducerInfo info;
 
     private long messageSequence;
@@ -52,13 +53,13 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
     private final int priority;
     private final long timeToLive;
 
-    public ActiveMQOutputStream(ActiveMQConnection connection, ProducerId producerId, ActiveMQDestination destination, Map properties, int deliveryMode, int priority,
+    public ActiveMQOutputStream(ActiveMQConnection connection, ProducerId producerId, ActiveMQDestination destination, Map<String, Object> properties, int deliveryMode, int priority,
                                 long timeToLive) throws JMSException {
         this.connection = connection;
         this.deliveryMode = deliveryMode;
         this.priority = priority;
         this.timeToLive = timeToLive;
-        this.properties = properties == null ? null : new HashMap(properties);
+        this.properties = properties == null ? null : new HashMap<String, Object>(properties);
 
         if (destination == null) {
             throw new InvalidDestinationException("Don't understand null destinations");

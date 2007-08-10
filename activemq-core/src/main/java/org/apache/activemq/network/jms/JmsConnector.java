@@ -44,13 +44,13 @@ import org.springframework.jndi.JndiTemplate;
  */
 public abstract class JmsConnector implements Service {
 
+    private static int nextId;
     private static final Log LOG = LogFactory.getLog(JmsConnector.class);
+    
     protected JndiTemplate jndiLocalTemplate;
     protected JndiTemplate jndiOutboundTemplate;
     protected JmsMesageConvertor inboundMessageConvertor;
     protected JmsMesageConvertor outboundMessageConvertor;
-    private List inboundBridges = new CopyOnWriteArrayList();
-    private List outboundBridges = new CopyOnWriteArrayList();
     protected AtomicBoolean initialized = new AtomicBoolean(false);
     protected AtomicBoolean started = new AtomicBoolean(false);
     protected ActiveMQConnectionFactory embeddedConnectionFactory;
@@ -59,9 +59,12 @@ public abstract class JmsConnector implements Service {
     protected String outboundPassword;
     protected String localUsername;
     protected String localPassword;
+    protected LRUCache replyToBridges = createLRUCache();
+
+    private List<DestinationBridge> inboundBridges = new CopyOnWriteArrayList<DestinationBridge>();
+    private List<DestinationBridge> outboundBridges = new CopyOnWriteArrayList<DestinationBridge>();
     private String name;
 
-    protected LRUCache replyToBridges = createLRUCache();
 
     private static LRUCache createLRUCache() {
         return new LRUCache() {
@@ -111,11 +114,11 @@ public abstract class JmsConnector implements Service {
         init();
         if (started.compareAndSet(false, true)) {
             for (int i = 0; i < inboundBridges.size(); i++) {
-                DestinationBridge bridge = (DestinationBridge)inboundBridges.get(i);
+                DestinationBridge bridge = inboundBridges.get(i);
                 bridge.start();
             }
             for (int i = 0; i < outboundBridges.size(); i++) {
-                DestinationBridge bridge = (DestinationBridge)outboundBridges.get(i);
+                DestinationBridge bridge = outboundBridges.get(i);
                 bridge.start();
             }
             LOG.info("JMS Connector " + getName() + " Started");
@@ -125,11 +128,11 @@ public abstract class JmsConnector implements Service {
     public void stop() throws Exception {
         if (started.compareAndSet(true, false)) {
             for (int i = 0; i < inboundBridges.size(); i++) {
-                DestinationBridge bridge = (DestinationBridge)inboundBridges.get(i);
+                DestinationBridge bridge = inboundBridges.get(i);
                 bridge.stop();
             }
             for (int i = 0; i < outboundBridges.size(); i++) {
-                DestinationBridge bridge = (DestinationBridge)outboundBridges.get(i);
+                DestinationBridge bridge = outboundBridges.get(i);
                 bridge.stop();
             }
             LOG.info("JMS Connector " + getName() + " Stopped");
@@ -297,8 +300,6 @@ public abstract class JmsConnector implements Service {
         }
         return name;
     }
-
-    static int nextId;
 
     private static synchronized int getNextId() {
         return nextId++;

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.jms.DeliveryMode;
@@ -40,22 +41,22 @@ import org.apache.activemq.command.ActiveMQStreamMessage;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.Message;
 
-public class OpenTypeSupport {
+public final class OpenTypeSupport {
 
     interface OpenTypeFactory {
         CompositeType getCompositeType() throws OpenDataException;
 
-        Map getFields(Object o) throws OpenDataException;
+        Map<String, Object> getFields(Object o) throws OpenDataException;
     }
 
-    private static final HashMap OPEN_TYPE_FACTORIES = new HashMap();
+    private static final Map<Class, MessageOpenTypeFactory> OPEN_TYPE_FACTORIES = new HashMap<Class, MessageOpenTypeFactory>();
 
     abstract static class AbstractOpenTypeFactory implements OpenTypeFactory {
 
         private CompositeType compositeType;
-        ArrayList itemNamesList = new ArrayList();
-        ArrayList itemDescriptionsList = new ArrayList();
-        ArrayList itemTypesList = new ArrayList();
+        private List<String> itemNamesList = new ArrayList<String>();
+        private List<String> itemDescriptionsList = new ArrayList<String>();
+        private List<OpenType> itemTypesList = new ArrayList<OpenType>();
 
         public CompositeType getCompositeType() throws OpenDataException {
             if (compositeType == null) {
@@ -69,9 +70,9 @@ public class OpenTypeSupport {
         }
 
         protected CompositeType createCompositeType() throws OpenDataException {
-            String[] itemNames = (String[])itemNamesList.toArray(new String[itemNamesList.size()]);
-            String[] itemDescriptions = (String[])itemDescriptionsList.toArray(new String[itemDescriptionsList.size()]);
-            OpenType[] itemTypes = (OpenType[])itemTypesList.toArray(new OpenType[itemTypesList.size()]);
+            String[] itemNames = itemNamesList.toArray(new String[itemNamesList.size()]);
+            String[] itemDescriptions = itemDescriptionsList.toArray(new String[itemDescriptionsList.size()]);
+            OpenType[] itemTypes = itemTypesList.toArray(new OpenType[itemTypesList.size()]);
             return new CompositeType(getTypeName(), getDescription(), itemNames, itemDescriptions, itemTypes);
         }
 
@@ -87,8 +88,8 @@ public class OpenTypeSupport {
             return getTypeName();
         }
 
-        public Map getFields(Object o) throws OpenDataException {
-            HashMap rc = new HashMap();
+        public Map<String, Object> getFields(Object o) throws OpenDataException {
+            Map<String, Object> rc = new HashMap<String, Object>();
             return rc;
         }
     }
@@ -114,9 +115,9 @@ public class OpenTypeSupport {
             addItem("Properties", "Properties", SimpleType.STRING);
         }
 
-        public Map getFields(Object o) throws OpenDataException {
+        public Map<String, Object> getFields(Object o) throws OpenDataException {
             ActiveMQMessage m = (ActiveMQMessage)o;
-            Map rc = super.getFields(o);
+            Map<String, Object> rc = super.getFields(o);
             rc.put("JMSCorrelationID", m.getJMSCorrelationID());
             rc.put("JMSDestination", "" + m.getJMSDestination());
             rc.put("JMSMessageID", m.getJMSMessageID());
@@ -148,9 +149,9 @@ public class OpenTypeSupport {
             addItem("BodyPreview", "Body preview", new ArrayType(1, SimpleType.BYTE));
         }
 
-        public Map getFields(Object o) throws OpenDataException {
+        public Map<String, Object> getFields(Object o) throws OpenDataException {
             ActiveMQBytesMessage m = (ActiveMQBytesMessage)o;
-            Map rc = super.getFields(o);
+            Map<String, Object> rc = super.getFields(o);
             long length = 0;
             try {
                 length = m.getBodyLength();
@@ -189,10 +190,9 @@ public class OpenTypeSupport {
             addItem("ContentMap", "Content map", SimpleType.STRING);
         }
 
-        public Map getFields(Object o) throws OpenDataException {
+        public Map<String, Object> getFields(Object o) throws OpenDataException {
             ActiveMQMapMessage m = (ActiveMQMapMessage)o;
-            Map rc = super.getFields(o);
-            long length = 0;
+            Map<String, Object> rc = super.getFields(o);
             try {
                 rc.put("ContentMap", "" + m.getContentMap());
             } catch (JMSException e) {
@@ -211,9 +211,8 @@ public class OpenTypeSupport {
             super.init();
         }
 
-        public Map getFields(Object o) throws OpenDataException {
-            ActiveMQObjectMessage m = (ActiveMQObjectMessage)o;
-            Map rc = super.getFields(o);
+        public Map<String, Object> getFields(Object o) throws OpenDataException {
+            Map<String, Object> rc = super.getFields(o);
             return rc;
         }
     }
@@ -227,9 +226,8 @@ public class OpenTypeSupport {
             super.init();
         }
 
-        public Map getFields(Object o) throws OpenDataException {
-            ActiveMQStreamMessage m = (ActiveMQStreamMessage)o;
-            Map rc = super.getFields(o);
+        public Map<String, Object> getFields(Object o) throws OpenDataException {
+            Map<String, Object> rc = super.getFields(o);
             return rc;
         }
     }
@@ -244,9 +242,9 @@ public class OpenTypeSupport {
             addItem("Text", "Text", SimpleType.STRING);
         }
 
-        public Map getFields(Object o) throws OpenDataException {
+        public Map<String, Object> getFields(Object o) throws OpenDataException {
             ActiveMQTextMessage m = (ActiveMQTextMessage)o;
-            Map rc = super.getFields(o);
+            Map<String, Object> rc = super.getFields(o);
             try {
                 rc.put("Text", "" + m.getText());
             } catch (JMSException e) {
@@ -265,16 +263,20 @@ public class OpenTypeSupport {
         OPEN_TYPE_FACTORIES.put(ActiveMQTextMessage.class, new TextMessageOpenTypeFactory());
     }
 
-    public static OpenTypeFactory getFactory(Class clazz) throws OpenDataException {
-        return (OpenTypeFactory)OPEN_TYPE_FACTORIES.get(clazz);
+    private OpenTypeSupport() {
+    }
+    
+    public static OpenTypeFactory getFactory(Class<? extends Message> clazz) throws OpenDataException {
+        return OPEN_TYPE_FACTORIES.get(clazz);
     }
 
     public static CompositeData convert(Message message) throws OpenDataException {
         OpenTypeFactory f = getFactory(message.getClass());
-        if (f == null)
+        if (f == null) {
             throw new OpenDataException("Cannot create a CompositeData for type: " + message.getClass().getName());
+        }
         CompositeType ct = f.getCompositeType();
-        Map fields = f.getFields(message);
+        Map<String, Object> fields = f.getFields(message);
         return new CompositeDataSupport(ct, fields);
     }
 

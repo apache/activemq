@@ -19,6 +19,7 @@ package org.apache.activemq;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.jms.IllegalStateException;
 import javax.jms.InvalidDestinationException;
@@ -100,7 +101,7 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
 
         // Allows the options on the destination to configure the consumerInfo
         if (dest.getOptions() != null) {
-            HashMap options = new HashMap(dest.getOptions());
+            Map<String, String> options = new HashMap<String, String>(dest.getOptions());
             IntrospectionSupport.setProperties(this.info, options, "consumer.");
         }
 
@@ -145,8 +146,9 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
             throw JMSExceptionSupport.create(e);
         }
 
-        if (md == null || unconsumedMessages.isClosed() || md.getMessage().isExpired())
+        if (md == null || unconsumedMessages.isClosed() || md.getMessage().isExpired()) {
             return null;
+        }
 
         deliveredCounter++;
         if ((0.75 * info.getPrefetchSize()) <= deliveredCounter) {
@@ -172,15 +174,17 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
 
     public int read() throws IOException {
         fillBuffer();
-        if (eosReached)
+        if (eosReached) {
             return -1;
+        }
         return buffer[pos++] & 0xff;
     }
 
     public int read(byte[] b, int off, int len) throws IOException {
         fillBuffer();
-        if (eosReached)
+        if (eosReached) {
             return -1;
+        }
 
         int max = Math.min(len, buffer.length - pos);
         System.arraycopy(buffer, pos, b, off, max);
@@ -190,8 +194,9 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
     }
 
     private void fillBuffer() throws IOException {
-        if (eosReached || (buffer != null && buffer.length > pos))
+        if (eosReached || (buffer != null && buffer.length > pos)) {
             return;
+        }
         try {
             while (true) {
                 ActiveMQMessage m = receive();

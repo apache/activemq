@@ -41,10 +41,11 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.3 $
  */
 public abstract class CursorSupport extends TestCase {
-    private static final Log LOG = LogFactory.getLog(CursorSupport.class);
 
     protected static final int MESSAGE_COUNT = 500;
     protected static final int PREFETCH_SIZE = 50;
+    private static final Log LOG = LogFactory.getLog(CursorSupport.class);
+
     protected BrokerService broker;
     protected String bindAddress = "tcp://localhost:60706";
 
@@ -63,7 +64,7 @@ public abstract class CursorSupport extends TestCase {
         producerConnection.start();
         Session session = producerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = session.createProducer(getDestination(session));
-        List senderList = new ArrayList();
+        List<Message> senderList = new ArrayList<Message>();
         for (int i = 0; i < MESSAGE_COUNT; i++) {
             Message msg = session.createTextMessage("test" + i);
             senderList.add(msg);
@@ -74,7 +75,7 @@ public abstract class CursorSupport extends TestCase {
         consumerConnection = getConsumerConnection(factory);
         // create durable subs
         consumer = getConsumer(consumerConnection);
-        List consumerList = new ArrayList();
+        List<Message> consumerList = new ArrayList<Message>();
         for (int i = 0; i < MESSAGE_COUNT; i++) {
             Message msg = consumer.receive();
             consumerList.add(msg);
@@ -93,7 +94,7 @@ public abstract class CursorSupport extends TestCase {
         producerConnection.start();
         Session session = producerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = session.createProducer(getDestination(session));
-        List senderList = new ArrayList();
+        List<TextMessage> senderList = new ArrayList<TextMessage>();
         for (int i = 0; i < MESSAGE_COUNT / 10; i++) {
             TextMessage msg = session.createTextMessage("test" + i);
             senderList.add(msg);
@@ -103,7 +104,7 @@ public abstract class CursorSupport extends TestCase {
         consumerConnection = getConsumerConnection(factory);
         // create durable subs
         consumer = getConsumer(consumerConnection);
-        final List consumerList = new ArrayList();
+        final List<Message> consumerList = new ArrayList<Message>();
         final CountDownLatch latch = new CountDownLatch(1);
         consumer.setMessageListener(new MessageListener() {
 
@@ -134,8 +135,8 @@ public abstract class CursorSupport extends TestCase {
         assertEquals("Still dipatching - count down latch not sprung", latch.getCount(), 0);
         assertEquals("cosumerList - expected: " + MESSAGE_COUNT + " but was: " + consumerList.size(), consumerList.size(), senderList.size());
         for (int i = 0; i < senderList.size(); i++) {
-            Message sent = (Message)senderList.get(i);
-            Message consumed = (Message)consumerList.get(i);
+            Message sent = senderList.get(i);
+            Message consumed = consumerList.get(i);
             if (!sent.equals(consumed)) {
                 LOG.error("BAD MATCH AT POS " + i);
                 LOG.error(sent);

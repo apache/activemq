@@ -69,7 +69,7 @@ public interface Region extends Service {
      * 
      * @return a copy of the regions currently active at the time of the call with the key the destination and the value the Destination.
      */
-    Map getDestinationMap();
+    Map<ActiveMQDestination, Destination> getDestinationMap();
     
 
     /**

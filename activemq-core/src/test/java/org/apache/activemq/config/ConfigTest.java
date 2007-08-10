@@ -52,11 +52,10 @@ import org.springframework.core.io.Resource;
  */
 public class ConfigTest extends TestCase {
 
-    private static final Log LOG = LogFactory.getLog(ConfigTest.class);
-
     protected static final String JOURNAL_ROOT = "target/test-data/";
     protected static final String DERBY_ROOT = "target/test-data/";
     protected static final String CONF_ROOT = "src/test/resources/org/apache/activemq/config/sample-conf/";
+    private static final Log LOG = LogFactory.getLog(ConfigTest.class);
 
     static {
         System.setProperty("javax.net.ssl.trustStore", "src/test/resources/client.keystore");
@@ -104,7 +103,7 @@ public class ConfigTest extends TestCase {
             // Check persistence factory configurations
             // System.out.print("Checking persistence adapter factory
             // settings... ");
-            JournalPersistenceAdapter pa = (JournalPersistenceAdapter)broker.getPersistenceAdapter();
+            broker.getPersistenceAdapter();
 
             LOG.info("Success");
         } finally {

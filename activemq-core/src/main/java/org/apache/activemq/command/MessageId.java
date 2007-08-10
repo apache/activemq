@@ -81,10 +81,12 @@ public class MessageId implements DataStructure, Comparable<MessageId> {
     }
 
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || o.getClass() != getClass())
+        }
+        if (o == null || o.getClass() != getClass()) {
             return false;
+        }
 
         MessageId id = (MessageId)o;
         return producerSequenceId == id.producerSequenceId && producerId.equals(id.producerId);

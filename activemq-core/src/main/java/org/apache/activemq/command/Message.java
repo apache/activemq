@@ -72,17 +72,17 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     protected int redeliveryCounter;
 
     protected int size;
-    protected Map properties;
+    protected Map<String, Object> properties;
     protected boolean readOnlyProperties;
     protected boolean readOnlyBody;
     protected transient boolean recievedByDFBridge;
+    protected boolean droppable;
 
     private transient short referenceCount;
     private transient ActiveMQConnection connection;
     private transient org.apache.activemq.broker.region.Destination regionDestination;
 
     private BrokerId[] brokerPath;
-    protected boolean droppable;
     private BrokerId[] cluster;
 
     public abstract Message copy();
@@ -109,7 +109,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         copy.groupSequence = groupSequence;
 
         if (properties != null) {
-            copy.properties = new HashMap(properties);
+            copy.properties = new HashMap<String, Object>(properties);
         } else {
             copy.properties = properties;
         }
@@ -139,17 +139,20 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
 
     public Object getProperty(String name) throws IOException {
         if (properties == null) {
-            if (marshalledProperties == null)
+            if (marshalledProperties == null) {
                 return null;
+            }
             properties = unmarsallProperties(marshalledProperties);
         }
         return properties.get(name);
     }
 
-    public Map getProperties() throws IOException {
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getProperties() throws IOException {
         if (properties == null) {
-            if (marshalledProperties == null)
+            if (marshalledProperties == null) {
                 return Collections.EMPTY_MAP;
+            }
             properties = unmarsallProperties(marshalledProperties);
         }
         return Collections.unmodifiableMap(properties);
@@ -168,7 +171,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     protected void lazyCreateProperties() throws IOException {
         if (properties == null) {
             if (marshalledProperties == null) {
-                properties = new HashMap();
+                properties = new HashMap<String, Object>();
             } else {
                 properties = unmarsallProperties(marshalledProperties);
                 marshalledProperties = null;
@@ -176,7 +179,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         }
     }
 
-    private Map unmarsallProperties(ByteSequence marshalledProperties) throws IOException {
+    private Map<String, Object> unmarsallProperties(ByteSequence marshalledProperties) throws IOException {
         return MarshallingSupport.unmarshalPrimitiveMap(new DataInputStream(new ByteArrayInputStream(marshalledProperties)));
     }
 
@@ -578,8 +581,9 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
             size = getSize();
         }
 
-        if (rc == 1 && regionDestination != null)
+        if (rc == 1 && regionDestination != null) {
             regionDestination.getUsageManager().increaseUsage(size);
+        }
 
         // System.out.println(" + "+getDestination()+" :::: "+getMessageId()+"
         // "+rc);
@@ -594,9 +598,9 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
             size = getSize();
         }
 
-        if (rc == 0 && regionDestination != null)
+        if (rc == 0 && regionDestination != null) {
             regionDestination.getUsageManager().decreaseUsage(size);
-
+        }
         // System.out.println(" - "+getDestination()+" :::: "+getMessageId()+"
         // "+rc);
 
@@ -606,10 +610,12 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     public int getSize() {
         if (size <= AVERAGE_MESSAGE_SIZE_OVERHEAD) {
             size = AVERAGE_MESSAGE_SIZE_OVERHEAD;
-            if (marshalledProperties != null)
+            if (marshalledProperties != null) {
                 size += marshalledProperties.getLength();
-            if (content != null)
+            }
+            if (content != null) {
                 size += content.getLength();
+            }
         }
         return size;
     }

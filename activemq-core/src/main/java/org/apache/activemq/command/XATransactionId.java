@@ -117,23 +117,26 @@ public class XATransactionId extends TransactionId implements Xid, Comparable {
     }
 
     private static int hash(byte[] bytes, int hash) {
-        for (int i = 0, size = bytes.length; i < size; i++) {
+        int size = bytes.length;
+        for (int i = 0; i < size; i++) {
             hash ^= bytes[i] << ((i % 4) * 8);
         }
         return hash;
     }
 
     public boolean equals(Object o) {
-        if (o == null || o.getClass() != XATransactionId.class)
+        if (o == null || o.getClass() != XATransactionId.class) {
             return false;
+        }
         XATransactionId xid = (XATransactionId)o;
         return xid.formatId == formatId && Arrays.equals(xid.globalTransactionId, globalTransactionId)
                && Arrays.equals(xid.branchQualifier, branchQualifier);
     }
 
     public int compareTo(Object o) {
-        if (o == null || o.getClass() != XATransactionId.class)
+        if (o == null || o.getClass() != XATransactionId.class) {
             return -1;
+        }
         XATransactionId xid = (XATransactionId)o;
         return getTransactionKey().compareTo(xid.getTransactionKey());
     }

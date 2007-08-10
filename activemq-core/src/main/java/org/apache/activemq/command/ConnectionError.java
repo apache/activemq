@@ -27,8 +27,8 @@ public class ConnectionError extends BaseCommand {
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.CONNECTION_ERROR;
 
-    protected ConnectionId connectionId;
-    Throwable exception;
+    private ConnectionId connectionId;
+    private Throwable exception;
 
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;

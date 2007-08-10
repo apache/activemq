@@ -34,12 +34,12 @@ public class MessageTest extends DataStructureTestSupport {
     }
 
     public void initCombosForTestActiveMQMessageMarshaling() {
-        addCombinationValues("cacheEnabled", new Object[] { Boolean.TRUE, Boolean.FALSE });
+        addCombinationValues("cacheEnabled", new Object[] {Boolean.TRUE, Boolean.FALSE});
     }
 
     public void testActiveMQMessageMarshaling() throws IOException {
         ActiveMQMessage message = new ActiveMQMessage();
-        message.setCommandId((short) 1);
+        message.setCommandId((short)1);
         message.setOriginalDestination(new ActiveMQQueue("queue"));
         message.setGroupID("group");
         message.setGroupSequence(4);
@@ -50,7 +50,7 @@ public class MessageTest extends DataStructureTestSupport {
 
     public void testActiveMQMessageMarshalingBigMessageId() throws IOException {
         ActiveMQMessage message = new ActiveMQMessage();
-        message.setCommandId((short) 1);
+        message.setCommandId((short)1);
         message.setOriginalDestination(new ActiveMQQueue("queue"));
         message.setGroupID("group");
         message.setGroupSequence(4);
@@ -61,7 +61,7 @@ public class MessageTest extends DataStructureTestSupport {
 
     public void testActiveMQMessageMarshalingBiggerMessageId() throws IOException {
         ActiveMQMessage message = new ActiveMQMessage();
-        message.setCommandId((short) 1);
+        message.setCommandId((short)1);
         message.setOriginalDestination(new ActiveMQQueue("queue"));
         message.setGroupID("group");
         message.setGroupSequence(4);
@@ -72,7 +72,7 @@ public class MessageTest extends DataStructureTestSupport {
 
     public void testActiveMQMessageMarshalingBiggestMessageId() throws IOException {
         ActiveMQMessage message = new ActiveMQMessage();
-        message.setCommandId((short) 1);
+        message.setCommandId((short)1);
         message.setOriginalDestination(new ActiveMQQueue("queue"));
         message.setGroupID("group");
         message.setGroupSequence(4);

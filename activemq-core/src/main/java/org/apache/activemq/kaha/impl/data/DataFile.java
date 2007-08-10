@@ -33,7 +33,7 @@ class DataFile {
     private int referenceCount;
     private RandomAccessFile randomAcessFile;
     private Object writerData;
-    long length;
+    private long length;
     private boolean dirty;
 
     DataFile(File file, int number) {

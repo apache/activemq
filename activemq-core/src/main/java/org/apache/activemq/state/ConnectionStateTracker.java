@@ -47,14 +47,14 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
 
     private static final Tracked TRACKED_RESPONSE_MARKER = new Tracked(null);
 
-    private boolean trackTransactions = false;
+    protected final ConcurrentHashMap<ConnectionId, ConnectionState> connectionStates = new ConcurrentHashMap<ConnectionId, ConnectionState>();
 
+    private boolean trackTransactions;
     private boolean restoreSessions = true;
     private boolean restoreConsumers = true;
     private boolean restoreProducers = true;
     private boolean restoreTransaction = true;
 
-    protected final ConcurrentHashMap connectionStates = new ConcurrentHashMap();
 
     private class RemoveTransactionAction implements Runnable {
         private final TransactionInfo info;
@@ -65,7 +65,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
 
         public void run() {
             ConnectionId connectionId = info.getConnectionId();
-            ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+            ConnectionState cs = connectionStates.get(connectionId);
             cs.removeTransactionState(info.getTransactionId());
         }
     }
@@ -89,16 +89,18 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
 
     public void restore(Transport transport) throws IOException {
         // Restore the connections.
-        for (Iterator iter = connectionStates.values().iterator(); iter.hasNext();) {
-            ConnectionState connectionState = (ConnectionState)iter.next();
+        for (Iterator<ConnectionState> iter = connectionStates.values().iterator(); iter.hasNext();) {
+            ConnectionState connectionState = iter.next();
             transport.oneway(connectionState.getInfo());
             restoreTempDestinations(transport, connectionState);
 
-            if (restoreSessions)
+            if (restoreSessions) {
                 restoreSessions(transport, connectionState);
+            }
 
-            if (restoreTransaction)
+            if (restoreTransaction) {
                 restoreTransactions(transport, connectionState);
+            }
         }
     }
 
@@ -123,11 +125,13 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
             SessionState sessionState = (SessionState)iter2.next();
             transport.oneway(sessionState.getInfo());
 
-            if (restoreProducers)
+            if (restoreProducers) {
                 restoreProducers(transport, sessionState);
+            }
 
-            if (restoreConsumers)
+            if (restoreConsumers) {
                 restoreConsumers(transport, sessionState);
+            }
         }
     }
 
@@ -172,7 +176,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
 
     public Response processAddDestination(DestinationInfo info) {
         if (info != null) {
-            ConnectionState cs = (ConnectionState)connectionStates.get(info.getConnectionId());
+            ConnectionState cs = connectionStates.get(info.getConnectionId());
             if (cs != null && info.getDestination().isTemporary()) {
                 cs.addTempDestination(info);
             }
@@ -182,7 +186,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
 
     public Response processRemoveDestination(DestinationInfo info) {
         if (info != null) {
-            ConnectionState cs = (ConnectionState)connectionStates.get(info.getConnectionId());
+            ConnectionState cs = connectionStates.get(info.getConnectionId());
             if (cs != null && info.getDestination().isTemporary()) {
                 cs.removeTempDestination(info.getDestination());
             }
@@ -196,7 +200,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
             if (sessionId != null) {
                 ConnectionId connectionId = sessionId.getParentId();
                 if (connectionId != null) {
-                    ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                    ConnectionState cs = connectionStates.get(connectionId);
                     if (cs != null) {
                         SessionState ss = cs.getSessionState(sessionId);
                         if (ss != null) {
@@ -215,7 +219,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
             if (sessionId != null) {
                 ConnectionId connectionId = sessionId.getParentId();
                 if (connectionId != null) {
-                    ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                    ConnectionState cs = connectionStates.get(connectionId);
                     if (cs != null) {
                         SessionState ss = cs.getSessionState(sessionId);
                         if (ss != null) {
@@ -234,7 +238,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
             if (sessionId != null) {
                 ConnectionId connectionId = sessionId.getParentId();
                 if (connectionId != null) {
-                    ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                    ConnectionState cs = connectionStates.get(connectionId);
                     if (cs != null) {
                         SessionState ss = cs.getSessionState(sessionId);
                         if (ss != null) {
@@ -253,7 +257,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
             if (sessionId != null) {
                 ConnectionId connectionId = sessionId.getParentId();
                 if (connectionId != null) {
-                    ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                    ConnectionState cs = connectionStates.get(connectionId);
                     if (cs != null) {
                         SessionState ss = cs.getSessionState(sessionId);
                         if (ss != null) {
@@ -270,7 +274,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         if (info != null) {
             ConnectionId connectionId = info.getSessionId().getParentId();
             if (connectionId != null) {
-                ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                ConnectionState cs = connectionStates.get(connectionId);
                 if (cs != null) {
                     cs.addSession(info);
                 }
@@ -283,7 +287,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         if (id != null) {
             ConnectionId connectionId = id.getParentId();
             if (connectionId != null) {
-                ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                ConnectionState cs = connectionStates.get(connectionId);
                 if (cs != null) {
                     cs.removeSession(id);
                 }
@@ -310,7 +314,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         if (trackTransactions && send != null && send.getTransactionId() != null) {
             ConnectionId connectionId = send.getProducerId().getParentId().getParentId();
             if (connectionId != null) {
-                ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                ConnectionState cs = connectionStates.get(connectionId);
                 if (cs != null) {
                     TransactionState transactionState = cs.getTransactionState(send.getTransactionId());
                     if (transactionState != null) {
@@ -327,7 +331,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         if (trackTransactions && ack != null && ack.getTransactionId() != null) {
             ConnectionId connectionId = ack.getConsumerId().getParentId().getParentId();
             if (connectionId != null) {
-                ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                ConnectionState cs = connectionStates.get(connectionId);
                 if (cs != null) {
                     TransactionState transactionState = cs.getTransactionState(ack.getTransactionId());
                     if (transactionState != null) {
@@ -344,7 +348,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         if (trackTransactions && info != null && info.getTransactionId() != null) {
             ConnectionId connectionId = info.getConnectionId();
             if (connectionId != null) {
-                ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                ConnectionState cs = connectionStates.get(connectionId);
                 if (cs != null) {
                     cs.addTransactionState(info.getTransactionId());
                 }
@@ -358,7 +362,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         if (trackTransactions && info != null) {
             ConnectionId connectionId = info.getConnectionId();
             if (connectionId != null) {
-                ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                ConnectionState cs = connectionStates.get(connectionId);
                 if (cs != null) {
                     TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
                     if (transactionState != null) {
@@ -375,7 +379,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         if (trackTransactions && info != null) {
             ConnectionId connectionId = info.getConnectionId();
             if (connectionId != null) {
-                ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                ConnectionState cs = connectionStates.get(connectionId);
                 if (cs != null) {
                     TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
                     if (transactionState != null) {
@@ -392,7 +396,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         if (trackTransactions && info != null) {
             ConnectionId connectionId = info.getConnectionId();
             if (connectionId != null) {
-                ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                ConnectionState cs = connectionStates.get(connectionId);
                 if (cs != null) {
                     TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
                     if (transactionState != null) {
@@ -409,7 +413,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         if (trackTransactions && info != null) {
             ConnectionId connectionId = info.getConnectionId();
             if (connectionId != null) {
-                ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                ConnectionState cs = connectionStates.get(connectionId);
                 if (cs != null) {
                     TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
                     if (transactionState != null) {
@@ -426,7 +430,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         if (trackTransactions && info != null) {
             ConnectionId connectionId = info.getConnectionId();
             if (connectionId != null) {
-                ConnectionState cs = (ConnectionState)connectionStates.get(connectionId);
+                ConnectionState cs = connectionStates.get(connectionId);
                 if (cs != null) {
                     TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
                     if (transactionState != null) {

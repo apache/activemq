@@ -42,19 +42,18 @@ public class NumberRangesWhileMarshallingTest extends TestCase {
 
     public void testLongNumberRanges() throws Exception {
         long[] numberValues = {
-                               // bytes
-                               0, 1, 0x7e, 0x7f, 0x80, 0x81, 0xf0, 0xff,
-                               // shorts
-                               0x7eff, 0x7fffL, 0x8001L, 0x8000L, 0xe000L, 0xe0001L, 0xff00L, 0xffffL,
-                               // ints
-                               0x10000L, 0x700000L, 0x12345678L, 0x72345678L, 0x7fffffffL, 0x80000000L, 0x80000001L, 0xE0000001L, 0xFFFFFFFFL,
-
-                               // 3 byte longs
-                               0x123456781L, 0x1234567812L, 0x12345678123L, 0x123456781234L, 0x1234567812345L, 0x12345678123456L, 0x7e345678123456L, 0x7fffffffffffffL,
-                               0x80000000000000L, 0x80000000000001L, 0xe0000000000001L, 0xffffffffffffffL,
-
-                               // 4 byte longs
-                               0x1234567812345678L, 0x7fffffffffffffffL, 0x8000000000000000L, 0x8000000000000001L, 0xe000000000000001L, 0xffffffffffffffffL, 1};
+            // bytes
+            0, 1, 0x7e, 0x7f, 0x80, 0x81, 0xf0, 0xff,
+            // shorts
+            0x7eff, 0x7fffL, 0x8001L, 0x8000L, 0xe000L, 0xe0001L, 0xff00L, 0xffffL,
+            // ints
+            0x10000L, 0x700000L, 0x12345678L, 0x72345678L, 0x7fffffffL, 0x80000000L, 0x80000001L, 0xE0000001L, 0xFFFFFFFFL,
+            // 3 byte longs
+            0x123456781L, 0x1234567812L, 0x12345678123L, 0x123456781234L, 0x1234567812345L, 0x12345678123456L, 0x7e345678123456L, 0x7fffffffffffffL,
+            0x80000000000000L, 0x80000000000001L, 0xe0000000000001L, 0xffffffffffffffL,
+            // 4 byte longs
+            0x1234567812345678L, 0x7fffffffffffffffL, 0x8000000000000000L, 0x8000000000000001L, 0xe000000000000001L, 0xffffffffffffffffL, 1
+        };
 
         for (int i = 0; i < numberValues.length; i++) {
             long value = numberValues[i];

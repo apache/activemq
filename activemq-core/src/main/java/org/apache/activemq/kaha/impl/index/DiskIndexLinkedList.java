@@ -52,8 +52,9 @@ public class DiskIndexLinkedList implements IndexLinkedList {
      * @return the first element in this list.
      */
     public synchronized IndexItem getFirst() {
-        if (size == 0)
+        if (size == 0) {
             return null;
+        }
         return getNextEntry(root);
     }
 
@@ -63,8 +64,9 @@ public class DiskIndexLinkedList implements IndexLinkedList {
      * @return the last element in this list.
      */
     public synchronized IndexItem getLast() {
-        if (size == 0)
+        if (size == 0) {
             return null;
+        }
         if (last != null) {
             last.next = null;
             last.setNextItem(IndexItem.POSITION_NOT_SET);
@@ -92,8 +94,9 @@ public class DiskIndexLinkedList implements IndexLinkedList {
      * @return the last element from this list.
      */
     public synchronized Object removeLast() {
-        if (size == 0)
+        if (size == 0) {
             return null;
+        }
         StoreEntry result = last;
         remove(last);
         return result;
@@ -208,8 +211,9 @@ public class DiskIndexLinkedList implements IndexLinkedList {
      * Return the indexed entry.
      */
     private IndexItem entry(int index) {
-        if (index < 0 || index >= size)
+        if (index < 0 || index >= size) {
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
+        }
         IndexItem e = root;
 
         for (int i = 0; i <= index; i++) {
@@ -328,8 +332,9 @@ public class DiskIndexLinkedList implements IndexLinkedList {
     }
 
     public synchronized void remove(IndexItem e) {
-        if (e == root || e.equals(root))
+        if (e == root || e.equals(root)) {
             return;
+        }
         if (e == last || e.equals(last)) {
             if (size > 1) {
                 last = (IndexItem)refreshEntry(last);

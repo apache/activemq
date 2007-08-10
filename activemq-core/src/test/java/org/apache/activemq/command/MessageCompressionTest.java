@@ -31,11 +31,8 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 
 public class MessageCompressionTest extends TestCase {
-
-    protected BrokerService broker;
-    private ActiveMQQueue queue;
+    
     private static final String BROKER_URL = "tcp://localhost:61216";
-
     // The following text should compress well
     private static final String TEXT = "The quick red fox jumped over the lazy brown dog. " + "The quick red fox jumped over the lazy brown dog. "
                                        + "The quick red fox jumped over the lazy brown dog. " + "The quick red fox jumped over the lazy brown dog. "
@@ -46,6 +43,9 @@ public class MessageCompressionTest extends TestCase {
                                        + "The quick red fox jumped over the lazy brown dog. " + "The quick red fox jumped over the lazy brown dog. "
                                        + "The quick red fox jumped over the lazy brown dog. " + "The quick red fox jumped over the lazy brown dog. "
                                        + "The quick red fox jumped over the lazy brown dog. ";
+
+    protected BrokerService broker;
+    private ActiveMQQueue queue;
 
     protected void setUp() throws Exception {
         broker = new BrokerService();

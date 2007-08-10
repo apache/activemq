@@ -38,14 +38,13 @@ import org.apache.commons.logging.LogFactory;
  * available and setup a connection to each available remote broker
  * 
  * @org.apache.xbean.XBean element="networkConnector"
- * 
  * @version $Revision$
  */
 public class DiscoveryNetworkConnector extends NetworkConnector implements DiscoveryListener {
     private static final Log LOG = LogFactory.getLog(DiscoveryNetworkConnector.class);
 
     private DiscoveryAgent discoveryAgent;
-    private ConcurrentHashMap bridges = new ConcurrentHashMap();
+    private ConcurrentHashMap<URI, NetworkBridge> bridges = new ConcurrentHashMap<URI, NetworkBridge>();
 
     public DiscoveryNetworkConnector() {
     }
@@ -61,8 +60,9 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
     public void onServiceAdd(DiscoveryEvent event) {
         String localURIName = localURI.getScheme() + "://" + localURI.getHost();
         // Ignore events once we start stopping.
-        if (serviceSupport.isStopped() || serviceSupport.isStopping())
+        if (serviceSupport.isStopped() || serviceSupport.isStopping()) {
             return;
+        }
         String url = event.getServiceName();
         if (url != null) {
             URI uri;
@@ -73,9 +73,9 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 return;
             }
             // Should we try to connect to that URI?
-            if (bridges.containsKey(uri) || localURI.equals(uri)
-                || (connectionFilter != null && !connectionFilter.connectTo(uri)))
+            if (bridges.containsKey(uri) || localURI.equals(uri) || (connectionFilter != null && !connectionFilter.connectTo(uri))) {
                 return;
+            }
             URI connectUri = uri;
             LOG.info("Establishing network connection between from " + localURIName + " to " + connectUri);
             Transport remoteTransport;
@@ -102,8 +102,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             } catch (Exception e) {
                 ServiceSupport.dispose(localTransport);
                 ServiceSupport.dispose(remoteTransport);
-                LOG.warn("Could not start network bridge between: " + localURIName + " and: " + uri
-                         + " due to: " + e);
+                LOG.warn("Could not start network bridge between: " + localURIName + " and: " + uri + " due to: " + e);
                 LOG.debug("Start failure exception: " + e, e);
                 try {
                     discoveryAgent.serviceFailed(event);
@@ -125,9 +124,10 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 return;
             }
 
-            NetworkBridge bridge = (NetworkBridge)bridges.remove(uri);
-            if (bridge == null)
+            NetworkBridge bridge = bridges.remove(uri);
+            if (bridge == null) {
                 return;
+            }
 
             ServiceSupport.dispose(bridge);
         }
@@ -154,8 +154,8 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
     }
 
     protected void handleStop(ServiceStopper stopper) throws Exception {
-        for (Iterator i = bridges.values().iterator(); i.hasNext();) {
-            NetworkBridge bridge = (NetworkBridge)i.next();
+        for (Iterator<NetworkBridge> i = bridges.values().iterator(); i.hasNext();) {
+            NetworkBridge bridge = i.next();
             try {
                 bridge.stop();
             } catch (Exception e) {
@@ -171,8 +171,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
         super.handleStop(stopper);
     }
 
-    protected NetworkBridge createBridge(Transport localTransport, Transport remoteTransport,
-                                         final DiscoveryEvent event) {
+    protected NetworkBridge createBridge(Transport localTransport, Transport remoteTransport, final DiscoveryEvent event) {
         NetworkBridgeListener listener = new NetworkBridgeListener() {
 
             public void bridgeFailed() {
@@ -194,8 +193,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             }
 
         };
-        DemandForwardingBridge result = NetworkBridgeFactory.createBridge(this, localTransport,
-                                                                          remoteTransport, listener);
+        DemandForwardingBridge result = NetworkBridgeFactory.createBridge(this, localTransport, remoteTransport, listener);
         return configureBridge(result);
     }
 

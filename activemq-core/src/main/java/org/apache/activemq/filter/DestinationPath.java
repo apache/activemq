@@ -34,7 +34,7 @@ public class DestinationPath {
     protected static final char SEPARATOR = '.';
 
     public static String[] getDestinationPaths(String subject) {
-        List list = new ArrayList();
+        List<String> list = new ArrayList<String>();
         int previous = 0;
         int lastIndex = subject.length() - 1;
         while (true) {

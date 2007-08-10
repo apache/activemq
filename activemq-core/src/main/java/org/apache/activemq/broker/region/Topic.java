@@ -18,6 +18,7 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -62,7 +63,7 @@ import org.apache.commons.logging.LogFactory;
 public class Topic implements Destination {
     private static final Log LOG = LogFactory.getLog(Topic.class);
     protected final ActiveMQDestination destination;
-    protected final CopyOnWriteArrayList consumers = new CopyOnWriteArrayList();
+    protected final CopyOnWriteArrayList<Subscription> consumers = new CopyOnWriteArrayList<Subscription>();
     protected final Valve dispatchValve = new Valve(true);
     // this could be NULL! (If an advisory)
     protected final TopicMessageStore store;
@@ -73,14 +74,32 @@ public class Topic implements Destination {
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy = new FixedSizedSubscriptionRecoveryPolicy();
     private boolean sendAdvisoryIfNoConsumers;
     private DeadLetterStrategy deadLetterStrategy = new SharedDeadLetterStrategy();
-    private final ConcurrentHashMap durableSubcribers = new ConcurrentHashMap();
-    final Broker broker;
+    private final ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription> durableSubcribers = new ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription>();
+    
+    private final LinkedList<Runnable> messagesWaitingForSpace = new LinkedList<Runnable>();
+    private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
+        public void run() {
+
+            // We may need to do this in async thread since this is run for
+            // within a synchronization
+            // that the UsageManager is holding.
+
+            synchronized (messagesWaitingForSpace) {
+                while (!usageManager.isFull() && !messagesWaitingForSpace.isEmpty()) {
+                    Runnable op = messagesWaitingForSpace.removeFirst();
+                    op.run();
+                }
+            }
+
+        };
+    };
+    private final Broker broker;
 
     public Topic(Broker broker, ActiveMQDestination destination, TopicMessageStore store, UsageManager memoryManager, DestinationStatistics parentStats,
                  TaskRunnerFactory taskFactory) {
         this.broker = broker;
         this.destination = destination;
-        this.store = store; // this could be NULL! (If an advsiory)
+        this.store = store; // this could be NULL! (If an advisory)
         this.usageManager = new UsageManager(memoryManager, destination.toString());
         this.usageManager.setUsagePortion(1.0f);
 
@@ -168,8 +187,9 @@ public class Topic implements Destination {
                 consumers.add(subscription);
             }
 
-            if (store == null)
+            if (store == null) {
                 return;
+            }
 
             // Recover the durable subscription.
             String clientId = subscription.getClientId();
@@ -228,9 +248,6 @@ public class Topic implements Destination {
                         throw new RuntimeException("Should not be called.");
                     }
 
-                    public void finished() {
-                    }
-
                     public boolean hasSpace() {
                         return true;
                     }
@@ -254,24 +271,6 @@ public class Topic implements Destination {
             subscriptionRecoveryPolicy.recover(context, this, subscription);
         }
     }
-
-    private final LinkedList<Runnable> messagesWaitingForSpace = new LinkedList<Runnable>();
-    private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
-        public void run() {
-
-            // We may need to do this in async thread since this is run for
-            // within a synchronization
-            // that the UsageManager is holding.
-
-            synchronized (messagesWaitingForSpace) {
-                while (!usageManager.isFull() && !messagesWaitingForSpace.isEmpty()) {
-                    Runnable op = messagesWaitingForSpace.removeFirst();
-                    op.run();
-                }
-            }
-
-        };
-    };
 
     public void send(final ProducerBrokerExchange producerExchange, final Message message) throws Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
@@ -342,8 +341,9 @@ public class Topic implements Destination {
                 // control at the broker
                 // by blocking this thread until there is space available.
                 while (!usageManager.waitForSpace(1000)) {
-                    if (context.getStopping().get())
+                    if (context.getStopping().get()) {
                         throw new IOException("Connection closed, send aborted.");
+                    }
                 }
 
                 // The usage manager could have delayed us by the time
@@ -364,8 +364,9 @@ public class Topic implements Destination {
         final ConnectionContext context = producerExchange.getConnectionContext();
         message.setRegionDestination(this);
 
-        if (store != null && message.isPersistent() && !canOptimizeOutPersistence())
+        if (store != null && message.isPersistent() && !canOptimizeOutPersistence()) {
             store.addMessage(context, message);
+        }
 
         message.incrementReferenceCount();
         try {
@@ -440,7 +441,7 @@ public class Topic implements Destination {
     }
 
     public Message[] browse() {
-        final Set result = new CopyOnWriteArraySet();
+        final Set<Message> result = new CopyOnWriteArraySet<Message>();
         try {
             if (store != null) {
                 store.recover(new MessageRecoveryListener() {
@@ -451,9 +452,6 @@ public class Topic implements Destination {
 
                     public boolean recoverMessageReference(MessageId messageReference) throws Exception {
                         return true;
-                    }
-
-                    public void finished() {
                     }
 
                     public boolean hasSpace() {
@@ -470,7 +468,7 @@ public class Topic implements Destination {
         } catch (Throwable e) {
             LOG.warn("Failed to browse Topic: " + getActiveMQDestination().getPhysicalName(), e);
         }
-        return (Message[])result.toArray(new Message[result.size()]);
+        return result.toArray(new Message[result.size()]);
     }
 
     // Properties
@@ -576,10 +574,12 @@ public class Topic implements Destination {
                     // filled when the message is first sent,
                     // it is only populated if the message is routed to another
                     // destination like the DLQ
-                    if (message.getOriginalDestination() != null)
+                    if (message.getOriginalDestination() != null) {
                         message.setOriginalDestination(message.getDestination());
-                    if (message.getOriginalTransactionId() != null)
+                    }
+                    if (message.getOriginalTransactionId() != null) {
                         message.setOriginalTransactionId(message.getTransactionId());
+                    }
 
                     ActiveMQTopic advisoryTopic = AdvisorySupport.getNoTopicConsumersAdvisoryTopic(destination);
                     message.setDestination(advisoryTopic);

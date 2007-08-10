@@ -16,9 +16,11 @@
  */
 package org.apache.activemq;
 
-import java.util.LinkedHashMap;
+import java.util.Map;
+
 import javax.jms.JMSException;
 import javax.jms.Message;
+
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
@@ -36,7 +38,7 @@ public class ActiveMQMessageAudit {
     private static final int DEFAULT_WINDOW_SIZE = 1024;
     private static final int MAXIMUM_PRODUCER_COUNT = 128;
     private int windowSize;
-    private LinkedHashMap<Object, BitArrayBin> map;
+    private Map<Object, BitArrayBin> map;
 
     /**
      * Default Constructor windowSize = 1024, maximumNumberOfProducersToTrack =

@@ -46,8 +46,8 @@ public class SslTransportFactoryTest extends TestCase {
         SslTransportServer sslTransportServer = null;
 
         for (int i = 0; i < 4; ++i) {
-            final boolean wantClientAuth = ((i & 0x1) == 1);
-            final boolean needClientAuth = ((i & 0x2) == 1);
+            final boolean wantClientAuth = (i & 0x1) == 1;
+            final boolean needClientAuth = (i & 0x2) == 1;
 
             String options = "wantClientAuth=" + (wantClientAuth ? "true" : "false") + "&needClientAuth="
                              + (needClientAuth ? "true" : "false");

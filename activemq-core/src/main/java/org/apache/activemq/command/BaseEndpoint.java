@@ -24,7 +24,7 @@ package org.apache.activemq.command;
 public class BaseEndpoint implements Endpoint {
 
     private String name;
-    BrokerInfo brokerInfo;
+    private BrokerInfo brokerInfo;
 
     public BaseEndpoint(String name) {
         this.name = name;

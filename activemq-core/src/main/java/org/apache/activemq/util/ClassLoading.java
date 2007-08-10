@@ -25,8 +25,28 @@ import java.util.Map;
  * 
  * @version $Rev: 109957 $ $Date$
  */
-public class ClassLoading {
+public final class ClassLoading {
 
+    /**
+     * Primitive type name -> class map.
+     */
+    private static final Map<String, Class> PRIMITIVES = new HashMap<String, Class>();
+    /**
+     * VM primitive type primitive type -> name
+     */
+    private static final Map<Class, String> VM_PRIMITIVES_REVERSE = new HashMap<Class, String>();
+    /**
+     * VM primitive type name -> primitive type
+     */
+    private static final Map<String, Class> VM_PRIMITIVES = new HashMap<String, Class>();
+    /**
+     * Map of primitive types to their wrapper classes
+     */
+    private static final Map<Class, Class> PRIMITIVE_WRAPPERS = new HashMap<Class, Class>();
+
+    private ClassLoading() {        
+    }
+    
     /**
      * Load a class for the given name. <p/>
      * <p>
@@ -130,11 +150,6 @@ public class ClassLoading {
         return rc.toString();
     }
 
-    /**
-     * Primitive type name -> class map.
-     */
-    private static final Map PRIMITIVES = new HashMap();
-
     /** Setup the primitives map. */
     static {
         PRIMITIVES.put("boolean", Boolean.TYPE);
@@ -156,13 +171,9 @@ public class ClassLoading {
      * @return Primitive type or null.
      */
     private static Class getPrimitiveType(final String name) {
-        return (Class) PRIMITIVES.get(name);
+        return PRIMITIVES.get(name);
     }
 
-    /**
-     * VM primitive type name -> primitive type
-     */
-    private static final HashMap VM_PRIMITIVES = new HashMap();
 
     /** Setup the vm primitives map. */
     static {
@@ -177,10 +188,6 @@ public class ClassLoading {
         VM_PRIMITIVES.put("V", void.class);
     }
 
-    /**
-     * VM primitive type primitive type -> name
-     */
-    private static final HashMap VM_PRIMITIVES_REVERSE = new HashMap();
 
     /** Setup the vm primitives reverse map. */
     static {
@@ -219,13 +226,8 @@ public class ClassLoading {
      * @return Primitive type or null.
      */
     private static Class getVMPrimitiveType(final String name) {
-        return (Class) VM_PRIMITIVES.get(name);
+        return VM_PRIMITIVES.get(name);
     }
-
-    /**
-     * Map of primitive types to their wrapper classes
-     */
-    private static final Map PRIMITIVE_WRAPPERS = new HashMap();
 
     /** Setup the wrapper map. */
     static {

@@ -26,13 +26,13 @@ import javax.management.j2ee.statistics.Stats;
  * @version $Revision: 1.2 $
  */
 public class StatsImpl extends StatisticImpl implements Stats, Resettable {
-    private Map map;
+    private Map<String, StatisticImpl> map;
 
     public StatsImpl() {
         this(new HashMap());
     }
 
-    public StatsImpl(Map map) {
+    public StatsImpl(Map<String, StatisticImpl> map) {
         super("stats", "many", "Used only as container, not Statistic");
         this.map = map;
     }
@@ -49,18 +49,18 @@ public class StatsImpl extends StatisticImpl implements Stats, Resettable {
     }
 
     public Statistic getStatistic(String name) {
-        return (Statistic)map.get(name);
+        return map.get(name);
     }
 
     public String[] getStatisticNames() {
-        Set keys = map.keySet();
+        Set<String> keys = map.keySet();
         String[] answer = new String[keys.size()];
         keys.toArray(answer);
         return answer;
     }
 
     public Statistic[] getStatistics() {
-        Collection values = map.values();
+        Collection<StatisticImpl> values = map.values();
         Statistic[] answer = new Statistic[values.size()];
         values.toArray(answer);
         return answer;

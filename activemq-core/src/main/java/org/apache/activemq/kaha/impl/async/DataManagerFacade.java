@@ -32,6 +32,12 @@ import org.apache.activemq.util.DataByteArrayOutputStream;
  */
 public final class DataManagerFacade implements org.apache.activemq.kaha.impl.DataManager {
 
+    private static final ByteSequence FORCE_COMMAND = new ByteSequence(new byte[] {'F', 'O', 'R', 'C', 'E'});
+
+    private AsyncDataManager dataManager;
+    private final String name;
+    private Marshaller redoMarshaller;
+
     private static class StoreLocationFacade implements StoreLocation {
         private final Location location;
 
@@ -56,19 +62,27 @@ public final class DataManagerFacade implements org.apache.activemq.kaha.impl.Da
         }
     }
 
+    public DataManagerFacade(AsyncDataManager dataManager, String name) {
+        this.dataManager = dataManager;
+        this.name = name;
+    }
+
     private static StoreLocation convertToStoreLocation(Location location) {
-        if (location == null)
+        if (location == null) {
             return null;
+        }
         return new StoreLocationFacade(location);
     }
 
     private static Location convertFromStoreLocation(StoreLocation location) {
 
-        if (location == null)
+        if (location == null) {
             return null;
+        }
 
-        if (location.getClass() == StoreLocationFacade.class)
+        if (location.getClass() == StoreLocationFacade.class) {
             return ((StoreLocationFacade)location).getLocation();
+        }
 
         Location l = new Location();
         l.setOffset((int)location.getOffset());
@@ -77,16 +91,6 @@ public final class DataManagerFacade implements org.apache.activemq.kaha.impl.Da
         return l;
     }
 
-    private static final ByteSequence FORCE_COMMAND = new ByteSequence(new byte[] {'F', 'O', 'R', 'C', 'E'});
-
-    AsyncDataManager dataManager;
-    private final String name;
-    private Marshaller redoMarshaller;
-
-    public DataManagerFacade(AsyncDataManager dataManager, String name) {
-        this.dataManager = dataManager;
-        this.name = name;
-    }
 
     public Object readItem(Marshaller marshaller, StoreLocation location) throws IOException {
         ByteSequence sequence = dataManager.read(convertFromStoreLocation(location));

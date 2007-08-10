@@ -36,12 +36,13 @@ public class DefaultBrokerFactory implements BrokerFactoryHandler {
     public BrokerService createBroker(URI brokerURI) throws Exception {
 
         CompositeData compositeData = URISupport.parseComposite(brokerURI);
-        Map params = new HashMap(compositeData.getParameters());
+        Map<String, String> params = new HashMap<String, String>(compositeData.getParameters());
 
         BrokerService brokerService = new BrokerService();
         IntrospectionSupport.setProperties(brokerService, params);
-        if (compositeData.getPath() != null)
+        if (compositeData.getPath() != null) {
             brokerService.setBrokerName(compositeData.getPath());
+        }
 
         URI[] components = compositeData.getComponents();
         for (int i = 0; i < components.length; i++) {

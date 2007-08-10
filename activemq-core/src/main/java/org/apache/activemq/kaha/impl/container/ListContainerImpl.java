@@ -323,15 +323,13 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
      */
     public synchronized boolean containsAll(Collection c) {
         load();
-        boolean result = false;
         for (Iterator i = c.iterator(); i.hasNext();) {
             Object obj = i.next();
-            if (!(result = contains(obj))) {
-                result = false;
-                break;
+            if (!contains(obj)) {
+                return false;
             }
         }
-        return result;
+        return true;
     }
 
     /*
@@ -872,8 +870,9 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
             Object o = i.next();
             result.append(String.valueOf(o));
             hasNext = i.hasNext();
-            if (hasNext)
+            if (hasNext) {
                 result.append(", ");
+            }
         }
         result.append("]");
         return result.toString();

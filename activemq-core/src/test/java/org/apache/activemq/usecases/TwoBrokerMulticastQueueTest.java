@@ -38,6 +38,13 @@ import org.apache.activemq.xbean.XBeanBrokerFactory;
 
 public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
 
+    public static final int MESSAGE_COUNT = 100;
+    public static final int BROKER_COUNT = 2;
+    public static final int CONSUMER_COUNT = 20;
+
+    public String sendUri, recvUri;
+    private BrokerService[] brokers;
+
     public static Test suite() {
         return suite(TwoBrokerMulticastQueueTest.class);
     }
@@ -45,13 +52,6 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
-
-    public static final int MESSAGE_COUNT = 100;
-    public static final int BROKER_COUNT = 2;
-    public static final int CONSUMER_COUNT = 20;
-
-    private BrokerService[] brokers;
-    public String sendUri, recvUri;
 
     public void setUp() throws Exception {
         super.setAutoFail(true);

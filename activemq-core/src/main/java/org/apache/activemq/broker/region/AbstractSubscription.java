@@ -45,7 +45,7 @@ public abstract class AbstractSubscription implements Subscription {
     protected ConnectionContext context;
     protected ConsumerInfo info;
     protected final DestinationFilter destinationFilter;
-    protected final CopyOnWriteArrayList destinations = new CopyOnWriteArrayList();
+    protected final CopyOnWriteArrayList<Destination> destinations = new CopyOnWriteArrayList<Destination>();
     private BooleanExpression selectorExpression;
     private ObjectName objectName;
 
@@ -83,8 +83,9 @@ public abstract class AbstractSubscription implements Subscription {
     public boolean matches(MessageReference node, MessageEvaluationContext context) throws IOException {
         ConsumerId targetConsumerId = node.getTargetConsumerId();
         if (targetConsumerId != null) {
-            if (!targetConsumerId.equals(info.getConsumerId()))
+            if (!targetConsumerId.equals(info.getConsumerId())) {
                 return false;
+            }
         }
         try {
             return (selectorExpression == null || selectorExpression.matches(context)) && this.context.isAllowedToConsume(node);

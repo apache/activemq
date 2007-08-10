@@ -83,7 +83,7 @@ public class IntrospectionSupport {
         return rc;
     }
 
-    public static boolean setProperties(Object target, Map props, String optionPrefix) {
+    public static boolean setProperties(Object target, Map<String, ?> props, String optionPrefix) {
         boolean rc = false;
         if (target == null) {
             throw new IllegalArgumentException("target was null.");

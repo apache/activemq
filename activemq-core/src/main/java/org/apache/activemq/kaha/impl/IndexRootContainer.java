@@ -40,13 +40,15 @@ import org.apache.commons.logging.LogFactory;
  */
 
 class IndexRootContainer {
-    private static final Log LOG = LogFactory.getLog(IndexRootContainer.class);
+    
     protected static final Marshaller ROOT_MARSHALLER = Store.OBJECT_MARSHALLER;
+    private static final Log LOG = LogFactory.getLog(IndexRootContainer.class);
+
     protected IndexItem root;
     protected IndexManager indexManager;
     protected DataManager dataManager;
-    protected Map map = new ConcurrentHashMap();
-    protected LinkedList list = new LinkedList();
+    protected Map<Object, StoreEntry> map = new ConcurrentHashMap<Object, StoreEntry>();
+    protected LinkedList<StoreEntry> list = new LinkedList<StoreEntry>();
 
     IndexRootContainer(IndexItem root, IndexManager im, DataManager dfm) throws IOException {
         this.root = root;
@@ -64,7 +66,7 @@ class IndexRootContainer {
         }
     }
 
-    Set getKeys() {
+    Set<Object> getKeys() {
         return map.keySet();
     }
 
@@ -93,7 +95,7 @@ class IndexRootContainer {
     }
 
     void removeRoot(IndexManager containerIndexManager, ContainerId key) throws IOException {
-        StoreEntry oldRoot = (StoreEntry)map.remove(key);
+        StoreEntry oldRoot = map.remove(key);
         if (oldRoot != null) {
             dataManager.removeInterestInFile(oldRoot.getKeyFile());
             // get the container root
@@ -119,7 +121,7 @@ class IndexRootContainer {
     }
 
     IndexItem getRoot(IndexManager containerIndexManager, ContainerId key) throws IOException {
-        StoreEntry index = (StoreEntry)map.get(key);
+        StoreEntry index = map.get(key);
         if (index != null) {
             return containerIndexManager.getIndex(index.getValueOffset());
         }

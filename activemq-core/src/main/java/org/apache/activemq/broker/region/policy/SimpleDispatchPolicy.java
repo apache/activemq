@@ -37,11 +37,13 @@ public class SimpleDispatchPolicy implements DispatchPolicy {
             Subscription sub = (Subscription)iter.next();
 
             // Don't deliver to browsers
-            if (sub.getConsumerInfo().isBrowser())
+            if (sub.getConsumerInfo().isBrowser()) {
                 continue;
+            }
             // Only dispatch to interested subscriptions
-            if (!sub.matches(node, msgContext))
+            if (!sub.matches(node, msgContext)) {
                 continue;
+            }
 
             sub.add(node);
             count++;

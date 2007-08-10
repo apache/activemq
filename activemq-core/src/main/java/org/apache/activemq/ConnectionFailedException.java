@@ -42,8 +42,9 @@ public class ConnectionFailedException extends JMSException {
 
     private static String extractMessage(IOException cause) {
         String m = cause.getMessage();
-        if (m == null || m.length() == 0)
+        if (m == null || m.length() == 0) {
             m = cause.toString();
+        }
         return m;
     }
 

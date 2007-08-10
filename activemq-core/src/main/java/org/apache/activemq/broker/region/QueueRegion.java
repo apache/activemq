@@ -53,12 +53,13 @@ public class QueueRegion extends AbstractRegion {
         }
     }
 
-    protected Set getInactiveDestinations() {
-        Set inactiveDestinations = super.getInactiveDestinations();
-        for (Iterator iter = inactiveDestinations.iterator(); iter.hasNext();) {
-            ActiveMQDestination dest = (ActiveMQDestination)iter.next();
-            if (!dest.isQueue())
+    protected Set<ActiveMQDestination> getInactiveDestinations() {
+        Set<ActiveMQDestination> inactiveDestinations = super.getInactiveDestinations();
+        for (Iterator<ActiveMQDestination> iter = inactiveDestinations.iterator(); iter.hasNext();) {
+            ActiveMQDestination dest = iter.next();
+            if (!dest.isQueue()) {
                 iter.remove();
+            }
         }
         return inactiveDestinations;
     }

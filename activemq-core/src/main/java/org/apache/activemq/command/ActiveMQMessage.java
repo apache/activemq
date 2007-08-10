@@ -45,12 +45,14 @@ import org.apache.activemq.util.TypeConversionSupport;
 public class ActiveMQMessage extends Message implements org.apache.activemq.Message {
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_MESSAGE;
+    private static final Map<String, PropertySetter> JMS_PROPERTY_SETERS = new HashMap<String, PropertySetter>();
+
+    protected transient Callback acknowledgeCallback;
 
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
 
-    protected transient Callback acknowledgeCallback;
 
     public Message copy() {
         ActiveMQMessage copy = new ActiveMQMessage();
@@ -73,10 +75,12 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     }
 
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || o.getClass() != getClass())
+        }
+        if (o == null || o.getClass() != getClass()) {
             return false;
+        }
 
         ActiveMQMessage msg = (ActiveMQMessage)o;
         MessageId oMsg = msg.getMessageId();
@@ -273,7 +277,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
 
     public Enumeration getPropertyNames() throws JMSException {
         try {
-            return new Vector(this.getProperties().keySet()).elements();
+            return new Vector<String>(this.getProperties().keySet()).elements();
         } catch (IOException e) {
             throw JMSExceptionSupport.create(e);
         }
@@ -283,7 +287,6 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         void set(Message message, Object value) throws MessageFormatException;
     }
 
-    private static final HashMap JMS_PROPERTY_SETERS = new HashMap();
     static {
         JMS_PROPERTY_SETERS.put("JMSXDeliveryCount", new PropertySetter() {
             public void set(Message message, Object value) throws MessageFormatException {
@@ -391,7 +394,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         }
 
         checkValidObject(value);
-        PropertySetter setter = (PropertySetter)JMS_PROPERTY_SETERS.get(name);
+        PropertySetter setter = JMS_PROPERTY_SETERS.get(name);
 
         if (setter != null) {
             setter.set(this, value);
@@ -416,7 +419,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
 
     protected void checkValidObject(Object value) throws MessageFormatException {
         
-        boolean valid = value instanceof Boolean || value instanceof Byte || value instanceof Short || value instanceof Integer || value instanceof Long ;
+        boolean valid = value instanceof Boolean || value instanceof Byte || value instanceof Short || value instanceof Integer || value instanceof Long;
         valid = valid || value instanceof Float || value instanceof Double || value instanceof Character || value instanceof String || value == null;
         
         if (!valid) {
@@ -445,8 +448,9 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
 
     public boolean getBooleanProperty(String name) throws JMSException {
         Object value = getObjectProperty(name);
-        if (value == null)
+        if (value == null) {
             return false;
+        }
         Boolean rc = (Boolean)TypeConversionSupport.convert(value, Boolean.class);
         if (rc == null) {
             throw new MessageFormatException("Property " + name + " was a " + value.getClass().getName() + " and cannot be read as a boolean");
@@ -456,8 +460,9 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
 
     public byte getByteProperty(String name) throws JMSException {
         Object value = getObjectProperty(name);
-        if (value == null)
+        if (value == null) {
             throw new NumberFormatException("property " + name + " was null");
+        }
         Byte rc = (Byte)TypeConversionSupport.convert(value, Byte.class);
         if (rc == null) {
             throw new MessageFormatException("Property " + name + " was a " + value.getClass().getName() + " and cannot be read as a byte");
@@ -467,8 +472,9 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
 
     public short getShortProperty(String name) throws JMSException {
         Object value = getObjectProperty(name);
-        if (value == null)
+        if (value == null) {
             throw new NumberFormatException("property " + name + " was null");
+        }
         Short rc = (Short)TypeConversionSupport.convert(value, Short.class);
         if (rc == null) {
             throw new MessageFormatException("Property " + name + " was a " + value.getClass().getName() + " and cannot be read as a short");
@@ -478,8 +484,9 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
 
     public int getIntProperty(String name) throws JMSException {
         Object value = getObjectProperty(name);
-        if (value == null)
+        if (value == null) {
             throw new NumberFormatException("property " + name + " was null");
+        }
         Integer rc = (Integer)TypeConversionSupport.convert(value, Integer.class);
         if (rc == null) {
             throw new MessageFormatException("Property " + name + " was a " + value.getClass().getName() + " and cannot be read as an integer");
@@ -489,8 +496,9 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
 
     public long getLongProperty(String name) throws JMSException {
         Object value = getObjectProperty(name);
-        if (value == null)
+        if (value == null) {
             throw new NumberFormatException("property " + name + " was null");
+        }
         Long rc = (Long)TypeConversionSupport.convert(value, Long.class);
         if (rc == null) {
             throw new MessageFormatException("Property " + name + " was a " + value.getClass().getName() + " and cannot be read as a long");
@@ -500,8 +508,9 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
 
     public float getFloatProperty(String name) throws JMSException {
         Object value = getObjectProperty(name);
-        if (value == null)
+        if (value == null) {
             throw new NullPointerException("property " + name + " was null");
+        }
         Float rc = (Float)TypeConversionSupport.convert(value, Float.class);
         if (rc == null) {
             throw new MessageFormatException("Property " + name + " was a " + value.getClass().getName() + " and cannot be read as a float");
@@ -511,8 +520,9 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
 
     public double getDoubleProperty(String name) throws JMSException {
         Object value = getObjectProperty(name);
-        if (value == null)
+        if (value == null) {
             throw new NullPointerException("property " + name + " was null");
+        }
         Double rc = (Double)TypeConversionSupport.convert(value, Double.class);
         if (rc == null) {
             throw new MessageFormatException("Property " + name + " was a " + value.getClass().getName() + " and cannot be read as a double");
@@ -527,8 +537,9 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
                 value = getUserID();
             }
         }
-        if (value == null)
+        if (value == null) {
             return null;
+        }
         String rc = (String)TypeConversionSupport.convert(value, String.class);
         if (rc == null) {
             throw new MessageFormatException("Property " + name + " was a " + value.getClass().getName() + " and cannot be read as a String");

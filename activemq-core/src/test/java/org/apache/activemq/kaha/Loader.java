@@ -50,9 +50,9 @@ class Loader extends Thread {
         try {
             start.countDown();
             start.await();
-            Marshaller keyMarshaller = new StringMarshaller();
-            Marshaller valueMarshaller = new BytesMarshaller();
-            MapContainer container = store.getMapContainer(name, Store.DEFAULT_CONTAINER_NAME, true);
+            Marshaller<String> keyMarshaller = new StringMarshaller();
+            Marshaller<Object> valueMarshaller = new BytesMarshaller();
+            MapContainer<String, Object> container = store.getMapContainer(name, Store.DEFAULT_CONTAINER_NAME, true);
 
             container.setKeyMarshaller(keyMarshaller);
             container.setValueMarshaller(valueMarshaller);
@@ -69,10 +69,10 @@ class Loader extends Thread {
             long totalLoadTime = finishLoad - startLoad;
             LOG.info("name " + name + " load time = " + totalLoadTime + "(ms)");
 
-            Set keys = container.keySet();
+            Set<String> keys = container.keySet();
             long startExtract = System.currentTimeMillis();
 
-            for (Iterator i = keys.iterator(); i.hasNext();) {
+            for (Iterator<String> i = keys.iterator(); i.hasNext();) {
                 byte[] data = (byte[])container.get(i.next());
             }
             long finishExtract = System.currentTimeMillis();
@@ -80,7 +80,7 @@ class Loader extends Thread {
             LOG.info("name " + name + " extract time = " + totalExtractTime + "(ms)");
 
             long startRemove = System.currentTimeMillis();
-            for (Iterator i = keys.iterator(); i.hasNext();) {
+            for (Iterator<String> i = keys.iterator(); i.hasNext();) {
                 container.remove(i.next());
             }
             long finishRemove = System.currentTimeMillis();

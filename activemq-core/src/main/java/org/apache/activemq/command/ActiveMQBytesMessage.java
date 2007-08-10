@@ -817,8 +817,9 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
         checkWriteOnlyBody();
         if (dataIn == null) {
             ByteSequence data = getContent();
-            if (data == null)
+            if (data == null) {
                 data = new ByteSequence(new byte[] {}, 0, 0);
+            }
             InputStream is = new ByteArrayInputStream(data);
             if (isCompressed()) {
                 // keep track of the real length of the content if

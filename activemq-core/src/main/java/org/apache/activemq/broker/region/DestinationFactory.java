@@ -41,7 +41,7 @@ public abstract class DestinationFactory {
      * Returns a set of all the {@link org.apache.activemq.command.ActiveMQDestination}
      * objects that the persistence store is aware exist.
      */
-    public abstract Set getDestinations();
+    public abstract Set<ActiveMQDestination> getDestinations();
 
     /**
      * Lists all the durable subscirptions for a given destination.

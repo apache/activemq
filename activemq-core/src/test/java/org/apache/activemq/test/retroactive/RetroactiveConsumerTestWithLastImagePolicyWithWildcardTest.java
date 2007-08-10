@@ -24,15 +24,14 @@ import javax.jms.TextMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 
 /**
- *
  * @version $Revision$
  */
 public class RetroactiveConsumerTestWithLastImagePolicyWithWildcardTest extends RetroactiveConsumerTestWithSimpleMessageListTest {
     private int counter = 1;
-    
+
     protected void sendMessage(MessageProducer producer, TextMessage message) throws JMSException {
         ActiveMQTopic topic = new ActiveMQTopic(destination.toString() + "." + (counter++));
-//        System.out.println("Sending to destination: " + topic);
+        // System.out.println("Sending to destination: " + topic);
         producer.send(topic, message);
     }
 
@@ -41,7 +40,7 @@ public class RetroactiveConsumerTestWithLastImagePolicyWithWildcardTest extends 
     }
 
     protected MessageConsumer createConsumer() throws JMSException {
-        return session.createConsumer( new ActiveMQTopic(destination.toString() + ".>"));
+        return session.createConsumer(new ActiveMQTopic(destination.toString() + ".>"));
     }
 
     protected String getBrokerXml() {

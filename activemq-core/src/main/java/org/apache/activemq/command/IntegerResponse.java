@@ -22,9 +22,9 @@ package org.apache.activemq.command;
  */
 public class IntegerResponse extends Response {
 
-    int result;
-
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.INTEGER_RESPONSE;
+
+    int result;
 
     public IntegerResponse() {
     }

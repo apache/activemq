@@ -48,10 +48,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public final class AsyncDataManager {
 
-    private static final Log LOG = LogFactory.getLog(AsyncDataManager.class);
-
     public static final int CONTROL_RECORD_MAX_LENGTH = 1024;
-
     public static final int ITEM_HEAD_RESERVED_SPACE = 21;
     // ITEM_HEAD_SPACE = length + type+ reserved space + SOR
     public static final int ITEM_HEAD_SPACE = 4 + 1 + ITEM_HEAD_RESERVED_SPACE + 3;
@@ -60,8 +57,8 @@ public final class AsyncDataManager {
 
     public static final int ITEM_HEAD_FOOT_SPACE = ITEM_HEAD_SPACE + ITEM_FOOT_SPACE;
 
-    static final byte[] ITEM_HEAD_SOR = new byte[] {'S', 'O', 'R'}; // 
-    static final byte[] ITEM_HEAD_EOR = new byte[] {'E', 'O', 'R'}; // 
+    public static final byte[] ITEM_HEAD_SOR = new byte[] {'S', 'O', 'R'}; // 
+    public static final byte[] ITEM_HEAD_EOR = new byte[] {'E', 'O', 'R'}; // 
 
     public static final byte DATA_ITEM_TYPE = 1;
     public static final byte REDO_ITEM_TYPE = 2;
@@ -70,8 +67,16 @@ public final class AsyncDataManager {
     public static final String DEFAULT_FILE_PREFIX = "data-";
     public static final int DEFAULT_MAX_FILE_LENGTH = 1024 * 1024 * 32;
 
+    private static final Log LOG = LogFactory.getLog(AsyncDataManager.class);
+
+    protected final Map<WriteKey, WriteCommand> inflightWrites = new ConcurrentHashMap<WriteKey, WriteCommand>();
+
     File directory = new File(DEFAULT_DIRECTORY);
     String filePrefix = DEFAULT_FILE_PREFIX;
+    ControlFile controlFile;
+    boolean started;
+    boolean useNio = true;
+
     private int maxFileLength = DEFAULT_MAX_FILE_LENGTH;
     private int preferedFileLength = DEFAULT_MAX_FILE_LENGTH - 1024 * 512;
 
@@ -80,15 +85,9 @@ public final class AsyncDataManager {
 
     private Map<Integer, DataFile> fileMap = new HashMap<Integer, DataFile>();
     private DataFile currentWriteFile;
-    ControlFile controlFile;
 
     private Location mark;
     private final AtomicReference<Location> lastAppendLocation = new AtomicReference<Location>();
-    boolean started;
-    boolean useNio = true;
-
-    protected final ConcurrentHashMap<WriteKey, WriteCommand> inflightWrites = new ConcurrentHashMap<WriteKey, WriteCommand>();
-
     private Runnable cleanupTask;
 
     @SuppressWarnings("unchecked")
@@ -130,13 +129,13 @@ public final class AsyncDataManager {
                     DataFile dataFile = new DataFile(file, num, preferedFileLength);
                     fileMap.put(dataFile.getDataFileId(), dataFile);
                 } catch (NumberFormatException e) {
-                    // Ignore file that do not match the patern.
+                    // Ignore file that do not match the pattern.
                 }
             }
 
             // Sort the list so that we can link the DataFiles together in the
             // right order.
-            ArrayList<DataFile> l = new ArrayList<DataFile>(fileMap.values());
+            List<DataFile> l = new ArrayList<DataFile>(fileMap.values());
             Collections.sort(l);
             currentWriteFile = null;
             for (DataFile df : l) {
@@ -534,7 +533,7 @@ public final class AsyncDataManager {
         this.filePrefix = filePrefix;
     }
 
-    public ConcurrentHashMap<WriteKey, WriteCommand> getInflightWrites() {
+    public Map<WriteKey, WriteCommand> getInflightWrites() {
         return inflightWrites;
     }
 

@@ -34,6 +34,10 @@ public abstract class UnaryExpression implements Expression {
     private static final BigDecimal BD_LONG_MIN_VALUE = BigDecimal.valueOf(Long.MIN_VALUE);
     protected Expression right;
 
+    public UnaryExpression(Expression left) {
+        this.right = left;
+    }
+
     public static Expression createNegate(Expression left) {
         return new UnaryExpression(left) {
             public Object evaluate(MessageEvaluationContext message) throws JMSException {
@@ -53,17 +57,16 @@ public abstract class UnaryExpression implements Expression {
         };
     }
 
-    public static BooleanExpression createInExpression(PropertyExpression right, List elements,
-                                                       final boolean not) {
+    public static BooleanExpression createInExpression(PropertyExpression right, List<Object> elements, final boolean not) {
 
         // Use a HashSet if there are many elements.
-        Collection t;
-        if (elements.size() == 0)
+        Collection<Object> t;
+        if (elements.size() == 0) {
             t = null;
-        else if (elements.size() < 5)
+        } else if (elements.size() < 5) {
             t = elements;
-        else {
-            t = new HashSet(elements);
+        } else {
+            t = new HashSet<Object>(elements);
         }
         final Collection inList = t;
 
@@ -74,8 +77,9 @@ public abstract class UnaryExpression implements Expression {
                 if (rvalue == null) {
                     return null;
                 }
-                if (rvalue.getClass() != String.class)
+                if (rvalue.getClass() != String.class) {
                     return null;
+                }
 
                 if ((inList != null && inList.contains(rvalue)) ^ not) {
                     return Boolean.TRUE;
@@ -155,10 +159,12 @@ public abstract class UnaryExpression implements Expression {
         return new BooleanUnaryExpression(left) {
             public Object evaluate(MessageEvaluationContext message) throws JMSException {
                 Object rvalue = right.evaluate(message);
-                if (rvalue == null)
+                if (rvalue == null) {
                     return null;
-                if (!rvalue.getClass().equals(Boolean.class))
+                }
+                if (!rvalue.getClass().equals(Boolean.class)) {
                     return Boolean.FALSE;
+                }
                 return ((Boolean)rvalue).booleanValue() ? Boolean.TRUE : Boolean.FALSE;
             }
 
@@ -200,10 +206,6 @@ public abstract class UnaryExpression implements Expression {
         } else {
             throw new RuntimeException("Don't know how to negate: " + left);
         }
-    }
-
-    public UnaryExpression(Expression left) {
-        this.right = left;
     }
 
     public Expression getRight() {

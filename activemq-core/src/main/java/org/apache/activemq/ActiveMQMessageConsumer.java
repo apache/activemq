@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -178,7 +179,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
         // Allows the options on the destination to configure the consumerInfo
         if (dest.getOptions() != null) {
-            HashMap options = new HashMap(dest.getOptions());
+            Map<String, String> options = new HashMap<String, String>(dest.getOptions());
             IntrospectionSupport.setProperties(this.info, options, "consumer.");
         }
 
@@ -208,8 +209,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             throw e;
         }
 
-        if (session.connection.isStarted())
+        if (session.connection.isStarted()) {
             start();
+        }
     }
 
     public StatsImpl getStats() {
@@ -345,13 +347,15 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         this.messageListener = listener;
         if (listener != null) {
             boolean wasRunning = session.isRunning();
-            if (wasRunning)
+            if (wasRunning) {
                 session.stop();
+            }
 
             session.redispatch(this, unconsumedMessages);
 
-            if (wasRunning)
+            if (wasRunning) {
                 session.start();
+            }
 
         }
     }
@@ -436,8 +440,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
         sendPullCommand(0);
         MessageDispatch md = dequeue(-1);
-        if (md == null)
+        if (md == null) {
             return null;
+        }
 
         beforeMessageIsConsumed(md);
         afterMessageIsConsumed(md, false);
@@ -501,8 +506,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 md = dequeue(timeout);
             }
 
-            if (md == null)
+            if (md == null) {
                 return null;
+            }
 
             beforeMessageIsConsumed(md);
             afterMessageIsConsumed(md, false);
@@ -532,8 +538,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             md = dequeue(0);
         }
 
-        if (md == null)
+        if (md == null) {
             return null;
+        }
 
         beforeMessageIsConsumed(md);
         afterMessageIsConsumed(md, false);
@@ -695,14 +702,16 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
 
     private void afterMessageIsConsumed(MessageDispatch md, boolean messageExpired) throws JMSException {
-        if (unconsumedMessages.isClosed())
+        if (unconsumedMessages.isClosed()) {
             return;
+        }
         if (messageExpired) {
             ackLater(md, MessageAck.DELIVERED_ACK_TYPE);
         } else {
             stats.onMessage();
-            if (session.isTransacted()) {
-            } else if (session.isAutoAcknowledge()) {
+            if( session.isTransacted() ) {
+                // Do nothing.
+            } else if(session.isAutoAcknowledge()) {
                 if (!deliveredMessages.isEmpty()) {
                     if (optimizeAcknowledge) {
                         if (deliveryingAcknowledgements.compareAndSet(false, true)) {
@@ -770,7 +779,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
             // When using DUPS ok, we do a real ack.
             if (ackType == MessageAck.STANDARD_ACK_TYPE) {
-                deliveredCounter = additionalWindowSize = 0;
+                deliveredCounter = 0;
+                additionalWindowSize = 0;
             }
         }
     }
@@ -782,8 +792,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * @throws JMSException
      */
     public void acknowledge() throws JMSException {
-        if (deliveredMessages.isEmpty())
+        if (deliveredMessages.isEmpty()) {
             return;
+        }
 
         // Acknowledge the last message.
         MessageDispatch lastMd = deliveredMessages.get(0);
@@ -822,13 +833,14 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     }
                 }
             }
-            if (deliveredMessages.isEmpty())
+            if (deliveredMessages.isEmpty()) {
                 return;
+            } 
 
             // Only increase the redlivery delay after the first redelivery..
-            if (rollbackCounter > 0)
+            if (rollbackCounter > 0) {
                 redeliveryDelay = redeliveryPolicy.getRedeliveryDelay(redeliveryDelay);
-
+            }
             rollbackCounter++;
             if (redeliveryPolicy.getMaximumRedeliveries() != RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES && rollbackCounter > redeliveryPolicy.getMaximumRedeliveries()) {
                 // We need to NACK the messages so that they get sent to the
@@ -858,8 +870,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     Scheduler.executeAfterDelay(new Runnable() {
                         public void run() {
                             try {
-                                if (started.get())
+                                if (started.get()) {
                                     start();
+                                }
                             } catch (JMSException e) {
                                 session.connection.onAsyncException(e);
                             }

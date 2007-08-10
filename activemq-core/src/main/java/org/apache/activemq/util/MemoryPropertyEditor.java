@@ -60,7 +60,7 @@ public class MemoryPropertyEditor extends PropertyEditorSupport {
 
     public String getAsText() {
         Long value = (Long)getValue();
-        return (value != null ? value.toString() : "");
+        return value != null ? value.toString() : "";
     }
 
 }

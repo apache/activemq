@@ -88,12 +88,12 @@ public final class ByteSequenceData {
 
     public static int readUnsignedShortBig(ByteSequence packet) throws IOException {
         spaceNeeded(packet, 2);
-        return ((read(packet) << 8) + (read(packet) << 0));
+        return (read(packet) << 8) + (read(packet) << 0);
     }
 
     public static int readUnsignedShortLittle(ByteSequence packet) throws IOException {
         spaceNeeded(packet, 2);
-        return ((read(packet) << 0) + (read(packet) << 8));
+        return (read(packet) << 0) + (read(packet) << 8);
     }
 
     public static char readCharBig(ByteSequence packet) throws IOException {
@@ -108,24 +108,24 @@ public final class ByteSequenceData {
 
     public static int readIntBig(ByteSequence packet) throws IOException {
         spaceNeeded(packet, 4);
-        return ((read(packet) << 24) + (read(packet) << 16) + (read(packet) << 8) + (read(packet) << 0));
+        return (read(packet) << 24) + (read(packet) << 16) + (read(packet) << 8) + (read(packet) << 0);
     }
 
     public static int readIntLittle(ByteSequence packet) throws IOException {
         spaceNeeded(packet, 4);
-        return ((read(packet) << 0) + (read(packet) << 8) + (read(packet) << 16) + (read(packet) << 24));
+        return (read(packet) << 0) + (read(packet) << 8) + (read(packet) << 16) + (read(packet) << 24);
     }
 
     public static long readLongBig(ByteSequence packet) throws IOException {
         spaceNeeded(packet, 8);
-        return (((long)read(packet) << 56) + ((long)read(packet) << 48) + ((long)read(packet) << 40) + ((long)read(packet) << 32) + ((long)read(packet) << 24)
-                + ((read(packet)) << 16) + ((read(packet)) << 8) + ((read(packet)) << 0));
+        return ((long)read(packet) << 56) + ((long)read(packet) << 48) + ((long)read(packet) << 40) + ((long)read(packet) << 32) + ((long)read(packet) << 24)
+                + ((read(packet)) << 16) + ((read(packet)) << 8) + ((read(packet)) << 0);
     }
 
     public static long readLongLittle(ByteSequence packet) throws IOException {
         spaceNeeded(packet, 8);
-        return ((read(packet) << 0) + (read(packet) << 8) + (read(packet) << 16) + ((long)read(packet) << 24) + ((long)read(packet) << 32) + ((long)read(packet) << 40)
-                + ((long)read(packet) << 48) + ((long)read(packet) << 56));
+        return (read(packet) << 0) + (read(packet) << 8) + (read(packet) << 16) + ((long)read(packet) << 24) + ((long)read(packet) << 32) + ((long)read(packet) << 40)
+                + ((long)read(packet) << 48) + ((long)read(packet) << 56);
     }
 
     public static double readDoubleBig(ByteSequence packet) throws IOException {

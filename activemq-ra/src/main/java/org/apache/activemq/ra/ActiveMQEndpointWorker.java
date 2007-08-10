@@ -54,7 +54,7 @@ public class ActiveMQEndpointWorker {
 
     private static final long INITIAL_RECONNECT_DELAY = 1000; // 1 second.
     private static final long MAX_RECONNECT_DELAY = 1000*30; // 30 seconds.
-    private static final ThreadLocal threadLocal = new ThreadLocal();
+    private static final ThreadLocal<Session> threadLocal = new ThreadLocal<Session>();
     
     static {
         try {

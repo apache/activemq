@@ -32,7 +32,8 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      */
     public VMIndexLinkedList(IndexItem header) {
         this.root = header;
-        this.root.next = root.prev = root;
+        this.root.next = root;
+        root.prev = root;
     }
 
     public IndexItem getRoot() {
@@ -45,8 +46,9 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#getFirst()
      */
     public IndexItem getFirst() {
-        if (size == 0)
+        if (size == 0) {
             return null;
+        }
         return root.next;
     }
 
@@ -56,8 +58,9 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#getLast()
      */
     public IndexItem getLast() {
-        if (size == 0)
+        if (size == 0) {
             return null;
+        }
         return root.prev;
     }
 
@@ -81,8 +84,9 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#removeLast()
      */
     public Object removeLast() {
-        if (size == 0)
+        if (size == 0) {
             return null;
+        }
         StoreEntry result = root.prev;
         remove(root.prev);
         return result;
@@ -140,7 +144,8 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#clear()
      */
     public void clear() {
-        root.next = root.prev = root;
+        root.next = root;
+        root.prev = root;
         size = 0;
     }
 
@@ -179,8 +184,9 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * Return the indexed entry.
      */
     private IndexItem entry(int index) {
-        if (index < 0 || index >= size)
+        if (index < 0 || index >= size) {
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
+        }
         IndexItem e = root;
         if (index < size / 2) {
             for (int i = 0; i <= index; i++) {
@@ -249,8 +255,9 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#remove(org.apache.activemq.kaha.impl.IndexItem)
      */
     public void remove(IndexItem e) {
-        if (e == root)
+        if (e == root) {
             return;
+        }
         e.prev.next = e.next;
         e.next.prev = e.prev;
         size--;

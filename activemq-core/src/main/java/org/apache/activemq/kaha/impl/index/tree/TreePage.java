@@ -157,7 +157,7 @@ class TreePage {
     }
 
     boolean isFull() {
-        return (treeEntries.size() >= maximumEntries);
+        return treeEntries.size() >= maximumEntries;
     }
 
     boolean isRoot() {
@@ -354,7 +354,7 @@ class TreePage {
             } else {
                 // so we are the root and need to split
                 doInsertEntry(newEntry);
-                int midIndex = (size() / 2);
+                int midIndex = size() / 2;
                 TreeEntry midEntry = removeTreeEntry(midIndex);
                 List<TreeEntry> subList = getSubList(midIndex, size());
                 removeAllTreeEntries(subList);

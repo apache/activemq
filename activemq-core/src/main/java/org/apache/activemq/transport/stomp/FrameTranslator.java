@@ -51,7 +51,7 @@ public interface FrameTranslator {
         }
 
         public static void copyStandardHeadersFromMessageToFrame(ActiveMQMessage message, StompFrame command, FrameTranslator ft) throws IOException {
-            final Map headers = command.getHeaders();
+            final Map<String, String> headers = command.getHeaders();
             headers.put(Stomp.Headers.Message.DESTINATION, ft.convertDestination(message.getDestination()));
             headers.put(Stomp.Headers.Message.MESSAGE_ID, message.getJMSMessageID());
 
@@ -82,12 +82,12 @@ public interface FrameTranslator {
         }
 
         public static void copyStandardHeadersFromFrameToMessage(StompFrame command, ActiveMQMessage msg, FrameTranslator ft) throws ProtocolException, JMSException {
-            final Map headers = new HashMap(command.getHeaders());
-            final String destination = (String)headers.remove(Stomp.Headers.Send.DESTINATION);
+            final Map<String, String> headers = new HashMap<String, String>(command.getHeaders());
+            final String destination = headers.remove(Stomp.Headers.Send.DESTINATION);
             msg.setDestination(ft.convertDestination(destination));
 
             // the standard JMS headers
-            msg.setJMSCorrelationID((String)headers.remove(Stomp.Headers.Send.CORRELATION_ID));
+            msg.setJMSCorrelationID(headers.remove(Stomp.Headers.Send.CORRELATION_ID));
 
             Object o = headers.remove(Stomp.Headers.Send.EXPIRATION_TIME);
             if (o != null) {
