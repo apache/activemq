@@ -56,6 +56,7 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements Message
     }
 
     public void start() throws Exception {
+        store.resetBatching();
     }
 
     public void stop() throws Exception {
