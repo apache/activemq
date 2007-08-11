@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,40 +16,92 @@
  */
 package org.apache.activemq.console.command;
 
-import org.apache.activemq.console.util.JmxMBeansUtil;
-import org.apache.activemq.console.formatter.GlobalWriter;
-
-import java.util.List;
-import java.util.Properties;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.StringTokenizer;
-import java.util.Set;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
+import java.util.StringTokenizer;
+
+import org.apache.activemq.console.formatter.GlobalWriter;
+import org.apache.activemq.console.util.JmxMBeansUtil;
 
 public class QueryCommand extends AbstractJmxCommand {
     // Predefined type=identifier query
     private static final Properties PREDEFINED_OBJNAME_QUERY = new Properties();
 
     static {
-        PREDEFINED_OBJNAME_QUERY.setProperty("Broker",           "Type=Broker,BrokerName=%1,*");
-        PREDEFINED_OBJNAME_QUERY.setProperty("Connection",       "Type=Connection,Connection=%1,*");
-        PREDEFINED_OBJNAME_QUERY.setProperty("Connector",        "Type=Connector,ConnectorName=%1,*");
+        PREDEFINED_OBJNAME_QUERY.setProperty("Broker", "Type=Broker,BrokerName=%1,*");
+        PREDEFINED_OBJNAME_QUERY.setProperty("Connection", "Type=Connection,Connection=%1,*");
+        PREDEFINED_OBJNAME_QUERY.setProperty("Connector", "Type=Connector,ConnectorName=%1,*");
         PREDEFINED_OBJNAME_QUERY.setProperty("NetworkConnector", "Type=NetworkConnector,BrokerName=%1,*");
-        PREDEFINED_OBJNAME_QUERY.setProperty("Queue",            "Type=Queue,Destination=%1,*");
-        PREDEFINED_OBJNAME_QUERY.setProperty("Topic",            "Type=Topic,Destination=%1,*");
+        PREDEFINED_OBJNAME_QUERY.setProperty("Queue", "Type=Queue,Destination=%1,*");
+        PREDEFINED_OBJNAME_QUERY.setProperty("Topic", "Type=Topic,Destination=%1,*");
     };
 
-    private final List queryAddObjects = new ArrayList(10);
-    private final List querySubObjects = new ArrayList(10);
-    private final Set  queryViews      = new HashSet(10);
+    protected String[] helpFile = new String[] {
+        "Task Usage: Main query [query-options]",
+        "Description: Display selected broker component's attributes and statistics.",
+        "",
+        "Query Options:",
+        "    -Q<type>=<name>               Add to the search list the specific object type matched",
+        "                                  by the defined object identifier.",
+        "    -xQ<type>=<name>              Remove from the search list the specific object type",
+        "                                  matched by the object identifier.",
+        "    --objname <query>             Add to the search list objects matched by the query similar",
+        "                                  to the JMX object name format.",
+        "    --xobjname <query>            Remove from the search list objects matched by the query",
+        "                                  similar to the JMX object name format.",
+        "    --view <attr1>,<attr2>,...    Select the specific attribute of the object to view.",
+        "                                  By default all attributes will be displayed.",
+        "    --jmxurl <url>                Set the JMX URL to connect to.",
+        "    --version                     Display the version information.",
+        "    -h,-?,--help                  Display the query broker help information.",
+        "", "Examples:",
+        "    query",
+        "        - Print all the attributes of all registered objects queues, topics, connections, etc).",
+        "",
+        "    query -QQueue=TEST.FOO",
+        "        - Print all the attributes of the queue with destination name TEST.FOO.",
+        "",
+        "    query -QTopic=*",
+        "        - Print all the attributes of all registered topics.",
+        "",
+        "    query --view EnqueueCount,DequeueCount", 
+        "        - Print the attributes EnqueueCount and DequeueCount of all registered objects.",
+        "",
+        "    query -QTopic=* --view EnqueueCount,DequeueCount",
+        "        - Print the attributes EnqueueCount and DequeueCount of all registered topics.",
+        "",
+        "    query -QTopic=* -QQueue=* --view EnqueueCount,DequeueCount",
+        "        - Print the attributes EnqueueCount and DequeueCount of all registered topics and",
+        "          queues.",
+        "",
+        "    query -QTopic=* -xQTopic=ActiveMQ.Advisory.*", 
+        "        - Print all attributes of all topics except those that has a name that begins",
+        "          with \"ActiveMQ.Advisory\".",
+        "",
+        "    query --objname Type=*Connect*,BrokerName=local* -xQNetworkConnector=*",
+        "        - Print all attributes of all connectors, connections excluding network connectors",
+        "          that belongs to the broker that begins with local.", 
+        "", 
+        "    query -QQueue=* -xQQueue=????", 
+        "        - Print all attributes of all queues except those that are 4 letters long.",
+        "",
+    };
+
+    private final List<String> queryAddObjects = new ArrayList<String>(10);
+    private final List<String> querySubObjects = new ArrayList<String>(10);
+    private final Set queryViews = new HashSet(10);
 
     /**
      * Queries the mbeans registered in the specified JMX context
+     * 
      * @param tokens - command arguments
      * @throws Exception
      */
-    protected void runTask(List tokens) throws Exception {
+    protected void runTask(List<String> tokens) throws Exception {
         try {
             // Query for the mbeans to add
             List addMBeans = JmxMBeansUtil.queryMBeans(useJmxServiceUrl(), queryAddObjects, queryViews);
@@ -60,7 +111,6 @@ public class QueryCommand extends AbstractJmxCommand {
                 List subMBeans = JmxMBeansUtil.queryMBeans(useJmxServiceUrl(), querySubObjects, queryViews);
                 addMBeans.removeAll(subMBeans);
             }
-
 
             GlobalWriter.printMBean(JmxMBeansUtil.filterMBeansView(addMBeans, queryViews));
 
@@ -72,11 +122,12 @@ public class QueryCommand extends AbstractJmxCommand {
 
     /**
      * Handle the -Q, -xQ, --objname, --xobjname, --view options.
+     * 
      * @param token - option token to handle
      * @param tokens - succeeding command arguments
      * @throws Exception
      */
-    protected void handleOption(String token, List tokens) throws Exception {
+    protected void handleOption(String token, List<String> tokens) throws Exception {
         // If token is a additive predefined query define option
         if (token.startsWith("-Q")) {
             String key = token.substring(2);
@@ -98,10 +149,8 @@ public class QueryCommand extends AbstractJmxCommand {
             while (queryTokens.hasMoreTokens()) {
                 queryAddObjects.add(queryTokens.nextToken());
             }
-        }
-
-        // If token is a substractive predefined query define option
-        else if (token.startsWith("-xQ")) {
+        } else if (token.startsWith("-xQ")) {
+            // If token is a substractive predefined query define option
             String key = token.substring(3);
             String value = "";
             int pos = key.indexOf("=");
@@ -121,12 +170,11 @@ public class QueryCommand extends AbstractJmxCommand {
             while (queryTokens.hasMoreTokens()) {
                 querySubObjects.add(queryTokens.nextToken());
             }
-        }
+        } else if (token.startsWith("--objname")) {
+            // If token is an additive object name query option
 
-        // If token is an additive object name query option
-        else if (token.startsWith("--objname")) {
-
-            // If no object name query is specified, or next token is a new option
+            // If no object name query is specified, or next token is a new
+            // option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
                 GlobalWriter.printException(new IllegalArgumentException("Object name query not specified"));
                 return;
@@ -136,12 +184,11 @@ public class QueryCommand extends AbstractJmxCommand {
             while (queryTokens.hasMoreTokens()) {
                 queryAddObjects.add(queryTokens.nextToken());
             }
-        }
+        } else if (token.startsWith("--xobjname")) {
+            // If token is a substractive object name query option
 
-        // If token is a substractive object name query option
-        else if (token.startsWith("--xobjname")) {
-
-            // If no object name query is specified, or next token is a new option
+            // If no object name query is specified, or next token is a new
+            // option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
                 GlobalWriter.printException(new IllegalArgumentException("Object name query not specified"));
                 return;
@@ -151,10 +198,8 @@ public class QueryCommand extends AbstractJmxCommand {
             while (queryTokens.hasMoreTokens()) {
                 querySubObjects.add(queryTokens.nextToken());
             }
-        }
-
-        // If token is a view option
-        else if (token.startsWith("--view")) {
+        } else if (token.startsWith("--view")) {
+            // If token is a view option
 
             // If no view specified, or next token is a new option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
@@ -167,10 +212,8 @@ public class QueryCommand extends AbstractJmxCommand {
             while (viewTokens.hasMoreElements()) {
                 queryViews.add(viewTokens.nextElement());
             }
-        }
-
-        // Let super class handle unknown option
-        else {
+        } else {
+            // Let super class handle unknown option
             super.handleOption(token, tokens);
         }
     }
@@ -181,56 +224,5 @@ public class QueryCommand extends AbstractJmxCommand {
     protected void printHelp() {
         GlobalWriter.printHelp(helpFile);
     }
-    
-    protected String[] helpFile = new String[] {
-        "Task Usage: Main query [query-options]",
-        "Description: Display selected broker component's attributes and statistics.",
-        "",
-        "Query Options:",
-        "    -Q<type>=<name>               Add to the search list the specific object type matched",
-        "                                  by the defined object identifier.",
-        "    -xQ<type>=<name>              Remove from the search list the specific object type",
-        "                                  matched by the object identifier.",
-        "    --objname <query>             Add to the search list objects matched by the query similar",
-        "                                  to the JMX object name format.",
-        "    --xobjname <query>            Remove from the search list objects matched by the query",
-        "                                  similar to the JMX object name format.",
-        "    --view <attr1>,<attr2>,...    Select the specific attribute of the object to view.",
-        "                                  By default all attributes will be displayed.",
-        "    --jmxurl <url>                Set the JMX URL to connect to.",
-        "    --version                     Display the version information.",
-        "    -h,-?,--help                  Display the query broker help information.",
-        "",
-        "Examples:",
-        "    query",
-        "        - Print all the attributes of all registered objects queues, topics, connections, etc).",
-        "",
-        "    query -QQueue=TEST.FOO",
-        "        - Print all the attributes of the queue with destination name TEST.FOO.",
-        "",
-        "    query -QTopic=*",
-        "        - Print all the attributes of all registered topics.",
-        "",
-        "    query --view EnqueueCount,DequeueCount",
-        "        - Print the attributes EnqueueCount and DequeueCount of all registered objects.",
-        "",
-        "    query -QTopic=* --view EnqueueCount,DequeueCount",
-        "        - Print the attributes EnqueueCount and DequeueCount of all registered topics.",
-        "",
-        "    query -QTopic=* -QQueue=* --view EnqueueCount,DequeueCount",
-        "        - Print the attributes EnqueueCount and DequeueCount of all registered topics and",
-        "          queues.",
-        "",
-        "    query -QTopic=* -xQTopic=ActiveMQ.Advisory.*",
-        "        - Print all attributes of all topics except those that has a name that begins",
-        "          with \"ActiveMQ.Advisory\".",
-        "",
-        "    query --objname Type=*Connect*,BrokerName=local* -xQNetworkConnector=*",
-        "        - Print all attributes of all connectors, connections excluding network connectors",
-        "          that belongs to the broker that begins with local.",
-        "",
-        "    query -QQueue=* -xQQueue=????",
-        "        - Print all attributes of all queues except those that are 4 letters long.",
-        "",
-    };
+
 }

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,14 +16,25 @@
  */
 package org.apache.activemq.console.command;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.activemq.console.formatter.GlobalWriter;
 import org.apache.activemq.console.util.JmxMBeansUtil;
 
-import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
-
 public class ListCommand extends AbstractJmxCommand {
+
+    protected String[] helpFile = new String[] {
+        "Task Usage: Main list [list-options]",
+        "Description:  Lists all available broker in the specified JMX context.",
+        "",
+        "List Options:",
+        "    --jmxurl <url>      Set the JMX URL to connect to.",
+        "    --version           Display the version information.",
+        "    -h,-?,--help        Display the stop broker help information.",
+        ""
+    };
 
     /**
      * List all running brokers registered in the specified JMX context
@@ -33,7 +43,7 @@ public class ListCommand extends AbstractJmxCommand {
      */
     protected void runTask(List tokens) throws Exception {
         try {
-            Set propsView = new HashSet();
+            Set<String> propsView = new HashSet<String>();
             propsView.add("BrokerName");
             GlobalWriter.printMBean(JmxMBeansUtil.filterMBeansView(JmxMBeansUtil.getAllBrokers(useJmxServiceUrl()), propsView));
         } catch (Exception e) {
@@ -49,14 +59,4 @@ public class ListCommand extends AbstractJmxCommand {
         GlobalWriter.printHelp(helpFile);
     }
 
-    protected String[] helpFile = new String[] {
-        "Task Usage: Main list [list-options]",
-        "Description:  Lists all available broker in the specified JMX context.",
-        "",
-        "List Options:",
-        "    --jmxurl <url>      Set the JMX URL to connect to.",
-        "    --version           Display the version information.",
-        "    -h,-?,--help        Display the stop broker help information.",
-        ""
-    };
 }

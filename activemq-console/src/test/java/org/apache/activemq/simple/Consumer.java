@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -38,34 +37,43 @@ import javax.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQQueue;
 
-public class Consumer {
-    
+/**
+ *
+ */
+public final class Consumer {
+
+    /**
+     *
+     */
+    private Consumer() {
+    }
+
     public static void main(String[] args) throws JMSException, InterruptedException {
 
         String url = "tcp://localhost:61616";
-        if( args.length>0 ) {
+        if (args.length > 0) {
             url = args[0];
         }
-        
+
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(url);
         Destination destination = new ActiveMQQueue("TEST.QUEUE");
 
         Connection connection = connectionFactory.createConnection();
         connection.start();
-        
+
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = session.createConsumer(destination);
-        
-        for( ;; ) {
+
+        for (;;) {
             System.out.println("Waiting for message.");
             Message message = consumer.receive();
-            if( message == null ) {
+            if (message == null) {
                 break;
             }
             System.out.println("Got message: " + message);
-        }        
-        
-        connection.close();        
+        }
+
+        connection.close();
     }
 }
 

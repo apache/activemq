@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,15 +16,17 @@
  */
 package org.apache.activemq.console.filter;
 
-import java.util.Set;
-import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 public class GroupPropertiesViewFilter extends PropertiesViewFilter {
 
     /**
-     * Creates a group properties filter that is able to filter the display result based on a group prefix
+     * Creates a group properties filter that is able to filter the display
+     * result based on a group prefix
+     * 
      * @param next - the next query filter
      */
     public GroupPropertiesViewFilter(QueryFilter next) {
@@ -33,7 +34,9 @@ public class GroupPropertiesViewFilter extends PropertiesViewFilter {
     }
 
     /**
-     * Creates a group properties filter that is able to filter the display result based on a group prefix
+     * Creates a group properties filter that is able to filter the display
+     * result based on a group prefix
+     * 
      * @param groupView - the group filter to use
      * @param next - the next query filter
      */
@@ -43,6 +46,7 @@ public class GroupPropertiesViewFilter extends PropertiesViewFilter {
 
     /**
      * Filter the properties that matches the group prefix only.
+     * 
      * @param data - map data to filter
      * @return - filtered map data
      */
@@ -55,18 +59,18 @@ public class GroupPropertiesViewFilter extends PropertiesViewFilter {
         Map newData;
         try {
             // Lets try to use the same class as the original
-            newData = (Map)data.getClass().newInstance();
+            newData = data.getClass().newInstance();
         } catch (Exception e) {
             // Lets use a default HashMap
             newData = new HashMap();
         }
 
         // Filter the keys to view
-        for (Iterator i=data.keySet().iterator(); i.hasNext();) {
-            String key = (String)i.next();
+        for (Iterator<String> i = data.keySet().iterator(); i.hasNext();) {
+            String key = i.next();
 
             // Checks if key matches any of the group filter
-            for (Iterator j=viewFilter.iterator(); j.hasNext();) {
+            for (Iterator j = viewFilter.iterator(); j.hasNext();) {
                 String group = (String)j.next();
                 if (key.startsWith(group)) {
                     newData.put(key, data.get(key));

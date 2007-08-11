@@ -1,4 +1,4 @@
-/*
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,16 +16,17 @@
  */
 package org.apache.activemq.console;
 
-import org.apache.activemq.broker.util.CommandHandler;
-import org.apache.activemq.console.command.ShellCommand;
-import org.apache.activemq.console.formatter.GlobalWriter;
-import org.apache.activemq.console.formatter.CommandShellOutputFormatter;
+import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
 
 import javax.jms.TextMessage;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.StringTokenizer;
-import java.io.ByteArrayOutputStream;
+
+import org.apache.activemq.broker.util.CommandHandler;
+import org.apache.activemq.console.command.ShellCommand;
+import org.apache.activemq.console.formatter.CommandShellOutputFormatter;
+import org.apache.activemq.console.formatter.GlobalWriter;
 
 /**
  * A default implementation of the @{link CommandHandler} interface
@@ -44,7 +45,7 @@ public class ConsoleCommandHandler implements CommandHandler {
         // lets turn the text into a list of arguments
         String requestText = request.getText();
 
-        List tokens = tokenize(requestText);
+        List<String> tokens = tokenize(requestText);
         command.execute(tokens);
 
         out.flush();
@@ -55,8 +56,8 @@ public class ConsoleCommandHandler implements CommandHandler {
         response.setText(answer);
     }
 
-    protected List tokenize(String text) {
-        List answer = new ArrayList();
+    protected List<String> tokenize(String text) {
+        List<String> answer = new ArrayList<String>();
         StringTokenizer iter = new StringTokenizer(text);
         while (iter.hasMoreTokens()) {
             answer.add(iter.nextToken());

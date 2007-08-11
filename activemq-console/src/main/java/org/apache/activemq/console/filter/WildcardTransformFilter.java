@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,15 +16,17 @@
  */
 package org.apache.activemq.console.filter;
 
-import java.util.Iterator;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public abstract class WildcardTransformFilter extends AbstractQueryFilter {
 
     /**
-     * Creates a wildcard transform filter that is able to convert a wildcard expression (determined by isWildcardQuery)
-     * to a another query type (use transformWildcardQuery).
+     * Creates a wildcard transform filter that is able to convert a wildcard
+     * expression (determined by isWildcardQuery) to a another query type (use
+     * transformWildcardQuery).
+     * 
      * @param next - the next query filter
      */
     protected WildcardTransformFilter(QueryFilter next) {
@@ -34,6 +35,7 @@ public abstract class WildcardTransformFilter extends AbstractQueryFilter {
 
     /**
      * Converts the query list to set of different queries
+     * 
      * @param queries - query list to transform
      * @return - result of the query
      * @throws Exception
@@ -41,7 +43,7 @@ public abstract class WildcardTransformFilter extends AbstractQueryFilter {
     public List query(List queries) throws Exception {
         List newQueries = new ArrayList();
 
-        for (Iterator i=queries.iterator(); i.hasNext();) {
+        for (Iterator i = queries.iterator(); i.hasNext();) {
             String queryToken = (String)i.next();
 
             // Transform the wildcard query
@@ -49,7 +51,7 @@ public abstract class WildcardTransformFilter extends AbstractQueryFilter {
                 // Transform the value part only
                 newQueries.add(transformWildcardQuery(queryToken));
 
-            // Maintain the query as is
+                // Maintain the query as is
             } else {
                 newQueries.add(queryToken);
             }
@@ -60,6 +62,7 @@ public abstract class WildcardTransformFilter extends AbstractQueryFilter {
 
     /**
      * Use to determine is a query string is a wildcard query
+     * 
      * @param query - query string
      * @return true, if the query string is a wildcard query, false otherwise
      */
@@ -67,6 +70,7 @@ public abstract class WildcardTransformFilter extends AbstractQueryFilter {
 
     /**
      * Use to transform a wildcard query string to another query format
+     * 
      * @param query - query string to transform
      * @return transformed query
      */

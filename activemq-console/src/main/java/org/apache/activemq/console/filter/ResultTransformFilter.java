@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -25,7 +24,8 @@ public abstract class ResultTransformFilter implements QueryFilter {
     private QueryFilter next;
 
     /**
-     * Contructs a query filter that transform the format of the query result
+     * Constructs a query filter that transform the format of the query result
+     * 
      * @param next - the query filter to retrieve the results from
      */
     protected ResultTransformFilter(QueryFilter next) {
@@ -34,6 +34,7 @@ public abstract class ResultTransformFilter implements QueryFilter {
 
     /**
      * Transforms the queried results to a collection of different objects
+     * 
      * @param query - the query string
      * @return collections of transformed objects
      * @throws Exception
@@ -44,23 +45,25 @@ public abstract class ResultTransformFilter implements QueryFilter {
 
     /**
      * Transforms the queried results to a collection of different objects
+     * 
      * @param queries - the query map
      * @return collections of transformed objects
      * @throws Exception
      */
-    public List query(List queries) throws Exception {
+    public List<Object> query(List queries) throws Exception {
         return transformList(next.query(queries));
     }
 
     /**
      * Transforms a collection to a collection of different objects.
+     * 
      * @param result - the collection to transform
      * @return collection of properties objects
      */
-    protected List transformList(List result) throws Exception {
-        List props = new ArrayList();
+    protected List<Object> transformList(List<Object> result) throws Exception {
+        List<Object> props = new ArrayList<Object>();
 
-        for (Iterator i=result.iterator(); i.hasNext();) {
+        for (Iterator<Object> i = result.iterator(); i.hasNext();) {
             props.add(transformElement(i.next()));
         }
 
@@ -69,6 +72,7 @@ public abstract class ResultTransformFilter implements QueryFilter {
 
     /**
      * Transform a result object
+     * 
      * @param obj - the object instance to transform
      * @return the transformed object
      */

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,9 +16,11 @@
  */
 package org.apache.activemq.console.filter;
 
-public class WildcardToMsgSelectorTransformFilter extends WildcardTransformFilter{
+public class WildcardToMsgSelectorTransformFilter extends WildcardTransformFilter {
     /**
-     * Creates a filter that is able to transform a wildcard query to a message selector format
+     * Creates a filter that is able to transform a wildcard query to a message
+     * selector format
+     * 
      * @param next - next query filter
      */
     public WildcardToMsgSelectorTransformFilter(QueryFilter next) {
@@ -27,8 +28,10 @@ public class WildcardToMsgSelectorTransformFilter extends WildcardTransformFilte
     }
 
     /**
-     * Use to determine if a query string is a wildcard query. A query string is a wildcard query if it is a key-value
-     * pair with the format <key>=<value> and the value is enclosed in '' and contains '*' and '?'.
+     * Use to determine if a query string is a wildcard query. A query string is
+     * a wildcard query if it is a key-value pair with the format <key>=<value>
+     * and the value is enclosed in '' and contains '*' and '?'.
+     * 
      * @param query - query string
      * @return true, if the query string is a wildcard query, false otherwise
      */
@@ -47,6 +50,7 @@ public class WildcardToMsgSelectorTransformFilter extends WildcardTransformFilte
 
     /**
      * Transform a wildcard query to message selector format
+     * 
      * @param query - query string to transform
      * @return message selector format string
      */

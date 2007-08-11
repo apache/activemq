@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,33 +16,36 @@
  */
 package org.apache.activemq.console.filter;
 
-import javax.management.remote.JMXServiceURL;
-import javax.management.remote.JMXConnectorFactory;
-import javax.management.remote.JMXConnector;
-import javax.management.ObjectInstance;
-import javax.management.ObjectName;
-import javax.management.MBeanServerConnection;
-import javax.management.ReflectionException;
-import javax.management.InstanceNotFoundException;
-import javax.management.AttributeList;
-import javax.management.Attribute;
-import javax.management.MBeanAttributeInfo;
-import javax.management.IntrospectionException;
-import java.util.Set;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.ArrayList;
 import java.util.List;
-import java.io.IOException;
+import java.util.Set;
+
+import javax.management.Attribute;
+import javax.management.AttributeList;
+import javax.management.InstanceNotFoundException;
+import javax.management.IntrospectionException;
+import javax.management.MBeanAttributeInfo;
+import javax.management.MBeanServerConnection;
+import javax.management.ObjectInstance;
+import javax.management.ObjectName;
+import javax.management.ReflectionException;
+import javax.management.remote.JMXConnector;
+import javax.management.remote.JMXConnectorFactory;
+import javax.management.remote.JMXServiceURL;
 
 public class MBeansAttributeQueryFilter extends AbstractQueryFilter {
     public static final String KEY_OBJECT_NAME_ATTRIBUTE = "Attribute:ObjectName:";
 
     private JMXServiceURL jmxServiceUrl;
-    private Set           attribView;
+    private Set attribView;
 
     /**
-     * Create an mbean attributes query filter that is able to select specific mbean attributes based on the object name to get.
+     * Create an mbean attributes query filter that is able to select specific
+     * mbean attributes based on the object name to get.
+     * 
      * @param jmxServiceUrl - JMX service url to connect to.
      * @param attribView - the attributes to extract
      * @param next - the next query filter
@@ -51,13 +53,16 @@ public class MBeansAttributeQueryFilter extends AbstractQueryFilter {
     public MBeansAttributeQueryFilter(JMXServiceURL jmxServiceUrl, Set attribView, MBeansObjectNameQueryFilter next) {
         super(next);
         this.jmxServiceUrl = jmxServiceUrl;
-        this.attribView    = attribView;
+        this.attribView = attribView;
     }
 
     /**
-     * Filter the query by retrieving the attributes specified, this will modify the collection to a list of AttributeList
+     * Filter the query by retrieving the attributes specified, this will modify
+     * the collection to a list of AttributeList
+     * 
      * @param queries - query list
-     * @return List of AttributeList, which includes the ObjectName, which has a key of MBeansAttributeQueryFilter.KEY_OBJECT_NAME_ATTRIBUTE
+     * @return List of AttributeList, which includes the ObjectName, which has a
+     *         key of MBeansAttributeQueryFilter.KEY_OBJECT_NAME_ATTRIBUTE
      * @throws Exception
      */
     public List query(List queries) throws Exception {
@@ -66,6 +71,7 @@ public class MBeansAttributeQueryFilter extends AbstractQueryFilter {
 
     /**
      * Retrieve the specified attributes of the mbean
+     * 
      * @param result - collection of ObjectInstances and/or ObjectNames
      * @return List of AttributeList
      * @throws IOException
@@ -76,7 +82,7 @@ public class MBeansAttributeQueryFilter extends AbstractQueryFilter {
     protected List getMBeanAttributesCollection(Collection result) throws IOException, ReflectionException, InstanceNotFoundException, NoSuchMethodException, IntrospectionException {
         List mbeansCollection = new ArrayList();
 
-        for (Iterator i=result.iterator(); i.hasNext();) {
+        for (Iterator i = result.iterator(); i.hasNext();) {
             Object mbean = i.next();
             if (mbean instanceof ObjectInstance) {
                 mbeansCollection.add(getMBeanAttributes(((ObjectInstance)mbean).getObjectName(), attribView));
@@ -92,6 +98,7 @@ public class MBeansAttributeQueryFilter extends AbstractQueryFilter {
 
     /**
      * Retrieve the specified attributes of the mbean
+     * 
      * @param obj - mbean ObjectInstance
      * @param attrView - list of attributes to retrieve
      * @return AttributeList for the mbean
@@ -105,6 +112,7 @@ public class MBeansAttributeQueryFilter extends AbstractQueryFilter {
 
     /**
      * Retrieve the specified attributes of the mbean
+     * 
      * @param objName - mbean ObjectName
      * @param attrView - list of attributes to retrieve
      * @return AttributeList for the mbean
@@ -113,7 +121,7 @@ public class MBeansAttributeQueryFilter extends AbstractQueryFilter {
      * @throws InstanceNotFoundException
      */
     protected AttributeList getMBeanAttributes(ObjectName objName, Set attrView) throws IOException, ReflectionException, InstanceNotFoundException, IntrospectionException {
-        JMXConnector jmxConnector    = JMXConnectorFactory.connect(jmxServiceUrl);
+        JMXConnector jmxConnector = JMXConnectorFactory.connect(jmxServiceUrl);
         MBeanServerConnection server = jmxConnector.getMBeanServerConnection();
 
         // If no attribute view specified, get all attributes
@@ -122,18 +130,18 @@ public class MBeansAttributeQueryFilter extends AbstractQueryFilter {
             MBeanAttributeInfo[] infos = server.getMBeanInfo(objName).getAttributes();
             attribs = new String[infos.length];
 
-            for (int i=0; i<infos.length; i++) {
+            for (int i = 0; i < infos.length; i++) {
                 if (infos[i].isReadable()) {
                     attribs[i] = infos[i].getName();
                 }
             }
 
-        // Get selected attributes
+            // Get selected attributes
         } else {
 
             attribs = new String[attrView.size()];
             int count = 0;
-            for (Iterator i=attrView.iterator(); i.hasNext();) {
+            for (Iterator i = attrView.iterator(); i.hasNext();) {
                 attribs[count++] = (String)i.next();
             }
         }

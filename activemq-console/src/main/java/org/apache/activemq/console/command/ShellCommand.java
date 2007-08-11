@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,20 +16,19 @@
  */
 package org.apache.activemq.console.command;
 
-import org.apache.activemq.console.formatter.GlobalWriter;
-import org.apache.activemq.console.formatter.CommandShellOutputFormatter;
-
-import java.util.List;
-import java.util.Arrays;
-import java.util.ArrayList;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.apache.activemq.console.formatter.CommandShellOutputFormatter;
+import org.apache.activemq.console.formatter.GlobalWriter;
 
 public class ShellCommand extends AbstractCommand {
 
     private boolean interactive;
     private String[] helpFile;
-
 
     public ShellCommand() {
         this(false);
@@ -38,29 +36,30 @@ public class ShellCommand extends AbstractCommand {
 
     public ShellCommand(boolean interactive) {
         this.interactive = interactive;
-        this.helpFile = new String[]{
-                (interactive ? "Usage: [task] [task-options] [task data]" : "Usage: Main [--extdir <dir>] [task] [task-options] [task data]"),
-                "",
-                "Tasks (default task is start):",
-                "    start           - Creates and starts a broker using a configuration file, or a broker URI.",
-                "    stop            - Stops a running broker specified by the broker name.",
-                "    list            - Lists all available brokers in the specified JMX context.",
-                "    query           - Display selected broker component's attributes and statistics.",
-                "    browse          - Display selected messages in a specified destination.",
-                "",
-                "Task Options (Options specific to each task):",
-                "    --extdir <dir>  - Add the jar files in the directory to the classpath.",
-                "    --version       - Display the version information.",
-                "    -h,-?,--help    - Display this help information. To display task specific help, use " + (interactive ? "" : "Main ") + "[task] -h,-?,--help",
-                "",
-                "Task Data:",
-                "    - Information needed by each specific task.",
-                ""
+        this.helpFile = new String[] {
+            interactive ? "Usage: [task] [task-options] [task data]" : "Usage: Main [--extdir <dir>] [task] [task-options] [task data]", 
+            "",
+            "Tasks (default task is start):",
+            "    start           - Creates and starts a broker using a configuration file, or a broker URI.",
+            "    stop            - Stops a running broker specified by the broker name.",
+            "    list            - Lists all available brokers in the specified JMX context.",
+            "    query           - Display selected broker component's attributes and statistics.",
+            "    browse          - Display selected messages in a specified destination.",
+            "",
+            "Task Options (Options specific to each task):",
+            "    --extdir <dir>  - Add the jar files in the directory to the classpath.",
+            "    --version       - Display the version information.",
+            "    -h,-?,--help    - Display this help information. To display task specific help, use " + (interactive ? "" : "Main ") + "[task] -h,-?,--help", 
+            "",
+            "Task Data:",
+            "    - Information needed by each specific task.",
+            ""
         };
     }
 
     /**
      * Main method to run a command shell client.
+     * 
      * @param args - command line arguments
      * @param in - input stream to use
      * @param out - output stream to use
@@ -70,7 +69,7 @@ public class ShellCommand extends AbstractCommand {
         GlobalWriter.instantiate(new CommandShellOutputFormatter(out));
 
         // Convert arguments to list for easier management
-        List tokens = new ArrayList(Arrays.asList(args));
+        List<String> tokens = new ArrayList<String>(Arrays.asList(args));
 
         ShellCommand main = new ShellCommand();
         try {
@@ -82,7 +81,6 @@ public class ShellCommand extends AbstractCommand {
         }
     }
 
-
     public boolean isInteractive() {
         return interactive;
     }
@@ -93,13 +91,14 @@ public class ShellCommand extends AbstractCommand {
 
     /**
      * Parses for specific command task.
+     * 
      * @param tokens - command arguments
      * @throws Exception
      */
-    protected void runTask(List tokens) throws Exception {
-        
+    protected void runTask(List<String> tokens) throws Exception {
+
         // Process task token
-        if( tokens.size() > 0 ) {
+        if (tokens.size() > 0) {
             String taskToken = (String)tokens.remove(0);
             if (taskToken.equals("start")) {
                 new StartCommand().execute(tokens);
@@ -123,7 +122,7 @@ public class ShellCommand extends AbstractCommand {
         } else {
             printHelp();
         }
-        
+
     }
 
     /**

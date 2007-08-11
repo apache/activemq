@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,14 +16,15 @@
  */
 package org.apache.activemq.console.command;
 
-import org.apache.activemq.console.formatter.GlobalWriter;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.util.List;
 
-import javax.management.remote.JMXServiceURL;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
-import java.util.List;
-import java.net.MalformedURLException;
-import java.io.IOException;
+import javax.management.remote.JMXServiceURL;
+
+import org.apache.activemq.console.formatter.GlobalWriter;
 
 public abstract class AbstractJmxCommand extends AbstractCommand {
     public static final String DEFAULT_JMX_URL    = "service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi";
@@ -107,7 +107,7 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
      * @param tokens - succeeding command arguments
      * @throws Exception
      */
-    protected void handleOption(String token, List tokens) throws Exception {
+    protected void handleOption(String token, List<String> tokens) throws Exception {
         // Try to handle the options first
         if (token.equals("--jmxurl")) {
             // If no jmx url specified, or next token is a new option
