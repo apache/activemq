@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,16 +16,17 @@
  */
 package org.apache.activemq.console.formatter;
 
-import javax.management.ObjectInstance;
-import javax.management.ObjectName;
-import javax.management.AttributeList;
-import javax.management.Attribute;
-import javax.jms.Message;
-import java.util.Map;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.Collection;
 import java.util.Iterator;
-import java.io.PrintStream;
-import java.io.OutputStream;
+import java.util.Map;
+
+import javax.jms.Message;
+import javax.management.Attribute;
+import javax.management.AttributeList;
+import javax.management.ObjectInstance;
+import javax.management.ObjectName;
 
 public class CommandShellOutputFormatter implements OutputFormatter {
     private OutputStream outputStream;
@@ -44,6 +44,7 @@ public class CommandShellOutputFormatter implements OutputFormatter {
 
     /**
      * Retrieve the output stream being used by the formatter
+     * 
      * @return
      */
     public OutputStream getOutputStream() {
@@ -52,6 +53,7 @@ public class CommandShellOutputFormatter implements OutputFormatter {
 
     /**
      * Print an ObjectInstance format of an mbean
+     * 
      * @param mbean - mbean to print
      */
     public void printMBean(ObjectInstance mbean) {
@@ -60,6 +62,7 @@ public class CommandShellOutputFormatter implements OutputFormatter {
 
     /**
      * Print an ObjectName format of an mbean
+     * 
      * @param mbean - mbean to print
      */
     public void printMBean(ObjectName mbean) {
@@ -68,10 +71,11 @@ public class CommandShellOutputFormatter implements OutputFormatter {
 
     /**
      * Print an AttributeList format of an mbean
+     * 
      * @param mbean - mbean to print
      */
     public void printMBean(AttributeList mbean) {
-        for (Iterator i=mbean.iterator(); i.hasNext();) {
+        for (Iterator i = mbean.iterator(); i.hasNext();) {
             Attribute attrib = (Attribute)i.next();
             if (attrib.getValue() instanceof ObjectName) {
                 printMBean((ObjectName)attrib.getValue());
@@ -86,10 +90,11 @@ public class CommandShellOutputFormatter implements OutputFormatter {
 
     /**
      * Print a Map format of an mbean
+     * 
      * @param mbean - mbean to print
      */
     public void printMBean(Map mbean) {
-        for (Iterator i=mbean.keySet().iterator(); i.hasNext();) {
+        for (Iterator i = mbean.keySet().iterator(); i.hasNext();) {
             String key = (String)i.next();
             String val = mbean.get(key).toString();
             out.println(key + " = " + val);
@@ -99,10 +104,11 @@ public class CommandShellOutputFormatter implements OutputFormatter {
 
     /**
      * Print a collection of mbean
+     * 
      * @param mbean - collection of mbeans
      */
     public void printMBean(Collection mbean) {
-        for (Iterator i=mbean.iterator(); i.hasNext();) {
+        for (Iterator i = mbean.iterator(); i.hasNext();) {
             Object obj = i.next();
             if (obj instanceof ObjectInstance) {
                 printMBean((ObjectInstance)obj);
@@ -122,10 +128,11 @@ public class CommandShellOutputFormatter implements OutputFormatter {
 
     /**
      * Print a Map format of a JMS message
+     * 
      * @param msg
      */
     public void printMessage(Map msg) {
-        for (Iterator i=msg.keySet().iterator(); i.hasNext();) {
+        for (Iterator i = msg.keySet().iterator(); i.hasNext();) {
             String key = (String)i.next();
             String val = msg.get(key).toString();
             out.println(key + " = " + val);
@@ -135,6 +142,7 @@ public class CommandShellOutputFormatter implements OutputFormatter {
 
     /**
      * Print a Message format of a JMS message
+     * 
      * @param msg - JMS message to print
      */
     public void printMessage(Message msg) {
@@ -143,10 +151,11 @@ public class CommandShellOutputFormatter implements OutputFormatter {
 
     /**
      * Print a collection of JMS messages
+     * 
      * @param msg - collection of JMS messages
      */
     public void printMessage(Collection msg) {
-        for (Iterator i=msg.iterator(); i.hasNext();) {
+        for (Iterator i = msg.iterator(); i.hasNext();) {
             Object obj = i.next();
             if (obj instanceof Message) {
                 printMessage((Message)obj);
@@ -162,10 +171,11 @@ public class CommandShellOutputFormatter implements OutputFormatter {
 
     /**
      * Print help messages
+     * 
      * @param helpMsgs - help messages to print
      */
     public void printHelp(String[] helpMsgs) {
-        for (int i=0; i<helpMsgs.length; i++) {
+        for (int i = 0; i < helpMsgs.length; i++) {
             out.println(helpMsgs[i]);
         }
         out.println();
@@ -173,6 +183,7 @@ public class CommandShellOutputFormatter implements OutputFormatter {
 
     /**
      * Print an information message
+     * 
      * @param info - information message to print
      */
     public void printInfo(String info) {
@@ -181,6 +192,7 @@ public class CommandShellOutputFormatter implements OutputFormatter {
 
     /**
      * Print an exception message
+     * 
      * @param e - exception to print
      */
     public void printException(Exception e) {
@@ -190,6 +202,7 @@ public class CommandShellOutputFormatter implements OutputFormatter {
 
     /**
      * Print a version information
+     * 
      * @param version - version info to print
      */
     public void printVersion(String version) {
@@ -201,10 +214,11 @@ public class CommandShellOutputFormatter implements OutputFormatter {
 
     /**
      * Print a generic key value mapping
+     * 
      * @param map to print
      */
     public void print(Map map) {
-        for (Iterator i=map.keySet().iterator(); i.hasNext();) {
+        for (Iterator i = map.keySet().iterator(); i.hasNext();) {
             String key = (String)i.next();
             String val = map.get(key).toString();
             out.println(key + " = " + val);
@@ -214,10 +228,11 @@ public class CommandShellOutputFormatter implements OutputFormatter {
 
     /**
      * Print a generic array of strings
+     * 
      * @param strings - string array to print
      */
     public void print(String[] strings) {
-        for (int i=0; i<strings.length; i++) {
+        for (int i = 0; i < strings.length; i++) {
             out.println(strings[i]);
         }
         out.println();
@@ -225,10 +240,11 @@ public class CommandShellOutputFormatter implements OutputFormatter {
 
     /**
      * Print a collection of objects
+     * 
      * @param collection - collection to print
      */
     public void print(Collection collection) {
-        for (Iterator i=collection.iterator(); i.hasNext();) {
+        for (Iterator i = collection.iterator(); i.hasNext();) {
             out.println(i.next().toString());
         }
         out.println();
@@ -236,6 +252,7 @@ public class CommandShellOutputFormatter implements OutputFormatter {
 
     /**
      * Print a java string
+     * 
      * @param string - string to print
      */
     public void print(String string) {

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,28 +16,31 @@
  */
 package org.apache.activemq.console.filter;
 
-import javax.management.remote.JMXServiceURL;
-import javax.management.remote.JMXConnector;
-import javax.management.remote.JMXConnectorFactory;
-import javax.management.ObjectName;
-import javax.management.MalformedObjectNameException;
-import javax.management.MBeanServerConnection;
-import javax.management.QueryExp;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
-import java.net.MalformedURLException;
-import java.io.IOException;
+
+import javax.management.MBeanServerConnection;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import javax.management.QueryExp;
+import javax.management.remote.JMXConnector;
+import javax.management.remote.JMXConnectorFactory;
+import javax.management.remote.JMXServiceURL;
 
 public class MBeansObjectNameQueryFilter extends AbstractQueryFilter {
 
     public static final String DEFAULT_JMX_DOMAIN = "org.apache.activemq";
-    public static final String QUERY_EXP_PREFIX   = "MBeans.QueryExp.";
+    public static final String QUERY_EXP_PREFIX = "MBeans.QueryExp.";
 
     private JMXServiceURL jmxServiceUrl;
 
     /**
-     * Creates an mbeans object name query filter that will query on the given JMX Service URL
+     * Creates an mbeans object name query filter that will query on the given
+     * JMX Service URL
+     * 
      * @param jmxUrl - JMX service URL to connect to
      * @throws MalformedURLException
      */
@@ -47,7 +49,9 @@ public class MBeansObjectNameQueryFilter extends AbstractQueryFilter {
     }
 
     /**
-     * Creates an mbeans objecet name query filter that will query on the given JMX Service URL
+     * Creates an mbeans objecet name query filter that will query on the given
+     * JMX Service URL
+     * 
      * @param jmxUrl - JMX service URL to connect to
      */
     public MBeansObjectNameQueryFilter(JMXServiceURL jmxUrl) {
@@ -56,10 +60,13 @@ public class MBeansObjectNameQueryFilter extends AbstractQueryFilter {
     }
 
     /**
-     * Queries the JMX service using a mapping of keys and values to construct the object name
+     * Queries the JMX service using a mapping of keys and values to construct
+     * the object name
+     * 
      * @param queries - mapping of keys and values
      * @return collection of ObjectInstance that matches the query
-     * @throws MalformedObjectNameException - if the given string is an invalid object name
+     * @throws MalformedObjectNameException - if the given string is an invalid
+     *                 object name
      * @throws IOException - if there is a problem querying the JMX context
      */
     public List query(List queries) throws MalformedObjectNameException, IOException {
@@ -72,7 +79,7 @@ public class MBeansObjectNameQueryFilter extends AbstractQueryFilter {
         // Constructs object name query
         String objNameQuery = "";
         String queryExp = "";
-        for (Iterator i=queries.iterator(); i.hasNext();) {
+        for (Iterator i = queries.iterator(); i.hasNext();) {
             String key = (String)i.next();
             String val = "";
             int pos = key.indexOf("=");
@@ -83,7 +90,7 @@ public class MBeansObjectNameQueryFilter extends AbstractQueryFilter {
 
             if (val.startsWith(QUERY_EXP_PREFIX)) {
                 // do nothing as of the moment
-            } else if (key != "" && val != "") {
+            } else if (!key.equals("") && !val.equals("")) {
                 objNameQuery = objNameQuery + key + "=" + val + ",";
             }
         }
@@ -95,8 +102,9 @@ public class MBeansObjectNameQueryFilter extends AbstractQueryFilter {
     }
 
     /**
-     * Advance query that enables you to specify both the object name and the query expression to use.
-     * Note: Query expression is currently unsupported.
+     * Advance query that enables you to specify both the object name and the
+     * query expression to use. Note: Query expression is currently unsupported.
+     * 
      * @param objName - object name to use for query
      * @param queryExpStr - query expression string
      * @return set of mbeans that matches the query
@@ -108,7 +116,8 @@ public class MBeansObjectNameQueryFilter extends AbstractQueryFilter {
 
         QueryExp queryExp = createQueryExp(queryExpStr);
 
-        // Convert mbeans set to list to make it standard throughout the query filter
+        // Convert mbeans set to list to make it standard throughout the query
+        // filter
         List mbeans = new ArrayList(server.queryMBeans(objName, queryExp));
 
         jmxConn.close();
@@ -118,6 +127,7 @@ public class MBeansObjectNameQueryFilter extends AbstractQueryFilter {
 
     /**
      * Get the JMX service URL the query is connecting to.
+     * 
      * @return JMX service URL
      */
     public JMXServiceURL getJmxServiceUrl() {
@@ -126,6 +136,7 @@ public class MBeansObjectNameQueryFilter extends AbstractQueryFilter {
 
     /**
      * Sets the JMX service URL the query is going to connect to.
+     * 
      * @param jmxServiceUrl - new JMX service URL
      */
     public void setJmxServiceUrl(JMXServiceURL jmxServiceUrl) {
@@ -134,6 +145,7 @@ public class MBeansObjectNameQueryFilter extends AbstractQueryFilter {
 
     /**
      * Sets the JMX service URL the query is going to connect to.
+     * 
      * @param jmxServiceUrl - new JMX service URL
      */
     public void setJmxServiceUrl(String jmxServiceUrl) throws MalformedURLException {
@@ -142,6 +154,7 @@ public class MBeansObjectNameQueryFilter extends AbstractQueryFilter {
 
     /**
      * Creates a JMX connector
+     * 
      * @return JMX connector
      * @throws IOException
      */
@@ -150,8 +163,9 @@ public class MBeansObjectNameQueryFilter extends AbstractQueryFilter {
     }
 
     /**
-     * Creates a query expression based on the query expression string
-     * Note: currently unsupported
+     * Creates a query expression based on the query expression string Note:
+     * currently unsupported
+     * 
      * @param queryExpStr - query expression string
      * @return the created query expression
      */

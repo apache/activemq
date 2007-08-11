@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,18 +16,21 @@
  */
 package org.apache.activemq.console.util;
 
-import org.apache.activemq.broker.util.CommandMessageListener;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+import org.apache.activemq.broker.util.CommandMessageListener;
+
 /**
- * A simple interactive console which can be used to communicate with a running broker
- * assuming that the classpath is fully setup
- *
+ * A simple interactive console which can be used to communicate with a running
+ * broker assuming that the classpath is fully setup
+ * 
  * @version $Revision$
  */
-public class SimpleConsole {
+public final class SimpleConsole {
+    
+    private SimpleConsole() {
+    }
 
     public static void main(String[] args) {
         CommandMessageListener listener = new CommandMessageListener(null);
@@ -47,8 +49,7 @@ public class SimpleConsole {
 
                 System.out.println(listener.processCommandText(line));
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.out.println("Caught: " + e);
             e.printStackTrace();
         }

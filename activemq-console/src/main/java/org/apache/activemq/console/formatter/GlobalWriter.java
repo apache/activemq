@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,15 +16,16 @@
  */
 package org.apache.activemq.console.formatter;
 
+import java.io.OutputStream;
+import java.util.Collection;
+import java.util.Map;
+
+import javax.jms.Message;
+import javax.management.AttributeList;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
-import javax.management.AttributeList;
-import javax.jms.Message;
-import java.util.Map;
-import java.util.Collection;
-import java.io.OutputStream;
 
-public class GlobalWriter {
+public final class GlobalWriter {
     private static OutputFormatter formatter;
 
     /**
@@ -36,14 +36,16 @@ public class GlobalWriter {
 
     /**
      * Maintains a global output formatter
+     * 
      * @param formatter - the output formatter to use
      */
     public static void instantiate(OutputFormatter formatter) {
-            GlobalWriter.formatter = formatter;
+        GlobalWriter.formatter = formatter;
     }
 
     /**
      * Retrieve the output stream being used by the global formatter
+     * 
      * @return
      */
     public static OutputStream getOutputStream() {
@@ -55,6 +57,7 @@ public class GlobalWriter {
 
     /**
      * Print an ObjectInstance format of an mbean
+     * 
      * @param mbean - mbean to print
      */
     public static void printMBean(ObjectInstance mbean) {
@@ -66,6 +69,7 @@ public class GlobalWriter {
 
     /**
      * Print an ObjectName format of an mbean
+     * 
      * @param mbean - mbean to print
      */
     public static void printMBean(ObjectName mbean) {
@@ -77,6 +81,7 @@ public class GlobalWriter {
 
     /**
      * Print an AttributeList format of an mbean
+     * 
      * @param mbean - mbean to print
      */
     public static void printMBean(AttributeList mbean) {
@@ -88,6 +93,7 @@ public class GlobalWriter {
 
     /**
      * Print a Map format of an mbean
+     * 
      * @param mbean
      */
     public static void printMBean(Map mbean) {
@@ -99,6 +105,7 @@ public class GlobalWriter {
 
     /**
      * Print a Collection format of mbeans
+     * 
      * @param mbean - collection of mbeans
      */
     public static void printMBean(Collection mbean) {
@@ -110,6 +117,7 @@ public class GlobalWriter {
 
     /**
      * Print a Map format of a JMS message
+     * 
      * @param msg
      */
     public static void printMessage(Map msg) {
@@ -121,6 +129,7 @@ public class GlobalWriter {
 
     /**
      * Print a Message format of a JMS message
+     * 
      * @param msg - JMS message to print
      */
     public static void printMessage(Message msg) {
@@ -132,6 +141,7 @@ public class GlobalWriter {
 
     /**
      * Print a collection of JMS messages
+     * 
      * @param msg - collection of JMS messages
      */
     public static void printMessage(Collection msg) {
@@ -143,6 +153,7 @@ public class GlobalWriter {
 
     /**
      * Print help messages
+     * 
      * @param helpMsgs - help messages to print
      */
     public static void printHelp(String[] helpMsgs) {
@@ -154,6 +165,7 @@ public class GlobalWriter {
 
     /**
      * Print an information message
+     * 
      * @param info - information message to print
      */
     public static void printInfo(String info) {
@@ -165,6 +177,7 @@ public class GlobalWriter {
 
     /**
      * Print an exception message
+     * 
      * @param e - exception to print
      */
     public static void printException(Exception e) {
@@ -176,6 +189,7 @@ public class GlobalWriter {
 
     /**
      * Print a version information
+     * 
      * @param version - version info to print
      */
     public static void printVersion(String version) {
@@ -187,6 +201,7 @@ public class GlobalWriter {
 
     /**
      * Print a generic key value mapping
+     * 
      * @param map to print
      */
     public static void print(Map map) {
@@ -198,6 +213,7 @@ public class GlobalWriter {
 
     /**
      * Print a generic array of strings
+     * 
      * @param strings - string array to print
      */
     public static void print(String[] strings) {
@@ -209,6 +225,7 @@ public class GlobalWriter {
 
     /**
      * Print a collection of objects
+     * 
      * @param collection - collection to print
      */
     public static void print(Collection collection) {
@@ -220,6 +237,7 @@ public class GlobalWriter {
 
     /**
      * Print a java string
+     * 
      * @param string - string to print
      */
     public static void print(String string) {

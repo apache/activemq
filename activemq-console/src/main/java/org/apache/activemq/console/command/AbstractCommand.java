@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,23 +16,25 @@
  */
 package org.apache.activemq.console.command;
 
+import java.util.List;
+
 import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.console.formatter.GlobalWriter;
-
-import java.util.List;
 
 public abstract class AbstractCommand implements Command {
     public static final String COMMAND_OPTION_DELIMETER = ",";
 
-    private boolean isPrintHelp    = false;
-    private boolean isPrintVersion = false;
+    private boolean isPrintHelp;
+    private boolean isPrintVersion;
 
     /**
-     * Exceute a generic command, which includes parsing the options for the command and running the specific task.
+     * Execute a generic command, which includes parsing the options for the
+     * command and running the specific task.
+     * 
      * @param tokens - command arguments
      * @throws Exception
      */
-    public void execute(List tokens) throws Exception {
+    public void execute(List<String> tokens) throws Exception {
         // Parse the options specified by "-"
         parseOptions(tokens);
 
@@ -41,24 +42,26 @@ public abstract class AbstractCommand implements Command {
         if (isPrintHelp) {
             printHelp();
 
-        // Print the AMQ version
+            // Print the AMQ version
         } else if (isPrintVersion) {
             GlobalWriter.printVersion(ActiveMQConnectionMetaData.PROVIDER_VERSION);
 
-        // Run the specified task
+            // Run the specified task
         } else {
             runTask(tokens);
         }
     }
 
     /**
-     * Parse any option parameters in the command arguments specified by a '-' as the first character of the token.
+     * Parse any option parameters in the command arguments specified by a '-'
+     * as the first character of the token.
+     * 
      * @param tokens - command arguments
      * @throws Exception
      */
-    protected void parseOptions(List tokens) throws Exception {
+    protected void parseOptions(List<String> tokens) throws Exception {
         while (!tokens.isEmpty()) {
-            String token = (String)tokens.remove(0);
+            String token = tokens.remove(0);
             if (token.startsWith("-")) {
                 // Token is an option
                 handleOption(token, tokens);
@@ -71,25 +74,25 @@ public abstract class AbstractCommand implements Command {
     }
 
     /**
-     * Handle the general options for each command, which includes -h, -?, --help, -D, --version.
+     * Handle the general options for each command, which includes -h, -?,
+     * --help, -D, --version.
+     * 
      * @param token - option token to handle
      * @param tokens - succeeding command arguments
      * @throws Exception
      */
-    protected void handleOption(String token, List tokens) throws Exception {
+    protected void handleOption(String token, List<String> tokens) throws Exception {
         // If token is a help option
         if (token.equals("-h") || token.equals("-?") || token.equals("--help")) {
             isPrintHelp = true;
             tokens.clear();
 
-        // If token is a version option
+            // If token is a version option
         } else if (token.equals("--version")) {
             isPrintVersion = true;
             tokens.clear();
-        }
-
-        // If token is a system property define option
-        else if (token.startsWith("-D")) {
+        } else if (token.startsWith("-D")) {
+            // If token is a system property define option
             String key = token.substring(2);
             String value = "";
             int pos = key.indexOf("=");
@@ -98,11 +101,8 @@ public abstract class AbstractCommand implements Command {
                 key = key.substring(0, pos);
             }
             System.setProperty(key, value);
-
-        }
-
-        // Token is unrecognized
-        else {
+        } else {
+            // Token is unrecognized
             GlobalWriter.printInfo("Unrecognized option: " + token);
             isPrintHelp = true;
         }
@@ -110,13 +110,14 @@ public abstract class AbstractCommand implements Command {
 
     /**
      * Run the specific task.
+     * 
      * @param tokens - command arguments
      * @throws Exception
      */
-    abstract protected void runTask(List tokens) throws Exception;
+    protected abstract void runTask(List<String> tokens) throws Exception;
 
     /**
      * Print the help messages for the specific task
      */
-    abstract protected void printHelp();
+    protected abstract void printHelp();
 }

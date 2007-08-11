@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,18 +16,20 @@
  */
 package org.apache.activemq.console.filter;
 
-import java.util.regex.Pattern;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.regex.Pattern;
 
 public abstract class RegExQueryFilter extends AbstractQueryFilter {
     public static final String REGEX_PREFIX = "REGEX:QUERY:";
 
     /**
-     * Creates a regular expression query that is able to match an object using key-value pattern regex filtering
+     * Creates a regular expression query that is able to match an object using
+     * key-value pattern regex filtering
+     * 
      * @param next
      */
     protected RegExQueryFilter(QueryFilter next) {
@@ -36,8 +37,10 @@ public abstract class RegExQueryFilter extends AbstractQueryFilter {
     }
 
     /**
-     * Separates the regular expressions queries from the usual queries. A query is a regex query, if it is key-value pair
-     * with the format <key>=<value>, and value is a pattern that satisfies the isRegularExpression method.
+     * Separates the regular expressions queries from the usual queries. A query
+     * is a regex query, if it is key-value pair with the format <key>=<value>,
+     * and value is a pattern that satisfies the isRegularExpression method.
+     * 
      * @param queries - list of queries
      * @return filtered objects that matches the regex query
      * @throws Exception
@@ -47,7 +50,7 @@ public abstract class RegExQueryFilter extends AbstractQueryFilter {
         List newQueries = new ArrayList();
 
         // Lets parse for regular expression queries
-        for (Iterator i=queries.iterator(); i.hasNext();) {
+        for (Iterator i = queries.iterator(); i.hasNext();) {
             // Get key-value pair
             String token = (String)i.next();
             String key = "";
@@ -58,11 +61,12 @@ public abstract class RegExQueryFilter extends AbstractQueryFilter {
                 key = token.substring(0, pos);
             }
 
-            // Add the regex query to list and make it a non-factor in the succeeding queries
+            // Add the regex query to list and make it a non-factor in the
+            // succeeding queries
             if (isRegularExpression(val)) {
                 regex.put(key, compileQuery(val));
 
-            // Add the normal query to the query list
+                // Add the normal query to the query list
             } else {
                 newQueries.add(token);
             }
@@ -73,8 +77,10 @@ public abstract class RegExQueryFilter extends AbstractQueryFilter {
     }
 
     /**
-     * Checks if a given string is a regular expression query. Currently, a pattern is a regex query, if it starts with
-     * the RegExQueryFilter.REGEX_PREFIX.
+     * Checks if a given string is a regular expression query. Currently, a
+     * pattern is a regex query, if it starts with the
+     * RegExQueryFilter.REGEX_PREFIX.
+     * 
      * @param query
      * @return
      */
@@ -84,6 +90,7 @@ public abstract class RegExQueryFilter extends AbstractQueryFilter {
 
     /**
      * Compiles the regex query to a pattern.
+     * 
      * @param query - query string to compile
      * @return regex pattern
      */
@@ -93,6 +100,7 @@ public abstract class RegExQueryFilter extends AbstractQueryFilter {
 
     /**
      * Filter the specified colleciton using the regex patterns extracted.
+     * 
      * @param regex - regex map
      * @param data - list of objects to filter
      * @return filtered list of objects that matches the regex map
@@ -100,14 +108,14 @@ public abstract class RegExQueryFilter extends AbstractQueryFilter {
      */
     protected List filterCollectionUsingRegEx(Map regex, List data) throws Exception {
         // No regular expressions filtering needed
-        if (regex==null || regex.isEmpty()) {
+        if (regex == null || regex.isEmpty()) {
             return data;
         }
 
         List filteredElems = new ArrayList();
 
         // Get each data object to filter
-        for (Iterator i=data.iterator(); i.hasNext();) {
+        for (Iterator i = data.iterator(); i.hasNext();) {
             Object dataElem = i.next();
             // If properties of data matches all the regex pattern, add it
             if (matches(dataElem, regex)) {
@@ -120,6 +128,7 @@ public abstract class RegExQueryFilter extends AbstractQueryFilter {
 
     /**
      * Determines how the object is to be matched to the regex map.
+     * 
      * @param data - object to match
      * @param regex - regex map
      * @return true, if the object matches the regex map, false otherwise

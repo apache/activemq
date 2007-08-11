@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,19 +16,20 @@
  */
 package org.apache.activemq.console.filter;
 
-import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.ActiveMQConnectionFactory;
-
-import javax.jms.Destination;
-import javax.jms.Connection;
-import javax.jms.JMSException;
-import javax.jms.Session;
-import javax.jms.QueueBrowser;
 import java.net.URI;
 import java.util.Collections;
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
+
+import javax.jms.Connection;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.QueueBrowser;
+import javax.jms.Session;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
 
 public class AmqMessagesQueryFilter extends AbstractQueryFilter {
 
@@ -38,17 +38,19 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
 
     /**
      * Create a JMS message query filter
+     * 
      * @param brokerUrl - broker url to connect to
      * @param destination - JMS destination to query
      */
     public AmqMessagesQueryFilter(URI brokerUrl, Destination destination) {
         super(null);
-        this.brokerUrl   = brokerUrl;
+        this.brokerUrl = brokerUrl;
         this.destination = destination;
     }
 
     /**
      * Queries the specified destination using the message selector format query
+     * 
      * @param queries - message selector queries
      * @return list messages that matches the selector
      * @throws Exception
@@ -57,12 +59,12 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
         String selector = "";
 
         // Convert to message selector
-        for (Iterator i=queries.iterator(); i.hasNext();) {
+        for (Iterator i = queries.iterator(); i.hasNext();) {
             selector = selector + "(" + i.next().toString() + ") AND ";
         }
 
         // Remove last AND
-        if (selector != "") {
+        if (!selector.equals("")) {
             selector = selector.substring(0, selector.length() - 5);
         }
 
@@ -75,6 +77,7 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
 
     /**
      * Query the messages of a queue destination using a queue browser
+     * 
      * @param queue - queue destination
      * @param selector - message selector
      * @return list of messages that matches the selector
@@ -95,19 +98,23 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
 
     /**
      * Query the messages of a topic destination using a message consumer
+     * 
      * @param topic - topic destination
      * @param selector - message selector
      * @return list of messages that matches the selector
      * @throws Exception
      */
     protected List queryMessages(ActiveMQTopic topic, String selector) throws Exception {
-        // TODO: should we use a durable subscriber or a retroactive non-durable subscriber?
-        // TODO: if a durable subscriber is used, how do we manage it? subscribe/unsubscribe tasks?
+        // TODO: should we use a durable subscriber or a retroactive non-durable
+        // subscriber?
+        // TODO: if a durable subscriber is used, how do we manage it?
+        // subscribe/unsubscribe tasks?
         return null;
     }
 
     /**
      * Create and start a JMS connection
+     * 
      * @param brokerUrl - broker url to connect to.
      * @return JMS connection
      * @throws JMSException
@@ -120,6 +127,7 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
 
     /**
      * Get the broker url being used.
+     * 
      * @return broker url
      */
     public URI getBrokerUrl() {
@@ -128,6 +136,7 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
 
     /**
      * Set the broker url to use.
+     * 
      * @param brokerUrl - broker url
      */
     public void setBrokerUrl(URI brokerUrl) {
@@ -136,6 +145,7 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
 
     /**
      * Get the destination being used.
+     * 
      * @return - JMS destination
      */
     public Destination getDestination() {
@@ -144,6 +154,7 @@ public class AmqMessagesQueryFilter extends AbstractQueryFilter {
 
     /**
      * Set the destination to use.
+     * 
      * @param destination - JMS destination
      */
     public void setDestination(Destination destination) {

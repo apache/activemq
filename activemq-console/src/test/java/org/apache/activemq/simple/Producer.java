@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -7,7 +6,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,16 +35,20 @@ import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-public class Producer {
+public final class Producer {
 
-    private static final org.apache.commons.logging.Log log = org.apache.commons.logging.LogFactory
-            .getLog(Producer.class);
-    
+    private static final Log LOG = LogFactory.getLog(Producer.class);
+
+    private Producer() {
+    }
+
     public static void main(String[] args) throws JMSException, InterruptedException {
 
         String url = "peer://localhost1/groupA?persistent=false";
-        if( args.length>0 ) {
+        if (args.length > 0) {
             url = args[0];
         }
 
@@ -58,12 +61,12 @@ public class Producer {
         TextMessage message = session.createTextMessage();
         for (int i = 0; i < 1000; i++) {
             message.setText("This is message " + (i + 1));
-            log.info("Sending message: " + message.getText());
+            LOG.info("Sending message: " + message.getText());
             producer.send(message);
             Thread.sleep(1000);
         }
         connection.close();
-        
+
     }
 }
 
