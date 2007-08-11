@@ -44,6 +44,10 @@ public class ConstantExpression implements Expression {
 
     private Object value;
 
+    public ConstantExpression(Object value) {
+        this.value = value;
+    }
+
     public static ConstantExpression createFromDecimal(String text) {
 
         // Strip off the 'l' or 'L' if needed.
@@ -87,10 +91,6 @@ public class ConstantExpression implements Expression {
     public static ConstantExpression createFloat(String text) {
         Number value = new Double(text);
         return new ConstantExpression(value);
-    }
-
-    public ConstantExpression(Object value) {
-        this.value = value;
     }
 
     public Object evaluate(MessageEvaluationContext message) throws JMSException {

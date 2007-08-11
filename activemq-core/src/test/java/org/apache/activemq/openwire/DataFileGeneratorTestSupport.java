@@ -67,7 +67,6 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
     private static final Throwable SINGLETON_EXCEPTION = new Exception("shared exception");
     private static final File MODULE_BASE_DIR;
     private static final File CONTROL_DIR;
-    private static final File CLASS_FILE_DIR;
 
 
     static {
@@ -81,7 +80,6 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
         }
         MODULE_BASE_DIR = basedir;
         CONTROL_DIR = new File(MODULE_BASE_DIR, "src/test/resources/openwire-control");
-        CLASS_FILE_DIR = new File(MODULE_BASE_DIR, "src/test/java/org/activemq/openwire");
     }
 
     private int counter;
@@ -107,16 +105,16 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
 
         LOG.info("Parsed: " + actual);
 
-        assertBeansEqual("", new HashSet(), expected, actual);
+        assertBeansEqual("", new HashSet<Object>(), expected, actual);
     }
 
-    protected void assertBeansEqual(String message, Set comparedObjects, Object expected, Object actual) throws Exception {
+    protected void assertBeansEqual(String message, Set<Object> comparedObjects, Object expected, Object actual) throws Exception {
         assertNotNull("Actual object should be equal to: " + expected + " but was null", actual);
         if (comparedObjects.contains(expected)) {
             return;
         }
         comparedObjects.add(expected);
-        Class type = expected.getClass();
+        Class<? extends Object> type = expected.getClass();
         assertEquals("Should be of same type", type, actual.getClass());
         BeanInfo beanInfo = Introspector.getBeanInfo(type);
         PropertyDescriptor[] descriptors = beanInfo.getPropertyDescriptors();
@@ -138,7 +136,7 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
         }
     }
 
-    protected void assertPropertyValuesEqual(String name, Set comparedObjects, Object expectedValue, Object actualValue) throws Exception {
+    protected void assertPropertyValuesEqual(String name, Set<Object> comparedObjects, Object expectedValue, Object actualValue) throws Exception {
         String message = "Property " + name + " not equal";
         if (expectedValue == null) {
             assertNull("Property " + name + " should be null", actualValue);
@@ -160,14 +158,14 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
         }
     }
 
-    protected void assertArrayEqual(String message, Set comparedObjects, Object[] expected, Object[] actual) throws Exception {
+    protected void assertArrayEqual(String message, Set<Object> comparedObjects, Object[] expected, Object[] actual) throws Exception {
         assertEquals(message + ". Array length", expected.length, actual.length);
         for (int i = 0; i < expected.length; i++) {
             assertPropertyValuesEqual(message + ". element: " + i, comparedObjects, expected[i], actual[i]);
         }
     }
 
-    protected void assertPrimitiveArrayEqual(String message, Set comparedObjects, Object expected, Object actual) throws ArrayIndexOutOfBoundsException, IllegalArgumentException,
+    protected void assertPrimitiveArrayEqual(String message, Set<Object> comparedObjects, Object expected, Object actual) throws ArrayIndexOutOfBoundsException, IllegalArgumentException,
         Exception {
         int length = Array.getLength(expected);
         assertEquals(message + ". Array length", length, Array.getLength(actual));

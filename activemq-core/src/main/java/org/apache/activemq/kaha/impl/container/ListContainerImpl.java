@@ -246,7 +246,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
      */
     public synchronized Object[] toArray() {
         load();
-        List tmp = new ArrayList(indexList.size());
+        List<Object> tmp = new ArrayList<Object>(indexList.size());
         IndexItem next = indexList.getFirst();
         while (next != null) {
             Object value = getValue(next);
@@ -263,7 +263,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
      */
     public synchronized Object[] toArray(Object[] a) {
         load();
-        List tmp = new ArrayList(indexList.size());
+        List<Object> tmp = new ArrayList<Object>(indexList.size());
         IndexItem next = indexList.getFirst();
         while (next != null) {
             Object value = getValue(next);
@@ -384,7 +384,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
      */
     public synchronized boolean retainAll(Collection c) {
         load();
-        List tmpList = new ArrayList();
+        List<Object> tmpList = new ArrayList<Object>();
         IndexItem next = indexList.getFirst();
         while (next != null) {
             Object o = getValue(next);
@@ -393,7 +393,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
             }
             next = indexList.getNextEntry(next);
         }
-        for (Iterator i = tmpList.iterator(); i.hasNext();) {
+        for (Iterator<Object> i = tmpList.iterator(); i.hasNext();) {
             remove(i.next());
         }
         return !tmpList.isEmpty();
@@ -619,9 +619,9 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
      * 
      * @see java.util.List#subList(int, int)
      */
-    public synchronized List subList(int fromIndex, int toIndex) {
+    public synchronized List<Object> subList(int fromIndex, int toIndex) {
         load();
-        List result = new ArrayList();
+        List<Object> result = new ArrayList<Object>();
         int count = fromIndex;
         IndexItem next = indexList.get(fromIndex);
         while (next != null && count++ < toIndex) {

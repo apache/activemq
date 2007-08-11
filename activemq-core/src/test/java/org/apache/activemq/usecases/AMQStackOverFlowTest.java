@@ -19,6 +19,7 @@ package org.apache.activemq.usecases;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -120,7 +121,7 @@ public class AMQStackOverFlowTest extends TestCase {
         memoryManager.setLimit(10);
         brokerService.setMemoryManager(memoryManager);
 
-        final ArrayList<PolicyEntry> policyEntries = new ArrayList<PolicyEntry>();
+        final List<PolicyEntry> policyEntries = new ArrayList<PolicyEntry>();
 
         final PolicyEntry entry = new PolicyEntry();
         entry.setQueue(">");

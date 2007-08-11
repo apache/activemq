@@ -196,7 +196,7 @@ public class BrokerView implements BrokerViewMBean {
     public void destroyDurableSubscriber(String clientId, String subscriberName) throws Exception {
         RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
         info.setClientId(clientId);
-        info.setSubcriptionName(subscriberName);
+        info.setSubscriptionName(subscriberName);
         ConnectionContext context = new ConnectionContext();
         context.setBroker(broker);
         context.setClientId(clientId);

@@ -43,7 +43,7 @@ public class ManagementContextXBeanConfigTest extends TestCase {
         MBeanServer beanServer = brokerService.getManagementContext().getMBeanServer();
 
         // Make sure the broker is registered in the right jmx domain.
-        Hashtable map = new Hashtable();
+        Hashtable<String, String> map = new Hashtable<String, String>();
         map.put("Type", "Broker");
         map.put("BrokerName", JMXSupport.encodeObjectNamePart("localhost"));
         ObjectName on = new ObjectName("test.domain", map);

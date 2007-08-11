@@ -56,7 +56,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     protected final WireFormat wireFormat;
 
     protected int connectionTimeout = 30000;
-    protected int soTimeout = 0;
+    protected int soTimeout;
     protected int socketBufferSize = 64 * 1024;
     protected int ioBufferSize = 8 * 1024;
     protected Socket socket;
@@ -68,7 +68,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     protected SocketFactory socketFactory;
     protected final AtomicReference<CountDownLatch> stoppedLatch = new AtomicReference<CountDownLatch>();
 
-    private Map socketOptions;
+    private Map<String, Object> socketOptions;
     private Boolean keepAlive;
     private Boolean tcpNoDelay;
 
@@ -82,7 +82,8 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      * @throws IOException
      * @throws UnknownHostException
      */
-    public TcpTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws UnknownHostException, IOException {
+    public TcpTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation,
+                        URI localLocation) throws UnknownHostException, IOException {
         this.wireFormat = wireFormat;
         this.socketFactory = socketFactory;
         try {
@@ -313,7 +314,8 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         InetSocketAddress remoteAddress = null;
 
         if (localLocation != null) {
-            localAddress = new InetSocketAddress(InetAddress.getByName(localLocation.getHost()), localLocation.getPort());
+            localAddress = new InetSocketAddress(InetAddress.getByName(localLocation.getHost()),
+                                                 localLocation.getPort());
         }
 
         if (remoteLocation != null) {
@@ -341,7 +343,8 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
             // For SSL sockets.. you can't create an unconnected socket :(
             // This means the timout option are not supported either.
             if (localAddress != null) {
-                socket = socketFactory.createSocket(remoteAddress.getAddress(), remoteAddress.getPort(), localAddress.getAddress(), localAddress.getPort());
+                socket = socketFactory.createSocket(remoteAddress.getAddress(), remoteAddress.getPort(),
+                                                    localAddress.getAddress(), localAddress.getPort());
             } else {
                 socket = socketFactory.createSocket(remoteAddress.getAddress(), remoteAddress.getPort());
             }
@@ -392,8 +395,8 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         }
     }
 
-    public void setSocketOptions(Map socketOptions) {
-        this.socketOptions = new HashMap(socketOptions);
+    public void setSocketOptions(Map<String, Object> socketOptions) {
+        this.socketOptions = new HashMap<String, Object>(socketOptions);
     }
 
     public String getRemoteAddress() {

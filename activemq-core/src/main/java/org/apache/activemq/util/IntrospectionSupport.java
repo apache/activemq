@@ -33,7 +33,10 @@ import java.util.Set;
 
 import org.apache.activemq.command.ActiveMQDestination;
 
-public class IntrospectionSupport {
+public final class IntrospectionSupport {
+    
+    private IntrospectionSupport() {
+    }
 
     public static boolean getProperties(Object target, Map props, String optionPrefix) {
 
@@ -92,8 +95,8 @@ public class IntrospectionSupport {
             throw new IllegalArgumentException("props was null.");
         }
 
-        for (Iterator iter = props.keySet().iterator(); iter.hasNext();) {
-            String name = (String)iter.next();
+        for (Iterator<String> iter = props.keySet().iterator(); iter.hasNext();) {
+            String name = iter.next();
             if (name.startsWith(optionPrefix)) {
                 Object value = props.get(name);
                 name = name.substring(optionPrefix.length());
@@ -106,12 +109,12 @@ public class IntrospectionSupport {
         return rc;
     }
 
-    public static Map extractProperties(Map props, String optionPrefix) {
+    public static Map<String, Object> extractProperties(Map props, String optionPrefix) {
         if (props == null) {
             throw new IllegalArgumentException("props was null.");
         }
 
-        HashMap rc = new HashMap(props.size());
+        HashMap<String, Object> rc = new HashMap<String, Object>(props.size());
 
         for (Iterator iter = props.keySet().iterator(); iter.hasNext();) {
             String name = (String)iter.next();
@@ -225,7 +228,7 @@ public class IntrospectionSupport {
     }
 
     public static String toString(Object target, Class stopClass) {
-        LinkedHashMap map = new LinkedHashMap();
+        LinkedHashMap<String, Object> map = new LinkedHashMap<String, Object>();
         addFields(target, target.getClass(), stopClass, map);
         StringBuffer buffer = new StringBuffer(simpleName(target.getClass()));
         buffer.append(" {");
@@ -264,7 +267,7 @@ public class IntrospectionSupport {
         return name;
     }
 
-    private static void addFields(Object target, Class startClass, Class stopClass, LinkedHashMap map) {
+    private static void addFields(Object target, Class startClass, Class<Object> stopClass, LinkedHashMap<String, Object> map) {
 
         if (startClass != stopClass) {
             addFields(target, startClass.getSuperclass(), stopClass, map);
@@ -273,7 +276,8 @@ public class IntrospectionSupport {
         Field[] fields = startClass.getDeclaredFields();
         for (int i = 0; i < fields.length; i++) {
             Field field = fields[i];
-            if (Modifier.isStatic(field.getModifiers()) || Modifier.isTransient(field.getModifiers()) || Modifier.isPrivate(field.getModifiers())) {
+            if (Modifier.isStatic(field.getModifiers()) || Modifier.isTransient(field.getModifiers())
+                || Modifier.isPrivate(field.getModifiers())) {
                 continue;
             }
 

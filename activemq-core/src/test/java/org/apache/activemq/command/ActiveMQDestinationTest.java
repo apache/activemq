@@ -51,7 +51,7 @@ public class ActiveMQDestinationTest extends DataStructureTestSupport {
         addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST?k1=v1&k2=v2"),
                                                           new ActiveMQTopic("TEST?k1=v1&k2=v2"),
                                                           new ActiveMQTempQueue("TEST:1?k1=v1&k2=v2"),
-                                                          new ActiveMQTempTopic("TEST:1?k1=v1&k2=v2"),});
+                                                          new ActiveMQTempTopic("TEST:1?k1=v1&k2=v2")});
     }
 
     public void testDesintaionOptions() throws IOException {
@@ -62,12 +62,12 @@ public class ActiveMQDestinationTest extends DataStructureTestSupport {
     }
 
     public void testSorting() throws Exception {
-        SortedSet set = new TreeSet();
+        SortedSet<ActiveMQDestination> set = new TreeSet<ActiveMQDestination>();
         ActiveMQDestination[] destinations = {new ActiveMQQueue("A"), new ActiveMQQueue("B"),
                                               new ActiveMQTopic("A"), new ActiveMQTopic("B")};
-        List expected = Arrays.asList(destinations);
+        List<ActiveMQDestination> expected = Arrays.asList(destinations);
         set.addAll(expected);
-        List actual = new ArrayList(set);
+        List<ActiveMQDestination> actual = new ArrayList<ActiveMQDestination>(set);
         assertEquals("Sorted order", expected, actual);
     }
 

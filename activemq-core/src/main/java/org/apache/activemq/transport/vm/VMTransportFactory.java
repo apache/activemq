@@ -42,9 +42,9 @@ import org.apache.commons.logging.LogFactory;
 
 public class VMTransportFactory extends TransportFactory {
     
-    public static final ConcurrentHashMap BROKERS = new ConcurrentHashMap();
-    public static final ConcurrentHashMap CONNECTORS = new ConcurrentHashMap();
-    public static final ConcurrentHashMap SERVERS = new ConcurrentHashMap();
+    public static final ConcurrentHashMap<String, BrokerService> BROKERS = new ConcurrentHashMap<String, BrokerService>();
+    public static final ConcurrentHashMap<String, TransportConnector> CONNECTORS = new ConcurrentHashMap<String, TransportConnector>();
+    public static final ConcurrentHashMap<String, VMTransportServer> SERVERS = new ConcurrentHashMap<String, VMTransportServer>();
     private static final Log LOG = LogFactory.getLog(VMTransportFactory.class);
     
     BrokerFactoryHandler brokerFactoryHandler;
@@ -56,7 +56,7 @@ public class VMTransportFactory extends TransportFactory {
     public Transport doCompositeConnect(URI location) throws Exception {
         URI brokerURI;
         String host;
-        Map options;
+        Map<String, String> options;
         boolean create = true;
         CompositeData data = URISupport.parseComposite(location);
         if (data.getComponents().length == 1 && "broker".equals(data.getComponents()[0].getScheme())) {
@@ -96,7 +96,7 @@ public class VMTransportFactory extends TransportFactory {
         if (host == null) {
             host = "localhost";
         }
-        VMTransportServer server = (VMTransportServer)SERVERS.get(host);
+        VMTransportServer server = SERVERS.get(host);
         // validate the broker is still active
         if (!validateBroker(host) || server == null) {
             BrokerService broker = null;
@@ -123,7 +123,7 @@ public class VMTransportFactory extends TransportFactory {
                     BROKERS.put(host, broker);
                 }
 
-                server = (VMTransportServer)SERVERS.get(host);
+                server = SERVERS.get(host);
                 if (server == null) {
                     server = (VMTransportServer)bind(location, true);
                     TransportConnector connector = new TransportConnector(broker.getBroker(), server);
@@ -140,7 +140,7 @@ public class VMTransportFactory extends TransportFactory {
         IntrospectionSupport.setProperties(vmtransport, options);
         Transport transport = vmtransport;
         if (vmtransport.isMarshal()) {
-            HashMap optionsCopy = new HashMap(options);
+            Map<String, String> optionsCopy = new HashMap<String, String>(options);
             transport = new MarshallingTransportFilter(transport, createWireFormat(options),
                                                        createWireFormat(optionsCopy));
         }
@@ -174,11 +174,11 @@ public class VMTransportFactory extends TransportFactory {
     public static void stopped(VMTransportServer server) {
         String host = server.getBindURI().getHost();
         SERVERS.remove(host);
-        TransportConnector connector = (TransportConnector)CONNECTORS.remove(host);
+        TransportConnector connector = CONNECTORS.remove(host);
         if (connector != null) {
             LOG.debug("Shutting down VM connectors for broker: " + host);
             ServiceSupport.dispose(connector);
-            BrokerService broker = (BrokerService)BROKERS.remove(host);
+            BrokerService broker = BROKERS.remove(host);
             if (broker != null) {
                 ServiceSupport.dispose(broker);
             }
@@ -187,11 +187,11 @@ public class VMTransportFactory extends TransportFactory {
 
     public static void stopped(String host) {
         SERVERS.remove(host);
-        TransportConnector connector = (TransportConnector)CONNECTORS.remove(host);
+        TransportConnector connector = CONNECTORS.remove(host);
         if (connector != null) {
             LOG.debug("Shutting down VM connectors for broker: " + host);
             ServiceSupport.dispose(connector);
-            BrokerService broker = (BrokerService)BROKERS.remove(host);
+            BrokerService broker = BROKERS.remove(host);
             if (broker != null) {
                 ServiceSupport.dispose(broker);
             }
@@ -210,7 +210,7 @@ public class VMTransportFactory extends TransportFactory {
         boolean result = true;
         if (BROKERS.containsKey(host) || SERVERS.containsKey(host) || CONNECTORS.containsKey(host)) {
             // check the broker is still in the BrokerRegistry
-            TransportConnector connector = (TransportConnector)CONNECTORS.get(host);
+            TransportConnector connector = CONNECTORS.get(host);
             if (BrokerRegistry.getInstance().lookup(host) == null
                 || (connector != null && connector.getBroker().isStopped())) {
                 result = false;

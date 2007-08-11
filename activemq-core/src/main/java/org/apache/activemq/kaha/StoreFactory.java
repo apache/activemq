@@ -25,7 +25,10 @@ import org.apache.activemq.kaha.impl.KahaStore;
  * 
  * @version $Revision: 1.2 $
  */
-public class StoreFactory {
+public final class StoreFactory {
+
+    private StoreFactory() {
+    }
 
     /**
      * open or create a Store

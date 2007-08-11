@@ -37,7 +37,7 @@ public class DatagramHeaderMarshaller {
     // TODO for large dynamic networks
     // we may want to evict endpoints that disconnect
     // from a transport - e.g. for multicast
-    private Map endpoints = new HashMap();
+    private Map<SocketAddress, Endpoint> endpoints = new HashMap<SocketAddress, Endpoint>();
     
     /**
      * Reads any header if applicable and then creates an endpoint object
@@ -71,7 +71,7 @@ public class DatagramHeaderMarshaller {
      * 
      */
     protected Endpoint getEndpoint(SocketAddress address) {
-        Endpoint endpoint = (Endpoint) endpoints.get(address);
+        Endpoint endpoint = endpoints.get(address);
         if (endpoint == null) {
             endpoint = createEndpoint(address);
             endpoints.put(address, endpoint);

@@ -33,7 +33,7 @@ public class DefaultReplayBuffer implements ReplayBuffer {
 
     private final int size;
     private ReplayBufferListener listener;
-    private Map map;
+    private Map<Integer, Object> map;
     private int lowestCommandId = 1;
     private Object lock = new Object();
 
@@ -77,8 +77,8 @@ public class DefaultReplayBuffer implements ReplayBuffer {
         }
     }
 
-    protected Map createMap(int maximumSize) {
-        return new HashMap(maximumSize);
+    protected Map<Integer, Object> createMap(int maximumSize) {
+        return new HashMap<Integer, Object>(maximumSize);
     }
 
     protected void onEvictedBuffer(int commandId, Object buffer) {

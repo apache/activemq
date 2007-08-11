@@ -32,6 +32,16 @@ import org.apache.activemq.util.IdGenerator;
  */
 public class ActiveMQMessageAuditTest extends TestCase {
 
+
+    /**
+     * Constructor for ActiveMQMessageAuditTest.
+     * 
+     * @param name
+     */
+    public ActiveMQMessageAuditTest(String name) {
+        super(name);
+    }
+
     public static void main(String[] args) {
     }
 
@@ -41,15 +51,6 @@ public class ActiveMQMessageAuditTest extends TestCase {
 
     protected void tearDown() throws Exception {
         super.tearDown();
-    }
-
-    /**
-     * Constructor for ActiveMQMessageAuditTest.
-     * 
-     * @param arg0
-     */
-    public ActiveMQMessageAuditTest(String arg0) {
-        super(arg0);
     }
 
     /**

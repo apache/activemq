@@ -41,7 +41,6 @@ import org.apache.commons.logging.LogFactory;
  */
 public class VMTransport implements Transport, Task {
 
-    private static final Log LOG = LogFactory.getLog(VMTransport.class);
     private static final AtomicLong NEXT_ID = new AtomicLong(0);
     private static final TaskRunnerFactory TASK_RUNNER_FACTORY = new TaskRunnerFactory("VMTransport", Thread.NORM_PRIORITY, true, 1000);
     protected VMTransport peer;
@@ -51,7 +50,7 @@ public class VMTransport implements Transport, Task {
     protected boolean network;
     protected boolean async = true;
     protected int asyncQueueDepth = 2000;
-    protected LinkedBlockingQueue messageQueue;
+    protected LinkedBlockingQueue<Object> messageQueue;
     protected boolean started;
     protected final URI location;
     protected final long id;
@@ -139,10 +138,10 @@ public class VMTransport implements Transport, Task {
         }
     }
 
-    private LinkedBlockingQueue getMessageQueue() {
+    private LinkedBlockingQueue<Object> getMessageQueue() {
         synchronized (mutex) {
             if (messageQueue == null) {
-                messageQueue = new LinkedBlockingQueue(this.asyncQueueDepth);
+                messageQueue = new LinkedBlockingQueue<Object>(this.asyncQueueDepth);
             }
             return messageQueue;
         }
@@ -182,9 +181,9 @@ public class VMTransport implements Transport, Task {
         }
     }
 
-    public Object narrow(Class target) {
+    public <T> T narrow(Class<T> target) {
         if (target.isAssignableFrom(getClass())) {
-            return this;
+            return target.cast(this);
         }
         return null;
     }
@@ -228,7 +227,7 @@ public class VMTransport implements Transport, Task {
             }
         }
 
-        LinkedBlockingQueue mq = getMessageQueue();
+        LinkedBlockingQueue<Object> mq = getMessageQueue();
         final Command command = (Command)mq.poll();
         if (command != null) {
             tl.onCommand(command);

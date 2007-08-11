@@ -18,6 +18,7 @@ package org.apache.activemq;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
@@ -550,10 +551,11 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             setBrokerURL(temp);
         }
 
-        buildFromMap(properties);
+        Map<String, Object> p = new HashMap(properties);
+        buildFromMap(p);
     }
 
-    public boolean buildFromMap(Map properties) {
+    public boolean buildFromMap(Map<String, Object> properties) {
         boolean rc = false;
 
         ActiveMQPrefetchPolicy p = new ActiveMQPrefetchPolicy();

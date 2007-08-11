@@ -23,12 +23,15 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.RedeliveryPolicy;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * 
  * @version $Revision$
  */
 public class DeadLetterTest extends DeadLetterTestSupport {
+    private static final Log LOG = LogFactory.getLog(DeadLetterTest.class);
 
     private int rollbackCount;
 
@@ -37,7 +40,7 @@ public class DeadLetterTest extends DeadLetterTestSupport {
 
         ActiveMQConnection amqConnection = (ActiveMQConnection) connection;
         rollbackCount = amqConnection.getRedeliveryPolicy().getMaximumRedeliveries() + 1;
-        log.info("Will redeliver messages: " + rollbackCount + " times");
+        LOG.info("Will redeliver messages: " + rollbackCount + " times");
 
         makeConsumer();
         makeDlqConsumer();
@@ -64,7 +67,7 @@ public class DeadLetterTest extends DeadLetterTestSupport {
 
             session.rollback();
         }
-        log.info("Rolled back: " + rollbackCount + " times");
+        LOG.info("Rolled back: " + rollbackCount + " times");
     }
 
     protected void setUp() throws Exception {

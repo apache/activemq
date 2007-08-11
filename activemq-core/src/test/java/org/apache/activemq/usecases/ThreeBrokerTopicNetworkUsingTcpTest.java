@@ -30,13 +30,14 @@ import org.apache.activemq.transport.TransportFactory;
  * @version $Revision: 1.1.1.1 $
  */
 public class ThreeBrokerTopicNetworkUsingTcpTest extends ThreeBrokerTopicNetworkTest {
-    protected List bridges;
+    protected List<DemandForwardingBridge> bridges;
 
     protected void bridgeBrokers(BrokerService localBroker, BrokerService remoteBroker) throws Exception {
         List remoteTransports = remoteBroker.getTransportConnectors();
         List localTransports = localBroker.getTransportConnectors();
 
-        URI remoteURI, localURI;
+        URI remoteURI;
+        URI localURI;
         if (!remoteTransports.isEmpty() && !localTransports.isEmpty()) {
             remoteURI = ((TransportConnector)remoteTransports.get(0)).getConnectUri();
             localURI = ((TransportConnector)localTransports.get(0)).getConnectUri();
@@ -62,6 +63,6 @@ public class ThreeBrokerTopicNetworkUsingTcpTest extends ThreeBrokerTopicNetwork
     public void setUp() throws Exception {
         super.setUp();
 
-        bridges = new ArrayList();
+        bridges = new ArrayList<DemandForwardingBridge>();
     }
 }

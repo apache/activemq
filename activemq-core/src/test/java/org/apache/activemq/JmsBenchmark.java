@@ -176,7 +176,6 @@ public class JmsBenchmark extends JmsTestSupport {
 
         LOG.info("Starting sample: " + SAMPLES + " each lasting " + (SAMPLE_DURATION / 1000.0f) + " seconds");
 
-        long now = System.currentTimeMillis();
         for (int i = 0; i < SAMPLES; i++) {
 
             long start = System.currentTimeMillis();

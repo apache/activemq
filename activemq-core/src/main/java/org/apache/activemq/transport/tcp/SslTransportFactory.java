@@ -75,13 +75,13 @@ public class SslTransportFactory extends TcpTransportFactory {
      */
     public TransportServer doBind(String brokerId, final URI location) throws IOException {
         try {
-            Map options = new HashMap(URISupport.parseParamters(location));
+            Map<String, String> options = new HashMap<String, String>(URISupport.parseParamters(location));
 
             ServerSocketFactory serverSocketFactory = createServerSocketFactory();
             SslTransportServer server = new SslTransportServer(this, location, (SSLServerSocketFactory)serverSocketFactory);
             server.setWireFormatFactory(createWireFormatFactory(options));
             IntrospectionSupport.setProperties(server, options);
-            Map transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
+            Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
             server.setTransportOption(transportOptions);
             server.bind();
 
@@ -99,7 +99,7 @@ public class SslTransportFactory extends TcpTransportFactory {
         SslTransport sslTransport = (SslTransport)transport.narrow(SslTransport.class);
         IntrospectionSupport.setProperties(sslTransport, options);
 
-        Map socketOptions = IntrospectionSupport.extractProperties(options, "socket.");
+        Map<String, Object> socketOptions = IntrospectionSupport.extractProperties(options, "socket.");
 
         sslTransport.setSocketOptions(socketOptions);
 

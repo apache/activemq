@@ -63,7 +63,7 @@ public class SimpleAuthorizationMap implements AuthorizationMap {
         return this.tempDestinationAuthorizationEntry;
     }
 
-    public Set getTempDestinationAdminACLs() {
+    public Set<Object> getTempDestinationAdminACLs() {
         if (tempDestinationAuthorizationEntry != null) {
             return tempDestinationAuthorizationEntry.getAdminACLs();
         } else {
@@ -71,7 +71,7 @@ public class SimpleAuthorizationMap implements AuthorizationMap {
         }
     }
 
-    public Set getTempDestinationReadACLs() {
+    public Set<Object> getTempDestinationReadACLs() {
         if (tempDestinationAuthorizationEntry != null) {
             return tempDestinationAuthorizationEntry.getReadACLs();
         } else {
@@ -79,7 +79,7 @@ public class SimpleAuthorizationMap implements AuthorizationMap {
         }
     }
 
-    public Set getTempDestinationWriteACLs() {
+    public Set<Object> getTempDestinationWriteACLs() {
         if (tempDestinationAuthorizationEntry != null) {
             return tempDestinationAuthorizationEntry.getWriteACLs();
         } else {
@@ -87,15 +87,18 @@ public class SimpleAuthorizationMap implements AuthorizationMap {
         }
     }
 
-    public Set getAdminACLs(ActiveMQDestination destination) {
+    @SuppressWarnings("unchecked")
+    public Set<Object> getAdminACLs(ActiveMQDestination destination) {
         return adminACLs.get(destination);
     }
 
-    public Set getReadACLs(ActiveMQDestination destination) {
+    @SuppressWarnings("unchecked")
+    public Set<Object> getReadACLs(ActiveMQDestination destination) {
         return readACLs.get(destination);
     }
 
-    public Set getWriteACLs(ActiveMQDestination destination) {
+    @SuppressWarnings("unchecked")
+    public Set<Object> getWriteACLs(ActiveMQDestination destination) {
         return writeACLs.get(destination);
     }
 

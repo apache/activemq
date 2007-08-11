@@ -69,7 +69,7 @@ public class PeerTransportFactory extends TransportFactory {
                 broker = ID_GENERATOR.generateSanitizedId();
             }
 
-            final Map brokerOptions = new HashMap(URISupport.parseParamters(location));
+            final Map<String, String> brokerOptions = new HashMap<String, String>(URISupport.parseParamters(location));
             if (!brokerOptions.containsKey("persistent")) {
                 brokerOptions.put("persistent", "false");
             }

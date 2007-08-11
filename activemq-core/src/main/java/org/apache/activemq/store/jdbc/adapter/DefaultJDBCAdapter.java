@@ -90,7 +90,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 // created already.
                 try {
                     LOG.debug("Executing SQL: " + createStatments[i]);
-                    boolean rc = s.execute(createStatments[i]);
+                    s.execute(createStatments[i]);
                 } catch (SQLException e) {
                     if (alreadyExists) {
                         LOG.debug("Could not create JDBC tables; The message table already existed."
@@ -122,7 +122,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 // This will fail usually since the tables will be
                 // created already.
                 try {
-                    boolean rc = s.execute(dropStatments[i]);
+                    s.execute(dropStatments[i]);
                 } catch (SQLException e) {
                     LOG.warn("Could not drop JDBC tables; they may not exist." + " Failure was: "
                              + dropStatments[i] + " Message: " + e.getMessage() + " SQLState: "
@@ -515,7 +515,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s = c.getConnection().prepareStatement(statements.getFindAllDurableSubsStatement());
             s.setString(1, destination.getQualifiedName());
             rs = s.executeQuery();
-            ArrayList rc = new ArrayList();
+            ArrayList<SubscriptionInfo> rc = new ArrayList<SubscriptionInfo>();
             while (rs.next()) {
                 SubscriptionInfo subscription = new SubscriptionInfo();
                 subscription.setDestination(destination);
@@ -526,7 +526,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                     .createDestination(rs.getString(4), ActiveMQDestination.QUEUE_TYPE));
                 rc.add(subscription);
             }
-            return (SubscriptionInfo[])rc.toArray(new SubscriptionInfo[rc.size()]);
+            return rc.toArray(new SubscriptionInfo[rc.size()]);
         } finally {
             close(rs);
             close(s);
@@ -616,17 +616,15 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         }
     }
 
-    public Set doGetDestinations(TransactionContext c) throws SQLException, IOException {
-        HashSet rc = new HashSet();
+    public Set<ActiveMQDestination> doGetDestinations(TransactionContext c) throws SQLException, IOException {
+        HashSet<ActiveMQDestination> rc = new HashSet<ActiveMQDestination>();
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
             s = c.getConnection().prepareStatement(statements.getFindAllDestinationsStatement());
             rs = s.executeQuery();
             while (rs.next()) {
-                rc
-                    .add(ActiveMQDestination.createDestination(rs.getString(1),
-                                                               ActiveMQDestination.QUEUE_TYPE));
+                rc.add(ActiveMQDestination.createDestination(rs.getString(1), ActiveMQDestination.QUEUE_TYPE));
             }
         } finally {
             close(rs);

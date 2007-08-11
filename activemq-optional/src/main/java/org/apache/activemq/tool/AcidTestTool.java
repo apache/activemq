@@ -53,7 +53,6 @@ public class AcidTestTool extends TestCase {
     private Random random = new Random();
     private byte data[];
     private int workerCount = 10;
-    private PrintWriter statWriter;
 
     // Worker configuration.
     protected int recordSize = 1024;
@@ -68,7 +67,7 @@ public class AcidTestTool extends TestCase {
     AtomicInteger publishedBatches = new AtomicInteger(0);
     AtomicInteger consumedBatches = new AtomicInteger(0);
     
-    List errors = Collections.synchronizedList(new ArrayList());
+    List<Throwable> errors = Collections.synchronizedList(new ArrayList<Throwable>());
 
     private interface Worker extends Runnable {
         public boolean waitForExit(long i) throws InterruptedException;
@@ -80,11 +79,9 @@ public class AcidTestTool extends TestCase {
         private MessageProducer producer;
         private BytesMessage message;
         CountDownLatch doneLatch = new CountDownLatch(1);
-        private final String workerId;
 
         ProducerWorker(Session session, String workerId) throws JMSException {
             this.session = session;
-            this.workerId = workerId;
             producer = session.createProducer(target);
             producer.setDeliveryMode(DeliveryMode.PERSISTENT);
             message = session.createBytesMessage();
@@ -141,11 +138,9 @@ public class AcidTestTool extends TestCase {
         private MessageConsumer consumer;
         private final long timeout;
         CountDownLatch doneLatch = new CountDownLatch(1);
-        private final String workerId;
         
         ConsumerWorker(Session session, String workerId, long timeout) throws JMSException {
             this.session = session;
-            this.workerId = workerId;
             this.timeout = timeout;
             consumer = session.createConsumer(target,"workerId='"+workerId+"'");
         }
@@ -233,7 +228,6 @@ public class AcidTestTool extends TestCase {
         }
         
         long reconnectDelay=1000;
-        JMSException lastError=null;
         
         while( connection == null) {
             if( reconnectDelay > 1000*10 ) {
@@ -243,7 +237,6 @@ public class AcidTestTool extends TestCase {
 	            connection = factory.createConnection();
 	            connection.start();
 	        } catch (JMSException e) {
-                lastError = e;
 	            Thread.sleep(reconnectDelay);
 	            reconnectDelay*=2;
 	        }
@@ -272,7 +265,7 @@ public class AcidTestTool extends TestCase {
         reconnect();
         
         System.out.println("Starting " + workerCount + " Workers...");
-        ArrayList workers = new ArrayList();
+        ArrayList<Worker> workers = new ArrayList<Worker>();
         for( int i=0; i< workerCount; i++ ){        
             String workerId = "worker-"+i;
             
@@ -302,8 +295,8 @@ public class AcidTestTool extends TestCase {
 
         // Wait for all the workers to finish.
         System.out.println("Waiting for all workers to exit due to server shutdown.");
-        for (Iterator iter = workers.iterator(); iter.hasNext();) {
-            Worker worker = (Worker) iter.next();
+        for (Iterator<Worker> iter = workers.iterator(); iter.hasNext();) {
+            Worker worker = iter.next();
             while( !worker.waitForExit(1000) ) {
                 System.out.println("==============================================");
                 System.out.println("===> Server is under load now.  Kill it!");
@@ -315,7 +308,7 @@ public class AcidTestTool extends TestCase {
         
         // No errors should have occured so far.
         if( errors.size()>0 )
-            throw (Throwable) errors.get(0);
+            throw errors.get(0);
         
         System.out.println("==============================================");
         System.out.println("===> Start the server now.");
@@ -333,8 +326,8 @@ public class AcidTestTool extends TestCase {
         }
 
         System.out.println("Waiting for restarted consumers to finish consuming all messages..");
-        for (Iterator iter = workers.iterator(); iter.hasNext();) {
-            Worker worker = (Worker) iter.next();
+        for (Iterator<Worker> iter = workers.iterator(); iter.hasNext();) {
+            Worker worker = iter.next();
             while( !worker.waitForExit(1000*5) ) {
                 System.out.println("Waiting for restarted consumers to finish consuming all messages..");
                 System.out.println("Stats: Produced Batches: "+this.publishedBatches.get()+", Consumed Batches: "+this.consumedBatches.get());            
@@ -346,7 +339,7 @@ public class AcidTestTool extends TestCase {
         System.out.println("Stats: Produced Batches: "+this.publishedBatches.get()+", Consumed Batches: "+this.consumedBatches.get());                    
         
         if( errors.size()>0 )
-            throw (Throwable) errors.get(0);
+            throw errors.get(0);
         
     }
     

@@ -29,13 +29,13 @@ import org.apache.commons.logging.LogFactory;
 public abstract class MemoryBufferTestSupport extends TestCase {
     private static final Log LOG = LogFactory.getLog(MemoryBufferTestSupport.class);
 
-    protected abstract MessageBuffer createMessageBuffer();
-
     protected MessageBuffer buffer = createMessageBuffer();
     protected MessageQueue qA = buffer.createMessageQueue();
     protected MessageQueue qB = buffer.createMessageQueue();
     protected MessageQueue qC = buffer.createMessageQueue();
     protected int messageCount;
+
+    protected abstract MessageBuffer createMessageBuffer();
 
     protected void setUp() throws Exception {
         buffer = createMessageBuffer();

@@ -29,7 +29,7 @@ import org.apache.activemq.broker.TransportConnector;
 public abstract class TransportBrokerTestSupport extends BrokerTest {
 
     private TransportConnector connector;
-    ArrayList connections = new ArrayList();
+    private ArrayList<StubConnection> connections = new ArrayList<StubConnection>();
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -44,8 +44,8 @@ public abstract class TransportBrokerTestSupport extends BrokerTest {
     protected abstract String getBindLocation();
 
     protected void tearDown() throws Exception {
-        for (Iterator iter = connections.iterator(); iter.hasNext();) {
-            StubConnection connection = (StubConnection) iter.next();
+        for (Iterator<StubConnection> iter = connections.iterator(); iter.hasNext();) {
+            StubConnection connection = iter.next();
             connection.stop();
             iter.remove();
         }

@@ -29,7 +29,7 @@ public class StatsImpl extends StatisticImpl implements Stats, Resettable {
     private Map<String, StatisticImpl> map;
 
     public StatsImpl() {
-        this(new HashMap());
+        this(new HashMap<String, StatisticImpl>());
     }
 
     public StatsImpl(Map<String, StatisticImpl> map) {
@@ -39,7 +39,8 @@ public class StatsImpl extends StatisticImpl implements Stats, Resettable {
 
     public void reset() {
         Statistic[] stats = getStatistics();
-        for (int i = 0, size = stats.length; i < size; i++) {
+        int size = stats.length;
+        for (int i = 0; i < size; i++) {
             Statistic stat = stats[i];
             if (stat instanceof Resettable) {
                 Resettable r = (Resettable)stat;

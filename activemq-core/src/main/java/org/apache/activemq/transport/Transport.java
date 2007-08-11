@@ -122,7 +122,7 @@ public interface Transport extends Service {
      * @param target
      * @return the target
      */
-    Object narrow(Class target);
+    <T> T narrow(Class<T> target);
 
     /**
      * @return the remote address for this connection

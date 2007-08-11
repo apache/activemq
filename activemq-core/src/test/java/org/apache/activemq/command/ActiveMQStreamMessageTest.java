@@ -30,6 +30,15 @@ import junit.framework.TestCase;
  */
 public class ActiveMQStreamMessageTest extends TestCase {
 
+    /**
+     * Constructor for ActiveMQStreamMessageTest.
+     * 
+     * @param name
+     */
+    public ActiveMQStreamMessageTest(String name) {
+        super(name);
+    }
+
     public static void main(String[] args) {
         junit.textui.TestRunner.run(ActiveMQStreamMessageTest.class);
     }
@@ -46,15 +55,6 @@ public class ActiveMQStreamMessageTest extends TestCase {
      */
     protected void tearDown() throws Exception {
         super.tearDown();
-    }
-
-    /**
-     * Constructor for ActiveMQStreamMessageTest.
-     * 
-     * @param arg0
-     */
-    public ActiveMQStreamMessageTest(String arg0) {
-        super(arg0);
     }
 
     public void testGetDataStructureType() {

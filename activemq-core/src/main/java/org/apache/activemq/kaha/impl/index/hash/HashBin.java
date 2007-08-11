@@ -251,15 +251,15 @@ class HashBin {
         return result;
     }
 
-    private int getInsertPageNo(int index) {
-        int result = index / maximumEntries;
-        return result;
-    }
-
-    private int getOffset(int index) {
-        int result = index % maximumEntries;
-        return result;
-    }
+//    private int getInsertPageNo(int index) {
+//        int result = index / maximumEntries;
+//        return result;
+//    }
+//
+//    private int getOffset(int index) {
+//        int result = index % maximumEntries;
+//        return result;
+//    }
 
     private void doOverFlow(int index) throws IOException {
         int pageNo = index / maximumEntries;

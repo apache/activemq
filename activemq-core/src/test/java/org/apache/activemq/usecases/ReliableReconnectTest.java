@@ -41,10 +41,11 @@ import org.apache.activemq.util.IdGenerator;
  * @version $Revision: 1.1.1.1 $
  */
 public class ReliableReconnectTest extends TestSupport {
-    private static final int RECEIVE_TIMEOUT = 10000;
+    
     protected static final int MESSAGE_COUNT = 100;
     protected static final String DEFAULT_BROKER_URL = "vm://localhost";
-    private IdGenerator idGen = new IdGenerator();
+    private static final int RECEIVE_TIMEOUT = 10000;
+    
     protected int deliveryMode = DeliveryMode.PERSISTENT;
     protected String consumerClientId;
     protected Destination destination;
@@ -52,6 +53,7 @@ public class ReliableReconnectTest extends TestSupport {
     protected AtomicInteger messagesReceived = new AtomicInteger(0);
     protected BrokerService broker;
     protected int firstBatch = MESSAGE_COUNT / 10;
+    private IdGenerator idGen = new IdGenerator();
 
     public ReliableReconnectTest() {
     }

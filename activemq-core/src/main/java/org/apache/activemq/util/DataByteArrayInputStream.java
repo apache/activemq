@@ -252,7 +252,9 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
     public String readUTF() throws IOException {
         int length = readUnsignedShort();
         char[] characters = new char[length];
-        int c, c2, c3;
+        int c;
+        int c2;
+        int c3;
         int count = 0;
         int total = pos + length;
         while (pos < total) {

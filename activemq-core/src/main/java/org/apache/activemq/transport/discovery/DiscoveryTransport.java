@@ -39,7 +39,7 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
 
     private final CompositeTransport next;
     private DiscoveryAgent discoveryAgent;
-    private final ConcurrentHashMap serviceURIs = new ConcurrentHashMap();
+    private final ConcurrentHashMap<String, URI> serviceURIs = new ConcurrentHashMap<String, URI>();
 
     public DiscoveryTransport(CompositeTransport next) {
         super(next);
@@ -79,7 +79,7 @@ public class DiscoveryTransport extends TransportFilter implements DiscoveryList
     }
 
     public void onServiceRemove(DiscoveryEvent event) {
-        URI uri = (URI)serviceURIs.get(event.getServiceName());
+        URI uri = serviceURIs.get(event.getServiceName());
         if (uri != null) {
             next.remove(new URI[] {uri});
         }

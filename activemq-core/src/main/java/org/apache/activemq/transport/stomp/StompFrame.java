@@ -37,10 +37,10 @@ public class StompFrame implements Command {
     private static final byte[] NO_DATA = new byte[] {};
 
     private String action;
-    private Map<String,String> headers = new HashMap<String,String>();
+    private Map<String, String> headers = new HashMap<String, String>();
     private byte[] content = NO_DATA;
 
-    public StompFrame(String command, Map<String,String> headers, byte[] data) {
+    public StompFrame(String command, Map<String, String> headers, byte[] data) {
         this.action = command;
         this.headers = headers;
         this.content = data;
@@ -65,11 +65,11 @@ public class StompFrame implements Command {
         this.content = data;
     }
 
-    public Map<String,String> getHeaders() {
+    public Map<String, String> getHeaders() {
         return headers;
     }
 
-    public void setHeaders(Map<String,String> headers) {
+    public void setHeaders(Map<String, String> headers) {
         this.headers = headers;
     }
 

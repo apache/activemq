@@ -18,6 +18,8 @@ package org.apache.activemq.broker;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -30,7 +32,7 @@ public class BrokerRegistry {
     private static final BrokerRegistry INSTANCE = new BrokerRegistry();
 
     private final Object mutex = new Object();
-    private final HashMap<String, BrokerService> brokers = new HashMap<String, BrokerService>();
+    private final Map<String, BrokerService> brokers = new HashMap<String, BrokerService>();
 
     public static BrokerRegistry getInstance() {
         return INSTANCE;

@@ -35,8 +35,9 @@ import org.apache.activemq.util.IdGenerator;
 public class TopicRedeliverTest extends TestSupport {
 
     private static final int RECEIVE_TIMEOUT = 10000;
-    private IdGenerator idGen = new IdGenerator();
+
     protected int deliveryMode = DeliveryMode.PERSISTENT;
+    private IdGenerator idGen = new IdGenerator();
 
     public TopicRedeliverTest() {
     }
@@ -80,9 +81,9 @@ public class TopicRedeliverTest extends TestSupport {
         sent1.setText("msg3");
         producer.send(sent3);
 
-        Message rec1 = consumer.receive(RECEIVE_TIMEOUT);
+        consumer.receive(RECEIVE_TIMEOUT);
         Message rec2 = consumer.receive(RECEIVE_TIMEOUT);
-        Message rec3 = consumer.receive(RECEIVE_TIMEOUT);
+        consumer.receive(RECEIVE_TIMEOUT);
 
         // ack rec2
         rec2.acknowledge();

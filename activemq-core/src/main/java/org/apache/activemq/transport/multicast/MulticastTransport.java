@@ -50,7 +50,7 @@ public class MulticastTransport extends UdpTransport {
     private InetAddress mcastAddress;
     private int mcastPort;
     private int timeToLive = 1;
-    private boolean loopBackMode = false;
+    private boolean loopBackMode;
     private long keepAliveInterval = DEFAULT_IDLE_TIME;
 
     public MulticastTransport(OpenWireFormat wireFormat, URI remoteLocation) throws UnknownHostException, IOException {

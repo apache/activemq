@@ -90,7 +90,7 @@ public class SslTransportFactoryTest extends TestCase {
         // 2 transport options, 3 socket options, 3 settings for each option =>
         // 3^5 = 243 combos.
         for (int i = 0; i < 243; ++i) {
-            Map options = new HashMap();
+            Map<String, String> options = new HashMap<String, String>();
 
             for (int j = 0; j < 5; ++j) {
                 // -1 since the option range is [-1,1], not [0,2].

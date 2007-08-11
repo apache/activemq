@@ -51,12 +51,12 @@ public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener
     private JmDNS jmdns;
     private InetAddress localAddress;
     private String localhost;
-    private int weight = 0;
-    private int priority = 0;
+    private int weight;
+    private int priority;
 
     private DiscoveryListener listener;
     private String group = "default";
-    private final CopyOnWriteArrayList serviceInfos = new CopyOnWriteArrayList();
+    private final CopyOnWriteArrayList<ServiceInfo> serviceInfos = new CopyOnWriteArrayList<ServiceInfo>();
 
     // DiscoveryAgent interface
     // -------------------------------------------------------------------------
@@ -83,8 +83,8 @@ public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener
 
     public void stop() {
         if (jmdns != null) {
-            for (Iterator iter = serviceInfos.iterator(); iter.hasNext();) {
-                ServiceInfo si = (ServiceInfo)iter.next();
+            for (Iterator<ServiceInfo> iter = serviceInfos.iterator(); iter.hasNext();) {
+                ServiceInfo si = iter.next();
                 jmdns.unregisterService(si);
             }
 

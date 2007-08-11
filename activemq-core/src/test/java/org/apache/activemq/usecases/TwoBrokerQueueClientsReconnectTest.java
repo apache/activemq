@@ -39,8 +39,10 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
     private static final Log LOG = LogFactory.getLog(TwoBrokerQueueClientsReconnectTest.class);
 
 
-    protected int msgsClient1, msgsClient2;
-    protected String broker1, broker2;
+    protected int msgsClient1;
+    protected int msgsClient2;
+    protected String broker1;
+    protected String broker2;
 
     public void testClientAReceivesOnly() throws Exception {
         broker1 = "BrokerA";
@@ -353,7 +355,8 @@ public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSu
         createBroker(new URI("broker:(tcp://localhost:61617)/BrokerB?persistent=false&useJmx=false"));
 
         // Configure broker connection factory
-        ActiveMQConnectionFactory factoryA, factoryB;
+        ActiveMQConnectionFactory factoryA;
+        ActiveMQConnectionFactory factoryB;
         factoryA = (ActiveMQConnectionFactory)getConnectionFactory("BrokerA");
         factoryB = (ActiveMQConnectionFactory)getConnectionFactory("BrokerB");
 

@@ -31,6 +31,7 @@ import javax.sql.DataSource;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.memory.UsageManager;
@@ -76,7 +77,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     private int cleanupPeriod = 1000 * 60 * 5;
     private boolean useExternalMessageReferences;
     private boolean useDatabaseLock = true;
-    private int lockKeepAlivePeriod = 0;
+    private int lockKeepAlivePeriod;
     private DatabaseLocker databaseLocker;
     private boolean createTablesOnStartup = true;
 
@@ -88,17 +89,17 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         this.wireFormat = wireFormat;
     }
 
-    public Set getDestinations() {
+    public Set<ActiveMQDestination> getDestinations() {
         // Get a connection and insert the message into the DB.
         TransactionContext c = null;
         try {
             c = getTransactionContext();
             return getAdapter().doGetDestinations(c);
         } catch (IOException e) {
-            return Collections.EMPTY_SET;
+            return emptyDestinationSet();
         } catch (SQLException e) {
             JDBCPersistenceAdapter.log("JDBC Failure: ", e);
-            return Collections.EMPTY_SET;
+            return emptyDestinationSet();
         } finally {
             if (c != null) {
                 try {
@@ -107,6 +108,11 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
                 }
             }
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Set<ActiveMQDestination> emptyDestinationSet() {
+        return Collections.EMPTY_SET;
     }
 
     public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {

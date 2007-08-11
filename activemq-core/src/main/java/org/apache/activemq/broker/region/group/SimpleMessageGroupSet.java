@@ -26,7 +26,7 @@ import java.util.Set;
  */
 public class SimpleMessageGroupSet implements MessageGroupSet {
 
-    private Set set = new HashSet();
+    private Set<String> set = new HashSet<String>();
 
     public boolean contains(String groupID) {
         return set.contains(groupID);

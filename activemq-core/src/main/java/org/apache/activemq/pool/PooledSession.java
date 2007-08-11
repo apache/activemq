@@ -63,10 +63,10 @@ public class PooledSession implements TopicSession, QueueSession {
     private ActiveMQQueueSender queueSender;
     private ActiveMQTopicPublisher topicPublisher;
     private boolean transactional = true;
-    private boolean ignoreClose = false;
+    private boolean ignoreClose;
 
-    private final CopyOnWriteArrayList consumers = new CopyOnWriteArrayList();
-    private final CopyOnWriteArrayList browsers = new CopyOnWriteArrayList();
+    private final CopyOnWriteArrayList<MessageConsumer> consumers = new CopyOnWriteArrayList<MessageConsumer>();
+    private final CopyOnWriteArrayList<QueueBrowser> browsers = new CopyOnWriteArrayList<QueueBrowser>();
 
     public PooledSession(ActiveMQSession aSession, SessionPool sessionPool) {
         this.session = aSession;
@@ -90,14 +90,14 @@ public class PooledSession implements TopicSession, QueueSession {
             getSession().setMessageListener(null);
 
             // Close any consumers and browsers that may have been created.
-            for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-                MessageConsumer consumer = (MessageConsumer)iter.next();
+            for (Iterator<MessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
+                MessageConsumer consumer = iter.next();
                 consumer.close();
             }
             consumers.clear();
 
-            for (Iterator iter = browsers.iterator(); iter.hasNext();) {
-                QueueBrowser browser = (QueueBrowser)iter.next();
+            for (Iterator<QueueBrowser> iter = browsers.iterator(); iter.hasNext();) {
+                QueueBrowser browser = iter.next();
                 browser.close();
             }
             browsers.clear();

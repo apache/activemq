@@ -54,7 +54,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         // if(!((ActiveMQTempDestination)destination).getConnectionId().equals(context.getConnectionId().getValue())
         // ) {
         if (!securityContext.isBrokerContext()) {
-            Set allowedACLs = null;
+            Set<?> allowedACLs = null;
             if (!destination.isTemporary()) {
                 allowedACLs = authorizationMap.getAdminACLs(destination);
             } else {
@@ -77,7 +77,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         if (securityContext == null) {
             throw new SecurityException("User is not authenticated.");
         }
-        Set allowedACLs = null;
+        Set<?> allowedACLs = null;
         if (!destination.isTemporary()) {
             allowedACLs = authorizationMap.getAdminACLs(destination);
         } else {
@@ -96,7 +96,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         if (subject == null) {
             throw new SecurityException("User is not authenticated.");
         }
-        Set allowedACLs = null;
+        Set<?> allowedACLs = null;
         if (!info.getDestination().isTemporary()) {
             allowedACLs = authorizationMap.getReadACLs(info.getDestination());
         } else {
@@ -140,7 +140,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         }
         if (info.getDestination() != null) {
 
-            Set allowedACLs = null;
+            Set<?> allowedACLs = null;
             if (!info.getDestination().isTemporary()) {
                 allowedACLs = authorizationMap.getWriteACLs(info.getDestination());
             } else {
@@ -162,7 +162,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         }
         if (!subject.getAuthorizedWriteDests().contains(messageSend.getDestination())) {
 
-            Set allowedACLs = null;
+            Set<?> allowedACLs = null;
             if (!messageSend.getDestination().isTemporary()) {
                 allowedACLs = authorizationMap.getWriteACLs(messageSend.getDestination());
             } else {

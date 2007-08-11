@@ -30,6 +30,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
@@ -53,10 +54,10 @@ public class AdvisoryBroker extends BrokerFilter {
     private static final Log LOG = LogFactory.getLog(AdvisoryBroker.class);
     private static final IdGenerator ID_GENERATOR = new IdGenerator();
 
-    protected final ConcurrentHashMap connections = new ConcurrentHashMap();
-    protected final ConcurrentHashMap consumers = new ConcurrentHashMap();
-    protected final ConcurrentHashMap producers = new ConcurrentHashMap();
-    protected final ConcurrentHashMap destinations = new ConcurrentHashMap();
+    protected final ConcurrentHashMap<ConnectionId, ConnectionInfo> connections = new ConcurrentHashMap<ConnectionId, ConnectionInfo>();
+    protected final ConcurrentHashMap<ConsumerId, ConsumerInfo> consumers = new ConcurrentHashMap<ConsumerId, ConsumerInfo>();
+    protected final ConcurrentHashMap<ProducerId, ProducerInfo> producers = new ConcurrentHashMap<ProducerId, ProducerInfo>();
+    protected final ConcurrentHashMap<ActiveMQDestination, DestinationInfo> destinations = new ConcurrentHashMap<ActiveMQDestination, DestinationInfo>();
     protected final ProducerId advisoryProducerId = new ProducerId();
     
     private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
@@ -88,8 +89,8 @@ public class AdvisoryBroker extends BrokerFilter {
             // for this newly added consumer.
             if (AdvisorySupport.isConnectionAdvisoryTopic(info.getDestination())) {
                 // Replay the connections.
-                for (Iterator iter = connections.values().iterator(); iter.hasNext();) {
-                    ConnectionInfo value = (ConnectionInfo)iter.next();
+                for (Iterator<ConnectionInfo> iter = connections.values().iterator(); iter.hasNext();) {
+                    ConnectionInfo value = iter.next();
                     ActiveMQTopic topic = AdvisorySupport.getConnectionAdvisoryTopic();
                     fireAdvisory(context, topic, value, info.getConsumerId());
                 }
@@ -100,8 +101,8 @@ public class AdvisoryBroker extends BrokerFilter {
             // for this newly added consumer.
             if (AdvisorySupport.isDestinationAdvisoryTopic(info.getDestination())) {
                 // Replay the destinations.
-                for (Iterator iter = destinations.values().iterator(); iter.hasNext();) {
-                    DestinationInfo value = (DestinationInfo)iter.next();
+                for (Iterator<DestinationInfo> iter = destinations.values().iterator(); iter.hasNext();) {
+                    DestinationInfo value = iter.next();
                     ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(value.getDestination());
                     fireAdvisory(context, topic, value, info.getConsumerId());
                 }
@@ -109,8 +110,8 @@ public class AdvisoryBroker extends BrokerFilter {
 
             // Replay the producers.
             if (AdvisorySupport.isProducerAdvisoryTopic(info.getDestination())) {
-                for (Iterator iter = producers.values().iterator(); iter.hasNext();) {
-                    ProducerInfo value = (ProducerInfo)iter.next();
+                for (Iterator<ProducerInfo> iter = producers.values().iterator(); iter.hasNext();) {
+                    ProducerInfo value = iter.next();
                     ActiveMQTopic topic = AdvisorySupport.getProducerAdvisoryTopic(value.getDestination());
                     fireProducerAdvisory(context, topic, value, info.getConsumerId());
                 }
@@ -118,8 +119,8 @@ public class AdvisoryBroker extends BrokerFilter {
 
             // Replay the consumers.
             if (AdvisorySupport.isConsumerAdvisoryTopic(info.getDestination())) {
-                for (Iterator iter = consumers.values().iterator(); iter.hasNext();) {
-                    ConsumerInfo value = (ConsumerInfo)iter.next();
+                for (Iterator<ConsumerInfo> iter = consumers.values().iterator(); iter.hasNext();) {
+                    ConsumerInfo value = iter.next();
                     ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(value.getDestination());
                     fireConsumerAdvisory(context, topic, value, info.getConsumerId());
                 }
@@ -163,7 +164,7 @@ public class AdvisoryBroker extends BrokerFilter {
 
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
         next.removeDestination(context, destination, timeout);
-        DestinationInfo info = (DestinationInfo)destinations.remove(destination);
+        DestinationInfo info = destinations.remove(destination);
         if (info != null) {
             info.setDestination(destination);
             info.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
@@ -183,7 +184,7 @@ public class AdvisoryBroker extends BrokerFilter {
 
     public void removeDestinationInfo(ConnectionContext context, DestinationInfo destInfo) throws Exception {
         next.removeDestinationInfo(context, destInfo);
-        DestinationInfo info = (DestinationInfo)destinations.remove(destInfo.getDestination());
+        DestinationInfo info = destinations.remove(destInfo.getDestination());
 
         if (info != null) {
             info.setDestination(destInfo.getDestination());

@@ -69,16 +69,16 @@ public class DestinationBasedMessageList implements MessageList {
         queue.add(node);
     }
 
-    public List getMessages(Subscription sub) {
+    public List<MessageReference> getMessages(Subscription sub) {
         return getMessages(sub.getConsumerInfo().getDestination());
     }
     
-    public  List getMessages(ActiveMQDestination destination) {
+    public  List<MessageReference> getMessages(ActiveMQDestination destination) {
         Set set = null;
         synchronized (lock) {
             set = subscriptionIndex.get(destination);
         }
-        List answer = new ArrayList();
+        List<MessageReference> answer = new ArrayList<MessageReference>();
         for (Iterator iter = set.iterator(); iter.hasNext();) {
             MessageQueue queue = (MessageQueue) iter.next();
             queue.appendMessages(answer);
@@ -87,8 +87,8 @@ public class DestinationBasedMessageList implements MessageList {
     }
     
     public Message[] browse(ActiveMQDestination destination) {
-        List result = getMessages(destination);
-        return (Message[])result.toArray(new Message[result.size()]);
+        List<MessageReference> result = getMessages(destination);
+        return result.toArray(new Message[result.size()]);
     }
 
 

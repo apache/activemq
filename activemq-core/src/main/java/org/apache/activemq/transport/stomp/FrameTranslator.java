@@ -75,9 +75,11 @@ public interface FrameTranslator {
             }
 
             // now lets add all the message headers
-            final Map properties = message.getProperties();
+            final Map<String, Object> properties = message.getProperties();
             if (properties != null) {
-                headers.putAll(properties);
+                for (Map.Entry<String, Object> prop : properties.entrySet()) {
+                    headers.put(prop.getKey(), "" + prop.getValue());
+                }
             }
         }
 

@@ -63,7 +63,8 @@ public class EmptyBroker implements Broker {
         return null;
     }
 
-    public Map getDestinationMap() {
+    @SuppressWarnings("unchecked")
+    public Map<ActiveMQDestination, Destination> getDestinationMap() {
         return Collections.EMPTY_MAP;
     }
 
@@ -198,7 +199,7 @@ public class EmptyBroker implements Broker {
         return false;
     }
 
-    public Set getDurableDestinations() {
+    public Set<ActiveMQDestination> getDurableDestinations() {
         return null;
     }
 

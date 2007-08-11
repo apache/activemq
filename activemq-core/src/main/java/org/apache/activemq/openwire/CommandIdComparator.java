@@ -25,14 +25,9 @@ import org.apache.activemq.command.Command;
  * 
  * @version $Revision$
  */
-public class CommandIdComparator implements Comparator {
+public class CommandIdComparator implements Comparator<Command> {
 
-    public int compare(Object o1, Object o2) {
-        assert o1 instanceof Command;
-        assert o2 instanceof Command;
-        
-        Command c1 = (Command) o1;
-        Command c2 = (Command) o2;
+    public int compare(Command c1, Command c2) {        
         return c1.getCommandId() - c2.getCommandId();
     }
 

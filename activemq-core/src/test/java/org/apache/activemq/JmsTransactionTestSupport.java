@@ -20,6 +20,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
@@ -31,17 +32,20 @@ import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.test.JmsResourceProvider;
 import org.apache.activemq.test.TestSupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision: 1.9 $
  */
 public abstract class JmsTransactionTestSupport extends TestSupport implements MessageListener {
 
-    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(JmsTransactionTestSupport.class);
+    private static final Log LOG = LogFactory.getLog(JmsTransactionTestSupport.class);
     private static final int MESSAGE_COUNT = 5;
     private static final String MESSAGE_TEXT = "message";
 
@@ -52,15 +56,14 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
     protected MessageProducer producer;
     protected JmsResourceProvider resourceProvider;
     protected Destination destination;
-
-    // for message listener test
-    private List unackMessages = new ArrayList(MESSAGE_COUNT);
-    private List ackMessages = new ArrayList(MESSAGE_COUNT);
-    private boolean resendPhase;
     protected int batchCount = 10;
     protected int batchSize = 20;
-
     protected BrokerService broker;
+
+    // for message listener test
+    private List<Message> unackMessages = new ArrayList<Message>(MESSAGE_COUNT);
+    private List<Message> ackMessages = new ArrayList<Message>(MESSAGE_COUNT);
+    private boolean resendPhase;
 
     public JmsTransactionTestSupport() {
         super();
@@ -164,7 +167,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         session.commit();
 
         // receives the first message
-        ArrayList messages = new ArrayList();
+        ArrayList<Message> messages = new ArrayList<Message>();
         LOG.info("About to consume message 1");
         Message message = consumer.receive(1000);
         messages.add(message);
@@ -207,7 +210,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         session.commit();
 
         // receives the first message
-        ArrayList messages = new ArrayList();
+        ArrayList<Message> messages = new ArrayList<Message>();
         LOG.info("About to consume message 1");
         Message message = consumer.receive(1000);
         messages.add(message);
@@ -251,7 +254,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         session.commit();
 
         // receives the first message
-        ArrayList messages = new ArrayList();
+        ArrayList<Message> messages = new ArrayList<Message>();
         LOG.info("About to consume message 1");
         Message message = consumer.receive(1000);
         messages.add(message);
@@ -292,7 +295,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         LOG.info("Sent 0: " + outbound[0]);
         LOG.info("Sent 1: " + outbound[1]);
 
-        ArrayList messages = new ArrayList();
+        ArrayList<Message> messages = new ArrayList<Message>();
         Message message = consumer.receive(1000);
         messages.add(message);
         assertEquals(outbound[0], message);
@@ -338,7 +341,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         LOG.info("Sent 0: " + outbound[0]);
         LOG.info("Sent 1: " + outbound[1]);
 
-        ArrayList messages = new ArrayList();
+        ArrayList<Message> messages = new ArrayList<Message>();
         Message message = consumer.receive(1000);
         assertEquals(outbound[0], message);
 
@@ -470,7 +473,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
     }
 
     public void testChangeMutableObjectInObjectMessageThenRollback() throws Exception {
-        ArrayList list = new ArrayList();
+        ArrayList<String> list = new ArrayList<String>();
         list.add("First");
         Message outbound = session.createObjectMessage(list);
         outbound.setStringProperty("foo", "abc");
@@ -481,7 +484,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         LOG.info("About to consume message 1");
         Message message = consumer.receive(5000);
 
-        List body = assertReceivedObjectMessageWithListBody(message);
+        List<String> body = assertReceivedObjectMessageWithListBody(message);
 
         // now lets try mutate it
         try {
@@ -495,18 +498,19 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
         session.rollback();
 
         message = consumer.receive(5000);
-        List secondBody = assertReceivedObjectMessageWithListBody(message);
+        List<String> secondBody = assertReceivedObjectMessageWithListBody(message);
         assertNotSame("Second call should return a different body", secondBody, body);
         session.commit();
     }
 
-    protected List assertReceivedObjectMessageWithListBody(Message message) throws JMSException {
+    @SuppressWarnings("unchecked")
+    protected List<String> assertReceivedObjectMessageWithListBody(Message message) throws JMSException {
         assertNotNull("Should have received a message!", message);
         assertEquals("foo header", "abc", message.getStringProperty("foo"));
 
         assertTrue("Should be an object message but was: " + message, message instanceof ObjectMessage);
         ObjectMessage objectMessage = (ObjectMessage)message;
-        List body = (List)objectMessage.getObject();
+        List<String> body = (List<String>)objectMessage.getObject();
         LOG.info("Received body: " + body);
 
         assertEquals("Size of list should be 1", 1, body.size());

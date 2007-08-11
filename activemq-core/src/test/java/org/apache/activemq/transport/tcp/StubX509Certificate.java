@@ -25,6 +25,9 @@ import java.util.Date;
 import java.util.Set;
 
 public class StubX509Certificate extends X509Certificate {
+    
+    private final Principal id;
+
     public StubX509Certificate(Principal id) {
         this.id = id;
     }
@@ -32,8 +35,6 @@ public class StubX509Certificate extends X509Certificate {
     public Principal getSubjectDN() {
         return this.id;
     }
-
-    private final Principal id;
 
     // --- Stubbed Methods ---
     public void checkValidity() {
@@ -146,11 +147,13 @@ public class StubX509Certificate extends X509Certificate {
         return false;
     }
 
+    @SuppressWarnings("unchecked")
     public Set getCriticalExtensionOIDs() {
         // TODO Auto-generated method stub
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     public Set getNonCriticalExtensionOIDs() {
         // TODO Auto-generated method stub
         return null;

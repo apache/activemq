@@ -58,7 +58,7 @@ public class TcpTransportServer extends TransportServerThreadSupport {
     protected long maxInactivityDuration = 30000;
     protected int minmumWireFormatVersion;
     protected boolean trace;
-    protected Map transportOptions;
+    protected Map<String, Object> transportOptions;
     protected final ServerSocketFactory serverSocketFactory;
 
     public TcpTransportServer(TcpTransportFactory transportFactory, URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
@@ -159,7 +159,7 @@ public class TcpTransportServer extends TransportServerThreadSupport {
                     if (isStopped() || getAcceptListener() == null) {
                         socket.close();
                     } else {
-                        HashMap options = new HashMap();
+                        HashMap<String, Object> options = new HashMap<String, Object>();
                         options.put("maxInactivityDuration", Long.valueOf(maxInactivityDuration));
                         options.put("minmumWireFormatVersion", Integer.valueOf(minmumWireFormatVersion));
                         options.put("trace", Boolean.valueOf(trace));
@@ -228,7 +228,7 @@ public class TcpTransportServer extends TransportServerThreadSupport {
         return (InetSocketAddress)serverSocket.getLocalSocketAddress();
     }
 
-    public void setTransportOption(Map transportOptions) {
+    public void setTransportOption(Map<String, Object> transportOptions) {
         this.transportOptions = transportOptions;
     }
 }

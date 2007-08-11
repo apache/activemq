@@ -21,7 +21,7 @@ import javax.jms.Destination;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 
-public class AdvisorySupport {
+public final class AdvisorySupport {
 
     public static final String ADVISORY_TOPIC_PREFIX = "ActiveMQ.Advisory.";
     public static final ActiveMQTopic CONNECTION_ADVISORY_TOPIC = new ActiveMQTopic(ADVISORY_TOPIC_PREFIX + "Connection");
@@ -45,6 +45,9 @@ public class AdvisorySupport {
     public static final ActiveMQTopic TEMP_DESTINATION_COMPOSITE_ADVISORY_TOPIC = new ActiveMQTopic(TEMP_QUEUE_ADVISORY_TOPIC + "," + TEMP_TOPIC_ADVISORY_TOPIC);
     private static final ActiveMQTopic AGENT_TOPIC_DESTINATION = new ActiveMQTopic(AGENT_TOPIC);
 
+    private AdvisorySupport() {        
+    }
+    
     public static ActiveMQTopic getConnectionAdvisoryTopic() {
         return CONNECTION_ADVISORY_TOPIC;
     }

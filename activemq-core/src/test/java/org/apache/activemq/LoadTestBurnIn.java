@@ -51,6 +51,13 @@ import org.apache.commons.logging.LogFactory;
 public class LoadTestBurnIn extends JmsTestSupport {
     private static final transient Log LOG = LogFactory.getLog(LoadTestBurnIn.class);
 
+    public ActiveMQDestination destination;
+    public int deliveryMode;
+    public byte destinationType;
+    public boolean durableConsumer;
+    public int messageCount = 50000;
+    public int messageSize = 1024;
+
     public static Test suite() {
         return suite(LoadTestBurnIn.class);
     }
@@ -84,14 +91,6 @@ public class LoadTestBurnIn extends JmsTestSupport {
         return new ActiveMQConnectionFactory(((TransportConnector)broker.getTransportConnectors().get(0))
             .getServer().getConnectURI());
     }
-
-    public ActiveMQDestination destination;
-    public int deliveryMode;
-    public byte destinationType;
-    public boolean durableConsumer;
-
-    public int messageCount = 50000;
-    public int messageSize = 1024;
 
     public void initCombosForTestSendReceive() {
         addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT),

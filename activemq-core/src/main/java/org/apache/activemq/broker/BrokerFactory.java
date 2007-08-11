@@ -29,10 +29,13 @@ import org.apache.activemq.util.IOExceptionSupport;
  * 
  * @version $Revision$
  */
-public class BrokerFactory {
+public final class BrokerFactory {
 
     private static final FactoryFinder BROKER_FACTORY_HANDLER_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/broker/");
 
+    private BrokerFactory() {        
+    }
+    
     public static BrokerFactoryHandler createBrokerFactoryHandler(String type) throws IOException {
         try {
             return (BrokerFactoryHandler)BROKER_FACTORY_HANDLER_FINDER.newInstance(type);

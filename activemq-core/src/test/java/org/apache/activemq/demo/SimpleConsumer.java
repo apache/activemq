@@ -42,9 +42,13 @@ import javax.naming.NamingException;
  * 
  * @version $Revision: 1.2 $
  */
-public class SimpleConsumer {
+public final class SimpleConsumer {
 
-    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(SimpleConsumer.class);
+    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory
+        .getLog(SimpleConsumer.class);
+
+    private SimpleConsumer() {
+    }
 
     /**
      * @param args the queue used by the example

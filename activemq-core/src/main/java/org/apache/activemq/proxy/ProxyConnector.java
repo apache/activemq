@@ -46,8 +46,7 @@ public class ProxyConnector implements Service {
     private URI remote;
     private URI localUri;
     private String name;
-
-    CopyOnWriteArrayList connections = new CopyOnWriteArrayList();
+    private CopyOnWriteArrayList<ProxyConnection> connections = new CopyOnWriteArrayList<ProxyConnection>();
 
     public void start() throws Exception {
 
@@ -77,9 +76,9 @@ public class ProxyConnector implements Service {
         if (this.server != null) {
             ss.stop(this.server);
         }
-        for (Iterator iter = connections.iterator(); iter.hasNext();) {
+        for (Iterator<ProxyConnection> iter = connections.iterator(); iter.hasNext();) {
             LOG.info("Connector stopped: Stopping proxy.");
-            ss.stop((Service)iter.next());
+            ss.stop(iter.next());
         }
         ss.throwFirstException();
         LOG.info("Proxy Connector " + getName() + " Stopped");

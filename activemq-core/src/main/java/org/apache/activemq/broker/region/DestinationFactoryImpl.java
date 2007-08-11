@@ -65,7 +65,7 @@ public class DestinationFactoryImpl extends DestinationFactory {
         this.broker = broker;
     }
 
-    public Set getDestinations() {
+    public Set<ActiveMQDestination> getDestinations() {
         return persistenceAdapter.getDestinations();
     }
 

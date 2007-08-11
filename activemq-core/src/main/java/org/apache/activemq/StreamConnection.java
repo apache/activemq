@@ -50,7 +50,7 @@ public interface StreamConnection extends Connection {
 
     OutputStream createOutputStream(Destination dest) throws JMSException;
 
-    OutputStream createOutputStream(Destination dest, Map streamProperties, int deliveryMode, int priority, long timeToLive) throws JMSException;
+    OutputStream createOutputStream(Destination dest, Map<String, Object> streamProperties, int deliveryMode, int priority, long timeToLive) throws JMSException;
 
     /**
      * Unsubscribes a durable subscription that has been created by a client.

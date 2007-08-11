@@ -32,7 +32,8 @@ import org.apache.commons.logging.LogFactory;
  */
 public class SimpleTopicTest extends TestCase {
 
-    private final Log log = LogFactory.getLog(getClass());
+    private static final Log LOG = LogFactory.getLog(SimpleTopicTest.class);
+    
     protected BrokerService broker;
     // protected String
     // bindAddress="tcp://localhost:61616?wireFormat.cacheEnabled=true&wireFormat.tightEncodingEnabled=true&jms.useAsyncSend=false";
@@ -66,8 +67,8 @@ public class SimpleTopicTest extends TestCase {
         Connection con = factory.createConnection();
         Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
         destination = createDestination(session, destinationName);
-        log.info("Testing against destination: " + destination);
-        log.info("Running " + numberofProducers + " producer(s) and " + numberOfConsumers + " consumer(s)");
+        LOG.info("Testing against destination: " + destination);
+        LOG.info("Running " + numberofProducers + " producer(s) and " + numberOfConsumers + " consumer(s)");
         con.close();
         producers = new PerfProducer[numberofProducers];
         consumers = new PerfConsumer[numberOfConsumers];
@@ -139,7 +140,7 @@ public class SimpleTopicTest extends TestCase {
         for (int i = 0; i < numberofProducers; i++) {
             producers[i].start();
         }
-        log.info("Sampling performance " + samepleCount + " times at a " + sampleInternal + " ms interval.");
+        LOG.info("Sampling performance " + samepleCount + " times at a " + sampleInternal + " ms interval.");
         for (int i = 0; i < samepleCount; i++) {
             Thread.sleep(sampleInternal);
             dumpProducerRate();
@@ -162,7 +163,7 @@ public class SimpleTopicTest extends TestCase {
             totalCount += rate.getTotalCount();
         }
         int avgRate = totalRate / producers.length;
-        log.info("Avg producer rate = " + avgRate + " msg/sec | Total rate = " + totalRate + ", sent = " + totalCount);
+        LOG.info("Avg producer rate = " + avgRate + " msg/sec | Total rate = " + totalRate + ", sent = " + totalCount);
     }
 
     protected void dumpConsumerRate() {
@@ -175,7 +176,7 @@ public class SimpleTopicTest extends TestCase {
         }
         if (consumers != null && consumers.length > 0) {
             int avgRate = totalRate / consumers.length;
-            log.info("Avg consumer rate = " + avgRate + " msg/sec | Total rate = " + totalRate + ", received = " + totalCount);
+            LOG.info("Avg consumer rate = " + avgRate + " msg/sec | Total rate = " + totalRate + ", received = " + totalCount);
         }
     }
 }

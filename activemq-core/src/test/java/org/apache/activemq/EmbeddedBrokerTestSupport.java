@@ -37,8 +37,6 @@ import org.springframework.jms.core.JmsTemplate;
  */
 public abstract class EmbeddedBrokerTestSupport extends TestCase {
 
-    private static final Log LOG = LogFactory.getLog(EmbeddedBrokerTestSupport.class);
-
     protected BrokerService broker;
     // protected String bindAddress = "tcp://localhost:61616";
     protected String bindAddress = "vm://localhost";

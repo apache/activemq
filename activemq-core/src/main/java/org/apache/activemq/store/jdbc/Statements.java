@@ -24,20 +24,18 @@ package org.apache.activemq.store.jdbc;
  */
 public class Statements {
 
-    private String tablePrefix = "";
     protected String messageTableName = "ACTIVEMQ_MSGS";
     protected String durableSubAcksTableName = "ACTIVEMQ_ACKS";
     protected String lockTableName = "ACTIVEMQ_LOCK";
-
     protected String binaryDataType = "BLOB";
     protected String containerNameDataType = "VARCHAR(250)";
     protected String msgIdDataType = "VARCHAR(250)";
     protected String sequenceDataType = "INTEGER";
     protected String longDataType = "BIGINT";
     protected String stringIdDataType = "VARCHAR(250)";
+    protected boolean useExternalMessageReferences;
 
-    protected boolean useExternalMessageReferences = false;
-
+    private String tablePrefix = "";
     private String addMessageStatement;
     private String updateMessageStatement;
     private String removeMessageStatment;
@@ -96,7 +94,7 @@ public class Statements {
     public String[] getDropSchemaStatements() {
         if (dropSchemaStatements == null) {
             dropSchemaStatements = new String[] {"DROP TABLE " + getFullAckTableName() + "",
-                                                 "DROP TABLE " + getFullMessageTableName() + "",};
+                                                 "DROP TABLE " + getFullMessageTableName() + ""};
         }
         return dropSchemaStatements;
     }

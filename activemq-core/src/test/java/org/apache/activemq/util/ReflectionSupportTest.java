@@ -26,7 +26,7 @@ public class ReflectionSupportTest extends TestCase {
 
     public void testSetProperties() throws URISyntaxException {
         SimplePojo pojo = new SimplePojo();
-        HashMap map = new HashMap();        
+        HashMap<String, String> map = new HashMap<String, String>();        
         map.put("age", "27");
         map.put("name", "Hiram");
         map.put("enabled", "true");

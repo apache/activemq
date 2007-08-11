@@ -28,7 +28,7 @@ import java.util.LinkedList;
 public class OrderBasedMessageBuffer implements MessageBuffer {
 
     private int limit = 100 * 64 * 1024;
-    private LinkedList list = new LinkedList();
+    private LinkedList<MessageQueue> list = new LinkedList<MessageQueue>();
     private int size;
     private Object lock = new Object();
 
@@ -63,7 +63,7 @@ public class OrderBasedMessageBuffer implements MessageBuffer {
             list.addLast(queue);
             size += delta;
             while (size > limit) {
-                MessageQueue biggest = (MessageQueue) list.removeFirst();
+                MessageQueue biggest = list.removeFirst();
                 size -= biggest.evictMessage();
             }
         }
@@ -71,8 +71,8 @@ public class OrderBasedMessageBuffer implements MessageBuffer {
 
     public void clear() {
         synchronized (lock) {
-            for (Iterator iter = list.iterator(); iter.hasNext();) {
-                MessageQueue queue = (MessageQueue) iter.next();
+            for (Iterator<MessageQueue> iter = list.iterator(); iter.hasNext();) {
+                MessageQueue queue = iter.next();
                 queue.clear();
             }
             size = 0;

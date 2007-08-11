@@ -25,10 +25,10 @@ import java.util.Map;
  * @version $Revision:$
  */
 public class LRUMap extends LinkedHashMap {
-    private static final long serialVersionUID = -9179676638408888162L;
 
     protected static final float DEFAULT_LOAD_FACTOR = (float) 0.75;
     protected static final int DEFAULT_INITIAL_CAPACITY = 5000;
+    private static final long serialVersionUID = -9179676638408888162L;
 
     private int maximumSize;
 

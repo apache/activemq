@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.memory.UsageManager;
@@ -42,16 +43,16 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
     private static final Log LOG = LogFactory.getLog(MemoryPersistenceAdapter.class);
 
     MemoryTransactionStore transactionStore;
-    ConcurrentHashMap topics = new ConcurrentHashMap();
-    ConcurrentHashMap queues = new ConcurrentHashMap();
+    ConcurrentHashMap<ActiveMQDestination, TopicMessageStore> topics = new ConcurrentHashMap<ActiveMQDestination, TopicMessageStore>();
+    ConcurrentHashMap<ActiveMQDestination, MessageStore> queues = new ConcurrentHashMap<ActiveMQDestination, MessageStore>();
     private boolean useExternalMessageReferences;
 
-    public Set getDestinations() {
-        Set rc = new HashSet(queues.size() + topics.size());
-        for (Iterator iter = queues.keySet().iterator(); iter.hasNext();) {
+    public Set<ActiveMQDestination> getDestinations() {
+        Set<ActiveMQDestination> rc = new HashSet<ActiveMQDestination>(queues.size() + topics.size());
+        for (Iterator<ActiveMQDestination> iter = queues.keySet().iterator(); iter.hasNext();) {
             rc.add(iter.next());
         }
-        for (Iterator iter = topics.keySet().iterator(); iter.hasNext();) {
+        for (Iterator<ActiveMQDestination> iter = topics.keySet().iterator(); iter.hasNext();) {
             rc.add(iter.next());
         }
         return rc;
@@ -62,7 +63,7 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
     }
 
     public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {
-        MessageStore rc = (MessageStore)queues.get(destination);
+        MessageStore rc = queues.get(destination);
         if (rc == null) {
             rc = new MemoryMessageStore(destination);
             if (transactionStore != null) {
@@ -74,7 +75,7 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
     }
 
     public TopicMessageStore createTopicMessageStore(ActiveMQTopic destination) throws IOException {
-        TopicMessageStore rc = (TopicMessageStore)topics.get(destination);
+        TopicMessageStore rc = topics.get(destination);
         if (rc == null) {
             rc = new MemoryTopicMessageStore(destination);
             if (transactionStore != null) {
@@ -112,13 +113,13 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
     }
 
     public void deleteAllMessages() throws IOException {
-        for (Iterator iter = topics.values().iterator(); iter.hasNext();) {
+        for (Iterator<TopicMessageStore> iter = topics.values().iterator(); iter.hasNext();) {
             MemoryMessageStore store = asMemoryMessageStore(iter.next());
             if (store != null) {
                 store.delete();
             }
         }
-        for (Iterator iter = queues.values().iterator(); iter.hasNext();) {
+        for (Iterator<MessageStore> iter = queues.values().iterator(); iter.hasNext();) {
             MemoryMessageStore store = asMemoryMessageStore(iter.next());
             if (store != null) {
                 store.delete();

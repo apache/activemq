@@ -26,12 +26,15 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * @version $Revision: 1.4 $
  */
 public class JmsTopicRedeliverTest extends TestSupport {
 
-    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(JmsTopicRedeliverTest.class);
+    private static final Log LOG = LogFactory.getLog(JmsTopicRedeliverTest.class);
 
     protected Connection connection;
     protected Session session;

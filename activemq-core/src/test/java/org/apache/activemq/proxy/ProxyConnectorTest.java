@@ -29,6 +29,10 @@ import org.apache.activemq.command.SessionInfo;
 
 public class ProxyConnectorTest extends ProxyTestSupport {
 
+    public ActiveMQDestination destination;
+    public byte destinationType;
+    public int deliveryMode;
+
     public static Test suite() {
         return suite(ProxyConnectorTest.class);
     }
@@ -37,10 +41,6 @@ public class ProxyConnectorTest extends ProxyTestSupport {
         junit.textui.TestRunner.run(suite());
     }
 
-    public ActiveMQDestination destination;
-    public byte destinationType;
-    public int deliveryMode;
-
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();
@@ -48,7 +48,7 @@ public class ProxyConnectorTest extends ProxyTestSupport {
 
     public void initCombosForTestSendAndConsume() {
         addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});
-        addCombinationValues("destinationType", new Object[] {Byte.valueOf(ActiveMQDestination.TOPIC_TYPE),});
+        addCombinationValues("destinationType", new Object[] {Byte.valueOf(ActiveMQDestination.TOPIC_TYPE)});
     }
 
     public void testSendAndConsume() throws Exception {

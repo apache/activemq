@@ -40,10 +40,10 @@ import org.apache.activemq.wireformat.WireFormat;
 public class SslTransportServer extends TcpTransportServer {
     
     // Specifies if sockets created from this server should needClientAuth.
-    private boolean needClientAuth = false;
+    private boolean needClientAuth;
     
     // Specifies if sockets created from this server should wantClientAuth.
-    private boolean wantClientAuth = false;
+    private boolean wantClientAuth;
     
     
     /**

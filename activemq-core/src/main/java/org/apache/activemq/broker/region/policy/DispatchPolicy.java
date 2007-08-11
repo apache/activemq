@@ -19,6 +19,7 @@ package org.apache.activemq.broker.region.policy;
 import java.util.List;
 
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.filter.MessageEvaluationContext;
 
 /**
@@ -43,6 +44,6 @@ public interface DispatchPolicy {
      * 
      * @return true if at least one consumer was dispatched or false if there are no active subscriptions that could be dispatched
      */
-    boolean dispatch(MessageReference node, MessageEvaluationContext msgContext, List consumers) throws Exception;
+    boolean dispatch(MessageReference node, MessageEvaluationContext msgContext, List<Subscription> consumers) throws Exception;
 
 }

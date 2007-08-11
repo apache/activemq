@@ -28,7 +28,7 @@ final class RecoveryListenerAdapter implements MessageRecoveryListener {
     private static final Log LOG = LogFactory.getLog(RecoveryListenerAdapter.class);
     private final MessageStore store;
     private final MessageRecoveryListener listener;
-    private int count = 0;
+    private int count;
     private MessageId lastRecovered;
 
     RecoveryListenerAdapter(MessageStore store, MessageRecoveryListener listener) {

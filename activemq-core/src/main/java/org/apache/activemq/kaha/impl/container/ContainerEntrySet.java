@@ -71,7 +71,7 @@ public class ContainerEntrySet extends ContainerCollectionSupport implements Set
     }
 
     public boolean retainAll(Collection c) {
-        List tmpList = new ArrayList();
+        List<Object> tmpList = new ArrayList<Object>();
         for (Iterator i = c.iterator(); i.hasNext();) {
             Object o = i.next();
             if (!contains(o)) {
@@ -79,7 +79,7 @@ public class ContainerEntrySet extends ContainerCollectionSupport implements Set
             }
         }
         boolean result = false;
-        for (Iterator i = tmpList.iterator(); i.hasNext();) {
+        for (Iterator<Object> i = tmpList.iterator(); i.hasNext();) {
             result |= remove(i.next());
         }
         return result;
@@ -99,8 +99,8 @@ public class ContainerEntrySet extends ContainerCollectionSupport implements Set
         container.clear();
     }
 
-    protected Set buildEntrySet() {
-        Set set = new HashSet();
+    protected Set<ContainerMapEntry> buildEntrySet() {
+        Set<ContainerMapEntry> set = new HashSet<ContainerMapEntry>();
         for (Iterator i = container.keySet().iterator(); i.hasNext();) {
             ContainerMapEntry entry = new ContainerMapEntry(container, i.next());
             set.add(entry);

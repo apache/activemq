@@ -35,14 +35,13 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
     private long initialReconnectDelay = 1000;
     private long maxReconnectDelay = 1000 * 30;
     private long backOffMultiplier = 2;
-    private boolean useExponentialBackOff = false;
+    private boolean useExponentialBackOff;
     private int maxReconnectAttempts;
     private final Object sleepMutex = new Object();
     private long minConnectTime = 500;
-
     private DiscoveryListener listener;
-    String services[] = new String[] {};
-    String group = "DEFAULT";
+    private String services[] = new String[] {};
+    private String group = "DEFAULT";
     private final AtomicBoolean running = new AtomicBoolean(false);
 
     class SimpleDiscoveryEvent extends DiscoveryEvent {

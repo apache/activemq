@@ -126,7 +126,8 @@ public class CommandDatagramChannel extends CommandChannelSupport {
                 // lets split the command up into chunks
                 int offset = 0;
                 boolean lastFragment = false;
-                for (int fragment = 0, length = data.length; !lastFragment; fragment++) {
+                int length = data.length;
+                for (int fragment = 0; !lastFragment; fragment++) {
                     // write the header
                     if (fragment > 0) {
                         writeBuffer = bufferPool.borrowBuffer();

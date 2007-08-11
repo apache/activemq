@@ -216,7 +216,7 @@ public final class DataByteArrayOutputStream extends OutputStream implements Dat
                 encodedsize += 2;
             }
         }
-        if (encodedsize > 65535){
+        if (encodedsize > 65535) {
             throw new UTFDataFormatException("encoded string too long: " + encodedsize + " bytes");
         }
         ensureEnoughBuffer(pos + encodedsize + 2);

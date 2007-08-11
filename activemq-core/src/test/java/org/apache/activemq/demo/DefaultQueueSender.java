@@ -34,19 +34,23 @@ import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
-import javax.jms.QueueSession;
 import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A simple queue sender which does not use JNDI
  * 
  * @version $Revision: 1.1 $
  */
-public class DefaultQueueSender {
+public final class DefaultQueueSender {
 
-    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(DefaultQueueSender.class);
+    private static final Log LOG = LogFactory.getLog(DefaultQueueSender.class);
+
+    private DefaultQueueSender() {    
+    }
 
     public static void main(String[] args) {
 
@@ -54,7 +58,6 @@ public class DefaultQueueSender {
         String text = "Hello World!";
 
         Connection connection = null;
-        QueueSession queueSession = null;
 
         if (args.length < 1) {
             printUsage();

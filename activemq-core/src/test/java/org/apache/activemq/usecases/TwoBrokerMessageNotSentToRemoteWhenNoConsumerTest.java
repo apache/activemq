@@ -39,7 +39,7 @@ import org.apache.activemq.util.MessageIdList;
 public class TwoBrokerMessageNotSentToRemoteWhenNoConsumerTest extends JmsMultipleBrokersTestSupport {
     protected static final int MESSAGE_COUNT = 10;
 
-    protected List bridges;
+    protected List<DemandForwardingBridge> bridges;
     protected AtomicInteger msgDispatchCount;
 
     /**
@@ -108,7 +108,8 @@ public class TwoBrokerMessageNotSentToRemoteWhenNoConsumerTest extends JmsMultip
         List remoteTransports = remoteBroker.getTransportConnectors();
         List localTransports = localBroker.getTransportConnectors();
 
-        URI remoteURI, localURI;
+        URI remoteURI;
+        URI localURI;
         if (!remoteTransports.isEmpty() && !localTransports.isEmpty()) {
             remoteURI = ((TransportConnector)remoteTransports.get(0)).getConnectUri();
             localURI = ((TransportConnector)localTransports.get(0)).getConnectUri();
@@ -147,7 +148,7 @@ public class TwoBrokerMessageNotSentToRemoteWhenNoConsumerTest extends JmsMultip
         createBroker(new URI("broker:(tcp://localhost:61616)/BrokerA?persistent=false&useJmx=false"));
         createBroker(new URI("broker:(tcp://localhost:61617)/BrokerB?persistent=false&useJmx=false"));
 
-        bridges = new ArrayList();
+        bridges = new ArrayList<DemandForwardingBridge>();
         msgDispatchCount = new AtomicInteger(0);
     }
 }

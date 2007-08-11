@@ -40,8 +40,8 @@ import org.apache.activemq.store.TransactionStore;
 public class JournalTransactionStore implements TransactionStore {
 
     private final JournalPersistenceAdapter peristenceAdapter;
-    Map inflightTransactions = new LinkedHashMap();
-    Map preparedTransactions = new LinkedHashMap();
+    private Map<Object, Tx> inflightTransactions = new LinkedHashMap<Object, Tx>();
+    private Map<TransactionId, Tx> preparedTransactions = new LinkedHashMap<TransactionId, Tx>();
     private boolean doingRecover;
 
     public static class TxOperation {
@@ -70,7 +70,7 @@ public class JournalTransactionStore implements TransactionStore {
     public static class Tx {
 
         private final RecordLocation location;
-        private ArrayList operations = new ArrayList();
+        private ArrayList<TxOperation> operations = new ArrayList<TxOperation>();
 
         public Tx(RecordLocation location) {
             this.location = location;
@@ -89,9 +89,9 @@ public class JournalTransactionStore implements TransactionStore {
         }
 
         public Message[] getMessages() {
-            ArrayList list = new ArrayList();
-            for (Iterator iter = operations.iterator(); iter.hasNext();) {
-                TxOperation op = (TxOperation)iter.next();
+            ArrayList<Object> list = new ArrayList<Object>();
+            for (Iterator<TxOperation> iter = operations.iterator(); iter.hasNext();) {
+                TxOperation op = iter.next();
                 if (op.operationType == TxOperation.ADD_OPERATION_TYPE) {
                     list.add(op.data);
                 }
@@ -102,9 +102,9 @@ public class JournalTransactionStore implements TransactionStore {
         }
 
         public MessageAck[] getAcks() {
-            ArrayList list = new ArrayList();
-            for (Iterator iter = operations.iterator(); iter.hasNext();) {
-                TxOperation op = (TxOperation)iter.next();
+            ArrayList<Object> list = new ArrayList<Object>();
+            for (Iterator<TxOperation> iter = operations.iterator(); iter.hasNext();) {
+                TxOperation op = iter.next();
                 if (op.operationType == TxOperation.REMOVE_OPERATION_TYPE) {
                     list.add(op.data);
                 }
@@ -114,7 +114,7 @@ public class JournalTransactionStore implements TransactionStore {
             return rc;
         }
 
-        public ArrayList getOperations() {
+        public ArrayList<TxOperation> getOperations() {
             return operations;
         }
 
@@ -131,7 +131,7 @@ public class JournalTransactionStore implements TransactionStore {
     public void prepare(TransactionId txid) throws IOException {
         Tx tx = null;
         synchronized (inflightTransactions) {
-            tx = (Tx)inflightTransactions.remove(txid);
+            tx = inflightTransactions.remove(txid);
         }
         if (tx == null) {
             return;
@@ -150,7 +150,7 @@ public class JournalTransactionStore implements TransactionStore {
     public void replayPrepare(TransactionId txid) throws IOException {
         Tx tx = null;
         synchronized (inflightTransactions) {
-            tx = (Tx)inflightTransactions.remove(txid);
+            tx = inflightTransactions.remove(txid);
         }
         if (tx == null) {
             return;
@@ -163,7 +163,7 @@ public class JournalTransactionStore implements TransactionStore {
     public Tx getTx(Object txid, RecordLocation location) {
         Tx tx = null;
         synchronized (inflightTransactions) {
-            tx = (Tx)inflightTransactions.get(txid);
+            tx = inflightTransactions.get(txid);
         }
         if (tx == null) {
             tx = new Tx(location);
@@ -180,11 +180,11 @@ public class JournalTransactionStore implements TransactionStore {
         Tx tx;
         if (wasPrepared) {
             synchronized (preparedTransactions) {
-                tx = (Tx)preparedTransactions.remove(txid);
+                tx = preparedTransactions.remove(txid);
             }
         } else {
             synchronized (inflightTransactions) {
-                tx = (Tx)inflightTransactions.remove(txid);
+                tx = inflightTransactions.remove(txid);
             }
         }
         if (tx == null) {
@@ -206,11 +206,11 @@ public class JournalTransactionStore implements TransactionStore {
     public Tx replayCommit(TransactionId txid, boolean wasPrepared) throws IOException {
         if (wasPrepared) {
             synchronized (preparedTransactions) {
-                return (Tx)preparedTransactions.remove(txid);
+                return preparedTransactions.remove(txid);
             }
         } else {
             synchronized (inflightTransactions) {
-                return (Tx)inflightTransactions.remove(txid);
+                return inflightTransactions.remove(txid);
             }
         }
     }
@@ -222,11 +222,11 @@ public class JournalTransactionStore implements TransactionStore {
     public void rollback(TransactionId txid) throws IOException {
         Tx tx = null;
         synchronized (inflightTransactions) {
-            tx = (Tx)inflightTransactions.remove(txid);
+            tx = inflightTransactions.remove(txid);
         }
         if (tx != null) {
             synchronized (preparedTransactions) {
-                tx = (Tx)preparedTransactions.remove(txid);
+                tx = preparedTransactions.remove(txid);
             }
         }
         if (tx != null) {
@@ -269,13 +269,13 @@ public class JournalTransactionStore implements TransactionStore {
         }
         this.doingRecover = true;
         try {
-            Map txs = null;
+            Map<TransactionId, Tx> txs = null;
             synchronized (preparedTransactions) {
-                txs = new LinkedHashMap(preparedTransactions);
+                txs = new LinkedHashMap<TransactionId, Tx>(preparedTransactions);
             }
-            for (Iterator iter = txs.keySet().iterator(); iter.hasNext();) {
-                Object txid = (Object)iter.next();
-                Tx tx = (Tx)txs.get(txid);
+            for (Iterator<TransactionId> iter = txs.keySet().iterator(); iter.hasNext();) {
+                Object txid = iter.next();
+                Tx tx = txs.get(txid);
                 listener.recover((XATransactionId)txid, tx.getMessages(), tx.getAcks());
             }
         } finally {
@@ -316,8 +316,8 @@ public class JournalTransactionStore implements TransactionStore {
         // roll over active tx records.
         RecordLocation rc = null;
         synchronized (inflightTransactions) {
-            for (Iterator iter = inflightTransactions.values().iterator(); iter.hasNext();) {
-                Tx tx = (Tx)iter.next();
+            for (Iterator<Tx> iter = inflightTransactions.values().iterator(); iter.hasNext();) {
+                Tx tx = iter.next();
                 RecordLocation location = tx.location;
                 if (rc == null || rc.compareTo(location) < 0) {
                     rc = location;
@@ -325,8 +325,8 @@ public class JournalTransactionStore implements TransactionStore {
             }
         }
         synchronized (preparedTransactions) {
-            for (Iterator iter = preparedTransactions.values().iterator(); iter.hasNext();) {
-                Tx tx = (Tx)iter.next();
+            for (Iterator<Tx> iter = preparedTransactions.values().iterator(); iter.hasNext();) {
+                Tx tx = iter.next();
                 RecordLocation location = tx.location;
                 if (rc == null || rc.compareTo(location) < 0) {
                     rc = location;

@@ -104,7 +104,8 @@ public class CommandDatagramSocket extends CommandChannelSupport {
                 // lets split the command up into chunks
                 byte[] data = writeBuffer.toByteArray();
                 boolean lastFragment = false;
-                for (int fragment = 0, length = data.length; !lastFragment; fragment++) {
+                int length = data.length;
+                for (int fragment = 0; !lastFragment; fragment++) {
                     writeBuffer = createByteArrayOutputStream();
                     headerMarshaller.writeHeader(command, dataOut);
 

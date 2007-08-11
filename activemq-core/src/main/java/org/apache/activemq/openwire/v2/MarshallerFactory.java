@@ -31,7 +31,7 @@ import org.apache.activemq.openwire.OpenWireFormat;
  *
  * @version $Revision$
  */
-public class MarshallerFactory {
+public final class MarshallerFactory {
 
     /**
      * Creates a Map of command type -> Marshallers
@@ -94,6 +94,9 @@ public class MarshallerFactory {
         add(new WireFormatInfoMarshaller());
         add(new XATransactionIdMarshaller());
 
+    }
+
+    private MarshallerFactory() {        
     }
 
     private static void add(DataStreamMarshaller dsm) {

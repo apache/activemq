@@ -54,7 +54,7 @@ public class SimpleAuthenticationBroker extends BrokerFilter {
 
             final Set groups = (Set)userGroups.get(info.getUserName());
             SecurityContext s = new SecurityContext(info.getUserName()) {
-                public Set getPrincipals() {
+                public Set<?> getPrincipals() {
                     return groups;
                 }
             };

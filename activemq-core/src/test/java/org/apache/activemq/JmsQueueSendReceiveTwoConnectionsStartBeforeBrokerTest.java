@@ -29,7 +29,7 @@ import org.apache.commons.logging.LogFactory;
 public class JmsQueueSendReceiveTwoConnectionsStartBeforeBrokerTest extends JmsQueueSendReceiveTwoConnectionsTest {
     private static final Log LOG = LogFactory.getLog(JmsQueueSendReceiveTwoConnectionsStartBeforeBrokerTest.class);
 
-    private Queue errors = new ConcurrentLinkedQueue();
+    private Queue<Exception> errors = new ConcurrentLinkedQueue<Exception>();
     private int delayBeforeStartingBroker = 1000;
     private BrokerService broker;
 
@@ -77,7 +77,7 @@ public class JmsQueueSendReceiveTwoConnectionsStartBeforeBrokerTest extends JmsQ
             broker.stop();
         }
         if (!errors.isEmpty()) {
-            Exception e = (Exception)errors.remove();
+            Exception e = errors.remove();
             throw e;
         }
     }

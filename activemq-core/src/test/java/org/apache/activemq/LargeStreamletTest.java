@@ -58,15 +58,12 @@ public final class LargeStreamletTest extends TestCase {
     private static final int BUFFER_SIZE = 1 * 1024;
     private static final int MESSAGE_COUNT = 10 * 1024;
 
-    private AtomicInteger totalRead = new AtomicInteger();
-
-    private AtomicInteger totalWritten = new AtomicInteger();
-
-    private AtomicBoolean stopThreads = new AtomicBoolean(false);
-
     protected Exception writerException;
-
     protected Exception readerException;
+
+    private AtomicInteger totalRead = new AtomicInteger();
+    private AtomicInteger totalWritten = new AtomicInteger();
+    private AtomicBoolean stopThreads = new AtomicBoolean(false);
 
     public void testStreamlets() throws Exception {
         final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(BROKER_URL);

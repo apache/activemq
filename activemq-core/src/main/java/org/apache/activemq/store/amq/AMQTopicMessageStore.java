@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -45,7 +46,7 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
 
     private static final Log LOG = LogFactory.getLog(AMQTopicMessageStore.class);
     private TopicReferenceStore topicReferenceStore;
-    private HashMap<SubscriptionKey, MessageId> ackedLastAckLocations = new HashMap<SubscriptionKey, MessageId>();
+    private Map<SubscriptionKey, MessageId> ackedLastAckLocations = new HashMap<SubscriptionKey, MessageId>();
 
     public AMQTopicMessageStore(AMQPersistenceAdapter adapter, TopicReferenceStore topicReferenceStore, ActiveMQTopic destinationName) {
         super(adapter, topicReferenceStore, destinationName);
@@ -157,7 +158,7 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
 
     @Override
     protected Location doAsyncWrite() throws IOException {
-        final HashMap<SubscriptionKey, MessageId> cpAckedLastAckLocations;
+        final Map<SubscriptionKey, MessageId> cpAckedLastAckLocations;
         // swap out the hash maps..
         synchronized (this) {
             cpAckedLastAckLocations = this.ackedLastAckLocations;

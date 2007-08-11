@@ -114,8 +114,8 @@ public class RegionBroker implements Broker {
         tempTopicRegion = createTempTopicRegion(memoryManager, taskRunnerFactory, destinationFactory);
     }
 
-    public Map getDestinationMap() {
-        Map answer = getQueueRegion().getDestinationMap();
+    public Map<ActiveMQDestination, Destination> getDestinationMap() {
+        Map<ActiveMQDestination, Destination> answer = getQueueRegion().getDestinationMap();
         answer.putAll(getTopicRegion().getDestinationMap());
         return answer;
     }
@@ -172,10 +172,6 @@ public class RegionBroker implements Broker {
 
     protected Region createQueueRegion(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
         return new QueueRegion(this, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
-    }
-
-    private static PersistenceAdapter createDefaultPersistenceAdapter(UsageManager memoryManager) throws IOException {
-        return new MemoryPersistenceAdapter();
     }
 
     public void start() throws Exception {
@@ -575,7 +571,7 @@ public class RegionBroker implements Broker {
         return !started;
     }
 
-    public Set getDurableDestinations() {
+    public Set<ActiveMQDestination> getDurableDestinations() {
         return destinationFactory.getDestinations();
     }
 

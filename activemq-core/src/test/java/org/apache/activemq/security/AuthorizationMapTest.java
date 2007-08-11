@@ -61,7 +61,7 @@ public class AuthorizationMapTest extends TestCase {
     protected AuthorizationMap createAuthorizationMap() {
         DefaultAuthorizationMap answer = new DefaultAuthorizationMap();
 
-        List entries = new ArrayList();
+        List<AuthorizationEntry> entries = new ArrayList<AuthorizationEntry>();
 
         AuthorizationEntry entry = new AuthorizationEntry();
         entry.setGroupClass("org.apache.activemq.jaas.GroupPrincipal");
@@ -91,7 +91,7 @@ public class AuthorizationMapTest extends TestCase {
     protected AuthorizationMap createAuthorizationMapWithTempDest() {
         DefaultAuthorizationMap answer = new DefaultAuthorizationMap();
 
-        List entries = new ArrayList();
+        List<AuthorizationEntry> entries = new ArrayList<AuthorizationEntry>();
 
         AuthorizationEntry entry = new AuthorizationEntry();
         entry.setQueue(">");

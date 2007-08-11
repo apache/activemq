@@ -72,7 +72,7 @@ public class LDAPAuthorizationMapTest extends TestCase {
 
     public void testOpen() throws Exception {
         DirContext ctx = authMap.open();
-        HashSet set = new HashSet();
+        HashSet<String> set = new HashSet<String>();
         NamingEnumeration list = ctx.list("ou=destinations,o=ActiveMQ,dc=example,dc=com");
         while (list.hasMore()) {
             NameClassPair ncp = (NameClassPair) list.next();

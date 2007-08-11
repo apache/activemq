@@ -23,7 +23,11 @@ import java.util.Map;
  * 
  * @version $Revision$
  */
-public class MapHelper {
+public final class MapHelper {
+
+    private MapHelper() {
+    }
+
     /**
      * Extracts the value from the map and coerces to a String
      */

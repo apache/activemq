@@ -43,16 +43,16 @@ import org.apache.activemq.store.TransactionStore;
  */
 public class MemoryTransactionStore implements TransactionStore {
 
-    ConcurrentHashMap inflightTransactions = new ConcurrentHashMap();
+    ConcurrentHashMap<Object, Tx> inflightTransactions = new ConcurrentHashMap<Object, Tx>();
 
-    ConcurrentHashMap preparedTransactions = new ConcurrentHashMap();
+    ConcurrentHashMap<TransactionId, Tx> preparedTransactions = new ConcurrentHashMap<TransactionId, Tx>();
 
     private boolean doingRecover;
 
     public static class Tx {
-        private ArrayList messages = new ArrayList();
+        private ArrayList<AddMessageCommand> messages = new ArrayList<AddMessageCommand>();
 
-        private ArrayList acks = new ArrayList();
+        private ArrayList<RemoveMessageCommand> acks = new ArrayList<RemoveMessageCommand>();
 
         public void add(AddMessageCommand msg) {
             messages.add(msg);
@@ -65,8 +65,8 @@ public class MemoryTransactionStore implements TransactionStore {
         public Message[] getMessages() {
             Message rc[] = new Message[messages.size()];
             int count = 0;
-            for (Iterator iter = messages.iterator(); iter.hasNext();) {
-                AddMessageCommand cmd = (AddMessageCommand)iter.next();
+            for (Iterator<AddMessageCommand> iter = messages.iterator(); iter.hasNext();) {
+                AddMessageCommand cmd = iter.next();
                 rc[count++] = cmd.getMessage();
             }
             return rc;
@@ -75,8 +75,8 @@ public class MemoryTransactionStore implements TransactionStore {
         public MessageAck[] getAcks() {
             MessageAck rc[] = new MessageAck[acks.size()];
             int count = 0;
-            for (Iterator iter = acks.iterator(); iter.hasNext();) {
-                RemoveMessageCommand cmd = (RemoveMessageCommand)iter.next();
+            for (Iterator<RemoveMessageCommand> iter = acks.iterator(); iter.hasNext();) {
+                RemoveMessageCommand cmd = iter.next();
                 rc[count++] = cmd.getMessageAck();
             }
             return rc;
@@ -87,13 +87,13 @@ public class MemoryTransactionStore implements TransactionStore {
          */
         public void commit() throws IOException {
             // Do all the message adds.
-            for (Iterator iter = messages.iterator(); iter.hasNext();) {
-                AddMessageCommand cmd = (AddMessageCommand)iter.next();
+            for (Iterator<AddMessageCommand> iter = messages.iterator(); iter.hasNext();) {
+                AddMessageCommand cmd = iter.next();
                 cmd.run();
             }
             // And removes..
-            for (Iterator iter = acks.iterator(); iter.hasNext();) {
-                RemoveMessageCommand cmd = (RemoveMessageCommand)iter.next();
+            for (Iterator<RemoveMessageCommand> iter = acks.iterator(); iter.hasNext();) {
+                RemoveMessageCommand cmd = iter.next();
                 cmd.run();
             }
         }
@@ -139,7 +139,7 @@ public class MemoryTransactionStore implements TransactionStore {
      * @see org.apache.activemq.store.TransactionStore#prepare(TransactionId)
      */
     public void prepare(TransactionId txid) {
-        Tx tx = (Tx)inflightTransactions.remove(txid);
+        Tx tx = inflightTransactions.remove(txid);
         if (tx == null) {
             return;
         }
@@ -147,7 +147,7 @@ public class MemoryTransactionStore implements TransactionStore {
     }
 
     public Tx getTx(Object txid) {
-        Tx tx = (Tx)inflightTransactions.get(txid);
+        Tx tx = inflightTransactions.get(txid);
         if (tx == null) {
             tx = new Tx();
             inflightTransactions.put(txid, tx);
@@ -163,9 +163,9 @@ public class MemoryTransactionStore implements TransactionStore {
 
         Tx tx;
         if (wasPrepared) {
-            tx = (Tx)preparedTransactions.remove(txid);
+            tx = preparedTransactions.remove(txid);
         } else {
-            tx = (Tx)inflightTransactions.remove(txid);
+            tx = inflightTransactions.remove(txid);
         }
 
         if (tx == null) {
@@ -194,9 +194,9 @@ public class MemoryTransactionStore implements TransactionStore {
         inflightTransactions.clear();
         this.doingRecover = true;
         try {
-            for (Iterator iter = preparedTransactions.keySet().iterator(); iter.hasNext();) {
-                Object txid = (Object)iter.next();
-                Tx tx = (Tx)preparedTransactions.get(txid);
+            for (Iterator<TransactionId> iter = preparedTransactions.keySet().iterator(); iter.hasNext();) {
+                Object txid = iter.next();
+                Tx tx = preparedTransactions.get(txid);
                 listener.recover((XATransactionId)txid, tx.getMessages(), tx.getAcks());
             }
         } finally {

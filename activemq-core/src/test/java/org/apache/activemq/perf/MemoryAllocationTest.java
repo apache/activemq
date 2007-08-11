@@ -39,9 +39,9 @@ import org.apache.commons.logging.LogFactory;
  */
 public class MemoryAllocationTest extends TestCase {
 
+    protected static final int MESSAGE_COUNT = 2000;
     private static final Log LOG = LogFactory.getLog(MemoryAllocationTest.class);
 
-    protected static final int MESSAGE_COUNT = 2000;
     protected BrokerService broker;
     protected String bindAddress = "vm://localhost";
     protected int topicCount;
@@ -53,7 +53,7 @@ public class MemoryAllocationTest extends TestCase {
 
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             Destination dest = session.createTemporaryTopic();
-            MessageConsumer mc = session.createConsumer(dest);
+            session.createConsumer(dest);
             MessageProducer mp = session.createProducer(dest);
             Message msg = session.createTextMessage("test" + i);
             mp.send(msg);

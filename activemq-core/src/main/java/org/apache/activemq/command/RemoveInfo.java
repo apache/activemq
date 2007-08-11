@@ -32,15 +32,15 @@ public class RemoveInfo extends BaseCommand {
 
     protected DataStructure objectId;
 
-    public byte getDataStructureType() {
-        return DATA_STRUCTURE_TYPE;
-    }
-
     public RemoveInfo() {
     }
 
     public RemoveInfo(DataStructure objectId) {
         this.objectId = objectId;
+    }
+
+    public byte getDataStructureType() {
+        return DATA_STRUCTURE_TYPE;
     }
 
     /**

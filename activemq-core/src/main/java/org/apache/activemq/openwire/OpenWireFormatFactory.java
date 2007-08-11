@@ -35,7 +35,7 @@ public class OpenWireFormatFactory implements WireFormatFactory {
     private boolean tcpNoDelayEnabled = true;
     private boolean cacheEnabled = true;
     private boolean tightEncodingEnabled = true;
-    private boolean sizePrefixDisabled = false;
+    private boolean sizePrefixDisabled;
     private long maxInactivityDuration = 30 * 1000;
     private int cacheSize = 1024;
 

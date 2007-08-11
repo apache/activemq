@@ -276,10 +276,10 @@ public class TopicRegion extends AbstractRegion {
         return !info1.getDestination().equals(info2.getDestination());
     }
 
-    protected Set getInactiveDestinations() {
-        Set inactiveDestinations = super.getInactiveDestinations();
-        for (Iterator iter = inactiveDestinations.iterator(); iter.hasNext();) {
-            ActiveMQDestination dest = (ActiveMQDestination)iter.next();
+    protected Set<ActiveMQDestination> getInactiveDestinations() {
+        Set<ActiveMQDestination> inactiveDestinations = super.getInactiveDestinations();
+        for (Iterator<ActiveMQDestination> iter = inactiveDestinations.iterator(); iter.hasNext();) {
+            ActiveMQDestination dest = iter.next();
             if (!dest.isTopic()) {
                 iter.remove();
             }

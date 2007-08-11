@@ -30,9 +30,12 @@ import org.apache.activemq.command.Message;
  * 
  * @version $Revision: 1.3 $
  */
-public class DestinationPath {
+public final class DestinationPath {
     protected static final char SEPARATOR = '.';
 
+    private DestinationPath() {    
+    }
+    
     public static String[] getDestinationPaths(String subject) {
         List<String> list = new ArrayList<String>();
         int previous = 0;

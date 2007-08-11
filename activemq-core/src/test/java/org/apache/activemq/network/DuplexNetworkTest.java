@@ -22,8 +22,6 @@ import org.apache.commons.logging.LogFactory;
 
 public class DuplexNetworkTest extends SimpleNetworkTest {
 
-    private static final Log LOG = LogFactory.getLog(DuplexNetworkTest.class);
-
     protected String getLocalBrokerURI() {
         return "org/apache/activemq/network/duplexLocalBroker.xml";
     }

@@ -41,7 +41,7 @@ public class CraigsBugTest extends EmbeddedBrokerTestSupport {
                 try {
                     Session session = conn.createSession(false, 1);
                     MessageConsumer consumer = session.createConsumer(queue, null);
-                    Message msg = consumer.receive(1000);
+                    consumer.receive(1000);
                 } catch (JMSException e) {
                     e.printStackTrace();
                 }

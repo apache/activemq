@@ -38,7 +38,7 @@ import org.apache.activemq.wireformat.WireFormat;
  */
 public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMessageStore {
 
-    private Map subscriberLastMessageMap = new ConcurrentHashMap();
+    private Map<String, AtomicLong> subscriberLastMessageMap = new ConcurrentHashMap<String, AtomicLong>();
 
     public JDBCTopicMessageStore(JDBCPersistenceAdapter persistenceAdapter, JDBCAdapter adapter, WireFormat wireFormat, ActiveMQTopic topic) {
         super(persistenceAdapter, adapter, wireFormat, topic);
@@ -89,7 +89,7 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         throws Exception {
         TransactionContext c = persistenceAdapter.getTransactionContext();
         String subcriberId = getSubscriptionKey(clientId, subscriptionName);
-        AtomicLong last = (AtomicLong)subscriberLastMessageMap.get(subcriberId);
+        AtomicLong last = subscriberLastMessageMap.get(subcriberId);
         if (last == null) {
             long lastAcked = adapter.doGetLastAckedDurableSubscriberMessageId(c, destination, clientId, subscriptionName);
             last = new AtomicLong(lastAcked);

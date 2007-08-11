@@ -33,11 +33,14 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * @version $Revision: 1.7 $
  */
 public class JmsSendReceiveTestSupport extends TestSupport implements MessageListener {
-    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(JmsSendReceiveTestSupport.class);
+    private static final Log LOG = LogFactory.getLog(JmsSendReceiveTestSupport.class);
 
     protected int messageCount = 100;
     protected String[] data;
@@ -46,7 +49,7 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
     protected MessageProducer producer;
     protected Destination consumerDestination;
     protected Destination producerDestination;
-    protected List messages = createConcurrentList();
+    protected List<Message> messages = createConcurrentList();
     protected boolean topic = true;
     protected boolean durable;
     protected int deliveryMode = DeliveryMode.PERSISTENT;
@@ -118,12 +121,12 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
      * @param receivedMessages - list of received messages.
      * @throws JMSException
      */
-    protected void assertMessagesReceivedAreValid(List receivedMessages) throws JMSException {
-        List copyOfMessages = Arrays.asList(receivedMessages.toArray());
+    protected void assertMessagesReceivedAreValid(List<Message> receivedMessages) throws JMSException {
+        List<Object> copyOfMessages = Arrays.asList(receivedMessages.toArray());
         int counter = 0;
 
         if (data.length != copyOfMessages.size()) {
-            for (Iterator iter = copyOfMessages.iterator(); iter.hasNext();) {
+            for (Iterator<Object> iter = copyOfMessages.iterator(); iter.hasNext();) {
                 TextMessage message = (TextMessage)iter.next();
                 if (LOG.isInfoEnabled()) {
                     LOG.info("<== " + counter++ + " = " + message.getText());
@@ -187,7 +190,7 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
      * @param message - message to be consumed.
      * @param messageList -list of consumed messages.
      */
-    protected void consumeMessage(Message message, List messageList) {
+    protected void consumeMessage(Message message, List<Message> messageList) {
         if (verbose) {
             if (LOG.isDebugEnabled()) {
                 LOG.info("Received message: " + message);
@@ -208,8 +211,8 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
      * 
      * @return List
      */
-    protected List createConcurrentList() {
-        return Collections.synchronizedList(new ArrayList());
+    protected List<Message> createConcurrentList() {
+        return Collections.synchronizedList(new ArrayList<Message>());
     }
 
     /**

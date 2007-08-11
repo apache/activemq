@@ -28,7 +28,7 @@ import org.apache.activemq.util.ServiceStopper;
  */
 public class StubTransport extends TransportSupport {
 
-    private Queue queue = new ConcurrentLinkedQueue();
+    private Queue<Object> queue = new ConcurrentLinkedQueue<Object>();
 
     protected void doStop(ServiceStopper stopper) throws Exception {
     }
@@ -40,7 +40,7 @@ public class StubTransport extends TransportSupport {
         queue.add(command);
     }
 
-    public Queue getQueue() {
+    public Queue<Object> getQueue() {
         return queue;
     }
 

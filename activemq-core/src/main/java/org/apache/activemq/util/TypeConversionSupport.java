@@ -21,7 +21,7 @@ import java.util.HashMap;
 
 import org.apache.activemq.command.ActiveMQDestination;
 
-public class TypeConversionSupport {
+public final class TypeConversionSupport {
 
     static class ConversionKey {
         final Class from;
@@ -35,7 +35,7 @@ public class TypeConversionSupport {
         }
 
         public boolean equals(Object o) {
-            ConversionKey x = (ConversionKey) o;
+            ConversionKey x = (ConversionKey)o;
             return x.from == from && x.to == to;
         }
 
@@ -48,7 +48,7 @@ public class TypeConversionSupport {
         Object convert(Object value);
     }
 
-    private static final HashMap CONVERSION_MAP = new HashMap();
+    private static final HashMap<ConversionKey, Converter> CONVERSION_MAP = new HashMap<ConversionKey, Converter>();
     static {
         Converter toStringConverter = new Converter() {
             public Object convert(Object value) {
@@ -65,43 +65,43 @@ public class TypeConversionSupport {
 
         CONVERSION_MAP.put(new ConversionKey(String.class, Boolean.class), new Converter() {
             public Object convert(Object value) {
-                return Boolean.valueOf((String) value);
+                return Boolean.valueOf((String)value);
             }
         });
         CONVERSION_MAP.put(new ConversionKey(String.class, Byte.class), new Converter() {
             public Object convert(Object value) {
-                return Byte.valueOf((String) value);
+                return Byte.valueOf((String)value);
             }
         });
         CONVERSION_MAP.put(new ConversionKey(String.class, Short.class), new Converter() {
             public Object convert(Object value) {
-                return Short.valueOf((String) value);
+                return Short.valueOf((String)value);
             }
         });
         CONVERSION_MAP.put(new ConversionKey(String.class, Integer.class), new Converter() {
             public Object convert(Object value) {
-                return Integer.valueOf((String) value);
+                return Integer.valueOf((String)value);
             }
         });
         CONVERSION_MAP.put(new ConversionKey(String.class, Long.class), new Converter() {
             public Object convert(Object value) {
-                return Long.valueOf((String) value);
+                return Long.valueOf((String)value);
             }
         });
         CONVERSION_MAP.put(new ConversionKey(String.class, Float.class), new Converter() {
             public Object convert(Object value) {
-                return Float.valueOf((String) value);
+                return Float.valueOf((String)value);
             }
         });
         CONVERSION_MAP.put(new ConversionKey(String.class, Double.class), new Converter() {
             public Object convert(Object value) {
-                return Double.valueOf((String) value);
+                return Double.valueOf((String)value);
             }
         });
 
         Converter longConverter = new Converter() {
             public Object convert(Object value) {
-                return Long.valueOf(((Number) value).longValue());
+                return Long.valueOf(((Number)value).longValue());
             }
         };
         CONVERSION_MAP.put(new ConversionKey(Byte.class, Long.class), longConverter);
@@ -109,13 +109,13 @@ public class TypeConversionSupport {
         CONVERSION_MAP.put(new ConversionKey(Integer.class, Long.class), longConverter);
         CONVERSION_MAP.put(new ConversionKey(Date.class, Long.class), new Converter() {
             public Object convert(Object value) {
-                return Long.valueOf(((Date) value).getTime());
+                return Long.valueOf(((Date)value).getTime());
             }
         });
 
         Converter intConverter = new Converter() {
             public Object convert(Object value) {
-                return Integer.valueOf(((Number) value).intValue());
+                return Integer.valueOf(((Number)value).intValue());
             }
         };
         CONVERSION_MAP.put(new ConversionKey(Byte.class, Integer.class), intConverter);
@@ -123,20 +123,23 @@ public class TypeConversionSupport {
 
         CONVERSION_MAP.put(new ConversionKey(Byte.class, Short.class), new Converter() {
             public Object convert(Object value) {
-                return Short.valueOf(((Number) value).shortValue());
+                return Short.valueOf(((Number)value).shortValue());
             }
         });
-        
+
         CONVERSION_MAP.put(new ConversionKey(Float.class, Double.class), new Converter() {
             public Object convert(Object value) {
-                return new Double(((Number) value).doubleValue());
+                return new Double(((Number)value).doubleValue());
             }
         });
         CONVERSION_MAP.put(new ConversionKey(String.class, ActiveMQDestination.class), new Converter() {
             public Object convert(Object value) {
-                return ActiveMQDestination.createDestination((String) value, ActiveMQDestination.QUEUE_TYPE);
+                return ActiveMQDestination.createDestination((String)value, ActiveMQDestination.QUEUE_TYPE);
             }
         });
+    }
+
+    private TypeConversionSupport() {
     }
 
     public static Object convert(Object value, Class clazz) {
@@ -147,7 +150,7 @@ public class TypeConversionSupport {
             return value;
         }
 
-        Converter c = (Converter) CONVERSION_MAP.get(new ConversionKey(value.getClass(), clazz));
+        Converter c = CONVERSION_MAP.get(new ConversionKey(value.getClass(), clazz));
         if (c == null) {
             return null;
         }

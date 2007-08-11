@@ -55,7 +55,7 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
 
     public Context getInitialContext(Hashtable environment) throws NamingException {
         // lets create a factory
-        Map data = new ConcurrentHashMap();
+        Map<String, Object> data = new ConcurrentHashMap<String, Object>();
         String[] names = getConnectionFactoryNames(environment);
         for (int i = 0; i < names.length; i++) {
             ActiveMQConnectionFactory factory = null;
@@ -120,7 +120,7 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
     // Implementation methods
     // -------------------------------------------------------------------------
 
-    protected ReadOnlyContext createContext(Hashtable environment, Map data) {
+    protected ReadOnlyContext createContext(Hashtable environment, Map<String, Object> data) {
         return new ReadOnlyContext(environment, data);
     }
 
@@ -143,7 +143,7 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
     protected String[] getConnectionFactoryNames(Map environment) {
         String factoryNames = (String)environment.get("connectionFactoryNames");
         if (factoryNames != null) {
-            List list = new ArrayList();
+            List<String> list = new ArrayList<String>();
             for (StringTokenizer enumeration = new StringTokenizer(factoryNames, ","); enumeration.hasMoreTokens();) {
                 list.add(enumeration.nextToken().trim());
             }
@@ -157,7 +157,7 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
         return DEFAULT_CONNECTION_FACTORY_NAMES;
     }
 
-    protected void createQueues(Map data, Hashtable environment) {
+    protected void createQueues(Map<String, Object> data, Hashtable environment) {
         for (Iterator iter = environment.entrySet().iterator(); iter.hasNext();) {
             Map.Entry entry = (Map.Entry)iter.next();
             String key = entry.getKey().toString();
@@ -168,7 +168,7 @@ public class ActiveMQInitialContextFactory implements InitialContextFactory {
         }
     }
 
-    protected void createTopics(Map data, Hashtable environment) {
+    protected void createTopics(Map<String, Object> data, Hashtable environment) {
         for (Iterator iter = environment.entrySet().iterator(); iter.hasNext();) {
             Map.Entry entry = (Map.Entry)iter.next();
             String key = entry.getKey().toString();

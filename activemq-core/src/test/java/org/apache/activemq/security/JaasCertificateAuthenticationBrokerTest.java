@@ -57,24 +57,24 @@ public class JaasCertificateAuthenticationBrokerTest extends TestCase {
         super.tearDown();
     }
 
-    private void setConfiguration(Set userNames, Set groupNames, boolean loginShouldSucceed) {
-        HashMap configOptions = new HashMap();
+    private void setConfiguration(Set<String> userNames, Set<String> groupNames, boolean loginShouldSucceed) {
+        HashMap<String, String> configOptions = new HashMap<String, String>();
 
         String userNamesString;
         {
-            Iterator iter = userNames.iterator();
-            userNamesString = "" + (iter.hasNext() ? (String)iter.next() : "");
+            Iterator<String> iter = userNames.iterator();
+            userNamesString = "" + (iter.hasNext() ? iter.next() : "");
             while (iter.hasNext()) {
-                userNamesString += "," + (String)iter.next();
+                userNamesString += "," + iter.next();
             }
         }
 
         String groupNamesString = "";
         {
-            Iterator iter = groupNames.iterator();
-            groupNamesString = "" + (iter.hasNext() ? (String)iter.next() : "");
+            Iterator<String> iter = groupNames.iterator();
+            groupNamesString = "" + (iter.hasNext() ? iter.next() : "");
             while (iter.hasNext()) {
-                groupNamesString += "," + (String)iter.next();
+                groupNamesString += "," + iter.next();
             }
         }
 
@@ -92,10 +92,10 @@ public class JaasCertificateAuthenticationBrokerTest extends TestCase {
     public void testAddConnectionSuccess() {
         String dnUserName = "dnUserName";
 
-        HashSet userNames = new HashSet();
+        HashSet<String> userNames = new HashSet<String>();
         userNames.add(dnUserName);
 
-        HashSet groupNames = new HashSet();
+        HashSet<String> groupNames = new HashSet<String>();
         groupNames.add("testGroup1");
         groupNames.add("testGroup2");
         groupNames.add("tesetGroup3");
@@ -147,9 +147,9 @@ public class JaasCertificateAuthenticationBrokerTest extends TestCase {
     }
 
     public void testAddConnectionFailure() {
-        HashSet userNames = new HashSet();
+        HashSet<String> userNames = new HashSet<String>();
 
-        HashSet groupNames = new HashSet();
+        HashSet<String> groupNames = new HashSet<String>();
         groupNames.add("testGroup1");
         groupNames.add("testGroup2");
         groupNames.add("tesetGroup3");

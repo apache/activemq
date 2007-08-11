@@ -32,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1 $
  */
 public class JmsTopicSendReceiveWithEmbeddedBrokerAndUserIDTest extends JmsTopicSendReceiveWithTwoConnectionsAndEmbeddedBrokerTest {
-    private static final Log log = LogFactory.getLog(JmsTopicSendReceiveWithEmbeddedBrokerAndUserIDTest.class);
+    private static final Log LOG = LogFactory.getLog(JmsTopicSendReceiveWithEmbeddedBrokerAndUserIDTest.class);
 
     protected String userName = "James";
 
@@ -55,7 +55,7 @@ public class JmsTopicSendReceiveWithEmbeddedBrokerAndUserIDTest extends JmsTopic
             Message message = (Message)iter.next();
             String userID = message.getStringProperty("JMSXUserID");
 
-            log.info("Received message with userID: " + userID);
+            LOG.info("Received message with userID: " + userID);
 
             assertEquals("JMSXUserID header", userName, userID);
         }

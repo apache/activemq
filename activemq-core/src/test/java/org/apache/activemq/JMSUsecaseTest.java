@@ -34,6 +34,12 @@ import org.apache.activemq.command.ActiveMQMessage;
 
 public class JMSUsecaseTest extends JmsTestSupport {
 
+    public ActiveMQDestination destination;
+    public int deliveryMode;
+    public int prefetch;
+    public byte destinationType;
+    public boolean durableConsumer;
+
     public static Test suite() {
         return suite(JMSUsecaseTest.class);
     }
@@ -41,12 +47,6 @@ public class JMSUsecaseTest extends JmsTestSupport {
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
-
-    public ActiveMQDestination destination;
-    public int deliveryMode;
-    public int prefetch;
-    public byte destinationType;
-    public boolean durableConsumer;
 
     public void initCombosForTestQueueBrowser() {
         addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});

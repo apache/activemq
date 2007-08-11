@@ -56,10 +56,10 @@ public final class TransactionRollbackOrderTest extends TestCase {
     private Connection connection;
     private CountDownLatch latch = new CountDownLatch(1);
     private int numMessages = 5;
-    private List msgSent = new ArrayList();
-    private List msgCommitted = new ArrayList();
-    private List msgRolledBack = new ArrayList();
-    private List msgRedelivered = new ArrayList();
+    private List<String> msgSent = new ArrayList<String>();
+    private List<String> msgCommitted = new ArrayList<String>();
+    private List<String> msgRolledBack = new ArrayList<String>();
+    private List<String> msgRedelivered = new ArrayList<String>();
 
     public void testTransaction() throws Exception {
 

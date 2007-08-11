@@ -21,6 +21,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.activemq.command.ActiveMQDestination;
+
 /**
  * Used to cache up authorizations so that subsequent requests are faster.
  * 
@@ -34,37 +36,38 @@ public abstract class SecurityContext {
             return true;
         }
 
-        public Set getPrincipals() {
+        @SuppressWarnings("unchecked")
+        public Set<?> getPrincipals() {
             return Collections.EMPTY_SET;
         }
     };
 
     final String userName;
 
-    final ConcurrentHashMap authorizedReadDests = new ConcurrentHashMap();
-    final ConcurrentHashMap authorizedWriteDests = new ConcurrentHashMap();
+    final ConcurrentHashMap<ActiveMQDestination, ActiveMQDestination> authorizedReadDests = new ConcurrentHashMap<ActiveMQDestination, ActiveMQDestination>();
+    final ConcurrentHashMap<ActiveMQDestination, ActiveMQDestination> authorizedWriteDests = new ConcurrentHashMap<ActiveMQDestination, ActiveMQDestination>();
 
     public SecurityContext(String userName) {
         this.userName = userName;
     }
 
-    public boolean isInOneOf(Set allowedPrincipals) {
-        HashSet set = new HashSet(getPrincipals());
+    public boolean isInOneOf(Set<?> allowedPrincipals) {
+        HashSet<?> set = new HashSet<Object>(getPrincipals());
         set.retainAll(allowedPrincipals);
         return set.size() > 0;
     }
 
-    public abstract Set getPrincipals();
+    public abstract Set<?> getPrincipals();
 
     public String getUserName() {
         return userName;
     }
 
-    public ConcurrentHashMap getAuthorizedReadDests() {
+    public ConcurrentHashMap<ActiveMQDestination, ActiveMQDestination> getAuthorizedReadDests() {
         return authorizedReadDests;
     }
 
-    public ConcurrentHashMap getAuthorizedWriteDests() {
+    public ConcurrentHashMap<ActiveMQDestination, ActiveMQDestination> getAuthorizedWriteDests() {
         return authorizedWriteDests;
     }
 

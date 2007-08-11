@@ -37,41 +37,45 @@ import org.apache.activemq.util.SubscriptionKey;
  */
 public class MemoryTopicMessageStore extends MemoryMessageStore implements TopicMessageStore {
 
-    private Map subscriberDatabase;
-    private Map topicSubMap;
+    private Map<SubscriptionKey, SubscriptionInfo> subscriberDatabase;
+    private Map<SubscriptionKey, MemoryTopicSub> topicSubMap;
 
     public MemoryTopicMessageStore(ActiveMQDestination destination) {
-        this(destination, new LRUCache(100, 100, 0.75f, false), makeMap());
+        this(destination, new LRUCache<MessageId, Message>(100, 100, 0.75f, false), makeSubscriptionInfoMap());
     }
 
-    protected static Map makeMap() {
-        return Collections.synchronizedMap(new HashMap());
-    }
-
-    public MemoryTopicMessageStore(ActiveMQDestination destination, Map messageTable, Map subscriberDatabase) {
+    public MemoryTopicMessageStore(ActiveMQDestination destination, Map<MessageId, Message> messageTable, Map<SubscriptionKey, SubscriptionInfo> subscriberDatabase) {
         super(destination, messageTable);
         this.subscriberDatabase = subscriberDatabase;
-        this.topicSubMap = makeMap();
+        this.topicSubMap = makeSubMap();
+    }
+
+    protected static Map<SubscriptionKey, SubscriptionInfo> makeSubscriptionInfoMap() {
+        return Collections.synchronizedMap(new HashMap<SubscriptionKey, SubscriptionInfo>());
+    }
+    
+    protected static Map<SubscriptionKey, MemoryTopicSub> makeSubMap() {
+        return Collections.synchronizedMap(new HashMap<SubscriptionKey, MemoryTopicSub>());
     }
 
     public synchronized void addMessage(ConnectionContext context, Message message) throws IOException {
         super.addMessage(context, message);
-        for (Iterator i = topicSubMap.values().iterator(); i.hasNext();) {
-            MemoryTopicSub sub = (MemoryTopicSub)i.next();
+        for (Iterator<MemoryTopicSub> i = topicSubMap.values().iterator(); i.hasNext();) {
+            MemoryTopicSub sub = i.next();
             sub.addMessage(message.getMessageId(), message);
         }
     }
 
     public synchronized void acknowledge(ConnectionContext context, String clientId, String subscriptionName, MessageId messageId) throws IOException {
         SubscriptionKey key = new SubscriptionKey(clientId, subscriptionName);
-        MemoryTopicSub sub = (MemoryTopicSub)topicSubMap.get(key);
+        MemoryTopicSub sub = topicSubMap.get(key);
         if (sub != null) {
             sub.removeMessage(messageId);
         }
     }
 
     public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {
-        return (SubscriptionInfo)subscriberDatabase.get(new SubscriptionKey(clientId, subscriptionName));
+        return subscriberDatabase.get(new SubscriptionKey(clientId, subscriptionName));
     }
 
     public synchronized void addSubsciption(SubscriptionInfo info, boolean retroactive) throws IOException {
@@ -94,7 +98,7 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
     }
 
     public void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener) throws Exception {
-        MemoryTopicSub sub = (MemoryTopicSub)topicSubMap.get(new SubscriptionKey(clientId, subscriptionName));
+        MemoryTopicSub sub = topicSubMap.get(new SubscriptionKey(clientId, subscriptionName));
         if (sub != null) {
             sub.recoverSubscription(listener);
         }
@@ -107,12 +111,12 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
     }
 
     public SubscriptionInfo[] getAllSubscriptions() throws IOException {
-        return (SubscriptionInfo[])subscriberDatabase.values().toArray(new SubscriptionInfo[subscriberDatabase.size()]);
+        return subscriberDatabase.values().toArray(new SubscriptionInfo[subscriberDatabase.size()]);
     }
 
     public synchronized int getMessageCount(String clientId, String subscriberName) throws IOException {
         int result = 0;
-        MemoryTopicSub sub = (MemoryTopicSub)topicSubMap.get(new SubscriptionKey(clientId, subscriberName));
+        MemoryTopicSub sub = topicSubMap.get(new SubscriptionKey(clientId, subscriberName));
         if (sub != null) {
             result = sub.size();
         }
@@ -120,14 +124,14 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
     }
 
     public void recoverNextMessages(String clientId, String subscriptionName, int maxReturned, MessageRecoveryListener listener) throws Exception {
-        MemoryTopicSub sub = (MemoryTopicSub)topicSubMap.get(new SubscriptionKey(clientId, subscriptionName));
+        MemoryTopicSub sub = topicSubMap.get(new SubscriptionKey(clientId, subscriptionName));
         if (sub != null) {
             sub.recoverNextMessages(maxReturned, listener);
         }
     }
 
     public void resetBatching(String clientId, String subscriptionName) {
-        MemoryTopicSub sub = (MemoryTopicSub)topicSubMap.get(new SubscriptionKey(clientId, subscriptionName));
+        MemoryTopicSub sub = topicSubMap.get(new SubscriptionKey(clientId, subscriptionName));
         if (sub != null) {
             sub.resetBatching();
         }

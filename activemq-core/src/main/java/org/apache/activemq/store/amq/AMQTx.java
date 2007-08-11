@@ -19,6 +19,8 @@ package org.apache.activemq.store.amq;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+
 import org.apache.activemq.command.JournalTopicAck;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
@@ -34,7 +36,7 @@ import org.apache.activemq.kaha.impl.async.Location;
 public class AMQTx {
 
     private final Location location;
-    private ArrayList<AMQTxOperation> operations = new ArrayList<AMQTxOperation>();
+    private List<AMQTxOperation> operations = new ArrayList<AMQTxOperation>();
 
     public AMQTx(Location location) {
         this.location = location;
@@ -56,7 +58,7 @@ public class AMQTx {
     }
 
     public Message[] getMessages() {
-        ArrayList<Object> list = new ArrayList<Object>();
+        List<Object> list = new ArrayList<Object>();
         for (Iterator<AMQTxOperation> iter = operations.iterator(); iter.hasNext();) {
             AMQTxOperation op = iter.next();
             if (op.getOperationType() == AMQTxOperation.ADD_OPERATION_TYPE) {
@@ -69,7 +71,7 @@ public class AMQTx {
     }
 
     public MessageAck[] getAcks() {
-        ArrayList<Object> list = new ArrayList<Object>();
+        List<Object> list = new ArrayList<Object>();
         for (Iterator<AMQTxOperation> iter = operations.iterator(); iter.hasNext();) {
             AMQTxOperation op = iter.next();
             if (op.getOperationType() == AMQTxOperation.REMOVE_OPERATION_TYPE) {
@@ -88,11 +90,11 @@ public class AMQTx {
         return this.location;
     }
 
-    public ArrayList<AMQTxOperation> getOperations() {
+    public List<AMQTxOperation> getOperations() {
         return operations;
     }
 
-    public void setOperations(ArrayList<AMQTxOperation> operations) {
+    public void setOperations(List<AMQTxOperation> operations) {
         this.operations = operations;
     }
 }

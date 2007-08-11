@@ -33,8 +33,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.4 $
  */
 class KahaTransaction {
-    private static final Log LOG = LogFactory.getLog(KahaTransaction.class);
-    protected List list = new ArrayList();
+    protected List<TxCommand> list = new ArrayList<TxCommand>();
 
     void add(KahaMessageStore store, BaseCommand command) {
         TxCommand tx = new TxCommand();
@@ -44,27 +43,27 @@ class KahaTransaction {
     }
 
     Message[] getMessages() {
-        List result = new ArrayList();
+        List<BaseCommand> result = new ArrayList<BaseCommand>();
         for (int i = 0; i < list.size(); i++) {
-            TxCommand command = (TxCommand)list.get(i);
+            TxCommand command = list.get(i);
             if (command.isAdd()) {
                 result.add(command.getCommand());
             }
         }
         Message[] messages = new Message[result.size()];
-        return (Message[])result.toArray(messages);
+        return result.toArray(messages);
     }
 
     MessageAck[] getAcks() {
-        List result = new ArrayList();
+        List<BaseCommand> result = new ArrayList<BaseCommand>();
         for (int i = 0; i < list.size(); i++) {
-            TxCommand command = (TxCommand)list.get(i);
+            TxCommand command = list.get(i);
             if (command.isRemove()) {
                 result.add(command.getCommand());
             }
         }
         MessageAck[] acks = new MessageAck[result.size()];
-        return (MessageAck[])result.toArray(acks);
+        return result.toArray(acks);
     }
 
     void prepare() {
@@ -79,14 +78,14 @@ class KahaTransaction {
      */
     void commit(KahaTransactionStore transactionStore) throws IOException {
         for (int i = 0; i < list.size(); i++) {
-            TxCommand command = (TxCommand)list.get(i);
+            TxCommand command = list.get(i);
             MessageStore ms = transactionStore.getStoreById(command.getMessageStoreKey());
             if (command.isAdd()) {
                 ms.addMessage(null, (Message)command.getCommand());
             }
         }
         for (int i = 0; i < list.size(); i++) {
-            TxCommand command = (TxCommand)list.get(i);
+            TxCommand command = list.get(i);
             MessageStore ms = transactionStore.getStoreById(command.getMessageStoreKey());
             if (command.isRemove()) {
                 ms.removeMessage(null, (MessageAck)command.getCommand());
@@ -94,11 +93,11 @@ class KahaTransaction {
         }
     }
 
-    List getList() {
-        return new ArrayList(list);
+    List<TxCommand> getList() {
+        return new ArrayList<TxCommand>(list);
     }
 
-    void setList(List list) {
+    void setList(List<TxCommand> list) {
         this.list = list;
     }
 }

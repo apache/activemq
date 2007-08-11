@@ -33,10 +33,10 @@ public class KahaReferenceStore implements ReferenceStore {
     protected final ActiveMQDestination destination;
     protected final MapContainer<MessageId, ReferenceRecord> messageContainer;
     protected KahaReferenceStoreAdapter adapter;
-    private StoreEntry batchEntry = null;
-    private String lastBatchId = null;
+    private StoreEntry batchEntry;
+    private String lastBatchId;
 
-    public KahaReferenceStore(KahaReferenceStoreAdapter adapter, MapContainer container,
+    public KahaReferenceStore(KahaReferenceStoreAdapter adapter, MapContainer<MessageId, ReferenceRecord> container,
                               ActiveMQDestination destination) throws IOException {
         this.adapter = adapter;
         this.messageContainer = container;

@@ -86,12 +86,12 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
 
     private final WireFormat wireFormat = new OpenWireFormat();
 
-    private final ConcurrentHashMap queues = new ConcurrentHashMap();
-    private final ConcurrentHashMap topics = new ConcurrentHashMap();
+    private final ConcurrentHashMap<ActiveMQQueue, JournalMessageStore> queues = new ConcurrentHashMap<ActiveMQQueue, JournalMessageStore>();
+    private final ConcurrentHashMap<ActiveMQTopic, JournalTopicMessageStore> topics = new ConcurrentHashMap<ActiveMQTopic, JournalTopicMessageStore>();
 
     private UsageManager usageManager;
-    long checkpointInterval = 1000 * 60 * 5;
-    long lastCheckpointRequest = System.currentTimeMillis();
+    private long checkpointInterval = 1000 * 60 * 5;
+    private long lastCheckpointRequest = System.currentTimeMillis();
     private long lastCleanup = System.currentTimeMillis();
     private int maxCheckpointWorkers = 10;
     private int maxCheckpointMessageAddSize = 1024 * 1024;
@@ -107,20 +107,6 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
 
     private final Runnable periodicCheckpointTask = createPeriodicCheckpointTask();
 
-    final Runnable createPeriodicCheckpointTask() {
-        return new Runnable() {
-            public void run() {
-                long lastTime = 0;
-                synchronized (this) {
-                    lastTime = lastCheckpointRequest;
-                }
-                if (System.currentTimeMillis() > lastTime + checkpointInterval) {
-                    checkpoint(false, true);
-                }
-            }
-        };
-    }
-
     public JournalPersistenceAdapter(Journal journal, PersistenceAdapter longTermPersistence, TaskRunnerFactory taskRunnerFactory) throws IOException {
 
         this.journal = journal;
@@ -135,6 +121,20 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         this.longTermPersistence = longTermPersistence;
     }
 
+    final Runnable createPeriodicCheckpointTask() {
+        return new Runnable() {
+            public void run() {
+                long lastTime = 0;
+                synchronized (this) {
+                    lastTime = lastCheckpointRequest;
+                }
+                if (System.currentTimeMillis() > lastTime + checkpointInterval) {
+                    checkpoint(false, true);
+                }
+            }
+        };
+    }
+
     /**
      * @param usageManager The UsageManager that is controlling the
      *                destination's memory usage.
@@ -144,8 +144,8 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         longTermPersistence.setUsageManager(usageManager);
     }
 
-    public Set getDestinations() {
-        Set destinations = new HashSet(longTermPersistence.getDestinations());
+    public Set<ActiveMQDestination> getDestinations() {
+        Set<ActiveMQDestination> destinations = new HashSet<ActiveMQDestination>(longTermPersistence.getDestinations());
         destinations.addAll(queues.keySet());
         destinations.addAll(topics.keySet());
         return destinations;
@@ -160,7 +160,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     }
 
     public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {
-        JournalMessageStore store = (JournalMessageStore)queues.get(destination);
+        JournalMessageStore store = queues.get(destination);
         if (store == null) {
             MessageStore checkpointStore = longTermPersistence.createQueueMessageStore(destination);
             store = new JournalMessageStore(this, checkpointStore, destination);
@@ -170,7 +170,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     }
 
     public TopicMessageStore createTopicMessageStore(ActiveMQTopic destinationName) throws IOException {
-        JournalTopicMessageStore store = (JournalTopicMessageStore)topics.get(destinationName);
+        JournalTopicMessageStore store = topics.get(destinationName);
         if (store == null) {
             TopicMessageStore checkpointStore = longTermPersistence.createTopicMessageStore(destinationName);
             store = new JournalTopicMessageStore(this, checkpointStore, destinationName);
@@ -204,7 +204,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
             return;
         }
 
-        checkpointExecutor = new ThreadPoolExecutor(maxCheckpointWorkers, maxCheckpointWorkers, 30, TimeUnit.SECONDS, new LinkedBlockingQueue(), new ThreadFactory() {
+        checkpointExecutor = new ThreadPoolExecutor(maxCheckpointWorkers, maxCheckpointWorkers, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
             public Thread newThread(Runnable runable) {
                 Thread t = new Thread(runable, "Journal checkpoint worker");
                 t.setPriority(7);
@@ -343,7 +343,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
             LOG.debug("Checkpoint started.");
             RecordLocation newMark = null;
 
-            ArrayList futureTasks = new ArrayList(queues.size() + topics.size());
+            ArrayList<FutureTask<RecordLocation>> futureTasks = new ArrayList<FutureTask<RecordLocation>>(queues.size() + topics.size());
 
             //
             // We do many partial checkpoints (fullCheckpoint==false) to move
@@ -357,12 +357,12 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
             // checkpoint queues on the fullCheckpoint cycles.
             //
             if (fullCheckpoint) {
-                Iterator iterator = queues.values().iterator();
+                Iterator<JournalMessageStore> iterator = queues.values().iterator();
                 while (iterator.hasNext()) {
                     try {
-                        final JournalMessageStore ms = (JournalMessageStore)iterator.next();
-                        FutureTask task = new FutureTask(new Callable() {
-                            public Object call() throws Exception {
+                        final JournalMessageStore ms = iterator.next();
+                        FutureTask<RecordLocation> task = new FutureTask<RecordLocation>(new Callable<RecordLocation>() {
+                            public RecordLocation call() throws Exception {
                                 return ms.checkpoint();
                             }
                         });
@@ -374,12 +374,12 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
                 }
             }
 
-            Iterator iterator = topics.values().iterator();
+            Iterator<JournalTopicMessageStore> iterator = topics.values().iterator();
             while (iterator.hasNext()) {
                 try {
-                    final JournalTopicMessageStore ms = (JournalTopicMessageStore)iterator.next();
-                    FutureTask task = new FutureTask(new Callable() {
-                        public Object call() throws Exception {
+                    final JournalTopicMessageStore ms = iterator.next();
+                    FutureTask<RecordLocation> task = new FutureTask<RecordLocation>(new Callable<RecordLocation>() {
+                        public RecordLocation call() throws Exception {
                             return ms.checkpoint();
                         }
                     });
@@ -391,9 +391,9 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
             }
 
             try {
-                for (Iterator iter = futureTasks.iterator(); iter.hasNext();) {
-                    FutureTask ft = (FutureTask)iter.next();
-                    RecordLocation mark = (RecordLocation)ft.get();
+                for (Iterator<FutureTask<RecordLocation>> iter = futureTasks.iterator(); iter.hasNext();) {
+                    FutureTask<RecordLocation> ft = iter.next();
+                    RecordLocation mark = ft.get();
                     // We only set a newMark on full checkpoints.
                     if (fullCheckpoint) {
                         if (mark != null && (newMark == null || newMark.compareTo(mark) < 0)) {

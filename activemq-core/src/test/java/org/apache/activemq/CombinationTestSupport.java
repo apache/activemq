@@ -62,22 +62,22 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
 
     private static final Log LOG = LogFactory.getLog(CombinationTestSupport.class);
 
-    private HashMap comboOptions = new HashMap();
+    private HashMap<String, ComboOption> comboOptions = new HashMap<String, ComboOption>();
     private boolean combosEvaluated;
     private Map options;
 
     static class ComboOption {
         final String attribute;
-        final LinkedHashSet values = new LinkedHashSet();
+        final LinkedHashSet<Object> values = new LinkedHashSet<Object>();
 
-        public ComboOption(String attribute, Collection options) {
+        public ComboOption(String attribute, Collection<Object> options) {
             this.attribute = attribute;
             this.values.addAll(options);
         }
     }
 
     public void addCombinationValues(String attribute, Object[] options) {
-        ComboOption co = (ComboOption)this.comboOptions.get(attribute);
+        ComboOption co = this.comboOptions.get(attribute);
         if (co == null) {
             this.comboOptions.put(attribute, new ComboOption(attribute, Arrays.asList(options)));
         } else {
@@ -129,20 +129,20 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
         }
 
         try {
-            ArrayList expandedOptions = new ArrayList();
-            expandCombinations(new ArrayList(comboOptions.values()), expandedOptions);
+            ArrayList<HashMap<String, Object>> expandedOptions = new ArrayList<HashMap<String, Object>>();
+            expandCombinations(new ArrayList<ComboOption>(comboOptions.values()), expandedOptions);
 
             if (expandedOptions.isEmpty()) {
                 combosEvaluated = true;
                 return new CombinationTestSupport[] {this};
             } else {
 
-                ArrayList result = new ArrayList();
+                ArrayList<CombinationTestSupport> result = new ArrayList<CombinationTestSupport>();
                 // Run the test case for each possible combination
-                for (Iterator iter = expandedOptions.iterator(); iter.hasNext();) {
+                for (Iterator<HashMap<String, Object>> iter = expandedOptions.iterator(); iter.hasNext();) {
                     CombinationTestSupport combo = (CombinationTestSupport)TestSuite.createTest(getClass(), name);
                     combo.combosEvaluated = true;
-                    combo.setOptions((Map)iter.next());
+                    combo.setOptions(iter.next());
                     result.add(combo);
                 }
 
@@ -157,23 +157,23 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
 
     }
 
-    private void expandCombinations(List optionsLeft, List expandedCombos) {
+    private void expandCombinations(List<ComboOption> optionsLeft, List<HashMap<String, Object>> expandedCombos) {
         if (!optionsLeft.isEmpty()) {
-            HashMap map;
+            HashMap<String, Object> map;
             if (comboOptions.size() == optionsLeft.size()) {
-                map = new HashMap();
+                map = new HashMap<String, Object>();
                 expandedCombos.add(map);
             } else {
-                map = (HashMap)expandedCombos.get(expandedCombos.size() - 1);
+                map = expandedCombos.get(expandedCombos.size() - 1);
             }
 
-            LinkedList l = new LinkedList(optionsLeft);
-            ComboOption comboOption = (ComboOption)l.removeLast();
+            LinkedList<ComboOption> l = new LinkedList<ComboOption>(optionsLeft);
+            ComboOption comboOption = l.removeLast();
             int i = 0;
-            for (Iterator iter = comboOption.values.iterator(); iter.hasNext();) {
-                Object value = (Object)iter.next();
+            for (Iterator<Object> iter = comboOption.values.iterator(); iter.hasNext();) {
+                Object value = iter.next();
                 if (i != 0) {
-                    map = new HashMap(map);
+                    map = new HashMap<String, Object>(map);
                     expandedCombos.add(map);
                 }
                 map.put(comboOption.attribute, value);
@@ -183,10 +183,10 @@ public abstract class CombinationTestSupport extends AutoFailTestSupport {
         }
     }
 
-    public static Test suite(Class clazz) {
+    public static Test suite(Class<? extends CombinationTestSupport> clazz) {
         TestSuite suite = new TestSuite();
 
-        ArrayList names = new ArrayList();
+        ArrayList<String> names = new ArrayList<String>();
         Method[] methods = clazz.getMethods();
         for (int i = 0; i < methods.length; i++) {
             String name = methods[i].getName();

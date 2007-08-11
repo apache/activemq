@@ -31,7 +31,7 @@ import org.apache.activemq.store.MessageRecoveryListener;
  */
 class MemoryTopicSub {
 
-    private Map map = new LinkedHashMap();
+    private Map<MessageId, Message> map = new LinkedHashMap<MessageId, Message>();
     private MessageId lastBatch;
 
     void addMessage(MessageId id, Message message) {

@@ -18,6 +18,7 @@ package org.apache.activemq.usecases;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -108,7 +109,7 @@ public class AMQFailoverIssue extends TestCase {
         final UsageManager memoryManager = new UsageManager();
         memoryManager.setLimit(5000000);
         brokerService.setMemoryManager(memoryManager);
-        final ArrayList<PolicyEntry> policyEntries = new ArrayList<PolicyEntry>();
+        final List<PolicyEntry> policyEntries = new ArrayList<PolicyEntry>();
         final PolicyEntry entry = new PolicyEntry();
         entry.setQueue(">");
         // entry.setQueue(QUEUE1_NAME);

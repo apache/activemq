@@ -28,7 +28,7 @@ import java.util.List;
  */
 public class DefaultBufferPool extends SimpleBufferPool implements ByteBufferPool {
 
-    private List buffers = new ArrayList();
+    private List<ByteBuffer> buffers = new ArrayList<ByteBuffer>();
     private Object lock = new Object();
 
     public DefaultBufferPool() {
@@ -43,7 +43,7 @@ public class DefaultBufferPool extends SimpleBufferPool implements ByteBufferPoo
         synchronized (lock) {
             int size = buffers.size();
             if (size > 0) {
-                return (ByteBuffer) buffers.remove(size - 1);
+                return buffers.remove(size - 1);
             }
         }
         return createBuffer();

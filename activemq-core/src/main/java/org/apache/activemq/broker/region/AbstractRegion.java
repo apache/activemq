@@ -243,7 +243,7 @@ public abstract class AbstractRegion implements Region {
             // inactive state for the
             // destination which has reduced memory usage.
             //
-            DestinationFilter destinationFilter = DestinationFilter.parseFilter(info.getDestination());
+            DestinationFilter.parseFilter(info.getDestination());
 
             Subscription sub = createSubscription(context, info);
 

@@ -25,8 +25,6 @@ import org.apache.commons.logging.LogFactory;
  */
 public class JmsQueueSendReceiveTwoConnectionsTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
 
-    private static final Log LOG = LogFactory.getLog(JmsQueueSendReceiveTwoConnectionsTest.class);
-
     /**
      * Set up the test with a queue and using two connections.
      * 

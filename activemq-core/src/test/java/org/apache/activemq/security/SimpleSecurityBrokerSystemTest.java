@@ -41,11 +41,11 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
-    private static final Log LOG = LogFactory.getLog(SimpleSecurityBrokerSystemTest.class);
 
     static final GroupPrincipal GUESTS = new GroupPrincipal("guests");
     static final GroupPrincipal USERS = new GroupPrincipal("users");
     static final GroupPrincipal ADMINS = new GroupPrincipal("admins");
+    private static final Log LOG = LogFactory.getLog(SimpleSecurityBrokerSystemTest.class);
 
     public BrokerPlugin authorizationPlugin;
     public BrokerPlugin authenticationPlugin;
@@ -108,15 +108,15 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
     static class SimpleAuthenticationFactory implements BrokerPlugin {
         public Broker installPlugin(Broker broker) {
 
-            HashMap u = new HashMap();
+            HashMap<String, String> u = new HashMap<String, String>();
             u.put("system", "manager");
             u.put("user", "password");
             u.put("guest", "password");
 
-            HashMap groups = new HashMap();
-            groups.put("system", new HashSet(Arrays.asList(new Object[] {ADMINS, USERS})));
-            groups.put("user", new HashSet(Arrays.asList(new Object[] {USERS})));
-            groups.put("guest", new HashSet(Arrays.asList(new Object[] {GUESTS})));
+            HashMap<String, HashSet<Object>> groups = new HashMap<String, HashSet<Object>>();
+            groups.put("system", new HashSet<Object>(Arrays.asList(new Object[] {ADMINS, USERS})));
+            groups.put("user", new HashSet<Object>(Arrays.asList(new Object[] {USERS})));
+            groups.put("guest", new HashSet<Object>(Arrays.asList(new Object[] {GUESTS})));
 
             return new SimpleAuthenticationBroker(broker, u, groups);
         }
@@ -130,8 +130,10 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
      * @see {@link CombinationTestSupport}
      */
     public void initCombos() {
-        addCombinationValues("authorizationPlugin", new Object[] {new AuthorizationPlugin(createAuthorizationMap()),});
-        addCombinationValues("authenticationPlugin", new Object[] {new SimpleAuthenticationFactory(), new JaasAuthenticationPlugin(),});
+        addCombinationValues("authorizationPlugin",
+                             new Object[] {new AuthorizationPlugin(createAuthorizationMap())});
+        addCombinationValues("authenticationPlugin", new Object[] {new SimpleAuthenticationFactory(),
+                                                                   new JaasAuthenticationPlugin()});
     }
 
     protected BrokerService createBroker() throws Exception {

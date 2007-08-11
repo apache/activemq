@@ -78,7 +78,7 @@ public class DurableSubscriptionView extends SubscriptionView implements Durable
     public void destroy() throws Exception {
         RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
         info.setClientId(clientId);
-        info.setSubcriptionName(subscriptionName);
+        info.setSubscriptionName(subscriptionName);
         ConnectionContext context = new ConnectionContext();
         context.setBroker(broker);
         context.setClientId(clientId);

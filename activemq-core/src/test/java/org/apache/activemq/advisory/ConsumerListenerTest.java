@@ -43,7 +43,7 @@ public class ConsumerListenerTest extends EmbeddedBrokerTestSupport implements C
     protected Session consumerSession2;
     protected int consumerCounter;
     protected ConsumerEventSource consumerEventSource;
-    protected BlockingQueue eventQueue = new ArrayBlockingQueue(1000);
+    protected BlockingQueue<ConsumerEvent> eventQueue = new ArrayBlockingQueue<ConsumerEvent>(1000);
     private Connection connection;
 
     public void testConsumerEvents() throws Exception {
@@ -131,7 +131,7 @@ public class ConsumerListenerTest extends EmbeddedBrokerTestSupport implements C
     }
 
     protected ConsumerEvent waitForConsumerEvent() throws InterruptedException {
-        ConsumerEvent answer = (ConsumerEvent)eventQueue.poll(100000, TimeUnit.MILLISECONDS);
+        ConsumerEvent answer = eventQueue.poll(100000, TimeUnit.MILLISECONDS);
         assertTrue("Should have received a consumer event!", answer != null);
         return answer;
     }
