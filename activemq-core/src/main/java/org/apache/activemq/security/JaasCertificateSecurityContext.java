@@ -17,6 +17,7 @@
 
 package org.apache.activemq.security;
 
+import java.security.Principal;
 import java.security.cert.X509Certificate;
 import java.util.Set;
 
@@ -38,7 +39,7 @@ public class JaasCertificateSecurityContext extends SecurityContext {
         this.certs = certs;
     }
 
-    public Set getPrincipals() {
+    public Set<Principal> getPrincipals() {
         return subject.getPrincipals();
     }
   

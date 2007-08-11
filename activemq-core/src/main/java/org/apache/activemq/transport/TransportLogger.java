@@ -33,13 +33,13 @@ public class TransportLogger extends TransportFilter {
         this(next, LogFactory.getLog(TransportLogger.class.getName() + ".Connection:" + getNextId()));
     }
 
-    private static synchronized int getNextId() {
-        return ++lastId;
-    }
-
     public TransportLogger(Transport next, Log log) {
         super(next);
         this.log = log;
+    }
+
+    private static synchronized int getNextId() {
+        return ++lastId;
     }
 
     public Object request(Object command) throws IOException {

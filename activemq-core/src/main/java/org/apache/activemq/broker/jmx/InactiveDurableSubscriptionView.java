@@ -123,7 +123,7 @@ public class InactiveDurableSubscriptionView extends SubscriptionView implements
     public void destroy() throws Exception {
         RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
         info.setClientId(clientId);
-        info.setSubcriptionName(subscriptionInfo.getSubscriptionName());
+        info.setSubscriptionName(subscriptionInfo.getSubscriptionName());
         ConnectionContext context = new ConnectionContext();
         context.setBroker(broker);
         context.setClientId(clientId);

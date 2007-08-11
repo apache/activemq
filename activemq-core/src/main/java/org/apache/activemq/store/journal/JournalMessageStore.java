@@ -234,6 +234,7 @@ public class JournalMessageStore implements MessageStore {
      * @return
      * @throws IOException
      */
+    @SuppressWarnings("unchecked")
     public RecordLocation checkpoint(final Callback postCheckpointTest) throws IOException {
 
         final List<MessageAck> cpRemovedMessageLocations;

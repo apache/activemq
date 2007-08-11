@@ -103,7 +103,7 @@ public class StompWireFormat implements WireFormat {
             }
 
             // Parse the headers
-            HashMap headers = new HashMap(25);
+            HashMap<String, String> headers = new HashMap<String, String>(25);
             while (true) {
                 String line = readLine(in, MAX_HEADER_LENGTH, "The maximum header length was exceeded");
                 if (line != null && line.trim().length() > 0) {
@@ -127,7 +127,7 @@ public class StompWireFormat implements WireFormat {
 
             // Read in the data part.
             byte[] data = NO_DATA;
-            String contentLength = (String)headers.get(Stomp.Headers.CONTENT_LENGTH);
+            String contentLength = headers.get(Stomp.Headers.CONTENT_LENGTH);
             if (contentLength != null) {
 
                 // Bless the client, he's telling us how much data to read in.

@@ -16,9 +16,13 @@
  */
 package org.apache.activemq.util;
 
-public class JMXSupport {
+public final class JMXSupport {
+
+    private JMXSupport() {
+    }
+
     public static String encodeObjectNamePart(String part) {
-        //return ObjectName.quote(part);
+        // return ObjectName.quote(part);
         String answer = part.replaceAll("[\\:\\,\\'\\\"]", "_");
         answer = answer.replaceAll("\\?", "&qe;");
         answer = answer.replaceAll("=", "&amp;");

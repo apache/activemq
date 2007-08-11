@@ -33,6 +33,8 @@ import javax.jms.Topic;
 import junit.framework.Test;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Test cases used to test the JMS message consumer.
@@ -41,7 +43,7 @@ import org.apache.activemq.command.ActiveMQQueue;
  */
 public class JMSConsumerTest extends JmsTestSupport {
 
-    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(JMSConsumerTest.class);
+    private static final Log LOG = LogFactory.getLog(JMSConsumerTest.class);
 
     public ActiveMQDestination destination;
     public int deliveryMode;
@@ -487,7 +489,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         ActiveMQConnection connection2 = (ActiveMQConnection)factory.createConnection();
         connections.add(connection2);
         Session session2 = connection2.createSession(true, 0);
-        MessageConsumer consumer2 = session2.createConsumer(destination);
+        session2.createConsumer(destination);
 
         // Only pick up the 2nd messages.
         Message message2 = consumer.receive(1000);

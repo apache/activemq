@@ -53,8 +53,12 @@ import org.apache.commons.logging.LogFactory;
 public class KahaStore implements Store {
 
     private static final String PROPERTY_PREFIX = "org.apache.activemq.kaha.Store";
-    private static final boolean BROKEN_FILE_LOCK = "true".equals(System.getProperty(PROPERTY_PREFIX + ".FileLockBroken", "false"));
-    private static final boolean DISABLE_LOCKING = "true".equals(System.getProperty(PROPERTY_PREFIX + ".DisableLocking", "false"));
+    private static final boolean BROKEN_FILE_LOCK = "true".equals(System.getProperty(PROPERTY_PREFIX
+                                                                                     + ".FileLockBroken",
+                                                                                     "false"));
+    private static final boolean DISABLE_LOCKING = "true".equals(System.getProperty(PROPERTY_PREFIX
+                                                                                    + ".DisableLocking",
+                                                                                    "false"));
 
     private static final Log LOG = LogFactory.getLog(KahaStore.class);
 
@@ -73,7 +77,7 @@ public class KahaStore implements Store {
     private boolean useAsyncDataManager;
     private long maxDataFileLength = 1024 * 1024 * 32;
     private FileLock lock;
-    private boolean persistentIndex=true;
+    private boolean persistentIndex = true;
     private RandomAccessFile lockFile;
 
     public KahaStore(String name, String mode) throws IOException {
@@ -196,7 +200,8 @@ public class KahaStore implements Store {
         return getMapContainer(id, containerName, persistentIndex);
     }
 
-    public synchronized MapContainer getMapContainer(Object id, String containerName, boolean persistentIndex) throws IOException {
+    public synchronized MapContainer getMapContainer(Object id, String containerName, boolean persistentIndex)
+        throws IOException {
         initialize();
         ContainerId containerId = new ContainerId();
         containerId.setKey(id);
@@ -264,7 +269,8 @@ public class KahaStore implements Store {
         return getListContainer(id, containerName, persistentIndex);
     }
 
-    public synchronized ListContainer getListContainer(Object id, String containerName, boolean persistentIndex) throws IOException {
+    public synchronized ListContainer getListContainer(Object id, String containerName,
+                                                       boolean persistentIndex) throws IOException {
         initialize();
         ContainerId containerId = new ContainerId();
         containerId.setKey(id);
@@ -461,13 +467,15 @@ public class KahaStore implements Store {
                 if (!BROKEN_FILE_LOCK) {
                     lock = lockFile.getChannel().tryLock();
                     if (lock == null) {
-                        throw new StoreLockedExcpetion("Kaha Store " + directory.getName() + "  is already opened by another application");
+                        throw new StoreLockedExcpetion("Kaha Store " + directory.getName()
+                                                       + "  is already opened by another application");
                     } else {
                         System.setProperty(key, new Date().toString());
                     }
                 }
             } else { // already locked
-                throw new StoreLockedExcpetion("Kaha Store " + directory.getName() + " is already opened by this application.");
+                throw new StoreLockedExcpetion("Kaha Store " + directory.getName()
+                                               + " is already opened by this application.");
             }
         }
     }

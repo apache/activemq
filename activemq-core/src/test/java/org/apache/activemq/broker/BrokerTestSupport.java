@@ -64,9 +64,6 @@ public class BrokerTestSupport extends CombinationTestSupport {
      */
     public static final boolean FAST_NO_MESSAGE_LEFT_ASSERT = System.getProperty("FAST_NO_MESSAGE_LEFT_ASSERT", "true").equals("true");
 
-    private static final Log LOG = LogFactory.getLog(BrokerTestSupport.class);
-
-
     protected RegionBroker regionBroker;
     protected BrokerService broker;
     protected long idGenerator;
@@ -199,7 +196,6 @@ public class BrokerTestSupport extends CombinationTestSupport {
     }
 
     protected XATransactionId createXATransaction(SessionInfo info) throws IOException {
-        long id = txGenerator;
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(baos);
         os.writeLong(++txGenerator);
@@ -247,7 +243,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
         consumerInfo.setBrowser(true);
         connection.send(consumerInfo);
 
-        ArrayList skipped = new ArrayList();
+        ArrayList<Object> skipped = new ArrayList<Object>();
 
         // Now get the messages.
         Object m = connection.getDispatchQueue().poll(maxWait, TimeUnit.MILLISECONDS);
@@ -267,7 +263,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
             m = connection.getDispatchQueue().poll(maxWait, TimeUnit.MILLISECONDS);
         }
 
-        for (Iterator iter = skipped.iterator(); iter.hasNext();) {
+        for (Iterator<Object> iter = skipped.iterator(); iter.hasNext();) {
             connection.getDispatchQueue().put(iter.next());
         }
 

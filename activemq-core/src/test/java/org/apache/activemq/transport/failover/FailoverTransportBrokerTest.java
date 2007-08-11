@@ -83,7 +83,7 @@ public class FailoverTransportBrokerTest extends NetworkTestSupport {
         connection3.request(createMessage(producerInfo3, destination, deliveryMode));
 
         // The message will be sent to one of the brokers.
-        FailoverTransport ft = (FailoverTransport)connection3.getTransport().narrow(FailoverTransport.class);
+        FailoverTransport ft = connection3.getTransport().narrow(FailoverTransport.class);
 
         // See which broker we were connected to.
         StubConnection connectionA;

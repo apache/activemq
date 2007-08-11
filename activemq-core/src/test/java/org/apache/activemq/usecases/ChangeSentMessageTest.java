@@ -47,7 +47,7 @@ public class ChangeSentMessageTest extends TestSupport {
         MessageConsumer consumer = consumerSession.createConsumer(destination);
         Session publisherSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = publisherSession.createProducer(destination);
-        HashMap map = new HashMap();
+        HashMap<String, Integer> map = new HashMap<String, Integer>();
         ObjectMessage message = publisherSession.createObjectMessage();
         for (int i = 0; i < COUNT; i++) {
             map.put(VALUE_NAME, Integer.valueOf(i));

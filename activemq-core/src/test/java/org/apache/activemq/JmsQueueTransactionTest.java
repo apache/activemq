@@ -28,12 +28,14 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.test.JmsResourceProvider;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision: 1.2 $
  */
 public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
-    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(JmsQueueTransactionTest.class);
+    private static final Log LOG = LogFactory.getLog(JmsQueueTransactionTest.class);
 
     /**
      * @see org.apache.activemq.JmsTransactionTestSupport#getJmsResourceProvider()
@@ -65,7 +67,7 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
         LOG.info("Sent 0: " + outbound[0]);
         LOG.info("Sent 1: " + outbound[1]);
 
-        ArrayList messages = new ArrayList();
+        ArrayList<Message> messages = new ArrayList<Message>();
         Message message = consumer.receive(1000);
         assertEquals(outbound[0], message);
 

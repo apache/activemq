@@ -25,7 +25,7 @@ import org.apache.activemq.kaha.StoreEntry;
  */
 public class TopicSubAck {
 
-    private int count = 0;
+    private int count;
     private StoreEntry messageEntry;
 
     /**

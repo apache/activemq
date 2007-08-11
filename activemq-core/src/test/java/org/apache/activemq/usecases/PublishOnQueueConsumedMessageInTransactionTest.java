@@ -50,7 +50,7 @@ public final class PublishOnQueueConsumedMessageInTransactionTest extends TestCa
     private MessageConsumer consumer;
     private Connection connection;
     private ObjectMessage objectMessage;
-    private List messages = createConcurrentList();
+    private List<Message> messages = createConcurrentList();
     private final Object lock = new Object();
     private String[] data;
     private String dataFileRoot = IOHelper.getDefaultDataDirectory();
@@ -134,7 +134,7 @@ public final class PublishOnQueueConsumedMessageInTransactionTest extends TestCa
         }
     }
 
-    protected void consumeMessage(Message message, List messageList) {
+    protected void consumeMessage(Message message, List<Message> messageList) {
         messageList.add(message);
         if (messageList.size() >= data.length) {
             synchronized (lock) {
@@ -144,8 +144,8 @@ public final class PublishOnQueueConsumedMessageInTransactionTest extends TestCa
 
     }
 
-    protected List createConcurrentList() {
-        return Collections.synchronizedList(new ArrayList());
+    protected List<Message> createConcurrentList() {
+        return Collections.synchronizedList(new ArrayList<Message>());
     }
 
     protected void waitForMessagesToBeDelivered() {

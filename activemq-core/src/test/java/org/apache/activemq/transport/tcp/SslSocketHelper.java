@@ -25,8 +25,13 @@ import javax.net.ssl.SSLSocket;
 /**
  * @version $Revision$
  */
-public class SslSocketHelper {
-    public static SSLSocket createSSLSocket(String certDistinguishedName, boolean wantAuth, boolean needAuth) throws IOException {
+public final class SslSocketHelper {
+
+    private SslSocketHelper() {
+    }
+
+    public static SSLSocket createSSLSocket(String certDistinguishedName, boolean wantAuth, boolean needAuth)
+        throws IOException {
         JMXPrincipal principal = new JMXPrincipal(certDistinguishedName);
         X509Certificate cert = new StubX509Certificate(principal);
         StubSSLSession sslSession = new StubSSLSession(cert);

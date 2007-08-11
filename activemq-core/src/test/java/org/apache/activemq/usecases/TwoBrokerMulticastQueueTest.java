@@ -42,7 +42,8 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
     public static final int BROKER_COUNT = 2;
     public static final int CONSUMER_COUNT = 20;
 
-    public String sendUri, recvUri;
+    public String sendUri;
+    public String recvUri;
     private BrokerService[] brokers;
 
     public static Test suite() {

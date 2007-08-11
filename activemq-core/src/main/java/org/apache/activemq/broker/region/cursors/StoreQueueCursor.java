@@ -32,7 +32,7 @@ import org.apache.commons.logging.LogFactory;
 public class StoreQueueCursor extends AbstractPendingMessageCursor {
 
     private static final Log LOG = LogFactory.getLog(StoreQueueCursor.class);
-    private int pendingCount = 0;
+    private int pendingCount;
     private Queue queue;
     private Store tmpStore;
     private PendingMessageCursor nonPersistent;

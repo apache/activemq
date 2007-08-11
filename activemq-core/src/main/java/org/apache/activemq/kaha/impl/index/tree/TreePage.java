@@ -34,8 +34,9 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1.1.1 $
  */
 class TreePage {
-    private static final transient Log LOG = LogFactory.getLog(TreePage.class);
+
     static final int PAGE_HEADER_SIZE = 18;
+    private static final transient Log LOG = LogFactory.getLog(TreePage.class);
 
     static enum Flavour {
         LESS, MORE
@@ -193,7 +194,8 @@ class TreePage {
 
     void setParentId(long newId) throws IOException {
         if (newId == this.id) {
-            throw new IllegalStateException("Cannot set page as a child of itself " + this + " trying to set parentId = " + newId);
+            throw new IllegalStateException("Cannot set page as a child of itself " + this
+                                            + " trying to set parentId = " + newId);
         }
         this.parentId = newId;
         tree.writePage(this);
@@ -362,7 +364,7 @@ class TreePage {
                 newRoot.setLeaf(false);
                 this.setParentId(newRoot.getId());
                 save(); // we are no longer root - need to save - we maybe
-                        // looked up v. soon!
+                // looked up v. soon!
                 TreePage rightPage = tree.createPage(newRoot.getId());
                 rightPage.setEntries(subList);
                 rightPage.checkLeaf();
@@ -464,8 +466,8 @@ class TreePage {
                         page.setLeaf(true);
                     }
                     insertTreeEntry(index, copy);
-                    TreePage landed = null;// if we overflow - the page the
-                                            // replacement ends up on
+                    // if we overflow - the page the replacement ends up on
+                    TreePage landed = null;
                     TreeEntry removed = null;
                     if (isOverflowed()) {
                         TreePage parent = getParent();
@@ -563,7 +565,8 @@ class TreePage {
         setLeaf(!result);
     }
 
-    private void checkParentIdForRemovedPageEntry(TreeEntry entry, long oldPageId, long newPageId) throws IOException {
+    private void checkParentIdForRemovedPageEntry(TreeEntry entry, long oldPageId, long newPageId)
+        throws IOException {
         TreePage page = tree.lookupPage(entry.getPrevPageId());
         if (page != null && page.getParentId() == oldPageId) {
             page.setParentId(newPageId);

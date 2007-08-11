@@ -20,12 +20,15 @@ import javax.jms.Message;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * @version $Revision: 1.4 $
  */
 public class JMSDurableTopicRedeliverTest extends JmsTopicRedeliverTest {
 
-    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(JMSDurableTopicRedeliverTest.class);
+    private static final Log LOG = LogFactory.getLog(JMSDurableTopicRedeliverTest.class);
 
     protected void setUp() throws Exception {
         durable = true;

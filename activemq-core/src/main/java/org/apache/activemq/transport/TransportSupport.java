@@ -54,10 +54,10 @@ public abstract class TransportSupport extends ServiceSupport implements Transpo
      * @param target
      * @return 'this' if assignable
      */
-    public Object narrow(Class target) {
+    public <T> T narrow(Class<T> target) {
         boolean assignableFrom = target.isAssignableFrom(getClass());
         if (assignableFrom) {
-            return this;
+            return target.cast(this);
         }
         return null;
     }

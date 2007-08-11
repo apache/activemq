@@ -58,7 +58,7 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
 
     // until we have some MBeans for producers, lets do it all ourselves
     private Map<ProducerId, ProducerInfo> producers = new HashMap<ProducerId, ProducerInfo>();
-    private Map<ProducerId, Set> producerDestinations = new HashMap<ProducerId, Set>();
+    private Map<ProducerId, Set<ActiveMQDestination>> producerDestinations = new HashMap<ProducerId, Set<ActiveMQDestination>>();
     private Object lock = new Object();
 
     public ConnectionDotFileInterceptor(Broker next, String file, boolean redrawOnRemove) throws MalformedObjectNameException {
@@ -267,7 +267,8 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
      */
     protected String asID(String name) {
         StringBuffer buffer = new StringBuffer();
-        for (int i = 0, size = name.length(); i < size; i++) {
+        int size = name.length();
+        for (int i = 0; i < size; i++) {
             char ch = name.charAt(i);
             if (Character.isLetterOrDigit(ch) || ch == '_') {
                 buffer.append(ch);

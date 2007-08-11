@@ -87,7 +87,7 @@ public class JmsCreateConsumerInOnMessageTest extends TestSupport implements Mes
     public void onMessage(Message message) {
         try {
             testConsumer = consumerSession.createConsumer(topic);
-            MessageProducer anotherProducer = consumerSession.createProducer(topic);
+            consumerSession.createProducer(topic);
             synchronized (lock) {
                 lock.notify();
             }

@@ -30,11 +30,9 @@ import org.apache.activemq.transport.udp.DatagramHeaderMarshaller;
  */
 public class MulticastDatagramHeaderMarshaller extends DatagramHeaderMarshaller {
 
-    private final String localUri;
     private final byte[] localUriAsBytes;
 
     public MulticastDatagramHeaderMarshaller(String localUri) {
-        this.localUri = localUri;
         this.localUriAsBytes = localUri.getBytes();
     }
 

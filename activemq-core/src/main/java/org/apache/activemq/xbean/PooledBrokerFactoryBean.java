@@ -34,7 +34,7 @@ import org.springframework.core.io.Resource;
  */
 public class PooledBrokerFactoryBean implements FactoryBean, InitializingBean, DisposableBean {
 
-    static final HashMap SHARED_BROKER_MAP = new HashMap();
+    static final HashMap<String, SharedBroker> SHARED_BROKER_MAP = new HashMap<String, SharedBroker>();
 
     private boolean start;
     private Resource config;
@@ -46,7 +46,7 @@ public class PooledBrokerFactoryBean implements FactoryBean, InitializingBean, D
 
     public void afterPropertiesSet() throws Exception {
         synchronized (SHARED_BROKER_MAP) {
-            SharedBroker sharedBroker = (SharedBroker)SHARED_BROKER_MAP.get(config.getFilename());
+            SharedBroker sharedBroker = SHARED_BROKER_MAP.get(config.getFilename());
             if (sharedBroker == null) {
                 sharedBroker = new SharedBroker();
                 sharedBroker.factory = new BrokerFactoryBean();
@@ -61,7 +61,7 @@ public class PooledBrokerFactoryBean implements FactoryBean, InitializingBean, D
 
     public void destroy() throws Exception {
         synchronized (SHARED_BROKER_MAP) {
-            SharedBroker sharedBroker = (SharedBroker)SHARED_BROKER_MAP.get(config.getFilename());
+            SharedBroker sharedBroker = SHARED_BROKER_MAP.get(config.getFilename());
             if (sharedBroker != null) {
                 sharedBroker.refCount--;
                 if (sharedBroker.refCount == 0) {
@@ -78,7 +78,7 @@ public class PooledBrokerFactoryBean implements FactoryBean, InitializingBean, D
 
     public Object getObject() throws Exception {
         synchronized (SHARED_BROKER_MAP) {
-            SharedBroker sharedBroker = (SharedBroker)SHARED_BROKER_MAP.get(config.getFilename());
+            SharedBroker sharedBroker = SHARED_BROKER_MAP.get(config.getFilename());
             if (sharedBroker != null) {
                 return sharedBroker.factory.getObject();
             }
@@ -86,7 +86,7 @@ public class PooledBrokerFactoryBean implements FactoryBean, InitializingBean, D
         return null;
     }
 
-    public Class getObjectType() {
+    public Class<BrokerService> getObjectType() {
         return BrokerService.class;
     }
 

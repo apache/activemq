@@ -38,7 +38,6 @@ import org.apache.commons.logging.LogFactory;
  */
 public class TestSupport extends TestCase {
 
-    protected Log log = LogFactory.getLog(getClass());
     protected ActiveMQConnectionFactory connectionFactory;
     protected boolean topic = true;
 

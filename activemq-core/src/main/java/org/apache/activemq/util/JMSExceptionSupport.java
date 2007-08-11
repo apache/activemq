@@ -22,6 +22,9 @@ import javax.jms.MessageFormatException;
 
 public final class JMSExceptionSupport {
 
+    private JMSExceptionSupport() {
+    }
+
     public static JMSException create(String msg, Throwable cause) {
         JMSException exception = new JMSException(msg);
         exception.initCause(cause);

@@ -51,9 +51,8 @@ import org.apache.activemq.util.MessageIdList;
  * @version $Revision$
  */
 public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
-    private AtomicInteger producerLock;
 
-    protected Map consumers = new HashMap(); // Map of consumer with messages
+    protected Map<MessageConsumer, MessageIdList> consumers = new HashMap<MessageConsumer, MessageIdList>(); // Map of consumer with messages
                                                 // received
     protected int consumerCount = 1;
     protected int producerCount = 1;
@@ -67,8 +66,10 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
 
     protected BrokerService broker;
     protected Destination destination;
-    protected List connections = Collections.synchronizedList(new ArrayList());
+    protected List<Connection> connections = Collections.synchronizedList(new ArrayList<Connection>());
     protected MessageIdList allMessagesList = new MessageIdList();
+
+    private AtomicInteger producerLock;
 
     protected void startProducers(Destination dest, int msgCount) throws Exception {
         startProducers(createConnectionFactory(), dest, msgCount);
@@ -219,8 +220,8 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
     }
 
     protected void tearDown() throws Exception {
-        for (Iterator iter = connections.iterator(); iter.hasNext();) {
-            Connection conn = (Connection)iter.next();
+        for (Iterator<Connection> iter = connections.iterator(); iter.hasNext();) {
+            Connection conn = iter.next();
             try {
                 conn.close();
             } catch (Throwable e) {
@@ -236,35 +237,35 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
      * Some helpful assertions for multiple consumers.
      */
     protected void assertConsumerReceivedAtLeastXMessages(MessageConsumer consumer, int msgCount) {
-        MessageIdList messageIdList = (MessageIdList)consumers.get(consumer);
+        MessageIdList messageIdList = consumers.get(consumer);
         messageIdList.assertAtLeastMessagesReceived(msgCount);
     }
 
     protected void assertConsumerReceivedAtMostXMessages(MessageConsumer consumer, int msgCount) {
-        MessageIdList messageIdList = (MessageIdList)consumers.get(consumer);
+        MessageIdList messageIdList = consumers.get(consumer);
         messageIdList.assertAtMostMessagesReceived(msgCount);
     }
 
     protected void assertConsumerReceivedXMessages(MessageConsumer consumer, int msgCount) {
-        MessageIdList messageIdList = (MessageIdList)consumers.get(consumer);
+        MessageIdList messageIdList = consumers.get(consumer);
         messageIdList.assertMessagesReceivedNoWait(msgCount);
     }
 
     protected void assertEachConsumerReceivedAtLeastXMessages(int msgCount) {
-        for (Iterator i = consumers.keySet().iterator(); i.hasNext();) {
-            assertConsumerReceivedAtLeastXMessages((MessageConsumer)i.next(), msgCount);
+        for (Iterator<MessageConsumer> i = consumers.keySet().iterator(); i.hasNext();) {
+            assertConsumerReceivedAtLeastXMessages(i.next(), msgCount);
         }
     }
 
     protected void assertEachConsumerReceivedAtMostXMessages(int msgCount) {
-        for (Iterator i = consumers.keySet().iterator(); i.hasNext();) {
-            assertConsumerReceivedAtMostXMessages((MessageConsumer)i.next(), msgCount);
+        for (Iterator<MessageConsumer> i = consumers.keySet().iterator(); i.hasNext();) {
+            assertConsumerReceivedAtMostXMessages(i.next(), msgCount);
         }
     }
 
     protected void assertEachConsumerReceivedXMessages(int msgCount) {
-        for (Iterator i = consumers.keySet().iterator(); i.hasNext();) {
-            assertConsumerReceivedXMessages((MessageConsumer)i.next(), msgCount);
+        for (Iterator<MessageConsumer> i = consumers.keySet().iterator(); i.hasNext();) {
+            assertConsumerReceivedXMessages(i.next(), msgCount);
         }
     }
 
@@ -273,8 +274,8 @@ public class JmsMultipleClientsTestSupport extends CombinationTestSupport {
 
         // now lets count the individual messages received
         int totalMsg = 0;
-        for (Iterator i = consumers.keySet().iterator(); i.hasNext();) {
-            MessageIdList messageIdList = (MessageIdList)consumers.get(i.next());
+        for (Iterator<MessageConsumer> i = consumers.keySet().iterator(); i.hasNext();) {
+            MessageIdList messageIdList = consumers.get(i.next());
             totalMsg += messageIdList.getMessageCount();
         }
         assertEquals("Total of consumers message count", msgCount, totalMsg);

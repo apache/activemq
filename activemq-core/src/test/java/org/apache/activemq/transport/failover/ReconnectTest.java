@@ -60,10 +60,11 @@ public class ReconnectTest extends TestCase {
 
     class Worker implements Runnable, ExceptionListener {
 
-        private ActiveMQConnection connection;
-        private AtomicBoolean stop = new AtomicBoolean(false);
         public AtomicInteger iterations = new AtomicInteger();
         public CountDownLatch stopped = new CountDownLatch(1);
+
+        private ActiveMQConnection connection;
+        private AtomicBoolean stop = new AtomicBoolean(false);
         private Throwable error;
 
         public Worker() throws URISyntaxException, JMSException {

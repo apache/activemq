@@ -41,7 +41,7 @@ public class MarshallingBrokerTest extends BrokerTest {
         OpenWireFormat wf2 = new OpenWireFormat();
         wf2.setCacheEnabled(true);
 
-        addCombinationValues("wireFormat", new Object[] {wf1, wf2,});
+        addCombinationValues("wireFormat", new Object[] {wf1, wf2, });
     }
 
     protected StubConnection createConnection() throws Exception {

@@ -38,7 +38,7 @@ public class ForwardingBridgeTest extends NetworkTestSupport {
         addCombinationValues("deliveryMode", new Object[] {new Integer(DeliveryMode.NON_PERSISTENT),
                                                            new Integer(DeliveryMode.PERSISTENT)});
         addCombinationValues("destinationType", new Object[] {new Byte(ActiveMQDestination.QUEUE_TYPE),
-                                                              new Byte(ActiveMQDestination.TOPIC_TYPE),});
+                                                              new Byte(ActiveMQDestination.TOPIC_TYPE)});
     }
 
     public void testAddConsumerThenSend() throws Exception {

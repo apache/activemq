@@ -38,7 +38,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class SimpleMessageList implements MessageList {
     private static final Log LOG = LogFactory.getLog(SimpleMessageList.class);
-    private LinkedList list = new LinkedList();
+    private LinkedList<MessageReference> list = new LinkedList<MessageReference>();
     private int maximumSize = 100 * 64 * 1024;
     private int size;
     private Object lock = new Object();
@@ -56,22 +56,22 @@ public class SimpleMessageList implements MessageList {
             list.add(node);
             size += delta;
             while (size > maximumSize) {
-                MessageReference evicted = (MessageReference)list.removeFirst();
+                MessageReference evicted = list.removeFirst();
                 size -= evicted.getMessageHardRef().getSize();
             }
         }
     }
 
-    public List getMessages(ActiveMQDestination destination) {
+    public List<MessageReference> getMessages(ActiveMQDestination destination) {
         return getList();
     }
 
     public Message[] browse(ActiveMQDestination destination) {
-        List result = new ArrayList();
+        List<Message> result = new ArrayList<Message>();
         DestinationFilter filter = DestinationFilter.parseFilter(destination);
         synchronized (lock) {
-            for (Iterator i = list.iterator(); i.hasNext();) {
-                MessageReference ref = (MessageReference)i.next();
+            for (Iterator<MessageReference> i = list.iterator(); i.hasNext();) {
+                MessageReference ref = i.next();
                 Message msg;
                 try {
                     msg = ref.getMessage();
@@ -84,15 +84,15 @@ public class SimpleMessageList implements MessageList {
 
             }
         }
-        return (Message[])result.toArray(new Message[result.size()]);
+        return result.toArray(new Message[result.size()]);
     }
 
     /**
      * Returns a copy of the list
      */
-    public List getList() {
+    public List<MessageReference> getList() {
         synchronized (lock) {
-            return new ArrayList(list);
+            return new ArrayList<MessageReference>(list);
         }
     }
 

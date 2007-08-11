@@ -95,7 +95,8 @@ public class ListContainerTest extends TestCase {
      */
     public void testIterator() throws Exception {
         container.addAll(testList);
-        for (Iterator<Object> i = testList.iterator(), j = container.iterator(); i.hasNext();) {
+        Iterator<Object> j = container.iterator();
+        for (Iterator<Object> i = testList.iterator(); i.hasNext();) {
             assertEquals(i.next(), j.next());
         }
         for (Iterator<Object> i = container.iterator(); i.hasNext();) {
@@ -117,7 +118,7 @@ public class ListContainerTest extends TestCase {
      */
     public void testContains() throws Exception {
         container.addAll(testList);
-        for (Iterator<Object> i = testList.iterator(), j = container.iterator(); i.hasNext();) {
+        for (Iterator<Object> i = testList.iterator(); i.hasNext();) {
             assertTrue(container.contains(i.next()));
         }
     }

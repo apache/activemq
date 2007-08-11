@@ -282,14 +282,16 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
         }
     }
 
+    @SuppressWarnings("deprecation")
     protected String tightUnmarshalString(DataInput dataIn, BooleanStream bs) throws IOException {
         if (bs.readBoolean()) {
             if (bs.readBoolean()) {
                 int size = dataIn.readShort();
                 byte data[] = new byte[size];
                 dataIn.readFully(data);
-                return new String(data, 0); // Yes deprecated, but we know what
-                                            // we are doing.
+                // Yes deprecated, but we know what we are doing.
+                // This allows us to create a String from a ASCII byte array. (no UTF-8 decoding)
+                return new String(data, 0);
             } else {
                 return dataIn.readUTF();
             }
@@ -305,7 +307,7 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
             int strlen = value.length();
             int utflen = 0;
             char[] charr = new char[strlen];
-            int c, count = 0;
+            int c = 0;
             boolean isOnlyAscii = true;
 
             value.getChars(0, strlen, charr, 0);

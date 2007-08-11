@@ -50,7 +50,7 @@ public abstract class JmsSendReceiveTestSupport extends TestSupport implements M
     protected MessageProducer producer;
     protected Destination consumerDestination;
     protected Destination producerDestination;
-    protected List messages = createConcurrentList();
+    protected List<Message> messages = createConcurrentList();
     protected boolean topic = true;
     protected boolean durable;
     protected int deliveryMode = DeliveryMode.PERSISTENT;
@@ -152,12 +152,12 @@ public abstract class JmsSendReceiveTestSupport extends TestSupport implements M
      * @param receivedMessages
      * @throws JMSException
      */
-    protected void assertMessagesReceivedAreValid(List receivedMessages) throws JMSException {
-        List copyOfMessages = Arrays.asList(receivedMessages.toArray());
+    protected void assertMessagesReceivedAreValid(List<Message> receivedMessages) throws JMSException {
+        List<Object> copyOfMessages = Arrays.asList(receivedMessages.toArray());
         int counter = 0;
 
         if (data.length != copyOfMessages.size()) {
-            for (Iterator iter = copyOfMessages.iterator(); iter.hasNext();) {
+            for (Iterator<Object> iter = copyOfMessages.iterator(); iter.hasNext();) {
                 Object message = iter.next();
                 LOG.info("<== " + counter++ + " = " + message);
             }
@@ -166,7 +166,7 @@ public abstract class JmsSendReceiveTestSupport extends TestSupport implements M
         assertEquals("Not enough messages received", data.length, receivedMessages.size());
 
         for (int i = 0; i < data.length; i++) {
-            Message received = (Message)receivedMessages.get(i);
+            Message received = receivedMessages.get(i);
             assertMessageValid(i, received);
         }
     }
@@ -217,7 +217,7 @@ public abstract class JmsSendReceiveTestSupport extends TestSupport implements M
      * @param message - a newly received message.
      * @param messageList - list containing the received messages.
      */
-    protected void consumeMessage(Message message, List messageList) {
+    protected void consumeMessage(Message message, List<Message> messageList) {
         if (verbose) {
             LOG.info("Received message: " + message);
         }
@@ -236,7 +236,7 @@ public abstract class JmsSendReceiveTestSupport extends TestSupport implements M
      * 
      * @return a synchronized view of the specified list.
      */
-    protected List createConcurrentList() {
-        return Collections.synchronizedList(new ArrayList());
+    protected List<Message> createConcurrentList() {
+        return Collections.synchronizedList(new ArrayList<Message>());
     }
 }

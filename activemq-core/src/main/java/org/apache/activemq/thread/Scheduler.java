@@ -26,27 +26,35 @@ import java.util.concurrent.TimeUnit;
 /**
  * @version $Revision$
  */
-public class Scheduler {
+public final class Scheduler {
 
-    public static final ScheduledThreadPoolExecutor CLOCK_DAEMON = new ScheduledThreadPoolExecutor(5, new ThreadFactory() {
-        public Thread newThread(Runnable runnable) {
-            Thread thread = new Thread(runnable, "ActiveMQ Scheduler");
-            thread.setDaemon(true);
-            return thread;
-        }
-    });
+    public static final ScheduledThreadPoolExecutor CLOCK_DAEMON = new ScheduledThreadPoolExecutor(5, createThreadFactory());
     static {
         CLOCK_DAEMON.setKeepAliveTime(5, TimeUnit.SECONDS);
     }
-    private static final HashMap CLOCK_TICKETS = new HashMap();
+    private static final HashMap<Runnable, ScheduledFuture> CLOCK_TICKETS = new HashMap<Runnable, ScheduledFuture>();
+
+    private Scheduler() {
+    }
+
+    private static ThreadFactory createThreadFactory() {
+        return new ThreadFactory() {
+            public Thread newThread(Runnable runnable) {
+                Thread thread = new Thread(runnable, "ActiveMQ Scheduler");
+                thread.setDaemon(true);
+                return thread;
+            }
+        };
+    }
 
     public static synchronized void executePeriodically(final Runnable task, long period) {
-        ScheduledFuture ticket = CLOCK_DAEMON.scheduleAtFixedRate(task, period, period, TimeUnit.MILLISECONDS);
+        ScheduledFuture ticket = CLOCK_DAEMON
+            .scheduleAtFixedRate(task, period, period, TimeUnit.MILLISECONDS);
         CLOCK_TICKETS.put(task, ticket);
     }
 
     public static synchronized void cancel(Runnable task) {
-        ScheduledFuture ticket = (ScheduledFuture)CLOCK_TICKETS.remove(task);
+        ScheduledFuture ticket = CLOCK_TICKETS.remove(task);
         if (ticket != null) {
             ticket.cancel(false);
             if (ticket instanceof Runnable) {

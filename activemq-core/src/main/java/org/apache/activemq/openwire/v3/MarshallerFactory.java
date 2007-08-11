@@ -31,7 +31,7 @@ import org.apache.activemq.openwire.OpenWireFormat;
  *
  * @version $Revision$
  */
-public class MarshallerFactory {
+public final class MarshallerFactory {
 
     /**
      * Creates a Map of command type -> Marshallers
@@ -98,6 +98,9 @@ public class MarshallerFactory {
 
     }
 
+    private MarshallerFactory() {        
+    }
+    
     private static void add(DataStreamMarshaller dsm) {
         MARSHALLER[dsm.getDataStructureType()] = dsm;
     }

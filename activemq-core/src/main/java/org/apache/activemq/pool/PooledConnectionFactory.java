@@ -47,7 +47,7 @@ import org.apache.commons.pool.impl.GenericObjectPoolFactory;
  */
 public class PooledConnectionFactory implements ConnectionFactory, Service {
     private ConnectionFactory connectionFactory;
-    private Map cache = new HashMap();
+    private Map<ConnectionKey, LinkedList<ConnectionPool>> cache = new HashMap<ConnectionKey, LinkedList<ConnectionPool>>();
     private ObjectPoolFactory poolFactory;
     private int maximumActive = 500;
     private int maxConnections = 1;
@@ -87,16 +87,16 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
 
     public synchronized Connection createConnection(String userName, String password) throws JMSException {
         ConnectionKey key = new ConnectionKey(userName, password);
-        LinkedList pools = (LinkedList)cache.get(key);
+        LinkedList<ConnectionPool> pools = cache.get(key);
 
         if (pools == null) {
-            pools = new LinkedList();
+            pools = new LinkedList<ConnectionPool>();
             cache.put(key, pools);
         }
 
         ConnectionPool connection = null;
         if (pools.size() == maxConnections) {
-            connection = (ConnectionPool)pools.removeFirst();
+            connection = pools.removeFirst();
         }
 
         // Now.. we might get a connection, but it might be that we need to
@@ -138,8 +138,8 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
     }
 
     public void stop() throws Exception {
-        for (Iterator iter = cache.values().iterator(); iter.hasNext();) {
-            LinkedList list = (LinkedList)iter.next();
+        for (Iterator<LinkedList<ConnectionPool>> iter = cache.values().iterator(); iter.hasNext();) {
+            LinkedList list = iter.next();
             for (Iterator i = list.iterator(); i.hasNext();) {
                 ConnectionPool connection = (ConnectionPool)i.next();
                 connection.close();

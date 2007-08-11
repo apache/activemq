@@ -47,8 +47,9 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
-    private static final Log LOG = LogFactory.getLog(MulticastDiscoveryAgent.class);
+
     public static final String DEFAULT_DISCOVERY_URI_STRING = "multicast://239.255.2.3:6155";
+    private static final Log LOG = LogFactory.getLog(MulticastDiscoveryAgent.class);
     private static final String TYPE_SUFFIX = "ActiveMQ-4.";
     private static final String ALIVE = "alive.";
     private static final String DEAD = "dead.";
@@ -60,7 +61,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
     private long initialReconnectDelay = 1000 * 5;
     private long maxReconnectDelay = 1000 * 30;
     private long backOffMultiplier = 2;
-    private boolean useExponentialBackOff = false;
+    private boolean useExponentialBackOff;
     private int maxReconnectAttempts;
 
     class RemoteBrokerData {
@@ -156,8 +157,8 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
     }
 
     private int timeToLive = 1;
-    private boolean loopBackMode = false;
-    private Map brokersByService = new ConcurrentHashMap();
+    private boolean loopBackMode;
+    private Map<String, RemoteBrokerData> brokersByService = new ConcurrentHashMap<String, RemoteBrokerData>();
     private String group = "default";
     private String brokerName;
     private URI discoveryURI;
@@ -168,11 +169,11 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
     private MulticastSocket mcast;
     private Thread runner;
     private long keepAliveInterval = DEFAULT_IDLE_TIME;
-    private long lastAdvertizeTime = 0;
+    private long lastAdvertizeTime;
     private AtomicBoolean started = new AtomicBoolean(false);
     private boolean reportAdvertizeFailed = true;
 
-    private final Executor executor = new ThreadPoolExecutor(1, 1, 30, TimeUnit.SECONDS, new LinkedBlockingQueue(), new ThreadFactory() {
+    private final Executor executor = new ThreadPoolExecutor(1, 1, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
         public Thread newThread(Runnable runable) {
             Thread t = new Thread(runable, "Multicast Discovery Agent Notifier");
             t.setDaemon(true);
@@ -421,7 +422,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
 
     private void processAlive(String brokerName, String service) {
         if (selfService == null || !service.equals(selfService)) {
-            RemoteBrokerData data = (RemoteBrokerData)brokersByService.get(service);
+            RemoteBrokerData data = brokersByService.get(service);
             if (data == null) {
                 data = new RemoteBrokerData(brokerName, service);
                 brokersByService.put(service, data);
@@ -440,7 +441,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
 
     private void processDead(String brokerName, String service) {
         if (!service.equals(selfService)) {
-            RemoteBrokerData data = (RemoteBrokerData)brokersByService.remove(service);
+            RemoteBrokerData data = brokersByService.remove(service);
             if (data != null && !data.isFailed()) {
                 fireServiceRemovedEvent(data);
             }
@@ -449,8 +450,8 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
 
     private void doExpireOldServices() {
         long expireTime = System.currentTimeMillis() - (keepAliveInterval * HEARTBEAT_MISS_BEFORE_DEATH);
-        for (Iterator i = brokersByService.values().iterator(); i.hasNext();) {
-            RemoteBrokerData data = (RemoteBrokerData)i.next();
+        for (Iterator<RemoteBrokerData> i = brokersByService.values().iterator(); i.hasNext();) {
+            RemoteBrokerData data = i.next();
             if (data.getLastHeartBeat() < expireTime) {
                 processDead(brokerName, data.service);
             }
@@ -468,7 +469,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
     }
 
     public void serviceFailed(DiscoveryEvent event) throws IOException {
-        RemoteBrokerData data = (RemoteBrokerData)brokersByService.get(event.getServiceName());
+        RemoteBrokerData data = brokersByService.get(event.getServiceName());
         if (data != null && data.markFailed()) {
             fireServiceRemovedEvent(data);
         }

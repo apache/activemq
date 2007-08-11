@@ -47,8 +47,6 @@ import org.apache.commons.logging.LogFactory;
  */
 public class LDAPAuthorizationMap implements AuthorizationMap {
 
-    private static Log log = LogFactory.getLog(LDAPLoginModule.class);
-
     public static final String INITIAL_CONTEXT_FACTORY = "initialContextFactory";
     public static final String CONNECTION_URL = "connectionURL";
     public static final String CONNECTION_USERNAME = "connectionUsername";
@@ -67,6 +65,8 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
     public static final String READ_ATTRIBUTE = "readAttribute";
     public static final String WRITE_BASE = "writeBAse";
     public static final String WRITE_ATTRIBUTE = "writeAttribute";
+
+    private static final Log LOG = LogFactory.getLog(LDAPLoginModule.class);
 
     private String initialContextFactory;
     private String connectionURL;
@@ -135,31 +135,30 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
         queueSearchSubtreeBool = Boolean.valueOf(queueSearchSubtree).booleanValue();
     }
 
-    public Set getTempDestinationAdminACLs() {
-        // TODO insert implementation
-
-        return null;
-    }
-
-    public Set getTempDestinationReadACLs() {
+    public Set<GroupPrincipal> getTempDestinationAdminACLs() {
         // TODO insert implementation
         return null;
     }
 
-    public Set getTempDestinationWriteACLs() {
+    public Set<GroupPrincipal> getTempDestinationReadACLs() {
         // TODO insert implementation
         return null;
     }
 
-    public Set getAdminACLs(ActiveMQDestination destination) {
+    public Set<GroupPrincipal> getTempDestinationWriteACLs() {
+        // TODO insert implementation
+        return null;
+    }
+
+    public Set<GroupPrincipal> getAdminACLs(ActiveMQDestination destination) {
         return getACLs(destination, adminBase, adminAttribute);
     }
 
-    public Set getReadACLs(ActiveMQDestination destination) {
+    public Set<GroupPrincipal> getReadACLs(ActiveMQDestination destination) {
         return getACLs(destination, readBase, readAttribute);
     }
 
-    public Set getWriteACLs(ActiveMQDestination destination) {
+    public Set<GroupPrincipal> getWriteACLs(ActiveMQDestination destination) {
         return getACLs(destination, writeBase, writeAttribute);
     }
 
@@ -304,12 +303,12 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
 
     // Implementation methods
     // -------------------------------------------------------------------------
-    protected Set getACLs(ActiveMQDestination destination, String roleBase, String roleAttribute) {
+    protected Set<GroupPrincipal> getACLs(ActiveMQDestination destination, String roleBase, String roleAttribute) {
         try {
             context = open();
         } catch (NamingException e) {
-            log.error(e);
-            return new HashSet();
+            LOG.error(e);
+            return new HashSet<GroupPrincipal>();
         }
 
         // if ((destination.getDestinationType() &
@@ -340,8 +339,8 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
         constraints.setReturningAttributes(new String[] {roleAttribute});
 
         try {
-            Set roles = new HashSet();
-            Set acls = new HashSet();
+            Set<GroupPrincipal> roles = new HashSet<GroupPrincipal>();
+            Set<String> acls = new HashSet<String>();
             NamingEnumeration results = context.search(destinationBase, roleBase, constraints);
             while (results.hasMore()) {
                 SearchResult result = (SearchResult)results.next();
@@ -351,23 +350,23 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
                 }
                 acls = addAttributeValues(roleAttribute, attrs, acls);
             }
-            for (Iterator iter = acls.iterator(); iter.hasNext();) {
-                String roleName = (String)iter.next();
+            for (Iterator<String> iter = acls.iterator(); iter.hasNext();) {
+                String roleName = iter.next();
                 roles.add(new GroupPrincipal(roleName));
             }
             return roles;
         } catch (NamingException e) {
-            log.error(e);
-            return new HashSet();
+            LOG.error(e);
+            return new HashSet<GroupPrincipal>();
         }
     }
 
-    protected Set addAttributeValues(String attrId, Attributes attrs, Set values) throws NamingException {
+    protected Set<String> addAttributeValues(String attrId, Attributes attrs, Set<String> values) throws NamingException {
         if (attrId == null || attrs == null) {
             return values;
         }
         if (values == null) {
-            values = new HashSet();
+            values = new HashSet<String>();
         }
         Attribute attr = attrs.get(attrId);
         if (attr == null) {
@@ -387,7 +386,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
         }
 
         try {
-            Hashtable env = new Hashtable();
+            Hashtable<String, String> env = new Hashtable<String, String>();
             env.put(Context.INITIAL_CONTEXT_FACTORY, initialContextFactory);
             if (connectionUsername != null || !"".equals(connectionUsername)) {
                 env.put(Context.SECURITY_PRINCIPAL, connectionUsername);
@@ -401,7 +400,7 @@ public class LDAPAuthorizationMap implements AuthorizationMap {
             context = new InitialDirContext(env);
 
         } catch (NamingException e) {
-            log.error(e);
+            LOG.error(e);
             throw e;
         }
         return context;

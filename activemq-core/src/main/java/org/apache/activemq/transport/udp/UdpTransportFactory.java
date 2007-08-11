@@ -44,7 +44,7 @@ public class UdpTransportFactory extends TransportFactory {
 
     public TransportServer doBind(String brokerId, final URI location) throws IOException {
         try {
-            Map options = new HashMap(URISupport.parseParamters(location));
+            Map<String, String> options = new HashMap<String, String>(URISupport.parseParamters(location));
             if (options.containsKey("port")) {
                 throw new IllegalArgumentException("The port property cannot be specified on a UDP server transport - please use the port in the URI syntax");
             }

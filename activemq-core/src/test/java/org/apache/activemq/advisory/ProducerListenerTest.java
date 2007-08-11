@@ -40,7 +40,7 @@ public class ProducerListenerTest extends EmbeddedBrokerTestSupport implements P
     protected Session consumerSession2;
     protected int consumerCounter;
     protected ProducerEventSource producerEventSource;
-    protected BlockingQueue eventQueue = new ArrayBlockingQueue(1000);
+    protected BlockingQueue<ProducerEvent> eventQueue = new ArrayBlockingQueue<ProducerEvent>(1000);
     private Connection connection;
 
     public void testProducerEvents() throws Exception {
@@ -123,7 +123,7 @@ public class ProducerListenerTest extends EmbeddedBrokerTestSupport implements P
     }
 
     protected ProducerEvent waitForProducerEvent() throws InterruptedException {
-        ProducerEvent answer = (ProducerEvent)eventQueue.poll(100000, TimeUnit.MILLISECONDS);
+        ProducerEvent answer = eventQueue.poll(100000, TimeUnit.MILLISECONDS);
         assertTrue("Should have received a consumer event!", answer != null);
         return answer;
     }

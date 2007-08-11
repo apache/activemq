@@ -128,7 +128,7 @@ public class DestinationView implements DestinationViewMBean {
 
     public CompositeData[] browse(String selector) throws OpenDataException, InvalidSelectorException {
         Message[] messages = destination.browse();
-        ArrayList c = new ArrayList();
+        ArrayList<CompositeData> c = new ArrayList<CompositeData>();
 
         MessageEvaluationContext ctx = new MessageEvaluationContext();
         ctx.setDestination(destination.getActiveMQDestination());
@@ -159,7 +159,7 @@ public class DestinationView implements DestinationViewMBean {
     /**
      * Browses the current destination returning a list of messages
      */
-    public List browseMessages() throws InvalidSelectorException {
+    public List<Object> browseMessages() throws InvalidSelectorException {
         return browseMessages(null);
     }
 
@@ -167,9 +167,9 @@ public class DestinationView implements DestinationViewMBean {
      * Browses the current destination with the given selector returning a list
      * of messages
      */
-    public List browseMessages(String selector) throws InvalidSelectorException {
+    public List<Object> browseMessages(String selector) throws InvalidSelectorException {
         Message[] messages = destination.browse();
-        ArrayList answer = new ArrayList();
+        ArrayList<Object> answer = new ArrayList<Object>();
 
         MessageEvaluationContext ctx = new MessageEvaluationContext();
         ctx.setDestination(destination.getActiveMQDestination());

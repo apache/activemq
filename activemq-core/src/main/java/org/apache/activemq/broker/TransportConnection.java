@@ -83,6 +83,7 @@ import org.apache.activemq.state.TransactionState;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.activemq.transaction.Transaction;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
@@ -100,27 +101,31 @@ import org.apache.commons.logging.LogFactory;
 public class TransportConnection implements Service, Connection, Task, CommandVisitor {
 
     private static final Log LOG = LogFactory.getLog(TransportConnection.class);
-    private static final Log TRANSPORTLOG = LogFactory.getLog(TransportConnection.class.getName() + ".Transport");
+    private static final Log TRANSPORTLOG = LogFactory.getLog(TransportConnection.class.getName()
+                                                              + ".Transport");
     private static final Log SERVICELOG = LogFactory.getLog(TransportConnection.class.getName() + ".Service");
+
     // Keeps track of the broker and connector that created this connection.
     protected final Broker broker;
-    private MasterBroker masterBroker;
     protected final TransportConnector connector;
-    private final Transport transport;
-    private MessageAuthorizationPolicy messageAuthorizationPolicy;
     // Keeps track of the state of the connections.
     // protected final ConcurrentHashMap localConnectionStates=new
     // ConcurrentHashMap();
     protected final Map<ConnectionId, ConnectionState> brokerConnectionStates;
     // The broker and wireformat info that was exchanged.
     protected BrokerInfo brokerInfo;
+    protected final List<Command> dispatchQueue = Collections.synchronizedList(new LinkedList<Command>());
+    protected TaskRunner taskRunner;
+    protected final AtomicReference<IOException> transportException = new AtomicReference<IOException>();
+    protected AtomicBoolean dispatchStopped = new AtomicBoolean(false);
+
+    private MasterBroker masterBroker;
+    private final Transport transport;
+    private MessageAuthorizationPolicy messageAuthorizationPolicy;
     private WireFormatInfo wireFormatInfo;
     // Used to do async dispatch.. this should perhaps be pushed down into the
     // transport layer..
-    protected final List<Command> dispatchQueue = Collections.synchronizedList(new LinkedList<Command>());
-    protected TaskRunner taskRunner;
-    protected final AtomicReference transportException = new AtomicReference();
-    private boolean inServiceException = false;
+    private boolean inServiceException;
     private ConnectionStatistics statistics = new ConnectionStatistics();
     private boolean manageable;
     private boolean slow;
@@ -140,7 +145,6 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     private final Map<ProducerId, ProducerBrokerExchange> producerExchanges = new HashMap<ProducerId, ProducerBrokerExchange>();
     private final Map<ConsumerId, ConsumerBrokerExchange> consumerExchanges = new HashMap<ConsumerId, ConsumerBrokerExchange>();
     private CountDownLatch dispatchStoppedLatch = new CountDownLatch(1);
-    protected AtomicBoolean dispatchStopped = new AtomicBoolean(false);
     private ConnectionContext context;
     private boolean networkConnection;
     private AtomicInteger protocolVersion = new AtomicInteger(CommandTypes.PROTOCOL_VERSION);
@@ -193,7 +197,8 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
      * @param taskRunnerFactory - can be null if you want direct dispatch to the
      *                transport else commands are sent async.
      */
-    public TransportConnection(TransportConnector connector, final Transport transport, Broker broker, TaskRunnerFactory taskRunnerFactory) {
+    public TransportConnection(TransportConnector connector, final Transport transport, Broker broker,
+                               TaskRunnerFactory taskRunnerFactory) {
         this.connector = connector;
         this.broker = broker;
         RegionBroker rb = (RegionBroker)broker.getAdaptor(RegionBroker.class);
@@ -264,7 +269,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
      * error transmitted to the client before stopping it's transport.
      */
     public void serviceException(Throwable e) {
-        
+
         // are we a transport exception such as not being able to dispatch
         // synchronously to a transport
         if (e instanceof IOException) {
@@ -275,7 +280,8 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
 
             if (!disposed.get()) {
                 if (SERVICELOG.isDebugEnabled()) {
-                    SERVICELOG.debug("Broker has been stopped.  Notifying client and closing his connection.");
+                    SERVICELOG
+                        .debug("Broker has been stopped.  Notifying client and closing his connection.");
                 }
 
                 ConnectionError ce = new ConnectionError();
@@ -408,7 +414,8 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         }
         TransactionState transactionState = cs.getTransactionState(info.getTransactionId());
         if (transactionState == null) {
-            throw new IllegalStateException("Cannot prepare a transaction that had not been started: " + info.getTransactionId());
+            throw new IllegalStateException("Cannot prepare a transaction that had not been started: "
+                                            + info.getTransactionId());
         }
         // Avoid dups.
         if (!transactionState.isPrepared()) {
@@ -478,7 +485,8 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return broker.messagePull(lookupConnectionState(pull.getConsumerId()).getContext(), pull);
     }
 
-    public Response processMessageDispatchNotification(MessageDispatchNotification notification) throws Exception {
+    public Response processMessageDispatchNotification(MessageDispatchNotification notification)
+        throws Exception {
         broker.processDispatchNotification(notification);
         return null;
     }
@@ -507,7 +515,9 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         TransportConnectionState cs = lookupConnectionState(connectionId);
         SessionState ss = cs.getSessionState(sessionId);
         if (ss == null) {
-            throw new IllegalStateException("Cannot add a producer to a session that had not been registered: " + sessionId);
+            throw new IllegalStateException(
+                                            "Cannot add a producer to a session that had not been registered: "
+                                                + sessionId);
         }
         // Avoid replaying dup commands
         if (!ss.getProducerIds().contains(info.getProducerId())) {
@@ -527,7 +537,9 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         TransportConnectionState cs = lookupConnectionState(connectionId);
         SessionState ss = cs.getSessionState(sessionId);
         if (ss == null) {
-            throw new IllegalStateException("Cannot remove a producer from a session that had not been registered: " + sessionId);
+            throw new IllegalStateException(
+                                            "Cannot remove a producer from a session that had not been registered: "
+                                                + sessionId);
         }
         ProducerState ps = ss.removeProducer(id);
         if (ps == null) {
@@ -544,7 +556,9 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         TransportConnectionState cs = lookupConnectionState(connectionId);
         SessionState ss = cs.getSessionState(sessionId);
         if (ss == null) {
-            throw new IllegalStateException("Cannot add a consumer to a session that had not been registered: " + sessionId);
+            throw new IllegalStateException(
+                                            "Cannot add a consumer to a session that had not been registered: "
+                                                + sessionId);
         }
         // Avoid replaying dup commands
         if (!ss.getConsumerIds().contains(info.getConsumerId())) {
@@ -564,7 +578,9 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         TransportConnectionState cs = lookupConnectionState(connectionId);
         SessionState ss = cs.getSessionState(sessionId);
         if (ss == null) {
-            throw new IllegalStateException("Cannot remove a consumer from a session that had not been registered: " + sessionId);
+            throw new IllegalStateException(
+                                            "Cannot remove a consumer from a session that had not been registered: "
+                                                + sessionId);
         }
         ConsumerState consumerState = ss.removeConsumer(id);
         if (consumerState == null) {
@@ -644,7 +660,8 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
             if (state.getConnection() != this) {
                 LOG.debug("Killing previous stale connection: " + state.getConnection().getRemoteAddress());
                 state.getConnection().stop();
-                LOG.debug("Connection " + getRemoteAddress() + " taking over previous connection: " + state.getConnection().getRemoteAddress());
+                LOG.debug("Connection " + getRemoteAddress() + " taking over previous connection: "
+                          + state.getConnection().getRemoteAddress());
                 state.setConnection(this);
                 state.reset(info);
             }
@@ -659,7 +676,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         context.setConnection(this);
         context.setBroker(broker);
         context.setConnector(connector);
-        context.setTransactions(new ConcurrentHashMap());
+        context.setTransactions(new ConcurrentHashMap<TransactionId, Transaction>());
         context.setClientId(clientId);
         context.setUserName(info.getUserName());
         context.setConnectionId(info.getConnectionId());
@@ -767,7 +784,8 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     }
 
     protected void processDispatch(Command command) throws IOException {
-        final MessageDispatch messageDispatch = (MessageDispatch)(command.isMessageDispatch() ? command : null);
+        final MessageDispatch messageDispatch = (MessageDispatch)(command.isMessageDispatch()
+            ? command : null);
         try {
             if (!disposed.get()) {
                 if (messageDispatch != null) {
@@ -847,7 +865,8 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
             transport.start();
 
             if (taskRunnerFactory != null) {
-                taskRunner = taskRunnerFactory.createTaskRunner(this, "ActiveMQ Connection Dispatcher: " + getRemoteAddress());
+                taskRunner = taskRunnerFactory.createTaskRunner(this, "ActiveMQ Connection Dispatcher: "
+                                                                      + getRemoteAddress());
             } else {
                 taskRunner = null;
             }
@@ -931,8 +950,8 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
 
             // Run the MessageDispatch callbacks so that message references get
             // cleaned up.
-            for (Iterator iter = dispatchQueue.iterator(); iter.hasNext();) {
-                Command command = (Command)iter.next();
+            for (Iterator<Command> iter = dispatchQueue.iterator(); iter.hasNext();) {
+                Command command = iter.next();
                 if (command.isMessageDispatch()) {
                     MessageDispatch md = (MessageDispatch)command;
                     Runnable sub = md.getTransmitCallback();
@@ -1105,18 +1124,19 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
             // We have been requested to create a two way pipe ...
             try {
                 Properties properties = MarshallingSupport.stringToProperties(info.getNetworkProperties());
-                Map<String, String> props = new HashMap(properties);
+                Map<String, String> props = createMap(properties);
                 NetworkBridgeConfiguration config = new NetworkBridgeConfiguration();
                 IntrospectionSupport.setProperties(config, props, "");
                 config.setBrokerName(broker.getBrokerName());
                 URI uri = broker.getVmConnectorURI();
-                HashMap<String,String> map = new HashMap<String,String>(URISupport.parseParamters(uri));
+                HashMap<String, String> map = new HashMap<String, String>(URISupport.parseParamters(uri));
                 map.put("network", "true");
                 map.put("async", "false");
                 uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
                 Transport localTransport = TransportFactory.connect(uri);
                 Transport remoteBridgeTransport = new ResponseCorrelator(transport);
-                duplexBridge = NetworkBridgeFactory.createBridge(config, localTransport, remoteBridgeTransport);
+                duplexBridge = NetworkBridgeFactory.createBridge(config, localTransport,
+                                                                 remoteBridgeTransport);
                 // now turn duplex off this side
                 info.setDuplexConnection(false);
                 duplexBridge.setCreatedByDuplex(true);
@@ -1142,6 +1162,11 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         }
 
         return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private HashMap<String, String> createMap(Properties properties) {
+        return new HashMap(properties);
     }
 
     protected void dispatch(Command command) throws IOException {
@@ -1182,7 +1207,8 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
                     ProducerState producerState = ss.getProducerState(id);
                     if (producerState != null && producerState.getInfo() != null) {
                         ProducerInfo info = producerState.getInfo();
-                        result.setMutable(info.getDestination() == null || info.getDestination().isComposite());
+                        result.setMutable(info.getDestination() == null
+                                          || info.getDestination().isComposite());
                     }
                 }
                 producerExchanges.put(id, result);
@@ -1213,7 +1239,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
                     if (cs != null) {
                         ConsumerInfo info = cs.getInfo();
                         if (info != null) {
-                            if (info.getDestination() != null && info.getDestination().isPattern()) { 
+                            if (info.getDestination() != null && info.getDestination().isPattern()) {
                                 result.setWildcard(true);
                             }
                         }
@@ -1287,7 +1313,8 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     //
     // /////////////////////////////////////////////////////////////////
 
-    protected TransportConnectionState registerConnectionState(ConnectionId connectionId, TransportConnectionState state) {
+    protected TransportConnectionState registerConnectionState(ConnectionId connectionId,
+                                                               TransportConnectionState state) {
         TransportConnectionState rc = connectionState;
         connectionState = state;
         return rc;
@@ -1310,7 +1337,9 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     protected TransportConnectionState lookupConnectionState(String connectionId) {
         TransportConnectionState cs = connectionState;
         if (cs == null) {
-            throw new IllegalStateException("Cannot lookup a connectionId for a connection that had not been registered: " + connectionId);
+            throw new IllegalStateException(
+                                            "Cannot lookup a connectionId for a connection that had not been registered: "
+                                                + connectionId);
         }
         return cs;
     }
@@ -1318,7 +1347,9 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     protected TransportConnectionState lookupConnectionState(ConsumerId id) {
         TransportConnectionState cs = connectionState;
         if (cs == null) {
-            throw new IllegalStateException("Cannot lookup a consumer from a connection that had not been registered: " + id.getParentId().getParentId());
+            throw new IllegalStateException(
+                                            "Cannot lookup a consumer from a connection that had not been registered: "
+                                                + id.getParentId().getParentId());
         }
         return cs;
     }
@@ -1326,7 +1357,9 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     protected TransportConnectionState lookupConnectionState(ProducerId id) {
         TransportConnectionState cs = connectionState;
         if (cs == null) {
-            throw new IllegalStateException("Cannot lookup a producer from a connection that had not been registered: " + id.getParentId().getParentId());
+            throw new IllegalStateException(
+                                            "Cannot lookup a producer from a connection that had not been registered: "
+                                                + id.getParentId().getParentId());
         }
         return cs;
     }
@@ -1334,7 +1367,9 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     protected TransportConnectionState lookupConnectionState(SessionId id) {
         TransportConnectionState cs = connectionState;
         if (cs == null) {
-            throw new IllegalStateException("Cannot lookup a session from a connection that had not been registered: " + id.getParentId());
+            throw new IllegalStateException(
+                                            "Cannot lookup a session from a connection that had not been registered: "
+                                                + id.getParentId());
         }
         return cs;
     }
@@ -1342,7 +1377,8 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     protected TransportConnectionState lookupConnectionState(ConnectionId connectionId) {
         TransportConnectionState cs = connectionState;
         if (cs == null) {
-            throw new IllegalStateException("Cannot lookup a connection that had not been registered: " + connectionId);
+            throw new IllegalStateException("Cannot lookup a connection that had not been registered: "
+                                            + connectionId);
         }
         return cs;
     }

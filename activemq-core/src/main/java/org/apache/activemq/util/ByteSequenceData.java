@@ -23,6 +23,9 @@ import java.io.IOException;
  */
 public final class ByteSequenceData {
 
+    private ByteSequenceData() {    
+    }
+    
     public static byte[] toByteArray(ByteSequence packet) {
         if (packet.offset == 0 && packet.length == packet.data.length) {
             return packet.data;

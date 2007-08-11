@@ -112,14 +112,14 @@ class ContainerValueCollection extends ContainerCollectionSupport implements Col
     }
 
     public boolean retainAll(Collection c) {
-        List tmpList = new ArrayList();
+        List<Object> tmpList = new ArrayList<Object>();
         for (Iterator i = c.iterator(); i.hasNext();) {
             Object o = i.next();
             if (!contains(o)) {
                 tmpList.add(o);
             }
         }
-        for (Iterator i = tmpList.iterator(); i.hasNext();) {
+        for (Iterator<Object> i = tmpList.iterator(); i.hasNext();) {
             remove(i.next());
         }
         return !tmpList.isEmpty();

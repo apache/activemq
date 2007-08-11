@@ -28,12 +28,15 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.Topic;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  *
  */
 public class JmsSendReceiveWithMessageExpirationTest extends TestSupport {
 
-    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(JmsSendReceiveWithMessageExpirationTest.class);
+    private static final Log LOG = LogFactory.getLog(JmsSendReceiveWithMessageExpirationTest.class);
 
     protected int messageCount = 100;
     protected String[] data;

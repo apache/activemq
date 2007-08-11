@@ -41,7 +41,6 @@ import org.springframework.core.io.Resource;
  * @version $Revision: 1.1 $
  */
 public class BrokerFactoryBean implements FactoryBean, InitializingBean, DisposableBean, ApplicationContextAware {
-    private static final Log LOG = LogFactory.getLog(BrokerFactoryBean.class);
 
     static {
         PropertyEditorManager.registerEditor(URI.class, URIEditor.class);

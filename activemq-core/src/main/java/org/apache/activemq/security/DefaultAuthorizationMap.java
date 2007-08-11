@@ -55,7 +55,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         return this.tempDestinationAuthorizationEntry;
     }
 
-    public Set getTempDestinationAdminACLs() {
+    public Set<Object> getTempDestinationAdminACLs() {
         if (tempDestinationAuthorizationEntry != null) {
             return tempDestinationAuthorizationEntry.getAdminACLs();
         } else {
@@ -63,7 +63,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         }
     }
 
-    public Set getTempDestinationReadACLs() {
+    public Set<Object> getTempDestinationReadACLs() {
         if (tempDestinationAuthorizationEntry != null) {
             return tempDestinationAuthorizationEntry.getReadACLs();
         } else {
@@ -71,7 +71,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         }
     }
 
-    public Set getTempDestinationWriteACLs() {
+    public Set<Object> getTempDestinationWriteACLs() {
         if (tempDestinationAuthorizationEntry != null) {
             return tempDestinationAuthorizationEntry.getWriteACLs();
         } else {
@@ -79,36 +79,36 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         }
     }
 
-    public Set getAdminACLs(ActiveMQDestination destination) {
-        Set entries = getAllEntries(destination);
-        Set answer = new HashSet();
+    public Set<Object> getAdminACLs(ActiveMQDestination destination) {
+        Set<AuthorizationEntry> entries = getAllEntries(destination);
+        Set<Object> answer = new HashSet<Object>();
         // now lets go through each entry adding individual
-        for (Iterator iter = entries.iterator(); iter.hasNext();) {
-            AuthorizationEntry entry = (AuthorizationEntry)iter.next();
+        for (Iterator<AuthorizationEntry> iter = entries.iterator(); iter.hasNext();) {
+            AuthorizationEntry entry = iter.next();
             answer.addAll(entry.getAdminACLs());
         }
         return answer;
     }
 
-    public Set getReadACLs(ActiveMQDestination destination) {
-        Set entries = getAllEntries(destination);
-        Set answer = new HashSet();
+    public Set<Object> getReadACLs(ActiveMQDestination destination) {
+        Set<AuthorizationEntry> entries = getAllEntries(destination);
+        Set<Object> answer = new HashSet<Object>();
 
         // now lets go through each entry adding individual
-        for (Iterator iter = entries.iterator(); iter.hasNext();) {
-            AuthorizationEntry entry = (AuthorizationEntry)iter.next();
+        for (Iterator<AuthorizationEntry> iter = entries.iterator(); iter.hasNext();) {
+            AuthorizationEntry entry = iter.next();
             answer.addAll(entry.getReadACLs());
         }
         return answer;
     }
 
-    public Set getWriteACLs(ActiveMQDestination destination) {
-        Set entries = getAllEntries(destination);
-        Set answer = new HashSet();
+    public Set<Object> getWriteACLs(ActiveMQDestination destination) {
+        Set<AuthorizationEntry> entries = getAllEntries(destination);
+        Set<Object> answer = new HashSet<Object>();
 
         // now lets go through each entry adding individual
-        for (Iterator iter = entries.iterator(); iter.hasNext();) {
-            AuthorizationEntry entry = (AuthorizationEntry)iter.next();
+        for (Iterator<AuthorizationEntry> iter = entries.iterator(); iter.hasNext();) {
+            AuthorizationEntry entry = iter.next();
             answer.addAll(entry.getWriteACLs());
         }
         return answer;
@@ -139,12 +139,12 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         this.defaultEntry = defaultEntry;
     }
 
-    protected Class getEntryClass() {
+    protected Class<AuthorizationEntry> getEntryClass() {
         return AuthorizationEntry.class;
     }
 
-    protected Set getAllEntries(ActiveMQDestination destination) {
-        Set entries = get(destination);
+    protected Set<AuthorizationEntry> getAllEntries(ActiveMQDestination destination) {
+        Set<AuthorizationEntry> entries = get(destination);
         if (defaultEntry != null) {
             entries.add(defaultEntry);
         }

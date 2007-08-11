@@ -75,7 +75,7 @@ public class MutableBrokerFilter implements Broker {
         }
     }
 
-    public Map getDestinationMap() {
+    public Map<ActiveMQDestination, Destination> getDestinationMap() {
         return getNext().getDestinationMap();
     }
 
@@ -215,7 +215,7 @@ public class MutableBrokerFilter implements Broker {
         return getNext().isStopped();
     }
 
-    public Set getDurableDestinations() {
+    public Set<ActiveMQDestination> getDurableDestinations() {
         return getNext().getDurableDestinations();
     }
 

@@ -56,9 +56,9 @@ public class CreateTemporaryQueueBeforeStartTest extends TestCase {
         QueueConnection queueConnection = factory.createQueueConnection();
         this.connection = queueConnection;
         QueueSession session = queueConnection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
-        QueueSender sender = session.createSender(null); // Unidentified
+        session.createSender(null); // Unidentified
         Queue receiverQueue = session.createTemporaryQueue();
-        QueueReceiver receiver = session.createReceiver(receiverQueue);
+        session.createReceiver(receiverQueue);
         queueConnection.start();
     }
 
@@ -72,7 +72,7 @@ public class CreateTemporaryQueueBeforeStartTest extends TestCase {
                         QueueConnection connection = createConnection();
                         QueueSession session = connection.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
                         Queue queue = session.createTemporaryQueue();
-                        QueueReceiver consumer = session.createReceiver(queue);
+                        session.createReceiver(queue);
                         connection.start();
 
                         if (count.incrementAndGet() >= number) {

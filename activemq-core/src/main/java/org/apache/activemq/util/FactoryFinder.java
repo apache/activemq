@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class FactoryFinder {
 
     private final String path;
-    private final ConcurrentHashMap classMap = new ConcurrentHashMap();
+    private final ConcurrentHashMap<String, Class> classMap = new ConcurrentHashMap<String, Class>();
 
     public FactoryFinder(String path) {
         this.path = path;
@@ -47,7 +47,7 @@ public class FactoryFinder {
             propertyPrefix = "";
         }
 
-        Class clazz = (Class)classMap.get(propertyPrefix + key);
+        Class clazz = classMap.get(propertyPrefix + key);
         if (clazz == null) {
             clazz = newInstance(doFindFactoryProperies(key), propertyPrefix);
             classMap.put(propertyPrefix + key, clazz);

@@ -43,7 +43,7 @@ public class ConnectionPool {
 
     private TransactionManager transactionManager;
     private ActiveMQConnection connection;
-    private Map cache;
+    private Map<SessionKey, SessionPool> cache;
     private AtomicBoolean started = new AtomicBoolean(false);
     private int referenceCount;
     private ObjectPoolFactory poolFactory;
@@ -54,7 +54,7 @@ public class ConnectionPool {
 
     public ConnectionPool(ActiveMQConnection connection, ObjectPoolFactory poolFactory,
                           TransactionManager transactionManager) {
-        this(connection, new HashMap(), poolFactory, transactionManager);
+        this(connection, new HashMap<SessionKey, SessionPool>(), poolFactory, transactionManager);
         // Add a transport Listener so that we can notice if this connection
         // should be expired due to
         // a connection failure.
@@ -76,7 +76,7 @@ public class ConnectionPool {
         });
     }
 
-    public ConnectionPool(ActiveMQConnection connection, Map cache, ObjectPoolFactory poolFactory,
+    public ConnectionPool(ActiveMQConnection connection, Map<SessionKey, SessionPool> cache, ObjectPoolFactory poolFactory,
                           TransactionManager transactionManager) {
         this.connection = connection;
         this.cache = cache;
@@ -102,7 +102,7 @@ public class ConnectionPool {
                 ackMode = Session.SESSION_TRANSACTED;
             }
             SessionKey key = new SessionKey(transacted, ackMode);
-            SessionPool pool = (SessionPool)cache.get(key);
+            SessionPool pool = cache.get(key);
             if (pool == null) {
                 pool = new SessionPool(this, key, poolFactory.createPool());
                 cache.put(key, pool);
@@ -129,9 +129,9 @@ public class ConnectionPool {
     public synchronized void close() {
         if (connection != null) {
             try {
-                Iterator i = cache.values().iterator();
+                Iterator<SessionPool> i = cache.values().iterator();
                 while (i.hasNext()) {
-                    SessionPool pool = (SessionPool)i.next();
+                    SessionPool pool = i.next();
                     i.remove();
                     try {
                         pool.close();

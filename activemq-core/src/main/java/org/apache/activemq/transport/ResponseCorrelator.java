@@ -39,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
 public class ResponseCorrelator extends TransportFilter {
 
     private static final Log LOG = LogFactory.getLog(ResponseCorrelator.class);
-    private final Map requestMap = new HashMap();
+    private final Map<Integer, FutureResponse> requestMap = new HashMap<Integer, FutureResponse>();
     private IntSequenceGenerator sequenceGenerator;
     private final boolean debug = LOG.isDebugEnabled();
 
@@ -87,7 +87,7 @@ public class ResponseCorrelator extends TransportFilter {
             Response response = (Response)command;
             FutureResponse future = null;
             synchronized (requestMap) {
-                future = (FutureResponse)requestMap.remove(Integer.valueOf(response.getCorrelationId()));
+                future = requestMap.remove(Integer.valueOf(response.getCorrelationId()));
             }
             if (future != null) {
                 future.set(response);
@@ -107,10 +107,10 @@ public class ResponseCorrelator extends TransportFilter {
      */
     public void onException(IOException error) {
         // Copy and Clear the request Map
-        ArrayList requests = new ArrayList(requestMap.values());
+        ArrayList<FutureResponse> requests = new ArrayList<FutureResponse>(requestMap.values());
         requestMap.clear();
-        for (Iterator iter = requests.iterator(); iter.hasNext();) {
-            FutureResponse fr = (FutureResponse)iter.next();
+        for (Iterator<FutureResponse> iter = requests.iterator(); iter.hasNext();) {
+            FutureResponse fr = iter.next();
             fr.set(new ExceptionResponse(error));
         }
         super.onException(error);

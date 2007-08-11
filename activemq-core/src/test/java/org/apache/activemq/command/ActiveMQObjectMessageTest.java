@@ -29,6 +29,15 @@ import junit.framework.TestCase;
  */
 public class ActiveMQObjectMessageTest extends TestCase {
 
+    /**
+     * Constructor for ActiveMQObjectMessageTest.
+     *
+     * @param name
+     */
+    public ActiveMQObjectMessageTest(String name) {
+        super(name);
+    }
+
     public static void main(String[] args) {
         junit.textui.TestRunner.run(ActiveMQObjectMessageTest.class);
     }
@@ -45,15 +54,6 @@ public class ActiveMQObjectMessageTest extends TestCase {
      */
     protected void tearDown() throws Exception {
         super.tearDown();
-    }
-
-    /**
-     * Constructor for ActiveMQObjectMessageTest.
-     *
-     * @param arg0
-     */
-    public ActiveMQObjectMessageTest(String arg0) {
-        super(arg0);
     }
 
     public void testBytes() throws JMSException, IOException {

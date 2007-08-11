@@ -69,7 +69,7 @@ public class MasterConnector implements Service, BrokerServiceAware {
     private ConnectionInfo connectionInfo;
     private SessionInfo sessionInfo;
     private ProducerInfo producerInfo;
-    final AtomicBoolean masterActive = new AtomicBoolean();
+    private final AtomicBoolean masterActive = new AtomicBoolean();
 
     public MasterConnector() {
     }

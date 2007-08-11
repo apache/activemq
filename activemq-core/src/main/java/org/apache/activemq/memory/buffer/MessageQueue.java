@@ -34,7 +34,7 @@ import org.apache.activemq.command.Message;
 public class MessageQueue {
 
     private MessageBuffer buffer;
-    private LinkedList list = new LinkedList();
+    private LinkedList<MessageReference> list = new LinkedList<MessageReference>();
     private int size;
     private Object lock = new Object();
     private int position;
@@ -81,15 +81,15 @@ public class MessageQueue {
     /**
      * Returns a copy of the list
      */
-    public List getList() {
+    public List<MessageReference> getList() {
         synchronized (lock) {
-            return new ArrayList(list);
+            return new ArrayList<MessageReference>(list);
         }
     }
 
-    public void appendMessages(List answer) {
+    public void appendMessages(List<MessageReference> answer) {
         synchronized (lock) {
-            for (Iterator iter = list.iterator(); iter.hasNext();) {
+            for (Iterator<MessageReference> iter = list.iterator(); iter.hasNext();) {
                 answer.add(iter.next());
             }
         }

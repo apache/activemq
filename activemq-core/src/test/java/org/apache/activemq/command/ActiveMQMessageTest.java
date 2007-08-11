@@ -54,6 +54,15 @@ public class ActiveMQMessageTest extends TestCase {
     private int jmsPriority;
     private long jmsTimestamp;
     private long[] consumerIDs;
+    
+    /**
+     * Constructor for ActiveMQMessageTest.
+     * 
+     * @param name
+     */
+    public ActiveMQMessageTest(String name) {
+        super(name);
+    }
 
     public static void main(String[] args) {
     }
@@ -86,15 +95,6 @@ public class ActiveMQMessageTest extends TestCase {
      */
     protected void tearDown() throws Exception {
         super.tearDown();
-    }
-
-    /**
-     * Constructor for ActiveMQMessageTest.
-     * 
-     * @param arg0
-     */
-    public ActiveMQMessageTest(String arg0) {
-        super(arg0);
     }
 
     public void testGetDataStructureType() {

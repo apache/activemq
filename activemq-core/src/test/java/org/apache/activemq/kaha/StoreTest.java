@@ -70,7 +70,7 @@ public class StoreTest extends TestCase {
      */
     public void testGetMapContainer() throws Exception {
         String containerId = "test";
-        MapContainer container = store.getMapContainer(containerId);
+        MapContainer<Object, String> container = store.getMapContainer(containerId);
         container.load();
         assertNotNull(container);
         store.close();
@@ -86,7 +86,7 @@ public class StoreTest extends TestCase {
      */
     public void testDeleteMapContainer() throws Exception {
         String containerId = "test";
-        MapContainer container = store.getMapContainer(containerId);
+        MapContainer<Object, String> container = store.getMapContainer(containerId);
         assertNotNull(container);
         store.deleteMapContainer(containerId);
         assertFalse(store.doesMapContainerExist(containerId));
@@ -124,7 +124,7 @@ public class StoreTest extends TestCase {
     }
 
     public void testBasicAllocations() throws Exception {
-        Map testMap = new HashMap();
+        Map<Object, String> testMap = new HashMap<Object, String>();
         int count = 1000;
         for (int i = 0; i < count; i++) {
             String key = "key:" + i;
@@ -138,11 +138,11 @@ public class StoreTest extends TestCase {
         String listId = "testList";
         String mapId1 = "testMap";
         String mapId2 = "testMap2";
-        MapContainer mapContainer1 = store.getMapContainer(mapId1);
+        MapContainer<Object, String> mapContainer1 = store.getMapContainer(mapId1);
         mapContainer1.load();
         mapContainer1.putAll(testMap);
 
-        MapContainer mapContainer2 = store.getMapContainer(mapId2, mapId2);
+        MapContainer<Object, String> mapContainer2 = store.getMapContainer(mapId2, mapId2);
         mapContainer2.load();
         mapContainer2.putAll(testMap);
 
@@ -158,20 +158,21 @@ public class StoreTest extends TestCase {
         mapContainer2.load();
         listContainer = store.getListContainer(listId);
         listContainer.load();
-        for (Iterator i = testMap.keySet().iterator(); i.hasNext();) {
+        for (Iterator<Object> i = testMap.keySet().iterator(); i.hasNext();) {
             Object key = i.next();
             Object value = testMap.get(key);
             assertTrue(mapContainer1.containsKey(key));
             assertEquals(value, mapContainer1.get(key));
         }
-        for (Iterator i = testMap.keySet().iterator(); i.hasNext();) {
+        for (Iterator<Object> i = testMap.keySet().iterator(); i.hasNext();) {
             Object key = i.next();
             Object value = testMap.get(key);
             assertTrue(mapContainer2.containsKey(key));
             assertEquals(value, mapContainer2.get(key));
         }
         assertEquals(testList.size(), listContainer.size());
-        for (Iterator i = testList.iterator(), j = listContainer.iterator(); i.hasNext();) {
+        Iterator j = listContainer.iterator();
+        for (Iterator i = testList.iterator(); i.hasNext();) {
             assertEquals(i.next(), j.next());
         }
     }

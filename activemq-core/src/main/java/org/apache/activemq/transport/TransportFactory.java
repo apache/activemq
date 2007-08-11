@@ -37,7 +37,7 @@ public abstract class TransportFactory {
 
     private static final FactoryFinder TRANSPORT_FACTORY_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/");
     private static final FactoryFinder WIREFORMAT_FACTORY_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/wireformat/");
-    private static final ConcurrentHashMap TRANSPORT_FACTORYS = new ConcurrentHashMap();
+    private static final ConcurrentHashMap<String, TransportFactory> TRANSPORT_FACTORYS = new ConcurrentHashMap<String, TransportFactory>();
 
     public abstract TransportServer doBind(String brokerId, URI location) throws IOException;
 
@@ -108,7 +108,7 @@ public abstract class TransportFactory {
 
     public Transport doConnect(URI location) throws Exception {
         try {
-            Map options = new HashMap(URISupport.parseParamters(location));
+            Map<String, String> options = new HashMap<String, String>(URISupport.parseParamters(location));
             WireFormat wf = createWireFormat(options);
             Transport transport = createTransport(location, wf);
             Transport rc = configure(transport, wf, options);
@@ -123,7 +123,7 @@ public abstract class TransportFactory {
 
     public Transport doCompositeConnect(URI location) throws Exception {
         try {
-            Map options = new HashMap(URISupport.parseParamters(location));
+            Map<String, String> options = new HashMap<String, String>(URISupport.parseParamters(location));
             WireFormat wf = createWireFormat(options);
             Transport transport = createTransport(location, wf);
             Transport rc = compositeConfigure(transport, wf, options);
@@ -157,7 +157,7 @@ public abstract class TransportFactory {
         if (scheme == null) {
             throw new IOException("Transport not scheme specified: [" + location + "]");
         }
-        TransportFactory tf = (TransportFactory)TRANSPORT_FACTORYS.get(scheme);
+        TransportFactory tf = TRANSPORT_FACTORYS.get(scheme);
         if (tf == null) {
             // Try to load if from a META-INF property.
             try {
@@ -170,13 +170,13 @@ public abstract class TransportFactory {
         return tf;
     }
 
-    protected WireFormat createWireFormat(Map options) throws IOException {
+    protected WireFormat createWireFormat(Map<String, String> options) throws IOException {
         WireFormatFactory factory = createWireFormatFactory(options);
         WireFormat format = factory.createWireFormat();
         return format;
     }
 
-    protected WireFormatFactory createWireFormatFactory(Map options) throws IOException {
+    protected WireFormatFactory createWireFormatFactory(Map<String, String> options) throws IOException {
         String wireFormat = (String)options.get("wireFormat");
         if (wireFormat == null) {
             wireFormat = getDefaultWireFormatType();

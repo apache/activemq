@@ -41,7 +41,7 @@ public class ReliableTransport extends ResponseCorrelator {
     private static final Log LOG = LogFactory.getLog(ReliableTransport.class);
 
     private ReplayStrategy replayStrategy;
-    private SortedSet commands = new TreeSet(new CommandIdComparator());
+    private SortedSet<Command> commands = new TreeSet<Command>(new CommandIdComparator());
     private int expectedCounter = 1;
     private int replayBufferCommandCount = 50;
     private int requestTimeout = 2000;
@@ -123,7 +123,7 @@ public class ReliableTransport extends ResponseCorrelator {
                 int nextCounter = actualCounter;
                 boolean empty = commands.isEmpty();
                 if (!empty) {
-                    Command nextAvailable = (Command)commands.first();
+                    Command nextAvailable = commands.first();
                     nextCounter = nextAvailable.getCommandId();
                 }
 
@@ -144,7 +144,7 @@ public class ReliableTransport extends ResponseCorrelator {
                 if (!empty) {
                     // lets see if the first item in the set is the next
                     // expected
-                    command = (Command)commands.first();
+                    command = commands.first();
                     valid = expectedCounter == command.getCommandId();
                     if (valid) {
                         commands.remove(command);
@@ -165,7 +165,7 @@ public class ReliableTransport extends ResponseCorrelator {
                 if (valid) {
                     // lets see if the first item in the set is the next
                     // expected
-                    command = (Command)commands.first();
+                    command = commands.first();
                     valid = expectedCounter == command.getCommandId();
                     if (valid) {
                         commands.remove(command);

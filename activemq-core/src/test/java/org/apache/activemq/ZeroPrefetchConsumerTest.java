@@ -90,8 +90,8 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
         }
         // now lets receive it
         MessageConsumer consumer = session.createConsumer(queue);
-        // noinspection UNUSED_SYMBOL
-        MessageConsumer idleConsumer = session.createConsumer(queue);
+        
+        session.createConsumer(queue);
         TextMessage answer = (TextMessage)consumer.receive(5000);
         assertEquals("Should have received a message!", answer.getText(), "Msg1");
         if (transacted) {

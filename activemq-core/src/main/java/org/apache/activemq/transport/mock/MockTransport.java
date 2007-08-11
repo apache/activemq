@@ -111,9 +111,9 @@ public class MockTransport extends DefaultTransportListener implements Transport
         getTransportListener().onException(error);
     }
 
-    public Object narrow(Class target) {
+    public <T> T narrow(Class<T> target) {
         if (target.isAssignableFrom(getClass())) {
-            return this;
+            return target.cast(this);
         }
         return getNext().narrow(target);
     }

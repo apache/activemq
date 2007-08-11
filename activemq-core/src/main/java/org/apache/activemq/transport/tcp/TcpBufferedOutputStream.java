@@ -33,7 +33,6 @@ public class TcpBufferedOutputStream extends FilterOutputStream {
     private byte[] buffer;
     private int bufferlen;
     private int count;
-    private boolean closed;
 
     /**
      * Constructor
@@ -115,18 +114,6 @@ public class TcpBufferedOutputStream extends FilterOutputStream {
      */
     public void close() throws IOException {
         super.close();
-        closed = true;
-    }
-
-    /**
-     * Checks that the stream has not been closed
-     * 
-     * @throws IOException
-     */
-    private void checkClosed() throws IOException {
-        if (closed) {
-            throw new EOFException("Cannot write to the stream any more it has already been closed");
-        }
     }
 
 }

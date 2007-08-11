@@ -138,8 +138,10 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * @param dispatchAsync
      * @throws JMSException
      */
-    public ActiveMQMessageConsumer(ActiveMQSession session, ConsumerId consumerId, ActiveMQDestination dest, String name, String selector, int prefetch,
-                                   int maximumPendingMessageCount, boolean noLocal, boolean browser, boolean dispatchAsync) throws JMSException {
+    public ActiveMQMessageConsumer(ActiveMQSession session, ConsumerId consumerId, ActiveMQDestination dest,
+                                   String name, String selector, int prefetch,
+                                   int maximumPendingMessageCount, boolean noLocal, boolean browser,
+                                   boolean dispatchAsync) throws JMSException {
         if (dest == null) {
             throw new InvalidDestinationException("Don't understand null destinations");
         } else if (dest.getPhysicalName() == null) {
@@ -154,11 +156,13 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             String connectionID = session.connection.getConnectionInfo().getConnectionId().getValue();
 
             if (physicalName.indexOf(connectionID) < 0) {
-                throw new InvalidDestinationException("Cannot use a Temporary destination from another Connection");
+                throw new InvalidDestinationException(
+                                                      "Cannot use a Temporary destination from another Connection");
             }
 
             if (session.connection.isDeleted(dest)) {
-                throw new InvalidDestinationException("Cannot use a Temporary destination that has been deleted");
+                throw new InvalidDestinationException(
+                                                      "Cannot use a Temporary destination that has been deleted");
             }
         }
 
@@ -199,7 +203,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         }
 
         this.stats = new JMSConsumerStatsImpl(session.getSessionStats(), dest);
-        this.optimizeAcknowledge = session.connection.isOptimizeAcknowledge() && session.isAutoAcknowledge() && !info.isBrowser();
+        this.optimizeAcknowledge = session.connection.isOptimizeAcknowledge() && session.isAutoAcknowledge()
+                                   && !info.isBrowser();
         this.info.setOptimizedAcknowledge(this.optimizeAcknowledge);
         try {
             this.session.addConsumer(this);
@@ -342,7 +347,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     public void setMessageListener(MessageListener listener) throws JMSException {
         checkClosed();
         if (info.getPrefetchSize() == 0) {
-            throw new JMSException("Illegal prefetch size of zero. This setting is not supported for asynchronous consumers please set a value of at least 1");
+            throw new JMSException(
+                                   "Illegal prefetch size of zero. This setting is not supported for asynchronous consumers please set a value of at least 1");
         }
         this.messageListener = listener;
         if (listener != null) {
@@ -709,15 +715,16 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             ackLater(md, MessageAck.DELIVERED_ACK_TYPE);
         } else {
             stats.onMessage();
-            if( session.isTransacted() ) {
+            if (session.isTransacted()) {
                 // Do nothing.
-            } else if(session.isAutoAcknowledge()) {
+            } else if (session.isAutoAcknowledge()) {
                 if (!deliveredMessages.isEmpty()) {
                     if (optimizeAcknowledge) {
                         if (deliveryingAcknowledgements.compareAndSet(false, true)) {
                             ackCounter++;
                             if (ackCounter >= (info.getCurrentPrefetchSize() * .65)) {
-                                MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, deliveredMessages.size());
+                                MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE,
+                                                                deliveredMessages.size());
                                 session.asyncSendPacket(ack);
                                 ackCounter = 0;
                                 deliveredMessages.clear();
@@ -725,7 +732,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                             deliveryingAcknowledgements.set(false);
                         }
                     } else {
-                        MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, deliveredMessages.size());
+                        MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, deliveredMessages
+                            .size());
                         session.asyncSendPacket(ack);
                         deliveredMessages.clear();
                     }
@@ -835,14 +843,15 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             }
             if (deliveredMessages.isEmpty()) {
                 return;
-            } 
+            }
 
             // Only increase the redlivery delay after the first redelivery..
             if (rollbackCounter > 0) {
                 redeliveryDelay = redeliveryPolicy.getRedeliveryDelay(redeliveryDelay);
             }
             rollbackCounter++;
-            if (redeliveryPolicy.getMaximumRedeliveries() != RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES && rollbackCounter > redeliveryPolicy.getMaximumRedeliveries()) {
+            if (redeliveryPolicy.getMaximumRedeliveries() != RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES
+                && rollbackCounter > redeliveryPolicy.getMaximumRedeliveries()) {
                 // We need to NACK the messages so that they get sent to the
                 // DLQ.
                 // Acknowledge the last message.
@@ -971,7 +980,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
 
     public String toString() {
-        return "ActiveMQMessageConsumer { value=" + info.getConsumerId() + ", started=" + started.get() + " }";
+        return "ActiveMQMessageConsumer { value=" + info.getConsumerId() + ", started=" + started.get()
+               + " }";
     }
 
     /**

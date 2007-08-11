@@ -31,17 +31,16 @@ import org.apache.activemq.demo.DefaultQueueSender;
  * 
  * @version $Revision$
  */
-public class Main {
+public final class Main {
     protected static boolean createConsumers;
 
+    private Main() {        
+    }
+    
     /**
      * @param args
      */
     public static void main(String[] args) {
-        String brokerURI = "broker:(tcp://localhost:61616,stomp://localhost:61613)?persistent=false&useJmx=true";
-        if (args.length > 0) {
-            brokerURI = args[0];
-        }
         try {
             // TODO - this seems to break interceptors for some reason
             // BrokerService broker = BrokerFactory.createBroker(new
@@ -71,10 +70,10 @@ public class Main {
                 Connection connection = new ActiveMQConnectionFactory().createConnection();
                 connection.start();
                 Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-                MessageConsumer consumer1 = session.createConsumer(new ActiveMQQueue("Orders.IBM"));
-                MessageConsumer consumer2 = session.createConsumer(new ActiveMQQueue("Orders.MSFT"), "price > 100");
+                session.createConsumer(new ActiveMQQueue("Orders.IBM"));
+                session.createConsumer(new ActiveMQQueue("Orders.MSFT"), "price > 100");
                 Session session2 = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-                MessageConsumer consumer3 = session2.createConsumer(new ActiveMQQueue("Orders.MSFT"), "price > 200");
+                session2.createConsumer(new ActiveMQQueue("Orders.MSFT"), "price > 200");
             } else {
                 // Lets wait for the broker
                 broker.waitUntilStopped();

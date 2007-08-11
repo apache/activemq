@@ -43,7 +43,7 @@ public class RoundRobinDispatchPolicy implements DispatchPolicy {
      * @see org.apache.activemq.broker.region.policy.DispatchPolicy#dispatch(org.apache.activemq.broker.region.MessageReference,
      *      org.apache.activemq.filter.MessageEvaluationContext, java.util.List)
      */
-    public boolean dispatch(MessageReference node, MessageEvaluationContext msgContext, List consumers) throws Exception {
+    public boolean dispatch(MessageReference node, MessageEvaluationContext msgContext, List<Subscription> consumers) throws Exception {
 
         // Big synch here so that only 1 message gets dispatched at a time.
         // Ensures
@@ -54,8 +54,8 @@ public class RoundRobinDispatchPolicy implements DispatchPolicy {
             int count = 0;
 
             Subscription firstMatchingConsumer = null;
-            for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-                Subscription sub = (Subscription)iter.next();
+            for (Iterator<Subscription> iter = consumers.iterator(); iter.hasNext();) {
+                Subscription sub = iter.next();
 
                 // Only dispatch to interested subscriptions
                 if (!sub.matches(node, msgContext)) {

@@ -228,19 +228,19 @@ public class BrokerBroadcaster extends BrokerFilter {
     }
 
     public synchronized void addListener(Broker broker) {
-        List tmp = getListenersAsList();
+        List<Broker> tmp = getListenersAsList();
         tmp.add(broker);
-        listeners = (Broker[])tmp.toArray(new Broker[tmp.size()]);
+        listeners = tmp.toArray(new Broker[tmp.size()]);
     }
 
     public synchronized void removeListener(Broker broker) {
-        List tmp = getListenersAsList();
+        List<Broker> tmp = getListenersAsList();
         tmp.remove(broker);
-        listeners = (Broker[])tmp.toArray(new Broker[tmp.size()]);
+        listeners = tmp.toArray(new Broker[tmp.size()]);
     }
 
-    protected List getListenersAsList() {
-        List tmp = new ArrayList();
+    protected List<Broker> getListenersAsList() {
+        List<Broker> tmp = new ArrayList<Broker>();
         Broker brokers[] = getListeners();
         for (int i = 0; i < brokers.length; i++) {
             tmp.add(brokers[i]);

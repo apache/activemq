@@ -164,7 +164,8 @@ public class DestinationMapNode implements DestinationNode {
 
     public void removeAll(Set answer, String[] paths, int startIndex) {
         DestinationNode node = this;
-        for (int i = startIndex, size = paths.length; i < size && node != null; i++) {
+        int size = paths.length;
+        for (int i = startIndex; i < size && node != null; i++) {
 
             String path = paths[i];
             if (path.equals(ANY_DESCENDENT)) {
@@ -230,7 +231,8 @@ public class DestinationMapNode implements DestinationNode {
     public void appendMatchingValues(Set answer, String[] paths, int startIndex) {
         DestinationNode node = this;
         boolean couldMatchAny = true;
-        for (int i = startIndex, size = paths.length; i < size && node != null; i++) {
+        int size = paths.length;
+        for (int i = startIndex; i < size && node != null; i++) {
             String path = paths[i];
             if (path.equals(ANY_DESCENDENT)) {
                 answer.addAll(node.getDesendentValues());

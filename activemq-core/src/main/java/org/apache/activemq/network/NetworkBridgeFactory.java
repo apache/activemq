@@ -23,8 +23,11 @@ import org.apache.activemq.transport.Transport;
  * 
  * @version $Revision: 1.1 $
  */
-public class NetworkBridgeFactory {
+public final class NetworkBridgeFactory {
 
+    private NetworkBridgeFactory() {
+    }
+    
     /**
      * Create a network bridge
      * 

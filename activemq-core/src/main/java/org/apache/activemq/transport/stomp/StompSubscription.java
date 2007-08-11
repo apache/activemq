@@ -45,7 +45,7 @@ public class StompSubscription {
     private final String subscriptionId;
     private final ConsumerInfo consumerInfo;
 
-    private final LinkedHashMap dispatchedMessage = new LinkedHashMap();
+    private final LinkedHashMap<String, MessageId> dispatchedMessage = new LinkedHashMap<String, MessageId>();
 
     private String ackMode = AUTO_ACK;
     private ActiveMQDestination destination;

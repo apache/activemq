@@ -24,10 +24,10 @@ package org.apache.activemq.transport;
  */
 public abstract class TransportThreadSupport extends TransportSupport implements Runnable {
 
-    private boolean daemon = false;
+    private boolean daemon;
     private Thread runner;
     // should be a multiple of 128k
-    private long stackSize = 0;
+    private long stackSize;
 
     public boolean isDaemon() {
         return daemon;

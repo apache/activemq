@@ -19,7 +19,10 @@ package org.apache.activemq.util;
 /**
  * @version $Revision$
  */
-public class IOHelper {
+public final class IOHelper {
+
+    private IOHelper() {
+    }
 
     public static String getDefaultDataDirectory() {
         return getDefaultDirectoryPrefix() + "activemq-data";

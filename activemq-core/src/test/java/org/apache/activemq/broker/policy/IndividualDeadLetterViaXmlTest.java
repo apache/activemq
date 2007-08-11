@@ -21,6 +21,8 @@ import javax.jms.Destination;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.xbean.BrokerFactoryBean;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.ClassPathResource;
 
 /**
@@ -28,6 +30,7 @@ import org.springframework.core.io.ClassPathResource;
  * @version $Revision$
  */
 public class IndividualDeadLetterViaXmlTest extends DeadLetterTest {
+    private static final Log LOG = LogFactory.getLog(IndividualDeadLetterViaXmlTest.class);
 
 
     protected BrokerService createBroker() throws Exception {
@@ -39,7 +42,7 @@ public class IndividualDeadLetterViaXmlTest extends DeadLetterTest {
 
     protected Destination createDlqDestination() {
         String queueName = "Test.DLQ." + getClass().getName() + "." + getName();
-        log.info("Using queue name: " + queueName);
+        LOG.info("Using queue name: " + queueName);
         return new ActiveMQQueue(queueName);
     }
 }

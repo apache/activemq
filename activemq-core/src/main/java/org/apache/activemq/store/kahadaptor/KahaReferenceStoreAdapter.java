@@ -53,9 +53,9 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     private static final String RECORD_REFERENCES = "record-references";
     private static final String TRANSACTIONS = "transactions-state";
     private MapContainer stateMap;
-    private MapContainer preparedTransactions;
+    private MapContainer<TransactionId, AMQTx> preparedTransactions;
     private Map<Integer, AtomicInteger> recordReferences = new HashMap<Integer, AtomicInteger>();
-    private ListContainer durableSubscribers;
+    private ListContainer<SubscriptionInfo> durableSubscribers;
     private boolean storeValid;
     private Store stateStore;
 
@@ -130,9 +130,8 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
         if (rc == null) {
             Store store = getStore();
             MapContainer messageContainer = getMapReferenceContainer(destination, "topic-data");
-            MapContainer subsContainer = getSubsMapContainer(destination.toString() + "-Subscriptions",
-                                                             "blob");
-            ListContainer ackContainer = store.getListContainer(destination.toString(), "topic-acks");
+            MapContainer subsContainer = getSubsMapContainer(destination.toString() + "-Subscriptions", "blob");
+            ListContainer<TopicSubAck> ackContainer = store.getListContainer(destination.toString(), "topic-acks");
             ackContainer.setMarshaller(new TopicSubAckMarshaller());
             rc = new KahaTopicReferenceStore(store, this, messageContainer, ackContainer, subsContainer,
                                              destination);
@@ -212,8 +211,8 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
      * @see org.apache.activemq.store.ReferenceStoreAdapter#recoverState()
      */
     public void recoverState() throws IOException {
-        for (Iterator i = durableSubscribers.iterator(); i.hasNext();) {
-            SubscriptionInfo info = (SubscriptionInfo)i.next();
+        for (Iterator<SubscriptionInfo> i = durableSubscribers.iterator(); i.hasNext();) {
+            SubscriptionInfo info = i.next();
             TopicReferenceStore ts = createTopicReferenceStore((ActiveMQTopic)info.getDestination());
             ts.addSubsciption(info, false);
         }
@@ -222,9 +221,9 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     public Map<TransactionId, AMQTx> retrievePreparedState() throws IOException {
         Map<TransactionId, AMQTx> result = new HashMap<TransactionId, AMQTx>();
         preparedTransactions.load();
-        for (Iterator i = preparedTransactions.keySet().iterator(); i.hasNext();) {
-            TransactionId key = (TransactionId)i.next();
-            AMQTx value = (AMQTx)preparedTransactions.get(key);
+        for (Iterator<TransactionId> i = preparedTransactions.keySet().iterator(); i.hasNext();) {
+            TransactionId key = i.next();
+            AMQTx value = preparedTransactions.get(key);
             result.put(key, value);
         }
         return result;

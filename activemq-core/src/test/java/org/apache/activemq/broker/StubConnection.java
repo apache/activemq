@@ -34,14 +34,10 @@ import org.apache.activemq.util.ServiceSupport;
 
 public class StubConnection implements Service {
 
-    private final BlockingQueue dispatchQueue = new LinkedBlockingQueue();
+    private final BlockingQueue<Object> dispatchQueue = new LinkedBlockingQueue<Object>();
     private Connection connection;
     private Transport transport;
-    boolean shuttingDown;
-
-    protected void dispatch(Object command) throws InterruptedException, IOException {
-        dispatchQueue.put(command);
-    }
+    private boolean shuttingDown;
 
     public StubConnection(BrokerService broker) throws Exception {
         this(TransportFactory.connect(broker.getVmConnectorURI()));
@@ -74,7 +70,11 @@ public class StubConnection implements Service {
         transport.start();
     }
 
-    public BlockingQueue getDispatchQueue() {
+    protected void dispatch(Object command) throws InterruptedException, IOException {
+        dispatchQueue.put(command);
+    }
+
+    public BlockingQueue<Object> getDispatchQueue() {
         return dispatchQueue;
     }
 

@@ -37,7 +37,7 @@ public abstract class Transaction {
     public static final byte PREPARED_STATE = 2; // can go to: 3
     public static final byte FINISHED_STATE = 3;
 
-    private ArrayList synchronizations = new ArrayList();
+    private ArrayList<Synchronization> synchronizations = new ArrayList<Synchronization>();
     private byte state = START_STATE;
 
     public byte getState() {
@@ -81,15 +81,15 @@ public abstract class Transaction {
     }
 
     protected void fireAfterCommit() throws Exception {
-        for (Iterator iter = synchronizations.iterator(); iter.hasNext();) {
-            Synchronization s = (Synchronization)iter.next();
+        for (Iterator<Synchronization> iter = synchronizations.iterator(); iter.hasNext();) {
+            Synchronization s = iter.next();
             s.afterCommit();
         }
     }
 
     public void fireAfterRollback() throws Exception {
-        for (Iterator iter = synchronizations.iterator(); iter.hasNext();) {
-            Synchronization s = (Synchronization)iter.next();
+        for (Iterator<Synchronization> iter = synchronizations.iterator(); iter.hasNext();) {
+            Synchronization s = iter.next();
             s.afterRollback();
         }
     }

@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.security;
 
+import java.security.Principal;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -37,7 +38,7 @@ import org.apache.activemq.jaas.JassCredentialCallbackHandler;
 public class JaasAuthenticationBroker extends BrokerFilter {
 
     private final String jassConfiguration;
-    private final CopyOnWriteArrayList securityContexts = new CopyOnWriteArrayList();
+    private final CopyOnWriteArrayList<SecurityContext> securityContexts = new CopyOnWriteArrayList<SecurityContext>();
 
     public JaasAuthenticationBroker(Broker next, String jassConfiguration) {
         super(next);
@@ -53,7 +54,7 @@ public class JaasAuthenticationBroker extends BrokerFilter {
             this.subject = subject;
         }
 
-        public Set getPrincipals() {
+        public Set<Principal> getPrincipals() {
             return subject.getPrincipals();
         }
 
@@ -102,8 +103,8 @@ public class JaasAuthenticationBroker extends BrokerFilter {
      * Refresh all the logged into users.
      */
     public void refresh() {
-        for (Iterator iter = securityContexts.iterator(); iter.hasNext();) {
-            SecurityContext sc = (SecurityContext)iter.next();
+        for (Iterator<SecurityContext> iter = securityContexts.iterator(); iter.hasNext();) {
+            SecurityContext sc = iter.next();
             sc.getAuthorizedReadDests().clear();
             sc.getAuthorizedWriteDests().clear();
         }

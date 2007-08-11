@@ -31,7 +31,7 @@ import org.apache.activemq.command.ConsumerInfo;
 public class DemandSubscription {
     private ConsumerInfo remoteInfo;
     private ConsumerInfo localInfo;
-    private Set remoteSubsIds = new CopyOnWriteArraySet();
+    private Set<ConsumerId> remoteSubsIds = new CopyOnWriteArraySet<ConsumerId>();
     private AtomicInteger dispatched = new AtomicInteger(0);
 
     DemandSubscription(ConsumerInfo info) {

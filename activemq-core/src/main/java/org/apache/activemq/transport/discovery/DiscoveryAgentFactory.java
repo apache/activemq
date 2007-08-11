@@ -26,7 +26,7 @@ import org.apache.activemq.util.IOExceptionSupport;
 public abstract class DiscoveryAgentFactory {
 
     private static final FactoryFinder DISCOVERY_AGENT_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/discoveryagent/");
-    private static final ConcurrentHashMap DISCOVERY_AGENT_FACTORYS = new ConcurrentHashMap();
+    private static final ConcurrentHashMap<String, DiscoveryAgentFactory> DISCOVERY_AGENT_FACTORYS = new ConcurrentHashMap<String, DiscoveryAgentFactory>();
 
     /**
      * @param uri
@@ -38,7 +38,7 @@ public abstract class DiscoveryAgentFactory {
         if (scheme == null) {
             throw new IOException("DiscoveryAgent scheme not specified: [" + uri + "]");
         }
-        DiscoveryAgentFactory daf = (DiscoveryAgentFactory)DISCOVERY_AGENT_FACTORYS.get(scheme);
+        DiscoveryAgentFactory daf = DISCOVERY_AGENT_FACTORYS.get(scheme);
         if (daf == null) {
             // Try to load if from a META-INF property.
             try {

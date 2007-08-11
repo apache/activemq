@@ -49,9 +49,9 @@ import org.apache.commons.logging.LogFactory;
  */
 public class TopicClusterTest extends TestCase implements MessageListener {
     
-    private static final Log LOG = LogFactory.getLog(TopicClusterTest.class);
     protected static final int MESSAGE_COUNT = 50;
     protected static final int NUMBER_IN_CLUSTER = 3;
+    private static final Log LOG = LogFactory.getLog(TopicClusterTest.class);
     
     protected Destination destination;
     protected boolean topic = true;
@@ -59,13 +59,12 @@ public class TopicClusterTest extends TestCase implements MessageListener {
     protected int deliveryMode = DeliveryMode.NON_PERSISTENT;
     protected MessageProducer[] producers;
     protected Connection[] connections;
-    protected List services = new ArrayList();
+    protected List<BrokerService> services = new ArrayList<BrokerService>();
 
     protected void setUp() throws Exception {
         connections = new Connection[NUMBER_IN_CLUSTER];
         producers = new MessageProducer[NUMBER_IN_CLUSTER];
         Destination destination = createDestination();
-        int portStart = 50000;
         String root = System.getProperty("activemq.store.dir");
         if (root == null) {
             root = "target/store";

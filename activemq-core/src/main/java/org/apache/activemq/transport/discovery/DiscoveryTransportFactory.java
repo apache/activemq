@@ -33,7 +33,7 @@ import org.apache.activemq.util.URISupport.CompositeData;
 public class DiscoveryTransportFactory extends FailoverTransportFactory {
         
     public Transport createTransport(CompositeData compositData) throws IOException {
-        Map parameters = new HashMap(compositData.getParameters());
+        Map<String, String> parameters = new HashMap<String, String>(compositData.getParameters());
         DiscoveryTransport transport = new DiscoveryTransport(createTransport(parameters));
 
         DiscoveryAgent discoveryAgent = DiscoveryAgentFactory.createDiscoveryAgent(compositData.getComponents()[0]);

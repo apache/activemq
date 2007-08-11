@@ -17,6 +17,7 @@
 package org.apache.activemq.broker;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.jms.DeliveryMode;
@@ -145,7 +146,7 @@ public class BrokerTest extends BrokerTestSupport {
         connection2.send(sessionInfo2);
         connection2.request(consumerInfo2);
 
-        ArrayList messages = new ArrayList();
+        List<Message> messages = new ArrayList<Message>();
 
         for (int i = 0; i < 4; i++) {
             Message m1 = receiveMessage(connection1);
@@ -154,7 +155,7 @@ public class BrokerTest extends BrokerTestSupport {
         }
 
         for (int i = 0; i < 4; i++) {
-            Message m1 = (Message)messages.get(i);
+            Message m1 = messages.get(i);
             Message m2 = receiveMessage(connection2);
             assertNotNull("m2 is null for index: " + i, m2);
             assertEquals(m1.getMessageId(), m2.getMessageId());

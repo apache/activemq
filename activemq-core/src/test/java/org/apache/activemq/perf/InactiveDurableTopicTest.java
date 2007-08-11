@@ -25,6 +25,7 @@ import javax.jms.Session;
 import javax.jms.Topic;
 import javax.jms.TopicSubscriber;
 
+import junit.framework.Assert;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -136,7 +137,7 @@ public class InactiveDurableTopicTest extends TestCase {
                     LOG.debug("Sent " + loop + " messages");
                 }
             }
-            this.assertEquals(loop, MESSAGE_COUNT);
+            Assert.assertEquals(loop, MESSAGE_COUNT);
             publisher.close();
             session.close();
             connection.stop();

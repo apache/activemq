@@ -20,6 +20,7 @@ import javax.jms.JMSException;
 
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQTempDestination;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DataStructure;
@@ -79,17 +80,24 @@ public class AdvisoryConsumer implements ActiveMQDispatcher {
         if (o != null && o.getClass() == DestinationInfo.class) {
             processDestinationInfo((DestinationInfo)o);
         } else {
-            connection.onAsyncException(new JMSException("Unexpected message was dispatched to the AdvisoryConsumer: " + md));
+            connection.onAsyncException(new JMSException(
+                                                         "Unexpected message was dispatched to the AdvisoryConsumer: "
+                                                             + md));
         }
 
     }
 
     private void processDestinationInfo(DestinationInfo dinfo) {
         ActiveMQDestination dest = dinfo.getDestination();
+        if (!dest.isTemporary()) {
+            return;
+        }
+
+        ActiveMQTempDestination tempDest = (ActiveMQTempDestination)dest;
         if (dinfo.getOperationType() == DestinationInfo.ADD_OPERATION_TYPE) {
-            connection.activeTempDestinations.put(dest, dest);
+            connection.activeTempDestinations.put(tempDest, tempDest);
         } else if (dinfo.getOperationType() == DestinationInfo.REMOVE_OPERATION_TYPE) {
-            connection.activeTempDestinations.remove(dest);
+            connection.activeTempDestinations.remove(tempDest);
         }
     }
 

@@ -23,8 +23,11 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.state.ProducerState;
 
-public class BrokerSupport {
+public final class BrokerSupport {
 
+    private BrokerSupport() {        
+    }
+    
     /**
      * @param context
      * @param message

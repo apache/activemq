@@ -38,9 +38,9 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class TopicBridgeSpringTest extends TestCase implements MessageListener {
 
+    protected static final int MESSAGE_COUNT = 10;
     private static final Log LOG = LogFactory.getLog(TopicBridgeSpringTest.class);
 
-    protected static final int MESSAGE_COUNT = 10;
     protected AbstractApplicationContext context;
     protected TopicConnection localConnection;
     protected TopicConnection remoteConnection;

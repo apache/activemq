@@ -21,8 +21,8 @@ public class ProgressPrinter {
 
     private final long total;
     private final long interval;
-    long percentDone;
-    long counter;
+    private long percentDone;
+    private long counter;
 
     public ProgressPrinter(long total, long interval) {
         this.total = total;

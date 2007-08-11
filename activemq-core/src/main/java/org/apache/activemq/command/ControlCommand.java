@@ -29,11 +29,11 @@ public class ControlCommand extends BaseCommand {
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.CONTROL_COMMAND;
 
+    private String command;
+
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
     }
-
-    private String command;
 
     /**
      * @openwire:property version=1

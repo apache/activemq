@@ -324,9 +324,10 @@ public abstract class ActiveMQDestination extends JNDIBaseStorable implements Da
         out.writeObject(options);
     }
 
+    @SuppressWarnings("unchecked")
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         this.setPhysicalName(in.readUTF());
-        this.options = (Map)in.readObject();
+        this.options = (Map<String, String>)in.readObject();
     }
 
     public String getDestinationTypeAsString() {

@@ -39,15 +39,21 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * A simple polymorphic JMS producer which can work with Queues or Topics which
  * uses JNDI to lookup the JMS connection factory and destination
  * 
  * @version $Revision: 1.2 $
  */
-public class SimpleProducer {
+public final class SimpleProducer {
 
-    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(SimpleProducer.class);
+    private static final Log LOG = LogFactory.getLog(SimpleProducer.class);
+
+    private SimpleProducer() {
+    }
 
     /**
      * @param args the destination name to send to and optionally, the number of

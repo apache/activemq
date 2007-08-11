@@ -26,10 +26,6 @@ public class DiscoveryEvent implements DataStructure {
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.DISCOVERY_EVENT;
 
-    public byte getDataStructureType() {
-        return DATA_STRUCTURE_TYPE;
-    }
-
     protected String serviceName;
     protected String brokerName;
 
@@ -38,6 +34,10 @@ public class DiscoveryEvent implements DataStructure {
 
     public DiscoveryEvent(String serviceName) {
         this.serviceName = serviceName;
+    }
+
+    public byte getDataStructureType() {
+        return DATA_STRUCTURE_TYPE;
     }
 
     /**

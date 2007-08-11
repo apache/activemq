@@ -48,7 +48,7 @@ public class WildcardDestinationFilter extends DestinationFilter {
         String[] path = DestinationPath.getDestinationPaths(destination);
         int length = prefixes.length;
         if (path.length == length) {
-            for (int i = 0, size = length; i < size; i++) {
+            for (int i = 0; i < length; i++) {
                 String prefix = prefixes[i];
                 if (prefix != null && !prefix.equals(path[i])) {
                     return false;

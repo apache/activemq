@@ -42,7 +42,8 @@ public class PrefixDestinationFilter extends DestinationFilter {
         String[] path = DestinationPath.getDestinationPaths(destination.getPhysicalName());
         int length = prefixes.length;
         if (path.length >= length) {
-            for (int i = 0, size = length - 1; i < size; i++) {
+            int size = length - 1;
+            for (int i = 0; i < size; i++) {
                 if (!prefixes[i].equals(path[i])) {
                     return false;
                 }

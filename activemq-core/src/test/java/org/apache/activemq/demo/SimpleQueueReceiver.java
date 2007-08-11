@@ -37,9 +37,15 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-public class SimpleQueueReceiver {
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(SimpleQueueReceiver.class);
+public final class SimpleQueueReceiver {
+
+    private static final Log LOG = LogFactory.getLog(SimpleQueueReceiver.class);
+
+    private SimpleQueueReceiver() {
+    }
 
     /**
      * Main method.

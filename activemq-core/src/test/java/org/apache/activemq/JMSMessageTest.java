@@ -258,18 +258,19 @@ public class JMSMessageTest extends JmsTestSupport {
 
     static class ForeignMessage implements TextMessage {
 
+        public int deliveryMode;
+
         private String messageId;
         private long timestamp;
         private String correlationId;
         private Destination replyTo;
         private Destination destination;
-        public int deliveryMode;
         private boolean redelivered;
         private String type;
         private long expiration;
         private int priority;
         private String text;
-        HashMap props = new HashMap();
+        private HashMap<String, Object> props = new HashMap<String, Object>();
 
         public String getJMSMessageID() throws JMSException {
             return messageId;
@@ -402,7 +403,7 @@ public class JMSMessageTest extends JmsTestSupport {
         }
 
         public Enumeration getPropertyNames() throws JMSException {
-            return new Vector(props.keySet()).elements();
+            return new Vector<String>(props.keySet()).elements();
         }
 
         public void setBooleanProperty(String arg0, boolean arg1) throws JMSException {

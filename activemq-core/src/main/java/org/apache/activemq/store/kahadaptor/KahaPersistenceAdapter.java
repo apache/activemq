@@ -50,19 +50,20 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * @org.apache.xbean.XBean
- * 
  * @version $Revision: 1.4 $
  */
 public class KahaPersistenceAdapter implements PersistenceAdapter {
 
     private static final int STORE_LOCKED_WAIT_DELAY = 10 * 1000;
     private static final Log LOG = LogFactory.getLog(KahaPersistenceAdapter.class);
-    static final String PREPARED_TRANSACTIONS_NAME = "PreparedTransactions";
-    KahaTransactionStore transactionStore;
-    ConcurrentHashMap<ActiveMQTopic, TopicMessageStore> topics = new ConcurrentHashMap<ActiveMQTopic, TopicMessageStore>();
-    ConcurrentHashMap<ActiveMQQueue, MessageStore> queues = new ConcurrentHashMap<ActiveMQQueue, MessageStore>();
-    ConcurrentHashMap<ActiveMQDestination, MessageStore> messageStores = new ConcurrentHashMap<ActiveMQDestination, MessageStore>();
+    private static final String PREPARED_TRANSACTIONS_NAME = "PreparedTransactions";
+
     protected OpenWireFormat wireFormat = new OpenWireFormat();
+    protected KahaTransactionStore transactionStore;
+    protected ConcurrentHashMap<ActiveMQTopic, TopicMessageStore> topics = new ConcurrentHashMap<ActiveMQTopic, TopicMessageStore>();
+    protected ConcurrentHashMap<ActiveMQQueue, MessageStore> queues = new ConcurrentHashMap<ActiveMQQueue, MessageStore>();
+    protected ConcurrentHashMap<ActiveMQDestination, MessageStore> messageStores = new ConcurrentHashMap<ActiveMQDestination, MessageStore>();
+
     private long maxDataFileLength = 32 * 1024 * 1024;
     private File directory;
     private String brokerName;
@@ -198,10 +199,10 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
         return container;
     }
 
-    protected MapContainer<String, Object> getSubsMapContainer(Object id, String containerName)
+    protected MapContainer getSubsMapContainer(Object id, String containerName)
         throws IOException {
         Store store = getStore();
-        MapContainer<String, Object> container = store.getMapContainer(id, containerName);
+        MapContainer container = store.getMapContainer(id, containerName);
         container.setKeyMarshaller(Store.STRING_MARSHALLER);
         container.setValueMarshaller(createMessageMarshaller());
         container.load();
@@ -236,7 +237,6 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
 
     /**
      * @param maxDataFileLength the maxDataFileLength to set
-     * 
      * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
      */
     public void setMaxDataFileLength(long maxDataFileLength) {

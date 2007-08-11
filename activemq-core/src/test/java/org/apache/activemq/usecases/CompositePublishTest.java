@@ -93,7 +93,7 @@ public class CompositePublishTest extends JmsSendReceiveTestSupport {
         LOG.info("Started connections");
     }
 
-    protected MessageListener createMessageListener(int i, final List messageList) {
+    protected MessageListener createMessageListener(int i, final List<Message> messageList) {
         return new MessageListener() {
             public void onMessage(Message message) {
                 consumeMessage(message, messageList);
@@ -121,12 +121,12 @@ public class CompositePublishTest extends JmsSendReceiveTestSupport {
 
     protected void assertMessagesAreReceived() throws JMSException {
         waitForMessagesToBeDelivered();
-
-        for (int i = 0, size = messageLists.length; i < size; i++) {
+        int size = messageLists.length;
+        for (int i = 0; i < size; i++) {
             LOG.info("Message list: " + i + " contains: " + messageLists[i].size() + " message(s)");
         }
-
-        for (int i = 0, size = messageLists.length; i < size; i++) {
+        size = messageLists.length;
+        for (int i = 0; i < size; i++) {
             assertMessagesReceivedAreValid(messageLists[i]);
         }
     }

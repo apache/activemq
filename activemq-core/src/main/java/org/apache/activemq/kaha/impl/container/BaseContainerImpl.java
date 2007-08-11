@@ -159,7 +159,7 @@ public abstract class BaseContainerImpl {
     protected final void doClear() {
         checkClosed();
         loaded = true;
-        List indexList = new ArrayList();
+        List<IndexItem> indexList = new ArrayList<IndexItem>();
         try {
             init();
             long nextItem = root.getNextItem();
@@ -172,7 +172,7 @@ public abstract class BaseContainerImpl {
             root.setNextItem(Item.POSITION_NOT_SET);
             storeIndex(root);
             for (int i = 0; i < indexList.size(); i++) {
-                IndexItem item = (IndexItem)indexList.get(i);
+                IndexItem item = indexList.get(i);
                 dataManager.removeInterestInFile(item.getKeyFile());
                 dataManager.removeInterestInFile(item.getValueFile());
                 indexManager.freeIndex(item);

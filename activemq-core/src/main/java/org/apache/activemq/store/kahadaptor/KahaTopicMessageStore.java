@@ -39,19 +39,19 @@ import org.apache.activemq.store.TopicMessageStore;
 public class KahaTopicMessageStore extends KahaMessageStore implements TopicMessageStore {
 
     protected ListContainer<TopicSubAck> ackContainer;
-    private Map subscriberContainer;
+    protected Map<Object, TopicSubContainer> subscriberMessages = new ConcurrentHashMap<Object, TopicSubContainer>();
+    private Map<String, SubscriptionInfo> subscriberContainer;
     private Store store;
-    protected Map subscriberMessages = new ConcurrentHashMap();
 
-    public KahaTopicMessageStore(Store store, MapContainer messageContainer,
-                                 ListContainer<TopicSubAck> ackContainer, MapContainer subsContainer,
+    public KahaTopicMessageStore(Store store, MapContainer<MessageId, Message> messageContainer,
+                                 ListContainer<TopicSubAck> ackContainer, MapContainer<String, SubscriptionInfo> subsContainer,
                                  ActiveMQDestination destination) throws IOException {
         super(messageContainer, destination);
         this.store = store;
         this.ackContainer = ackContainer;
         subscriberContainer = subsContainer;
         // load all the Ack containers
-        for (Iterator i = subscriberContainer.keySet().iterator(); i.hasNext();) {
+        for (Iterator<String> i = subscriberContainer.keySet().iterator(); i.hasNext();) {
             Object key = i.next();
             addSubscriberMessageContainer(key);
         }
@@ -67,8 +67,8 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
             tsa.setCount(subscriberCount);
             tsa.setMessageEntry(messageEntry);
             StoreEntry ackEntry = ackContainer.placeLast(tsa);
-            for (Iterator i = subscriberMessages.values().iterator(); i.hasNext();) {
-                TopicSubContainer container = (TopicSubContainer)i.next();
+            for (Iterator<TopicSubContainer> i = subscriberMessages.values().iterator(); i.hasNext();) {
+                TopicSubContainer container = i.next();
                 ConsumerMessageRef ref = new ConsumerMessageRef();
                 ref.setAckEntry(ackEntry);
                 ref.setMessageEntry(messageEntry);
@@ -81,14 +81,14 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
     public synchronized void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
                                          MessageId messageId) throws IOException {
         String subcriberId = getSubscriptionKey(clientId, subscriptionName);
-        TopicSubContainer container = (TopicSubContainer)subscriberMessages.get(subcriberId);
+        TopicSubContainer container = subscriberMessages.get(subcriberId);
         if (container != null) {
             ConsumerMessageRef ref = container.remove(messageId);
             if (container.isEmpty()) {
                 container.reset();
             }
             if (ref != null) {
-                TopicSubAck tsa = (TopicSubAck)ackContainer.get(ref.getAckEntry());
+                TopicSubAck tsa = ackContainer.get(ref.getAckEntry());
                 if (tsa != null) {
                     if (tsa.decrementCount() <= 0) {
                         StoreEntry entry = ref.getAckEntry();
@@ -106,7 +106,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
     }
 
     public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {
-        return (SubscriptionInfo)subscriberContainer.get(getSubscriptionKey(clientId, subscriptionName));
+        return subscriberContainer.get(getSubscriptionKey(clientId, subscriptionName));
     }
 
     public synchronized void addSubsciption(SubscriptionInfo info, boolean retroactive) throws IOException {
@@ -136,7 +136,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
     public void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener)
         throws Exception {
         String key = getSubscriptionKey(clientId, subscriptionName);
-        TopicSubContainer container = (TopicSubContainer)subscriberMessages.get(key);
+        TopicSubContainer container = subscriberMessages.get(key);
         if (container != null) {
             for (Iterator i = container.iterator(); i.hasNext();) {
                 ConsumerMessageRef ref = (ConsumerMessageRef)i.next();
@@ -153,7 +153,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
     public void recoverNextMessages(String clientId, String subscriptionName, int maxReturned,
                                     MessageRecoveryListener listener) throws Exception {
         String key = getSubscriptionKey(clientId, subscriptionName);
-        TopicSubContainer container = (TopicSubContainer)subscriberMessages.get(key);
+        TopicSubContainer container = subscriberMessages.get(key);
         if (container != null) {
             int count = 0;
             StoreEntry entry = container.getBatchEntry();
@@ -190,7 +190,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
     }
 
     public SubscriptionInfo[] getAllSubscriptions() throws IOException {
-        return (SubscriptionInfo[])subscriberContainer.values()
+        return subscriberContainer.values()
             .toArray(new SubscriptionInfo[subscriberContainer.size()]);
     }
 
@@ -211,11 +211,11 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
 
     protected void removeSubscriberMessageContainer(Object key) throws IOException {
         subscriberContainer.remove(key);
-        TopicSubContainer container = (TopicSubContainer)subscriberMessages.remove(key);
+        TopicSubContainer container = subscriberMessages.remove(key);
         for (Iterator i = container.iterator(); i.hasNext();) {
             ConsumerMessageRef ref = (ConsumerMessageRef)i.next();
             if (ref != null) {
-                TopicSubAck tsa = (TopicSubAck)ackContainer.get(ref.getAckEntry());
+                TopicSubAck tsa = ackContainer.get(ref.getAckEntry());
                 if (tsa != null) {
                     if (tsa.decrementCount() <= 0) {
                         ackContainer.remove(ref.getAckEntry());
@@ -231,7 +231,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
 
     public int getMessageCount(String clientId, String subscriberName) throws IOException {
         String key = getSubscriptionKey(clientId, subscriberName);
-        TopicSubContainer container = (TopicSubContainer)subscriberMessages.get(key);
+        TopicSubContainer container = subscriberMessages.get(key);
         return container != null ? container.size() : 0;
     }
 
@@ -243,15 +243,15 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
     public synchronized void removeAllMessages(ConnectionContext context) throws IOException {
         messageContainer.clear();
         ackContainer.clear();
-        for (Iterator i = subscriberMessages.values().iterator(); i.hasNext();) {
-            TopicSubContainer container = (TopicSubContainer)i.next();
+        for (Iterator<TopicSubContainer> i = subscriberMessages.values().iterator(); i.hasNext();) {
+            TopicSubContainer container = i.next();
             container.clear();
         }
     }
 
     public synchronized void resetBatching(String clientId, String subscriptionName) {
         String key = getSubscriptionKey(clientId, subscriptionName);
-        TopicSubContainer topicSubContainer = (TopicSubContainer)subscriberMessages.get(key);
+        TopicSubContainer topicSubContainer = subscriberMessages.get(key);
         if (topicSubContainer != null) {
             topicSubContainer.reset();
         }

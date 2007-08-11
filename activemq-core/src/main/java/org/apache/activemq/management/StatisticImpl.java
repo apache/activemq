@@ -24,12 +24,14 @@ import javax.management.j2ee.statistics.Statistic;
  * @version $Revision: 1.2 $
  */
 public class StatisticImpl implements Statistic, Resettable {
+
+    protected boolean enabled;
+
     private String name;
     private String unit;
     private String description;
     private long startTime;
     private long lastSampleTime;
-    protected boolean enabled;
 
     public StatisticImpl(String name, String unit, String description) {
         this.name = name;

@@ -23,7 +23,6 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 
 import junit.framework.Test;
-
 import org.apache.activemq.command.ActiveMQQueue;
 
 /**
@@ -33,6 +32,8 @@ import org.apache.activemq.command.ActiveMQQueue;
  */
 public class JMSExclusiveConsumerTest extends JmsTestSupport {
 
+    public int deliveryMode;
+
     public static Test suite() {
         return suite(JMSExclusiveConsumerTest.class);
     }
@@ -40,8 +41,6 @@ public class JMSExclusiveConsumerTest extends JmsTestSupport {
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
-
-    public int deliveryMode;
 
     public void initCombosForTestRoundRobinDispatchOnNonExclusive() {
         addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});

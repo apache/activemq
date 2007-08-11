@@ -44,9 +44,9 @@ public class TempDestDeleteTest extends EmbeddedBrokerTestSupport implements Con
 
     protected int consumerCounter;
     protected ConsumerEventSource topicConsumerEventSource;
+    protected BlockingQueue<ConsumerEvent> eventQueue = new ArrayBlockingQueue<ConsumerEvent>(1000);
+    
     private ConsumerEventSource queueConsumerEventSource;
-
-    protected BlockingQueue eventQueue = new ArrayBlockingQueue(1000);
     private Connection connection;
     private Session session;
     private ActiveMQTempTopic tempTopic;
@@ -141,7 +141,7 @@ public class TempDestDeleteTest extends EmbeddedBrokerTestSupport implements Con
     }
 
     protected ConsumerEvent waitForConsumerEvent() throws InterruptedException {
-        ConsumerEvent answer = (ConsumerEvent)eventQueue.poll(1000, TimeUnit.MILLISECONDS);
+        ConsumerEvent answer = eventQueue.poll(1000, TimeUnit.MILLISECONDS);
         assertTrue("Should have received a consumer event!", answer != null);
         return answer;
     }

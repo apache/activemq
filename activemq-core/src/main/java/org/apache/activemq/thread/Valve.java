@@ -26,8 +26,8 @@ public final class Valve {
 
     private final Object mutex = new Object();
     private boolean on;
-    private int turningOff = 0;
-    private int usage = 0;
+    private int turningOff;
+    private int usage;
 
     public Valve(boolean on) {
         this.on = on;

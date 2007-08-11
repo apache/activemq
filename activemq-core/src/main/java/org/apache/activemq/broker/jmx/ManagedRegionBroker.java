@@ -320,7 +320,7 @@ public class ManagedRegionBroker extends RegionBroker {
             SubscriptionKey subscriptionKey = new SubscriptionKey(view.getClientId(), view.getSubscriptionName());
             SubscriptionInfo info = new SubscriptionInfo();
             info.setClientId(subscriptionKey.getClientId());
-            info.setSubcriptionName(subscriptionKey.getSubscriptionName());
+            info.setSubscriptionName(subscriptionKey.getSubscriptionName());
             info.setDestination(new ActiveMQTopic(view.getDestinationName()));
             addInactiveSubscription(subscriptionKey, info);
         }
@@ -418,9 +418,6 @@ public class ManagedRegionBroker extends RegionBroker {
 
                 public boolean recoverMessageReference(MessageId messageReference) throws Exception {
                     throw new RuntimeException("Should not be called.");
-                }
-
-                public void finished() {
                 }
 
                 public boolean hasSpace() {

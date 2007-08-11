@@ -31,7 +31,7 @@ import org.apache.activemq.transport.TransportFactory;
  * @version $Revision: 1.1.1.1 $
  */
 public class MultiBrokersMultiClientsUsingTcpTest extends MultiBrokersMultiClientsTest {
-    protected List bridges;
+    protected List<DemandForwardingBridge> bridges;
 
     protected void bridgeAllBrokers(String groupName) throws Exception {
         for (int i = 1; i <= BROKER_COUNT; i++) {
@@ -49,7 +49,8 @@ public class MultiBrokersMultiClientsUsingTcpTest extends MultiBrokersMultiClien
         List remoteTransports = remoteBroker.getTransportConnectors();
         List localTransports = localBroker.getTransportConnectors();
 
-        URI remoteURI, localURI;
+        URI remoteURI;
+        URI localURI;
         if (!remoteTransports.isEmpty() && !localTransports.isEmpty()) {
             remoteURI = ((TransportConnector)remoteTransports.get(0)).getConnectUri();
             localURI = ((TransportConnector)localTransports.get(0)).getConnectUri();
@@ -79,6 +80,6 @@ public class MultiBrokersMultiClientsUsingTcpTest extends MultiBrokersMultiClien
             ((BrokerItem)i.next()).broker.addConnector("tcp://localhost:" + (61616 + j++));
         }
 
-        bridges = new ArrayList();
+        bridges = new ArrayList<DemandForwardingBridge>();
     }
 }

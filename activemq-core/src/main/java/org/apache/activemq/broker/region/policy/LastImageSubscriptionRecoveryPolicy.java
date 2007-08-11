@@ -57,12 +57,12 @@ public class LastImageSubscriptionRecoveryPolicy implements SubscriptionRecovery
     }
 
     public Message[] browse(ActiveMQDestination destination) throws Exception {
-        List result = new ArrayList();
+        List<Message> result = new ArrayList<Message>();
         DestinationFilter filter = DestinationFilter.parseFilter(destination);
         if (filter.matches(lastImage.getMessage().getDestination())) {
             result.add(lastImage.getMessage());
         }
-        return (Message[])result.toArray(new Message[result.size()]);
+        return result.toArray(new Message[result.size()]);
     }
 
     public SubscriptionRecoveryPolicy copy() {

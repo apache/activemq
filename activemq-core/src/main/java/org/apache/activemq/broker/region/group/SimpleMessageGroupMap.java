@@ -30,25 +30,25 @@ import org.apache.activemq.command.ConsumerId;
  * @version $Revision$
  */
 public class SimpleMessageGroupMap implements MessageGroupMap {
-    private Map map = new ConcurrentHashMap();
+    private Map<String, ConsumerId> map = new ConcurrentHashMap<String, ConsumerId>();
     
     public void put(String groupId, ConsumerId consumerId) {
         map.put(groupId, consumerId);
     }
 
     public ConsumerId get(String groupId) {
-        return (ConsumerId) map.get(groupId);
+        return map.get(groupId);
     }
 
     public ConsumerId removeGroup(String groupId) {
-        return (ConsumerId) map.remove(groupId);
+        return map.remove(groupId);
     }
 
     public MessageGroupSet removeConsumer(ConsumerId consumerId) {
         SimpleMessageGroupSet ownedGroups = new SimpleMessageGroupSet();
-        for (Iterator iter = map.keySet().iterator(); iter.hasNext();) {
-            String group = (String) iter.next();
-            ConsumerId owner = (ConsumerId) map.get(group);
+        for (Iterator<String> iter = map.keySet().iterator(); iter.hasNext();) {
+            String group = iter.next();
+            ConsumerId owner = map.get(group);
             if (owner.equals(consumerId)) {
                 ownedGroups.add(group);
                 iter.remove();

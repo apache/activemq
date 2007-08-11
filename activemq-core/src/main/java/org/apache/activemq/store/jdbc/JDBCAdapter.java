@@ -68,7 +68,7 @@ public interface JDBCAdapter {
 
     long doGetLastMessageBrokerSequenceId(TransactionContext c) throws SQLException, IOException;
 
-    Set doGetDestinations(TransactionContext c) throws SQLException, IOException;
+    Set<ActiveMQDestination> doGetDestinations(TransactionContext c) throws SQLException, IOException;
 
     void setUseExternalMessageReferences(boolean useExternalMessageReferences);
 

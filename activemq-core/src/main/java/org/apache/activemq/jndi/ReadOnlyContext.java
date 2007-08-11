@@ -59,6 +59,7 @@ import javax.naming.spi.NamingManager;
  * 
  * @version $Revision: 1.2 $ $Date: 2005/08/27 03:52:39 $
  */
+@SuppressWarnings("unchecked")
 public class ReadOnlyContext implements Context, Serializable {
 
     public static final String SEPARATOR = "/";

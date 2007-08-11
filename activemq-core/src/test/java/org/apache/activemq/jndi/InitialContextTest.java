@@ -23,13 +23,15 @@ import javax.naming.InitialContext;
 
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision: 1.3 $
  */
 public class InitialContextTest extends TestCase {
 
-    private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(InitialContextTest.class);
+    private static final Log LOG = LogFactory.getLog(InitialContextTest.class);
 
     public void testInitialContext() throws Exception {
         InitialContext context = new InitialContext();

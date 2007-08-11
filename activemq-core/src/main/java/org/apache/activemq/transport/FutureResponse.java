@@ -29,7 +29,7 @@ public class FutureResponse {
     private static final Log LOG = LogFactory.getLog(FutureResponse.class);
 
     private final ResponseCallback responseCallback;
-    private final ArrayBlockingQueue responseSlot = new ArrayBlockingQueue(1);
+    private final ArrayBlockingQueue<Response> responseSlot = new ArrayBlockingQueue<Response>(1);
 
     public FutureResponse(ResponseCallback responseCallback) {
         this.responseCallback = responseCallback;
@@ -37,7 +37,7 @@ public class FutureResponse {
 
     public Response getResult() throws IOException {
         try {
-            return (Response)responseSlot.take();
+            return responseSlot.take();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             if (LOG.isDebugEnabled()) {
@@ -49,7 +49,7 @@ public class FutureResponse {
 
     public Response getResult(int timeout) throws IOException {
         try {
-            return (Response)responseSlot.poll(timeout, TimeUnit.MILLISECONDS);
+            return responseSlot.poll(timeout, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             throw new InterruptedIOException("Interrupted.");
         }

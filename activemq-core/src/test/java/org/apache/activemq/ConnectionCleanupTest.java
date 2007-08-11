@@ -46,7 +46,7 @@ public class ConnectionCleanupTest extends TestCase {
     public void testChangeClientID() throws JMSException {
 
         connection.setClientID("test");
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
         try {
             connection.setClientID("test");

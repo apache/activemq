@@ -56,7 +56,7 @@ public class LegacyFrameTranslator implements FrameTranslator {
     public StompFrame convertMessage(ActiveMQMessage message) throws IOException, JMSException {
         StompFrame command = new StompFrame();
         command.setAction(Stomp.Responses.MESSAGE);
-        Map headers = new HashMap(25);
+        Map<String, String> headers = new HashMap<String, String>(25);
         command.setHeaders(headers);
 
         FrameTranslator.Helper.copyStandardHeadersFromMessageToFrame(message, command, this);

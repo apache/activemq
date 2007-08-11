@@ -44,10 +44,14 @@ public class JMSSessionStatsImpl extends StatsImpl {
         this.messageCount = new CountStatisticImpl("messageCount", "Number of messages exchanged");
         this.pendingMessageCount = new CountStatisticImpl("pendingMessageCount", "Number of pending messages");
         this.expiredMessageCount = new CountStatisticImpl("expiredMessageCount", "Number of expired messages");
-        this.messageWaitTime = new TimeStatisticImpl("messageWaitTime", "Time spent by a message before being delivered");
-        this.durableSubscriptionCount = new CountStatisticImpl("durableSubscriptionCount", "The number of durable subscriptions");
-        this.messageWaitTime = new TimeStatisticImpl("messageWaitTime", "Time spent by a message before being delivered");
-        this.messageRateTime = new TimeStatisticImpl("messageRateTime", "Time taken to process a message (thoughtput rate)");
+        this.messageWaitTime = new TimeStatisticImpl("messageWaitTime",
+                                                     "Time spent by a message before being delivered");
+        this.durableSubscriptionCount = new CountStatisticImpl("durableSubscriptionCount",
+                                                               "The number of durable subscriptions");
+        this.messageWaitTime = new TimeStatisticImpl("messageWaitTime",
+                                                     "Time spent by a message before being delivered");
+        this.messageRateTime = new TimeStatisticImpl("messageRateTime",
+                                                     "Time taken to process a message (thoughtput rate)");
 
         // lets add named stats
         addStatistic("messageCount", messageCount);
@@ -85,11 +89,13 @@ public class JMSSessionStatsImpl extends StatsImpl {
     public void reset() {
         super.reset();
         JMSConsumerStatsImpl[] cstats = getConsumers();
-        for (int i = 0, size = cstats.length; i < size; i++) {
+        int size = cstats.length;
+        for (int i = 0; i < size; i++) {
             cstats[i].reset();
         }
         JMSProducerStatsImpl[] pstats = getProducers();
-        for (int i = 0, size = pstats.length; i < size; i++) {
+        size = pstats.length;
+        for (int i = 0; i < size; i++) {
             pstats[i].reset();
         }
     }
@@ -100,11 +106,13 @@ public class JMSSessionStatsImpl extends StatsImpl {
     public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
         JMSConsumerStatsImpl[] cstats = getConsumers();
-        for (int i = 0, size = cstats.length; i < size; i++) {
+        int size = cstats.length;
+        for (int i = 0; i < size; i++) {
             cstats[i].setEnabled(enabled);
         }
         JMSProducerStatsImpl[] pstats = getProducers();
-        for (int i = 0, size = pstats.length; i < size; i++) {
+        size = pstats.length;
+        for (int i = 0; i < size; i++) {
             pstats[i].setEnabled(enabled);
         }
 

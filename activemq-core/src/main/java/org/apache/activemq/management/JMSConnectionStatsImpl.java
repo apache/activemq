@@ -50,7 +50,8 @@ public class JMSConnectionStatsImpl extends StatsImpl {
     public void reset() {
         super.reset();
         JMSSessionStatsImpl[] stats = getSessions();
-        for (int i = 0, size = stats.length; i < size; i++) {
+        int size = stats.length;
+        for (int i = 0; i < size; i++) {
             stats[i].reset();
         }
     }
@@ -61,7 +62,8 @@ public class JMSConnectionStatsImpl extends StatsImpl {
     public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
         JMSSessionStatsImpl[] stats = getSessions();
-        for (int i = 0, size = stats.length; i < size; i++) {
+        int size = stats.length;
+        for (int i = 0; i < size; i++) {
             stats[i].setEnabled(enabled);
         }
 

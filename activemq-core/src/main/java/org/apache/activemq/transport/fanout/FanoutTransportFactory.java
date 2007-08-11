@@ -64,7 +64,7 @@ public class FanoutTransportFactory extends TransportFactory {
     public Transport createTransport(URI location) throws IOException, URISyntaxException {
 
         CompositeData compositData = URISupport.parseComposite(location);
-        Map parameters = new HashMap(compositData.getParameters());
+        Map<String, String> parameters = new HashMap<String, String>(compositData.getParameters());
         DiscoveryTransport transport = new DiscoveryTransport(createTransport(parameters));
 
         DiscoveryAgent discoveryAgent = DiscoveryAgentFactory.createDiscoveryAgent(compositData.getComponents()[0]);

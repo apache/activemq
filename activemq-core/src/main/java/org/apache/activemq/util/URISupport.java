@@ -123,8 +123,13 @@ public class URISupport {
         }
     }
 
-    public static Map<String,String> parseParamters(URI uri) throws URISyntaxException {
-        return uri.getQuery() == null ? Collections.EMPTY_MAP : parseQuery(stripPrefix(uri.getQuery(), "?"));
+    public static Map<String, String> parseParamters(URI uri) throws URISyntaxException {
+        return uri.getQuery() == null ? emptyMap() : parseQuery(stripPrefix(uri.getQuery(), "?"));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, String> emptyMap() {
+        return Collections.EMPTY_MAP;
     }
 
     /**
@@ -138,7 +143,8 @@ public class URISupport {
      * Creates a URI with the given query
      */
     public static URI createURIWithQuery(URI uri, String query) throws URISyntaxException {
-        return new URI(uri.getScheme(), uri.getUserInfo(), uri.getHost(), uri.getPort(), uri.getPath(), query, uri.getFragment());
+        return new URI(uri.getScheme(), uri.getUserInfo(), uri.getHost(), uri.getPort(), uri.getPath(),
+                       query, uri.getFragment());
     }
 
     public static CompositeData parseComposite(URI uri) throws URISyntaxException {
@@ -202,7 +208,7 @@ public class URISupport {
             if (params.length() > 0) {
                 rc.path = stripPrefix(params, "/");
             }
-            rc.parameters = Collections.EMPTY_MAP;
+            rc.parameters = emptyMap();
         }
     }
 
@@ -296,7 +302,8 @@ public class URISupport {
     }
 
     public static URI changeScheme(URI bindAddr, String scheme) throws URISyntaxException {
-        return new URI(scheme, bindAddr.getUserInfo(), bindAddr.getHost(), bindAddr.getPort(), bindAddr.getPath(), bindAddr.getQuery(), bindAddr.getFragment());
+        return new URI(scheme, bindAddr.getUserInfo(), bindAddr.getHost(), bindAddr.getPort(), bindAddr
+            .getPath(), bindAddr.getQuery(), bindAddr.getFragment());
     }
 
     public static boolean checkParenthesis(String str) {

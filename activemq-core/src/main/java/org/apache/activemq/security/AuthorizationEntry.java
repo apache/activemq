@@ -35,13 +35,13 @@ import org.apache.activemq.filter.DestinationMapEntry;
  */
 public class AuthorizationEntry extends DestinationMapEntry {
 
-    private Set readACLs = Collections.EMPTY_SET;
-    private Set writeACLs = Collections.EMPTY_SET;
-    private Set adminACLs = Collections.EMPTY_SET;
+    private Set<Object> readACLs = emptySet();
+    private Set<Object> writeACLs = emptySet();
+    private Set<Object> adminACLs = emptySet();
 
-    private String adminRoles = null;
-    private String readRoles = null;
-    private String writeRoles = null;
+    private String adminRoles;
+    private String readRoles;
+    private String writeRoles;
 
     private String groupClass = "org.apache.activemq.jaas.GroupPrincipal";
 
@@ -49,31 +49,36 @@ public class AuthorizationEntry extends DestinationMapEntry {
         return groupClass;
     }
 
+    @SuppressWarnings("unchecked")
+    private Set<Object> emptySet() {
+        return Collections.EMPTY_SET;
+    }
+
     public void setGroupClass(String groupClass) {
         this.groupClass = groupClass;
     }
 
-    public Set getAdminACLs() {
+    public Set<Object> getAdminACLs() {
         return adminACLs;
     }
 
-    public void setAdminACLs(Set adminACLs) {
+    public void setAdminACLs(Set<Object> adminACLs) {
         this.adminACLs = adminACLs;
     }
 
-    public Set getReadACLs() {
+    public Set<Object> getReadACLs() {
         return readACLs;
     }
 
-    public void setReadACLs(Set readACLs) {
+    public void setReadACLs(Set<Object> readACLs) {
         this.readACLs = readACLs;
     }
 
-    public Set getWriteACLs() {
+    public Set<Object> getWriteACLs() {
         return writeACLs;
     }
 
-    public void setWriteACLs(Set writeACLs) {
+    public void setWriteACLs(Set<Object> writeACLs) {
         this.writeACLs = writeACLs;
     }
 
@@ -100,8 +105,8 @@ public class AuthorizationEntry extends DestinationMapEntry {
         setWriteACLs(parseACLs(writeRoles));
     }
 
-    protected Set parseACLs(String roles) throws Exception {
-        Set answer = new HashSet();
+    protected Set<Object> parseACLs(String roles) throws Exception {
+        Set<Object> answer = new HashSet<Object>();
         StringTokenizer iter = new StringTokenizer(roles, ",");
         while (iter.hasMoreTokens()) {
             String name = iter.nextToken().trim();

@@ -22,11 +22,15 @@ import javax.jms.Message;
 import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.broker.policy.IndividualDeadLetterViaXmlTest;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision: 1.1.1.1 $
  */
 public class ConsumeTopicPrefetchTest extends ProducerConsumerTestSupport {
+    private static final Log LOG = LogFactory.getLog(ConsumeTopicPrefetchTest.class);
 
     protected int prefetchSize = 100;
     protected String[] messageTexts;
@@ -47,7 +51,7 @@ public class ConsumeTopicPrefetchTest extends ProducerConsumerTestSupport {
     protected void testWithMessageCount(int messageCount) throws JMSException {
         makeMessages(messageCount);
 
-        log.info("About to send and receive: " + messageCount + " on destination: " + destination
+        LOG.info("About to send and receive: " + messageCount + " on destination: " + destination
                 + " of type: " + destination.getClass().getName());
 
         for (int i = 0; i < messageCount; i++) {

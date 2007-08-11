@@ -33,8 +33,6 @@ import org.springframework.context.support.AbstractApplicationContext;
  */
 public abstract class SpringTestSupport extends TestCase {
 
-    protected final Log log = LogFactory.getLog(getClass());
-
     protected AbstractApplicationContext context;
 
     protected void setUp() throws Exception {
@@ -58,7 +56,7 @@ public abstract class SpringTestSupport extends TestCase {
     }
 
     protected void assertSetEquals(String description, Object[] expected, Set actual) {
-        Set expectedSet = new HashSet();
+        Set<Object> expectedSet = new HashSet<Object>();
         expectedSet.addAll(Arrays.asList(expected));
         assertEquals(description, expectedSet, actual);
     }

@@ -52,7 +52,7 @@ public class UdpTransportServer extends TransportServerSupport {
     private ReplayStrategy replayStrategy;
     private Transport configuredTransport;
     private boolean usingWireFormatNegotiation;
-    private Map transports = new HashMap();
+    private Map<DatagramEndpoint, Transport> transports = new HashMap<DatagramEndpoint, Transport>();
 
     public UdpTransportServer(URI connectURI, UdpTransport serverTransport, Transport configuredTransport, ReplayStrategy replayStrategy) {
         super(connectURI);
@@ -108,7 +108,7 @@ public class UdpTransportServer extends TransportServerSupport {
         }
         Transport transport = null;
         synchronized (transports) {
-            transport = (Transport)transports.get(endpoint);
+            transport = transports.get(endpoint);
             if (transport == null) {
                 if (usingWireFormatNegotiation && !command.isWireFormatInfo()) {
                     LOG.error("Received inbound server communication from: " + command.getFrom() + " expecting WireFormatInfo but was command: " + command);
@@ -146,7 +146,7 @@ public class UdpTransportServer extends TransportServerSupport {
         final UdpTransport transport = new UdpTransport(connectionWireFormat, address);
 
         final ReliableTransport reliableTransport = new ReliableTransport(transport, transport);
-        Replayer replayer = reliableTransport.getReplayer();
+        reliableTransport.getReplayer();
         reliableTransport.setReplayStrategy(replayStrategy);
 
         // Joiner must be on outside as the inbound messages must be processed

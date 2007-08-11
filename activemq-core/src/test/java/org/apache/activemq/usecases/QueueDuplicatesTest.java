@@ -114,11 +114,9 @@ public class QueueDuplicatesTest extends TestCase {
     }
 
     private class SendingThread extends Thread {
-        private String brokerUrl;
         private String subject;
 
         SendingThread(String brokerUrl, String subject) {
-            this.brokerUrl = brokerUrl;
             this.subject = subject;
             setDaemon(false);
         }
@@ -144,7 +142,7 @@ public class QueueDuplicatesTest extends TestCase {
     }
 
     private static class SimpleConsumer implements MessageListener {
-        private Map msgs = new HashMap();
+        private Map<String, Message> msgs = new HashMap<String, Message>();
 
         public void onMessage(Message message) {
             LOG.info(formatter.format(new Date()) + " SimpleConsumer Message Received: " + message);

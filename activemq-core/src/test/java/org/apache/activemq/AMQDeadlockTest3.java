@@ -18,6 +18,7 @@ package org.apache.activemq;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -241,7 +242,7 @@ public class AMQDeadlockTest3 extends TestCase {
         memoryManager.setLimit(5000000);
         brokerService.setMemoryManager(memoryManager);
 
-        final ArrayList policyEntries = new ArrayList();
+        final List<PolicyEntry> policyEntries = new ArrayList<PolicyEntry>();
 
         final PolicyEntry entry = new PolicyEntry();
         entry.setQueue(">");

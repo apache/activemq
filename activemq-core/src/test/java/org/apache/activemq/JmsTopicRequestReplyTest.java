@@ -37,16 +37,16 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.3 $
  */
 public class JmsTopicRequestReplyTest extends TestSupport implements MessageListener {
-    private final Log log = LogFactory.getLog(getClass());
+    private static final Log LOG = LogFactory.getLog(JmsTopicRequestReplyTest.class);
 
+    protected boolean useAsyncConsume;
     private Connection serverConnection;
     private Connection clientConnection;
     private MessageProducer replyProducer;
     private Session serverSession;
     private Destination requestDestination;
-    private List failures = new Vector();
+    private List<JMSException> failures = new Vector<JMSException>();
     private boolean dynamicallyCreateProducer;
-    protected boolean useAsyncConsume;
     private String clientSideClientID;
 
     public void testSendAndReceive() throws Exception {
@@ -67,7 +67,7 @@ public class JmsTopicRequestReplyTest extends TestSupport implements MessageList
         // replyDestination);
         // assertEquals("clientID from the temporary destination must be the
         // same", clientSideClientID, value);
-        log.info("Both the clientID and destination clientID match properly: " + clientSideClientID);
+        LOG.info("Both the clientID and destination clientID match properly: " + clientSideClientID);
 
         /* build queues */
         MessageProducer requestProducer = session.createProducer(requestDestination);
@@ -78,15 +78,15 @@ public class JmsTopicRequestReplyTest extends TestSupport implements MessageList
         requestMessage.setJMSReplyTo(replyDestination);
         requestProducer.send(requestMessage);
 
-        log.info("Sent request.");
-        log.info(requestMessage.toString());
+        LOG.info("Sent request.");
+        LOG.info(requestMessage.toString());
 
         Message msg = replyConsumer.receive(5000);
 
         if (msg instanceof TextMessage) {
             TextMessage replyMessage = (TextMessage)msg;
-            log.info("Received reply.");
-            log.info(replyMessage.toString());
+            LOG.info("Received reply.");
+            LOG.info(replyMessage.toString());
             assertEquals("Wrong message content", "Hello: Olivier", replyMessage.getText());
         } else {
             fail("Should have received a reply by now");
@@ -107,8 +107,8 @@ public class JmsTopicRequestReplyTest extends TestSupport implements MessageList
         try {
             TextMessage requestMessage = (TextMessage)message;
 
-            log.info("Received request.");
-            log.info(requestMessage.toString());
+            LOG.info("Received request.");
+            LOG.info(requestMessage.toString());
 
             Destination replyDestination = requestMessage.getJMSReplyTo();
 
@@ -130,8 +130,8 @@ public class JmsTopicRequestReplyTest extends TestSupport implements MessageList
                 replyProducer.send(replyDestination, replyMessage);
             }
 
-            log.info("Sent reply.");
-            log.info(replyMessage.toString());
+            LOG.info("Sent reply.");
+            LOG.info(replyMessage.toString());
         } catch (JMSException e) {
             onException(e);
         }
@@ -146,7 +146,7 @@ public class JmsTopicRequestReplyTest extends TestSupport implements MessageList
             if (message != null) {
                 onMessage(message);
             } else {
-                log.error("No message received");
+                LOG.error("No message received");
             }
         } catch (JMSException e) {
             onException(e);
@@ -188,7 +188,7 @@ public class JmsTopicRequestReplyTest extends TestSupport implements MessageList
     }
 
     protected void onException(JMSException e) {
-        log.info("Caught: " + e);
+        LOG.info("Caught: " + e);
         e.printStackTrace();
         failures.add(e);
     }

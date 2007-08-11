@@ -46,8 +46,8 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     
     private Store store;
     private String name;
-    private LinkedList memoryList = new LinkedList();
-    private ListContainer diskList;
+    private LinkedList<MessageReference> memoryList = new LinkedList<MessageReference>();
+    private ListContainer<MessageReference> diskList;
     private Iterator iter;
     private Destination regionDestination;
     private boolean iterating;
@@ -105,7 +105,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
 
     public synchronized void destroy() {
         stop();
-        for (Iterator i = memoryList.iterator(); i.hasNext();) {
+        for (Iterator<MessageReference> i = memoryList.iterator(); i.hasNext();) {
             Message node = (Message)i.next();
             node.decrementReferenceCount();
         }
@@ -115,15 +115,15 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         }
     }
 
-    public synchronized LinkedList pageInList(int maxItems) {
-        LinkedList result = new LinkedList();
+    public synchronized LinkedList<MessageReference> pageInList(int maxItems) {
+        LinkedList<MessageReference> result = new LinkedList<MessageReference>();
         int count = 0;
-        for (Iterator i = memoryList.iterator(); i.hasNext() && count < maxItems;) {
+        for (Iterator<MessageReference> i = memoryList.iterator(); i.hasNext() && count < maxItems;) {
             result.add(i.next());
             count++;
         }
         if (count < maxItems && !isDiskListEmpty()) {
-            for (Iterator i = getDiskList().iterator(); i.hasNext() && count < maxItems;) {
+            for (Iterator<MessageReference> i = getDiskList().iterator(); i.hasNext() && count < maxItems;) {
                 Message message = (Message)i.next();
                 message.setRegionDestination(regionDestination);
                 message.incrementReferenceCount();
@@ -262,7 +262,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     protected synchronized void flushToDisk() {
         if (!memoryList.isEmpty()) {
             while (!memoryList.isEmpty()) {
-                MessageReference node = (MessageReference)memoryList.removeFirst();
+                MessageReference node = memoryList.removeFirst();
                 node.decrementReferenceCount();
                 getDiskList().addLast(node);
             }
@@ -274,7 +274,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         return diskList == null || diskList.isEmpty();
     }
 
-    protected ListContainer getDiskList() {
+    protected ListContainer<MessageReference> getDiskList() {
         if (diskList == null) {
             try {
                 diskList = store.getListContainer(name, "TopicSubscription", true);

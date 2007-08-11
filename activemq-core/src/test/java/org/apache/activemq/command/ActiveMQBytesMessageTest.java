@@ -27,6 +27,11 @@ import junit.framework.TestCase;
  * @version $Revision$
  */
 public class ActiveMQBytesMessageTest extends TestCase {
+
+    public ActiveMQBytesMessageTest(String name) {
+        super(name);
+    }
+
     public static void main(String[] args) {
         junit.textui.TestRunner.run(ActiveMQBytesMessageTest.class);
     }
@@ -43,15 +48,6 @@ public class ActiveMQBytesMessageTest extends TestCase {
      */
     protected void tearDown() throws Exception {
         super.tearDown();
-    }
-
-    /**
-     * Constructor for ActiveMQBytesMessageTest.
-     *
-     * @param arg0
-     */
-    public ActiveMQBytesMessageTest(String arg0) {
-        super(arg0);
     }
 
     public void testGetDataStructureType() {

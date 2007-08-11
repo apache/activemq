@@ -28,33 +28,33 @@ public interface AuthorizationMap {
     /**
      * Returns the set of all ACLs capable of administering temp destination
      */
-    Set getTempDestinationAdminACLs();
+    Set<?> getTempDestinationAdminACLs();
 
     /**
      * Returns the set of all ACLs capable of reading from temp destination
      */
-    Set getTempDestinationReadACLs();
+    Set<?> getTempDestinationReadACLs();
 
     /**
      * Returns the set of all ACLs capable of writing to temp destination
      */
-    Set getTempDestinationWriteACLs();
+    Set<?> getTempDestinationWriteACLs();
 
     /**
      * Returns the set of all ACLs capable of administering the given
      * destination
      */
-    Set getAdminACLs(ActiveMQDestination destination);
+    Set<?> getAdminACLs(ActiveMQDestination destination);
 
     /**
      * Returns the set of all ACLs capable of reading (consuming from) the given
      * destination
      */
-    Set getReadACLs(ActiveMQDestination destination);
+    Set<?> getReadACLs(ActiveMQDestination destination);
 
     /**
      * Returns the set of all ACLs capable of writing to the given destination
      */
-    Set getWriteACLs(ActiveMQDestination destination);
+    Set<?> getWriteACLs(ActiveMQDestination destination);
 
 }

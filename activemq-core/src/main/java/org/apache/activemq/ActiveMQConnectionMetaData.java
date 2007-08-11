@@ -17,7 +17,7 @@
 package org.apache.activemq;
 
 import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -137,12 +137,12 @@ public final class ActiveMQConnectionMetaData implements ConnectionMetaData {
      * @return an Enumeration of JMSX property names
      */
 
-    public Enumeration getJMSXPropertyNames() {
-        Hashtable jmxProperties = new Hashtable();
-        jmxProperties.put("JMSXGroupID", "1");
-        jmxProperties.put("JMSXGroupSeq", "1");
-        jmxProperties.put("JMSXDeliveryCount", "1");
-        jmxProperties.put("JMSXProducerTXID", "1");
-        return jmxProperties.keys();
+    public Enumeration<String> getJMSXPropertyNames() {
+        Vector<String> jmxProperties = new Vector<String>();
+        jmxProperties.add("JMSXGroupID");
+        jmxProperties.add("JMSXGroupSeq");
+        jmxProperties.add("JMSXDeliveryCount");
+        jmxProperties.add("JMSXProducerTXID");
+        return jmxProperties.elements();
     }
 }

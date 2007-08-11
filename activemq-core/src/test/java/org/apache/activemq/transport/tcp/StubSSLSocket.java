@@ -32,8 +32,7 @@ public class StubSSLSocket extends SSLSocket {
     private int wantClientAuthStatus = UNTOUCHED;
     private int needClientAuthStatus = UNTOUCHED;
     private int useClientModeStatus = UNTOUCHED;
-
-    final StubSSLSession session;
+    private final StubSSLSession session;
 
     public StubSSLSocket(StubSSLSession ses) {
         this.session = ses;

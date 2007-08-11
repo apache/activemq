@@ -45,7 +45,7 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
     private static final Log LOG = LogFactory.getLog(JournalTopicMessageStore.class);
 
     private TopicMessageStore longTermStore;
-    private HashMap ackedLastAckLocations = new HashMap();
+    private HashMap<SubscriptionKey, MessageId> ackedLastAckLocations = new HashMap<SubscriptionKey, MessageId>();
 
     public JournalTopicMessageStore(JournalPersistenceAdapter adapter, TopicMessageStore checkpointStore,
                                     ActiveMQTopic destinationName) {
@@ -160,22 +160,22 @@ public class JournalTopicMessageStore extends JournalMessageStore implements Top
 
     public RecordLocation checkpoint() throws IOException {
 
-        final HashMap cpAckedLastAckLocations;
+        final HashMap<SubscriptionKey, MessageId> cpAckedLastAckLocations;
 
         // swap out the hash maps..
         synchronized (this) {
             cpAckedLastAckLocations = this.ackedLastAckLocations;
-            this.ackedLastAckLocations = new HashMap();
+            this.ackedLastAckLocations = new HashMap<SubscriptionKey, MessageId>();
         }
 
         return super.checkpoint(new Callback() {
             public void execute() throws Exception {
 
                 // Checkpoint the acknowledged messages.
-                Iterator iterator = cpAckedLastAckLocations.keySet().iterator();
+                Iterator<SubscriptionKey> iterator = cpAckedLastAckLocations.keySet().iterator();
                 while (iterator.hasNext()) {
-                    SubscriptionKey subscriptionKey = (SubscriptionKey)iterator.next();
-                    MessageId identity = (MessageId)cpAckedLastAckLocations.get(subscriptionKey);
+                    SubscriptionKey subscriptionKey = iterator.next();
+                    MessageId identity = cpAckedLastAckLocations.get(subscriptionKey);
                     longTermStore.acknowledge(transactionTemplate.getContext(), subscriptionKey.clientId,
                                               subscriptionKey.subscriptionName, identity);
                 }

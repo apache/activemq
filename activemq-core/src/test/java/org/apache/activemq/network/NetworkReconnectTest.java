@@ -55,7 +55,7 @@ public class NetworkReconnectTest extends TestCase {
     private ActiveMQConnectionFactory producerConnectionFactory;
     private ActiveMQConnectionFactory consumerConnectionFactory;
     private Destination destination;
-    private ArrayList connections = new ArrayList();
+    private ArrayList<Connection> connections = new ArrayList<Connection>();
 
     public void testMultipleProducerBrokerRestarts() throws Exception {
         for (int i = 0; i < 10; i++) {
@@ -207,8 +207,8 @@ public class NetworkReconnectTest extends TestCase {
     }
 
     protected void disposeConsumerConnections() {
-        for (Iterator iter = connections.iterator(); iter.hasNext();) {
-            Connection connection = (Connection)iter.next();
+        for (Iterator<Connection> iter = connections.iterator(); iter.hasNext();) {
+            Connection connection = iter.next();
             try {
                 connection.close();
             } catch (Throwable ignore) {

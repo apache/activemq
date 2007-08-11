@@ -55,7 +55,8 @@ public class ErrorBroker implements Broker {
         this.message = message;
     }
 
-    public Map getDestinationMap() {
+    @SuppressWarnings("unchecked")
+    public Map<ActiveMQDestination, Destination> getDestinationMap() {
         return Collections.EMPTY_MAP;
     }
 
@@ -203,7 +204,7 @@ public class ErrorBroker implements Broker {
         return true;
     }
 
-    public Set getDurableDestinations() {
+    public Set<ActiveMQDestination> getDurableDestinations() {
         throw new BrokerStoppedException(this.message);
     }
 

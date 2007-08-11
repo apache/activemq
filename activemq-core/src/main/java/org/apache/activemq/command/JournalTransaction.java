@@ -35,10 +35,6 @@ public class JournalTransaction implements DataStructure {
     public boolean wasPrepared;
     public TransactionId transactionId;
 
-    public byte getDataStructureType() {
-        return DATA_STRUCTURE_TYPE;
-    }
-
     public JournalTransaction(byte type, TransactionId transactionId, boolean wasPrepared) {
         this.type = type;
         this.transactionId = transactionId;
@@ -46,6 +42,10 @@ public class JournalTransaction implements DataStructure {
     }
 
     public JournalTransaction() {
+    }
+
+    public byte getDataStructureType() {
+        return DATA_STRUCTURE_TYPE;
     }
 
     /**

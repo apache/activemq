@@ -61,7 +61,7 @@ public class BrokerFilter implements Broker {
         return next.getAdaptor(type);
     }
 
-    public Map getDestinationMap() {
+    public Map<ActiveMQDestination, Destination> getDestinationMap() {
         return next.getDestinationMap();
     }
 
@@ -205,7 +205,7 @@ public class BrokerFilter implements Broker {
         return next.isStopped();
     }
 
-    public Set getDurableDestinations() {
+    public Set<ActiveMQDestination> getDurableDestinations() {
         return next.getDurableDestinations();
     }
 

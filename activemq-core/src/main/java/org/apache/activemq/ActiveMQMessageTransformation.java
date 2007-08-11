@@ -50,8 +50,11 @@ import org.apache.activemq.command.ActiveMQTopic;
  * 
  * @version $Revision: 1.1 $
  */
-public class ActiveMQMessageTransformation {
+public final class ActiveMQMessageTransformation {
 
+    private ActiveMQMessageTransformation() {    
+    }
+    
     /**
      * Creates a an available JMS message from another provider.
      * 
@@ -95,7 +98,7 @@ public class ActiveMQMessageTransformation {
      *         message.
      * @throws JMSException if an error occurs
      */
-    public static final ActiveMQMessage transformMessage(Message message, ActiveMQConnection connection)
+    public static ActiveMQMessage transformMessage(Message message, ActiveMQConnection connection)
         throws JMSException {
         if (message instanceof ActiveMQMessage) {
             return (ActiveMQMessage)message;

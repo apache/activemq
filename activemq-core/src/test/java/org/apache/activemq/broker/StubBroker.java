@@ -45,8 +45,8 @@ import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.kaha.Store;
 
 public class StubBroker implements Broker {
-    public LinkedList addConnectionData = new LinkedList();
-    public LinkedList removeConnectionData = new LinkedList();
+    public LinkedList<AddConnectionData> addConnectionData = new LinkedList<AddConnectionData>();
+    public LinkedList<RemoveConnectionData> removeConnectionData = new LinkedList<RemoveConnectionData>();
 
     public class AddConnectionData {
         public final ConnectionContext connectionContext;
@@ -124,7 +124,7 @@ public class StubBroker implements Broker {
         return null;
     }
 
-    public Set getDurableDestinations() {
+    public Set<ActiveMQDestination> getDurableDestinations() {
         return null;
     }
 
@@ -190,7 +190,7 @@ public class StubBroker implements Broker {
     public void gc() {
     }
 
-    public Map getDestinationMap() {
+    public Map<ActiveMQDestination, Destination> getDestinationMap() {
         return null;
     }
 

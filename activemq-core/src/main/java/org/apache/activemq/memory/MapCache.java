@@ -31,7 +31,7 @@ public class MapCache implements Cache {
     protected final Map<Object, Object> map;
     
     public MapCache() {
-        this(new ConcurrentHashMap());
+        this(new ConcurrentHashMap<Object, Object>());
     }
     
     public MapCache(Map<Object, Object> map) {

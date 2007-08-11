@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
 
 public class ConsumerBean extends Assert implements MessageListener {
     private static final Log LOG = LogFactory.getLog(ConsumerBean.class);
-    private List messages = new ArrayList();
+    private List<Message> messages = new ArrayList<Message>();
     private Object semaphore;
     private boolean verbose;
 
@@ -51,8 +51,8 @@ public class ConsumerBean extends Assert implements MessageListener {
     /**
      * @return all the messages on the list so far, clearing the buffer
      */
-    public synchronized List flushMessages() {
-        List answer = new ArrayList(messages);
+    public synchronized List<Message> flushMessages() {
+        List<Message> answer = new ArrayList<Message>(messages);
         messages.clear();
         return answer;
     }

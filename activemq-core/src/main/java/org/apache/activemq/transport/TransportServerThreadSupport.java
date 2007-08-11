@@ -35,8 +35,8 @@ public abstract class TransportServerThreadSupport extends TransportServerSuppor
     private boolean daemon = true;
     private boolean joinOnStop = true;
     private Thread runner;
- // should be a multiple of 128k
-    private long stackSize = 0;
+    // should be a multiple of 128k
+    private long stackSize;
 
     public TransportServerThreadSupport() {
     }

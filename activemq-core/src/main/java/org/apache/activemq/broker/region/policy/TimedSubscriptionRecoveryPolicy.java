@@ -45,7 +45,7 @@ public class TimedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPoli
 
     // TODO: need to get a better synchronized linked list that has little
     // contention between enqueuing and dequeuing
-    private final List buffer = Collections.synchronizedList(new LinkedList());
+    private final List<TimestampWrapper> buffer = Collections.synchronizedList(new LinkedList<TimestampWrapper>());
     private volatile long lastGCRun = System.currentTimeMillis();
 
     private long recoverDuration = 60 * 1000; // Buffer for 1 min.
@@ -79,11 +79,10 @@ public class TimedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPoli
 
     public void recover(ConnectionContext context, Topic topic, SubscriptionRecovery sub) throws Exception {
         // Re-dispatch the messages from the buffer.
-        ArrayList copy = new ArrayList(buffer);
+        ArrayList<TimestampWrapper> copy = new ArrayList<TimestampWrapper>(buffer);
         if (!copy.isEmpty()) {
-            MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
-            for (Iterator iter = copy.iterator(); iter.hasNext();) {
-                TimestampWrapper timestampWrapper = (TimestampWrapper)iter.next();
+            for (Iterator<TimestampWrapper> iter = copy.iterator(); iter.hasNext();) {
+                TimestampWrapper timestampWrapper = iter.next();
                 MessageReference message = timestampWrapper.message;
                 sub.addRecoveredMessage(context, message);
             }
@@ -101,7 +100,7 @@ public class TimedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPoli
     public void gc() {
         lastGCRun = System.currentTimeMillis();
         while (buffer.size() > 0) {
-            TimestampWrapper timestampWrapper = (TimestampWrapper)buffer.get(0);
+            TimestampWrapper timestampWrapper = buffer.get(0);
             if (lastGCRun > timestampWrapper.timestamp + recoverDuration) {
                 // GC it.
                 buffer.remove(0);
@@ -120,18 +119,18 @@ public class TimedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPoli
     }
 
     public Message[] browse(ActiveMQDestination destination) throws Exception {
-        List result = new ArrayList();
-        ArrayList copy = new ArrayList(buffer);
+        List<Message> result = new ArrayList<Message>();
+        ArrayList<TimestampWrapper> copy = new ArrayList<TimestampWrapper>(buffer);
         DestinationFilter filter = DestinationFilter.parseFilter(destination);
-        for (Iterator iter = copy.iterator(); iter.hasNext();) {
-            TimestampWrapper timestampWrapper = (TimestampWrapper)iter.next();
+        for (Iterator<TimestampWrapper> iter = copy.iterator(); iter.hasNext();) {
+            TimestampWrapper timestampWrapper = iter.next();
             MessageReference ref = timestampWrapper.message;
             Message message = ref.getMessage();
             if (filter.matches(message.getDestination())) {
                 result.add(message);
             }
         }
-        return (Message[])result.toArray(new Message[result.size()]);
+        return result.toArray(new Message[result.size()]);
     }
 
 }

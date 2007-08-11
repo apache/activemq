@@ -28,7 +28,7 @@ import org.apache.activemq.util.IndentPrinter;
  * @version $Revision: 1.2 $
  */
 public class JMSStatsImpl extends StatsImpl {
-    private List connections = new CopyOnWriteArrayList();
+    private List<ActiveMQConnection> connections = new CopyOnWriteArrayList<ActiveMQConnection>();
 
     public JMSStatsImpl() {
     }
@@ -73,7 +73,8 @@ public class JMSStatsImpl extends StatsImpl {
     public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
         JMSConnectionStatsImpl[] stats = getConnections();
-        for (int i = 0, size = stats.length; i < size; i++) {
+        int size = stats.length;
+        for (int i = 0; i < size; i++) {
             stats[i].setEnabled(enabled);
         }
 

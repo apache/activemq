@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.List;
 
 import javax.jms.JMSException;
 import javax.jms.MessageFormatException;
@@ -39,6 +40,15 @@ public class ActiveMQMapMessageTest extends TestCase {
 
     private String name = "testName";
 
+    /**
+     * Constructor for ActiveMQMapMessageTest.
+     * 
+     * @param name
+     */
+    public ActiveMQMapMessageTest(String name) {
+        super(name);
+    }
+
     public static void main(String[] args) {
         junit.textui.TestRunner.run(ActiveMQMapMessageTest.class);
     }
@@ -55,15 +65,6 @@ public class ActiveMQMapMessageTest extends TestCase {
      */
     protected void tearDown() throws Exception {
         super.tearDown();
-    }
-
-    /**
-     * Constructor for ActiveMQMapMessageTest.
-     * 
-     * @param arg0
-     */
-    public ActiveMQMapMessageTest(String arg0) {
-        super(arg0);
     }
 
     public void testBytesConversion() throws JMSException, IOException {
@@ -316,8 +317,8 @@ public class ActiveMQMapMessageTest extends TestCase {
 
         msg = (ActiveMQMapMessage)msg.copy();
 
-        Enumeration mapNamesEnum = msg.getMapNames();
-        ArrayList mapNamesList = Collections.list(mapNamesEnum);
+        Enumeration<String> mapNamesEnum = msg.getMapNames();
+        List<String> mapNamesList = Collections.list(mapNamesEnum);
 
         assertEquals(mapNamesList.size(), 12);
         assertTrue(mapNamesList.contains("boolean"));

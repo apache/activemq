@@ -24,7 +24,7 @@ import java.util.concurrent.ThreadFactory;
  * 
  * @version $Revision$
  */
-public class DefaultThreadPools {
+public final class DefaultThreadPools {
 
     private static final Executor DEFAULT_POOL;
     static {
@@ -35,9 +35,11 @@ public class DefaultThreadPools {
                 return thread;
             }
         });
-    }
-    
+    }    
     private static final TaskRunnerFactory DEFAULT_TASK_RUNNER_FACTORY = new TaskRunnerFactory();
+    
+    private DefaultThreadPools() {        
+    }
     
     public static Executor getDefaultPool() {
         return DEFAULT_POOL;

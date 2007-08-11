@@ -38,7 +38,7 @@ public class KahaMessageStore implements MessageStore {
 
     protected final ActiveMQDestination destination;
     protected final MapContainer<MessageId, Message> messageContainer;
-    protected StoreEntry batchEntry = null;
+    protected StoreEntry batchEntry;
 
     public KahaMessageStore(MapContainer<MessageId, Message> container, ActiveMQDestination destination)
         throws IOException {

@@ -29,11 +29,14 @@ import javax.jms.Topic;
 
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision$
  */
 public abstract class DeadLetterTestSupport extends TestSupport {
+    private static final Log LOG = LogFactory.getLog(DeadLetterTestSupport.class);
 
     protected int messageCount = 10;
     protected long timeToLive;
@@ -80,7 +83,7 @@ public abstract class DeadLetterTestSupport extends TestSupport {
 
     protected void makeConsumer() throws JMSException {
         Destination destination = getDestination();
-        log.info("Consuming from: " + destination);
+        LOG.info("Consuming from: " + destination);
         if (durableSubscriber) {
             consumer = session.createDurableSubscriber((Topic)destination, destination.toString());
         } else {
@@ -91,7 +94,7 @@ public abstract class DeadLetterTestSupport extends TestSupport {
     protected void makeDlqConsumer() throws JMSException {
         dlqDestination = createDlqDestination();
 
-        log.info("Consuming from dead letter on: " + dlqDestination);
+        LOG.info("Consuming from dead letter on: " + dlqDestination);
         dlqConsumer = session.createConsumer(dlqDestination);
     }
 
@@ -101,7 +104,7 @@ public abstract class DeadLetterTestSupport extends TestSupport {
         producer.setDeliveryMode(deliveryMode);
         producer.setTimeToLive(timeToLive);
 
-        log.info("Sending " + messageCount + " messages to: " + getDestination());
+        LOG.info("Sending " + messageCount + " messages to: " + getDestination());
         for (int i = 0; i < messageCount; i++) {
             Message message = createMessage(session, i);
             producer.send(message);
@@ -117,7 +120,7 @@ public abstract class DeadLetterTestSupport extends TestSupport {
     }
 
     protected void assertMessage(Message message, int i) throws Exception {
-        log.info("Received message: " + message);
+        LOG.info("Received message: " + message);
         assertNotNull("No message received for index: " + i, message);
         assertTrue("Should be a TextMessage not: " + message, message instanceof TextMessage);
         TextMessage textMessage = (TextMessage)message;

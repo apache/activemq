@@ -98,8 +98,8 @@ out.println(" */");
     /**
      * Sort the class list so that base classes come up first.
      */
-    protected List sort(List source) {
-        LinkedHashMap rc = new LinkedHashMap();
+    protected List<JClass> sort(List source) {
+        LinkedHashMap<JClass, JClass> rc = new LinkedHashMap<JClass, JClass>();
     	ArrayList classes = new ArrayList(source);
         Collections.sort(classes, new Comparator(){
 			public int compare(Object o1, Object o2) {
@@ -109,7 +109,7 @@ out.println(" */");
 			}});
     	
         // lets make a map of all the class names
-        HashMap classNames = new HashMap();
+        HashMap<JClass, JClass> classNames = new HashMap<JClass, JClass>();
         for (Iterator iter = classes.iterator(); iter.hasNext();) {
             JClass c = (JClass) iter.next();
             classNames.put(c, c);
@@ -129,7 +129,7 @@ out.println(" */");
                 rc.put(c,c);
         }
 
-        return new ArrayList(rc.keySet());
+        return new ArrayList<JClass>(rc.keySet());
     }
 
     void generateFields(PrintWriter out, JClass jclass) {
@@ -141,7 +141,7 @@ out.println(" */");
             generateFields(out, jclass.getSuperclass());
         }
 
-        ArrayList properties = new ArrayList();
+        ArrayList<JProperty> properties = new ArrayList<JProperty>();
         jclass.getDeclaredProperties();
         for (int i = 0; i < jclass.getDeclaredProperties().length; i++) {
             JProperty p = jclass.getDeclaredProperties()[i];
@@ -149,8 +149,8 @@ out.println(" */");
                 properties.add(p);
             }
         }
-        for (Iterator iter = properties.iterator(); iter.hasNext();) {
-            JProperty property = (JProperty) iter.next();
+        for (Iterator<JProperty> iter = properties.iterator(); iter.hasNext();) {
+            JProperty property = iter.next();
             JAnnotation annotation = property.getGetter().getAnnotation("openwire:property");
             JAnnotationValue size = annotation.getValue("size");
             String name = toPropertyCase(property.getSimpleName());

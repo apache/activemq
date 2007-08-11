@@ -41,14 +41,14 @@ import org.apache.activemq.store.MessageStore;
 public class MemoryMessageStore implements MessageStore {
 
     protected final ActiveMQDestination destination;
-    protected final Map messageTable;
+    protected final Map<MessageId, Message> messageTable;
     protected MessageId lastBatchId;
 
     public MemoryMessageStore(ActiveMQDestination destination) {
-        this(destination, new LinkedHashMap());
+        this(destination, new LinkedHashMap<MessageId, Message>());
     }
 
-    public MemoryMessageStore(ActiveMQDestination destination, Map messageTable) {
+    public MemoryMessageStore(ActiveMQDestination destination, Map<MessageId, Message> messageTable) {
         this.destination = destination;
         this.messageTable = Collections.synchronizedMap(messageTable);
     }
@@ -68,7 +68,7 @@ public class MemoryMessageStore implements MessageStore {
     // }
 
     public Message getMessage(MessageId identity) throws IOException {
-        return (Message)messageTable.get(identity);
+        return messageTable.get(identity);
     }
 
     // public String getMessageReference(MessageId identity) throws IOException{
@@ -92,8 +92,8 @@ public class MemoryMessageStore implements MessageStore {
         // the message table is a synchronizedMap - so just have to synchronize
         // here
         synchronized (messageTable) {
-            for (Iterator iter = messageTable.values().iterator(); iter.hasNext();) {
-                Object msg = (Object)iter.next();
+            for (Iterator<Message> iter = messageTable.values().iterator(); iter.hasNext();) {
+                Object msg = iter.next();
                 if (msg.getClass() == MessageId.class) {
                     listener.recoverMessageReference((MessageId)msg);
                 } else {

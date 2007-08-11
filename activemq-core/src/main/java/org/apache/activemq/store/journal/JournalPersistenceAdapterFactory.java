@@ -48,9 +48,9 @@ public class JournalPersistenceAdapterFactory extends DataSourceSupport implemen
     private TaskRunnerFactory taskRunnerFactory;
     private Journal journal;
     private boolean useJournal = true;
-    private boolean useQuickJournal = false;
+    private boolean useQuickJournal;
     private File journalArchiveDirectory;
-    private boolean failIfJournalIsLocked = false;
+    private boolean failIfJournalIsLocked;
     private int journalThreadPriority = Thread.MAX_PRIORITY;
     private JDBCPersistenceAdapter jdbcPersistenceAdapter = new JDBCPersistenceAdapter();
 

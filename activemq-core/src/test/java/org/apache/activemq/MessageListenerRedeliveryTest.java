@@ -34,7 +34,7 @@ import org.apache.commons.logging.LogFactory;
 
 public class MessageListenerRedeliveryTest extends TestCase {
 
-    private Log log = LogFactory.getLog(getClass());
+    private static final Log LOG = LogFactory.getLog(MessageListenerRedeliveryTest.class);
 
     private Connection connection;
 
@@ -68,9 +68,9 @@ public class MessageListenerRedeliveryTest extends TestCase {
     }
 
     private class TestMessageListener implements MessageListener {
-        private Session session;
 
         public int counter;
+        private Session session;
 
         public TestMessageListener(Session session) {
             this.session = session;
@@ -78,18 +78,18 @@ public class MessageListenerRedeliveryTest extends TestCase {
 
         public void onMessage(Message message) {
             try {
-                log.info("Message Received: " + message);
+                LOG.info("Message Received: " + message);
                 counter++;
                 if (counter <= 4) {
-                    log.info("Message Rollback.");
+                    LOG.info("Message Rollback.");
                     session.rollback();
                 } else {
-                    log.info("Message Commit.");
+                    LOG.info("Message Commit.");
                     message.acknowledge();
                     session.commit();
                 }
             } catch (JMSException e) {
-                log.error("Error when rolling back transaction");
+                LOG.error("Error when rolling back transaction");
             }
         }
     }

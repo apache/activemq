@@ -44,13 +44,14 @@ import org.apache.commons.logging.LogFactory;
 public class StompTest extends CombinationTestSupport {
     private static final Log LOG = LogFactory.getLog(StompTest.class);
 
+    protected String bindAddress = "stomp://localhost:0";
+
     private BrokerService broker;
     private TransportConnector connector;
     private StompConnection stompConnection = new StompConnection();
     private Connection connection;
     private Session session;
     private ActiveMQQueue queue;
-    protected String bindAddress = "stomp://localhost:0";
 
     protected void setUp() throws Exception {
         broker = new BrokerService();

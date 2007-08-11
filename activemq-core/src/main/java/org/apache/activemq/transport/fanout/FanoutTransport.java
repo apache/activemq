@@ -59,13 +59,13 @@ public class FanoutTransport implements CompositeTransport {
 
     private final Object reconnectMutex = new Object();
     private final ConnectionStateTracker stateTracker = new ConnectionStateTracker();
-    private final ConcurrentHashMap requestMap = new ConcurrentHashMap();
+    private final ConcurrentHashMap<Integer, RequestCounter> requestMap = new ConcurrentHashMap<Integer, RequestCounter>();
 
     private final TaskRunner reconnectTask;
     private boolean started;
 
-    private ArrayList transports = new ArrayList();
-    private int connectedCount = 0;
+    private ArrayList<FanoutTransportHandler> transports = new ArrayList<FanoutTransportHandler>();
+    private int connectedCount;
 
     private int minAckCount = 2;
 
@@ -109,7 +109,7 @@ public class FanoutTransport implements CompositeTransport {
             Command command = (Command)o;
             if (command.isResponse()) {
                 Integer id = new Integer(((Response)command).getCorrelationId());
-                RequestCounter rc = (RequestCounter)requestMap.get(id);
+                RequestCounter rc = requestMap.get(id);
                 if (rc != null) {
                     if (rc.ackCount.decrementAndGet() <= 0) {
                         requestMap.remove(id);
@@ -179,12 +179,12 @@ public class FanoutTransport implements CompositeTransport {
                 } else {
 
                     // Try to connect them up.
-                    Iterator iter = transports.iterator();
+                    Iterator<FanoutTransportHandler> iter = transports.iterator();
                     for (int i = 0; iter.hasNext() && !disposed; i++) {
 
                         long now = System.currentTimeMillis();
 
-                        FanoutTransportHandler fanoutHandler = (FanoutTransportHandler)iter.next();
+                        FanoutTransportHandler fanoutHandler = iter.next();
                         if (fanoutHandler.transport != null) {
                             continue;
                         }
@@ -269,8 +269,8 @@ public class FanoutTransport implements CompositeTransport {
                 return;
             }
             started = true;
-            for (Iterator iter = transports.iterator(); iter.hasNext();) {
-                FanoutTransportHandler th = (FanoutTransportHandler)iter.next();
+            for (Iterator<FanoutTransportHandler> iter = transports.iterator(); iter.hasNext();) {
+                FanoutTransportHandler th = iter.next();
                 if (th.transport != null) {
                     restoreTransport(th);
                 }
@@ -288,8 +288,8 @@ public class FanoutTransport implements CompositeTransport {
             started = false;
             disposed = true;
 
-            for (Iterator iter = transports.iterator(); iter.hasNext();) {
-                FanoutTransportHandler th = (FanoutTransportHandler)iter.next();
+            for (Iterator<FanoutTransportHandler> iter = transports.iterator(); iter.hasNext();) {
+                FanoutTransportHandler th = iter.next();
                 if (th.transport != null) {
                     ss.stop(th.transport);
                 }
@@ -376,8 +376,8 @@ public class FanoutTransport implements CompositeTransport {
 
                 // Send the message.
                 if (fanout) {
-                    for (Iterator iter = transports.iterator(); iter.hasNext();) {
-                        FanoutTransportHandler th = (FanoutTransportHandler)iter.next();
+                    for (Iterator<FanoutTransportHandler> iter = transports.iterator(); iter.hasNext();) {
+                        FanoutTransportHandler th = iter.next();
                         if (th.transport != null) {
                             try {
                                 th.transport.oneway(command);
@@ -447,17 +447,17 @@ public class FanoutTransport implements CompositeTransport {
         this.transportListener = commandListener;
     }
 
-    public Object narrow(Class target) {
+    public <T> T narrow(Class<T> target) {
 
         if (target.isAssignableFrom(getClass())) {
-            return this;
+            return target.cast(this);
         }
 
         synchronized (reconnectMutex) {
-            for (Iterator iter = transports.iterator(); iter.hasNext();) {
-                FanoutTransportHandler th = (FanoutTransportHandler)iter.next();
+            for (Iterator<FanoutTransportHandler> iter = transports.iterator(); iter.hasNext();) {
+                FanoutTransportHandler th = iter.next();
                 if (th.transport != null) {
-                    Object rc = th.transport.narrow(target);
+                    T rc = th.transport.narrow(target);
                     if (rc != null) {
                         return rc;
                     }
@@ -473,8 +473,8 @@ public class FanoutTransport implements CompositeTransport {
         th.transport.start();
         stateTracker.setRestoreConsumers(th.transport == primary);
         stateTracker.restore(th.transport);
-        for (Iterator iter2 = requestMap.values().iterator(); iter2.hasNext();) {
-            RequestCounter rc = (RequestCounter)iter2.next();
+        for (Iterator<RequestCounter> iter2 = requestMap.values().iterator(); iter2.hasNext();) {
+            RequestCounter rc = iter2.next();
             th.transport.oneway(rc.command);
         }
     }
@@ -486,8 +486,8 @@ public class FanoutTransport implements CompositeTransport {
                 URI uri = uris[i];
 
                 boolean match = false;
-                for (Iterator iter = transports.iterator(); iter.hasNext();) {
-                    FanoutTransportHandler th = (FanoutTransportHandler)iter.next();
+                for (Iterator<FanoutTransportHandler> iter = transports.iterator(); iter.hasNext();) {
+                    FanoutTransportHandler th = iter.next();
                     if (th.uri.equals(uri)) {
                         match = true;
                         break;
@@ -509,9 +509,8 @@ public class FanoutTransport implements CompositeTransport {
             for (int i = 0; i < uris.length; i++) {
                 URI uri = uris[i];
 
-                boolean match = false;
-                for (Iterator iter = transports.iterator(); iter.hasNext();) {
-                    FanoutTransportHandler th = (FanoutTransportHandler)iter.next();
+                for (Iterator<FanoutTransportHandler> iter = transports.iterator(); iter.hasNext();) {
+                    FanoutTransportHandler th = iter.next();
                     if (th.uri.equals(uri)) {
                         if (th.transport != null) {
                             ServiceSupport.dispose(th.transport);

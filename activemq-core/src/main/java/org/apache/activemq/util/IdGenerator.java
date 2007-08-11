@@ -64,6 +64,19 @@ public class IdGenerator {
     }
 
     /**
+     * Construct an IdGenerator
+     */
+    public IdGenerator(String prefix) {
+        synchronized (UNIQUE_STUB) {
+            this.seed = prefix + UNIQUE_STUB + (instanceCount++) + ":";
+        }
+    }
+
+    public IdGenerator() {
+        this("ID:" + hostName);
+    }
+
+    /**
      * As we have to find the hostname as a side-affect of generating a unique
      * stub, we allow it's easy retrevial here
      * 
@@ -74,19 +87,6 @@ public class IdGenerator {
         return hostName;
     }
 
-    /**
-     * Construct an IdGenerator
-     */
-
-    public IdGenerator(String prefix) {
-        synchronized (UNIQUE_STUB) {
-            this.seed = prefix + UNIQUE_STUB + (instanceCount++) + ":";
-        }
-    }
-
-    public IdGenerator() {
-        this("ID:" + hostName);
-    }
 
     /**
      * Generate a unqiue id

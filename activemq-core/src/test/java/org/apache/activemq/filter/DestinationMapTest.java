@@ -371,6 +371,7 @@ public class DestinationMapTest extends TestCase {
         assertMapValue(destinationName, Arrays.asList(new Object[] {expected1, expected2, expected3, expected4, expected5, expected6}));
     }
 
+    @SuppressWarnings("unchecked")
     protected void assertMapValue(ActiveMQDestination destination, Object expected) {
         List expectedList = null;
         if (expected == null) {

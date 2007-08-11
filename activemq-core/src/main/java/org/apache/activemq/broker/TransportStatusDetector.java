@@ -34,7 +34,7 @@ import org.apache.commons.logging.LogFactory;
 public class TransportStatusDetector implements Service, Runnable {
     private static final Log LOG = LogFactory.getLog(TransportStatusDetector.class);
     private TransportConnector connector;
-    private Set collectionCandidates = new CopyOnWriteArraySet();
+    private Set<TransportConnection> collectionCandidates = new CopyOnWriteArraySet<TransportConnection>();
     private AtomicBoolean started = new AtomicBoolean(false);
     private Thread runner;
     private int sweepInterval = 5000;
@@ -60,8 +60,8 @@ public class TransportStatusDetector implements Service, Runnable {
     }
 
     protected void doCollection() {
-        for (Iterator i = collectionCandidates.iterator(); i.hasNext();) {
-            TransportConnection tc = (TransportConnection)i.next();
+        for (Iterator<TransportConnection> i = collectionCandidates.iterator(); i.hasNext();) {
+            TransportConnection tc = i.next();
             if (tc.isMarkedCandidate()) {
                 if (tc.isBlockedCandidate()) {
                     collectionCandidates.remove(tc);

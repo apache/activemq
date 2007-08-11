@@ -45,9 +45,9 @@ import org.springframework.core.io.Resource;
 
 public class SimpleNetworkTest extends TestCase {
 
+    protected static final int MESSAGE_COUNT = 10;
     private static final Log LOG = LogFactory.getLog(SimpleNetworkTest.class);
 
-    protected static final int MESSAGE_COUNT = 10;
     protected AbstractApplicationContext context;
     protected Connection localConnection;
     protected Connection remoteConnection;
@@ -139,7 +139,6 @@ public class SimpleNetworkTest extends TestCase {
         doSetUp();
         remoteConsumer = remoteSession.createDurableSubscriber(included, consumerName);
         for (int i = 0; i < MESSAGE_COUNT; i++) {
-            Message test = localSession.createTextMessage("test-" + i);
             assertNotNull(remoteConsumer.receive(500));
         }
     }

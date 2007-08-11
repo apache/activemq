@@ -23,10 +23,12 @@ import javax.jms.InvalidSelectorException;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.cursors.StoreDurableSubscriberCursor;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.memory.UsageListener;
 import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.util.SubscriptionKey;
@@ -36,8 +38,8 @@ import org.apache.commons.logging.LogFactory;
 public class DurableTopicSubscription extends PrefetchSubscription implements UsageListener {
 
     private static final Log LOG = LogFactory.getLog(PrefetchSubscription.class);
-    private final ConcurrentHashMap redeliveredMessages = new ConcurrentHashMap();
-    private final ConcurrentHashMap destinations = new ConcurrentHashMap();
+    private final ConcurrentHashMap<MessageId, Integer> redeliveredMessages = new ConcurrentHashMap<MessageId, Integer>();
+    private final ConcurrentHashMap<ActiveMQDestination, Destination> destinations = new ConcurrentHashMap<ActiveMQDestination, Destination>();
     private final SubscriptionKey subscriptionKey;
     private final boolean keepDurableSubsActive;
     private final UsageManager usageManager;
@@ -82,7 +84,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             this.context = context;
             this.info = info;
             if (!keepDurableSubsActive) {
-                for (Iterator iter = destinations.values().iterator(); iter.hasNext();) {
+                for (Iterator<Destination> iter = destinations.values().iterator(); iter.hasNext();) {
                     Topic topic = (Topic)iter.next();
                     topic.activate(context, this);
                 }
@@ -93,7 +95,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             // If nothing was in the persistent store, then try to use the
             // recovery policy.
             if (pending.isEmpty()) {
-                for (Iterator iter = destinations.values().iterator(); iter.hasNext();) {
+                for (Iterator<Destination> iter = destinations.values().iterator(); iter.hasNext();) {
                     Topic topic = (Topic)iter.next();
                     topic.recoverRetroactiveMessages(context, this);
                 }
@@ -110,7 +112,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             pending.stop();
         }
         if (!keepDurableSubsActive) {
-            for (Iterator iter = destinations.values().iterator(); iter.hasNext();) {
+            for (Iterator<Destination> iter = destinations.values().iterator(); iter.hasNext();) {
                 Topic topic = (Topic)iter.next();
                 topic.deactivate(context, this);
             }
@@ -118,7 +120,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         for (Iterator iter = dispatched.iterator(); iter.hasNext();) {
             // Mark the dispatched messages as redelivered for next time.
             MessageReference node = (MessageReference)iter.next();
-            Integer count = (Integer)redeliveredMessages.get(node.getMessageId());
+            Integer count = redeliveredMessages.get(node.getMessageId());
             if (count != null) {
                 redeliveredMessages.put(node.getMessageId(), Integer.valueOf(count.intValue() + 1));
             } else {
@@ -152,7 +154,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     protected MessageDispatch createMessageDispatch(MessageReference node, Message message) {
         MessageDispatch md = super.createMessageDispatch(node, message);
-        Integer count = (Integer)redeliveredMessages.get(node.getMessageId());
+        Integer count = redeliveredMessages.get(node.getMessageId());
         if (count != null) {
             md.setRedeliveryCounter(count.intValue());
         }
