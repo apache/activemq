@@ -16,12 +16,12 @@
  */
 package org.apache.activemq.web;
 
+import java.util.Collection;
+
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
-
-import java.util.Collection;
 
 /**
  * A facade for either a local in JVM broker or a remote broker over JMX

@@ -23,22 +23,24 @@ import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Handler;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.nio.SelectChannelConnector;
-import org.mortbay.jetty.webapp.WebAppClassLoader;
 import org.mortbay.jetty.webapp.WebAppContext;
 
-
 /**
- * A simple bootstrap class for starting Jetty in your IDE using the local web application.
+ * A simple bootstrap class for starting Jetty in your IDE using the local web
+ * application.
  * 
  * @version $Revision$
  */
-public class JettyServer {
-    
+public final class JettyServer {
+
     public static final int PORT = 8080;
 
     public static final String WEBAPP_DIR = "src/main/webapp";
 
     public static final String WEBAPP_CTX = "/";
+
+    private JettyServer() {
+    }
 
     public static void main(String[] args) throws Exception {
         // lets create a broker
@@ -48,11 +50,13 @@ public class JettyServer {
         broker.addConnector("tcp://localhost:61616");
         broker.addConnector("stomp://localhost:61613");
         broker.start();
-        
+
         // lets publish some messages so that there is some stuff to browse
-        DefaultQueueSender.main(new String[] {"FOO.BAR"});
-        
-        // now lets start the web server        
+        DefaultQueueSender.main(new String[] {
+            "FOO.BAR"
+        });
+
+        // now lets start the web server
         int port = PORT;
         if (args.length > 0) {
             String text = args[0];
@@ -64,12 +68,16 @@ public class JettyServer {
         connector.setPort(port);
         connector.setServer(server);
         WebAppContext context = new WebAppContext();
-        
+
         context.setResourceBase(WEBAPP_DIR);
         context.setContextPath(WEBAPP_CTX);
         context.setServer(server);
-        server.setHandlers(new Handler[]{context});
-        server.setConnectors(new Connector[]{connector});
+        server.setHandlers(new Handler[] {
+            context
+        });
+        server.setConnectors(new Connector[] {
+            connector
+        });
         server.start();
     }
 }

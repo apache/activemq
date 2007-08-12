@@ -16,18 +16,27 @@
  */
 package org.apache.activemq.tool;
 
-import org.apache.activemq.tool.MemMessageIdList;
-
-import javax.jms.*;
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.Session;
+import javax.jms.Topic;
 
 /**
  * @version $Revision: 1.3 $
  */
 public class MemConsumer extends MemMessageIdList implements MessageListener {
+
+    static long ctr;
+
     protected Connection connection;
     protected MessageConsumer consumer;
-    protected long counter = 0;
-    protected boolean isParent = false;
+    protected long counter;
+    protected boolean isParent;
     protected boolean inOrder = true;
 
 
@@ -70,8 +79,6 @@ public class MemConsumer extends MemMessageIdList implements MessageListener {
     public Message receive(long wait) throws JMSException {
         return consumer.receive(wait);
     }
-
-    static long ctr = 0;
 
     public void onMessage(Message msg) {
         super.onMessage(msg);

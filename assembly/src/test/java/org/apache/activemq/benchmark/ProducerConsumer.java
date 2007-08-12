@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.benchmark;
 
-
 /**
  * @author James Strachan
  * @version $Revision$
@@ -24,6 +23,9 @@ package org.apache.activemq.benchmark;
 public class ProducerConsumer extends Producer {
 
     private Consumer consumer = new Consumer();
+
+    public ProducerConsumer() {
+    }
 
     public static void main(String[] args) {
         ProducerConsumer tool = new ProducerConsumer();
@@ -44,14 +46,10 @@ public class ProducerConsumer extends Producer {
         }
         try {
             tool.run();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.out.println("Caught: " + e);
             e.printStackTrace();
         }
-    }
-
-    public ProducerConsumer() {
     }
 
     public void run() throws Exception {

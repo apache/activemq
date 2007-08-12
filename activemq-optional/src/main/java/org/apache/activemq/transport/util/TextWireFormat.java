@@ -34,8 +34,10 @@ import org.apache.activemq.wireformat.WireFormat;
  */
 public abstract class TextWireFormat implements WireFormat {
 
-    public abstract Object unmarshalText(String text);    
+    public abstract Object unmarshalText(String text);
+
     public abstract Object unmarshalText(Reader reader);
+
     public abstract String marshalText(Object command);
 
     public void marshal(Object command, DataOutput out) throws IOException {
@@ -45,9 +47,9 @@ public abstract class TextWireFormat implements WireFormat {
     public Object unmarshal(DataInput in) throws IOException {
         String text = in.readUTF();
         return unmarshalText(text);
-	}
-    
-	public ByteSequence marshal(Object command) throws IOException {
+    }
+
+    public ByteSequence marshal(Object command) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
         marshal(command, dos);

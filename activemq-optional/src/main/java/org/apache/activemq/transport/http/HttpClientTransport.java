@@ -37,24 +37,24 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * A HTTP {@link org.apache.activemq.transport.TransportChannel} which uses the <a
- * href="http://jakarta.apache.org/commons/httpclient/">commons-httpclient</a>
+ * A HTTP {@link org.apache.activemq.transport.TransportChannel} which uses the
+ * <a href="http://jakarta.apache.org/commons/httpclient/">commons-httpclient</a>
  * library
  * 
  * @version $Revision$
  */
 public class HttpClientTransport extends HttpTransportSupport {
-    private static final Log log = LogFactory.getLog(HttpClientTransport.class);
-    public static final int MAX_CLIENT_TIMEOUT = 30000;
 
-    private static final IdGenerator clientIdGenerator = new IdGenerator();
+    public static final int MAX_CLIENT_TIMEOUT = 30000;
+    private static final Log LOG = LogFactory.getLog(HttpClientTransport.class);
+    private static final IdGenerator CLIENT_ID_GENERATOR = new IdGenerator();
 
     private HttpClient sendHttpClient;
     private HttpClient receiveHttpClient;
-    
-    private final String clientID = clientIdGenerator.generateId();
+
+    private final String clientID = CLIENT_ID_GENERATOR.generateId();
     private boolean trace;
-    
+
     public HttpClientTransport(TextWireFormat wireFormat, URI remoteUrl) {
         super(wireFormat, remoteUrl);
     }
@@ -64,27 +64,27 @@ public class HttpClientTransport extends HttpTransportSupport {
     }
 
     public void oneway(Object command) throws IOException {
-    	
-    	if( isStopped() ) {
-    		throw new IOException("stopped.");
-    	}
-    	
+
+        if (isStopped()) {
+            throw new IOException("stopped.");
+        }
+
         PostMethod httpMethod = new PostMethod(getRemoteUrl().toString());
         configureMethod(httpMethod);
         String data = getTextWireFormat().marshalText(command);
         byte[] bytes = data.getBytes("UTF-8");
         httpMethod.setRequestBody(new ByteArrayInputStream(bytes));
-        
+
         try {
-        	
+
             HttpClient client = getSendHttpClient();
             client.setTimeout(MAX_CLIENT_TIMEOUT);
             int answer = client.executeMethod(httpMethod);
             if (answer != HttpStatus.SC_OK) {
                 throw new IOException("Failed to post command: " + command + " as response was: " + answer);
             }
-                        
-//            checkSession(httpMethod);
+
+            // checkSession(httpMethod);
         } catch (IOException e) {
             throw IOExceptionSupport.create("Could not post command: " + command + " due to: " + e, e);
         } finally {
@@ -98,12 +98,12 @@ public class HttpClientTransport extends HttpTransportSupport {
     }
 
     public void run() {
-    	
-        log.trace("HTTP GET consumer thread starting: " + this);
+
+        LOG.trace("HTTP GET consumer thread starting: " + this);
         HttpClient httpClient = getReceiveHttpClient();
         URI remoteUrl = getRemoteUrl();
-                
-        while ( !isStopped() && !isStopping() ) {
+
+        while (!isStopped() && !isStopping()) {
 
             GetMethod httpMethod = new GetMethod(remoteUrl.toString());
             configureMethod(httpMethod);
@@ -112,33 +112,30 @@ public class HttpClientTransport extends HttpTransportSupport {
                 int answer = httpClient.executeMethod(httpMethod);
                 if (answer != HttpStatus.SC_OK) {
                     if (answer == HttpStatus.SC_REQUEST_TIMEOUT) {
-                        log.debug("GET timed out");
+                        LOG.debug("GET timed out");
                         try {
-							Thread.sleep(1000);
-						} catch (InterruptedException e) {
-							onException(new InterruptedIOException());
-							break;
-						}
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            onException(new InterruptedIOException());
+                            break;
+                        }
+                    } else {
+                        onException(new IOException("Failed to perform GET on: " + remoteUrl + " as response was: " + answer));
+                        break;
                     }
-                    else {
-						onException(new IOException("Failed to perform GET on: " + remoteUrl + " as response was: " + answer));
-						break;
-                    }
-                }
-                else {
-//                    checkSession(httpMethod);
-                	DataInputStream stream = new DataInputStream(httpMethod.getResponseBodyAsStream());                    
-                	Object command = (Object) getTextWireFormat().unmarshal(stream);                    
+                } else {
+                    // checkSession(httpMethod);
+                    DataInputStream stream = new DataInputStream(httpMethod.getResponseBodyAsStream());
+                    Object command = (Object)getTextWireFormat().unmarshal(stream);
                     if (command == null) {
-                        log.warn("Received null command from url: " + remoteUrl);
+                        LOG.warn("Received null command from url: " + remoteUrl);
                     } else {
                         doConsume(command);
                     }
                 }
-            }
-            catch (IOException e) {
-				onException(IOExceptionSupport.create("Failed to perform GET on: " + remoteUrl+" Reason: "+e.getMessage(),e));
-				break;
+            } catch (IOException e) {
+                onException(IOExceptionSupport.create("Failed to perform GET on: " + remoteUrl + " Reason: " + e.getMessage(), e));
+                break;
             } finally {
                 httpMethod.getResponseBody();
                 httpMethod.releaseConnection();
@@ -173,22 +170,22 @@ public class HttpClientTransport extends HttpTransportSupport {
     // Implementation methods
     // -------------------------------------------------------------------------
     protected void doStart() throws Exception {
-    	
-        log.trace("HTTP GET consumer thread starting: " + this);
+
+        LOG.trace("HTTP GET consumer thread starting: " + this);
         HttpClient httpClient = getReceiveHttpClient();
         URI remoteUrl = getRemoteUrl();
-                
+
         HeadMethod httpMethod = new HeadMethod(remoteUrl.toString());
         configureMethod(httpMethod);
 
         int answer = httpClient.executeMethod(httpMethod);
         if (answer != HttpStatus.SC_OK) {
-			throw new IOException("Failed to perform GET on: " + remoteUrl + " as response was: " + answer);
+            throw new IOException("Failed to perform GET on: " + remoteUrl + " as response was: " + answer);
         }
-    	
-    	super.doStart();
+
+        super.doStart();
     }
-    
+
     protected void doStop(ServiceStopper stopper) throws Exception {
     }
 
@@ -204,24 +201,24 @@ public class HttpClientTransport extends HttpTransportSupport {
         method.setRequestHeader("clientID", clientID);
     }
 
-	public boolean isTrace() {
-		return trace;
-	}
+    public boolean isTrace() {
+        return trace;
+    }
 
-	public void setTrace(boolean trace) {
-		this.trace = trace;
-	}
+    public void setTrace(boolean trace) {
+        this.trace = trace;
+    }
 
-//    protected void checkSession(HttpMethod client) {
-//        Header header = client.getRequestHeader("Set-Cookie");
-//        if (header != null) {
-//            String set_cookie = header.getValue();
-//
-//            if (set_cookie != null && set_cookie.startsWith("JSESSIONID=")) {
-//                String[] bits = set_cookie.split("[=;]");
-//                sessionID = bits[1];
-//            }
-//        }
-//    }
+    // protected void checkSession(HttpMethod client) {
+    // Header header = client.getRequestHeader("Set-Cookie");
+    // if (header != null) {
+    // String set_cookie = header.getValue();
+    //
+    // if (set_cookie != null && set_cookie.startsWith("JSESSIONID=")) {
+    // String[] bits = set_cookie.split("[=;]");
+    // sessionID = bits[1];
+    // }
+    // }
+    // }
 
 }

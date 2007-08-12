@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.ra;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import javax.resource.ResourceException;
 import javax.resource.spi.ConnectionEvent;
 import javax.resource.spi.ConnectionEventListener;
@@ -28,21 +25,24 @@ import javax.resource.spi.ManagedConnection;
 import javax.resource.spi.ManagedConnectionFactory;
 import javax.security.auth.Subject;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
- * A simple implementation of a ConnectionManager.
- * An Application Server will have a better implementation with pooling and security etc.
+ * A simple implementation of a ConnectionManager. An Application Server will
+ * have a better implementation with pooling and security etc.
  * 
  * @version $Revision$
  */
 public class SimpleConnectionManager implements ConnectionManager, ConnectionEventListener {
 
     private static final long serialVersionUID = -7662970495944876239L;
-    
-    private static final Log log = LogFactory.getLog(SimpleConnectionManager.class);
+
+    private static final Log LOG = LogFactory.getLog(SimpleConnectionManager.class);
 
     /**
-     * @see javax.resource.spi.ConnectionManager#allocateConnection(javax.resource.spi.ManagedConnectionFactory, javax.resource.spi.ConnectionRequestInfo)
+     * @see javax.resource.spi.ConnectionManager#allocateConnection(javax.resource.spi.ManagedConnectionFactory,
+     *      javax.resource.spi.ConnectionRequestInfo)
      */
     public Object allocateConnection(ManagedConnectionFactory connectionFactory, ConnectionRequestInfo info) throws ResourceException {
         Subject subject = null;
@@ -56,16 +56,14 @@ public class SimpleConnectionManager implements ConnectionManager, ConnectionEve
      */
     public void connectionClosed(ConnectionEvent event) {
         try {
-            ((ManagedConnection) event.getSource()).cleanup();
-        }
-        catch (ResourceException e) {
-            log.warn("Error occured during the cleanup of a managed connection: ", e);
+            ((ManagedConnection)event.getSource()).cleanup();
+        } catch (ResourceException e) {
+            LOG.warn("Error occured during the cleanup of a managed connection: ", e);
         }
         try {
-            ((ManagedConnection) event.getSource()).destroy();
-        }
-        catch (ResourceException e) {
-            log.warn("Error occured during the destruction of a managed connection: ", e);
+            ((ManagedConnection)event.getSource()).destroy();
+        } catch (ResourceException e) {
+            LOG.warn("Error occured during the destruction of a managed connection: ", e);
         }
     }
 
@@ -91,18 +89,16 @@ public class SimpleConnectionManager implements ConnectionManager, ConnectionEve
      * @see javax.resource.spi.ConnectionEventListener#connectionErrorOccurred(javax.resource.spi.ConnectionEvent)
      */
     public void connectionErrorOccurred(ConnectionEvent event) {
-        log.warn("Managed connection experiened an error: ", event.getException());
+        LOG.warn("Managed connection experiened an error: ", event.getException());
         try {
-            ((ManagedConnection) event.getSource()).cleanup();
-        }
-        catch (ResourceException e) {
-            log.warn("Error occured during the cleanup of a managed connection: ", e);
+            ((ManagedConnection)event.getSource()).cleanup();
+        } catch (ResourceException e) {
+            LOG.warn("Error occured during the cleanup of a managed connection: ", e);
         }
         try {
-            ((ManagedConnection) event.getSource()).destroy();
-        }
-        catch (ResourceException e) {
-            log.warn("Error occured during the destruction of a managed connection: ", e);
+            ((ManagedConnection)event.getSource()).destroy();
+        } catch (ResourceException e) {
+            LOG.warn("Error occured during the destruction of a managed connection: ", e);
         }
     }
 

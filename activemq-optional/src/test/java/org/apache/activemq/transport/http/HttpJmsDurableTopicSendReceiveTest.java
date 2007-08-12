@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.transport.http;
 
-import org.apache.activemq.JmsDurableTopicSendReceiveTest;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.JmsDurableTopicSendReceiveTest;
 import org.apache.activemq.broker.BrokerService;
 
 public class HttpJmsDurableTopicSendReceiveTest extends JmsDurableTopicSendReceiveTest {

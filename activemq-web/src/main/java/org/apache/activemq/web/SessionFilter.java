@@ -28,22 +28,22 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
-
 /* ------------------------------------------------------------ */
-/** SessionFilter.
- * Simple filter to ensure that all clients have a session.
- * Prevents problems with AJAX requests. 
+/**
+ * SessionFilter. Simple filter to ensure that all clients have a session.
+ * Prevents problems with AJAX requests.
  */
-public class SessionFilter implements Filter{
+public class SessionFilter implements Filter {
 
     public void init(FilterConfig filterConfig) throws ServletException {
     }
 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        HttpSession session=((HttpServletRequest)request).getSession(true);
+        ((HttpServletRequest)request).getSession(true);
         // if (session.isNew())
-        //    System.err.println("NEW SESSION "+session.getId()+" for "+((HttpServletRequest)request).getRequestURI());
-        chain.doFilter(request,response);
+        // System.err.println("NEW SESSION "+session.getId()+" for
+        // "+((HttpServletRequest)request).getRequestURI());
+        chain.doFilter(request, response);
     }
 
     public void destroy() {

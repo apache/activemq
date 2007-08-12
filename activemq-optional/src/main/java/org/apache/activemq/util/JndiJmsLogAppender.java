@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.util;
 
-import org.apache.log4j.helpers.LogLog;
+import java.util.Hashtable;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -24,12 +24,13 @@ import javax.jms.JMSException;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import java.util.Hashtable;
+
+import org.apache.log4j.helpers.LogLog;
 
 /**
- * A JMS 1.1 log4j appender which uses JNDI to locate a JMS ConnectionFactory
- * to use for logging events.
- *
+ * A JMS 1.1 log4j appender which uses JNDI to locate a JMS ConnectionFactory to
+ * use for logging events.
+ * 
  * @version $Revision$
  */
 public class JndiJmsLogAppender extends JmsLogAppenderSupport {
@@ -71,9 +72,8 @@ public class JndiJmsLogAppender extends JmsLogAppenderSupport {
         this.password = password;
     }
 
-
     // to customize the JNDI context
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     public String getInitialContextFactoryName() {
         return initialContextFactoryName;
     }
@@ -115,18 +115,17 @@ public class JndiJmsLogAppender extends JmsLogAppenderSupport {
     }
 
     // Implementation methods
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     protected Connection createConnection() throws JMSException, NamingException {
         InitialContext context = createInitialContext();
         LogLog.debug("Looking up ConnectionFactory with jndiName: " + jndiName);
-        ConnectionFactory factory = (ConnectionFactory) context.lookup(jndiName);
+        ConnectionFactory factory = (ConnectionFactory)context.lookup(jndiName);
         if (factory == null) {
             throw new JMSException("No such ConnectionFactory for name: " + jndiName);
         }
         if (userName != null) {
             return factory.createConnection(userName, password);
-        }
-        else {
+        } else {
             return factory.createConnection();
         }
     }
@@ -134,16 +133,13 @@ public class JndiJmsLogAppender extends JmsLogAppenderSupport {
     protected InitialContext createInitialContext() throws NamingException {
         if (initialContextFactoryName == null) {
             return new InitialContext();
-        }
-        else {
+        } else {
             Hashtable<String, String> env = new Hashtable<String, String>();
             env.put(Context.INITIAL_CONTEXT_FACTORY, initialContextFactoryName);
             if (providerURL != null) {
                 env.put(Context.PROVIDER_URL, providerURL);
-            }
-            else {
-                LogLog.warn("You have set InitialContextFactoryName option but not the "
-                        + "ProviderURL. This is likely to cause problems.");
+            } else {
+                LogLog.warn("You have set InitialContextFactoryName option but not the " + "ProviderURL. This is likely to cause problems.");
             }
             if (urlPkgPrefixes != null) {
                 env.put(Context.URL_PKG_PREFIXES, urlPkgPrefixes);
@@ -153,10 +149,8 @@ public class JndiJmsLogAppender extends JmsLogAppenderSupport {
                 env.put(Context.SECURITY_PRINCIPAL, securityPrincipalName);
                 if (securityCredentials != null) {
                     env.put(Context.SECURITY_CREDENTIALS, securityCredentials);
-                }
-                else {
-                    LogLog.warn("You have set SecurityPrincipalName option but not the "
-                            + "SecurityCredentials. This is likely to cause problems.");
+                } else {
+                    LogLog.warn("You have set SecurityPrincipalName option but not the " + "SecurityCredentials. This is likely to cause problems.");
                 }
             }
             LogLog.debug("Looking up JNDI context with environment: " + env);

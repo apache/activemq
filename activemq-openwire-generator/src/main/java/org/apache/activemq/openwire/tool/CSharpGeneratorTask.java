@@ -26,92 +26,93 @@ import org.codehaus.jam.JamServiceFactory;
 import org.codehaus.jam.JamServiceParams;
 
 /**
- * 
  * @version $Revision: 384826 $
  */
 public class CSharpGeneratorTask extends Task {
-	
-	int version = 2;
-	File source = new File(".");
-	File target = new File(".");
-	
+
+    int version = 2;
+    File source = new File(".");
+    File target = new File(".");
+
     public static void main(String[] args) {
-    	
+
         Project project = new Project();
         project.init();
-    	CSharpGeneratorTask generator = new CSharpGeneratorTask();
-    	generator.setProject(project);
-    	
-    	if( args.length > 0 ) {
-    		generator.version = Integer.parseInt(args[0]);
-    	}
+        CSharpGeneratorTask generator = new CSharpGeneratorTask();
+        generator.setProject(project);
 
-    	if( args.length > 1 ) {
-    		generator.source = new File(args[1]);
-    	}  
-    	
-    	if( args.length > 2 ) {
-    		generator.target = new File(args[2]);
-    	}    	
-    	
-    	generator.execute();
-	}
-    
+        if (args.length > 0) {
+            generator.version = Integer.parseInt(args[0]);
+        }
+
+        if (args.length > 1) {
+            generator.source = new File(args[1]);
+        }
+
+        if (args.length > 2) {
+            generator.target = new File(args[2]);
+        }
+
+        generator.execute();
+    }
+
     public void execute() throws BuildException {
         try {
-        	
-        	String sourceDir = source+"/src/main/java";
-        	
+
+            String sourceDir = source + "/src/main/java";
+
             System.out.println("Parsing source files in: " + sourceDir);
 
             JamServiceFactory jamServiceFactory = JamServiceFactory.getInstance();
-            JamServiceParams params = jamServiceFactory.createServiceParams();            
-            File[] dirs = new File[]{new File(sourceDir)};            
+            JamServiceParams params = jamServiceFactory.createServiceParams();
+            File[] dirs = new File[] {
+                new File(sourceDir)
+            };
             params.includeSourcePattern(dirs, "**/*.java");
             JamService jam = jamServiceFactory.createService(params);
 
             {
-            	CSharpClassesGenerator script = new CSharpClassesGenerator();
-	        	script.setJam(jam);
-	        	script.setTargetDir(target+"/src/main/csharp");
-	        	script.setOpenwireVersion(version);
-	        	script.run();
+                CSharpClassesGenerator script = new CSharpClassesGenerator();
+                script.setJam(jam);
+                script.setTargetDir(target + "/src/main/csharp");
+                script.setOpenwireVersion(version);
+                script.run();
             }
             {
-            	CSharpMarshallingGenerator script = new CSharpMarshallingGenerator();
-	        	script.setJam(jam);
-	        	script.setTargetDir(target+"/src/main/csharp");
-	        	script.setOpenwireVersion(version);
-	        	script.run();
+                CSharpMarshallingGenerator script = new CSharpMarshallingGenerator();
+                script.setJam(jam);
+                script.setTargetDir(target + "/src/main/csharp");
+                script.setOpenwireVersion(version);
+                script.run();
             }
-            
+
         } catch (Exception e) {
-        	throw new BuildException(e);
+            throw new BuildException(e);
         }
     }
 
-	public int getVersion() {
-		return version;
-	}
+    public int getVersion() {
+        return version;
+    }
 
-	public void setVersion(int version) {
-		this.version = version;
-	}
+    public void setVersion(int version) {
+        this.version = version;
+    }
 
-	public File getSource() {
-		return source;
-	}
+    public File getSource() {
+        return source;
+    }
 
-	public void setSource(File basedir) {
-		this.source = basedir;
-	}
+    public void setSource(File basedir) {
+        this.source = basedir;
+    }
 
-	public File getTarget() {
-		return target;
-	}
+    public File getTarget() {
+        return target;
+    }
 
-	public void setTarget(File target) {
-		this.target = target;
-	}
+    public void setTarget(File target) {
+        this.target = target;
+    }
 
 }

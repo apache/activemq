@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.transport.http;
 
+import java.net.URI;
+
 import org.apache.activemq.transport.TransportThreadSupport;
 import org.apache.activemq.transport.util.TextWireFormat;
-
-import java.net.URI;
 
 /**
  * A useful base class for HTTP Transport implementations.

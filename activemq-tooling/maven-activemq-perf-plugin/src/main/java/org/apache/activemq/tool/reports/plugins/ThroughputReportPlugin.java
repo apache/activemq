@@ -16,22 +16,22 @@
  */
 package org.apache.activemq.tool.reports.plugins;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+
 import org.apache.activemq.tool.reports.PerformanceStatisticsUtil;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.util.StringTokenizer;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.Iterator;
-
 public class ThroughputReportPlugin implements ReportPlugin {
-    public static final String KEY_SYS_TOTAL_TP          = "SystemTotalTP";
-    public static final String KEY_SYS_TOTAL_CLIENTS     = "SystemTotalClients";
-    public static final String KEY_SYS_AVE_TP            = "SystemAveTP";
-    public static final String KEY_SYS_AVE_EMM_TP        = "SystemAveEMMTP";
-    public static final String KEY_SYS_AVE_CLIENT_TP     = "SystemAveClientTP";
+    public static final String KEY_SYS_TOTAL_TP = "SystemTotalTP";
+    public static final String KEY_SYS_TOTAL_CLIENTS = "SystemTotalClients";
+    public static final String KEY_SYS_AVE_TP = "SystemAveTP";
+    public static final String KEY_SYS_AVE_EMM_TP = "SystemAveEMMTP";
+    public static final String KEY_SYS_AVE_CLIENT_TP = "SystemAveClientTP";
     public static final String KEY_SYS_AVE_CLIENT_EMM_TP = "SystemAveClientEMMTP";
     public static final String KEY_MIN_CLIENT_TP = "MinClientTP";
     public static final String KEY_MAX_CLIENT_TP = "MaxClientTP";
@@ -46,12 +46,15 @@ public class ThroughputReportPlugin implements ReportPlugin {
 
     public void handleCsvData(String csvData) {
         StringTokenizer tokenizer = new StringTokenizer(csvData, ",");
-        String data, key, val, clientName = null;
+        String data;
+        String key;
+        String val;
+        String clientName = null;
         Long throughput = null;
         while (tokenizer.hasMoreTokens()) {
             data = tokenizer.nextToken();
-            key  = data.substring(0, data.indexOf("="));
-            val  = data.substring(data.indexOf("=") + 1);
+            key = data.substring(0, data.indexOf("="));
+            val = data.substring(data.indexOf("=") + 1);
 
             if (key.equalsIgnoreCase("clientName")) {
                 clientName = val;
@@ -70,35 +73,35 @@ public class ThroughputReportPlugin implements ReportPlugin {
             return new HashMap<String, String>();
         }
 
-        long   minClientTP = Long.MAX_VALUE, // TP = throughput
-               maxClientTP = Long.MIN_VALUE,
-               minClientTotalTP = Long.MAX_VALUE,
-               maxClientTotalTP = Long.MIN_VALUE,
-               systemTotalTP = 0;
+        long minClientTP = Long.MAX_VALUE; // TP = throughput
+        long maxClientTP = Long.MIN_VALUE;
+        long minClientTotalTP = Long.MAX_VALUE;
+        long maxClientTotalTP = Long.MIN_VALUE;
+        long systemTotalTP = 0;
 
-        double minClientAveTP = Double.MAX_VALUE,
-               maxClientAveTP = Double.MIN_VALUE,
-               minClientAveEMMTP = Double.MAX_VALUE, // EMM = Excluding Min/Max
-               maxClientAveEMMTP = Double.MIN_VALUE,
-               systemAveTP = 0.0,
-               systemAveEMMTP = 0.0;
+        double minClientAveTP = Double.MAX_VALUE;
+        double maxClientAveTP = Double.MIN_VALUE;
+        double minClientAveEMMTP = Double.MAX_VALUE; // EMM = Excluding Min/Max
+        double maxClientAveEMMTP = Double.MIN_VALUE;
+        double systemAveTP = 0.0;
+        double systemAveEMMTP = 0.0;
 
-        String nameMinClientTP = "",
-               nameMaxClientTP = "",
-               nameMinClientTotalTP = "",
-               nameMaxClientTotalTP = "",
-               nameMinClientAveTP = "",
-               nameMaxClientAveTP = "",
-               nameMinClientAveEMMTP = "",
-               nameMaxClientAveEMMTP = "";
+        String nameMinClientTP = "";
+        String nameMaxClientTP = "";
+        String nameMinClientTotalTP = "";
+        String nameMaxClientTotalTP = "";
+        String nameMinClientAveTP = "";
+        String nameMaxClientAveTP = "";
+        String nameMinClientAveEMMTP = "";
+        String nameMaxClientAveEMMTP = "";
 
         Set<String> clientNames = clientThroughputs.keySet();
         String clientName;
-        List   clientTPList;
+        List clientTPList;
         long tempLong;
         double tempDouble;
         int clientCount = 0;
-        for (Iterator<String> i=clientNames.iterator(); i.hasNext();) {
+        for (Iterator<String> i = clientNames.iterator(); i.hasNext();) {
             clientName = i.next();
             clientTPList = clientThroughputs.get(clientName);
             clientCount++;
@@ -140,7 +143,8 @@ public class ThroughputReportPlugin implements ReportPlugin {
             }
 
             tempDouble = PerformanceStatisticsUtil.getAveEx(clientTPList);
-            systemAveEMMTP += tempDouble; // Accumulate ave throughput excluding min/max
+            systemAveEMMTP += tempDouble; // Accumulate ave throughput
+                                            // excluding min/max
             if (tempDouble < minClientAveEMMTP) {
                 minClientAveEMMTP = tempDouble;
                 nameMinClientAveEMMTP = clientName;

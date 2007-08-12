@@ -16,13 +16,12 @@
  */
 package org.apache.activemq.tool;
 
-import junit.framework.TestCase;
-
-import java.util.Properties;
 import java.io.File;
+import java.util.Properties;
 
-import org.apache.activemq.tool.properties.ReflectionUtil;
+import junit.framework.TestCase;
 import org.apache.activemq.tool.properties.ReflectionConfigurable;
+import org.apache.activemq.tool.properties.ReflectionUtil;
 
 public class ReflectionUtilTest extends TestCase {
     public void testConfigurableOption() {
@@ -186,8 +185,8 @@ public class ReflectionUtilTest extends TestCase {
 
     public class TestClass1 {
         private boolean booleanData;
-        private int     intData;
-        private long    longData;
+        private int intData;
+        private long longData;
 
         public boolean isBooleanData() {
             return booleanData;
@@ -215,9 +214,9 @@ public class ReflectionUtilTest extends TestCase {
     }
 
     public class TestClass2 extends TestClass1 {
-        private float   floatData;
-        private byte    byteData;
-        private char    charData;
+        private float floatData;
+        private byte byteData;
+        private char charData;
 
         public float getFloatData() {
             return floatData;
@@ -245,9 +244,9 @@ public class ReflectionUtilTest extends TestCase {
     }
 
     public class TestClass3 extends TestClass2 {
-        private short   shortData;
-        private double  doubleData;
-        private String  stringData;
+        private short shortData;
+        private double doubleData;
+        private String stringData;
         private TestClass3 testData;
 
         public short getShortData() {
@@ -296,9 +295,9 @@ public class ReflectionUtilTest extends TestCase {
     }
 
     public class TestClass5 implements ReflectionConfigurable {
-        public boolean intercepted = false;
+        public boolean intercepted;
         public boolean willIntercept = true;
-        public TestClass5 nest = null;
+        public TestClass5 nest;
 
         public void configureProperties(Properties props) {
             // Do nothing
@@ -324,8 +323,8 @@ public class ReflectionUtilTest extends TestCase {
     }
 
     public class TestClass6 {
-        public TestClass6 nestNotConfig = null;
-        public TestClass5 nestConfig = null;
+        public TestClass6 nestNotConfig;
+        public TestClass5 nestConfig;
 
         public TestClass6 getNestNotConfig() {
             return nestNotConfig;

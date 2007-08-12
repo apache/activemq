@@ -33,7 +33,7 @@ public interface InboundContext {
     /**
      * Returns the current session being used to process a JMS message in the current thread.
      */
-    public Session getSession() throws JMSException;
+    Session getSession() throws JMSException;
 
     /**
      * Lazily creates a message producer that can be used to send messages using the
@@ -45,5 +45,5 @@ public interface InboundContext {
      *         destination so the destination must be specified on a send() method.
      * @throws javax.jms.JMSException
      */
-    public MessageProducer getMessageProducer() throws JMSException;
+    MessageProducer getMessageProducer() throws JMSException;
 }

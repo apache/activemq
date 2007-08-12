@@ -20,25 +20,24 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.springframework.core.io.ClassPathResource;
 
-
 /**
- * This servlet embeds an ActiveMQ broker inside a servlet engine which is
- * ideal for deploying ActiveMQ inside a WAR and using this servlet as a HTTP tunnel.
- *
+ * This servlet embeds an ActiveMQ broker inside a servlet engine which is ideal
+ * for deploying ActiveMQ inside a WAR and using this servlet as a HTTP tunnel.
+ * 
  * @version $Revision$
  */
 public class HttpSpringEmbeddedTunnelServlet extends HttpEmbeddedTunnelServlet {
 
-	private static final long serialVersionUID = -6568661997192814908L;
+    private static final long serialVersionUID = -6568661997192814908L;
 
-	/**
+    /**
      * Factory method to create a new broker
      */
     protected BrokerService createBroker() throws Exception {
-    	
+
         String configFile = getServletContext().getInitParameter("org.activemq.config.file");
         if (configFile == null) {
-        	configFile="activemq.xml";
+            configFile = "activemq.xml";
         }
 
         BrokerFactoryBean factory = new BrokerFactoryBean(new ClassPathResource(configFile));

@@ -18,15 +18,15 @@ package org.apache.activemq.util;
 
 import java.net.URISyntaxException;
 
-import org.apache.activemq.ActiveMQConnection;
-
 import javax.jms.Connection;
 import javax.jms.JMSException;
 
+import org.apache.activemq.ActiveMQConnection;
+
 /**
- * A JMS 1.1 log4j appender which uses ActiveMQ by default and does not require any JNDI
- * configurations
- *
+ * A JMS 1.1 log4j appender which uses ActiveMQ by default and does not require
+ * any JNDI configurations
+ * 
  * @version $Revision$
  */
 public class JmsLogAppender extends JmsLogAppenderSupport {
@@ -66,20 +66,13 @@ public class JmsLogAppender extends JmsLogAppenderSupport {
             try {
                 return ActiveMQConnection.makeConnection(userName, password, uri);
             } catch (URISyntaxException e) {
-                throw new JMSException("Unable to connect to a broker using " + 
-                        "userName: \'" + userName + 
-                        "\' password \'" + password + 
-                        "\' uri \'" + uri + "\' :: error - " +
-                        e.getMessage());
+                throw new JMSException("Unable to connect to a broker using " + "userName: \'" + userName + "\' password \'" + password + "\' uri \'" + uri + "\' :: error - " + e.getMessage());
             }
-        }
-        else {
+        } else {
             try {
                 return ActiveMQConnection.makeConnection(uri);
             } catch (URISyntaxException e) {
-                throw new JMSException("Unable to connect to a broker using " + 
-                        "uri \'" + uri + "\' :: error - " +
-                        e.getMessage());
+                throw new JMSException("Unable to connect to a broker using " + "uri \'" + uri + "\' :: error - " + e.getMessage());
             }
         }
     }

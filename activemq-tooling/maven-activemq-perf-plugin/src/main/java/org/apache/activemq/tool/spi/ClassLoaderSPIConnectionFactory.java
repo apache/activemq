@@ -16,22 +16,23 @@
  */
 package org.apache.activemq.tool.spi;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import javax.jms.ConnectionFactory;
-import java.util.Properties;
-import java.util.StringTokenizer;
-import java.util.List;
-import java.util.ArrayList;
 import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.StringTokenizer;
+
+import javax.jms.ConnectionFactory;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public abstract class ClassLoaderSPIConnectionFactory implements SPIConnectionFactory {
-    private static final Log log = LogFactory.getLog(ClassLoaderSPIConnectionFactory.class);
 
     public static final String KEY_EXT_DIR = "extDir";
+    private static final Log LOG = LogFactory.getLog(ClassLoaderSPIConnectionFactory.class);
 
     public final ConnectionFactory createConnectionFactory(Properties settings) throws Exception {
 
@@ -46,30 +47,30 @@ public abstract class ClassLoaderSPIConnectionFactory implements SPIConnectionFa
         String extDir = (String)settings.remove(KEY_EXT_DIR);
         if (extDir != null) {
             StringTokenizer tokens = new StringTokenizer(extDir, ";,");
-            List urls = new ArrayList();
+            List<URL> urls = new ArrayList<URL>();
             while (tokens.hasMoreTokens()) {
                 String dir = tokens.nextToken();
                 try {
                     File f = new File(dir);
                     if (!f.exists()) {
-                        log.warn("Cannot find extension dir: " + f.getAbsolutePath());
+                        LOG.warn("Cannot find extension dir: " + f.getAbsolutePath());
                     } else {
-                        log.info("Adding extension dir: " + f.getAbsolutePath());
+                        LOG.info("Adding extension dir: " + f.getAbsolutePath());
 
                         urls.add(f.toURL());
 
                         File[] files = f.listFiles();
-                        if( files!=null ) {
+                        if (files != null) {
                             for (int j = 0; j < files.length; j++) {
-                                if( files[j].getName().endsWith(".zip") || files[j].getName().endsWith(".jar") ) {
-                                    log.info("Adding extension dir: " + files[j].getAbsolutePath());
+                                if (files[j].getName().endsWith(".zip") || files[j].getName().endsWith(".jar")) {
+                                    LOG.info("Adding extension dir: " + files[j].getAbsolutePath());
                                     urls.add(files[j].toURL());
                                 }
                             }
                         }
                     }
                 } catch (Exception e) {
-                    log.warn("Failed to load ext dir: " + dir + ". Reason: " + e);
+                    LOG.warn("Failed to load ext dir: " + dir + ". Reason: " + e);
                 }
             }
 

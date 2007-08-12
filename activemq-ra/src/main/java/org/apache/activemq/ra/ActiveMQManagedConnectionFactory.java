@@ -31,11 +31,8 @@ import javax.resource.spi.ResourceAdapterAssociation;
 import javax.security.auth.Subject;
 
 /**
- * @version $Revisio n$
- * 
- * TODO: Must override equals and hashCode (JCA spec 16.4)
- * 
- * @org.apache.xbean.XBean element="managedConnectionFactory"  
+ * @version $Revisio n$ TODO: Must override equals and hashCode (JCA spec 16.4)
+ * @org.apache.xbean.XBean element="managedConnectionFactory"
  */
 public class ActiveMQManagedConnectionFactory implements ManagedConnectionFactory, ResourceAdapterAssociation {
 
@@ -52,31 +49,36 @@ public class ActiveMQManagedConnectionFactory implements ManagedConnectionFactor
         if (!(adapter instanceof MessageResourceAdapter)) {
             throw new ResourceException("ResourceAdapter is not of type: " + MessageResourceAdapter.class.getName());
         }
-        this.adapter = (MessageResourceAdapter) adapter;
+        this.adapter = (MessageResourceAdapter)adapter;
         ActiveMQConnectionRequestInfo baseInfo = this.adapter.getInfo().copy();
-        if (info.getClientid() == null)
+        if (info.getClientid() == null) {
             info.setClientid(baseInfo.getClientid());
-        if (info.getPassword() == null)
+        }
+        if (info.getPassword() == null) {
             info.setPassword(baseInfo.getPassword());
-        if (info.getServerUrl() == null)
+        }
+        if (info.getServerUrl() == null) {
             info.setServerUrl(baseInfo.getServerUrl());
-        if (info.getUseInboundSession() == null)
+        }
+        if (info.getUseInboundSession() == null) {
             info.setUseInboundSession(baseInfo.getUseInboundSession());
-        if (info.getUserName() == null)
+        }
+        if (info.getUserName() == null) {
             info.setUserName(baseInfo.getUserName());
+        }
     }
-    
+
     /**
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
     public boolean equals(Object object) {
-        if( object == null || object.getClass()!=ActiveMQManagedConnectionFactory.class ) {
+        if (object == null || object.getClass() != ActiveMQManagedConnectionFactory.class) {
             return false;
         }
         return ((ActiveMQManagedConnectionFactory)object).info.equals(info);
     }
-    
+
     /**
      * @see java.lang.Object#hashCode()
      */
@@ -84,7 +86,6 @@ public class ActiveMQManagedConnectionFactory implements ManagedConnectionFactor
     public int hashCode() {
         return info.hashCode();
     }
-    
 
     /**
      * @see javax.resource.spi.ResourceAdapterAssociation#getResourceAdapter()
@@ -118,13 +119,12 @@ public class ActiveMQManagedConnectionFactory implements ManagedConnectionFactor
      */
     public ManagedConnection createManagedConnection(Subject subject, ConnectionRequestInfo info) throws ResourceException {
         try {
-            if( info == null ) {
+            if (info == null) {
                 info = this.info;
             }
-            ActiveMQConnectionRequestInfo amqInfo = (ActiveMQConnectionRequestInfo) info;
+            ActiveMQConnectionRequestInfo amqInfo = (ActiveMQConnectionRequestInfo)info;
             return new ActiveMQManagedConnection(subject, adapter.makeConnection(amqInfo), amqInfo);
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             throw new ResourceException("Could not create connection.", e);
         }
     }
@@ -137,13 +137,12 @@ public class ActiveMQManagedConnectionFactory implements ManagedConnectionFactor
     public ManagedConnection matchManagedConnections(Set connections, Subject subject, ConnectionRequestInfo info) throws ResourceException {
         Iterator iterator = connections.iterator();
         while (iterator.hasNext()) {
-            ActiveMQManagedConnection c = (ActiveMQManagedConnection) iterator.next();
+            ActiveMQManagedConnection c = (ActiveMQManagedConnection)iterator.next();
             if (c.matches(subject, info)) {
                 try {
-                    c.associate(subject, (ActiveMQConnectionRequestInfo) info);
+                    c.associate(subject, (ActiveMQConnectionRequestInfo)info);
                     return c;
-                }
-                catch (JMSException e) {
+                } catch (JMSException e) {
                     throw new ResourceException(e);
                 }
             }
@@ -293,7 +292,6 @@ public class ActiveMQManagedConnectionFactory implements ManagedConnectionFactor
     public void setRedeliveryUseExponentialBackOff(Boolean value) {
         info.setRedeliveryUseExponentialBackOff(value);
     }
-
 
     // Prefetch policy configuration
     /**

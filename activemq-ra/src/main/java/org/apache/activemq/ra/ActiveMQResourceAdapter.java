@@ -44,20 +44,19 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * Knows how to connect to one ActiveMQ server. It can then activate endpoints
- * and deliver messages to those end points using the connection configure in the
- * resource adapter. <p/>Must override equals and hashCode (JCA spec 16.4)
- *
+ * and deliver messages to those end points using the connection configure in
+ * the resource adapter. <p/>Must override equals and hashCode (JCA spec 16.4)
+ * 
  * @org.apache.xbean.XBean element="resourceAdapter" rootElement="true"
- * description="The JCA Resource Adaptor for ActiveMQ"
- *
+ *                         description="The JCA Resource Adaptor for ActiveMQ"
  * @version $Revision$
  */
 public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializable {
 
     private static final long serialVersionUID = -5417363537865649130L;
-    private static final Log log = LogFactory.getLog(ActiveMQResourceAdapter.class);
-    
-    private final HashMap endpointWorkers = new HashMap();
+    private static final Log LOG = LogFactory.getLog(ActiveMQResourceAdapter.class);
+
+    private final HashMap<ActiveMQEndpointActivationKey, ActiveMQEndpointWorker> endpointWorkers = new HashMap<ActiveMQEndpointActivationKey, ActiveMQEndpointWorker>();
     private final ActiveMQConnectionRequestInfo info = new ActiveMQConnectionRequestInfo();
 
     private BootstrapContext bootstrapContext;
@@ -69,7 +68,7 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
      * 
      */
     public ActiveMQResourceAdapter() {
-    	super();
+        super();
     }
 
     /**
@@ -77,12 +76,12 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
      */
     public void start(BootstrapContext bootstrapContext) throws ResourceAdapterInternalException {
         this.bootstrapContext = bootstrapContext;
-        if (brokerXmlConfig!=null && brokerXmlConfig.trim().length()>0 ) {
+        if (brokerXmlConfig != null && brokerXmlConfig.trim().length() > 0) {
             try {
                 broker = BrokerFactory.createBroker(new URI(brokerXmlConfig));
                 broker.start();
             } catch (Throwable e) {
-                throw new ResourceAdapterInternalException("Failed to startup an embedded broker: "+brokerXmlConfig+", due to: "+e, e);
+                throw new ResourceAdapterInternalException("Failed to startup an embedded broker: " + brokerXmlConfig + ", due to: " + e, e);
             }
         }
     }
@@ -106,12 +105,13 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
     }
 
     /**
-     * @see org.apache.activemq.ra.MessageResourceAdapter#makeConnection(org.apache.activemq.ra.ActiveMQConnectionRequestInfo, org.apache.activemq.ActiveMQConnectionFactory)
+     * @see org.apache.activemq.ra.MessageResourceAdapter#makeConnection(org.apache.activemq.ra.ActiveMQConnectionRequestInfo,
+     *      org.apache.activemq.ActiveMQConnectionFactory)
      */
     public ActiveMQConnection makeConnection(ActiveMQConnectionRequestInfo info, ActiveMQConnectionFactory connectionFactory) throws JMSException {
         String userName = info.getUserName();
         String password = info.getPassword();
-        ActiveMQConnection physicalConnection = (ActiveMQConnection) connectionFactory.createConnection(userName, password);
+        ActiveMQConnection physicalConnection = (ActiveMQConnection)connectionFactory.createConnection(userName, password);
 
         String clientId = info.getClientid();
         if (clientId != null && clientId.length() > 0) {
@@ -130,13 +130,12 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
         String clientId = activationSpec.getClientId();
         if (clientId != null) {
             connectionFactory.setClientID(clientId);
-        }
-        else {
+        } else {
             if (activationSpec.isDurableSubscription()) {
-                log.warn("No clientID specified for durable subscription: " + activationSpec);
+                LOG.warn("No clientID specified for durable subscription: " + activationSpec);
             }
         }
-        ActiveMQConnection physicalConnection = (ActiveMQConnection) connectionFactory.createConnection(userName, password);
+        ActiveMQConnection physicalConnection = (ActiveMQConnection)connectionFactory.createConnection(userName, password);
 
         // have we configured a redelivery policy
         RedeliveryPolicy redeliveryPolicy = activationSpec.redeliveryPolicy();
@@ -151,12 +150,11 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
      * @throws JMSException
      * @throws URISyntaxException
      */
-    synchronized private ActiveMQConnectionFactory createConnectionFactory(ActiveMQConnectionRequestInfo info) throws JMSException {
+    private synchronized ActiveMQConnectionFactory createConnectionFactory(ActiveMQConnectionRequestInfo info) throws JMSException {
         ActiveMQConnectionFactory factory = connectionFactory;
         if (factory != null && info.isConnectionFactoryConfigured()) {
             factory = factory.copy();
-        }
-        else if (factory == null) {
+        } else if (factory == null) {
             factory = new ActiveMQConnectionFactory();
         }
         info.configure(factory);
@@ -164,8 +162,9 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
     }
 
     private String defaultValue(String value, String defaultValue) {
-        if (value != null)
+        if (value != null) {
             return value;
+        }
         return defaultValue;
     }
 
@@ -174,7 +173,7 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
      */
     public void stop() {
         while (endpointWorkers.size() > 0) {
-            ActiveMQEndpointActivationKey key = (ActiveMQEndpointActivationKey) endpointWorkers.keySet().iterator().next();
+            ActiveMQEndpointActivationKey key = endpointWorkers.keySet().iterator().next();
             endpointDeactivation(key.getMessageEndpointFactory(), key.getActivationSpec());
         }
         if (broker != null) {
@@ -195,8 +194,7 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
      * @see javax.resource.spi.ResourceAdapter#endpointActivation(javax.resource.spi.endpoint.MessageEndpointFactory,
      *      javax.resource.spi.ActivationSpec)
      */
-    public void endpointActivation(MessageEndpointFactory endpointFactory, ActivationSpec activationSpec)
-            throws ResourceException {
+    public void endpointActivation(MessageEndpointFactory endpointFactory, ActivationSpec activationSpec) throws ResourceException {
 
         // spec section 5.3.3
         if (!equals(activationSpec.getResourceAdapter())) {
@@ -207,8 +205,7 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
             throw new NotSupportedException("That type of ActicationSpec not supported: " + activationSpec.getClass());
         }
 
-        ActiveMQEndpointActivationKey key = new ActiveMQEndpointActivationKey(endpointFactory,
-                (MessageActivationSpec) activationSpec);
+        ActiveMQEndpointActivationKey key = new ActiveMQEndpointActivationKey(endpointFactory, (MessageActivationSpec)activationSpec);
         // This is weird.. the same endpoint activated twice.. must be a
         // container error.
         if (endpointWorkers.containsKey(key)) {
@@ -228,8 +225,8 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
     public void endpointDeactivation(MessageEndpointFactory endpointFactory, ActivationSpec activationSpec) {
 
         if (activationSpec instanceof MessageActivationSpec) {
-            ActiveMQEndpointActivationKey key = new ActiveMQEndpointActivationKey(endpointFactory, (MessageActivationSpec) activationSpec);
-            ActiveMQEndpointWorker worker = (ActiveMQEndpointWorker) endpointWorkers.remove(key);
+            ActiveMQEndpointActivationKey key = new ActiveMQEndpointActivationKey(endpointFactory, (MessageActivationSpec)activationSpec);
+            ActiveMQEndpointWorker worker = endpointWorkers.remove(key);
             if (worker == null) {
                 // This is weird.. that endpoint was not activated.. oh well..
                 // this method
@@ -253,7 +250,7 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
     /**
      * We only connect to one resource manager per ResourceAdapter instance, so
      * any ActivationSpec will return the same XAResource.
-     *
+     * 
      * @see javax.resource.spi.ResourceAdapter#getXAResources(javax.resource.spi.ActivationSpec[])
      */
     public XAResource[] getXAResources(ActivationSpec[] activationSpecs) throws ResourceException {
@@ -261,9 +258,11 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
         try {
             connection = makeConnection();
             if (connection instanceof XAConnection) {
-                XASession session = ((XAConnection) connection).createXASession();
+                XASession session = ((XAConnection)connection).createXASession();
                 XAResource xaResource = session.getXAResource();
-                return new XAResource[] { xaResource };
+                return new XAResource[] {
+                    xaResource
+                };
             }
             return new XAResource[] {};
         } catch (JMSException e) {
@@ -272,7 +271,7 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
             try {
                 connection.close();
             } catch (Throwable ignore) {
-            	//
+                //
             }
         }
     }
@@ -350,16 +349,15 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
      * Sets the <a href="http://activemq.org/Xml+Configuration">XML
      * configuration file </a> used to configure the ActiveMQ broker via Spring
      * if using embedded mode.
-     *
-     * @param brokerXmlConfig
-     *            is the filename which is assumed to be on the classpath unless
-     *            a URL is specified. So a value of <code>foo/bar.xml</code>
-     *            would be assumed to be on the classpath whereas
-     *            <code>file:dir/file.xml</code> would use the file system.
-     *            Any valid URL string is supported.
+     * 
+     * @param brokerXmlConfig is the filename which is assumed to be on the
+     *                classpath unless a URL is specified. So a value of
+     *                <code>foo/bar.xml</code> would be assumed to be on the
+     *                classpath whereas <code>file:dir/file.xml</code> would
+     *                use the file system. Any valid URL string is supported.
      */
     public void setBrokerXmlConfig(String brokerXmlConfig) {
-        this.brokerXmlConfig=brokerXmlConfig;
+        this.brokerXmlConfig = brokerXmlConfig;
     }
 
     /**
@@ -521,12 +519,12 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
             return false;
         }
 
-        final MessageResourceAdapter activeMQResourceAdapter = (MessageResourceAdapter) o;
+        final MessageResourceAdapter activeMQResourceAdapter = (MessageResourceAdapter)o;
 
         if (!info.equals(activeMQResourceAdapter.getInfo())) {
             return false;
         }
-        if ( notEqual(brokerXmlConfig, activeMQResourceAdapter.getBrokerXmlConfig()) ) {
+        if (notEqual(brokerXmlConfig, activeMQResourceAdapter.getBrokerXmlConfig())) {
             return false;
         }
 
@@ -537,7 +535,6 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
         return (o1 == null ^ o2 == null) || (o1 != null && !o1.equals(o2));
     }
 
-
     /**
      * @see java.lang.Object#hashCode()
      */
@@ -545,7 +542,7 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
     public int hashCode() {
         int result;
         result = info.hashCode();
-        if( brokerXmlConfig !=null ) {
+        if (brokerXmlConfig != null) {
             result ^= brokerXmlConfig.hashCode();
         }
         return result;
@@ -580,13 +577,14 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
     }
 
     /**
-     * This allows a connection factory to be configured and shared between a ResourceAdaptor and outbound messaging.
-     * Note that setting the connectionFactory will overload many of the properties on this POJO such as the redelivery
-     * and prefetch policies; the properties on the connectionFactory will be used instead.
+     * This allows a connection factory to be configured and shared between a
+     * ResourceAdaptor and outbound messaging. Note that setting the
+     * connectionFactory will overload many of the properties on this POJO such
+     * as the redelivery and prefetch policies; the properties on the
+     * connectionFactory will be used instead.
      */
     public void setConnectionFactory(ActiveMQConnectionFactory connectionFactory) {
         this.connectionFactory = connectionFactory;
     }
-
 
 }

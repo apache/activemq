@@ -16,41 +16,43 @@
  */
 package org.apache.activemq.tool;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.activemq.tool.sampler.ThroughputSamplerTask;
-import org.apache.activemq.tool.sampler.CpuSamplerTask;
-import org.apache.activemq.tool.reports.PerformanceReportWriter;
-import org.apache.activemq.tool.reports.XmlFilePerfReportWriter;
-import org.apache.activemq.tool.reports.VerbosePerfReportWriter;
-import org.apache.activemq.tool.properties.JmsClientSystemProperties;
-import org.apache.activemq.tool.properties.AbstractObjectProperties;
-import org.apache.activemq.tool.properties.JmsFactoryProperties;
-import org.apache.activemq.tool.properties.ReflectionUtil;
-import org.apache.activemq.tool.properties.JmsClientProperties;
-import org.apache.activemq.tool.spi.SPIConnectionFactory;
-
-import javax.jms.ConnectionFactory;
-import javax.jms.JMSException;
-import javax.jms.ConnectionMetaData;
-import java.util.Properties;
-import java.util.Enumeration;
-import java.io.IOException;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Enumeration;
+import java.util.Properties;
+
+import javax.jms.ConnectionFactory;
+import javax.jms.ConnectionMetaData;
+import javax.jms.JMSException;
+
+import org.apache.activemq.tool.properties.AbstractObjectProperties;
+import org.apache.activemq.tool.properties.JmsClientProperties;
+import org.apache.activemq.tool.properties.JmsClientSystemProperties;
+import org.apache.activemq.tool.properties.JmsFactoryProperties;
+import org.apache.activemq.tool.properties.ReflectionUtil;
+import org.apache.activemq.tool.reports.PerformanceReportWriter;
+import org.apache.activemq.tool.reports.VerbosePerfReportWriter;
+import org.apache.activemq.tool.reports.XmlFilePerfReportWriter;
+import org.apache.activemq.tool.sampler.CpuSamplerTask;
+import org.apache.activemq.tool.sampler.ThroughputSamplerTask;
+import org.apache.activemq.tool.spi.SPIConnectionFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
-    private static final Log log = LogFactory.getLog(AbstractJmsClientSystem.class);
-
-    private int clientDestIndex, clientDestCount;
+    private static final Log LOG = LogFactory.getLog(AbstractJmsClientSystem.class);
 
     protected ThreadGroup clientThreadGroup;
     protected ConnectionFactory jmsConnFactory;
 
     // Properties
-    protected JmsFactoryProperties factory  = new JmsFactoryProperties();
+    protected JmsFactoryProperties factory = new JmsFactoryProperties();
     protected ThroughputSamplerTask tpSampler = new ThroughputSamplerTask();
     protected CpuSamplerTask cpuSampler = new CpuSamplerTask();
+
+    private int clientDestIndex;
+    private int clientDestCount;
 
     public void runSystemTest() throws JMSException {
         // Create connection factory
@@ -72,7 +74,7 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
         writer.writeProperties("cpuSamplerSettings", ReflectionUtil.retrieveObjectProperties(cpuSampler));
 
         clientThreadGroup = new ThreadGroup(getSysTest().getClientPrefix() + " Thread Group");
-        for (int i=0; i<getSysTest().getNumClients(); i++) {
+        for (int i = 0; i < getSysTest().getNumClients(); i++) {
             distributeDestinations(getSysTest().getDestDistro(), i, getSysTest().getNumClients(), getSysTest().getTotalDests());
 
             final String clientName = getSysTest().getClientPrefix() + i;
@@ -97,7 +99,7 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
                 cpuSampler.createPlugin();
                 cpuSampler.startSampler();
             } catch (IOException e) {
-                log.warn("Unable to start CPU sampler plugin. Reason: " + e.getMessage());
+                LOG.warn("Unable to start CPU sampler plugin. Reason: " + e.getMessage());
             }
         }
 
@@ -132,7 +134,9 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
     }
 
     public abstract JmsClientSystemProperties getSysTest();
+
     public abstract void setSysTest(JmsClientSystemProperties sysTestProps);
+
     public abstract JmsClientProperties getJmsClientProperties();
 
     protected PerformanceReportWriter createPerfWriter() {
@@ -140,10 +144,7 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
             String reportName;
 
             if ((reportName = getSysTest().getReportName()) == null) {
-                reportName = getSysTest().getClientPrefix() + "_" +
-                             "numClients" + getSysTest().getNumClients() + "_" +
-                             "numDests" + getSysTest().getTotalDests() + "_" +
-                             getSysTest().getDestDistro();
+                reportName = getSysTest().getClientPrefix() + "_" + "numClients" + getSysTest().getNumClients() + "_" + "numDests" + getSysTest().getTotalDests() + "_" + getSysTest().getDestDistro();
             }
             return new XmlFilePerfReportWriter(getSysTest().getReportDir(), reportName);
         } else if (getSysTest().getReportType().equalsIgnoreCase(JmsClientSystemProperties.REPORT_VERBOSE)) {
@@ -159,18 +160,19 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
             clientDestCount = numDests;
             clientDestIndex = 0;
         } else if (distroType.equalsIgnoreCase(JmsClientSystemProperties.DEST_DISTRO_EQUAL)) {
-            int destPerClient = (numDests / numClients);
+            int destPerClient = numDests / numClients;
             // There are equal or more destinations per client
             if (destPerClient > 0) {
                 clientDestCount = destPerClient;
                 clientDestIndex = destPerClient * clientIndex;
-            // If there are more clients than destinations, share destinations per client
+                // If there are more clients than destinations, share
+                // destinations per client
             } else {
                 clientDestCount = 1; // At most one destination per client
                 clientDestIndex = clientIndex % numDests;
             }
         } else if (distroType.equalsIgnoreCase(JmsClientSystemProperties.DEST_DISTRO_DIVIDE)) {
-            int destPerClient = (numDests / numClients);
+            int destPerClient = numDests / numClients;
             // There are equal or more destinations per client
             if (destPerClient > 0) {
                 int remain = numDests % numClients;
@@ -185,15 +187,16 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
                 clientDestCount = destPerClient;
                 clientDestIndex = nextIndex;
 
-            // If there are more clients than destinations, share destinations per client
+                // If there are more clients than destinations, share
+                // destinations per client
             } else {
                 clientDestCount = 1; // At most one destination per client
                 clientDestIndex = clientIndex % numDests;
             }
 
-        // Send to all for unknown behavior
+            // Send to all for unknown behavior
         } else {
-            log.warn("Unknown destination distribution type: " + distroType);
+            LOG.warn("Unknown destination distribution type: " + distroType);
             clientDestCount = numDests;
             clientDestIndex = 0;
         }
@@ -204,7 +207,7 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
             Class spi = Class.forName(spiClass);
             SPIConnectionFactory spiFactory = (SPIConnectionFactory)spi.newInstance();
             ConnectionFactory jmsFactory = spiFactory.createConnectionFactory(factorySettings);
-            log.info("Created: " + jmsFactory.getClass().getName() + " using SPIConnectionFactory: " + spiFactory.getClass().getName());
+            LOG.info("Created: " + jmsFactory.getClass().getName() + " using SPIConnectionFactory: " + spiFactory.getClass().getName());
             return jmsFactory;
         } catch (Exception e) {
             e.printStackTrace();
@@ -219,11 +222,11 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
         String jmsProperties = "";
         Enumeration jmsProps = metaData.getJMSXPropertyNames();
         while (jmsProps.hasMoreElements()) {
-            jmsProperties += (jmsProps.nextElement().toString() + ",");
+            jmsProperties += jmsProps.nextElement().toString() + ",";
         }
         if (jmsProperties.length() > 0) {
             // Remove the last comma
-            jmsProperties = jmsProperties.substring(0, jmsProperties.length()-1);
+            jmsProperties = jmsProperties.substring(0, jmsProperties.length() - 1);
         }
         props.setJmsProperties(jmsProperties);
     }
@@ -238,12 +241,12 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
             return props; // Empty properties
         }
 
-        for (int i=0; i<args.length; i++) {
+        for (int i = 0; i < args.length; i++) {
             String arg = args[i];
             if (arg.startsWith("-D") || arg.startsWith("-d")) {
                 arg = arg.substring(2);
             }
-            int index  = arg.indexOf("=");
+            int index = arg.indexOf("=");
             String key = arg.substring(0, index);
             String val = arg.substring(index + 1);
 
@@ -259,7 +262,7 @@ public abstract class AbstractJmsClientSystem extends AbstractObjectProperties {
         Properties fileProps = new Properties();
         try {
             if (configFile != null) {
-                log.info("Loading properties file: " + configFile.getAbsolutePath());
+                LOG.info("Loading properties file: " + configFile.getAbsolutePath());
                 fileProps.load(new FileInputStream(configFile));
             }
         } catch (IOException e) {

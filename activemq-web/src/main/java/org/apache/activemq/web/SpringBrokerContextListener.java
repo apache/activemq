@@ -16,14 +16,14 @@
  */
 package org.apache.activemq.web;
 
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.springframework.core.io.Resource;
 import org.springframework.web.context.support.ServletContextResource;
-
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
 
 /**
  * Used to configure and instance of ActiveMQ <tt>BrokerService</tt> using
@@ -34,7 +34,6 @@ import javax.servlet.ServletContextListener;
  * &lt;param-value&gt;/WEB-INF/activemq.xml&lt;/param-value&gt;
  * &lt;/context-param&gt;
  * </code>
- * 
  * As a a default, if a <tt>brokerURI</tt> is not specified it will look up
  * for <tt>activemq.xml</tt>
  * 
@@ -51,8 +50,7 @@ public class SpringBrokerContextListener implements ServletContextListener {
     /**
      * Set the broker container to be used by this listener
      * 
-     * @param container
-     *            the container to be used.
+     * @param container the container to be used.
      */
     protected void setBrokerService(BrokerService container) {
         this.brokerContainer = container;
@@ -75,8 +73,7 @@ public class SpringBrokerContextListener implements ServletContextListener {
             brokerContainer.start();
 
             context.log("Started ActiveMQ Broker");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             context.log("Failed to start ActiveMQ broker: " + e, e);
         }
     }
@@ -86,8 +83,7 @@ public class SpringBrokerContextListener implements ServletContextListener {
         if (brokerContainer != null) {
             try {
                 brokerContainer.stop();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 context.log("Failed to stop the ActiveMQ Broker: " + e, e);
             }
             brokerContainer = null;
@@ -107,8 +103,7 @@ public class SpringBrokerContextListener implements ServletContextListener {
         BrokerFactoryBean factory = new BrokerFactoryBean(resource);
         try {
             factory.afterPropertiesSet();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             context.log("Failed to create broker: " + e, e);
         }
         return factory.getBroker();

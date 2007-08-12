@@ -33,15 +33,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.web.view.MessageRenderer;
-import org.apache.activemq.ActiveMQConnectionFactory;
 
 /**
  * Renders the contents of a queue using some kind of view. The URI is assumed
  * to be the queue. The following parameters can be used
- * 
  * <ul>
  * <li>view - specifies the type of the view such as simple, xml, rss</li>
  * <li>selector - specifies the SQL 92 selector to apply to the queue</li>
@@ -49,15 +48,16 @@ import org.apache.activemq.ActiveMQConnectionFactory;
  * 
  * @version $Revision: $
  */
-//TODO Why do we implement our own session pool?
-//TODO This doesn't work, since nobody will be setting the connection factory (because nobody is able to). Just use the WebClient?
+// TODO Why do we implement our own session pool?
+// TODO This doesn't work, since nobody will be setting the connection factory
+// (because nobody is able to). Just use the WebClient?
 public class QueueBrowseServlet extends HttpServlet {
 
     private static FactoryFinder factoryFinder = new FactoryFinder("META-INF/services/org/apache/activemq/web/view/");
 
     private ConnectionFactory connectionFactory;
     private Connection connection;
-    private LinkedList sessions = new LinkedList();
+    private LinkedList<Session> sessions = new LinkedList<Session>();
 
     public Connection getConnection() throws JMSException {
         if (connection == null) {
@@ -76,8 +76,7 @@ public class QueueBrowseServlet extends HttpServlet {
             String uri = getServletContext().getInitParameter("org.apache.activemq.brokerURL");
             if (uri != null) {
                 connectionFactory = new ActiveMQConnectionFactory(uri);
-            }
-            else {
+            } else {
                 throw new IllegalStateException("missing ConnectionFactory in QueueBrowserServlet");
             }
         }
@@ -103,11 +102,9 @@ public class QueueBrowseServlet extends HttpServlet {
             MessageRenderer renderer = getMessageRenderer(request);
             configureRenderer(request, renderer);
             renderer.renderMessages(request, response, browser);
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             throw new ServletException(e);
-        }
-        finally {
+        } finally {
             returnSession(session);
         }
     }
@@ -118,23 +115,20 @@ public class QueueBrowseServlet extends HttpServlet {
             style = "simple";
         }
         try {
-            return (MessageRenderer) factoryFinder.newInstance(style);
-        }
-        catch (IllegalAccessException e) {
+            return (MessageRenderer)factoryFinder.newInstance(style);
+        } catch (IllegalAccessException e) {
             throw new NoSuchViewStyleException(style, e);
-        }
-        catch (InstantiationException e) {
+        } catch (InstantiationException e) {
             throw new NoSuchViewStyleException(style, e);
-        }
-        catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             throw new NoSuchViewStyleException(style, e);
         }
     }
 
     protected void configureRenderer(HttpServletRequest request, MessageRenderer renderer) {
-        Map properties = new HashMap();
-        for (Enumeration iter = request.getParameterNames(); iter.hasMoreElements(); ) {
-            String name = (String) iter.nextElement();
+        Map<String, String> properties = new HashMap<String, String>();
+        for (Enumeration iter = request.getParameterNames(); iter.hasMoreElements();) {
+            String name = (String)iter.nextElement();
             properties.put(name, request.getParameter(name));
         }
         IntrospectionSupport.setProperties(renderer, properties);
@@ -145,9 +139,8 @@ public class QueueBrowseServlet extends HttpServlet {
         synchronized (sessions) {
             if (sessions.isEmpty()) {
                 answer = createSession();
-            }
-            else {
-                answer = (Session) sessions.removeLast();
+            } else {
+                answer = sessions.removeLast();
             }
         }
         return answer;
@@ -171,14 +164,16 @@ public class QueueBrowseServlet extends HttpServlet {
 
     protected Queue getQueue(HttpServletRequest request, Session session) throws JMSException {
         String uri = request.getPathInfo();
-        if (uri == null)
+        if (uri == null) {
             return null;
+        }
 
         // replace URI separator with JMS destination separator
         if (uri.startsWith("/")) {
             uri = uri.substring(1);
-            if (uri.length() == 0)
+            if (uri.length() == 0) {
                 return null;
+            }
         }
         uri = uri.replace('/', '.');
 

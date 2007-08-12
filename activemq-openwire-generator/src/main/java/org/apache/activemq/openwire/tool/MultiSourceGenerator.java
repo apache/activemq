@@ -16,12 +16,6 @@
  */
 package org.apache.activemq.openwire.tool;
 
-import org.apache.tools.ant.Project;
-import org.apache.tools.ant.taskdefs.FixCRLF;
-import org.codehaus.jam.JClass;
-import org.codehaus.jam.JProperty;
-import org.codehaus.jam.JamClassIterator;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
@@ -30,12 +24,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.taskdefs.FixCRLF;
+import org.codehaus.jam.JClass;
+import org.codehaus.jam.JProperty;
+import org.codehaus.jam.JamClassIterator;
+
 /**
- * 
  * @version $Revision: 386442 $
  */
 public abstract class MultiSourceGenerator extends OpenWireGenerator {
-    protected Set manuallyMaintainedClasses = new HashSet();
+    protected Set<String> manuallyMaintainedClasses = new HashSet<String>();
     protected File destDir;
     protected File destFile;
 
@@ -71,8 +70,8 @@ public abstract class MultiSourceGenerator extends OpenWireGenerator {
     /**
      * Returns all the valid properties available on the current class
      */
-    public List getProperties() {
-        List answer = new ArrayList();
+    public List<JProperty> getProperties() {
+        List<JProperty> answer = new ArrayList<JProperty>();
         JProperty[] properties = jclass.getDeclaredProperties();
         for (int i = 0; i < properties.length; i++) {
             JProperty property = properties[i];
@@ -106,17 +105,16 @@ public abstract class MultiSourceGenerator extends OpenWireGenerator {
         try {
             out = new PrintWriter(new FileWriter(destFile));
             generateFile(out);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
-        }
-        finally {
+        } finally {
             if (out != null) {
                 out.close();
             }
         }
-        
-        // Use the FixCRLF Ant Task to make sure the file has consistent newlines
+
+        // Use the FixCRLF Ant Task to make sure the file has consistent
+        // newlines
         // so that SVN does not complain on checkin.
         Project project = new Project();
         project.init();
@@ -143,7 +141,7 @@ public abstract class MultiSourceGenerator extends OpenWireGenerator {
     protected String getClassName(JClass jclass) {
         return jclass.getSimpleName();
     }
-    
+
     public boolean isAbstractClass() {
         return jclass != null && jclass.isAbstract();
     }
@@ -151,84 +149,84 @@ public abstract class MultiSourceGenerator extends OpenWireGenerator {
     public String getAbstractClassText() {
         return isAbstractClass() ? "abstract " : "";
     }
-    
+
     public boolean isMarshallerAware() {
         return isMarshallAware(jclass);
     }
 
     protected void initialiseManuallyMaintainedClasses() {
-        String[] names = { "ActiveMQDestination", "ActiveMQTempDestination", "ActiveMQQueue", "ActiveMQTopic", "ActiveMQTempQueue", "ActiveMQTempTopic",
-                "BaseCommand",
-                "ActiveMQMessage", "ActiveMQTextMessage", "ActiveMQMapMessage", "ActiveMQBytesMessage", "ActiveMQStreamMessage",
-                "ActiveMQBlobMessage", "DataStructureSupport", "WireFormatInfo", "ActiveMQObjectMessage" };
+        String[] names = {
+            "ActiveMQDestination", "ActiveMQTempDestination", "ActiveMQQueue", "ActiveMQTopic", "ActiveMQTempQueue", "ActiveMQTempTopic", "BaseCommand", "ActiveMQMessage", "ActiveMQTextMessage",
+            "ActiveMQMapMessage", "ActiveMQBytesMessage", "ActiveMQStreamMessage", "ActiveMQBlobMessage", "DataStructureSupport", "WireFormatInfo", "ActiveMQObjectMessage"
+        };
 
         for (int i = 0; i < names.length; i++) {
             manuallyMaintainedClasses.add(names[i]);
         }
     }
 
-	public String getBaseClass() {
-		return baseClass;
-	}
+    public String getBaseClass() {
+        return baseClass;
+    }
 
-	public void setBaseClass(String baseClass) {
-		this.baseClass = baseClass;
-	}
+    public void setBaseClass(String baseClass) {
+        this.baseClass = baseClass;
+    }
 
-	public String getClassName() {
-		return className;
-	}
+    public String getClassName() {
+        return className;
+    }
 
-	public void setClassName(String className) {
-		this.className = className;
-	}
+    public void setClassName(String className) {
+        this.className = className;
+    }
 
-	public File getDestDir() {
-		return destDir;
-	}
+    public File getDestDir() {
+        return destDir;
+    }
 
-	public void setDestDir(File destDir) {
-		this.destDir = destDir;
-	}
+    public void setDestDir(File destDir) {
+        this.destDir = destDir;
+    }
 
-	public File getDestFile() {
-		return destFile;
-	}
+    public File getDestFile() {
+        return destFile;
+    }
 
-	public void setDestFile(File destFile) {
-		this.destFile = destFile;
-	}
+    public void setDestFile(File destFile) {
+        this.destFile = destFile;
+    }
 
-	public JClass getJclass() {
-		return jclass;
-	}
+    public JClass getJclass() {
+        return jclass;
+    }
 
-	public void setJclass(JClass jclass) {
-		this.jclass = jclass;
-	}
+    public void setJclass(JClass jclass) {
+        this.jclass = jclass;
+    }
 
-	public Set getManuallyMaintainedClasses() {
-		return manuallyMaintainedClasses;
-	}
+    public Set<String> getManuallyMaintainedClasses() {
+        return manuallyMaintainedClasses;
+    }
 
-	public void setManuallyMaintainedClasses(Set manuallyMaintainedClasses) {
-		this.manuallyMaintainedClasses = manuallyMaintainedClasses;
-	}
+    public void setManuallyMaintainedClasses(Set<String> manuallyMaintainedClasses) {
+        this.manuallyMaintainedClasses = manuallyMaintainedClasses;
+    }
 
-	public String getSimpleName() {
-		return simpleName;
-	}
+    public String getSimpleName() {
+        return simpleName;
+    }
 
-	public void setSimpleName(String simpleName) {
-		this.simpleName = simpleName;
-	}
+    public void setSimpleName(String simpleName) {
+        this.simpleName = simpleName;
+    }
 
-	public JClass getSuperclass() {
-		return superclass;
-	}
+    public JClass getSuperclass() {
+        return superclass;
+    }
 
-	public void setSuperclass(JClass superclass) {
-		this.superclass = superclass;
-	}
+    public void setSuperclass(JClass superclass) {
+        this.superclass = superclass;
+    }
 
 }

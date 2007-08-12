@@ -28,52 +28,46 @@ import org.apache.activemq.ActiveMQConnectionFactory;
  * Knows how to connect to one ActiveMQ server. It can then activate endpoints
  * and deliver messages to those end points using the connection configure in
  * the resource adapter. <p/>Must override equals and hashCode (JCA spec 16.4)
- *
+ * 
  * @org.apache.xbean.XBean element="resourceAdapter" rootElement="true"
- * description="The JCA Resource Adaptor for ActiveMQ"
+ *                         description="The JCA Resource Adaptor for ActiveMQ"
  * @version $Revision$
  */
-public interface MessageResourceAdapter
-        extends ResourceAdapter
-{
+interface MessageResourceAdapter extends ResourceAdapter {
 
     /**
      */
-	public ActiveMQConnection makeConnection()
-		throws JMSException;
+    ActiveMQConnection makeConnection() throws JMSException;
 
     /**
      */
-	public ActiveMQConnection makeConnection(ActiveMQConnectionRequestInfo info)
-		throws JMSException;
+    ActiveMQConnection makeConnection(ActiveMQConnectionRequestInfo info) throws JMSException;
 
     /**
      */
-	public ActiveMQConnection makeConnection(ActiveMQConnectionRequestInfo info, ActiveMQConnectionFactory connectionFactory)
-		throws JMSException;
+    ActiveMQConnection makeConnection(ActiveMQConnectionRequestInfo info, ActiveMQConnectionFactory connectionFactory) throws JMSException;
 
     /**
-	 * @param activationSpec
+     * @param activationSpec
      */
-	public ActiveMQConnection makeConnection(MessageActivationSpec activationSpec)
-		throws JMSException;
+    ActiveMQConnection makeConnection(MessageActivationSpec activationSpec) throws JMSException;
 
     /**
-	 * @return bootstrap context
+     * @return bootstrap context
      */
-	public BootstrapContext getBootstrapContext();
+    BootstrapContext getBootstrapContext();
 
     /**
      */
-	public String getBrokerXmlConfig();
+    String getBrokerXmlConfig();
 
     /**
      * @return Returns the info.
      */
-	public ActiveMQConnectionRequestInfo getInfo();
+    ActiveMQConnectionRequestInfo getInfo();
 
     /**
      */
-	public ActiveMQConnectionFactory getConnectionFactory();
+    ActiveMQConnectionFactory getConnectionFactory();
 
 }

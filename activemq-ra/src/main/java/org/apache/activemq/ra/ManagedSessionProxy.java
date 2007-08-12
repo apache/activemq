@@ -54,14 +54,14 @@ import org.apache.activemq.ActiveMQSession;
 public class ManagedSessionProxy implements Session, QueueSession, TopicSession {
 
     private final ActiveMQSession session;
-    boolean closed = false;
+    private boolean closed;
 
     public ManagedSessionProxy(ActiveMQSession session) {
         this.session = session;
     }
 
     public void setUseSharedTxContext(boolean enable) throws JMSException {
-        if( session.getTransactionContext() !=null ) {
+        if (session.getTransactionContext() != null) {
             ((ManagedTransactionContext)session.getTransactionContext()).setUseSharedTxContext(enable);
         }
     }
@@ -75,8 +75,8 @@ public class ManagedSessionProxy implements Session, QueueSession, TopicSession 
 
     /**
      * Called by the ActiveMQManagedConnection to invalidate this proxy.
-     * @throws JMSException 
      * 
+     * @throws JMSException
      * @throws JMSException
      */
     public void cleanup() throws JMSException {
@@ -150,13 +150,12 @@ public class ManagedSessionProxy implements Session, QueueSession, TopicSession 
     /**
      * @param destination
      * @param messageSelector
-     * @param NoLocal
+     * @param noLocal
      * @return
      * @throws JMSException
      */
-    public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean NoLocal)
-            throws JMSException {
-        return getSession().createConsumer(destination, messageSelector, NoLocal);
+    public MessageConsumer createConsumer(Destination destination, String messageSelector, boolean noLocal) throws JMSException {
+        return getSession().createConsumer(destination, messageSelector, noLocal);
     }
 
     /**
@@ -177,8 +176,7 @@ public class ManagedSessionProxy implements Session, QueueSession, TopicSession 
      * @return
      * @throws JMSException
      */
-    public TopicSubscriber createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal)
-            throws JMSException {
+    public TopicSubscriber createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
         return getSession().createDurableSubscriber(topic, name, messageSelector, noLocal);
     }
 
@@ -343,7 +341,7 @@ public class ManagedSessionProxy implements Session, QueueSession, TopicSession 
      * @throws JMSException
      */
     public QueueReceiver createReceiver(Queue queue) throws JMSException {
-        return ((QueueSession) getSession()).createReceiver(queue);
+        return ((QueueSession)getSession()).createReceiver(queue);
     }
 
     /**
@@ -353,7 +351,7 @@ public class ManagedSessionProxy implements Session, QueueSession, TopicSession 
      * @throws JMSException
      */
     public QueueReceiver createReceiver(Queue queue, String messageSelector) throws JMSException {
-        return ((QueueSession) getSession()).createReceiver(queue, messageSelector);
+        return ((QueueSession)getSession()).createReceiver(queue, messageSelector);
     }
 
     /**
@@ -362,7 +360,7 @@ public class ManagedSessionProxy implements Session, QueueSession, TopicSession 
      * @throws JMSException
      */
     public QueueSender createSender(Queue queue) throws JMSException {
-        return ((QueueSession) getSession()).createSender(queue);
+        return ((QueueSession)getSession()).createSender(queue);
     }
 
     /**
@@ -371,7 +369,7 @@ public class ManagedSessionProxy implements Session, QueueSession, TopicSession 
      * @throws JMSException
      */
     public TopicPublisher createPublisher(Topic topic) throws JMSException {
-        return ((TopicSession) getSession()).createPublisher(topic);
+        return ((TopicSession)getSession()).createPublisher(topic);
     }
 
     /**
@@ -380,7 +378,7 @@ public class ManagedSessionProxy implements Session, QueueSession, TopicSession 
      * @throws JMSException
      */
     public TopicSubscriber createSubscriber(Topic topic) throws JMSException {
-        return ((TopicSession) getSession()).createSubscriber(topic);
+        return ((TopicSession)getSession()).createSubscriber(topic);
     }
 
     /**
@@ -391,7 +389,7 @@ public class ManagedSessionProxy implements Session, QueueSession, TopicSession 
      * @throws JMSException
      */
     public TopicSubscriber createSubscriber(Topic topic, String messageSelector, boolean noLocal) throws JMSException {
-        return ((TopicSession) getSession()).createSubscriber(topic, messageSelector, noLocal);
+        return ((TopicSession)getSession()).createSubscriber(topic, messageSelector, noLocal);
     }
 
     /**
@@ -402,7 +400,7 @@ public class ManagedSessionProxy implements Session, QueueSession, TopicSession 
     }
 
     public String toString() {
-        return "ManagedSessionProxy { "+session+" }";
+        return "ManagedSessionProxy { " + session + " }";
     }
 
 }

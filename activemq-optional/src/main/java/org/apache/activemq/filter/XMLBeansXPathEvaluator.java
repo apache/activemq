@@ -30,32 +30,32 @@ public class XMLBeansXPathEvaluator implements XPathExpression.XPathEvaluator {
     private final String xpath;
 
     public XMLBeansXPathEvaluator(String xpath) {
-        this.xpath = xpath;        
+        this.xpath = xpath;
     }
-    
+
     public boolean evaluate(Message message) throws JMSException {
-        if( message instanceof TextMessage ) {
+        if (message instanceof TextMessage) {
             String text = ((TextMessage)message).getText();
             try {
                 XmlObject object = XmlObject.Factory.parse(text);
                 XmlObject[] objects = object.selectPath(xpath);
-                return object!=null && objects.length>0;                       
+                return object != null && objects.length > 0;
             } catch (Throwable e) {
                 return false;
             }
-            
-        } else if ( message instanceof BytesMessage ) {
-            BytesMessage bm = (BytesMessage) message;
-            byte data[] = new byte[(int) bm.getBodyLength()];
+
+        } else if (message instanceof BytesMessage) {
+            BytesMessage bm = (BytesMessage)message;
+            byte data[] = new byte[(int)bm.getBodyLength()];
             bm.readBytes(data);
             try {
                 XmlObject object = XmlObject.Factory.parse(new ByteArrayInputStream(data));
                 XmlObject[] objects = object.selectPath(xpath);
-                return object!=null && objects.length>0;                       
+                return object != null && objects.length > 0;
             } catch (Throwable e) {
                 return false;
             }
-        }            
+        }
         return false;
     }
 }

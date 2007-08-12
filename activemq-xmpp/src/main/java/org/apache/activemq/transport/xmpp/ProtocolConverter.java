@@ -16,6 +16,18 @@
  */
 package org.apache.activemq.transport.xmpp;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.jms.JMSException;
+import org.w3c.dom.Element;
+
 import ietf.params.xml.ns.xmpp_sasl.Auth;
 import ietf.params.xml.ns.xmpp_sasl.Challenge;
 import ietf.params.xml.ns.xmpp_sasl.Success;
@@ -27,8 +39,28 @@ import jabber.client.Iq;
 import jabber.client.Message;
 import jabber.client.Presence;
 import jabber.iq.auth.Query;
+
 import org.apache.activemq.advisory.AdvisorySupport;
-import org.apache.activemq.command.*;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQTempQueue;
+import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ConnectionId;
+import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ConsumerId;
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.DestinationInfo;
+import org.apache.activemq.command.ExceptionResponse;
+import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.command.MessageId;
+import org.apache.activemq.command.ProducerId;
+import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.command.Response;
+import org.apache.activemq.command.SessionId;
+import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.transport.xmpp.command.Handler;
 import org.apache.activemq.transport.xmpp.command.HandlerRegistry;
 import org.apache.activemq.util.IdGenerator;
@@ -40,31 +72,19 @@ import org.jabber.protocol.disco_info.Feature;
 import org.jabber.protocol.disco_info.Identity;
 import org.jabber.protocol.disco_items.Item;
 import org.jabber.protocol.muc_user.X;
-import org.w3c.dom.Element;
-
-import javax.jms.JMSException;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * TODO lots of this code could be shared with Stomp
  */
 public class ProtocolConverter {
-    private static final transient Log log = LogFactory.getLog(ProtocolConverter.class);
+    private static final transient Log LOG = LogFactory.getLog(ProtocolConverter.class);
+    private static final IdGenerator CONNECTION_ID_GENERATOR = new IdGenerator();
+    private static final IdGenerator CLIENT_ID_GENERATOR = new IdGenerator("xmpp");
 
     private HandlerRegistry registry = new HandlerRegistry();
     private XmppTransport transport;
 
-
-    private static final IdGenerator connectionIdGenerator = new IdGenerator();
-    private static final IdGenerator clientIdGenerator = new IdGenerator("xmpp");
-    private final ConnectionId connectionId = new ConnectionId(connectionIdGenerator.generateId());
+    private final ConnectionId connectionId = new ConnectionId(CONNECTION_ID_GENERATOR.generateId());
     private final SessionId sessionId = new SessionId(connectionId, -1);
     private final ProducerId producerId = new ProducerId(sessionId, 1);
 
@@ -74,15 +94,12 @@ public class ProtocolConverter {
 
     private final LongSequenceGenerator consumerIdGenerator = new LongSequenceGenerator();
     private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
-    private final LongSequenceGenerator transactionIdGenerator = new LongSequenceGenerator();
     private final IntSequenceGenerator tempDestinationIdGenerator = new IntSequenceGenerator();
 
     private final Map<Integer, Handler<Response>> resposeHandlers = new ConcurrentHashMap<Integer, Handler<Response>>();
     private final Map<ConsumerId, Handler<MessageDispatch>> subscriptionsByConsumerId = new ConcurrentHashMap<ConsumerId, Handler<MessageDispatch>>();
     private final Map<String, ConsumerInfo> jidToConsumerMap = new HashMap<String, ConsumerInfo>();
     private final Map<String, ConsumerInfo> jidToInboxConsumerMap = new HashMap<String, ConsumerInfo>();
-
-    private final Map transactions = new ConcurrentHashMap();
 
     private final Object commnadIdMutex = new Object();
     private int lastCommandId;
@@ -131,42 +148,39 @@ public class ProtocolConverter {
 
     public void onXmppCommand(Object command) throws Exception {
         // TODO we could do some nice code generation to boost performance
-        // by autogenerating the bytecode to statically lookup a handler from a registry maybe?
+        // by autogenerating the bytecode to statically lookup a handler from a
+        // registry maybe?
 
         Handler handler = registry.getHandler(command.getClass());
         if (handler == null) {
             unknownCommand(command);
-        }
-        else {
+        } else {
             handler.handle(command);
         }
     }
 
     public void onActiveMQCommad(Command command) throws Exception {
         if (command.isResponse()) {
-            Response response = (Response) command;
+            Response response = (Response)command;
             Handler<Response> handler = resposeHandlers.remove(new Integer(response.getCorrelationId()));
             if (handler != null) {
                 handler.handle(response);
+            } else {
+                LOG.warn("No handler for response: " + response);
             }
-            else {
-                log.warn("No handler for response: " + response);
-            }
-        }
-        else if (command.isMessageDispatch()) {
-            MessageDispatch md = (MessageDispatch) command;
+        } else if (command.isMessageDispatch()) {
+            MessageDispatch md = (MessageDispatch)command;
             Handler<MessageDispatch> handler = subscriptionsByConsumerId.get(md.getConsumerId());
             if (handler != null) {
                 handler.handle(md);
-            }
-            else {
-                log.warn("No handler for message: " + md);
+            } else {
+                LOG.warn("No handler for message: " + md);
             }
         }
     }
 
     protected void unknownCommand(Object command) throws Exception {
-        log.warn("Unkown command: " + command + " of type: " + command.getClass().getName());
+        LOG.warn("Unkown command: " + command + " of type: " + command.getClass().getName());
     }
 
     protected void onIq(final Iq iq) throws Exception {
@@ -175,44 +189,38 @@ public class ProtocolConverter {
         if (any instanceof Query) {
             onAuthQuery(any, iq);
 
-        }
-        else if (any instanceof jabber.iq._private.Query) {
-            jabber.iq._private.Query query = (jabber.iq._private.Query) any;
+        } else if (any instanceof jabber.iq._private.Query) {
+            jabber.iq._private.Query query = (jabber.iq._private.Query)any;
 
-            if (log.isDebugEnabled()) {
-                log.debug("Iq Private " + debugString(iq) + " any: " + query.getAny());
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Iq Private " + debugString(iq) + " any: " + query.getAny());
             }
 
             Iq result = createResult(iq);
             jabber.iq._private.Query answer = new jabber.iq._private.Query();
             result.setAny(answer);
             transport.marshall(result);
-        }
-        else if (any instanceof jabber.iq.roster.Query) {
-            jabber.iq.roster.Query query = (jabber.iq.roster.Query) any;
+        } else if (any instanceof jabber.iq.roster.Query) {
+            jabber.iq.roster.Query query = (jabber.iq.roster.Query)any;
 
-            if (log.isDebugEnabled()) {
-                log.debug("Iq Roster " + debugString(iq) + " item: " + query.getItem());
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Iq Roster " + debugString(iq) + " item: " + query.getItem());
             }
 
             Iq result = createResult(iq);
             jabber.iq.roster.Query roster = new jabber.iq.roster.Query();
             result.setAny(roster);
             transport.marshall(result);
-        }
-        else if (any instanceof org.jabber.protocol.disco_items.Query) {
-            onDiscoItems(iq, (org.jabber.protocol.disco_items.Query) any);
-        }
-        else if (any instanceof org.jabber.protocol.disco_info.Query) {
-            onDiscoInfo(iq, (org.jabber.protocol.disco_info.Query) any);
-        }
-        else {
+        } else if (any instanceof org.jabber.protocol.disco_items.Query) {
+            onDiscoItems(iq, (org.jabber.protocol.disco_items.Query)any);
+        } else if (any instanceof org.jabber.protocol.disco_info.Query) {
+            onDiscoInfo(iq, (org.jabber.protocol.disco_info.Query)any);
+        } else {
             if (any instanceof Element) {
-                Element element = (Element) any;
-                log.warn("Iq Unknown " + debugString(iq) + " element namespace: " + element.getNamespaceURI() + " localName: " + element.getLocalName());
-            }
-            else {
-                log.warn("Iq Unknown " + debugString(iq) + " any: " + any + " of type: " + any.getClass().getName());
+                Element element = (Element)any;
+                LOG.warn("Iq Unknown " + debugString(iq) + " element namespace: " + element.getNamespaceURI() + " localName: " + element.getLocalName());
+            } else {
+                LOG.warn("Iq Unknown " + debugString(iq) + " any: " + any + " of type: " + any.getClass().getName());
             }
             Iq result = createResult(iq);
             jabber.client.Error error = new Error();
@@ -223,9 +231,9 @@ public class ProtocolConverter {
     }
 
     protected void onAuthQuery(Object any, final Iq iq) throws IOException {
-        Query query = (Query) any;
-        if (log.isDebugEnabled()) {
-            log.debug("Iq Auth Query " + debugString(iq) + " resource: " + query.getResource() + " username: " + query.getUsername());
+        Query query = (Query)any;
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Iq Auth Query " + debugString(iq) + " resource: " + query.getResource() + " username: " + query.getUsername());
         }
         if (query.getPassword() == null) {
             Iq result = createResult(iq);
@@ -237,14 +245,14 @@ public class ProtocolConverter {
             return;
         }
 
-        //connectionInfo.setClientId(query.getResource());
+        // connectionInfo.setClientId(query.getResource());
         connectionInfo.setUserName(query.getUsername());
         connectionInfo.setPassword(query.getPassword());
 
         // TODO support digest?
 
         if (connectionInfo.getClientId() == null) {
-            connectionInfo.setClientId(clientIdGenerator.generateId());
+            connectionInfo.setClientId(CLIENT_ID_GENERATOR.generateId());
         }
 
         sendToActiveMQ(connectionInfo, new Handler<Response>() {
@@ -253,10 +261,10 @@ public class ProtocolConverter {
                 Iq result = createResult(iq);
 
                 if (response instanceof ExceptionResponse) {
-                    ExceptionResponse exceptionResponse = (ExceptionResponse) response;
+                    ExceptionResponse exceptionResponse = (ExceptionResponse)response;
                     Throwable exception = exceptionResponse.getException();
 
-                    log.warn("Failed to create connection: " + exception, exception);
+                    LOG.warn("Failed to create connection: " + exception, exception);
 
                     Error error = new Error();
                     result.setError(error);
@@ -264,8 +272,7 @@ public class ProtocolConverter {
                     StringWriter buffer = new StringWriter();
                     exception.printStackTrace(new PrintWriter(buffer));
                     error.setInternalServerError(buffer.toString());
-                }
-                else {
+                } else {
                     connected.set(true);
                 }
                 transport.marshall(result);
@@ -283,8 +290,8 @@ public class ProtocolConverter {
     protected void onDiscoItems(Iq iq, org.jabber.protocol.disco_items.Query query) throws IOException {
         String to = iq.getTo();
 
-        if (log.isDebugEnabled()) {
-            log.debug("Iq Disco Items query " + debugString(iq) + " node: " + query.getNode() + " item: " + query.getItem());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Iq Disco Items query " + debugString(iq) + " node: " + query.getNode() + " item: " + query.getItem());
         }
 
         Iq result = createResult(iq);
@@ -292,8 +299,7 @@ public class ProtocolConverter {
         if (to == null || to.length() == 0) {
             answer.getItem().add(createItem("queues", "Queues", "queues"));
             answer.getItem().add(createItem("topics", "Topics", "topics"));
-        }
-        else {
+        } else {
             // lets not add anything?
         }
 
@@ -306,8 +312,8 @@ public class ProtocolConverter {
 
         // TODO lets create the topic 'to'
 
-        if (log.isDebugEnabled()) {
-            log.debug("Iq Disco Info query " + debugString(iq) + " node: " + query.getNode() + " features: " + query.getFeature() + " identity: " + query.getIdentity());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Iq Disco Info query " + debugString(iq) + " node: " + query.getNode() + " features: " + query.getFeature() + " identity: " + query.getIdentity());
         }
 
         Iq result = createResult(iq);
@@ -319,22 +325,20 @@ public class ProtocolConverter {
             answer.getIdentity().add(createIdentity("directory", "chatroom", "queues"));
             answer.getIdentity().add(createIdentity("directory", "chatroom", "topics"));
             /*
-            answer.getIdentity().add(createIdentity("hierarchy", "queues", "branch"));
-            answer.getIdentity().add(createIdentity("hierarchy", "topics", "branch"));
-            */
-        }
-        else {
+             * answer.getIdentity().add(createIdentity("hierarchy", "queues",
+             * "branch")); answer.getIdentity().add(createIdentity("hierarchy",
+             * "topics", "branch"));
+             */
+        } else {
             // for queues/topics
             if (to.equals("queues")) {
                 answer.getIdentity().add(createIdentity("conference", "queue.a", "text"));
                 answer.getIdentity().add(createIdentity("conference", "queue.b", "text"));
-            }
-            else if (to.equals("topics")) {
+            } else if (to.equals("topics")) {
                 answer.getIdentity().add(createIdentity("conference", "topic.x", "text"));
                 answer.getIdentity().add(createIdentity("conference", "topic.y", "text"));
                 answer.getIdentity().add(createIdentity("conference", "topic.z", "text"));
-            }
-            else {
+            } else {
                 // lets reply to an actual room
                 answer.getIdentity().add(createIdentity("conference", to, "text"));
                 answer.getFeature().add(createFeature("http://jabber.org/protocol/muc"));
@@ -347,9 +351,9 @@ public class ProtocolConverter {
     }
 
     protected void onPresence(Presence presence) throws IOException, JMSException {
-        if (log.isDebugEnabled()) {
-            log.debug("Presence: " + presence.getFrom() + " id: " + presence.getId() + " to: " + presence.getTo() + " type: " + presence.getType()
-                    + " showOrStatusOrPriority: " + presence.getShowOrStatusOrPriority() + " any: " + presence.getAny());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Presence: " + presence.getFrom() + " id: " + presence.getId() + " to: " + presence.getTo() + " type: " + presence.getType() + " showOrStatusOrPriority: "
+                      + presence.getShowOrStatusOrPriority() + " any: " + presence.getAny());
         }
         org.jabber.protocol.muc_user.Item item = new org.jabber.protocol.muc_user.Item();
         item.setAffiliation("owner");
@@ -358,18 +362,17 @@ public class ProtocolConverter {
         sendPresence(presence, item);
 
         /*
-        item = new org.jabber.protocol.muc_user.Item();
-        item.setAffiliation("admin");
-        item.setRole("moderator");
-        sendPresence(presence, item);
-        */
+         * item = new org.jabber.protocol.muc_user.Item();
+         * item.setAffiliation("admin"); item.setRole("moderator");
+         * sendPresence(presence, item);
+         */
 
         // lets create a subscription
         final String to = presence.getTo();
 
         ActiveMQDestination destination = createActiveMQDestination(to);
         if (destination == null) {
-            log.debug("No 'to' attribute specified for presence so not creating a JMS subscription");
+            LOG.debug("No 'to' attribute specified for presence so not creating a JMS subscription");
             return;
         }
         subscribe(to, destination, jidToConsumerMap);
@@ -415,8 +418,8 @@ public class ProtocolConverter {
         subscriptionsByConsumerId.put(consumerInfo.getConsumerId(), new Handler<MessageDispatch>() {
             public void handle(MessageDispatch messageDispatch) throws Exception {
                 // processing the inbound message
-                if (log.isDebugEnabled()) {
-                    log.debug("Receiving inbound: " + messageDispatch.getMessage());
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Receiving inbound: " + messageDispatch.getMessage());
                 }
 
                 // lets send back an ACK
@@ -425,8 +428,8 @@ public class ProtocolConverter {
 
                 Message message = createXmppMessage(to, messageDispatch);
                 if (message != null) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("Sending message to XMPP client from: " + message.getFrom() + " to: " + message.getTo() + " type: " + message.getType() + " with body: " + message.getAny());
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Sending message to XMPP client from: " + message.getFrom() + " to: " + message.getTo() + " type: " + message.getType() + " with body: " + message.getAny());
                     }
                     transport.marshall(message);
                 }
@@ -447,18 +450,17 @@ public class ProtocolConverter {
         answer.setTo(to);
 
         org.apache.activemq.command.Message message = messageDispatch.getMessage();
-        //answer.setType(message.getType());
+        // answer.setType(message.getType());
         if (message instanceof ActiveMQTextMessage) {
-            ActiveMQTextMessage activeMQTextMessage = (ActiveMQTextMessage) message;
+            ActiveMQTextMessage activeMQTextMessage = (ActiveMQTextMessage)message;
             Body body = new Body();
             String text = activeMQTextMessage.getText();
-            log.info("Setting the body text to be: " + text);
+            LOG.info("Setting the body text to be: " + text);
             body.setValue(text);
             answer.getAny().add(body);
-        }
-        else {
+        } else {
             // TODO support other message types
-            log.warn("Could not convert the message to a complete Jabber message: " + message);
+            LOG.warn("Could not convert the message to a complete Jabber message: " + message);
         }
         return answer;
     }
@@ -473,7 +475,6 @@ public class ProtocolConverter {
         answer.getShowOrStatusOrPriority().add(x);
         transport.marshall(answer);
     }
-
 
     protected Item createItem(String jid, String name, String node) {
         Item answer = new Item();
@@ -519,15 +520,14 @@ public class ProtocolConverter {
         transport.getTransportListener().onCommand(command);
     }
 
-
     protected void onStarttls(Starttls starttls) throws Exception {
-        log.debug("Starttls");
+        LOG.debug("Starttls");
         transport.marshall(new Proceed());
     }
 
     protected void onMessage(Message message) throws Exception {
-        if (log.isDebugEnabled()) {
-            log.debug("Message from: " + message.getFrom() + " to: " + message.getTo() + " subjectOrBodyOrThread: " + message.getSubjectOrBodyOrThread());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Message from: " + message.getFrom() + " to: " + message.getTo() + " subjectOrBodyOrThread: " + message.getSubjectOrBodyOrThread());
         }
 
         final ActiveMQMessage activeMQMessage = createActiveMQMessage(message);
@@ -541,13 +541,13 @@ public class ProtocolConverter {
         addActiveMQMessageHeaders(activeMQMessage, message);
 
         /*
-        MessageDispatch dispatch = new MessageDispatch();
-        dispatch.setDestination(destination);
-        dispatch.setMessage(activeMQMessage);
-        */
+         * MessageDispatch dispatch = new MessageDispatch();
+         * dispatch.setDestination(destination);
+         * dispatch.setMessage(activeMQMessage);
+         */
 
-        if (log.isDebugEnabled()) {
-            log.debug("Sending ActiveMQ message: " + activeMQMessage);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Sending ActiveMQ message: " + activeMQMessage);
         }
         sendToActiveMQ(activeMQMessage, createErrorHandler("send message"));
     }
@@ -556,17 +556,15 @@ public class ProtocolConverter {
         return new Handler<Response>() {
             public void handle(Response event) throws Exception {
                 if (event instanceof ExceptionResponse) {
-                    ExceptionResponse exceptionResponse = (ExceptionResponse) event;
+                    ExceptionResponse exceptionResponse = (ExceptionResponse)event;
                     Throwable exception = exceptionResponse.getException();
-                    log.error("Failed to " + text + ". Reason: " + exception, exception);
-                }
-                else if (log.isDebugEnabled()) {
-                    log.debug("Completed " + text);
+                    LOG.error("Failed to " + text + ". Reason: " + exception, exception);
+                } else if (LOG.isDebugEnabled()) {
+                    LOG.debug("Completed " + text);
                 }
             }
         };
     }
-
 
     /**
      * Converts the Jabber destination name into a destination in ActiveMQ
@@ -596,7 +594,7 @@ public class ProtocolConverter {
         List<Object> list = message.getSubjectOrBodyOrThread();
         for (Object object : list) {
             if (object instanceof Body) {
-                Body body = (Body) object;
+                Body body = (Body)object;
                 text = body.getValue();
                 break;
             }
@@ -620,16 +618,15 @@ public class ProtocolConverter {
     }
 
     protected void onAuth(Auth auth) throws Exception {
-        if (log.isDebugEnabled()) {
-            log.debug("Auth mechanism: " + auth.getMechanism() + " value: " + auth.getValue());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Auth mechanism: " + auth.getMechanism() + " value: " + auth.getValue());
         }
         String value = createChallengeValue(auth);
         if (value != null) {
             Challenge challenge = new Challenge();
             challenge.setValue(value);
             transport.marshall(challenge);
-        }
-        else {
+        } else {
             transport.marshall(new Success());
         }
     }

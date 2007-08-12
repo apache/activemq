@@ -16,20 +16,20 @@
  */
 package org.apache.activemq.tool.properties;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
+import java.util.StringTokenizer;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.util.Iterator;
-import java.util.StringTokenizer;
-import java.util.Properties;
-import java.util.List;
-import java.util.ArrayList;
-import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Constructor;
-
 public final class ReflectionUtil {
-    private static final Log log = LogFactory.getLog(ReflectionUtil.class);
+    private static final Log LOG = LogFactory.getLog(ReflectionUtil.class);
 
     private ReflectionUtil() {
     }
@@ -39,7 +39,7 @@ public final class ReflectionUtil {
             String debugInfo;
 
             Object target = obj;
-            Class  targetClass = obj.getClass();
+            Class targetClass = obj.getClass();
 
             // DEBUG: Debugging Info
             debugInfo = "Invoking: " + targetClass.getName();
@@ -48,8 +48,9 @@ public final class ReflectionUtil {
             String keySubString = key;
             int tokenCount = tokenizer.countTokens();
 
-            // For nested settings, get the object first. -1, do not count the last token
-            for (int j=0; j<tokenCount-1; j++) {
+            // For nested settings, get the object first. -1, do not count the
+            // last token
+            for (int j = 0; j < tokenCount - 1; j++) {
                 // Find getter method first
                 String name = tokenizer.nextToken();
 
@@ -57,20 +58,23 @@ public final class ReflectionUtil {
                 if (target instanceof ReflectionConfigurable && !((ReflectionConfigurable)target).acceptConfig(keySubString, val)) {
                     return;
                 } else {
-                    // This will reduce the key, so that it will be recognize by the next object. i.e.
+                    // This will reduce the key, so that it will be recognize by
+                    // the next object. i.e.
                     // Property name: factory.prefetchPolicy.queuePrefetch
-                    // Calling order: this.getFactory().prefetchPolicy().queuePrefetch();
-                    // If factory does not accept the config, it should be given prefetchPolicy.queuePrefetch as the key
-                    keySubString = keySubString.substring(name.length() + 1); // +1 to account for the '.'
+                    // Calling order:
+                    // this.getFactory().prefetchPolicy().queuePrefetch();
+                    // If factory does not accept the config, it should be given
+                    // prefetchPolicy.queuePrefetch as the key
+                    // +1 to account for the '.'
+                    keySubString = keySubString.substring(name.length() + 1);
                 }
 
-                String getMethod = "get" + name.substring(0,1).toUpperCase() + name.substring(1);
+                String getMethod = "get" + name.substring(0, 1).toUpperCase() + name.substring(1);
                 Method method = targetClass.getMethod(getMethod, new Class[] {});
                 target = method.invoke(target, null);
                 targetClass = target.getClass();
 
-
-                debugInfo += ("." + getMethod + "()");
+                debugInfo += "." + getMethod + "()";
             }
 
             // Property name
@@ -83,49 +87,75 @@ public final class ReflectionUtil {
             // Find setter method
             Method setterMethod = findSetterMethod(targetClass, property);
 
-            // Get the first parameter type. This assumes that there is only one parameter.
+            // Get the first parameter type. This assumes that there is only one
+            // parameter.
             if (setterMethod == null) {
                 throw new IllegalAccessException("Unable to find appropriate setter method signature for property: " + property);
             }
             Class paramType = setterMethod.getParameterTypes()[0];
 
             // Set primitive type
-            debugInfo += ("." + setterMethod + "(" + paramType.getName() + ": " + val + ")");
+            debugInfo += "." + setterMethod + "(" + paramType.getName() + ": " + val + ")";
             if (paramType.isPrimitive()) {
                 if (paramType == Boolean.TYPE) {
-                    setterMethod.invoke(target, new Object[] {Boolean.valueOf(val)});
+                    setterMethod.invoke(target, new Object[] {
+                        Boolean.valueOf(val)
+                    });
                 } else if (paramType == Integer.TYPE) {
-                    setterMethod.invoke(target, new Object[] {Integer.valueOf(val)});
+                    setterMethod.invoke(target, new Object[] {
+                        Integer.valueOf(val)
+                    });
                 } else if (paramType == Long.TYPE) {
-                    setterMethod.invoke(target, new Object[] {Long.valueOf(val)});
+                    setterMethod.invoke(target, new Object[] {
+                        Long.valueOf(val)
+                    });
                 } else if (paramType == Double.TYPE) {
-                    setterMethod.invoke(target, new Object[] {Double.valueOf(val)});
+                    setterMethod.invoke(target, new Object[] {
+                        Double.valueOf(val)
+                    });
                 } else if (paramType == Float.TYPE) {
-                    setterMethod.invoke(target, new Object[] {Float.valueOf(val)});
+                    setterMethod.invoke(target, new Object[] {
+                        Float.valueOf(val)
+                    });
                 } else if (paramType == Short.TYPE) {
-                    setterMethod.invoke(target, new Object[] {Short.valueOf(val)});
+                    setterMethod.invoke(target, new Object[] {
+                        Short.valueOf(val)
+                    });
                 } else if (paramType == Byte.TYPE) {
-                    setterMethod.invoke(target, new Object[] {Byte.valueOf(val)});
+                    setterMethod.invoke(target, new Object[] {
+                        Byte.valueOf(val)
+                    });
                 } else if (paramType == Character.TYPE) {
-                    setterMethod.invoke(target, new Object[] {new Character(val.charAt(0))});
+                    setterMethod.invoke(target, new Object[] {
+                        new Character(val.charAt(0))
+                    });
                 }
             } else {
                 // Set String type
                 if (paramType == String.class) {
-                    setterMethod.invoke(target, new Object[] {val});
+                    setterMethod.invoke(target, new Object[] {
+                        val
+                    });
 
-                // For unknown object type, try to create an instance of the object using a String constructor
+                    // For unknown object type, try to create an instance of the
+                    // object using a String constructor
                 } else {
-                    Constructor c = paramType.getConstructor(new Class[] {String.class});
-                    Object paramObject = c.newInstance(new Object[] {val});
+                    Constructor c = paramType.getConstructor(new Class[] {
+                        String.class
+                    });
+                    Object paramObject = c.newInstance(new Object[] {
+                        val
+                    });
 
-                    setterMethod.invoke(target, new Object[] {paramObject});
+                    setterMethod.invoke(target, new Object[] {
+                        paramObject
+                    });
                 }
             }
-            log.debug(debugInfo);
+            LOG.debug(debugInfo);
 
         } catch (Exception e) {
-            log.warn(e);
+            LOG.warn(e);
         }
     }
 
@@ -137,7 +167,8 @@ public final class ReflectionUtil {
 
                 configureClass(obj, key, val);
             } catch (Throwable t) {
-                // Let's catch any exception as this could be cause by the foreign class
+                // Let's catch any exception as this could be cause by the
+                // foreign class
                 t.printStackTrace();
             }
         }
@@ -148,7 +179,7 @@ public final class ReflectionUtil {
         try {
             props.putAll(retrieveClassProperties("", obj.getClass(), obj));
         } catch (Exception e) {
-            log.warn(e);
+            LOG.warn(e);
         }
         return props;
     }
@@ -159,14 +190,15 @@ public final class ReflectionUtil {
         } else {
             Properties props = new Properties();
             Method[] getterMethods = findAllGetterMethods(targetClass);
-            for (int i=0; i<getterMethods.length; i++) {
+            for (int i = 0; i < getterMethods.length; i++) {
                 try {
                     String propertyName = getPropertyName(getterMethods[i].getName());
                     Class retType = getterMethods[i].getReturnType();
 
                     // If primitive or string type, return it
                     if (retType.isPrimitive() || retType == String.class) {
-                        // Check for an appropriate setter method to consider it as a property
+                        // Check for an appropriate setter method to consider it
+                        // as a property
                         if (findSetterMethod(targetClass, propertyName) != null) {
                             Object val = null;
                             try {
@@ -191,7 +223,8 @@ public final class ReflectionUtil {
                         }
                     }
                 } catch (Throwable t) {
-                    // Let's catch any exception, cause this could be cause by the foreign class
+                    // Let's catch any exception, cause this could be cause by
+                    // the foreign class
                     t.printStackTrace();
                 }
             }
@@ -200,10 +233,10 @@ public final class ReflectionUtil {
     }
 
     private static Method findSetterMethod(Class targetClass, String propertyName) {
-        String methodName = "set" + propertyName.substring(0,1).toUpperCase() + propertyName.substring(1);
+        String methodName = "set" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1);
 
         Method[] methods = targetClass.getMethods();
-        for (int i=0; i<methods.length; i++) {
+        for (int i = 0; i < methods.length; i++) {
             if (methods[i].getName().equals(methodName) && isSetterMethod(methods[i])) {
                 return methods[i];
             }
@@ -212,11 +245,11 @@ public final class ReflectionUtil {
     }
 
     private static Method findGetterMethod(Class targetClass, String propertyName) {
-        String methodName1 = "get" + propertyName.substring(0,1).toUpperCase() + propertyName.substring(1);
-        String methodName2 = "is"  + propertyName.substring(0,1).toUpperCase() + propertyName.substring(1);
+        String methodName1 = "get" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1);
+        String methodName2 = "is" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1);
 
         Method[] methods = targetClass.getMethods();
-        for (int i=0; i<methods.length; i++) {
+        for (int i = 0; i < methods.length; i++) {
             if ((methods[i].getName().equals(methodName1) || methods[i].getName().equals(methodName2)) && isGetterMethod(methods[i])) {
                 return methods[i];
             }
@@ -228,7 +261,7 @@ public final class ReflectionUtil {
         List getterMethods = new ArrayList();
         Method[] methods = targetClass.getMethods();
 
-        for (int i=0; i<methods.length; i++) {
+        for (int i = 0; i < methods.length; i++) {
             if (isGetterMethod(methods[i])) {
                 getterMethods.add(methods[i]);
             }
@@ -243,9 +276,8 @@ public final class ReflectionUtil {
         // If 'is' method, must return a boolean value
         // Both must have no parameters
         // Method must not belong to the Object class to prevent infinite loop
-        return (((method.getName().startsWith("is") && method.getReturnType() == Boolean.TYPE) ||
-                 (method.getName().startsWith("get") && method.getReturnType() != Void.TYPE)) &&
-                (method.getParameterTypes().length == 0) && method.getDeclaringClass() != Object.class);
+        return ((method.getName().startsWith("is") && method.getReturnType() == Boolean.TYPE) || (method.getName().startsWith("get") && method.getReturnType() != Void.TYPE))
+               && (method.getParameterTypes().length == 0) && method.getDeclaringClass() != Object.class;
     }
 
     private static boolean isSetterMethod(Method method) {
@@ -254,13 +286,16 @@ public final class ReflectionUtil {
             Class[] paramType = method.getParameterTypes();
             // Check that it can only accept one parameter
             if (paramType.length == 1) {
-                // Check if parameter is a primitive or can accept a String parameter
+                // Check if parameter is a primitive or can accept a String
+                // parameter
                 if (paramType[0].isPrimitive() || paramType[0] == String.class) {
                     return true;
                 } else {
                     // Check if object can accept a string as a constructor
                     try {
-                        if (paramType[0].getConstructor(new Class[] {String.class}) != null) {
+                        if (paramType[0].getConstructor(new Class[] {
+                            String.class
+                        }) != null) {
                             return true;
                         }
                     } catch (NoSuchMethodException e) {
@@ -284,6 +319,6 @@ public final class ReflectionUtil {
             name = "";
         }
 
-        return name.substring(0,1).toLowerCase() + name.substring(1);
+        return name.substring(0, 1).toLowerCase() + name.substring(1);
     }
 }

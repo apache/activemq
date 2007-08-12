@@ -17,9 +17,6 @@
 
 package org.apache.activemq.tool;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -27,12 +24,16 @@ import java.io.PrintWriter;
 import java.util.Enumeration;
 import java.util.Properties;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 public class ReportGenerator {
-    private static final Log log = LogFactory.getLog(ReportGenerator.class);
-    private String reportDirectory = null;
-    private String reportName = null;
-    private PrintWriter writer = null;
-    private File reportFile = null;
+    
+    private static final Log LOG = LogFactory.getLog(ReportGenerator.class);
+    private String reportDirectory;
+    private String reportName;
+    private PrintWriter writer;
+    private File reportFile;
     private Properties testSettings;
 
     public ReportGenerator() {
@@ -45,14 +46,12 @@ public class ReportGenerator {
 
     public void startGenerateReport() {
 
-
         File reportDir = new File(getReportDirectory());
 
         // Create output directory if it doesn't exist.
         if (!reportDir.exists()) {
             reportDir.mkdirs();
         }
-
 
         if (reportDir != null) {
             reportFile = new File(this.getReportDirectory() + File.separator + this.getReportName() + ".xml");
@@ -61,7 +60,8 @@ public class ReportGenerator {
         try {
             this.writer = new PrintWriter(new FileOutputStream(reportFile));
         } catch (IOException e1) {
-            e1.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e1.printStackTrace(); // To change body of catch statement use
+                                    // File | Settings | File Templates.
         }
     }
 
@@ -69,8 +69,7 @@ public class ReportGenerator {
         writeWithIndent(0, "</test-report>");
         this.getWriter().flush();
         this.getWriter().close();
-        log.info(" TEST REPORT OUTPUT : " + reportFile.getAbsolutePath());
-
+        LOG.info(" TEST REPORT OUTPUT : " + reportFile.getAbsolutePath());
 
     }
 
@@ -84,7 +83,6 @@ public class ReportGenerator {
 
     }
 
-
     protected void addClientSettings() {
         if (this.getTestSettings() != null) {
             Enumeration keys = getTestSettings().propertyNames();
@@ -93,7 +91,7 @@ public class ReportGenerator {
 
             String key;
             while (keys.hasMoreElements()) {
-                key = (String) keys.nextElement();
+                key = (String)keys.nextElement();
                 writeWithIndent(6, "<" + key + ">" + getTestSettings().get(key) + "</" + key + ">");
             }
 
@@ -115,7 +113,6 @@ public class ReportGenerator {
         writeWithIndent(2, "</test-result>");
     }
 
-
     protected void writeWithIndent(int indent, String result) {
         StringBuffer buffer = new StringBuffer();
 
@@ -131,7 +128,6 @@ public class ReportGenerator {
         return this.writer;
     }
 
-
     public String getReportDirectory() {
         return reportDirectory;
     }
@@ -143,7 +139,6 @@ public class ReportGenerator {
     public String getReportName() {
         return reportName;
     }
-
 
     public void setReportName(String reportName) {
         this.reportName = reportName;

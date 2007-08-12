@@ -35,7 +35,7 @@ public class ServerStartupConfiguration extends StartupConfiguration {
     private ServiceRegistry minaServiceRegistry = new SimpleServiceRegistry();
     private int ldapPort = 389;
     private int ldapsPort = 636;
-    private InetAddress host = null;
+    private InetAddress host;
     private boolean enableKerberos;
 
     protected ServerStartupConfiguration() {

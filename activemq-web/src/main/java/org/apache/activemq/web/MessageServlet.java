@@ -51,7 +51,7 @@ import org.mortbay.util.ajax.ContinuationSupport;
  * @version $Revision: 1.1.1.1 $
  */
 public class MessageServlet extends MessageServletSupport {
-    private static final Log log = LogFactory.getLog(MessageServlet.class);
+    private static final Log LOG = LogFactory.getLog(MessageServlet.class);
 
     private String readTimeoutParameter = "readTimeout";
     private long defaultReadTimeout = -1;
@@ -86,13 +86,14 @@ public class MessageServlet extends MessageServletSupport {
 
             // lets create the destination from the URI?
             Destination destination = getDestination(client, request);
-            if (destination==null)
+            if (destination == null) {
                 throw new NoDestinationSuppliedException();
-
-            if (log.isDebugEnabled()) {
-                log.debug("Sending message to: " + destination + " with text: " + text);
             }
-            
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Sending message to: " + destination + " with text: " + text);
+            }
+
             TextMessage message = client.getSession().createTextMessage(text);
             appendParametersToMessage(request, message);
             boolean persistent = isSendPersistent(request);
@@ -103,8 +104,7 @@ public class MessageServlet extends MessageServletSupport {
             // lets return a unique URI for reliable messaging
             response.setHeader("messageID", message.getJMSMessageID());
             response.setStatus(HttpServletResponse.SC_OK);
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             throw new ServletException("Could not post JMS message: " + e, e);
         }
     }
@@ -139,25 +139,27 @@ public class MessageServlet extends MessageServletSupport {
         try {
             WebClient client = WebClient.getWebClient(request);
             Destination destination = getDestination(client, request);
-            if (destination==null)
+            if (destination == null) {
                 throw new NoDestinationSuppliedException();
+            }
             long timeout = getReadTimeout(request);
             boolean ajax = isRicoAjax(request);
-            if (!ajax)
+            if (!ajax) {
                 maxMessages = 1;
-
-            if (log.isDebugEnabled()) {
-                log.debug("Receiving message(s) from: " + destination + " with timeout: " + timeout);
             }
 
-            MessageAvailableConsumer consumer = (MessageAvailableConsumer) client.getConsumer(destination);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Receiving message(s) from: " + destination + " with timeout: " + timeout);
+            }
+
+            MessageAvailableConsumer consumer = (MessageAvailableConsumer)client.getConsumer(destination);
             Continuation continuation = null;
             Listener listener = null;
             Message message = null;
 
             synchronized (consumer) {
                 // Fetch the listeners
-                listener = (Listener) consumer.getAvailableListener();
+                listener = (Listener)consumer.getAvailableListener();
                 if (listener == null) {
                     listener = new Listener(consumer);
                     consumer.setAvailableListener(listener);
@@ -179,27 +181,29 @@ public class MessageServlet extends MessageServletSupport {
                 }
 
                 // Try again now
-                if (message == null)
+                if (message == null) {
                     message = consumer.receiveNoWait();
+                }
 
                 // write a responds
                 response.setContentType("text/xml");
                 PrintWriter writer = response.getWriter();
 
-                if (ajax)
+                if (ajax) {
                     writer.println("<ajax-response>");
+                }
 
                 // handle any message(s)
                 if (message == null) {
                     // No messages so OK response of for ajax else no content.
                     response.setStatus(ajax ? HttpServletResponse.SC_OK : HttpServletResponse.SC_NO_CONTENT);
-                }
-                else {
+                } else {
                     // We have at least one message so set up the response
                     response.setStatus(HttpServletResponse.SC_OK);
                     String type = getContentType(request);
-                    if (type != null)
+                    if (type != null) {
                         response.setContentType(type);
+                    }
 
                     // send a response for each available message (up to max
                     // messages)
@@ -209,15 +213,16 @@ public class MessageServlet extends MessageServletSupport {
                             writer.print("<response type='object' id='");
                             writer.print(request.getParameter("id"));
                             writer.println("'>");
-                        }
-                        else
+                        } else {
                             // only ever 1 message for non ajax!
                             setResponseHeaders(response, message);
+                        }
 
                         writeMessageResponse(writer, message);
 
-                        if (ajax)
+                        if (ajax) {
                             writer.println("</response>");
+                        }
 
                         // look for next message
                         message = consumer.receiveNoWait();
@@ -230,13 +235,11 @@ public class MessageServlet extends MessageServletSupport {
                     writer.println("</ajax-response>");
                 }
             }
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             throw new ServletException("Could not post JMS message: " + e, e);
-        }
-        finally {
-            if (log.isDebugEnabled()) {
-                log.debug("Received " + messages + " message(s)");
+        } finally {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Received " + messages + " message(s)");
             }
         }
     }
@@ -249,8 +252,7 @@ public class MessageServlet extends MessageServletSupport {
      * @throws ServletException
      * @throws IOException
      */
-    protected void doMessagesWithoutContinuation(HttpServletRequest request, HttpServletResponse response,
-            int maxMessages) throws ServletException, IOException {
+    protected void doMessagesWithoutContinuation(HttpServletRequest request, HttpServletResponse response, int maxMessages) throws ServletException, IOException {
 
         int messages = 0;
         try {
@@ -258,24 +260,23 @@ public class MessageServlet extends MessageServletSupport {
             Destination destination = getDestination(client, request);
             long timeout = getReadTimeout(request);
             boolean ajax = isRicoAjax(request);
-            if (!ajax)
+            if (!ajax) {
                 maxMessages = 1;
-
-            if (log.isDebugEnabled()) {
-                log.debug("Receiving message(s) from: " + destination + " with timeout: " + timeout);
+            }
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Receiving message(s) from: " + destination + " with timeout: " + timeout);
             }
 
-            MessageAvailableConsumer consumer = (MessageAvailableConsumer) client.getConsumer(destination);
-            Continuation continuation = null;
-            Listener listener = null;
+            MessageAvailableConsumer consumer = (MessageAvailableConsumer)client.getConsumer(destination);
             Message message = null;
 
             // write a responds
             response.setContentType("text/xml");
             PrintWriter writer = response.getWriter();
 
-            if (ajax)
+            if (ajax) {
                 writer.println("<ajax-response>");
+            }
 
             // Only one client thread at a time should poll for messages.
             if (client.getSemaphore().tryAcquire()) {
@@ -293,8 +294,9 @@ public class MessageServlet extends MessageServletSupport {
                         // response
                         response.setStatus(HttpServletResponse.SC_OK);
                         String type = getContentType(request);
-                        if (type != null)
+                        if (type != null) {
                             response.setContentType(type);
+                        }
 
                         // send a response for each available message (up to
                         // max
@@ -305,14 +307,16 @@ public class MessageServlet extends MessageServletSupport {
                                 writer.print("<response type='object' id='");
                                 writer.print(request.getParameter("id"));
                                 writer.println("'>");
-                            } else
+                            } else {
                                 // only ever 1 message for non ajax!
                                 setResponseHeaders(response, message);
+                            }
 
                             writeMessageResponse(writer, message);
 
-                            if (ajax)
+                            if (ajax) {
                                 writer.println("</response>");
+                            }
 
                             // look for next message
                             message = consumer.receiveNoWait();
@@ -335,23 +339,22 @@ public class MessageServlet extends MessageServletSupport {
         } catch (JMSException e) {
             throw new ServletException("Could not post JMS message: " + e, e);
         } finally {
-            if (log.isDebugEnabled()) {
-                log.debug("Received " + messages + " message(s)");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Received " + messages + " message(s)");
             }
         }
     }
 
     protected void writeMessageResponse(PrintWriter writer, Message message) throws JMSException, IOException {
         if (message instanceof TextMessage) {
-            TextMessage textMsg = (TextMessage) message;
+            TextMessage textMsg = (TextMessage)message;
             String txt = textMsg.getText();
             if (txt.startsWith("<?")) {
                 txt = txt.substring(txt.indexOf("?>") + 2);
             }
             writer.print(txt);
-        }
-        else if (message instanceof ObjectMessage) {
-            ObjectMessage objectMsg = (ObjectMessage) message;
+        } else if (message instanceof ObjectMessage) {
+            ObjectMessage objectMsg = (ObjectMessage)message;
             Object object = objectMsg.getObject();
             writer.print(object.toString());
         }
@@ -420,8 +423,9 @@ public class MessageServlet extends MessageServletSupport {
             assert this.consumer == consumer;
 
             synchronized (this.consumer) {
-                if (continuation != null)
+                if (continuation != null) {
                     continuation.resume();
+                }
                 continuation = null;
             }
         }

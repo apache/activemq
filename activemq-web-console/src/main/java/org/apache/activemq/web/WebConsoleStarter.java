@@ -21,11 +21,11 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.context.support.XmlWebApplicationContext;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Starts the WebConsole.
@@ -33,50 +33,49 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1 $
  */
 public class WebConsoleStarter implements ServletContextListener {
-    private static final transient Log log = LogFactory.getLog(WebConsoleStarter.class);
+    
+    private static final Log LOG = LogFactory.getLog(WebConsoleStarter.class);
 
     public void contextInitialized(ServletContextEvent event) {
-		log.debug("Initializing ActiveMQ WebConsole...");
-		
-		ServletContext servletContext = event.getServletContext();
-		WebApplicationContext context = createWebapplicationContext(servletContext);
-		
-		initializeWebClient(servletContext, context);
-		
-		log.info("ActiveMQ WebConsole initialized.");
-	}
+        LOG.debug("Initializing ActiveMQ WebConsole...");
 
-	private WebApplicationContext createWebapplicationContext(ServletContext servletContext) {
-		String webconsoleType = System.getProperty("webconsole.type", "embedded");
-		String configuration = "/WEB-INF/webconsole-" + webconsoleType + ".xml";
-		
-		XmlWebApplicationContext context = new XmlWebApplicationContext();
-		context.setServletContext(servletContext);
-		context.setConfigLocations(new String[] { configuration });
-		context.refresh();
-		context.start();
-		
-		servletContext.setAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, context);
+        ServletContext servletContext = event.getServletContext();
+        WebApplicationContext context = createWebapplicationContext(servletContext);
 
-		return context;
-	}
+        initializeWebClient(servletContext, context);
 
-	private void initializeWebClient(ServletContext servletContext, WebApplicationContext context) {
-		ConnectionFactory connectionFactory = (ConnectionFactory) context
-				.getBean("connectionFactory");
-		servletContext.setAttribute(WebClient.connectionFactoryAttribute,
-				connectionFactory);
-	}
-	
-	public void contextDestroyed(ServletContextEvent event) {
-		XmlWebApplicationContext context = (XmlWebApplicationContext) WebApplicationContextUtils
-				.getWebApplicationContext(event.getServletContext());
-		if (context != null)
-		{
-			context.stop();
-			context.destroy();
-		}
-		// do nothing, since the context is destoyed anyway
-	}
+        LOG.info("ActiveMQ WebConsole initialized.");
+    }
+
+    private WebApplicationContext createWebapplicationContext(ServletContext servletContext) {
+        String webconsoleType = System.getProperty("webconsole.type", "embedded");
+        String configuration = "/WEB-INF/webconsole-" + webconsoleType + ".xml";
+
+        XmlWebApplicationContext context = new XmlWebApplicationContext();
+        context.setServletContext(servletContext);
+        context.setConfigLocations(new String[] {
+            configuration
+        });
+        context.refresh();
+        context.start();
+
+        servletContext.setAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, context);
+
+        return context;
+    }
+
+    private void initializeWebClient(ServletContext servletContext, WebApplicationContext context) {
+        ConnectionFactory connectionFactory = (ConnectionFactory)context.getBean("connectionFactory");
+        servletContext.setAttribute(WebClient.CONNECTION_FACTORY_ATTRIBUTE, connectionFactory);
+    }
+
+    public void contextDestroyed(ServletContextEvent event) {
+        XmlWebApplicationContext context = (XmlWebApplicationContext)WebApplicationContextUtils.getWebApplicationContext(event.getServletContext());
+        if (context != null) {
+            context.stop();
+            context.destroy();
+        }
+        // do nothing, since the context is destoyed anyway
+    }
 
 }

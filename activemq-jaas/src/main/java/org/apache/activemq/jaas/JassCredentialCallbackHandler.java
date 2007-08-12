@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.jaas;
 
+import java.io.IOException;
+
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.NameCallback;
 import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
-import java.io.IOException;
-
 
 /**
  * A JASS username password CallbackHandler.
@@ -41,19 +41,17 @@ public class JassCredentialCallbackHandler implements CallbackHandler {
         for (int i = 0; i < callbacks.length; i++) {
             Callback callback = callbacks[i];
             if (callback instanceof PasswordCallback) {
-                PasswordCallback passwordCallback = (PasswordCallback) callback;
+                PasswordCallback passwordCallback = (PasswordCallback)callback;
                 if (password == null) {
                     passwordCallback.setPassword(null);
-                }
-                else {
+                } else {
                     passwordCallback.setPassword(password.toCharArray());
                 }
             } else if (callback instanceof NameCallback) {
-                NameCallback nameCallback = (NameCallback) callback;
+                NameCallback nameCallback = (NameCallback)callback;
                 if (username == null) {
                     nameCallback.setName(null);
-                }
-                else {
+                } else {
                     nameCallback.setName(username);
                 }
             }

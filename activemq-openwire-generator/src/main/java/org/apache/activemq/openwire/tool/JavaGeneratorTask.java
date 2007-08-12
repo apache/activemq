@@ -26,79 +26,80 @@ import org.codehaus.jam.JamServiceFactory;
 import org.codehaus.jam.JamServiceParams;
 
 /**
- * 
  * @version $Revision: 384826 $
  */
 public class JavaGeneratorTask extends Task {
-	
-	int version = 2;
-	File basedir = new File(".");
-	
+
+    int version = 2;
+    File basedir = new File(".");
+
     public static void main(String[] args) {
-    	
+
         Project project = new Project();
         project.init();
-    	JavaGeneratorTask generator = new JavaGeneratorTask();
-    	generator.setProject(project);
-    	
-    	if( args.length > 0 ) {
-    		generator.version = Integer.parseInt(args[0]);
-    	}
+        JavaGeneratorTask generator = new JavaGeneratorTask();
+        generator.setProject(project);
 
-    	if( args.length > 1 ) {
-    		generator.basedir = new File(args[1]);
-    	}    	
-    	
-    	generator.execute();
-	}
-    
+        if (args.length > 0) {
+            generator.version = Integer.parseInt(args[0]);
+        }
+
+        if (args.length > 1) {
+            generator.basedir = new File(args[1]);
+        }
+
+        generator.execute();
+    }
+
     public void execute() throws BuildException {
         try {
-        	
-        	String sourceDir = basedir+"/src/main/java";
-        	
+
+            String sourceDir = basedir + "/src/main/java";
+
             System.out.println("Parsing source files in: " + sourceDir);
 
             JamServiceFactory jamServiceFactory = JamServiceFactory.getInstance();
-            JamServiceParams params = jamServiceFactory.createServiceParams();            
-            File[] dirs = new File[]{new File(sourceDir)};            
+            JamServiceParams params = jamServiceFactory.createServiceParams();
+            File[] dirs = new File[] {
+                new File(sourceDir)
+            };
             params.includeSourcePattern(dirs, "**/*.java");
             JamService jam = jamServiceFactory.createService(params);
 
             {
-	            JavaMarshallingGenerator script = new JavaMarshallingGenerator();
-	        	script.setJam(jam);
-	        	script.setTargetDir(basedir+"/src/main/java");
-	        	script.setOpenwireVersion(version);
-	        	script.run();
+                JavaMarshallingGenerator script = new JavaMarshallingGenerator();
+                script.setJam(jam);
+                script.setTargetDir(basedir + "/src/main/java");
+                script.setOpenwireVersion(version);
+                script.run();
             }
             {
-	            JavaTestsGenerator script = new JavaTestsGenerator();
-	        	script.setJam(jam);
-	        	script.setTargetDir(basedir+"/src/test/java");
-	        	script.setOpenwireVersion(version);
-	        	script.run();
+                JavaTestsGenerator script = new JavaTestsGenerator();
+                script.setJam(jam);
+                script.setTargetDir(basedir + "/src/test/java");
+                script.setOpenwireVersion(version);
+                script.run();
             }
-            
+
         } catch (Exception e) {
-        	throw new BuildException(e);
+            throw new BuildException(e);
         }
     }
 
-	public int getVersion() {
-		return version;
-	}
+    public int getVersion() {
+        return version;
+    }
 
-	public void setVersion(int version) {
-		this.version = version;
-	}
+    public void setVersion(int version) {
+        this.version = version;
+    }
 
-	public File getBasedir() {
-		return basedir;
-	}
+    public File getBasedir() {
+        return basedir;
+    }
 
-	public void setBasedir(File basedir) {
-		this.basedir = basedir;
-	}
+    public void setBasedir(File basedir) {
+        this.basedir = basedir;
+    }
 
 }

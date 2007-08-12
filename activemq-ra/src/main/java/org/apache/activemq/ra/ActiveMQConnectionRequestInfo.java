@@ -16,17 +16,16 @@
  */
 package org.apache.activemq.ra;
 
-import org.apache.activemq.ActiveMQPrefetchPolicy;
-import org.apache.activemq.RedeliveryPolicy;
-import org.apache.activemq.ActiveMQConnectionFactory;
-
-import javax.resource.spi.ConnectionRequestInfo;
 import java.io.Serializable;
 
+import javax.resource.spi.ConnectionRequestInfo;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQPrefetchPolicy;
+import org.apache.activemq.RedeliveryPolicy;
+
 /**
- * @version $Revision$
- * 
- * Must override equals and hashCode (JCA spec 16.4)
+ * @version $Revision$ Must override equals and hashCode (JCA spec 16.4)
  */
 public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Serializable, Cloneable {
 
@@ -42,19 +41,19 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
 
     public ActiveMQConnectionRequestInfo copy() {
         try {
-            ActiveMQConnectionRequestInfo answer = (ActiveMQConnectionRequestInfo) clone();
+            ActiveMQConnectionRequestInfo answer = (ActiveMQConnectionRequestInfo)clone();
             if (redeliveryPolicy != null) {
                 answer.redeliveryPolicy = redeliveryPolicy.copy();
             }
             return answer;
-        }
-        catch (CloneNotSupportedException e) {
+        } catch (CloneNotSupportedException e) {
             throw new RuntimeException("Could not clone: " + e, e);
         }
     }
 
     /**
-     * Returns true if this object will configure an ActiveMQConnectionFactory in any way
+     * Returns true if this object will configure an ActiveMQConnectionFactory
+     * in any way
      */
     public boolean isConnectionFactoryConfigured() {
         return serverUrl != null || clientid != null || redeliveryPolicy != null || prefetchPolicy != null;
@@ -70,14 +69,14 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
         if (clientid != null) {
             factory.setClientID(clientid);
         }
-        if (redeliveryPolicy != null) { 
+        if (redeliveryPolicy != null) {
             factory.setRedeliveryPolicy(redeliveryPolicy);
         }
         if (prefetchPolicy != null) {
             factory.setPrefetchPolicy(prefetchPolicy);
         }
     }
-    
+
     /**
      * @see javax.resource.spi.ConnectionRequestInfo#hashCode()
      */
@@ -102,7 +101,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
         if (!getClass().equals(o.getClass())) {
             return false;
         }
-        ActiveMQConnectionRequestInfo i = (ActiveMQConnectionRequestInfo) o;
+        ActiveMQConnectionRequestInfo i = (ActiveMQConnectionRequestInfo)o;
         if (notEqual(serverUrl, i.serverUrl)) {
             return false;
         }
@@ -128,8 +127,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     /**
-     * @param url
-     *            The url to set.
+     * @param url The url to set.
      */
     public void setServerUrl(String url) {
         this.serverUrl = url;
@@ -143,8 +141,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     /**
-     * @param password
-     *            The password to set.
+     * @param password The password to set.
      */
     public void setPassword(String password) {
         this.password = password;
@@ -158,8 +155,7 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     /**
-     * @param userid
-     *            The userid to set.
+     * @param userid The userid to set.
      */
     public void setUserName(String userid) {
         this.userName = userid;
@@ -173,16 +169,15 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     /**
-     * @param clientid
-     *            The clientid to set.
+     * @param clientid The clientid to set.
      */
     public void setClientid(String clientid) {
         this.clientid = clientid;
     }
 
     public String toString() {
-        return "ActiveMQConnectionRequestInfo{ " + "userName = '" + userName + "' " + ", serverUrl = '" + serverUrl + "' " + ", clientid = '" + clientid + "' "
-                + ", userName = '" + userName + "' " + ", useInboundSession = '" + useInboundSession + "' " + " }";
+        return "ActiveMQConnectionRequestInfo{ " + "userName = '" + userName + "' " + ", serverUrl = '" + serverUrl + "' " + ", clientid = '" + clientid + "' " + ", userName = '" + userName + "' "
+               + ", useInboundSession = '" + useInboundSession + "' " + " }";
     }
 
     public Boolean getUseInboundSession() {
@@ -305,8 +300,8 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
     }
 
     /**
-     * Returns the prefetch policy; not using bean properties to avoid
-     * breaking compatibility with JCA configuration in J2EE
+     * Returns the prefetch policy; not using bean properties to avoid breaking
+     * compatibility with JCA configuration in J2EE
      */
     public ActiveMQPrefetchPolicy prefetchPolicy() {
         if (prefetchPolicy == null) {

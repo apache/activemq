@@ -21,7 +21,11 @@ import org.apache.activemq.broker.BrokerService;
  * 
  * @version $Revision$
  */
-public class EmbeddedBroker {
+public final class EmbeddedBroker {
+
+    private EmbeddedBroker() {
+    }
+
     public static void main(String[] args) throws Exception {
         BrokerService broker = new BrokerService();
         broker.setUseJmx(true);

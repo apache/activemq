@@ -16,19 +16,20 @@
  */
 package org.apache.activemq.web.controller;
 
+import java.util.Iterator;
+import java.util.Map;
+
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.web.BrokerFacade;
 import org.apache.activemq.web.DestinationFacade;
 import org.apache.activemq.web.WebClient;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.Controller;
-
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.Iterator;
-import java.util.Map;
 
 /**
  * Sends a message
@@ -37,15 +38,15 @@ import java.util.Map;
  */
 public class SendMessage extends DestinationFacade implements Controller {
 
-    private String JMSText;
-    private boolean JMSPersistent;
-    private int JMSPriority;
-    private int JMSTimeToLive = -1;
-    private String JMSCorrelationID;
-    private String JMSReplyTo;
-    private String JMSType;
-    private int JMSMessageCount = 1;
-    private String JMSMessageCountHeader = "JMSXMessageNumber";
+    private String jmsText;
+    private boolean jmsPersistent;
+    private int jmsPriority;
+    private int jmsTimeToLive = -1;
+    private String jmsCorrelationID;
+    private String jmsReplyTo;
+    private String jmsType;
+    private int jmsMessageCount = 1;
+    private String jmsMessageCountHeader = "JMSXMessageNumber";
     private boolean redirectToBrowse;
 
     public SendMessage(BrokerFacade brokerFacade) {
@@ -66,17 +67,17 @@ public class SendMessage extends DestinationFacade implements Controller {
     }
 
     protected void sendMessages(HttpServletRequest request, WebClient client, ActiveMQDestination dest) throws JMSException {
-        if (JMSMessageCount <= 1) {
-            JMSMessageCount = 1;
+        if (jmsMessageCount <= 1) {
+            jmsMessageCount = 1;
         }
-        for (int i = 0; i < JMSMessageCount; i++) {
+        for (int i = 0; i < jmsMessageCount; i++) {
             Message message = createMessage(client, request);
             appendHeaders(message, request);
-            if (JMSMessageCount > 1) {
-                message.setIntProperty(JMSMessageCountHeader, i + 1);
+            if (jmsMessageCount > 1) {
+                message.setIntProperty(jmsMessageCountHeader, i + 1);
             }
 
-            client.send(dest, message, JMSPersistent, JMSPriority, JMSTimeToLive);
+            client.send(dest, message, jmsPersistent, jmsPriority, jmsTimeToLive);
         }
     }
 
@@ -84,108 +85,107 @@ public class SendMessage extends DestinationFacade implements Controller {
     // -------------------------------------------------------------------------
 
     public String getJMSCorrelationID() {
-        return JMSCorrelationID;
+        return jmsCorrelationID;
     }
 
     public void setJMSCorrelationID(String correlationID) {
-        JMSCorrelationID = correlationID;
+        jmsCorrelationID = correlationID;
     }
 
     public String getJMSReplyTo() {
-        return JMSReplyTo;
+        return jmsReplyTo;
     }
 
     public void setJMSReplyTo(String replyTo) {
-        JMSReplyTo = replyTo;
+        jmsReplyTo = replyTo;
     }
 
     public String getJMSType() {
-        return JMSType;
+        return jmsType;
     }
 
     public void setJMSType(String type) {
-        JMSType = type;
+        jmsType = type;
     }
 
     public boolean isJMSPersistent() {
-        return JMSPersistent;
+        return jmsPersistent;
     }
 
     public void setJMSPersistent(boolean persistent) {
-        this.JMSPersistent = persistent;
+        this.jmsPersistent = persistent;
     }
 
     public int getJMSPriority() {
-        return JMSPriority;
+        return jmsPriority;
     }
 
     public void setJMSPriority(int priority) {
-        this.JMSPriority = priority;
+        this.jmsPriority = priority;
     }
 
     public String getJMSText() {
-        return JMSText;
+        return jmsText;
     }
 
     public void setJMSText(String text) {
-        this.JMSText = text;
+        this.jmsText = text;
     }
 
     public int getJMSTimeToLive() {
-        return JMSTimeToLive;
+        return jmsTimeToLive;
     }
 
     public void setJMSTimeToLive(int timeToLive) {
-        this.JMSTimeToLive = timeToLive;
+        this.jmsTimeToLive = timeToLive;
     }
 
     public int getJMSMessageCount() {
-        return JMSMessageCount;
+        return jmsMessageCount;
     }
 
     public void setJMSMessageCount(int copies) {
-        JMSMessageCount = copies;
+        jmsMessageCount = copies;
     }
 
     public String getJMSMessageCountHeader() {
-        return JMSMessageCountHeader;
+        return jmsMessageCountHeader;
     }
 
     public void setJMSMessageCountHeader(String messageCountHeader) {
-        JMSMessageCountHeader = messageCountHeader;
+        jmsMessageCountHeader = messageCountHeader;
     }
 
     // Implementation methods
     // -------------------------------------------------------------------------
     protected Message createMessage(WebClient client, HttpServletRequest request) throws JMSException {
-        if (JMSText != null) {
-            return client.getSession().createTextMessage(JMSText);
+        if (jmsText != null) {
+            return client.getSession().createTextMessage(jmsText);
         }
         // TODO create Bytes message from request body...
         return client.getSession().createMessage();
     }
 
     protected void appendHeaders(Message message, HttpServletRequest request) throws JMSException {
-        message.setJMSCorrelationID(JMSCorrelationID);
-        if (JMSReplyTo != null && JMSReplyTo.trim().length() > 0) {
-            message.setJMSReplyTo(ActiveMQDestination.createDestination(JMSReplyTo, ActiveMQDestination.QUEUE_TYPE));
+        message.setJMSCorrelationID(jmsCorrelationID);
+        if (jmsReplyTo != null && jmsReplyTo.trim().length() > 0) {
+            message.setJMSReplyTo(ActiveMQDestination.createDestination(jmsReplyTo, ActiveMQDestination.QUEUE_TYPE));
         }
-        message.setJMSType(JMSType);
+        message.setJMSType(jmsType);
 
         // now lets add all of the parameters
         Map map = request.getParameterMap();
         if (map != null) {
             for (Iterator iter = map.entrySet().iterator(); iter.hasNext();) {
-                Map.Entry entry = (Map.Entry) iter.next();
-                String name = (String) entry.getKey();
+                Map.Entry entry = (Map.Entry)iter.next();
+                String name = (String)entry.getKey();
                 Object value = entry.getValue();
                 if (isValidPropertyName(name)) {
                     if (value instanceof String[]) {
-                        String[] array = (String[]) value;
+                        String[] array = (String[])value;
                         if (array.length > 0) {
                             value = array[0];
-                        }
-                        else {
+                        } else {
                             value = null;
                         }
                     }
@@ -193,8 +193,7 @@ public class SendMessage extends DestinationFacade implements Controller {
                         String text = value.toString().trim();
                         if (text.length() == 0) {
                             value = null;
-                        }
-                        else {
+                        } else {
                             value = text;
                         }
                     }

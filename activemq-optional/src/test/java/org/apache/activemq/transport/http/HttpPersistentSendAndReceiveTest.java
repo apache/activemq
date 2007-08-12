@@ -16,9 +16,9 @@
  */
 package org.apache.activemq.transport.http;
 
-import org.apache.activemq.broker.BrokerService;
-
 import javax.jms.DeliveryMode;
+
+import org.apache.activemq.broker.BrokerService;
 
 public class HttpPersistentSendAndReceiveTest extends HttpJmsSendAndReceiveTest {
     protected BrokerService broker;

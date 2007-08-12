@@ -23,7 +23,6 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -41,9 +40,9 @@ import org.apache.commons.logging.LogFactory;
  */
 public class MemMessageIdList implements MessageListener {
 
-    protected static final Log log = LogFactory.getLog(MemMessageIdList.class);
+    protected static final Log LOG = LogFactory.getLog(MemMessageIdList.class);
 
-    private List messageIds = new ArrayList();
+    private List<String> messageIds = new ArrayList<String>();
     private Object semaphore;
     private boolean verbose;
     private MessageListener parent;
@@ -80,17 +79,17 @@ public class MemMessageIdList implements MessageListener {
     /**
      * @return all the messages on the list so far, clearing the buffer
      */
-    public List flushMessages() {
+    public List<String> flushMessages() {
         synchronized (semaphore) {
-            List answer = new ArrayList(messageIds);
+            List<String> answer = new ArrayList<String>(messageIds);
             messageIds.clear();
             return answer;
         }
     }
 
-    public synchronized List getMessageIds() {
+    public synchronized List<String> getMessageIds() {
         synchronized (semaphore) {
-            return new ArrayList(messageIds);
+            return new ArrayList<String>(messageIds);
         }
     }
 
@@ -103,7 +102,7 @@ public class MemMessageIdList implements MessageListener {
                 semaphore.notifyAll();
             }
             if (verbose) {
-                log.info("Received message: " + message);
+                LOG.info("Received message: " + message);
             }
         } catch (JMSException e) {
             e.printStackTrace();
@@ -120,7 +119,7 @@ public class MemMessageIdList implements MessageListener {
     }
 
     public void waitForMessagesToArrive(int messageCount) {
-        log.info("Waiting for " + messageCount + " message(s) to arrive");
+        LOG.info("Waiting for " + messageCount + " message(s) to arrive");
 
         long start = System.currentTimeMillis();
 
@@ -137,12 +136,12 @@ public class MemMessageIdList implements MessageListener {
                     semaphore.wait(maximumDuration - duration);
                 }
             } catch (InterruptedException e) {
-                log.info("Caught: " + e);
+                LOG.info("Caught: " + e);
             }
         }
         long end = System.currentTimeMillis() - start;
 
-        log.info("End of wait for " + end + " millis and received: " + getMessageCount() + " messages");
+        LOG.info("End of wait for " + end + " millis and received: " + getMessageCount() + " messages");
     }
 
 

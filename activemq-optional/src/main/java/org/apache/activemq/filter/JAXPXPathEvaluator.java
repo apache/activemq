@@ -26,34 +26,35 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import org.apache.activemq.command.Message;
-import org.apache.activemq.util.ByteArrayInputStream;
 import org.xml.sax.InputSource;
 
+import org.apache.activemq.command.Message;
+import org.apache.activemq.util.ByteArrayInputStream;
+
 public class JAXPXPathEvaluator implements XPathExpression.XPathEvaluator {
-    
-    private static final XPathFactory factory = XPathFactory.newInstance();
+
+    private static final XPathFactory FACTORY = XPathFactory.newInstance();
     private javax.xml.xpath.XPathExpression expression;
-    
+
     public JAXPXPathEvaluator(String xpathExpression) {
         try {
-            XPath xpath = factory.newXPath();
-            expression = xpath.compile(xpathExpression);            
+            XPath xpath = FACTORY.newXPath();
+            expression = xpath.compile(xpathExpression);
         } catch (XPathExpressionException e) {
-            throw new RuntimeException("Invalid XPath expression: "+xpathExpression);
+            throw new RuntimeException("Invalid XPath expression: " + xpathExpression);
         }
     }
-    
+
     public boolean evaluate(Message message) throws JMSException {
-        if( message instanceof TextMessage ) {
+        if (message instanceof TextMessage) {
             String text = ((TextMessage)message).getText();
-            return evaluate(text);                
-        } else if ( message instanceof BytesMessage ) {
-            BytesMessage bm = (BytesMessage) message;
-            byte data[] = new byte[(int) bm.getBodyLength()];
+            return evaluate(text);
+        } else if (message instanceof BytesMessage) {
+            BytesMessage bm = (BytesMessage)message;
+            byte data[] = new byte[(int)bm.getBodyLength()];
             bm.readBytes(data);
             return evaluate(data);
-        }            
+        }
         return false;
     }
 

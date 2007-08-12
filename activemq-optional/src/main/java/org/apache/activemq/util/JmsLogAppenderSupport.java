@@ -16,8 +16,10 @@
  */
 package org.apache.activemq.util;
 
-import org.apache.log4j.AppenderSkeleton;
-import org.apache.log4j.spi.LoggingEvent;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -26,14 +28,14 @@ import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.naming.NamingException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+
+import org.apache.log4j.AppenderSkeleton;
+import org.apache.log4j.spi.LoggingEvent;
 
 /**
- * An abstract base class for implementation inheritence for a log4j JMS appender
- *
+ * An abstract base class for implementation inheritence for a log4j JMS
+ * appender
+ * 
  * @version $Revision$
  */
 public abstract class JmsLogAppenderSupport extends AppenderSkeleton {
@@ -83,33 +85,30 @@ public abstract class JmsLogAppenderSupport extends AppenderSkeleton {
     }
 
     public void close() {
-        List errors = new ArrayList();
+        List<JMSException> errors = new ArrayList<JMSException>();
         if (producer != null) {
             try {
                 producer.close();
-            }
-            catch (JMSException e) {
+            } catch (JMSException e) {
                 errors.add(e);
             }
         }
         if (session != null) {
             try {
                 session.close();
-            }
-            catch (JMSException e) {
+            } catch (JMSException e) {
                 errors.add(e);
             }
         }
         if (connection != null) {
             try {
                 connection.close();
-            }
-            catch (JMSException e) {
+            } catch (JMSException e) {
                 errors.add(e);
             }
         }
-        for (Iterator iter = errors.iterator(); iter.hasNext();) {
-            JMSException e = (JMSException) iter.next();
+        for (Iterator<JMSException> iter = errors.iterator(); iter.hasNext();) {
+            JMSException e = iter.next();
             getErrorHandler().error("Error closing JMS resources: " + e, e, JMS_PUBLISH_ERROR_CODE);
         }
     }
@@ -122,15 +121,13 @@ public abstract class JmsLogAppenderSupport extends AppenderSkeleton {
         try {
             // lets ensure we're all created
             getProducer();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             getErrorHandler().error("Could not create JMS resources: " + e, e, JMS_PUBLISH_ERROR_CODE);
         }
     }
 
-
     // Implementation methods
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     protected abstract Connection createConnection() throws JMSException, NamingException;
 
     protected Session createSession() throws JMSException, NamingException {
@@ -146,8 +143,7 @@ public abstract class JmsLogAppenderSupport extends AppenderSkeleton {
             Message message = createMessage(event);
             Destination destination = getDestination(event);
             getProducer().send(destination, message);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             getErrorHandler().error("Could not send message due to: " + e, e, JMS_PUBLISH_ERROR_CODE, event);
         }
     }
@@ -156,10 +152,9 @@ public abstract class JmsLogAppenderSupport extends AppenderSkeleton {
         Message answer = null;
         Object value = event.getMessage();
         if (allowTextMessages && value instanceof String) {
-            answer = getSession().createTextMessage((String) value);
-        }
-        else {
-            answer = getSession().createObjectMessage((Serializable) value);
+            answer = getSession().createTextMessage((String)value);
+        } else {
+            answer = getSession().createObjectMessage((Serializable)value);
         }
         answer.setStringProperty("level", event.getLevel().toString());
         answer.setIntProperty("levelInt", event.getLevel().toInt());

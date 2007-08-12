@@ -36,84 +36,79 @@ import javax.resource.spi.XATerminator;
 import javax.resource.spi.work.WorkManager;
 
 import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.ra.ActiveMQConnectionRequestInfo;
-import org.apache.activemq.ra.ActiveMQManagedConnectionFactory;
-import org.apache.activemq.ra.ActiveMQResourceAdapter;
-import org.apache.activemq.ra.ManagedConnectionProxy;
-
 
 /**
  * @version $Revision$
  */
 public class ManagedConnectionFactoryTest extends TestCase {
-    
+
     private static final String DEFAULT_HOST = "vm://localhost?broker.persistent=false";
     private static final String REMOTE_HOST = "vm://remotehost?broker.persistent=false";
     private ActiveMQManagedConnectionFactory managedConnectionFactory;
-    
+
     /**
      * @see junit.framework.TestCase#setUp()
      */
     protected void setUp() throws Exception {
-        
-    	ActiveMQResourceAdapter adapter = new ActiveMQResourceAdapter(); 
-    	adapter.setServerUrl(DEFAULT_HOST);
-    	adapter.setUserName(ActiveMQConnectionFactory.DEFAULT_USER);
-    	adapter.setPassword(ActiveMQConnectionFactory.DEFAULT_PASSWORD);
-    	adapter.start(new BootstrapContext(){
-			public WorkManager getWorkManager() {
-				return null;
-			}
-			public XATerminator getXATerminator() {
-				return null;
-			}
 
-			public Timer createTimer() throws UnavailableException {
-				return null;
-			}
-		});
-    	
+        ActiveMQResourceAdapter adapter = new ActiveMQResourceAdapter();
+        adapter.setServerUrl(DEFAULT_HOST);
+        adapter.setUserName(ActiveMQConnectionFactory.DEFAULT_USER);
+        adapter.setPassword(ActiveMQConnectionFactory.DEFAULT_PASSWORD);
+        adapter.start(new BootstrapContext() {
+            public WorkManager getWorkManager() {
+                return null;
+            }
+
+            public XATerminator getXATerminator() {
+                return null;
+            }
+
+            public Timer createTimer() throws UnavailableException {
+                return null;
+            }
+        });
+
         managedConnectionFactory = new ActiveMQManagedConnectionFactory();
         managedConnectionFactory.setResourceAdapter(adapter);
-        
+
     }
-    
+
     public void testConnectionFactoryAllocation() throws ResourceException, JMSException {
-        
-        // Make sure that the ConnectionFactory is asking the connection manager to
-        // allocate the connection.
-        final boolean allocateRequested[] = new boolean[]{false};
-        Object cf = managedConnectionFactory.createConnectionFactory(
-            new ConnectionManagerAdapter() {
-                private static final long serialVersionUID = 1699499816530099939L;
 
-                public Object allocateConnection(ManagedConnectionFactory connectionFactory, ConnectionRequestInfo info)
-                        throws ResourceException {
-                    allocateRequested[0]=true;
-                    return super.allocateConnection(connectionFactory, info);
-                }
-            }    
-        );
-        
+        // Make sure that the ConnectionFactory is asking the connection manager
+        // to
+        // allocate the connection.
+        final boolean allocateRequested[] = new boolean[] {
+            false
+        };
+        Object cf = managedConnectionFactory.createConnectionFactory(new ConnectionManagerAdapter() {
+            private static final long serialVersionUID = 1699499816530099939L;
+
+            public Object allocateConnection(ManagedConnectionFactory connectionFactory, ConnectionRequestInfo info) throws ResourceException {
+                allocateRequested[0] = true;
+                return super.allocateConnection(connectionFactory, info);
+            }
+        });
+
         // We should be getting a JMS Connection Factory.
-        assertTrue( cf instanceof ConnectionFactory );
+        assertTrue(cf instanceof ConnectionFactory);
         ConnectionFactory connectionFactory = (ConnectionFactory)cf;
-        
-        // Make sure that the connection factory is using the ConnectionManager..
-        Connection connection = connectionFactory.createConnection();        
+
+        // Make sure that the connection factory is using the
+        // ConnectionManager..
+        Connection connection = connectionFactory.createConnection();
         assertTrue(allocateRequested[0]);
-        
+
         // Make sure that the returned connection is of the expected type.
-        assertTrue( connection!=null );
-        assertTrue( connection instanceof ManagedConnectionProxy );
-        
+        assertTrue(connection != null);
+        assertTrue(connection instanceof ManagedConnectionProxy);
+
     }
 
-    
     public void testConnectionFactoryConnectionMatching() throws ResourceException, JMSException {
-        
+
         ActiveMQConnectionRequestInfo ri1 = new ActiveMQConnectionRequestInfo();
         ri1.setServerUrl(DEFAULT_HOST);
         ri1.setUserName(ActiveMQConnectionFactory.DEFAULT_USER);
@@ -124,40 +119,40 @@ public class ManagedConnectionFactoryTest extends TestCase {
         ri2.setUserName(ActiveMQConnectionFactory.DEFAULT_USER);
         ri2.setPassword(ActiveMQConnectionFactory.DEFAULT_PASSWORD);
         assertNotSame(ri1, ri2);
-        
+
         ManagedConnection connection1 = managedConnectionFactory.createManagedConnection(null, ri1);
-        ManagedConnection connection2 = managedConnectionFactory.createManagedConnection(null, ri2);        
-        assertTrue(connection1!=connection2);
-        
-        HashSet set = new HashSet();
+        ManagedConnection connection2 = managedConnectionFactory.createManagedConnection(null, ri2);
+        assertTrue(connection1 != connection2);
+
+        HashSet<ManagedConnection> set = new HashSet<ManagedConnection>();
         set.add(connection1);
         set.add(connection2);
-        
+
         // Can we match for the first connection?
         ActiveMQConnectionRequestInfo ri3 = ri1.copy();
-        assertTrue( ri1!=ri3 && ri1.equals(ri3) );
-        ManagedConnection test = managedConnectionFactory.matchManagedConnections(set,null, ri3);
-        assertTrue( connection1==test );
+        assertTrue(ri1 != ri3 && ri1.equals(ri3));
+        ManagedConnection test = managedConnectionFactory.matchManagedConnections(set, null, ri3);
+        assertTrue(connection1 == test);
 
         // Can we match for the second connection?
         ri3 = ri2.copy();
-        assertTrue( ri2!=ri3 && ri2.equals(ri3) );
-        test = managedConnectionFactory.matchManagedConnections(set,null, ri2);
-        assertTrue( connection2==test );
-        
+        assertTrue(ri2 != ri3 && ri2.equals(ri3));
+        test = managedConnectionFactory.matchManagedConnections(set, null, ri2);
+        assertTrue(connection2 == test);
+
     }
-    
+
     public void testConnectionFactoryIsSerializableAndReferenceable() throws ResourceException, JMSException {
         Object cf = managedConnectionFactory.createConnectionFactory(new ConnectionManagerAdapter());
-        assertTrue( cf!=null );
-        assertTrue( cf instanceof Serializable );
-        assertTrue( cf instanceof Referenceable );
+        assertTrue(cf != null);
+        assertTrue(cf instanceof Serializable);
+        assertTrue(cf instanceof Referenceable);
     }
 
     public void testImplementsQueueAndTopicConnectionFactory() throws Exception {
         Object cf = managedConnectionFactory.createConnectionFactory(new ConnectionManagerAdapter());
-        assertTrue( cf instanceof QueueConnectionFactory );
-        assertTrue( cf instanceof TopicConnectionFactory );
+        assertTrue(cf instanceof QueueConnectionFactory);
+        assertTrue(cf instanceof TopicConnectionFactory);
     }
 
 }

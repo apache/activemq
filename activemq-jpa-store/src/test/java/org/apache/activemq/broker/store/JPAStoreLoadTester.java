@@ -23,25 +23,24 @@ import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.springframework.core.io.ClassPathResource;
 
 /**
- * 
  * @version $Revision$
  */
-public class JPAStoreLoadTester extends LoadTester  {
+public class JPAStoreLoadTester extends LoadTester {
 
     protected BrokerService createBroker() throws Exception {
-        BrokerFactoryBean brokerFactory=new BrokerFactoryBean(new ClassPathResource("org/apache/activemq/broker/store/jpabroker.xml"));
+        BrokerFactoryBean brokerFactory = new BrokerFactoryBean(new ClassPathResource("org/apache/activemq/broker/store/jpabroker.xml"));
         brokerFactory.afterPropertiesSet();
-        BrokerService broker =  brokerFactory.getBroker();
+        BrokerService broker = brokerFactory.getBroker();
         broker.setDeleteAllMessagesOnStartup(true);
         return broker;
     }
-    
+
     public static Test suite() {
         return suite(JPAStoreLoadTester.class);
     }
-    
+
     public static void main(String[] args) {
         junit.textui.TestRunner.run(suite());
     }
-    
+
 }

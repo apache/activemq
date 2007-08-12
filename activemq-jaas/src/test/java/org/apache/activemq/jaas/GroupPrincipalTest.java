@@ -16,10 +16,7 @@
  */
 package org.apache.activemq.jaas;
 
-import org.apache.activemq.jaas.GroupPrincipal;
-
 import junit.framework.TestCase;
-
 
 /**
  * @version $Rev: $ $Date: $
@@ -29,7 +26,7 @@ public class GroupPrincipalTest extends TestCase {
     public void testArguments() {
         GroupPrincipal principal = new GroupPrincipal("FOO");
 
-       assertEquals("FOO", principal.getName());
+        assertEquals("FOO", principal.getName());
 
         try {
             new GroupPrincipal(null);

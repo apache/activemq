@@ -16,10 +16,7 @@
  */
 package org.apache.activemq.jaas;
 
-import org.apache.activemq.jaas.UserPrincipal;
-
 import junit.framework.TestCase;
-
 
 /**
  * @version $Rev: $ $Date: $
@@ -29,7 +26,7 @@ public class UserPrincipalTest extends TestCase {
     public void testArguments() {
         UserPrincipal principal = new UserPrincipal("FOO");
 
-       assertEquals("FOO", principal.getName());
+        assertEquals("FOO", principal.getName());
 
         try {
             new UserPrincipal(null);

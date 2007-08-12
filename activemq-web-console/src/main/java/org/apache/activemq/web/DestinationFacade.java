@@ -16,22 +16,19 @@
  */
 package org.apache.activemq.web;
 
-import org.apache.activemq.broker.jmx.BrokerViewMBean;
-import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.command.ActiveMQTopic;
-import org.springframework.web.servlet.ModelAndView;
-
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.activemq.broker.jmx.BrokerViewMBean;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.springframework.web.servlet.ModelAndView;
+
 /**
- *
  * @version $Revision$
  */
-public class DestinationFacade  {
+public class DestinationFacade {
 
-    private String JMSDestination;
-    private String JMSDestinationType;
+    private String jmsDestination;
+    private String jmsDestinationType;
     private BrokerFacade brokerFacade;
 
     public DestinationFacade(BrokerFacade brokerFacade) {
@@ -39,9 +36,8 @@ public class DestinationFacade  {
     }
 
     public String toString() {
-        return super.toString() + "[destination:" + JMSDestination + "; type=" + JMSDestinationType + "]";
+        return super.toString() + "[destination:" + jmsDestination + "; type=" + jmsDestinationType + "]";
     }
-
 
     // Operations
     // -------------------------------------------------------------------------
@@ -49,8 +45,7 @@ public class DestinationFacade  {
         getValidDestination();
         if (isQueue()) {
             getBrokerAdmin().removeQueue(getJMSDestination());
-        }
-        else {
+        } else {
             getBrokerAdmin().removeTopic(getJMSDestination());
         }
     }
@@ -58,12 +53,11 @@ public class DestinationFacade  {
     public void addDestination() throws Exception {
         if (isQueue()) {
             getBrokerAdmin().addQueue(getValidDestination());
-        }
-        else {
+        } else {
             getBrokerAdmin().addTopic(getValidDestination());
         }
     }
-    
+
     // Properties
     // -------------------------------------------------------------------------
     public BrokerViewMBean getBrokerAdmin() throws Exception {
@@ -75,26 +69,26 @@ public class DestinationFacade  {
     }
 
     public boolean isQueue() {
-        if (JMSDestinationType != null && JMSDestinationType.equalsIgnoreCase("topic")) {
+        if (jmsDestinationType != null && jmsDestinationType.equalsIgnoreCase("topic")) {
             return false;
         }
         return true;
     }
 
     public String getJMSDestination() {
-        return JMSDestination;
+        return jmsDestination;
     }
 
     public void setJMSDestination(String destination) {
-        this.JMSDestination = destination;
+        this.jmsDestination = destination;
     }
 
     public String getJMSDestinationType() {
-        return JMSDestinationType;
+        return jmsDestinationType;
     }
 
     public void setJMSDestinationType(String type) {
-        this.JMSDestinationType = type;
+        this.jmsDestinationType = type;
     }
 
     protected ActiveMQDestination createDestination() {
@@ -103,19 +97,17 @@ public class DestinationFacade  {
     }
 
     protected String getValidDestination() {
-        if (JMSDestination == null) {
+        if (jmsDestination == null) {
             throw new IllegalArgumentException("No JMSDestination parameter specified");
         }
-        return JMSDestination;
+        return jmsDestination;
     }
-
 
     protected ModelAndView redirectToRequest(HttpServletRequest request) {
         String view = "redirect:" + request.getRequestURI();
-//        System.out.println("Redirecting to: " + view);
+        // System.out.println("Redirecting to: " + view);
         return new ModelAndView(view);
     }
-
 
     protected ModelAndView redirectToBrowseView() {
         return new ModelAndView("redirect:" + (isQueue() ? "queues.jsp" : "topics.jsp"));

@@ -16,33 +16,35 @@
  */
 package org.apache.activemq.tool;
 
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Session;
+
 import org.apache.activemq.tool.properties.JmsClientProperties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.jms.ConnectionFactory;
-import javax.jms.Connection;
-import javax.jms.Session;
-import javax.jms.JMSException;
-import javax.jms.Destination;
-import java.util.Enumeration;
-
 public abstract class AbstractJmsClient {
-    private static final Log log = LogFactory.getLog(AbstractJmsClient.class);
+
+    private static final Log LOG = LogFactory.getLog(AbstractJmsClient.class);
 
     protected ConnectionFactory factory;
     protected Connection jmsConnection;
     protected Session jmsSession;
 
-    protected int destCount = 1, destIndex = 0;
+    protected int destCount = 1;
+    protected int destIndex;
     protected String clientName = "";
 
     public AbstractJmsClient(ConnectionFactory factory) {
         this.factory = factory;
     }
 
-    abstract public JmsClientProperties getClient();
-    abstract public void setClient(JmsClientProperties client);
+    public abstract JmsClientProperties getClient();
+
+    public abstract void setClient(JmsClientProperties client);
 
     public ConnectionFactory getFactory() {
         return factory;
@@ -80,7 +82,7 @@ public abstract class AbstractJmsClient {
         if (jmsConnection == null) {
             jmsConnection = factory.createConnection();
             jmsConnection.setClientID(getClientName());
-            log.info("Creating JMS Connection: Provider=" + getClient().getJmsProvider() + ", JMS Spec=" + getClient().getJmsVersion());
+            LOG.info("Creating JMS Connection: Provider=" + getClient().getJmsProvider() + ", JMS Spec=" + getClient().getJmsVersion());
         }
         return jmsConnection;
     }
@@ -107,10 +109,12 @@ public abstract class AbstractJmsClient {
     public Destination[] createDestination(int destIndex, int destCount) throws JMSException {
 
         if (getClient().isDestComposite()) {
-            return new Destination[] {createCompositeDestination(getClient().getDestName(), destIndex, destCount)};
+            return new Destination[] {
+                createCompositeDestination(getClient().getDestName(), destIndex, destCount)
+            };
         } else {
             Destination[] dest = new Destination[destCount];
-            for (int i=0; i<destCount; i++) {
+            for (int i = 0; i < destCount; i++) {
                 dest[i] = createDestination(getClient().getDestName() + "." + (destIndex + i));
             }
 
@@ -136,10 +140,11 @@ public abstract class AbstractJmsClient {
 
         int i;
         compDestName = name + "." + destIndex + ","; // First destination
-        for (i=1; i<destCount-1; i++) {
-            compDestName += (simpleName + "." + (destIndex + i) +",");
+        for (i = 1; i < destCount - 1; i++) {
+            compDestName += simpleName + "." + (destIndex + i) + ",";
         }
-        compDestName += (simpleName + "." + (destIndex + i)); // Last destination (minus the comma)
+        // Last destination (minus the comma)
+        compDestName += simpleName + "." + (destIndex + i);
 
         return createDestination(compDestName);
     }

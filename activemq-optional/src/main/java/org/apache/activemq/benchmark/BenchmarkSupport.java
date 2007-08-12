@@ -16,23 +16,22 @@
  */
 package org.apache.activemq.benchmark;
 
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.util.IdGenerator;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Session;
 
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.List;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.util.IdGenerator;
 
 /**
  * Abstract base class for some simple benchmark tools
- *
+ * 
  * @author James Strachan
  * @version $Revision$
  */
@@ -41,15 +40,14 @@ public class BenchmarkSupport {
     protected int connectionCount = 1;
     protected int batch = 1000;
     protected Destination destination;
-    private boolean topic = true;
-    private boolean durable = false;
+    protected String[] subjects;
 
+    private boolean topic = true;
+    private boolean durable;
     private ActiveMQConnectionFactory factory;
     private String url;
-    protected String[] subjects;
-    private long time = System.currentTimeMillis();
     private int counter;
-    private List resources = new ArrayList();
+    private List<Object> resources = new ArrayList<Object>();
     private NumberFormat formatter = NumberFormat.getInstance();
     private AtomicInteger connectionCounter = new AtomicInteger(0);
     private IdGenerator idGenerator = new IdGenerator();
@@ -99,7 +97,9 @@ public class BenchmarkSupport {
 
     public void setSubject(String subject) {
         connectionCount = 1;
-        subjects = new String[]{subject};
+        subjects = new String[] {
+            subject
+        };
     }
 
     public boolean isDurable() {
@@ -144,16 +144,11 @@ public class BenchmarkSupport {
     protected synchronized void count(int count) {
         counter += count;
         /*
-        if (counter > batch) {
-            counter = 0;
-            long current = System.currentTimeMillis();
-            double end = current - time;
-            end /= 1000;
-            time = current;
-
-            System.out.println("Processed " + batch + " messages in " + end + " (secs)");
-        }
-        */
+         * if (counter > batch) { counter = 0; long current =
+         * System.currentTimeMillis(); double end = current - time; end /= 1000;
+         * time = current; System.out.println("Processed " + batch + " messages
+         * in " + end + " (secs)"); }
+         */
     }
 
     protected synchronized int resetCount() {
@@ -161,7 +156,6 @@ public class BenchmarkSupport {
         counter = 0;
         return answer;
     }
-
 
     protected void timerLoop() {
         int times = 0;
@@ -172,8 +166,7 @@ public class BenchmarkSupport {
         while (true) {
             try {
                 Thread.sleep(1000);
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             int processed = resetCount();
@@ -186,18 +179,11 @@ public class BenchmarkSupport {
                 average = total / times;
             }
 
-            long oldtime = time;
-            time = System.currentTimeMillis();
-
-            double diff = time - oldtime;
-
             System.out.println(getClass().getName() + " Processed: " + processed + " messages this second. Average: " + average);
 
             if ((times % dumpVmStatsFrequency) == 0 && times != 0) {
-                System.out.println("Used memory: " + asMemoryString(runtime.totalMemory() - runtime.freeMemory())
-                        + " Free memory: " + asMemoryString(runtime.freeMemory())
-                        + " Total memory: " + asMemoryString(runtime.totalMemory())
-                        + " Max memory: " + asMemoryString(runtime.maxMemory()));
+                System.out.println("Used memory: " + asMemoryString(runtime.totalMemory() - runtime.freeMemory()) + " Free memory: " + asMemoryString(runtime.freeMemory()) + " Total memory: "
+                                   + asMemoryString(runtime.totalMemory()) + " Max memory: " + asMemoryString(runtime.maxMemory()));
             }
 
         }
@@ -214,8 +200,7 @@ public class BenchmarkSupport {
     protected Destination createDestination(Session session, String subject) throws JMSException {
         if (topic) {
             return session.createTopic(subject);
-        }
-        else {
+        } else {
             return session.createQueue(subject);
         }
     }

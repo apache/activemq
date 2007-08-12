@@ -33,17 +33,17 @@ public abstract class OpenWireGenerator {
     protected int openwireVersion;
     protected String filePostFix = ".java";
     protected JamService jam;
-    
 
-	public boolean isValidProperty(JProperty it) {
+    public boolean isValidProperty(JProperty it) {
         JMethod getter = it.getGetter();
-        return getter != null && it.getSetter() != null && getter.isStatic() == false && getter.getAnnotation("openwire:property") != null;
+        return getter != null && it.getSetter() != null && !getter.isStatic() && getter.getAnnotation("openwire:property") != null;
     }
 
     public boolean isCachedProperty(JProperty it) {
         JMethod getter = it.getGetter();
-        if (!isValidProperty(it))
+        if (!isValidProperty(it)) {
             return false;
+        }
         JAnnotationValue value = getter.getAnnotation("openwire:property").getValue("cache");
         return value != null && value.asBoolean();
     }
@@ -110,34 +110,30 @@ public abstract class OpenWireGenerator {
         String name = type.getSimpleName();
         if (name.equals("String")) {
             return "string";
-        }
-        else if (name.equals("Throwable") || name.equals("Exception")) {
+        } else if (name.equals("Throwable") || name.equals("Exception")) {
             return "BrokerError";
-        }
-        else if (name.equals("ByteSequence")) {
+        } else if (name.equals("ByteSequence")) {
             return "byte[]";
-        }
-        else if (name.equals("boolean")) {
+        } else if (name.equals("boolean")) {
             return "bool";
-        }
-        else {
+        } else {
             return name;
         }
     }
 
     public String getOpenWireOpCode(JClass element) {
-    	if (element != null) {
-			JAnnotation annotation = element.getAnnotation("openwire:marshaller");
-			return stringValue(annotation, "code", "0");
-		}
-		return "0";
+        if (element != null) {
+            JAnnotation annotation = element.getAnnotation("openwire:marshaller");
+            return stringValue(annotation, "code", "0");
+        }
+        return "0";
     }
-    
+
     protected String stringValue(JAnnotation annotation, String name) {
-		return stringValue(annotation, name, null);
-	}
-	
-	protected String stringValue(JAnnotation annotation, String name, String defaultValue) {
+        return stringValue(annotation, name, null);
+    }
+
+    protected String stringValue(JAnnotation annotation, String name, String defaultValue) {
         if (annotation != null) {
             JAnnotationValue value = annotation.getValue(name);
             if (value != null) {
@@ -145,23 +141,23 @@ public abstract class OpenWireGenerator {
             }
         }
         return defaultValue;
-	}
+    }
 
-	public void setJam(JamService jam) {
-		this.jam = jam;
-	}
-	
-	public String decapitalize(String text) {
-		if (text == null) {
-			return null;
-		}
-		return text.substring(0, 1).toLowerCase() + text.substring(1);
-	}
+    public void setJam(JamService jam) {
+        this.jam = jam;
+    }
 
-	public String capitalize(String text) {
-		if (text == null) {
-			return null;
-		}
-		return text.substring(0, 1).toUpperCase() + text.substring(1);
-	}
+    public String decapitalize(String text) {
+        if (text == null) {
+            return null;
+        }
+        return text.substring(0, 1).toLowerCase() + text.substring(1);
+    }
+
+    public String capitalize(String text) {
+        if (text == null) {
+            return null;
+        }
+        return text.substring(0, 1).toUpperCase() + text.substring(1);
+    }
 }

@@ -16,18 +16,17 @@
  */
 package org.apache.activemq.tool.reports.plugins;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.activemq.tool.reports.PerformanceStatisticsUtil;
-
-import java.util.Map;
-import java.util.StringTokenizer;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+
+import org.apache.activemq.tool.reports.PerformanceStatisticsUtil;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class CpuReportPlugin implements ReportPlugin {
-    private static final Log log = LogFactory.getLog(CpuReportPlugin.class);
 
     public static final String NAME_IGNORE_LIST = "$index$timeUnit$r$b$w$swpd$inact$active$free$buff$cache$si$so$in$";
     public static final String NAME_BLOCK_RECV = "bi";
@@ -54,17 +53,21 @@ public class CpuReportPlugin implements ReportPlugin {
     public static final String KEY_AVE_IDLE_TIME  = "AveIdleTime";
     public static final String KEY_AVE_WAIT_TIME  = "AveWaitingTime";
 
-    protected List blockRecv = new ArrayList();
-    protected List blockSent = new ArrayList();
-    protected List ctxSwitch = new ArrayList();
-    protected List userTime  = new ArrayList();
-    protected List sysTime   = new ArrayList();
-    protected List idleTime  = new ArrayList();
-    protected List waitTime  = new ArrayList();
+    private static final Log LOG = LogFactory.getLog(CpuReportPlugin.class);
+
+    protected List<Long> blockRecv = new ArrayList<Long>();
+    protected List<Long> blockSent = new ArrayList<Long>();
+    protected List<Long> ctxSwitch = new ArrayList<Long>();
+    protected List<Long> userTime  = new ArrayList<Long>();
+    protected List<Long> sysTime   = new ArrayList<Long>();
+    protected List<Long> idleTime  = new ArrayList<Long>();
+    protected List<Long> waitTime  = new ArrayList<Long>();
 
     public void handleCsvData(String csvData) {
         StringTokenizer tokenizer = new StringTokenizer(csvData, ",");
-        String data, key, val;
+        String data;
+        String key;
+        String val;
         while (tokenizer.hasMoreTokens()) {
             data = tokenizer.nextToken();
             key  = data.substring(0, data.indexOf("="));
@@ -74,10 +77,10 @@ public class CpuReportPlugin implements ReportPlugin {
         }
     }
 
-    public Map getSummary() {
+    public Map<String, String> getSummary() {
         long val;
 
-        Map summary = new HashMap();
+        Map<String, String> summary = new HashMap<String, String>();
 
         if (blockRecv.size() > 0) {
             val = PerformanceStatisticsUtil.getSum(blockRecv);
@@ -146,7 +149,7 @@ public class CpuReportPlugin implements ReportPlugin {
         } else if (NAME_IGNORE_LIST.indexOf("$" + key + "$") != -1) {
             // Ignore key
         } else {
-            log.warn("Unrecognized CPU data. " + key + "=" + val);
+            LOG.warn("Unrecognized CPU data. " + key + "=" + val);
         }
     }
 }

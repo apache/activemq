@@ -29,11 +29,11 @@ public class JmsClientSystemProperties extends AbstractObjectProperties {
     public static final String SAMPLER_TP  = "tp";
     public static final String SAMPLER_CPU = "cpu";
 
-    protected File propsConfigFile = null;
+    protected File propsConfigFile;
 
     protected String reportType = REPORT_XML_FILE;
     protected String reportDir  = "./";
-    protected String reportName = null;
+    protected String reportName;
 
     protected String samplers = SAMPLER_TP + "," + SAMPLER_CPU; // Start both samplers
 

@@ -16,12 +16,12 @@
  */
 package org.apache.activemq.transport.http;
 
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.transport.TransportAcceptListener;
+import java.net.URI;
 
 import javax.servlet.ServletException;
 
-import java.net.URI;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.transport.TransportAcceptListener;
 
 /**
  * This servlet embeds an ActiveMQ broker inside a servlet engine which is ideal
@@ -31,7 +31,7 @@ import java.net.URI;
  */
 public class HttpEmbeddedTunnelServlet extends HttpTunnelServlet {
     private static final long serialVersionUID = -3705734740251302361L;
-    
+
     protected BrokerService broker;
     protected HttpTransportServer transportConnector;
 
@@ -52,8 +52,7 @@ public class HttpEmbeddedTunnelServlet extends HttpTunnelServlet {
                 }
             }
             broker.start();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new ServletException("Failed to start embedded broker: " + e, e);
         }
         // now lets register the listener

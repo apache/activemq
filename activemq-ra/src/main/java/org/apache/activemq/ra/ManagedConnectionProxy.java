@@ -39,17 +39,16 @@ import org.apache.activemq.ActiveMQQueueSession;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.ActiveMQTopicSession;
 
-
 /**
- * Acts as a pass through proxy for a JMS Connection object.
- * It intercepts events that are of interest of the ActiveMQManagedConnection.
- *
+ * Acts as a pass through proxy for a JMS Connection object. It intercepts
+ * events that are of interest of the ActiveMQManagedConnection.
+ * 
  * @version $Revision$
  */
 public class ManagedConnectionProxy implements Connection, QueueConnection, TopicConnection, ExceptionListener {
 
     private ActiveMQManagedConnection managedConnection;
-    private ArrayList sessions = new ArrayList();
+    private ArrayList<ManagedSessionProxy> sessions = new ArrayList<ManagedSessionProxy>();
     private ExceptionListener exceptionListener;
 
     public ManagedConnectionProxy(ActiveMQManagedConnection managedConnection) {
@@ -57,13 +56,13 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
     }
 
     /**
-     * Used to let the ActiveMQManagedConnection that this connection
-     * handel is not needed by the app.
-     *
+     * Used to let the ActiveMQManagedConnection that this connection handel is
+     * not needed by the app.
+     * 
      * @throws JMSException
      */
     public void close() throws JMSException {
-        if( managedConnection!=null ) {
+        if (managedConnection != null) {
             managedConnection.proxyClosedEvent(this);
         }
     }
@@ -72,10 +71,10 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
      * Called by the ActiveMQManagedConnection to invalidate this proxy.
      */
     public void cleanup() {
-        exceptionListener=null;
+        exceptionListener = null;
         managedConnection = null;
-        for (Iterator iter = sessions.iterator(); iter.hasNext();) {
-            ManagedSessionProxy p = (ManagedSessionProxy) iter.next();
+        for (Iterator<ManagedSessionProxy> iter = sessions.iterator(); iter.hasNext();) {
+            ManagedSessionProxy p = iter.next();
             try {
                 p.cleanup();
             } catch (JMSException ignore) {
@@ -100,8 +99,7 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
      * @return
      * @throws JMSException
      */
-    public Session createSession(boolean transacted, int acknowledgeMode)
-            throws JMSException {
+    public Session createSession(boolean transacted, int acknowledgeMode) throws JMSException {
         return createSessionProxy(transacted, acknowledgeMode);
     }
 
@@ -111,19 +109,19 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
      * @return
      * @throws JMSException
      */
-    private ManagedSessionProxy createSessionProxy(boolean transacted, int acknowledgeMode) throws JMSException {        
-        ActiveMQSession session = (ActiveMQSession) getConnection().createSession(transacted, acknowledgeMode);
+    private ManagedSessionProxy createSessionProxy(boolean transacted, int acknowledgeMode) throws JMSException {
+        ActiveMQSession session = (ActiveMQSession)getConnection().createSession(transacted, acknowledgeMode);
         ManagedTransactionContext txContext = new ManagedTransactionContext(managedConnection.getTransactionContext());
-        session.setTransactionContext(txContext);        
-        ManagedSessionProxy p = new ManagedSessionProxy(session);        
+        session.setTransactionContext(txContext);
+        ManagedSessionProxy p = new ManagedSessionProxy(session);
         p.setUseSharedTxContext(managedConnection.isInManagedTx());
-        sessions.add(p);        
+        sessions.add(p);
         return p;
     }
 
     public void setUseSharedTxContext(boolean enable) throws JMSException {
-        for (Iterator iter = sessions.iterator(); iter.hasNext();) {
-            ManagedSessionProxy p = (ManagedSessionProxy) iter.next();
+        for (Iterator<ManagedSessionProxy> iter = sessions.iterator(); iter.hasNext();) {
+            ManagedSessionProxy p = iter.next();
             p.setUseSharedTxContext(enable);
         }
     }
@@ -134,8 +132,7 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
      * @return
      * @throws JMSException
      */
-    public QueueSession createQueueSession(boolean transacted,
-                                           int acknowledgeMode) throws JMSException {
+    public QueueSession createQueueSession(boolean transacted, int acknowledgeMode) throws JMSException {
         return new ActiveMQQueueSession(createSessionProxy(transacted, acknowledgeMode));
     }
 
@@ -145,8 +142,7 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
      * @return
      * @throws JMSException
      */
-    public TopicSession createTopicSession(boolean transacted,
-                                           int acknowledgeMode) throws JMSException {
+    public TopicSession createTopicSession(boolean transacted, int acknowledgeMode) throws JMSException {
         return new ActiveMQTopicSession(createSessionProxy(transacted, acknowledgeMode));
     }
 
@@ -186,8 +182,7 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
      * @param listener
      * @throws JMSException
      */
-    public void setExceptionListener(ExceptionListener listener)
-            throws JMSException {
+    public void setExceptionListener(ExceptionListener listener) throws JMSException {
         getConnection();
         exceptionListener = listener;
     }
@@ -206,7 +201,6 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
         getConnection().stop();
     }
 
-
     /**
      * @param queue
      * @param messageSelector
@@ -215,9 +209,7 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
      * @return
      * @throws JMSException
      */
-    public ConnectionConsumer createConnectionConsumer(Queue queue,
-                                                       String messageSelector, ServerSessionPool sessionPool,
-                                                       int maxMessages) throws JMSException {
+    public ConnectionConsumer createConnectionConsumer(Queue queue, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
         throw new JMSException("Not Supported.");
     }
 
@@ -229,9 +221,7 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
      * @return
      * @throws JMSException
      */
-    public ConnectionConsumer createConnectionConsumer(Topic topic,
-                                                       String messageSelector, ServerSessionPool sessionPool,
-                                                       int maxMessages) throws JMSException {
+    public ConnectionConsumer createConnectionConsumer(Topic topic, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
         throw new JMSException("Not Supported.");
     }
 
@@ -243,9 +233,7 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
      * @return
      * @throws JMSException
      */
-    public ConnectionConsumer createConnectionConsumer(Destination destination,
-                                                       String messageSelector, ServerSessionPool sessionPool,
-                                                       int maxMessages) throws JMSException {
+    public ConnectionConsumer createConnectionConsumer(Destination destination, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
         throw new JMSException("Not Supported.");
     }
 
@@ -258,9 +246,7 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
      * @return
      * @throws JMSException
      */
-    public ConnectionConsumer createDurableConnectionConsumer(Topic topic,
-                                                              String subscriptionName, String messageSelector,
-                                                              ServerSessionPool sessionPool, int maxMessages) throws JMSException {
+    public ConnectionConsumer createDurableConnectionConsumer(Topic topic, String subscriptionName, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
         throw new JMSException("Not Supported.");
     }
 
@@ -272,7 +258,7 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
     }
 
     public void onException(JMSException e) {
-        if(exceptionListener!=null && managedConnection!=null) {
+        if (exceptionListener != null && managedConnection != null) {
             try {
                 exceptionListener.onException(e);
             } catch (Throwable ignore) {

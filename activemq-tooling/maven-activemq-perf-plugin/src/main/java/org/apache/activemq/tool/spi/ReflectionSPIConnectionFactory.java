@@ -16,10 +16,11 @@
  */
 package org.apache.activemq.tool.spi;
 
-import org.apache.activemq.tool.properties.ReflectionUtil;
+import java.util.Properties;
 
 import javax.jms.ConnectionFactory;
-import java.util.Properties;
+
+import org.apache.activemq.tool.properties.ReflectionUtil;
 
 public abstract class ReflectionSPIConnectionFactory extends ClassLoaderSPIConnectionFactory {
 

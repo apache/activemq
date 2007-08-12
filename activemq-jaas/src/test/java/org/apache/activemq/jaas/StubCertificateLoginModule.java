@@ -25,21 +25,20 @@ import javax.security.auth.login.LoginException;
 public class StubCertificateLoginModule extends CertificateLoginModule {
     final String userName;
     final Set groupNames;
-    
-    String lastUserName = null;
-    X509Certificate[] lastCertChain = null;
-    
+
+    String lastUserName;
+    X509Certificate[] lastCertChain;
+
     public StubCertificateLoginModule(String userName, Set groupNames) {
         this.userName = userName;
         this.groupNames = groupNames;
     }
 
-    protected String getUserNameForCertificates(X509Certificate[] certs)
-            throws LoginException {
+    protected String getUserNameForCertificates(X509Certificate[] certs) throws LoginException {
         lastCertChain = certs;
         return userName;
     }
-    
+
     protected Set getUserGroups(String username) throws LoginException {
         lastUserName = username;
         return this.groupNames;

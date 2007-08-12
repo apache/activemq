@@ -16,17 +16,15 @@
  */
 package org.apache.activemq.ra;
 
-import org.apache.activemq.ra.ActiveMQEndpointWorker;
-import org.apache.activemq.ra.InvalidMessageEndpointException;
-import org.apache.activemq.ra.MessageEndpointProxy;
-import org.jmock.MockObjectTestCase;
-import org.jmock.Mock;
-
-import javax.jms.MessageListener;
-import javax.jms.Message;
-import javax.resource.spi.endpoint.MessageEndpoint;
-import javax.resource.ResourceException;
 import java.lang.reflect.Method;
+
+import javax.jms.Message;
+import javax.jms.MessageListener;
+import javax.resource.ResourceException;
+import javax.resource.spi.endpoint.MessageEndpoint;
+
+import org.jmock.Mock;
+import org.jmock.MockObjectTestCase;
 
 /**
  * @author <a href="mailto:michael.gaffney@panacya.com">Michael Gaffney </a>

@@ -16,16 +16,17 @@
  */
 package org.apache.activemq.transport.xmpp;
 
-import org.apache.activemq.transport.tcp.TcpTransportServer;
-import org.apache.activemq.transport.tcp.TcpTransportFactory;
-import org.apache.activemq.transport.Transport;
-import org.apache.activemq.wireformat.WireFormat;
-
-import javax.net.ServerSocketFactory;
+import java.io.IOException;
+import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.Socket;
-import java.io.IOException;
+
+import javax.net.ServerSocketFactory;
+
+import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.tcp.TcpTransportFactory;
+import org.apache.activemq.transport.tcp.TcpTransportServer;
+import org.apache.activemq.wireformat.WireFormat;
 
 /**
  * @version $Revision$

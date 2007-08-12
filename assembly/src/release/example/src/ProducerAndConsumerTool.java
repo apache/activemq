@@ -22,30 +22,30 @@ import javax.jms.MessageListener;
 
 /**
  * A simple tool for producing and consuming messages
- *
+ * 
  * @version $Revision: 1.1.1.1 $
  */
 public class ProducerAndConsumerTool extends ConsumerTool implements MessageListener {
 
     public static void main(String[] args) {
-    	
-	ConsumerTool consumerTool = new ConsumerTool();
-	String[] unknown = CommandLineSupport.setOptions(consumerTool, args);
-	HashSet set1 = new HashSet(Arrays.asList(unknown));
-    	
-	ProducerTool producerTool = new ProducerTool();
-        unknown = CommandLineSupport.setOptions(producerTool, args);
-	HashSet set2 = new HashSet(Arrays.asList(unknown));
 
-	set1.retainAll(set2);
-	if( set1.size() > 0 ) {
-    	    System.out.println("Unknown options: "+set1);
-	    System.exit(-1);
-    	}
-    	
-	consumerTool.run();
-    	producerTool.run();
-		
+        ConsumerTool consumerTool = new ConsumerTool();
+        String[] unknown = CommandLineSupport.setOptions(consumerTool, args);
+        HashSet<String> set1 = new HashSet<String>(Arrays.asList(unknown));
+
+        ProducerTool producerTool = new ProducerTool();
+        unknown = CommandLineSupport.setOptions(producerTool, args);
+        HashSet<String> set2 = new HashSet<String>(Arrays.asList(unknown));
+
+        set1.retainAll(set2);
+        if (set1.size() > 0) {
+            System.out.println("Unknown options: " + set1);
+            System.exit(-1);
+        }
+
+        consumerTool.run();
+        producerTool.run();
+
     }
 
 }

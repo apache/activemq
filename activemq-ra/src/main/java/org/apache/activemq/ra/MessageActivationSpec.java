@@ -50,14 +50,12 @@ import org.apache.activemq.RedeliveryPolicy;
  * @version $Revision$ $Date$
  * @since 0.1
  */
-public interface MessageActivationSpec
-        extends ActivationSpec
-{
+public interface MessageActivationSpec extends ActivationSpec {
 
     /**
      */
     String getClientId();
-    
+
     /**
      */
     boolean isDurableSubscription();
@@ -76,7 +74,7 @@ public interface MessageActivationSpec
 
     /**
      */
-    String getSubscriptionName(); 
+    String getSubscriptionName();
 
     /**
      */
@@ -92,18 +90,18 @@ public interface MessageActivationSpec
 
     /**
      */
-	String getDestinationType();
+    String getDestinationType();
 
     /**
      */
-	String getDestination();
-
-	/**
-	 */
-	int getMaxSessionsIntValue();
+    String getDestination();
 
     /**
-    *
+     */
+    int getMaxSessionsIntValue();
+
+    /**
+     *
      */
     int getAcknowledgeModeForSession();
 

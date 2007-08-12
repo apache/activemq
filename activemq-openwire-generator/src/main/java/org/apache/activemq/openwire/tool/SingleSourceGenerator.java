@@ -32,12 +32,11 @@ import org.codehaus.jam.JProperty;
 import org.codehaus.jam.JamClassIterator;
 
 /**
- * 
  * @version $Revision: 386442 $
  */
 public abstract class SingleSourceGenerator extends OpenWireGenerator {
-	
-    protected Set manuallyMaintainedClasses = new HashSet();
+
+    protected Set<String> manuallyMaintainedClasses = new HashSet<String>();
     protected File destFile;
 
     protected JClass jclass;
@@ -45,36 +44,36 @@ public abstract class SingleSourceGenerator extends OpenWireGenerator {
     protected String simpleName;
     protected String className;
     protected String baseClass;
-	protected List sortedClasses;
+    protected List<JClass> sortedClasses;
 
     public SingleSourceGenerator() {
         initialiseManuallyMaintainedClasses();
     }
 
     public Object run() {
-    	
+
         if (destFile == null) {
             throw new IllegalArgumentException("No destFile defined!");
-        }        
+        }
         destFile.getParentFile().mkdirs();
 
         PrintWriter out = null;
         try {
-        	out =  new PrintWriter(new FileWriter(destFile));
-        	
-        	ArrayList classes = new ArrayList();        	
-   	     	JamClassIterator iter = getClasses();
+            out = new PrintWriter(new FileWriter(destFile));
+
+            ArrayList<JClass> classes = new ArrayList<JClass>();
+            JamClassIterator iter = getClasses();
             while (iter.hasNext()) {
-				jclass = iter.nextClass();				
+                jclass = iter.nextClass();
                 if (isValidClass(jclass)) {
-                	classes.add(jclass);
+                    classes.add(jclass);
                 }
             }
-   	        sortedClasses = sort(classes);
-   	        
-        	generateSetup(out);
-   	        for (Iterator iterator = sortedClasses.iterator(); iterator.hasNext();) {
-				jclass = (JClass) iterator.next();				
+            sortedClasses = sort(classes);
+
+            generateSetup(out);
+            for (Iterator<JClass> iterator = sortedClasses.iterator(); iterator.hasNext();) {
+                jclass = iterator.next();
                 simpleName = jclass.getSimpleName();
                 superclass = jclass.getSuperclass();
                 className = getClassName(jclass);
@@ -82,9 +81,9 @@ public abstract class SingleSourceGenerator extends OpenWireGenerator {
 
                 System.out.println(getClass().getName() + " processing class: " + simpleName);
                 generateFile(out);
-            }        
+            }
             generateTearDown(out);
-        	
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
@@ -92,8 +91,9 @@ public abstract class SingleSourceGenerator extends OpenWireGenerator {
                 out.close();
             }
         }
-        
-        // Use the FixCRLF Ant Task to make sure the file has consistent newlines
+
+        // Use the FixCRLF Ant Task to make sure the file has consistent
+        // newlines
         // so that SVN does not complain on checkin.
         Project project = new Project();
         project.init();
@@ -104,22 +104,22 @@ public abstract class SingleSourceGenerator extends OpenWireGenerator {
         fixCRLF.execute();
         return null;
     }
-    
-    protected List sort(List classes) {
-		return classes;
-	}
 
-	protected void generateTearDown(PrintWriter out) {
-	}
+    protected List<JClass> sort(List<JClass> classes) {
+        return classes;
+    }
+
+    protected void generateTearDown(PrintWriter out) {
+    }
 
     protected void generateSetup(PrintWriter out) {
-	}
+    }
 
-	/**
+    /**
      * Returns all the valid properties available on the current class
      */
-    public List getProperties() {
-        List answer = new ArrayList();
+    public List<JProperty> getProperties() {
+        List<JProperty> answer = new ArrayList<JProperty>();
         JProperty[] properties = jclass.getDeclaredProperties();
         for (int i = 0; i < properties.length; i++) {
             JProperty property = properties[i];
@@ -131,13 +131,12 @@ public abstract class SingleSourceGenerator extends OpenWireGenerator {
     }
 
     protected boolean isValidClass(JClass jclass) {
-        if (jclass==null || jclass.getAnnotation("openwire:marshaller") == null) {
+        if (jclass == null || jclass.getAnnotation("openwire:marshaller") == null) {
             return false;
         }
         return true;
-        //return !manuallyMaintainedClasses.contains(jclass.getSimpleName());
+        // return !manuallyMaintainedClasses.contains(jclass.getSimpleName());
     }
-
 
     protected abstract void generateFile(PrintWriter out) throws Exception;
 
@@ -155,7 +154,7 @@ public abstract class SingleSourceGenerator extends OpenWireGenerator {
     protected String getClassName(JClass jclass) {
         return jclass.getSimpleName();
     }
-    
+
     public boolean isAbstractClass() {
         return jclass != null && jclass.isAbstract();
     }
@@ -163,75 +162,76 @@ public abstract class SingleSourceGenerator extends OpenWireGenerator {
     public String getAbstractClassText() {
         return isAbstractClass() ? "abstract " : "";
     }
-    
+
     public boolean isMarshallerAware() {
         return isMarshallAware(jclass);
     }
 
     protected void initialiseManuallyMaintainedClasses() {
-        String[] names = { "ActiveMQDestination", "ActiveMQTempDestination", "ActiveMQQueue", "ActiveMQTopic", "ActiveMQTempQueue", "ActiveMQTempTopic",
-                "BaseCommand", "ActiveMQMessage", "ActiveMQTextMessage", "ActiveMQMapMessage", "ActiveMQBytesMessage", "ActiveMQStreamMessage",
-                "ActiveMQStreamMessage", "DataStructureSupport", "WireFormatInfo", "ActiveMQObjectMessage" };
+        String[] names = {
+            "ActiveMQDestination", "ActiveMQTempDestination", "ActiveMQQueue", "ActiveMQTopic", "ActiveMQTempQueue", "ActiveMQTempTopic", "BaseCommand", "ActiveMQMessage", "ActiveMQTextMessage",
+            "ActiveMQMapMessage", "ActiveMQBytesMessage", "ActiveMQStreamMessage", "ActiveMQStreamMessage", "DataStructureSupport", "WireFormatInfo", "ActiveMQObjectMessage"
+        };
 
         for (int i = 0; i < names.length; i++) {
             manuallyMaintainedClasses.add(names[i]);
         }
     }
 
-	public String getBaseClass() {
-		return baseClass;
-	}
+    public String getBaseClass() {
+        return baseClass;
+    }
 
-	public void setBaseClass(String baseClass) {
-		this.baseClass = baseClass;
-	}
+    public void setBaseClass(String baseClass) {
+        this.baseClass = baseClass;
+    }
 
-	public String getClassName() {
-		return className;
-	}
+    public String getClassName() {
+        return className;
+    }
 
-	public void setClassName(String className) {
-		this.className = className;
-	}
+    public void setClassName(String className) {
+        this.className = className;
+    }
 
-	public File getDestFile() {
-		return destFile;
-	}
+    public File getDestFile() {
+        return destFile;
+    }
 
-	public void setDestFile(File destFile) {
-		this.destFile = destFile;
-	}
+    public void setDestFile(File destFile) {
+        this.destFile = destFile;
+    }
 
-	public JClass getJclass() {
-		return jclass;
-	}
+    public JClass getJclass() {
+        return jclass;
+    }
 
-	public void setJclass(JClass jclass) {
-		this.jclass = jclass;
-	}
+    public void setJclass(JClass jclass) {
+        this.jclass = jclass;
+    }
 
-	public Set getManuallyMaintainedClasses() {
-		return manuallyMaintainedClasses;
-	}
+    public Set<String> getManuallyMaintainedClasses() {
+        return manuallyMaintainedClasses;
+    }
 
-	public void setManuallyMaintainedClasses(Set manuallyMaintainedClasses) {
-		this.manuallyMaintainedClasses = manuallyMaintainedClasses;
-	}
+    public void setManuallyMaintainedClasses(Set<String> manuallyMaintainedClasses) {
+        this.manuallyMaintainedClasses = manuallyMaintainedClasses;
+    }
 
-	public String getSimpleName() {
-		return simpleName;
-	}
+    public String getSimpleName() {
+        return simpleName;
+    }
 
-	public void setSimpleName(String simpleName) {
-		this.simpleName = simpleName;
-	}
+    public void setSimpleName(String simpleName) {
+        this.simpleName = simpleName;
+    }
 
-	public JClass getSuperclass() {
-		return superclass;
-	}
+    public JClass getSuperclass() {
+        return superclass;
+    }
 
-	public void setSuperclass(JClass superclass) {
-		this.superclass = superclass;
-	}
+    public void setSuperclass(JClass superclass) {
+        this.superclass = superclass;
+    }
 
 }

@@ -16,31 +16,27 @@
  */
 package org.apache.activemq.maven;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
+
 import org.apache.activemq.tool.JmsProducerSystem;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Properties;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.HashSet;
-
 /**
  * Goal which touches a timestamp file.
- *
+ * 
  * @goal producer
  * @phase process
  */
 public class ProducerMojo extends AbstractMojo {
 
     private String[] validPrefix = {
-        "sysTest.",
-        "factory.",
-        "producer.",
-        "tpSampler.",
-        "cpuSampler."
+        "sysTest.", "factory.", "producer.", "tpSampler.", "cpuSampler."
     };
 
     public void execute() throws MojoExecutionException {
@@ -52,7 +48,7 @@ public class ProducerMojo extends AbstractMojo {
         Properties sysProps = System.getProperties();
         Set keys = new HashSet(sysProps.keySet());
 
-        for (Iterator i=keys.iterator(); i.hasNext();) {
+        for (Iterator i = keys.iterator(); i.hasNext();) {
             String key = (String)i.next();
             if (isRecognizedProperty(key)) {
                 args.add(key + "=" + sysProps.remove(key));
@@ -62,7 +58,7 @@ public class ProducerMojo extends AbstractMojo {
     }
 
     protected boolean isRecognizedProperty(String key) {
-        for (int j=0; j<validPrefix.length; j++) {
+        for (int j = 0; j < validPrefix.length; j++) {
             if (key.startsWith(validPrefix[j])) {
                 return true;
             }

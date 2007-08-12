@@ -44,22 +44,19 @@ import org.apache.commons.logging.LogFactory;
  */
 public class ActiveMQEndpointWorker {
 
-    private static final Log log = LogFactory.getLog(ActiveMQEndpointWorker.class);
-
-    /**
-     * 
-     */
     public static final Method ON_MESSAGE_METHOD;
+    private static final Log LOG = LogFactory.getLog(ActiveMQEndpointWorker.class);
 
     private static final long INITIAL_RECONNECT_DELAY = 1000; // 1 second.
-    private static final long MAX_RECONNECT_DELAY = 1000*30; // 30 seconds.
-    private static final ThreadLocal<Session> threadLocal = new ThreadLocal<Session>();
-    
+    private static final long MAX_RECONNECT_DELAY = 1000 * 30; // 30 seconds.
+    private static final ThreadLocal<Session> THREAD_LOCAL = new ThreadLocal<Session>();
+
     static {
         try {
-            ON_MESSAGE_METHOD = MessageListener.class.getMethod("onMessage", new Class[]{Message.class});
-        }
-        catch (Exception e) {
+            ON_MESSAGE_METHOD = MessageListener.class.getMethod("onMessage", new Class[] {
+                Message.class
+            });
+        } catch (Exception e) {
             throw new ExceptionInInitializerError(e);
         }
     }
@@ -69,63 +66,16 @@ public class ActiveMQEndpointWorker {
     protected MessageEndpointFactory endpointFactory;
     protected WorkManager workManager;
     protected boolean transacted;
-    
-    
+    protected ActiveMQConnection connection;
+
     private ConnectionConsumer consumer;
     private ServerSessionPoolImpl serverSessionPool;
     private ActiveMQDestination dest;
     private boolean running;
     private Work connectWork;
-    protected ActiveMQConnection connection;
-    
-    private long reconnectDelay=INITIAL_RECONNECT_DELAY;
 
+    private long reconnectDelay = INITIAL_RECONNECT_DELAY;
 
-    /**
-     * @param s
-     */
-    public static void safeClose(Session s) {
-        try {
-            if (s != null) {
-                s.close();
-            }
-        }
-        catch (JMSException e) {
-        	//
-        }
-    }
-
-    /**
-     * @param c
-     */
-    public static void safeClose(Connection c) {
-        try {
-            if (c != null) {
-                c.close();
-            }
-        }
-        catch (JMSException e) {
-        	//
-        }
-    }
-
-    /**
-     * @param cc
-     */
-    public static void safeClose(ConnectionConsumer cc) {
-        try {
-            if (cc != null) {
-                cc.close();
-            }
-        }
-        catch (JMSException e) {
-        	//
-        }
-    }
-
-    /**
-     * 
-     */
     public ActiveMQEndpointWorker(final MessageResourceAdapter adapter, ActiveMQEndpointActivationKey key) throws ResourceException {
         this.endpointActivationKey = key;
         this.adapter = adapter;
@@ -133,23 +83,24 @@ public class ActiveMQEndpointWorker {
         this.workManager = adapter.getBootstrapContext().getWorkManager();
         try {
             this.transacted = endpointFactory.isDeliveryTransacted(ON_MESSAGE_METHOD);
-        }
-        catch (NoSuchMethodException e) {
+        } catch (NoSuchMethodException e) {
             throw new ResourceException("Endpoint does not implement the onMessage method.");
         }
-        
+
         connectWork = new Work() {
 
             public void release() {
-            	//
+                //
             }
 
-            synchronized public void run() {
-                if( !isRunning() )
+            public synchronized void run() {
+                if (!isRunning()) {
                     return;
-                if( connection!=null )
+                }
+                if (connection != null) {
                     return;
-                
+                }
+
                 MessageActivationSpec activationSpec = endpointActivationKey.getActivationSpec();
                 try {
                     connection = adapter.makeConnection(activationSpec);
@@ -163,24 +114,15 @@ public class ActiveMQEndpointWorker {
                     });
 
                     if (activationSpec.isDurableSubscription()) {
-                        consumer = connection.createDurableConnectionConsumer(
-                                (Topic) dest,
-                                activationSpec.getSubscriptionName(), 
-                                emptyToNull(activationSpec.getMessageSelector()),
-                                serverSessionPool, 
-                                activationSpec.getMaxMessagesPerSessionsIntValue(),
-                                activationSpec.getNoLocalBooleanValue());
+                        consumer = connection.createDurableConnectionConsumer((Topic)dest, activationSpec.getSubscriptionName(), emptyToNull(activationSpec.getMessageSelector()), serverSessionPool,
+                                                                              activationSpec.getMaxMessagesPerSessionsIntValue(), activationSpec.getNoLocalBooleanValue());
                     } else {
-                        consumer = connection.createConnectionConsumer(
-                                dest, 
-                                emptyToNull(activationSpec.getMessageSelector()), 
-                                serverSessionPool, 
-                                activationSpec.getMaxMessagesPerSessionsIntValue(),
-                                activationSpec.getNoLocalBooleanValue());
+                        consumer = connection.createConnectionConsumer(dest, emptyToNull(activationSpec.getMessageSelector()), serverSessionPool, activationSpec.getMaxMessagesPerSessionsIntValue(),
+                                                                       activationSpec.getNoLocalBooleanValue());
                     }
 
                 } catch (JMSException error) {
-                    log.debug("Fail to to connect: "+error, error);
+                    LOG.debug("Fail to to connect: " + error, error);
                     reconnect(error);
                 }
             }
@@ -198,89 +140,133 @@ public class ActiveMQEndpointWorker {
     }
 
     /**
-     * 
+     * @param s
      */
-    synchronized public void start() throws WorkException, ResourceException {
-        if (running)
-            return;
-        running = true;
+    public static void safeClose(Session s) {
+        try {
+            if (s != null) {
+                s.close();
+            }
+        } catch (JMSException e) {
+            //
+        }
+    }
 
-        log.debug("Starting");
-        serverSessionPool = new ServerSessionPoolImpl(this, endpointActivationKey.getActivationSpec().getMaxSessionsIntValue());
-        connect();
-        log.debug("Started");
+    /**
+     * @param c
+     */
+    public static void safeClose(Connection c) {
+        try {
+            if (c != null) {
+                c.close();
+            }
+        } catch (JMSException e) {
+            //
+        }
+    }
+
+    /**
+     * @param cc
+     */
+    public static void safeClose(ConnectionConsumer cc) {
+        try {
+            if (cc != null) {
+                cc.close();
+            }
+        } catch (JMSException e) {
+            //
+        }
     }
 
     /**
      * 
      */
-    synchronized public void stop() throws InterruptedException {
-        if (!running)
+    public synchronized void start() throws WorkException, ResourceException {
+        if (running) {
             return;
+        }
+        running = true;
+
+        LOG.debug("Starting");
+        serverSessionPool = new ServerSessionPoolImpl(this, endpointActivationKey.getActivationSpec().getMaxSessionsIntValue());
+        connect();
+        LOG.debug("Started");
+    }
+
+    /**
+     * 
+     */
+    public synchronized void stop() throws InterruptedException {
+        if (!running) {
+            return;
+        }
         running = false;
         serverSessionPool.close();
-        disconnect();        
+        disconnect();
     }
 
     private boolean isRunning() {
         return running;
-    }    
+    }
 
-    synchronized private void connect() {
-        if (!running)
+    private synchronized void connect() {
+        if (!running) {
             return;
+        }
 
         try {
             workManager.scheduleWork(connectWork, WorkManager.INDEFINITE, null, null);
         } catch (WorkException e) {
             running = false;
-            log.error("Work Manager did not accept work: ",e);
+            LOG.error("Work Manager did not accept work: ", e);
         }
     }
 
     /**
      * 
      */
-    synchronized private void disconnect() {
+    private synchronized void disconnect() {
         safeClose(consumer);
-        consumer=null;
+        consumer = null;
         safeClose(connection);
-        connection=null;
+        connection = null;
     }
 
-    private void reconnect(JMSException error){
-        log.debug("Reconnect cause: ",error);
+    private void reconnect(JMSException error) {
+        LOG.debug("Reconnect cause: ", error);
         long reconnectDelay;
-        synchronized(this) {
+        synchronized (this) {
             reconnectDelay = this.reconnectDelay;
-            // Only log errors if the server is really down.. And not a temp failure.
+            // Only log errors if the server is really down.. And not a temp
+            // failure.
             if (reconnectDelay == MAX_RECONNECT_DELAY) {
-                log.error("Endpoint connection to JMS broker failed: " + error.getMessage());
-                log.error("Endpoint will try to reconnect to the JMS broker in "+(MAX_RECONNECT_DELAY/1000)+" seconds");
+                LOG.error("Endpoint connection to JMS broker failed: " + error.getMessage());
+                LOG.error("Endpoint will try to reconnect to the JMS broker in " + (MAX_RECONNECT_DELAY / 1000) + " seconds");
             }
         }
         try {
             disconnect();
             Thread.sleep(reconnectDelay);
-            
-            synchronized(this) {
+
+            synchronized (this) {
                 // Use exponential rollback.
-                this.reconnectDelay*=2;
-                if (this.reconnectDelay > MAX_RECONNECT_DELAY)
-                    this.reconnectDelay=MAX_RECONNECT_DELAY;
+                this.reconnectDelay *= 2;
+                if (this.reconnectDelay > MAX_RECONNECT_DELAY) {
+                    this.reconnectDelay = MAX_RECONNECT_DELAY;
+                }
             }
             connect();
-        } catch(InterruptedException e) {
-        	//
+        } catch (InterruptedException e) {
+            //
         }
     }
 
     protected void registerThreadSession(Session session) {
-        threadLocal.set(session);
+        THREAD_LOCAL.set(session);
     }
 
     protected void unregisterThreadSession(Session session) {
-        threadLocal.set(null);
+        THREAD_LOCAL.set(null);
     }
 
     private String emptyToNull(String value) {

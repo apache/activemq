@@ -16,15 +16,15 @@
  */
 package org.apache.activemq.transport.https;
 
-import org.apache.activemq.transport.http.HttpTransport;
-import org.apache.activemq.transport.util.TextWireFormat;
-
-import javax.net.ssl.HttpsURLConnection;
-
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
+
+import javax.net.ssl.HttpsURLConnection;
+
+import org.apache.activemq.transport.http.HttpTransport;
+import org.apache.activemq.transport.util.TextWireFormat;
 
 public class HttpsTransport extends HttpTransport {
 

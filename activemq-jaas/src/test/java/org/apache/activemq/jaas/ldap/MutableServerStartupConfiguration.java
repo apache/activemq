@@ -25,12 +25,10 @@ import org.apache.mina.registry.ServiceRegistry;
 
 /**
  * A mutable version of {@link ServerStartupConfiguration}.
- *
+ * 
  * @version $Rev: 233391 $ $Date: 2005-08-18 16:38:47 -0600 (Thu, 18 Aug 2005) $
  */
-public class MutableServerStartupConfiguration extends
-        ServerStartupConfiguration
-{
+public class MutableServerStartupConfiguration extends ServerStartupConfiguration {
     private static final long serialVersionUID = 515104910980600099L;
 
     public MutableServerStartupConfiguration() {

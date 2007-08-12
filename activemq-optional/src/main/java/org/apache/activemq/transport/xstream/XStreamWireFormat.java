@@ -18,11 +18,11 @@ package org.apache.activemq.transport.xstream;
 
 import java.io.Reader;
 
+import com.thoughtworks.xstream.XStream;
+
 import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.wireformat.WireFormat;
-
-import com.thoughtworks.xstream.XStream;
 
 /**
  * A {@link WireFormat} implementation which uses the <a
@@ -43,29 +43,26 @@ public class XStreamWireFormat extends TextWireFormat {
         this.version = version;
     }
 
-
     public WireFormat copy() {
         return new XStreamWireFormat();
     }
 
-
     public Object unmarshalText(String text) {
-        return (Command) getXStream().fromXML(text);
-    }
-    
-    public Object unmarshalText(Reader reader) {
-        return (Command) getXStream().fromXML(reader);
+        return (Command)getXStream().fromXML(text);
     }
 
-	public String marshalText(Object command) {
+    public Object unmarshalText(Reader reader) {
+        return (Command)getXStream().fromXML(reader);
+    }
+
+    public String marshalText(Object command) {
         return getXStream().toXML(command);
     }
 
     /**
      * Can this wireformat process packets of this version
      * 
-     * @param version
-     *            the version number to test
+     * @param version the version number to test
      * @return true if can accept the version
      */
     public boolean canProcessWireFormatVersion(int version) {
@@ -98,5 +95,4 @@ public class XStreamWireFormat extends TextWireFormat {
         return new XStream();
     }
 
-	
 }

@@ -16,21 +16,22 @@
  */
 package org.apache.activemq.web;
 
-import org.apache.activemq.broker.jmx.BrokerViewMBean;
-import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
-import org.apache.activemq.broker.jmx.ManagementContext;
-import org.apache.activemq.broker.jmx.TopicViewMBean;
-import org.apache.activemq.broker.jmx.QueueViewMBean;
-import org.apache.activemq.broker.jmx.DestinationViewMBean;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.management.MBeanServer;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.ObjectName;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Iterator;
+
+import org.apache.activemq.broker.jmx.BrokerViewMBean;
+import org.apache.activemq.broker.jmx.DestinationViewMBean;
+import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
+import org.apache.activemq.broker.jmx.ManagementContext;
+import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.broker.jmx.TopicViewMBean;
 
 /**
  * A useful base class for an implementation of {@link BrokerFacade}
@@ -40,7 +41,7 @@ import java.util.Iterator;
 public abstract class BrokerFacadeSupport implements BrokerFacade {
     public abstract ManagementContext getManagementContext();
 
-    public Collection getQueues() throws Exception {
+    public Collection<Object> getQueues() throws Exception {
         BrokerViewMBean broker = getBrokerAdmin();
         if (broker == null) {
             return Collections.EMPTY_LIST;
@@ -49,7 +50,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         return getManagedObjects(queues, QueueViewMBean.class);
     }
 
-    public Collection getTopics() throws Exception {
+    public Collection<Object> getTopics() throws Exception {
         BrokerViewMBean broker = getBrokerAdmin();
         if (broker == null) {
             return Collections.EMPTY_LIST;
@@ -58,7 +59,7 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         return getManagedObjects(queues, TopicViewMBean.class);
     }
 
-    public Collection getDurableTopicSubscribers() throws Exception {
+    public Collection<Object> getDurableTopicSubscribers() throws Exception {
         BrokerViewMBean broker = getBrokerAdmin();
         if (broker == null) {
             return Collections.EMPTY_LIST;
@@ -75,8 +76,8 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         return (TopicViewMBean) getDestinationByName(getTopics(), name);
     }
 
-    protected DestinationViewMBean getDestinationByName(Collection collection, String name) {
-        Iterator iter = collection.iterator();
+    protected DestinationViewMBean getDestinationByName(Collection<Object> collection, String name) {
+        Iterator<Object> iter = collection.iterator();
         while (iter.hasNext()) {
             DestinationViewMBean destinationViewMBean = (DestinationViewMBean) iter.next();
             if (name.equals(destinationViewMBean.getName())) {
@@ -86,8 +87,8 @@ public abstract class BrokerFacadeSupport implements BrokerFacade {
         return null;
     }
 
-    protected Collection getManagedObjects(ObjectName[] names, Class type) {
-        List answer = new ArrayList();
+    protected Collection<Object> getManagedObjects(ObjectName[] names, Class type) {
+        List<Object> answer = new ArrayList<Object>();
         MBeanServer mbeanServer = getManagementContext().getMBeanServer();
         if (mbeanServer != null) {
             for (int i = 0; i < names.length; i++) {

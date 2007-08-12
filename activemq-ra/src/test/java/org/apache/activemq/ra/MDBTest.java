@@ -21,6 +21,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Timer;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
 import javax.jms.Message;
@@ -43,16 +45,12 @@ import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
 import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.ra.ActiveMQActivationSpec;
-import org.apache.activemq.ra.ActiveMQResourceAdapter;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 public class MDBTest extends TestCase {
+
+    long txGenerator = System.currentTimeMillis();
 
     private static final class StubBootstrapContext implements BootstrapContext {
         public WorkManager getWorkManager() {
@@ -60,29 +58,26 @@ public class MDBTest extends TestCase {
                 public void doWork(Work work) throws WorkException {
                     new Thread(work).start();
                 }
-        
-                public void doWork(Work work, long arg1, ExecutionContext arg2, WorkListener arg3)
-                        throws WorkException {
+
+                public void doWork(Work work, long arg1, ExecutionContext arg2, WorkListener arg3) throws WorkException {
                     new Thread(work).start();
                 }
-        
+
                 public long startWork(Work work) throws WorkException {
                     new Thread(work).start();
                     return 0;
                 }
-        
-                public long startWork(Work work, long arg1, ExecutionContext arg2, WorkListener arg3)
-                        throws WorkException {
+
+                public long startWork(Work work, long arg1, ExecutionContext arg2, WorkListener arg3) throws WorkException {
                     new Thread(work).start();
                     return 0;
                 }
-        
+
                 public void scheduleWork(Work work) throws WorkException {
                     new Thread(work).start();
                 }
-        
-                public void scheduleWork(Work work, long arg1, ExecutionContext arg2, WorkListener arg3)
-                        throws WorkException {
+
+                public void scheduleWork(Work work, long arg1, ExecutionContext arg2, WorkListener arg3) throws WorkException {
                     new Thread(work).start();
                 }
             };
@@ -98,15 +93,16 @@ public class MDBTest extends TestCase {
     }
 
     public class StubMessageEndpoint implements MessageEndpoint, MessageListener {
-        public int messageCount; 
+        public int messageCount;
         public XAResource xaresource;
-        public Xid xid=null;
-        
+        public Xid xid;
+
         public void beforeDelivery(Method method) throws NoSuchMethodException, ResourceException {
             try {
-                if( xid==null )
+                if (xid == null) {
                     xid = createXid();
-                xaresource.start(xid,0);
+                }
+                xaresource.start(xid, 0);
             } catch (Throwable e) {
                 throw new ResourceException(e);
             }
@@ -114,9 +110,9 @@ public class MDBTest extends TestCase {
 
         public void afterDelivery() throws ResourceException {
             try {
-                xaresource.end(xid,0);
+                xaresource.end(xid, 0);
                 xaresource.prepare(xid);
-                xaresource.commit(xid,false);
+                xaresource.commit(xid, false);
             } catch (Throwable e) {
                 throw new ResourceException(e);
             }
@@ -130,7 +126,7 @@ public class MDBTest extends TestCase {
         }
 
     }
-    
+
     public void testMessageDelivery() throws Exception {
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
@@ -142,25 +138,26 @@ public class MDBTest extends TestCase {
         adapter.start(new StubBootstrapContext());
 
         final CountDownLatch messageDelivered = new CountDownLatch(1);
-        
+
         final StubMessageEndpoint endpoint = new StubMessageEndpoint() {
             public void onMessage(Message message) {
                 super.onMessage(message);
                 messageDelivered.countDown();
             };
         };
-        
+
         ActiveMQActivationSpec activationSpec = new ActiveMQActivationSpec();
         activationSpec.setDestinationType(Queue.class.getName());
         activationSpec.setDestination("TEST");
         activationSpec.setResourceAdapter(adapter);
         activationSpec.validate();
-        
+
         MessageEndpointFactory messageEndpointFactory = new MessageEndpointFactory() {
             public MessageEndpoint createEndpoint(XAResource resource) throws UnavailableException {
                 endpoint.xaresource = resource;
                 return endpoint;
             }
+
             public boolean isDeliveryTransacted(Method method) throws NoSuchMethodException {
                 return true;
             }
@@ -168,31 +165,30 @@ public class MDBTest extends TestCase {
 
         // Activate an Endpoint
         adapter.endpointActivation(messageEndpointFactory, activationSpec);
-        
+
         // Give endpoint a chance to setup and register its listeners
         try {
             Thread.sleep(1000);
         } catch (Exception e) {
 
         }
-        
+
         // Send the broker a message to that endpoint
         MessageProducer producer = session.createProducer(new ActiveMQQueue("TEST"));
         producer.send(session.createTextMessage("Hello!"));
         connection.close();
-        
+
         // Wait for the message to be delivered.
         assertTrue(messageDelivered.await(5000, TimeUnit.MILLISECONDS));
-        
+
         // Shut the Endpoint down.
         adapter.endpointDeactivation(messageEndpointFactory, activationSpec);
-        adapter.stop();        
-        
+        adapter.stop();
+
     }
-    
-    long txGenerator = System.currentTimeMillis();
-    
-    public Xid createXid() throws IOException {        
+
+
+    public Xid createXid() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream os = new DataOutputStream(baos);
         os.writeLong(++txGenerator);
@@ -203,14 +199,16 @@ public class MDBTest extends TestCase {
             public int getFormatId() {
                 return 86;
             }
+
             public byte[] getGlobalTransactionId() {
                 return bs;
             }
+
             public byte[] getBranchQualifier() {
                 return bs;
             }
         };
-        
+
     }
 
 }

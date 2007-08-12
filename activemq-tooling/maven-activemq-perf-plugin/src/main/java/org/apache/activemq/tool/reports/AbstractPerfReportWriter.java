@@ -16,21 +16,20 @@
  */
 package org.apache.activemq.tool.reports;
 
+import java.util.Map;
+
+import org.apache.activemq.tool.reports.plugins.CpuReportPlugin;
 import org.apache.activemq.tool.reports.plugins.ReportPlugin;
 import org.apache.activemq.tool.reports.plugins.ThroughputReportPlugin;
-import org.apache.activemq.tool.reports.plugins.CpuReportPlugin;
-
-import java.util.Map;
 
 public abstract class AbstractPerfReportWriter implements PerformanceReportWriter {
 
     public static final int REPORT_PLUGIN_THROUGHPUT = 0;
-    public static final int REPORT_PLUGIN_CPU        = 1;
-    
+    public static final int REPORT_PLUGIN_CPU = 1;
+
     protected ReportPlugin[] plugins = new ReportPlugin[] {
-                                                new ThroughputReportPlugin(),
-                                                new CpuReportPlugin()
-                                       };
+        new ThroughputReportPlugin(), new CpuReportPlugin()
+    };
 
     protected void handleCsvData(int pluginType, String csvData) {
         plugins[pluginType].handleCsvData(csvData);

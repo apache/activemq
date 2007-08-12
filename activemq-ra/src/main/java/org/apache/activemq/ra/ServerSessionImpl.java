@@ -32,8 +32,8 @@ import javax.resource.spi.work.WorkListener;
 import javax.resource.spi.work.WorkManager;
 
 import org.apache.activemq.ActiveMQSession;
-import org.apache.activemq.TransactionContext;
 import org.apache.activemq.ActiveMQSession.DeliveryListener;
+import org.apache.activemq.TransactionContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -43,24 +43,22 @@ import org.apache.commons.logging.LogFactory;
 public class ServerSessionImpl implements ServerSession, InboundContext, Work, DeliveryListener {
 
     public static final Method ON_MESSAGE_METHOD;
+    private static int nextLogId;
 
     static {
         try {
-            ON_MESSAGE_METHOD = MessageListener.class.getMethod("onMessage", new Class[]{Message.class});
-        }
-        catch (Exception e) {
+            ON_MESSAGE_METHOD = MessageListener.class.getMethod("onMessage", new Class[] {
+                Message.class
+            });
+        } catch (Exception e) {
             throw new ExceptionInInitializerError(e);
         }
     }
 
-    private static int nextLogId=0;
-    synchronized static private int getNextLogId() {
-        return nextLogId++;
-    }
 
     private int serverSessionId = getNextLogId();
-    private final Log log = LogFactory.getLog( ServerSessionImpl.class.getName()+":"+serverSessionId );
-    
+    private final Log log = LogFactory.getLog(ServerSessionImpl.class.getName() + ":" + serverSessionId);
+
     private ActiveMQSession session;
     private WorkManager workManager;
     private MessageEndpoint endpoint;
@@ -68,10 +66,10 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
     private final ServerSessionPoolImpl pool;
 
     private Object runControlMutex = new Object();
-    private boolean runningFlag = false;
-    /** 
-     * True if an error was detected that cause this session to be stale.  When a session 
-     * is stale, it should not be used again for proccessing.
+    private boolean runningFlag;
+    /**
+     * True if an error was detected that cause this session to be stale. When a
+     * session is stale, it should not be used again for proccessing.
      */
     private boolean stale;
     /**
@@ -93,9 +91,13 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
         this.workManager = workManager;
         this.endpoint = endpoint;
         this.useRAManagedTx = useRAManagedTx;
-        this.session.setMessageListener((MessageListener) endpoint);
+        this.session.setMessageListener((MessageListener)endpoint);
         this.session.setDeliveryListener(this);
         this.batchSize = batchSize;
+    }
+
+    private static synchronized int getNextLogId() {
+        return nextLogId++;
     }
 
     public Session getSession() throws JMSException {
@@ -125,29 +127,27 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
         // We get here because we need to start a async worker.
         log.debug("Starting run.");
         try {
-            workManager.scheduleWork(this, WorkManager.INDEFINITE, null,
-                    new WorkListener() {
-                        //The work listener is useful only for debugging...
-                        public void workAccepted(WorkEvent event) {
-                            log.debug("Work accepted: " + event);
-                        }
+            workManager.scheduleWork(this, WorkManager.INDEFINITE, null, new WorkListener() {
+                // The work listener is useful only for debugging...
+                public void workAccepted(WorkEvent event) {
+                    log.debug("Work accepted: " + event);
+                }
 
-                        public void workRejected(WorkEvent event) {
-                            log.debug("Work rejected: " + event);
-                        }
+                public void workRejected(WorkEvent event) {
+                    log.debug("Work rejected: " + event);
+                }
 
-                        public void workStarted(WorkEvent event) {
-                            log.debug("Work started: " + event);
-                        }
+                public void workStarted(WorkEvent event) {
+                    log.debug("Work started: " + event);
+                }
 
-                        public void workCompleted(WorkEvent event) {
-                            log.debug("Work completed: " + event);
-                        }
+                public void workCompleted(WorkEvent event) {
+                    log.debug("Work completed: " + event);
+                }
 
-                    });
-        }
-        catch (WorkException e) {
-            throw (JMSException) new JMSException("Start failed: " + e).initCause(e);
+            });
+        } catch (WorkException e) {
+            throw (JMSException)new JMSException("Start failed: " + e).initCause(e);
         }
     }
 
@@ -155,43 +155,40 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
      * @see java.lang.Runnable#run()
      */
     public void run() {
-        log.debug("Running"); 
+        log.debug("Running");
         while (true) {
-            log.debug("run loop start");            
+            log.debug("run loop start");
             try {
-                InboundContextSupport.register(this);                
+                InboundContextSupport.register(this);
                 currentBatchSize = 0;
                 session.run();
-            }
-            catch (Throwable e) {
-                stale=true;
+            } catch (Throwable e) {
+                stale = true;
                 log.debug("Endpoint failed to process message.", e);
                 log.info("Endpoint failed to process message. Reason: " + e);
-            }            
-            finally {
-                InboundContextSupport.unregister(this);                
-                log.debug("run loop end");            
+            } finally {
+                InboundContextSupport.unregister(this);
+                log.debug("run loop end");
                 synchronized (runControlMutex) {
                     // This endpoint may have gone stale due to error
-                    if( stale) {
+                    if (stale) {
                         runningFlag = false;
                         pool.removeFromPool(this);
                         break;
                     }
-                    if( !session.hasUncomsumedMessages() ) {
+                    if (!session.hasUncomsumedMessages()) {
                         runningFlag = false;
                         pool.returnToPool(this);
                         break;
-                    }                
+                    }
                 }
             }
         }
         log.debug("Run finished");
     }
 
-
     /**
-     * The ActiveMQSession's run method will call back to this method before 
+     * The ActiveMQSession's run method will call back to this method before
      * dispactching a message to the MessageListener.
      */
     public void beforeDelivery(ActiveMQSession session, Message msg) {
@@ -205,7 +202,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
     }
 
     /**
-     * The ActiveMQSession's run method will call back to this method after 
+     * The ActiveMQSession's run method will call back to this method after
      * dispactching a message to the MessageListener.
      */
     public void afterDelivery(ActiveMQSession session, Message msg) {
@@ -217,9 +214,10 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
                 throw new RuntimeException("Endpoint after delivery notification failure", e);
             } finally {
                 TransactionContext transactionContext = session.getTransactionContext();
-                if( transactionContext != null && transactionContext.isInLocalTransaction() ) {
-                    if( !useRAManagedTx ) {
-                        // Sanitiy Check: If the local transaction has not been commited..
+                if (transactionContext != null && transactionContext.isInLocalTransaction()) {
+                    if (!useRAManagedTx) {
+                        // Sanitiy Check: If the local transaction has not been
+                        // commited..
                         // Commit it now.
                         log.warn("Local transaction had not been commited.  Commiting now.");
                     }
@@ -244,19 +242,19 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
      * @see java.lang.Object#toString()
      */
     public String toString() {
-        return "ServerSessionImpl:"+serverSessionId;
+        return "ServerSessionImpl:" + serverSessionId;
     }
 
     public void close() {
         try {
             endpoint.release();
         } catch (Throwable e) {
-            log.debug("Endpoint did not release properly: "+e,e);
+            log.debug("Endpoint did not release properly: " + e, e);
         }
         try {
             session.close();
         } catch (Throwable e) {
-            log.debug("Session did not close properly: "+e,e);
+            log.debug("Session did not close properly: " + e, e);
         }
     }
 

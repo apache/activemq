@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.tool.reports;
 
-import org.apache.activemq.tool.reports.plugins.ThroughputReportPlugin;
-import org.apache.activemq.tool.reports.plugins.CpuReportPlugin;
-
-import java.util.Properties;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Arrays;
+import java.util.Properties;
+
+import org.apache.activemq.tool.reports.plugins.CpuReportPlugin;
+import org.apache.activemq.tool.reports.plugins.ThroughputReportPlugin;
 
 public class VerbosePerfReportWriter extends AbstractPerfReportWriter {
 
@@ -54,7 +54,7 @@ public class VerbosePerfReportWriter extends AbstractPerfReportWriter {
     }
 
     public void writeProperties(Properties props) {
-        for (Iterator i=props.keySet().iterator(); i.hasNext();) {
+        for (Iterator i = props.keySet().iterator(); i.hasNext();) {
             String key = (String)i.next();
             String val = props.getProperty(key, "");
             System.out.println("[PERF-PROP]: " + key + "=" + val);
