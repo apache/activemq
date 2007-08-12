@@ -30,71 +30,72 @@ import javax.jms.Session;
  */
 public class SessionPool {
 
-	private ConnectionFactory connectionFactory;
-	private Connection connection;
-	private LinkedList sessions = new LinkedList();
+    private ConnectionFactory connectionFactory;
+    private Connection connection;
+    private LinkedList<Session> sessions = new LinkedList<Session>();
 
-	public Connection getConnection() throws JMSException {
-		if (checkConnection())
-			return connection;
+    public Connection getConnection() throws JMSException {
+        if (checkConnection()) {
+            return connection;
+        }
 
-		synchronized (this) {
-			connection = getConnectionFactory().createConnection();
-			connection.start();
-			return connection;
-		}
-	}
+        synchronized (this) {
+            connection = getConnectionFactory().createConnection();
+            connection.start();
+            return connection;
+        }
+    }
 
-	private boolean checkConnection() {
-		if (connection == null)
-			return false;
+    private boolean checkConnection() {
+        if (connection == null) {
+            return false;
+        }
 
-		try {
-			connection.getMetaData();
-			return true;
-		} catch (JMSException e) {
-			return false;
-		}
-	}
+        try {
+            connection.getMetaData();
+            return true;
+        } catch (JMSException e) {
+            return false;
+        }
+    }
 
-	public void setConnection(Connection connection) {
-		this.connection = connection;
-	}
+    public void setConnection(Connection connection) {
+        this.connection = connection;
+    }
 
-	public ConnectionFactory getConnectionFactory() {
-		if (connectionFactory == null) {
-			throw new IllegalStateException(
-					"No ConnectionFactory has been set for the session pool");
-		}
-		return connectionFactory;
-	}
+    public ConnectionFactory getConnectionFactory() {
+        if (connectionFactory == null) {
+            throw new IllegalStateException("No ConnectionFactory has been set for the session pool");
+        }
+        return connectionFactory;
+    }
 
-	public void setConnectionFactory(ConnectionFactory connectionFactory) {
-		this.connectionFactory = connectionFactory;
-	}
+    public void setConnectionFactory(ConnectionFactory connectionFactory) {
+        this.connectionFactory = connectionFactory;
+    }
 
-	public Session borrowSession() throws JMSException {
-		Session answer = null;
-		synchronized (sessions) {
-			if (sessions.isEmpty()) {
-				answer = createSession();
-			} else {
-				answer = (Session) sessions.removeLast();
-			}
-		}
-		return answer;
-	}
+    public Session borrowSession() throws JMSException {
+        Session answer = null;
+        synchronized (sessions) {
+            if (sessions.isEmpty()) {
+                answer = createSession();
+            } else {
+                answer = sessions.removeLast();
+            }
+        }
+        return answer;
+    }
 
-	public void returnSession(Session session) {
-		if (session != null) {
-			synchronized (sessions) {
-				sessions.add(session);
-			}
-		}
-	}
+    public void returnSession(Session session) {
+        if (session != null) {
+            synchronized (sessions) {
+                sessions.add(session);
+            }
+        }
+    }
 
-	protected Session createSession() throws JMSException {
-		return getConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
-	}
+    protected Session createSession() throws JMSException {
+        return getConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
+    }
 
 }

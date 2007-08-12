@@ -55,6 +55,7 @@ public class LDAPLoginModuleTest extends TestCase {
     public void testNothing() {
     }
 
+    @SuppressWarnings("unchecked")
     public void testRunning() throws Exception {
 
         Hashtable env = new Hashtable();
@@ -85,7 +86,7 @@ public class LDAPLoginModuleTest extends TestCase {
 
     }
 
-    public void XtestLogin() throws LoginException {
+    public void xtestLogin() throws LoginException {
         LoginContext context = new LoginContext("LDAPLogin", new CallbackHandler() {
             public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
                 for (int i = 0; i < callbacks.length; i++) {
@@ -103,6 +104,7 @@ public class LDAPLoginModuleTest extends TestCase {
         context.logout();
     }
 
+    @SuppressWarnings("unchecked")
     public void setUp() throws Exception {
         MutableServerStartupConfiguration startup = new MutableServerStartupConfiguration();
         // put some mandatory JNDI properties here
@@ -124,6 +126,7 @@ public class LDAPLoginModuleTest extends TestCase {
         new InitialDirContext(env);
     }
 
+    @SuppressWarnings("unchecked")
     public void tearDown() throws Exception {
         Properties env = new Properties();
         env.putAll(new ShutdownConfiguration().toJndiEnvironment());

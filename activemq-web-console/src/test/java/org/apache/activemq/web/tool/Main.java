@@ -23,22 +23,25 @@ import org.mortbay.jetty.Server;
 import org.mortbay.jetty.nio.SelectChannelConnector;
 import org.mortbay.jetty.webapp.WebAppContext;
 
-
 /**
- * A simple bootstrap class for starting Jetty in your IDE using the local web application.
+ * A simple bootstrap class for starting Jetty in your IDE using the local web
+ * application.
  * 
  * @version $Revision$
  */
-public class Main {
-    
+public final class Main {
+
     public static final int PORT = 8080;
 
     public static final String WEBAPP_DIR = "src/main/webapp";
 
     public static final String WEBAPP_CTX = "/";
 
+    private Main() {
+    }
+
     public static void main(String[] args) throws Exception {
-        // now lets start the web server        
+        // now lets start the web server
         int port = PORT;
         if (args.length > 0) {
             String text = args[0];
@@ -50,14 +53,18 @@ public class Main {
         connector.setPort(port);
         connector.setServer(server);
         WebAppContext context = new WebAppContext();
-        
+
         context.setResourceBase(WEBAPP_DIR);
         context.setContextPath(WEBAPP_CTX);
         context.setServer(server);
-        server.setHandlers(new Handler[]{context});
-        server.setConnectors(new Connector[]{connector});
+        server.setHandlers(new Handler[] {
+            context
+        });
+        server.setConnectors(new Connector[] {
+            connector
+        });
         server.start();
-        
+
         System.out.println();
         System.out.println("==============================================================================");
         System.out.println("Started the ActiveMQ Console: point your web browser at http://localhost:" + port + "/");

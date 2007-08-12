@@ -17,29 +17,32 @@
 
 package org.apache.activemq.tool;
 
+import java.util.Properties;
+
+import javax.jms.BytesMessage;
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.Session;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.tool.MemProducer;
-import org.apache.activemq.tool.MemConsumer;
-import org.apache.activemq.tool.MemoryMonitoringTool;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import javax.jms.*;
-
-
-import java.util.Properties;
 
 
 public class JMSMemtest {
 
-    private static final Log log = LogFactory.getLog(JMSMemtest.class);
+    private static final Log LOG = LogFactory.getLog(JMSMemtest.class);
     private static final int DEFAULT_MESSAGECOUNT = 5000;
+    
     protected BrokerService broker;
     protected boolean topic = true;
-    protected boolean durable = false;
-
-    protected long messageCount = 0;
+    protected boolean durable;
+    protected long messageCount;
 
     //  how large the message in kb before we close/start the producer/consumer with a new connection.  -1 means no connectionCheckpointSize
     protected int connectionCheckpointSize;
@@ -73,10 +76,27 @@ public class JMSMemtest {
 
     protected boolean createConnectionPerClient = true;
 
-    protected boolean transacted = false;
+    protected boolean transacted;
     protected boolean useEmbeddedBroker = true;
     protected MemoryMonitoringTool memoryMonitoringTool;
 
+    public JMSMemtest(Properties settings) {
+        url = settings.getProperty("url");
+        topic = new Boolean(settings.getProperty("topic")).booleanValue();
+        durable = new Boolean(settings.getProperty("durable")).booleanValue();
+        connectionCheckpointSize = new Integer(settings.getProperty("connectionCheckpointSize")).intValue();
+        producerCount = new Integer(settings.getProperty("producerCount")).intValue();
+        consumerCount = new Integer(settings.getProperty("consumerCount")).intValue();
+        messageCount = new Integer(settings.getProperty("messageCount")).intValue();
+        messageSize = new Integer(settings.getProperty("messageSize")).intValue();
+        prefetchSize = new Integer(settings.getProperty("prefetchSize")).intValue();
+        checkpointInterval = new Integer(settings.getProperty("checkpointInterval")).intValue() * 1000;
+        producerCount = new Integer(settings.getProperty("producerCount")).intValue();
+        reportName = settings.getProperty("reportName");
+        destinationName = settings.getProperty("destinationName");
+        reportDirectory = settings.getProperty("reportDirectory");
+        connectionInterval = connectionCheckpointSize * 1024;
+    }
 
     public static void main(String[] args) {
 
@@ -103,27 +123,8 @@ public class JMSMemtest {
 
     }
 
-
-    public JMSMemtest(Properties settings) {
-        url = settings.getProperty("url");
-        topic = new Boolean(settings.getProperty("topic")).booleanValue();
-        durable = new Boolean(settings.getProperty("durable")).booleanValue();
-        connectionCheckpointSize = new Integer(settings.getProperty("connectionCheckpointSize")).intValue();
-        producerCount = new Integer(settings.getProperty("producerCount")).intValue();
-        consumerCount = new Integer(settings.getProperty("consumerCount")).intValue();
-        messageCount = new Integer(settings.getProperty("messageCount")).intValue();
-        messageSize = new Integer(settings.getProperty("messageSize")).intValue();
-        prefetchSize = new Integer(settings.getProperty("prefetchSize")).intValue();
-        checkpointInterval = new Integer(settings.getProperty("checkpointInterval")).intValue() * 1000;
-        producerCount = new Integer(settings.getProperty("producerCount")).intValue();
-        reportName = settings.getProperty("reportName");
-        destinationName = settings.getProperty("destinationName");
-        reportDirectory = settings.getProperty("reportDirectory");
-        connectionInterval = connectionCheckpointSize * 1024;
-    }
-
     protected void start() throws Exception {
-        log.info("Starting Monitor");
+        LOG.info("Starting Monitor");
         memoryMonitoringTool = new MemoryMonitoringTool();
         memoryMonitoringTool.setTestSettings(getSysTestSettings());
         Thread monitorThread = memoryMonitoringTool.startMonitor();
@@ -159,7 +160,7 @@ public class JMSMemtest {
 
         publishAndConsume();
 
-        log.info("Closing resources");
+        LOG.info("Closing resources");
         this.close();
 
         monitorThread.join();
@@ -184,9 +185,9 @@ public class JMSMemtest {
         createProducers();
         int counter = 0;
         boolean resetCon = false;
-        log.info("Start sending messages ");
+        LOG.info("Start sending messages ");
         for (int i = 0; i < messageCount; i++) {
-            if (resetCon == true) {
+            if (resetCon) {
                 closeConsumers();
                 closeProducers();
                 createConsumers();
@@ -287,8 +288,8 @@ public class JMSMemtest {
 
     protected Properties getSysTestSettings() {
         Properties settings = new Properties();
-        settings.setProperty("domain", topic == true ? "topic" : "queue");
-        settings.setProperty("durable", durable == true ? "durable" : "non-durable");
+        settings.setProperty("domain", topic ? "topic" : "queue");
+        settings.setProperty("durable", durable ? "durable" : "non-durable");
         settings.setProperty("connection_checkpoint_size_kb", new Integer(connectionCheckpointSize).toString());
         settings.setProperty("producer_count", new Integer(producerCount).toString());
         settings.setProperty("consumer_count", new Integer(consumerCount).toString());

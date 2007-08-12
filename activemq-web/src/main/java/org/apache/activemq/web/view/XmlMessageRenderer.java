@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.web.view;
 
-import com.thoughtworks.xstream.XStream;
+import java.io.PrintWriter;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -24,7 +24,7 @@ import javax.jms.QueueBrowser;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import java.io.PrintWriter;
+import com.thoughtworks.xstream.XStream;
 
 /**
  * This renderer uses XStream to render messages on a queue as full XML elements

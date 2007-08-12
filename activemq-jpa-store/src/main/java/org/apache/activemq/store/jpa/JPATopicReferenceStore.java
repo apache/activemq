@@ -38,221 +38,215 @@ import org.apache.activemq.store.jpa.model.StoredSubscription.SubscriptionId;
 import org.apache.activemq.util.IOExceptionSupport;
 
 public class JPATopicReferenceStore extends JPAReferenceStore implements TopicReferenceStore {
-    private Map<SubscriptionId,AtomicLong> subscriberLastMessageMap=new ConcurrentHashMap<SubscriptionId,AtomicLong>();
+    private Map<SubscriptionId, AtomicLong> subscriberLastMessageMap = new ConcurrentHashMap<SubscriptionId, AtomicLong>();
 
-	public JPATopicReferenceStore(JPAPersistenceAdapter adapter, ActiveMQDestination destination) {
-		super(adapter, destination);
-	}
+    public JPATopicReferenceStore(JPAPersistenceAdapter adapter, ActiveMQDestination destination) {
+        super(adapter, destination);
+    }
 
-	public void acknowledge(ConnectionContext context, String clientId, String subscriptionName, MessageId messageId) throws IOException {
-		EntityManager manager = adapter.beginEntityManager(context);
-		try {
-			StoredSubscription ss = findStoredSubscription(manager, clientId, subscriptionName);
-			ss.setLastAckedId(messageId.getBrokerSequenceId());
-		} catch (Throwable e) {
-			adapter.rollbackEntityManager(context,manager);
-			throw IOExceptionSupport.create(e);
-		}
-		adapter.commitEntityManager(context,manager);
-	}
+    public void acknowledge(ConnectionContext context, String clientId, String subscriptionName, MessageId messageId) throws IOException {
+        EntityManager manager = adapter.beginEntityManager(context);
+        try {
+            StoredSubscription ss = findStoredSubscription(manager, clientId, subscriptionName);
+            ss.setLastAckedId(messageId.getBrokerSequenceId());
+        } catch (Throwable e) {
+            adapter.rollbackEntityManager(context, manager);
+            throw IOExceptionSupport.create(e);
+        }
+        adapter.commitEntityManager(context, manager);
+    }
 
-	public void addSubsciption(SubscriptionInfo info, boolean retroactive) throws IOException {
-		EntityManager manager = adapter.beginEntityManager(null);
-		try {			
-			StoredSubscription ss = new StoredSubscription();
-			ss.setClientId(info.getClientId());
-			ss.setSubscriptionName(info.getSubcriptionName());
-			ss.setDestination(destinationName);
-			ss.setSelector(info.getSelector());
-			ss.setSubscribedDestination(info.getSubscribedDestination().getQualifiedName());
-			ss.setLastAckedId(-1);
-			
-			if( !retroactive ) {
-				Query query = manager.createQuery("select max(m.id) from StoredMessageReference m");
-				Long rc = (Long) query.getSingleResult();
-				if( rc != null ) {
-					ss.setLastAckedId(rc);
-				}
-			}
-			
-			manager.persist(ss);
-		} catch (Throwable e) {
-			adapter.rollbackEntityManager(null,manager);
-			throw IOExceptionSupport.create(e);
-		}
-		adapter.commitEntityManager(null,manager);
-	}
+    public void addSubsciption(SubscriptionInfo info, boolean retroactive) throws IOException {
+        EntityManager manager = adapter.beginEntityManager(null);
+        try {
+            StoredSubscription ss = new StoredSubscription();
+            ss.setClientId(info.getClientId());
+            ss.setSubscriptionName(info.getSubcriptionName());
+            ss.setDestination(destinationName);
+            ss.setSelector(info.getSelector());
+            ss.setSubscribedDestination(info.getSubscribedDestination().getQualifiedName());
+            ss.setLastAckedId(-1);
 
-	public void deleteSubscription(String clientId, String subscriptionName) throws IOException {
-		EntityManager manager = adapter.beginEntityManager(null);
-		try {			
-			StoredSubscription ss = findStoredSubscription(manager, clientId, subscriptionName);
-			manager.remove(ss);
-		} catch (Throwable e) {
-			adapter.rollbackEntityManager(null,manager);
-			throw IOExceptionSupport.create(e);
-		}
-		adapter.commitEntityManager(null,manager);
-	}
+            if (!retroactive) {
+                Query query = manager.createQuery("select max(m.id) from StoredMessageReference m");
+                Long rc = (Long)query.getSingleResult();
+                if (rc != null) {
+                    ss.setLastAckedId(rc);
+                }
+            }
 
-	private StoredSubscription findStoredSubscription(EntityManager manager, String clientId, String subscriptionName) {
-		Query query = manager.createQuery(
-				"select ss from StoredSubscription ss " +
-				"where ss.clientId=?1 " +
-				"and ss.subscriptionName=?2 " +
-				"and ss.destination=?3");
-		query.setParameter(1, clientId);
-		query.setParameter(2, subscriptionName);
-		query.setParameter(3, destinationName);
-		List<StoredSubscription> resultList = query.getResultList();
-		if( resultList.isEmpty() )
-			return null;
-		return resultList.get(0); 
-	}
+            manager.persist(ss);
+        } catch (Throwable e) {
+            adapter.rollbackEntityManager(null, manager);
+            throw IOExceptionSupport.create(e);
+        }
+        adapter.commitEntityManager(null, manager);
+    }
 
-	public SubscriptionInfo[] getAllSubscriptions() throws IOException {
-		SubscriptionInfo rc[];
-		EntityManager manager = adapter.beginEntityManager(null);
-		try {
-			ArrayList<SubscriptionInfo> l = new ArrayList<SubscriptionInfo>();
-			
-			Query query = manager.createQuery("select ss from StoredSubscription ss where ss.destination=?1");
-			query.setParameter(1, destinationName);
-			for (StoredSubscription ss : (List<StoredSubscription>)query.getResultList()) {
-				SubscriptionInfo info = new SubscriptionInfo();
-				info.setClientId(ss.getClientId());
-				info.setDestination(destination);
-				info.setSelector(ss.getSelector());
-				info.setSubscriptionName(ss.getSubscriptionName());
-				info.setSubscribedDestination(toSubscribedDestination(ss));
-				l.add(info);
-	        }
-			
-			rc = new SubscriptionInfo[l.size()];
-			l.toArray(rc);
-		} catch (Throwable e) {
-			adapter.rollbackEntityManager(null,manager);
-			throw IOExceptionSupport.create(e);
-		}
-		adapter.commitEntityManager(null,manager);		
-		return rc;
-	}
-	
-	private ActiveMQDestination toSubscribedDestination(StoredSubscription ss) {
-		if( ss.getSubscribedDestination() == null )
-			return null;
-		return ActiveMQDestination.createDestination(ss.getSubscribedDestination(), ActiveMQDestination.QUEUE_TYPE);
-	}
+    public void deleteSubscription(String clientId, String subscriptionName) throws IOException {
+        EntityManager manager = adapter.beginEntityManager(null);
+        try {
+            StoredSubscription ss = findStoredSubscription(manager, clientId, subscriptionName);
+            manager.remove(ss);
+        } catch (Throwable e) {
+            adapter.rollbackEntityManager(null, manager);
+            throw IOExceptionSupport.create(e);
+        }
+        adapter.commitEntityManager(null, manager);
+    }
 
-	public int getMessageCount(String clientId, String subscriptionName) throws IOException {
-		Long rc;
-		EntityManager manager = adapter.beginEntityManager(null);
-		try {	
-			Query query = manager.createQuery(
-					"select count(m) FROM StoredMessageReference m, StoredSubscription ss " +
-					"where ss.clientId=?1 " +
-					"and   ss.subscriptionName=?2 " +
-					"and   ss.destination=?3 " +
-					"and   m.destination=ss.destination and m.id > ss.lastAckedId");
-			query.setParameter(1, clientId);
-			query.setParameter(2, subscriptionName);
-			query.setParameter(3, destinationName);
-	        rc = (Long) query.getSingleResult();	        
-		} catch (Throwable e) {
-			adapter.rollbackEntityManager(null,manager);
-			throw IOExceptionSupport.create(e);
-		}
-		adapter.commitEntityManager(null,manager);
-		return rc.intValue();
-	}
+    private StoredSubscription findStoredSubscription(EntityManager manager, String clientId, String subscriptionName) {
+        Query query = manager.createQuery("select ss from StoredSubscription ss " + "where ss.clientId=?1 " + "and ss.subscriptionName=?2 " + "and ss.destination=?3");
+        query.setParameter(1, clientId);
+        query.setParameter(2, subscriptionName);
+        query.setParameter(3, destinationName);
+        List<StoredSubscription> resultList = query.getResultList();
+        if (resultList.isEmpty()) {
+            return null;
+        }
+        return resultList.get(0);
+    }
 
-	public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {
-		SubscriptionInfo rc=null;
-		EntityManager manager = adapter.beginEntityManager(null);
-		try {			
-			StoredSubscription ss = findStoredSubscription(manager, clientId, subscriptionName);
-			if( ss != null ) {
-				rc = new SubscriptionInfo();
-				rc.setClientId(ss.getClientId());
-				rc.setDestination(destination);
-				rc.setSelector(ss.getSelector());
-				rc.setSubscriptionName(ss.getSubscriptionName());
-				rc.setSubscribedDestination(toSubscribedDestination(ss));
-			}
-		} catch (Throwable e) {
-			adapter.rollbackEntityManager(null,manager);
-			throw IOExceptionSupport.create(e);
-		}
-		adapter.commitEntityManager(null,manager);
-		return rc;
-	}
+    public SubscriptionInfo[] getAllSubscriptions() throws IOException {
+        SubscriptionInfo rc[];
+        EntityManager manager = adapter.beginEntityManager(null);
+        try {
+            ArrayList<SubscriptionInfo> l = new ArrayList<SubscriptionInfo>();
 
-	public void recoverNextMessages(String clientId, String subscriptionName, int maxReturned, MessageRecoveryListener listener) throws Exception {
-		EntityManager manager = adapter.beginEntityManager(null);
-		try {
-			SubscriptionId id = new SubscriptionId();
-			id.setClientId(clientId);
-			id.setSubscriptionName(subscriptionName);
-			id.setDestination(destinationName);
-	
-			AtomicLong last=subscriberLastMessageMap.get(id);
-	        if(last==null){
-	    		StoredSubscription ss = findStoredSubscription(manager, clientId, subscriptionName);
-	            last=new AtomicLong(ss.getLastAckedId());
-	            subscriberLastMessageMap.put(id,last);
-	        }
-	        final AtomicLong lastMessageId=last;
-			
-			Query query = manager.createQuery("select m from StoredMessageReference m where m.destination=?1 and m.id>?2 order by m.id asc");
-			query.setParameter(1, destinationName);
-			query.setParameter(2, lastMessageId.get());
-			query.setMaxResults(maxReturned);
-			int count = 0;
-			for (StoredMessageReference m : (List<StoredMessageReference>)query.getResultList()) {
-				MessageId mid = new MessageId(m.getMessageId());
-				mid.setBrokerSequenceId(m.getId());
-				listener.recoverMessageReference(mid);
+            Query query = manager.createQuery("select ss from StoredSubscription ss where ss.destination=?1");
+            query.setParameter(1, destinationName);
+            for (StoredSubscription ss : (List<StoredSubscription>)query.getResultList()) {
+                SubscriptionInfo info = new SubscriptionInfo();
+                info.setClientId(ss.getClientId());
+                info.setDestination(destination);
+                info.setSelector(ss.getSelector());
+                info.setSubscriptionName(ss.getSubscriptionName());
+                info.setSubscribedDestination(toSubscribedDestination(ss));
+                l.add(info);
+            }
 
-				lastMessageId.set(m.getId());
-				count++;
-				if( count >= maxReturned ) { 
-					return;
-				}
-	        }        
-		} catch (Throwable e) {
-			adapter.rollbackEntityManager(null,manager);
-			throw IOExceptionSupport.create(e);
-		}
-		adapter.commitEntityManager(null,manager);
-	}
+            rc = new SubscriptionInfo[l.size()];
+            l.toArray(rc);
+        } catch (Throwable e) {
+            adapter.rollbackEntityManager(null, manager);
+            throw IOExceptionSupport.create(e);
+        }
+        adapter.commitEntityManager(null, manager);
+        return rc;
+    }
 
-	public void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener) throws Exception {
-		EntityManager manager = adapter.beginEntityManager(null);
-		try {
-	
-			StoredSubscription ss = findStoredSubscription(manager, clientId, subscriptionName);
-			
-			Query query = manager.createQuery("select m from StoredMessageReference m where m.destination=?1 and m.id>?2 order by m.id asc");
-			query.setParameter(1, destinationName);
-			query.setParameter(2, ss.getLastAckedId());
-			for (StoredMessageReference m : (List<StoredMessageReference>)query.getResultList()) {
-				MessageId mid = new MessageId(m.getMessageId());
-				mid.setBrokerSequenceId(m.getId());
-				listener.recoverMessageReference(mid);
-	        }
-		} catch (Throwable e) {
-			adapter.rollbackEntityManager(null,manager);
-			throw IOExceptionSupport.create(e);
-		}
-		adapter.commitEntityManager(null,manager);
-	}
+    private ActiveMQDestination toSubscribedDestination(StoredSubscription ss) {
+        if (ss.getSubscribedDestination() == null) {
+            return null;
+        }
+        return ActiveMQDestination.createDestination(ss.getSubscribedDestination(), ActiveMQDestination.QUEUE_TYPE);
+    }
 
-	public void resetBatching(String clientId, String subscriptionName) {
-		SubscriptionId id = new SubscriptionId();
-		id.setClientId(clientId);
-		id.setSubscriptionName(subscriptionName);
-		id.setDestination(destinationName);
+    public int getMessageCount(String clientId, String subscriptionName) throws IOException {
+        Long rc;
+        EntityManager manager = adapter.beginEntityManager(null);
+        try {
+            Query query = manager.createQuery("select count(m) FROM StoredMessageReference m, StoredSubscription ss " + "where ss.clientId=?1 " + "and   ss.subscriptionName=?2 "
+                                              + "and   ss.destination=?3 " + "and   m.destination=ss.destination and m.id > ss.lastAckedId");
+            query.setParameter(1, clientId);
+            query.setParameter(2, subscriptionName);
+            query.setParameter(3, destinationName);
+            rc = (Long)query.getSingleResult();
+        } catch (Throwable e) {
+            adapter.rollbackEntityManager(null, manager);
+            throw IOExceptionSupport.create(e);
+        }
+        adapter.commitEntityManager(null, manager);
+        return rc.intValue();
+    }
+
+    public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {
+        SubscriptionInfo rc = null;
+        EntityManager manager = adapter.beginEntityManager(null);
+        try {
+            StoredSubscription ss = findStoredSubscription(manager, clientId, subscriptionName);
+            if (ss != null) {
+                rc = new SubscriptionInfo();
+                rc.setClientId(ss.getClientId());
+                rc.setDestination(destination);
+                rc.setSelector(ss.getSelector());
+                rc.setSubscriptionName(ss.getSubscriptionName());
+                rc.setSubscribedDestination(toSubscribedDestination(ss));
+            }
+        } catch (Throwable e) {
+            adapter.rollbackEntityManager(null, manager);
+            throw IOExceptionSupport.create(e);
+        }
+        adapter.commitEntityManager(null, manager);
+        return rc;
+    }
+
+    public void recoverNextMessages(String clientId, String subscriptionName, int maxReturned, MessageRecoveryListener listener) throws Exception {
+        EntityManager manager = adapter.beginEntityManager(null);
+        try {
+            SubscriptionId id = new SubscriptionId();
+            id.setClientId(clientId);
+            id.setSubscriptionName(subscriptionName);
+            id.setDestination(destinationName);
+
+            AtomicLong last = subscriberLastMessageMap.get(id);
+            if (last == null) {
+                StoredSubscription ss = findStoredSubscription(manager, clientId, subscriptionName);
+                last = new AtomicLong(ss.getLastAckedId());
+                subscriberLastMessageMap.put(id, last);
+            }
+            final AtomicLong lastMessageId = last;
+
+            Query query = manager.createQuery("select m from StoredMessageReference m where m.destination=?1 and m.id>?2 order by m.id asc");
+            query.setParameter(1, destinationName);
+            query.setParameter(2, lastMessageId.get());
+            query.setMaxResults(maxReturned);
+            int count = 0;
+            for (StoredMessageReference m : (List<StoredMessageReference>)query.getResultList()) {
+                MessageId mid = new MessageId(m.getMessageId());
+                mid.setBrokerSequenceId(m.getId());
+                listener.recoverMessageReference(mid);
+
+                lastMessageId.set(m.getId());
+                count++;
+                if (count >= maxReturned) {
+                    return;
+                }
+            }
+        } catch (Throwable e) {
+            adapter.rollbackEntityManager(null, manager);
+            throw IOExceptionSupport.create(e);
+        }
+        adapter.commitEntityManager(null, manager);
+    }
+
+    public void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener) throws Exception {
+        EntityManager manager = adapter.beginEntityManager(null);
+        try {
+
+            StoredSubscription ss = findStoredSubscription(manager, clientId, subscriptionName);
+
+            Query query = manager.createQuery("select m from StoredMessageReference m where m.destination=?1 and m.id>?2 order by m.id asc");
+            query.setParameter(1, destinationName);
+            query.setParameter(2, ss.getLastAckedId());
+            for (StoredMessageReference m : (List<StoredMessageReference>)query.getResultList()) {
+                MessageId mid = new MessageId(m.getMessageId());
+                mid.setBrokerSequenceId(m.getId());
+                listener.recoverMessageReference(mid);
+            }
+        } catch (Throwable e) {
+            adapter.rollbackEntityManager(null, manager);
+            throw IOExceptionSupport.create(e);
+        }
+        adapter.commitEntityManager(null, manager);
+    }
+
+    public void resetBatching(String clientId, String subscriptionName) {
+        SubscriptionId id = new SubscriptionId();
+        id.setClientId(clientId);
+        id.setSubscriptionName(subscriptionName);
+        id.setDestination(destinationName);
         subscriberLastMessageMap.remove(id);
-	}
+    }
 
 }

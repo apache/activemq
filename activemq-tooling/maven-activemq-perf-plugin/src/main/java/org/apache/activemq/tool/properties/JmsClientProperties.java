@@ -17,20 +17,20 @@
 package org.apache.activemq.tool.properties;
 
 public class JmsClientProperties extends AbstractObjectProperties {
-    public static final String SESSION_AUTO_ACKNOWLEDGE    = "autoAck";
-    public static final String SESSION_CLIENT_ACKNOWLEDGE  = "clientAck";
+    public static final String SESSION_AUTO_ACKNOWLEDGE = "autoAck";
+    public static final String SESSION_CLIENT_ACKNOWLEDGE = "clientAck";
     public static final String SESSION_DUPS_OK_ACKNOWLEDGE = "dupsAck";
-    public static final String SESSION_TRANSACTED          = "transacted";
+    public static final String SESSION_TRANSACTED = "transacted";
 
-    protected String  destName       = "TEST.FOO";
-    protected boolean destComposite  = false;
+    protected String destName = "TEST.FOO";
+    protected boolean destComposite;
 
-    protected String  sessAckMode    = SESSION_AUTO_ACKNOWLEDGE;
-    protected boolean sessTransacted = false;
+    protected String sessAckMode = SESSION_AUTO_ACKNOWLEDGE;
+    protected boolean sessTransacted;
 
-    protected String jmsProvider = null;
-    protected String jmsVersion = null;
-    protected String jmsProperties = null;
+    protected String jmsProvider;
+    protected String jmsVersion;
+    protected String jmsProperties;
 
     public String getDestName() {
         return destName;

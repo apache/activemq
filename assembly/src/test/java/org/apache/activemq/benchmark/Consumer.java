@@ -31,6 +31,9 @@ import javax.jms.Topic;
  */
 public class Consumer extends BenchmarkSupport implements MessageListener {
 
+    public Consumer() {
+    }
+
     public static void main(String[] args) {
         Consumer tool = new Consumer();
         if (args.length > 0) {
@@ -51,14 +54,10 @@ public class Consumer extends BenchmarkSupport implements MessageListener {
 
         try {
             tool.run();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.out.println("Caught: " + e);
             e.printStackTrace();
         }
-    }
-
-    public Consumer() {
     }
 
     public void run() throws JMSException {
@@ -81,9 +80,8 @@ public class Consumer extends BenchmarkSupport implements MessageListener {
 
         MessageConsumer consumer = null;
         if (isDurable() && isTopic()) {
-            consumer = session.createDurableSubscriber((Topic) destination, getClass().getName());
-        }
-        else {
+            consumer = session.createDurableSubscriber((Topic)destination, getClass().getName());
+        } else {
             consumer = session.createConsumer(destination);
         }
         consumer.setMessageListener(this);
@@ -92,17 +90,16 @@ public class Consumer extends BenchmarkSupport implements MessageListener {
 
     public void onMessage(Message message) {
         try {
-            TextMessage textMessage = (TextMessage) message;
+            TextMessage textMessage = (TextMessage)message;
 
             // lets force the content to be deserialized
-            String text = textMessage.getText();
+            textMessage.getText();
             count(1);
-            
+
             // lets count the messages
 
-            //message.acknowledge();
-        }
-        catch (JMSException e) {
+            // message.acknowledge();
+        } catch (JMSException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }

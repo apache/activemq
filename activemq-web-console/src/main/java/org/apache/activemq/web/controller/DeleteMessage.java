@@ -16,14 +16,14 @@
  */
 package org.apache.activemq.web.controller;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.web.BrokerFacade;
 import org.apache.activemq.web.DestinationFacade;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.Controller;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @version $Revision$
@@ -41,8 +41,7 @@ public class DeleteMessage extends DestinationFacade implements Controller {
             if (queueView != null) {
                 System.out.println("#### removing message: " + messageId);
                 queueView.removeMessage(messageId);
-            }
-            else {
+            } else {
                 System.out.println("#### NO QUEUE!");
             }
         }

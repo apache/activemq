@@ -27,9 +27,7 @@ import javax.jms.Topic;
 import javax.resource.spi.InvalidPropertyException;
 
 import junit.framework.TestCase;
-
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.activemq.ra.ActiveMQActivationSpec;
 
 /**
  * @version $Revision$
@@ -38,6 +36,7 @@ public class ActiveMQActivationSpecTest extends TestCase {
 
     private static final String DESTINATION = "defaultQueue";
     private static final String DESTINATION_TYPE = Queue.class.getName();
+    private static final String EMPTY_STRING = "   ";
 
     private ActiveMQActivationSpec activationSpec;
     private PropertyDescriptor destinationProperty;
@@ -46,7 +45,6 @@ public class ActiveMQActivationSpecTest extends TestCase {
     private PropertyDescriptor subscriptionDurabilityProperty;
     private PropertyDescriptor clientIdProperty;
     private PropertyDescriptor subscriptionNameProperty;
-    private static final String EMPTY_STRING = "   ";
 
     public ActiveMQActivationSpecTest(String name) {
         super(name);
@@ -297,8 +295,8 @@ public class ActiveMQActivationSpecTest extends TestCase {
         */
         assertNotNull("No PropertyDescriptors returned", expected);
         assertEquals("PropertyDescriptor array size is incorrect ", expected.length, actual.length);
-        List expectedList = Arrays.asList(expected);
-        List actualList = Arrays.asList(actual);
+        List<PropertyDescriptor> expectedList = Arrays.asList(expected);
+        List<PropertyDescriptor> actualList = Arrays.asList(actual);
         assertTrue("Incorrect PropertyDescriptors returned", expectedList.containsAll(actualList));
     }
     

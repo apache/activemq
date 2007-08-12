@@ -17,8 +17,9 @@
 
 package org.apache.activemq.jaas;
 
-import javax.security.auth.callback.Callback;
 import java.security.cert.X509Certificate;
+
+import javax.security.auth.callback.Callback;
 
 /**
  * A Callback for SSL certificates.
@@ -29,7 +30,7 @@ import java.security.cert.X509Certificate;
  *
  */
 public class CertificateCallback implements Callback {
-    X509Certificate certificates[] = null;
+    X509Certificate certificates[];
     
     /**
      * Setter for certificate chain.

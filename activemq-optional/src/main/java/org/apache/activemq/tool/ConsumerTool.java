@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.tool;
 
+import java.io.IOException;
+
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -24,21 +26,19 @@ import javax.jms.MessageListener;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
-import java.io.IOException;
 
 /**
  * A simple tool for consuming messages
- *
+ * 
  * @version $Revision$
  */
 public class ConsumerTool extends ToolSupport implements MessageListener {
 
-    protected int count = 0;
+    protected int count;
     protected int dumpCount = 10;
     protected boolean verbose = true;
-    protected int maxiumMessages = 0;
+    protected int maxiumMessages;
     private boolean pauseBeforeShutdown;
-
 
     public static void main(String[] args) {
         ConsumerTool tool = new ConsumerTool();
@@ -70,9 +70,8 @@ public class ConsumerTool extends ToolSupport implements MessageListener {
             Session session = createSession(connection);
             MessageConsumer consumer = null;
             if (durable && topic) {
-                consumer = session.createDurableSubscriber((Topic) destination, consumerName);
-            }
-            else {
+                consumer = session.createDurableSubscriber((Topic)destination, consumerName);
+            } else {
                 consumer = session.createConsumer(destination);
             }
             if (maxiumMessages <= 0) {
@@ -83,8 +82,7 @@ public class ConsumerTool extends ToolSupport implements MessageListener {
             if (maxiumMessages > 0) {
                 consumeMessagesAndClose(connection, session, consumer);
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.out.println("Caught: " + e);
             e.printStackTrace();
         }
@@ -93,33 +91,29 @@ public class ConsumerTool extends ToolSupport implements MessageListener {
     public void onMessage(Message message) {
         try {
             if (message instanceof TextMessage) {
-                TextMessage txtMsg = (TextMessage) message;
+                TextMessage txtMsg = (TextMessage)message;
                 if (verbose) {
-                	
-                	String msg = txtMsg.getText();
-                	if( msg.length() > 50 )
-                		msg = msg.substring(0, 50)+"...";
-                	
+
+                    String msg = txtMsg.getText();
+                    if (msg.length() > 50) {
+                        msg = msg.substring(0, 50) + "...";
+                    }
+
                     System.out.println("Received: " + msg);
                 }
-            }
-            else {
+            } else {
                 if (verbose) {
                     System.out.println("Received: " + message);
                 }
             }
             /*
-            if (++count % dumpCount == 0) {
-                dumpStats(connection);
-            }
-            */
-        }
-        catch (JMSException e) {
+             * if (++count % dumpCount == 0) { dumpStats(connection); }
+             */
+        } catch (JMSException e) {
             System.out.println("Caught: " + e);
             e.printStackTrace();
         }
     }
-
 
     protected void consumeMessagesAndClose(Connection connection, Session session, MessageConsumer consumer) throws JMSException, IOException {
         System.out.println("We are about to wait until we consume: " + maxiumMessages + " message(s) then we will shutdown");

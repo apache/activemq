@@ -16,14 +16,13 @@
  */
 package org.apache.activemq.transport.http;
 
+import java.io.IOException;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.transport.TransportSupport;
 import org.apache.activemq.util.ServiceStopper;
-
-import java.io.IOException;
 
 /**
  * A server side HTTP based TransportChannel which processes incoming packets
@@ -35,21 +34,22 @@ import java.io.IOException;
 public class BlockingQueueTransport extends TransportSupport {
     public static final long MAX_TIMEOUT = 30000L;
 
-    private BlockingQueue queue;
+    private BlockingQueue<Object> queue;
 
-    public BlockingQueueTransport(BlockingQueue channel) {
+    public BlockingQueueTransport(BlockingQueue<Object> channel) {
         this.queue = channel;
     }
 
-    public BlockingQueue getQueue() {
+    public BlockingQueue<Object> getQueue() {
         return queue;
     }
 
     public void oneway(Object command) throws IOException {
         try {
             boolean success = queue.offer(command, MAX_TIMEOUT, TimeUnit.MILLISECONDS);
-            if (!success)
+            if (!success) {
                 throw new IOException("Fail to add to BlockingQueue. Add timed out after " + MAX_TIMEOUT + "ms: size=" + queue.size());
+            }
         } catch (InterruptedException e) {
             throw new IOException("Fail to add to BlockingQueue. Interrupted while waiting for space: size=" + queue.size());
         }

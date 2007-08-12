@@ -16,8 +16,6 @@
  */
 package org.apache.activemq.ra;
 
-import org.apache.activemq.ra.ActiveMQResourceAdapter;
-
 import junit.framework.TestCase;
 
 /**
@@ -34,14 +32,14 @@ public class ActiveMQResourceAdapterJavaBeanEqualityTest extends TestCase {
 
     protected void setUp() throws Exception {
         super.setUp();
-        raOne = new ActiveMQResourceAdapter();        
+        raOne = new ActiveMQResourceAdapter();
         raTwo = new ActiveMQResourceAdapter();
     }
 
     public void testSelfEquality() {
-        assertEquality(raOne, raOne);        
+        assertEquality(raOne, raOne);
     }
-    
+
     public void testEmptyEquality() {
         assertEquality(raOne, raTwo);
     }
@@ -53,13 +51,13 @@ public class ActiveMQResourceAdapterJavaBeanEqualityTest extends TestCase {
     public void testServerUrlEquality() {
         raOne.setServerUrl("one");
         raTwo.setServerUrl("one");
-        assertEquality(raOne,raTwo);
+        assertEquality(raOne, raTwo);
     }
 
     public void testServerUrlInequality() {
         raOne.setServerUrl("one");
         raTwo.setServerUrl("two");
-        assertNonEquality(raOne,raTwo);
+        assertNonEquality(raOne, raTwo);
     }
 
     public void testServerUrlInequalityDifferentCase() {
@@ -97,7 +95,7 @@ public class ActiveMQResourceAdapterJavaBeanEqualityTest extends TestCase {
         raTwo.setBrokerXmlConfig(null);
         assertNonEquality(raOne, raTwo);
     }
-    
+
     public void testPasswordNotPartOfEquality() {
         raOne.setClientid("one");
         raTwo.setClientid("one");
@@ -118,5 +116,4 @@ public class ActiveMQResourceAdapterJavaBeanEqualityTest extends TestCase {
         assertFalse("HashCodes are equal", leftRa.hashCode() == rightRa.hashCode());
     }
 
-    
 }

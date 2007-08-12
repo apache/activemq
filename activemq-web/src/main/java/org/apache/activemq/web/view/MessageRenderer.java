@@ -17,15 +17,15 @@
 
 package org.apache.activemq.web.view;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.QueueBrowser;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import java.io.IOException;
-import java.io.PrintWriter;
 
 /**
  * Represents a rendering of the messages
@@ -34,10 +34,8 @@ import java.io.PrintWriter;
  */
 public interface MessageRenderer {
 
-    public void renderMessages(HttpServletRequest request, HttpServletResponse response, QueueBrowser browser)
-            throws IOException, JMSException, ServletException;
+    void renderMessages(HttpServletRequest request, HttpServletResponse response, QueueBrowser browser) throws IOException, JMSException, ServletException;
 
-    public void renderMessage(PrintWriter writer, HttpServletRequest request, HttpServletResponse response,
-            QueueBrowser browser, Message message) throws JMSException, ServletException;
+    void renderMessage(PrintWriter writer, HttpServletRequest request, HttpServletResponse response, QueueBrowser browser, Message message) throws JMSException, ServletException;
 
 }

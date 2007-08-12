@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 package org.apache.activemq.tool;
+
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.bio.SocketConnector;
@@ -23,31 +24,37 @@ import org.mortbay.jetty.webapp.WebAppContext;
 /**
  * @version $Revision$
  */
-public class WebServer {
+public final class WebServer {
+
     public static final int PORT = 8080;
-    //public static final String WEBAPP_DIR = "target/activemq";
+    // public static final String WEBAPP_DIR = "target/activemq";
     public static final String WEBAPP_DIR = "src/webapp";
     public static final String WEBAPP_CTX = "/";
+
+    private WebServer() {
+    }
 
     public static void main(String[] args) throws Exception {
         Server server = new Server();
         Connector context = new SocketConnector();
         context.setServer(server);
         context.setPort(PORT);
-        
+
         String webappDir = WEBAPP_DIR;
-        if( args.length > 0 ) {
-        	webappDir = args[0];
+        if (args.length > 0) {
+            webappDir = args[0];
         }
-        
+
         WebAppContext webapp = new WebAppContext();
         webapp.setServer(server);
         webapp.setContextPath(WEBAPP_CTX);
         webapp.setResourceBase(webappDir);
-       
+
         server.setHandler(webapp);
-        
-        server.setConnectors(new Connector[]{context});
+
+        server.setConnectors(new Connector[] {
+            context
+        });
         server.start();
 
     }

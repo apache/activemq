@@ -36,181 +36,181 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 
 public class JPAReferenceStore implements ReferenceStore {
-	
-	protected final JPAPersistenceAdapter adapter;
-	protected final WireFormat wireFormat;
-	protected final ActiveMQDestination destination;
-	protected final String destinationName;
+
+    protected final JPAPersistenceAdapter adapter;
+    protected final WireFormat wireFormat;
+    protected final ActiveMQDestination destination;
+    protected final String destinationName;
     protected AtomicLong lastMessageId = new AtomicLong(-1);
-    
-	public JPAReferenceStore(JPAPersistenceAdapter adapter, ActiveMQDestination destination) {
-		this.adapter = adapter;
-		this.destination = destination;
-		this.destinationName = destination.getQualifiedName();
-		this.wireFormat = this.adapter.getWireFormat();
-	}
-	
-	public ActiveMQDestination getDestination() {
-		return destination;
-	}
 
-	public void addMessage(ConnectionContext context, Message message) throws IOException {
-		throw new RuntimeException("Use addMessageReference instead");
-	}
-	
-	public Message getMessage(MessageId identity) throws IOException {
-		throw new RuntimeException("Use addMessageReference instead");
-	}
-	
-	public void addMessageReference(ConnectionContext context, MessageId messageId, ReferenceData data) throws IOException {
-		EntityManager manager = adapter.beginEntityManager(context);
-		try {
-			
-			StoredMessageReference sm = new StoredMessageReference();
-			sm.setDestination(destinationName);
-			sm.setId(messageId.getBrokerSequenceId());
-			sm.setMessageId(messageId.toString());
-			sm.setExiration(data.getExpiration());
-			sm.setFileId(data.getFileId());
-			sm.setOffset(data.getOffset());
-		
-			manager.persist(sm);
-			
-		} catch (Throwable e) {
-			adapter.rollbackEntityManager(context,manager);
-			throw IOExceptionSupport.create(e);
-		}
-		adapter.commitEntityManager(context,manager);		
-	}
-
-	public ReferenceData getMessageReference(MessageId identity) throws IOException {
-		ReferenceData rc=null;
-		EntityManager manager = adapter.beginEntityManager(null);
-		try {
-			StoredMessageReference message=null;
-			if( identity.getBrokerSequenceId()!= 0 ) {
-				message = manager.find(StoredMessageReference.class, identity.getBrokerSequenceId());			
-			} else {
-				Query query = manager.createQuery("select m from StoredMessageReference m where m.messageId=?1");
-				query.setParameter(1, identity.toString());
-				message = (StoredMessageReference) query.getSingleResult();
-			}
-			if( message !=null ) {
-				rc = new ReferenceData();
-				rc.setExpiration(message.getExiration());
-				rc.setFileId(message.getFileId());
-				rc.setOffset(message.getOffset());
-			}
-		} catch (Throwable e) {
-			adapter.rollbackEntityManager(null,manager);
-			throw IOExceptionSupport.create(e);
-		}
-		adapter.commitEntityManager(null,manager);
-		return rc;
-	}
-
-	public int getMessageCount() throws IOException {
-		Long rc;
-		EntityManager manager = adapter.beginEntityManager(null);
-		try {
-			Query query = manager.createQuery("select count(m) from StoredMessageReference m");
-			rc = (Long) query.getSingleResult();
-		} catch (Throwable e) {
-			adapter.rollbackEntityManager(null,manager);
-			throw IOExceptionSupport.create(e);
-		}
-		adapter.commitEntityManager(null,manager);
-		return rc.intValue();
-	}
-
-	public void recover(MessageRecoveryListener container) throws Exception {
-		EntityManager manager = adapter.beginEntityManager(null);
-		try {
-			Query query = manager.createQuery("select m from StoredMessageReference m where m.destination=?1 order by m.id asc");
-			query.setParameter(1, destinationName);
-			for (StoredMessageReference m : (List<StoredMessageReference>)query.getResultList()) {
-				MessageId id = new MessageId(m.getMessageId());
-				id.setBrokerSequenceId(m.getId());
-				container.recoverMessageReference(id);
-	        }
-		} catch (Throwable e) {
-			adapter.rollbackEntityManager(null,manager);
-			throw IOExceptionSupport.create(e);
-		}
-		adapter.commitEntityManager(null,manager);
-	}
-
-	public void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception {
-		
-		EntityManager manager = adapter.beginEntityManager(null);
-		try {
-			
-			Query query = manager.createQuery("select m from StoredMessageReference m where m.destination=?1 and m.id>?2 order by m.id asc");
-			query.setParameter(1, destinationName);
-			query.setParameter(2, lastMessageId.get());
-			query.setMaxResults(maxReturned);
-			int count = 0;
-			for (StoredMessageReference m : (List<StoredMessageReference>)query.getResultList()) {
-				MessageId id = new MessageId(m.getMessageId());
-				id.setBrokerSequenceId(m.getId());				
-				listener.recoverMessageReference(id);
-				lastMessageId.set(m.getId());
-				count++;
-				if( count >= maxReturned ) { 
-					return;
-				}
-	        }
-
-		} catch (Throwable e) {
-			adapter.rollbackEntityManager(null,manager);
-			throw IOExceptionSupport.create(e);
-		}
-		adapter.commitEntityManager(null,manager);
-	}
-
-	public void removeAllMessages(ConnectionContext context) throws IOException {
-		EntityManager manager = adapter.beginEntityManager(context);
-		try {
-			Query query = manager.createQuery("delete from StoredMessageReference m where m.destination=?1");
-			query.setParameter(1, destinationName);
-			query.executeUpdate();
-		} catch (Throwable e) {
-			adapter.rollbackEntityManager(context,manager);
-			throw IOExceptionSupport.create(e);
-		}
-		adapter.commitEntityManager(context,manager);
-	}
-
-	public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
-		EntityManager manager = adapter.beginEntityManager(context);
-		try {
-			Query query = manager.createQuery("delete from StoredMessageReference m where m.id=?1");
-			query.setParameter(1, ack.getLastMessageId().getBrokerSequenceId());
-			query.executeUpdate();
-		} catch (Throwable e) {
-			adapter.rollbackEntityManager(context,manager);
-			throw IOExceptionSupport.create(e);
-		}
-		adapter.commitEntityManager(context,manager);
-	}
-
-	public void resetBatching() {
-        lastMessageId.set(-1);
-	}
-
-	public void setUsageManager(UsageManager usageManager) {
-	}
-
-	public void start() throws Exception {
-	}
-
-	public void stop() throws Exception {
-	}
-
-    public void setBatch(MessageId startAfter){        
+    public JPAReferenceStore(JPAPersistenceAdapter adapter, ActiveMQDestination destination) {
+        this.adapter = adapter;
+        this.destination = destination;
+        this.destinationName = destination.getQualifiedName();
+        this.wireFormat = this.adapter.getWireFormat();
     }
 
-    public boolean supportsExternalBatchControl(){
+    public ActiveMQDestination getDestination() {
+        return destination;
+    }
+
+    public void addMessage(ConnectionContext context, Message message) throws IOException {
+        throw new RuntimeException("Use addMessageReference instead");
+    }
+
+    public Message getMessage(MessageId identity) throws IOException {
+        throw new RuntimeException("Use addMessageReference instead");
+    }
+
+    public void addMessageReference(ConnectionContext context, MessageId messageId, ReferenceData data) throws IOException {
+        EntityManager manager = adapter.beginEntityManager(context);
+        try {
+
+            StoredMessageReference sm = new StoredMessageReference();
+            sm.setDestination(destinationName);
+            sm.setId(messageId.getBrokerSequenceId());
+            sm.setMessageId(messageId.toString());
+            sm.setExiration(data.getExpiration());
+            sm.setFileId(data.getFileId());
+            sm.setOffset(data.getOffset());
+
+            manager.persist(sm);
+
+        } catch (Throwable e) {
+            adapter.rollbackEntityManager(context, manager);
+            throw IOExceptionSupport.create(e);
+        }
+        adapter.commitEntityManager(context, manager);
+    }
+
+    public ReferenceData getMessageReference(MessageId identity) throws IOException {
+        ReferenceData rc = null;
+        EntityManager manager = adapter.beginEntityManager(null);
+        try {
+            StoredMessageReference message = null;
+            if (identity.getBrokerSequenceId() != 0) {
+                message = manager.find(StoredMessageReference.class, identity.getBrokerSequenceId());
+            } else {
+                Query query = manager.createQuery("select m from StoredMessageReference m where m.messageId=?1");
+                query.setParameter(1, identity.toString());
+                message = (StoredMessageReference)query.getSingleResult();
+            }
+            if (message != null) {
+                rc = new ReferenceData();
+                rc.setExpiration(message.getExiration());
+                rc.setFileId(message.getFileId());
+                rc.setOffset(message.getOffset());
+            }
+        } catch (Throwable e) {
+            adapter.rollbackEntityManager(null, manager);
+            throw IOExceptionSupport.create(e);
+        }
+        adapter.commitEntityManager(null, manager);
+        return rc;
+    }
+
+    public int getMessageCount() throws IOException {
+        Long rc;
+        EntityManager manager = adapter.beginEntityManager(null);
+        try {
+            Query query = manager.createQuery("select count(m) from StoredMessageReference m");
+            rc = (Long)query.getSingleResult();
+        } catch (Throwable e) {
+            adapter.rollbackEntityManager(null, manager);
+            throw IOExceptionSupport.create(e);
+        }
+        adapter.commitEntityManager(null, manager);
+        return rc.intValue();
+    }
+
+    public void recover(MessageRecoveryListener container) throws Exception {
+        EntityManager manager = adapter.beginEntityManager(null);
+        try {
+            Query query = manager.createQuery("select m from StoredMessageReference m where m.destination=?1 order by m.id asc");
+            query.setParameter(1, destinationName);
+            for (StoredMessageReference m : (List<StoredMessageReference>)query.getResultList()) {
+                MessageId id = new MessageId(m.getMessageId());
+                id.setBrokerSequenceId(m.getId());
+                container.recoverMessageReference(id);
+            }
+        } catch (Throwable e) {
+            adapter.rollbackEntityManager(null, manager);
+            throw IOExceptionSupport.create(e);
+        }
+        adapter.commitEntityManager(null, manager);
+    }
+
+    public void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception {
+
+        EntityManager manager = adapter.beginEntityManager(null);
+        try {
+
+            Query query = manager.createQuery("select m from StoredMessageReference m where m.destination=?1 and m.id>?2 order by m.id asc");
+            query.setParameter(1, destinationName);
+            query.setParameter(2, lastMessageId.get());
+            query.setMaxResults(maxReturned);
+            int count = 0;
+            for (StoredMessageReference m : (List<StoredMessageReference>)query.getResultList()) {
+                MessageId id = new MessageId(m.getMessageId());
+                id.setBrokerSequenceId(m.getId());
+                listener.recoverMessageReference(id);
+                lastMessageId.set(m.getId());
+                count++;
+                if (count >= maxReturned) {
+                    return;
+                }
+            }
+
+        } catch (Throwable e) {
+            adapter.rollbackEntityManager(null, manager);
+            throw IOExceptionSupport.create(e);
+        }
+        adapter.commitEntityManager(null, manager);
+    }
+
+    public void removeAllMessages(ConnectionContext context) throws IOException {
+        EntityManager manager = adapter.beginEntityManager(context);
+        try {
+            Query query = manager.createQuery("delete from StoredMessageReference m where m.destination=?1");
+            query.setParameter(1, destinationName);
+            query.executeUpdate();
+        } catch (Throwable e) {
+            adapter.rollbackEntityManager(context, manager);
+            throw IOExceptionSupport.create(e);
+        }
+        adapter.commitEntityManager(context, manager);
+    }
+
+    public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
+        EntityManager manager = adapter.beginEntityManager(context);
+        try {
+            Query query = manager.createQuery("delete from StoredMessageReference m where m.id=?1");
+            query.setParameter(1, ack.getLastMessageId().getBrokerSequenceId());
+            query.executeUpdate();
+        } catch (Throwable e) {
+            adapter.rollbackEntityManager(context, manager);
+            throw IOExceptionSupport.create(e);
+        }
+        adapter.commitEntityManager(context, manager);
+    }
+
+    public void resetBatching() {
+        lastMessageId.set(-1);
+    }
+
+    public void setUsageManager(UsageManager usageManager) {
+    }
+
+    public void start() throws Exception {
+    }
+
+    public void stop() throws Exception {
+    }
+
+    public void setBatch(MessageId startAfter) {
+    }
+
+    public boolean supportsExternalBatchControl() {
         return false;
     }
 }

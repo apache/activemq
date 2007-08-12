@@ -16,36 +16,37 @@
  */
 package org.apache.activemq.util;
 
-import junit.framework.TestCase;
-
 import java.io.IOException;
 import java.util.Properties;
 
-import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
-import org.apache.log4j.Level;
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.command.ActiveMQTopic;
-
-import javax.jms.JMSException;
 import javax.jms.Connection;
+import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+
+import junit.framework.TestCase;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 public class JmsLogAppenderTest extends TestCase {
     protected BrokerService broker;
 
     public void testLoggingWithJMS() throws IOException, JMSException {
         // Setup the consumers
-        MessageConsumer info, debug, warn;
+        MessageConsumer info;
+        MessageConsumer debug;
+        MessageConsumer warn;
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
         Connection conn = factory.createConnection();
         conn.start();
 
-        warn  = conn.createSession(false, Session.AUTO_ACKNOWLEDGE).createConsumer(new ActiveMQTopic("log4j.MAIN.WARN"));
-        info  = conn.createSession(false, Session.AUTO_ACKNOWLEDGE).createConsumer(new ActiveMQTopic("log4j.MAIN.INFO"));
+        warn = conn.createSession(false, Session.AUTO_ACKNOWLEDGE).createConsumer(new ActiveMQTopic("log4j.MAIN.WARN"));
+        info = conn.createSession(false, Session.AUTO_ACKNOWLEDGE).createConsumer(new ActiveMQTopic("log4j.MAIN.INFO"));
         debug = conn.createSession(false, Session.AUTO_ACKNOWLEDGE).createConsumer(new ActiveMQTopic("log4j.MAIN.DEBUG"));
 
         // lets try configure log4j
@@ -53,7 +54,9 @@ public class JmsLogAppenderTest extends TestCase {
         properties.load(getClass().getResourceAsStream("test-log4j.properties"));
         PropertyConfigurator.configure(properties);
 
-        Logger warnLog, infoLog, debugLog;
+        Logger warnLog;
+        Logger infoLog;
+        Logger debugLog;
 
         warnLog = Logger.getLogger("MAIN.WARN");
         warnLog.setLevel(Level.WARN);
@@ -81,7 +84,8 @@ public class JmsLogAppenderTest extends TestCase {
         assertEquals("Warn Message", msg.getText());
 
         msg = (TextMessage)warn.receive(1000);
-        assertNull(msg); // We should not receive anymore message because our level is warning only
+        assertNull(msg); // We should not receive anymore message because our
+                            // level is warning only
 
         // Test info level
         msg = (TextMessage)info.receive(1000);

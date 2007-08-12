@@ -32,8 +32,7 @@ public class XmppBroker implements Service {
 
             System.out.println("Press any key to terminate");
             System.in.read();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.out.println("Caught: " + e);
             e.printStackTrace();
         }

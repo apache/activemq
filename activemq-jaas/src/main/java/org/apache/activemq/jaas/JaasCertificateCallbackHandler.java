@@ -17,27 +17,22 @@
 
 package org.apache.activemq.jaas;
 
-
-import javax.security.auth.callback.Callback;
-import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.callback.NameCallback;
-import javax.security.auth.callback.PasswordCallback;
-import javax.security.auth.callback.UnsupportedCallbackException;
-
 import java.io.IOException;
 import java.security.cert.X509Certificate;
 
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.callback.UnsupportedCallbackException;
+
 /**
- * A Standard JAAS callback handler for SSL certificate requests.
- * 
- * Will only handle callbacks of type CertificateCallback.
+ * A Standard JAAS callback handler for SSL certificate requests. Will only
+ * handle callbacks of type CertificateCallback.
  * 
  * @author sepandm@gmail.com (Sepand)
- *
  */
 public class JaasCertificateCallbackHandler implements CallbackHandler {
     final X509Certificate certificates[];
-    
+
     /**
      * Basic constructor.
      * 
@@ -46,22 +41,23 @@ public class JaasCertificateCallbackHandler implements CallbackHandler {
     public JaasCertificateCallbackHandler(X509Certificate certs[]) {
         certificates = certs;
     }
-    
+
     /**
      * Overriding handle method to handle certificates.
      * 
      * @param callbacks The callbacks requested.
      * @throws IOException
-     * @throws UnsupportedCallbackException Thrown if an unkown Callback type is encountered.
+     * @throws UnsupportedCallbackException Thrown if an unkown Callback type is
+     *                 encountered.
      */
     public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
         for (int i = 0; i < callbacks.length; i++) {
             Callback callback = callbacks[i];
             if (callback instanceof CertificateCallback) {
-                CertificateCallback certCallback = (CertificateCallback) callback;
-                
+                CertificateCallback certCallback = (CertificateCallback)callback;
+
                 certCallback.setCertificates(certificates);
-                
+
             } else {
                 throw new UnsupportedCallbackException(callback);
             }

@@ -16,16 +16,16 @@
  */
 package org.apache.activemq.web.view;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Enumeration;
+
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.QueueBrowser;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Enumeration;
 
 /**
  * A simple rendering of the contents of a queue appear as a list of message
@@ -36,10 +36,9 @@ import java.util.Enumeration;
 public class SimpleMessageRenderer implements MessageRenderer {
 
     private String contentType = "text/xml";
-    private int maxMessages = 0;
+    private int maxMessages;
 
-    public void renderMessages(HttpServletRequest request, HttpServletResponse response, QueueBrowser browser)
-            throws IOException, JMSException, ServletException {
+    public void renderMessages(HttpServletRequest request, HttpServletResponse response, QueueBrowser browser) throws IOException, JMSException, ServletException {
         // lets use XML by default
         response.setContentType(getContentType());
         PrintWriter writer = response.getWriter();
@@ -47,15 +46,14 @@ public class SimpleMessageRenderer implements MessageRenderer {
 
         Enumeration iter = browser.getEnumeration();
         for (int counter = 0; iter.hasMoreElements() && (maxMessages <= 0 || counter < maxMessages); counter++) {
-            Message message = (Message) iter.nextElement();
+            Message message = (Message)iter.nextElement();
             renderMessage(writer, request, response, browser, message);
         }
 
         printFooter(writer, browser, request);
     }
 
-    public void renderMessage(PrintWriter writer, HttpServletRequest request, HttpServletResponse response,
-            QueueBrowser browser, Message message) throws JMSException, ServletException {
+    public void renderMessage(PrintWriter writer, HttpServletRequest request, HttpServletResponse response, QueueBrowser browser, Message message) throws JMSException, ServletException {
         // lets just write the message IDs for now
         writer.print("<message id='");
         writer.print(message.getJMSMessageID());
@@ -83,8 +81,7 @@ public class SimpleMessageRenderer implements MessageRenderer {
     // Implementation methods
     // -------------------------------------------------------------------------
 
-    protected void printHeader(PrintWriter writer, QueueBrowser browser, HttpServletRequest request)
-            throws IOException, JMSException, ServletException {
+    protected void printHeader(PrintWriter writer, QueueBrowser browser, HttpServletRequest request) throws IOException, JMSException, ServletException {
         writer.println("");
         writer.print("<messages queue='");
         writer.print(browser.getQueue());
@@ -98,8 +95,7 @@ public class SimpleMessageRenderer implements MessageRenderer {
         writer.println(">");
     }
 
-    protected void printFooter(PrintWriter writer, QueueBrowser browser, HttpServletRequest request)
-            throws IOException, JMSException, ServletException {
+    protected void printFooter(PrintWriter writer, QueueBrowser browser, HttpServletRequest request) throws IOException, JMSException, ServletException {
         writer.println("</messages>");
     }
 

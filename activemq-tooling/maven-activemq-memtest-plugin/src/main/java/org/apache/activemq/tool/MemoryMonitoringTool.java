@@ -16,27 +16,21 @@
  */
 package org.apache.activemq.tool;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
-
 import java.io.DataOutputStream;
-import java.util.Properties;
-import java.lang.management.MemoryMXBean;
 import java.lang.management.ManagementFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
+import java.lang.management.MemoryMXBean;
+import java.util.Properties;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MemoryMonitoringTool implements Runnable {
 
-    private long checkpointInterval = 5000;          // 5 sec sample checkpointInterval
-    private long resultIndex = 0;
-
-    private AtomicBoolean isRunning = new AtomicBoolean(false);
-    private DataOutputStream dataDoutputStream = null;
-
     protected Properties testSettings = new Properties();
     protected ReportGenerator reportGenerator = new ReportGenerator();
+
+    private long checkpointInterval = 5000;          // 5 sec sample checkpointInterval
+    private long resultIndex;
+    private AtomicBoolean isRunning = new AtomicBoolean(false);
+    private DataOutputStream dataDoutputStream;
     private MemoryMXBean memoryBean;
 
     public Properties getTestSettings() {
@@ -128,7 +122,12 @@ public class MemoryMonitoringTool implements Runnable {
                 nonHeapMB = memoryBean.getNonHeapMemoryUsage().getUsed() / oneMB;
                 heapMB = memoryBean.getHeapMemoryUsage().getUsed() / oneMB;
 
-                reportGenerator.writeWithIndent(6, "<memory_usage index=" + resultIndex + " non_heap_mb=" + nonHeapMB + " non_heap_bytes=" + memoryBean.getNonHeapMemoryUsage().getUsed() + " heap_mb=" + heapMB + " heap_bytes=" + memoryBean.getHeapMemoryUsage().getUsed() + "/>");
+                reportGenerator.writeWithIndent(6, "<memory_usage index=" + resultIndex 
+                                                + " non_heap_mb=" + nonHeapMB 
+                                                + " non_heap_bytes=" 
+                                                + memoryBean.getNonHeapMemoryUsage().getUsed() 
+                                                + " heap_mb=" + heapMB 
+                                                + " heap_bytes=" + memoryBean.getHeapMemoryUsage().getUsed() + "/>");
 
                 resultIndex++;
 

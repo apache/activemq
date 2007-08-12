@@ -16,30 +16,31 @@
  */
 package org.apache.activemq.tool.reports;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.activemq.tool.reports.plugins.ThroughputReportPlugin;
-import org.apache.activemq.tool.reports.plugins.CpuReportPlugin;
-
-import java.util.Properties;
-import java.util.List;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.StringTokenizer;
-import java.io.File;
-import java.io.PrintWriter;
-import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
-import java.io.FileNotFoundException;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.FileInputStream;
-import java.io.IOException;
+
+import org.apache.activemq.tool.reports.plugins.CpuReportPlugin;
+import org.apache.activemq.tool.reports.plugins.ThroughputReportPlugin;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
-    private static final Log log = LogFactory.getLog(XmlFilePerfReportWriter.class);
+
+    private static final Log LOG = LogFactory.getLog(XmlFilePerfReportWriter.class);
 
     private File tempLogFile;
     private PrintWriter tempLogFileWriter;
@@ -50,18 +51,18 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
     private String reportDir;
     private String reportName;
 
-    private Map  testPropsMap;
-    private List testPropsList;
+    private Map<String, Properties> testPropsMap;
+    private List<Properties> testPropsList;
 
     public XmlFilePerfReportWriter() {
         this("", "PerformanceReport.xml");
     }
 
     public XmlFilePerfReportWriter(String reportDir, String reportName) {
-        this.testPropsMap  = new HashMap();
-        this.testPropsList = new ArrayList();
-        this.reportDir     = reportDir;
-        this.reportName    = reportName;
+        this.testPropsMap = new HashMap<String, Properties>();
+        this.testPropsList = new ArrayList<Properties>();
+        this.reportDir = reportDir;
+        this.reportName = reportName;
     }
 
     public void openReportWriter() {
@@ -141,7 +142,7 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
     }
 
     protected File createXmlFile() {
-        String filename = (getReportName().endsWith(".xml") ? getReportName() : (getReportName() + ".xml"));
+        String filename = getReportName().endsWith(".xml") ? getReportName() : (getReportName() + ".xml");
         String path = (getReportDir() == null) ? "" : getReportDir();
 
         return new File(path + filename);
@@ -158,7 +159,7 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
             writeXmlFooter();
             xmlFileWriter.close();
 
-            log.info("Created performance report: " + xmlFile.getAbsolutePath());
+            LOG.info("Created performance report: " + xmlFile.getAbsolutePath());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -176,15 +177,15 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
         Properties props;
 
         // Write test settings
-        for (Iterator i=testPropsMap.keySet().iterator(); i.hasNext();) {
-            String key = (String)i.next();
-            props = (Properties)testPropsMap.get(key);
+        for (Iterator<String> i = testPropsMap.keySet().iterator(); i.hasNext();) {
+            String key = i.next();
+            props = testPropsMap.get(key);
             writeMap(key, props);
         }
 
         int count = 1;
-        for (Iterator i=testPropsList.iterator(); i.hasNext();) {
-            props = (Properties)i.next();
+        for (Iterator<Properties> i = testPropsList.iterator(); i.hasNext();) {
+            props = i.next();
             writeMap("settings" + count++, props);
         }
     }
@@ -235,7 +236,9 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
         xmlFileWriter.println("<property name='perfTpSummary'>");
         xmlFileWriter.println("<props>");
 
-        String val, clientName, clientVal;
+        String val;
+        String clientName;
+        String clientVal;
 
         System.out.println("#########################################");
         System.out.println("####    SYSTEM THROUGHPUT SUMMARY    ####");
@@ -267,49 +270,49 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
 
         val = (String)summary.get(ThroughputReportPlugin.KEY_MIN_CLIENT_TP);
         clientName = val.substring(0, val.indexOf("="));
-        clientVal  = val.substring(val.indexOf("=") + 1);
+        clientVal = val.substring(val.indexOf("=") + 1);
         System.out.println("Min Client Throughput Per Sample: clientName=" + clientName + ", value=" + clientVal);
         xmlFileWriter.println("<prop key='" + ThroughputReportPlugin.KEY_MIN_CLIENT_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
 
         val = (String)summary.get(ThroughputReportPlugin.KEY_MAX_CLIENT_TP);
         clientName = val.substring(0, val.indexOf("="));
-        clientVal  = val.substring(val.indexOf("=") + 1);
+        clientVal = val.substring(val.indexOf("=") + 1);
         System.out.println("Max Client Throughput Per Sample: clientName=" + clientName + ", value=" + clientVal);
         xmlFileWriter.println("<prop key='" + ThroughputReportPlugin.KEY_MAX_CLIENT_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
 
         val = (String)summary.get(ThroughputReportPlugin.KEY_MIN_CLIENT_TOTAL_TP);
         clientName = val.substring(0, val.indexOf("="));
-        clientVal  = val.substring(val.indexOf("=") + 1);
+        clientVal = val.substring(val.indexOf("=") + 1);
         System.out.println("Min Client Total Throughput: clientName=" + clientName + ", value=" + clientVal);
         xmlFileWriter.println("<prop key='" + ThroughputReportPlugin.KEY_MIN_CLIENT_TOTAL_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
 
         val = (String)summary.get(ThroughputReportPlugin.KEY_MAX_CLIENT_TOTAL_TP);
         clientName = val.substring(0, val.indexOf("="));
-        clientVal  = val.substring(val.indexOf("=") + 1);
+        clientVal = val.substring(val.indexOf("=") + 1);
         System.out.println("Max Client Total Throughput: clientName=" + clientName + ", value=" + clientVal);
         xmlFileWriter.println("<prop key='" + ThroughputReportPlugin.KEY_MAX_CLIENT_TOTAL_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
 
         val = (String)summary.get(ThroughputReportPlugin.KEY_MIN_CLIENT_AVE_TP);
         clientName = val.substring(0, val.indexOf("="));
-        clientVal  = val.substring(val.indexOf("=") + 1);
+        clientVal = val.substring(val.indexOf("=") + 1);
         System.out.println("Min Average Client Throughput: clientName=" + clientName + ", value=" + clientVal);
         xmlFileWriter.println("<prop key='" + ThroughputReportPlugin.KEY_MIN_CLIENT_AVE_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
 
         val = (String)summary.get(ThroughputReportPlugin.KEY_MAX_CLIENT_AVE_TP);
         clientName = val.substring(0, val.indexOf("="));
-        clientVal  = val.substring(val.indexOf("=") + 1);
+        clientVal = val.substring(val.indexOf("=") + 1);
         System.out.println("Max Average Client Throughput: clientName=" + clientName + ", value=" + clientVal);
         xmlFileWriter.println("<prop key='" + ThroughputReportPlugin.KEY_MAX_CLIENT_AVE_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
 
         val = (String)summary.get(ThroughputReportPlugin.KEY_MIN_CLIENT_AVE_EMM_TP);
         clientName = val.substring(0, val.indexOf("="));
-        clientVal  = val.substring(val.indexOf("=") + 1);
+        clientVal = val.substring(val.indexOf("=") + 1);
         System.out.println("Min Average Client Throughput Excluding Min/Max: clientName=" + clientName + ", value=" + clientVal);
         xmlFileWriter.println("<prop key='" + ThroughputReportPlugin.KEY_MIN_CLIENT_AVE_EMM_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
 
         val = (String)summary.get(ThroughputReportPlugin.KEY_MAX_CLIENT_AVE_EMM_TP);
         clientName = val.substring(0, val.indexOf("="));
-        clientVal  = val.substring(val.indexOf("=") + 1);
+        clientVal = val.substring(val.indexOf("=") + 1);
         System.out.println("Max Average Client Throughput Excluding Min/Max: clientName=" + clientName + ", value=" + clientVal);
         xmlFileWriter.println("<prop key='" + ThroughputReportPlugin.KEY_MAX_CLIENT_AVE_EMM_TP + "'>clientName=" + clientName + ",value=" + clientVal + "</prop>");
 
@@ -374,7 +377,7 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
     protected void writeMap(String name, Map map) {
         xmlFileWriter.println("<property name='" + name + "'>");
         xmlFileWriter.println("<props>");
-        for (Iterator i=map.keySet().iterator(); i.hasNext();) {
+        for (Iterator i = map.keySet().iterator(); i.hasNext();) {
             String propKey = (String)i.next();
             Object propVal = map.get(propKey);
             xmlFileWriter.println("<prop key='" + propKey + "'>" + propVal.toString() + "</prop>");
@@ -388,12 +391,14 @@ public class XmlFilePerfReportWriter extends AbstractPerfReportWriter {
         String xmlElement;
 
         xmlElement = "<" + elementName;
-        String data, key, val;
+        String data;
+        String key;
+        String val;
         while (tokenizer.hasMoreTokens()) {
             data = tokenizer.nextToken();
-            key  = data.substring(0, data.indexOf("="));
-            val  = data.substring(data.indexOf("=") + 1);
-            xmlElement += (" " + key + "='" + val + "'");
+            key = data.substring(0, data.indexOf("="));
+            val = data.substring(data.indexOf("=") + 1);
+            xmlElement += " " + key + "='" + val + "'";
         }
         xmlElement += " />";
         xmlFileWriter.println(xmlElement);

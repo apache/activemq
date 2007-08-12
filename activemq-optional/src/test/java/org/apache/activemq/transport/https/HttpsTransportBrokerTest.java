@@ -16,10 +16,9 @@
  */
 package org.apache.activemq.transport.https;
 
-import org.apache.activemq.transport.http.HttpTransportBrokerTest;
-
 import junit.framework.Test;
 import junit.textui.TestRunner;
+import org.apache.activemq.transport.http.HttpTransportBrokerTest;
 
 public class HttpsTransportBrokerTest extends HttpTransportBrokerTest {
 

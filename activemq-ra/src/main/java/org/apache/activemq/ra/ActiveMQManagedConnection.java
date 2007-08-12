@@ -33,40 +33,40 @@ import javax.resource.spi.ManagedConnectionMetaData;
 import javax.security.auth.Subject;
 import javax.transaction.xa.XAResource;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.LocalTransactionEventListener;
 import org.apache.activemq.TransactionContext;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
- * ActiveMQManagedConnection maps to real physical connection to the
- * server.  Since a ManagedConnection has to provide a transaction
- * managment interface to the physical connection, and sessions
- * are the objects implement transaction managment interfaces in
- * the JMS API, this object also maps to a singe physical JMS session.
- * <p/>
- * The side-effect is that JMS connection the application gets
- * will allways create the same session object.  This is good if
- * running in an app server since the sessions are elisted in the
- * context transaction.  This is bad if used outside of an app
- * server since the user may be trying to create 2 different
- * sessions to coordinate 2 different uow.
- *
+ * ActiveMQManagedConnection maps to real physical connection to the server.
+ * Since a ManagedConnection has to provide a transaction managment interface to
+ * the physical connection, and sessions are the objects implement transaction
+ * managment interfaces in the JMS API, this object also maps to a singe
+ * physical JMS session. <p/> The side-effect is that JMS connection the
+ * application gets will allways create the same session object. This is good if
+ * running in an app server since the sessions are elisted in the context
+ * transaction. This is bad if used outside of an app server since the user may
+ * be trying to create 2 different sessions to coordinate 2 different uow.
+ * 
  * @version $Revision$
  */
-public class ActiveMQManagedConnection implements ManagedConnection, ExceptionListener { // TODO: , DissociatableManagedConnection {
+public class ActiveMQManagedConnection implements ManagedConnection, ExceptionListener { // TODO:
+                                                                                            // ,
+                                                                                            // DissociatableManagedConnection
+                                                                                            // {
 
-    private static final Log log = LogFactory.getLog(ActiveMQManagedConnection.class);
+    private static final Log LOG = LogFactory.getLog(ActiveMQManagedConnection.class);
 
     private PrintWriter logWriter;
 
     private final ActiveMQConnection physicalConnection;
     private final TransactionContext transactionContext;
-    private final ArrayList proxyConnections = new ArrayList();
-    private final ArrayList listeners = new ArrayList();
+    private final ArrayList<ManagedConnectionProxy> proxyConnections = new ArrayList<ManagedConnectionProxy>();
+    private final ArrayList<ConnectionEventListener> listeners = new ArrayList<ConnectionEventListener>();
     private final LocalAndXATransaction localAndXATransaction;
-    
+
     private Subject subject;
     private ActiveMQConnectionRequestInfo info;
     private boolean destoryed;
@@ -77,41 +77,43 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
             this.info = info;
             this.physicalConnection = physicalConnection;
             this.transactionContext = new TransactionContext(physicalConnection);
-            
+
             this.localAndXATransaction = new LocalAndXATransaction(transactionContext) {
                 public void setInManagedTx(boolean inManagedTx) throws JMSException {
-                    super.setInManagedTx(inManagedTx);                    
-                    Iterator iterator = proxyConnections.iterator();
+                    super.setInManagedTx(inManagedTx);
+                    Iterator<ManagedConnectionProxy> iterator = proxyConnections.iterator();
                     while (iterator.hasNext()) {
-                        ManagedConnectionProxy proxy = (ManagedConnectionProxy) iterator.next();
+                        ManagedConnectionProxy proxy = iterator.next();
                         proxy.setUseSharedTxContext(inManagedTx);
-                    }                    
+                    }
                 }
             };
-            
-            this.transactionContext.setLocalTransactionEventListener( new LocalTransactionEventListener() {
+
+            this.transactionContext.setLocalTransactionEventListener(new LocalTransactionEventListener() {
                 public void beginEvent() {
                     fireBeginEvent();
                 }
+
                 public void commitEvent() {
                     fireCommitEvent();
                 }
+
                 public void rollbackEvent() {
                     fireRollbackEvent();
                 }
             });
-                        
+
             physicalConnection.setExceptionListener(this);
-		} catch (JMSException e) {
-            throw new ResourceException("Could not create a new connection: "+e.getMessage(), e);
-        }    			
+        } catch (JMSException e) {
+            throw new ResourceException("Could not create a new connection: " + e.getMessage(), e);
+        }
     }
-    
+
     public boolean isInManagedTx() {
         return localAndXATransaction.isInManagedTx();
     }
-    
-    static public boolean matches(Object x, Object y) {
+
+    public static boolean matches(Object x, Object y) {
         if (x == null ^ y == null) {
             return false;
         }
@@ -124,13 +126,14 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
     public void associate(Subject subject, ActiveMQConnectionRequestInfo info) throws JMSException {
 
         // Do we need to change the associated userid/password
-        if( !matches(info.getUserName(), this.info.getUserName()) || !matches(info.getPassword(), this.info.getPassword()) ) {
+        if (!matches(info.getUserName(), this.info.getUserName()) || !matches(info.getPassword(), this.info.getPassword())) {
             ((ActiveMQConnection)physicalConnection).changeUserInfo(info.getUserName(), info.getPassword());
         }
-        
+
         // Do we need to set the clientId?
-        if( info.getClientid()!=null && info.getClientid().length()>0 ) 
+        if (info.getClientid() != null && info.getClientid().length() > 0) {
             physicalConnection.setClientID(info.getClientid());
+        }
 
         this.subject = subject;
         this.info = info;
@@ -139,55 +142,50 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
     public Connection getPhysicalConnection() {
         return physicalConnection;
     }
-    
+
     private void fireBeginEvent() {
-        ConnectionEvent event = new ConnectionEvent(ActiveMQManagedConnection.this,
-                ConnectionEvent.LOCAL_TRANSACTION_STARTED);
-        Iterator iterator = listeners.iterator();
+        ConnectionEvent event = new ConnectionEvent(ActiveMQManagedConnection.this, ConnectionEvent.LOCAL_TRANSACTION_STARTED);
+        Iterator<ConnectionEventListener> iterator = listeners.iterator();
         while (iterator.hasNext()) {
-            ConnectionEventListener l = (ConnectionEventListener) iterator.next();
+            ConnectionEventListener l = iterator.next();
             l.localTransactionStarted(event);
         }
     }
 
     private void fireCommitEvent() {
-        ConnectionEvent event = new ConnectionEvent(ActiveMQManagedConnection.this,
-                ConnectionEvent.LOCAL_TRANSACTION_COMMITTED);
-        Iterator iterator = listeners.iterator();
+        ConnectionEvent event = new ConnectionEvent(ActiveMQManagedConnection.this, ConnectionEvent.LOCAL_TRANSACTION_COMMITTED);
+        Iterator<ConnectionEventListener> iterator = listeners.iterator();
         while (iterator.hasNext()) {
-            ConnectionEventListener l = (ConnectionEventListener) iterator.next();
+            ConnectionEventListener l = iterator.next();
             l.localTransactionCommitted(event);
         }
     }
 
     private void fireRollbackEvent() {
-        ConnectionEvent event = new ConnectionEvent(ActiveMQManagedConnection.this,
-                ConnectionEvent.LOCAL_TRANSACTION_ROLLEDBACK);
-        Iterator iterator = listeners.iterator();
+        ConnectionEvent event = new ConnectionEvent(ActiveMQManagedConnection.this, ConnectionEvent.LOCAL_TRANSACTION_ROLLEDBACK);
+        Iterator<ConnectionEventListener> iterator = listeners.iterator();
         while (iterator.hasNext()) {
-            ConnectionEventListener l = (ConnectionEventListener) iterator.next();
+            ConnectionEventListener l = iterator.next();
             l.localTransactionRolledback(event);
         }
     }
 
     private void fireCloseEvent(ManagedConnectionProxy proxy) {
-        ConnectionEvent event = new ConnectionEvent(ActiveMQManagedConnection.this,
-                ConnectionEvent.CONNECTION_CLOSED);
+        ConnectionEvent event = new ConnectionEvent(ActiveMQManagedConnection.this, ConnectionEvent.CONNECTION_CLOSED);
         event.setConnectionHandle(proxy);
-        
-        Iterator iterator = listeners.iterator();
+
+        Iterator<ConnectionEventListener> iterator = listeners.iterator();
         while (iterator.hasNext()) {
-            ConnectionEventListener l = (ConnectionEventListener) iterator.next();
+            ConnectionEventListener l = iterator.next();
             l.connectionClosed(event);
         }
     }
 
     private void fireErrorOccurredEvent(Exception error) {
-        ConnectionEvent event = new ConnectionEvent(ActiveMQManagedConnection.this,
-                ConnectionEvent.CONNECTION_ERROR_OCCURRED, error);
-        Iterator iterator = listeners.iterator();
+        ConnectionEvent event = new ConnectionEvent(ActiveMQManagedConnection.this, ConnectionEvent.CONNECTION_ERROR_OCCURRED, error);
+        Iterator<ConnectionEventListener> iterator = listeners.iterator();
         while (iterator.hasNext()) {
-            ConnectionEventListener l = (ConnectionEventListener) iterator.next();
+            ConnectionEventListener l = iterator.next();
             l.connectionErrorOccurred(event);
         }
     }
@@ -196,8 +194,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
      * @see javax.resource.spi.ManagedConnection#getConnection(javax.security.auth.Subject,
      *      javax.resource.spi.ConnectionRequestInfo)
      */
-    public Object getConnection(Subject subject, ConnectionRequestInfo info)
-            throws ResourceException {
+    public Object getConnection(Subject subject, ConnectionRequestInfo info) throws ResourceException {
         ManagedConnectionProxy proxy = new ManagedConnectionProxy(this);
         proxyConnections.add(proxy);
         return proxy;
@@ -206,10 +203,10 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
     private boolean isDestroyed() {
         return destoryed;
     }
-    
+
     /**
      * Close down the physical connection to the server.
-     *
+     * 
      * @see javax.resource.spi.ManagedConnection#destroy()
      */
     public void destroy() throws ResourceException {
@@ -224,7 +221,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
             physicalConnection.close();
             destoryed = true;
         } catch (JMSException e) {
-            log.info("Error occured during close of a JMS connection.", e);
+            LOG.info("Error occured during close of a JMS connection.", e);
         }
     }
 
@@ -235,26 +232,26 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
      * @see javax.resource.spi.ManagedConnection#cleanup()
      */
     public void cleanup() throws ResourceException {
-    	
+
         // Have we allready been destroyed??
         if (isDestroyed()) {
             return;
         }
 
-        Iterator iterator = proxyConnections.iterator();
+        Iterator<ManagedConnectionProxy> iterator = proxyConnections.iterator();
         while (iterator.hasNext()) {
-            ManagedConnectionProxy proxy = (ManagedConnectionProxy) iterator.next();
+            ManagedConnectionProxy proxy = iterator.next();
             proxy.cleanup();
         }
         proxyConnections.clear();
         localAndXATransaction.cleanup();
-        
+
         try {
             ((ActiveMQConnection)physicalConnection).cleanup();
         } catch (JMSException e) {
-            throw new ResourceException("Could cleanup the ActiveMQ connection: "+e, e);
+            throw new ResourceException("Could cleanup the ActiveMQ connection: " + e, e);
         }
-            
+
     }
 
     /**
@@ -262,10 +259,9 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
      */
     public void associateConnection(Object connection) throws ResourceException {
         if (connection instanceof ManagedConnectionProxy) {
-            ManagedConnectionProxy proxy = (ManagedConnectionProxy) connection;
+            ManagedConnectionProxy proxy = (ManagedConnectionProxy)connection;
             proxyConnections.add(proxy);
-        }
-        else {
+        } else {
             throw new ResourceException("Not supported : associating connection instance of " + connection.getClass().getName());
         }
     }
@@ -310,8 +306,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
                 }
                 try {
                     return physicalConnection.getMetaData().getJMSProviderName();
-                }
-                catch (JMSException e) {
+                } catch (JMSException e) {
                     throw new ResourceException("Error accessing provider.", e);
                 }
             }
@@ -322,8 +317,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
                 }
                 try {
                     return physicalConnection.getMetaData().getProviderVersion();
-                }
-                catch (JMSException e) {
+                } catch (JMSException e) {
                     throw new ResourceException("Error accessing provider.", e);
                 }
             }
@@ -341,8 +335,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
                 }
                 try {
                     return physicalConnection.getClientID();
-                }
-                catch (JMSException e) {
+                } catch (JMSException e) {
                     throw new ResourceException("Error accessing provider.", e);
                 }
             }
@@ -393,7 +386,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
     /**
      * When a proxy is closed this cleans up the proxy and notifys the
      * ConnectionEventListeners that a connection closed.
-     *
+     * 
      * @param proxy
      */
     public void proxyClosedEvent(ManagedConnectionProxy proxy) {
@@ -403,12 +396,12 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
     }
 
     public void onException(JMSException e) {
-        log.warn("Connection failed: "+e);
-        log.debug("Cause: ", e);
-        
+        LOG.warn("Connection failed: " + e);
+        LOG.debug("Cause: ", e);
+
         // Let any active proxy connections know that exception occured.
-        for (Iterator iter = proxyConnections.iterator(); iter.hasNext();) {
-            ManagedConnectionProxy proxy = (ManagedConnectionProxy) iter.next();
+        for (Iterator<ManagedConnectionProxy> iter = proxyConnections.iterator(); iter.hasNext();) {
+            ManagedConnectionProxy proxy = iter.next();
             proxy.onException(e);
         }
         // Let the container know that the error occured.

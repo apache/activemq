@@ -20,22 +20,8 @@ import javax.resource.spi.endpoint.MessageEndpointFactory;
 
 
 public class ActiveMQEndpointActivationKey {
-    final private MessageEndpointFactory messageEndpointFactory;
-    final private MessageActivationSpec activationSpec;
-
-    /**
-     * @return Returns the activationSpec.
-     */
-    public MessageActivationSpec getActivationSpec() {
-        return activationSpec;
-    }
-
-    /**
-     * @return Returns the messageEndpointFactory.
-     */
-    public MessageEndpointFactory getMessageEndpointFactory() {
-        return messageEndpointFactory;
-    }
+    private final MessageEndpointFactory messageEndpointFactory;
+    private final MessageActivationSpec activationSpec;
 
     /**
      * For testing
@@ -52,6 +38,21 @@ public class ActiveMQEndpointActivationKey {
         this.messageEndpointFactory = messageEndpointFactory;
         this.activationSpec = activationSpec;
     }
+
+    /**
+     * @return Returns the activationSpec.
+     */
+    public MessageActivationSpec getActivationSpec() {
+        return activationSpec;
+    }
+
+    /**
+     * @return Returns the messageEndpointFactory.
+     */
+    public MessageEndpointFactory getMessageEndpointFactory() {
+        return messageEndpointFactory;
+    }
+
 
     /**
      * @see java.lang.Object#hashCode()

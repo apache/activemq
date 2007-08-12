@@ -40,12 +40,15 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class HttpTransport extends HttpTransportSupport {
-    private static final Log log = LogFactory.getLog(HttpTransport.class);
+    
+    private static final Log LOG = LogFactory.getLog(HttpTransport.class);
+    
     private HttpURLConnection sendConnection;
     private HttpURLConnection receiveConnection;
     private URL url;
     private String clientID;
-//    private String sessionID;
+
+    // private String sessionID;
 
     public HttpTransport(TextWireFormat wireFormat, URI remoteUrl) throws MalformedURLException {
         super(wireFormat, remoteUrl);
@@ -53,12 +56,12 @@ public class HttpTransport extends HttpTransportSupport {
     }
 
     public void oneway(Object o) throws IOException {
-    	final Command command = (Command) o;
+        final Command command = (Command)o;
         try {
-            if (command.getDataStructureType()==ConnectionInfo.DATA_STRUCTURE_TYPE) {
-                boolean startGetThread = clientID==null;
-                clientID=((ConnectionInfo)command).getClientId();
-                if( startGetThread && isStarted() ) {
+            if (command.getDataStructureType() == ConnectionInfo.DATA_STRUCTURE_TYPE) {
+                boolean startGetThread = clientID == null;
+                clientID = ((ConnectionInfo)command).getClientId();
+                if (startGetThread && isStarted()) {
                     try {
                         super.doStart();
                     } catch (Exception e) {
@@ -66,7 +69,7 @@ public class HttpTransport extends HttpTransportSupport {
                     }
                 }
             }
-            
+
             HttpURLConnection connection = getSendConnection();
             String text = getTextWireFormat().marshalText(command);
             Writer writer = new OutputStreamWriter(connection.getOutputStream());
@@ -76,15 +79,14 @@ public class HttpTransport extends HttpTransportSupport {
             if (answer != HttpURLConnection.HTTP_OK) {
                 throw new IOException("Failed to post command: " + command + " as response was: " + answer);
             }
-//            checkSession(connection);
-        }
-        catch (IOException e) {
+            // checkSession(connection);
+        } catch (IOException e) {
             throw IOExceptionSupport.create("Could not post command: " + command + " due to: " + e, e);
         }
     }
 
     public void run() {
-        log.trace("HTTP GET consumer thread starting for transport: " + this);
+        LOG.trace("HTTP GET consumer thread starting for transport: " + this);
         URI remoteUrl = getRemoteUrl();
         while (!isStopped()) {
             try {
@@ -92,54 +94,48 @@ public class HttpTransport extends HttpTransportSupport {
                 int answer = connection.getResponseCode();
                 if (answer != HttpURLConnection.HTTP_OK) {
                     if (answer == HttpURLConnection.HTTP_CLIENT_TIMEOUT) {
-                        log.trace("GET timed out");
+                        LOG.trace("GET timed out");
+                    } else {
+                        LOG.warn("Failed to perform GET on: " + remoteUrl + " as response was: " + answer);
                     }
-                    else {
-                        log.warn("Failed to perform GET on: " + remoteUrl + " as response was: " + answer);
+                } else {
+                    // checkSession(connection);
+
+                    // Create a String for the UTF content
+                    InputStream is = connection.getInputStream();
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream(connection.getContentLength() > 0 ? connection.getContentLength() : 1024);
+                    int c = 0;
+                    while ((c = is.read()) >= 0) {
+                        baos.write(c);
                     }
-                }
-                else {
-//                    checkSession(connection);
-                	
-                	// Create a String for the UTF content
-                	InputStream is = connection.getInputStream();
-                	ByteArrayOutputStream baos = new ByteArrayOutputStream(connection.getContentLength()>0?connection.getContentLength():1024);
-                	int c=0;
-                	while( (c=is.read())>= 0 ) {
-                		baos.write(c);
-                	}
-                	ByteSequence sequence = baos.toByteSequence();
-                	String data = new String(sequence.data, sequence.offset, sequence.length, "UTF-8");
-                	
-                    Command command = (Command) getTextWireFormat().unmarshalText(data);
-                    
+                    ByteSequence sequence = baos.toByteSequence();
+                    String data = new String(sequence.data, sequence.offset, sequence.length, "UTF-8");
+
+                    Command command = (Command)getTextWireFormat().unmarshalText(data);
+
                     if (command == null) {
-                        log.warn("Received null packet from url: " + remoteUrl);
-                    }
-                    else {
+                        LOG.warn("Received null packet from url: " + remoteUrl);
+                    } else {
                         doConsume(command);
                     }
                 }
-            }
-            catch (Throwable e) {
+            } catch (Throwable e) {
                 if (!isStopped()) {
-                    log.error("Failed to perform GET on: " + remoteUrl + " due to: " + e, e);
-                }
-                else {
-                    log.trace("Caught error after closed: " + e, e);
+                    LOG.error("Failed to perform GET on: " + remoteUrl + " due to: " + e, e);
+                } else {
+                    LOG.trace("Caught error after closed: " + e, e);
                 }
             } finally {
                 safeClose(receiveConnection);
-                receiveConnection=null;
+                receiveConnection = null;
             }
         }
     }
- 
 
     // Implementation methods
     // -------------------------------------------------------------------------
     protected HttpURLConnection createSendConnection() throws IOException {
-        HttpURLConnection conn = (HttpURLConnection) getRemoteURL().openConnection();
+        HttpURLConnection conn = (HttpURLConnection)getRemoteURL().openConnection();
         conn.setDoOutput(true);
         conn.setRequestMethod("POST");
         configureConnection(conn);
@@ -148,7 +144,7 @@ public class HttpTransport extends HttpTransportSupport {
     }
 
     protected HttpURLConnection createReceiveConnection() throws IOException {
-        HttpURLConnection conn = (HttpURLConnection) getRemoteURL().openConnection();
+        HttpURLConnection conn = (HttpURLConnection)getRemoteURL().openConnection();
         conn.setDoOutput(false);
         conn.setDoInput(true);
         conn.setRequestMethod("GET");
@@ -157,21 +153,21 @@ public class HttpTransport extends HttpTransportSupport {
         return conn;
     }
 
-//    protected void checkSession(HttpURLConnection connection)
-//    {
-//        String set_cookie=connection.getHeaderField("Set-Cookie");
-//        if (set_cookie!=null && set_cookie.startsWith("JSESSIONID="))
-//        {
-//            String[] bits=set_cookie.split("[=;]");
-//            sessionID=bits[1];
-//        }
-//    }
-    
+    // protected void checkSession(HttpURLConnection connection)
+    // {
+    // String set_cookie=connection.getHeaderField("Set-Cookie");
+    // if (set_cookie!=null && set_cookie.startsWith("JSESSIONID="))
+    // {
+    // String[] bits=set_cookie.split("[=;]");
+    // sessionID=bits[1];
+    // }
+    // }
+
     protected void configureConnection(HttpURLConnection connection) {
-//        if (sessionID !=null) {
-//            connection.addRequestProperty("Cookie", "JSESSIONID="+sessionID);
-//        }
-//        else
+        // if (sessionID !=null) {
+        // connection.addRequestProperty("Cookie", "JSESSIONID="+sessionID);
+        // }
+        // else
         if (clientID != null) {
             connection.setRequestProperty("clientID", clientID);
         }
@@ -202,12 +198,13 @@ public class HttpTransport extends HttpTransportSupport {
     }
 
     protected void doStart() throws Exception {
-        // Don't start the background thread until the clientId has been established.
-        if( clientID != null ) {
+        // Don't start the background thread until the clientId has been
+        // established.
+        if (clientID != null) {
             super.doStart();
         }
     }
-    
+
     protected void doStop(ServiceStopper stopper) throws Exception {
         stopper.run(new Callback() {
             public void execute() throws Exception {
@@ -221,13 +218,12 @@ public class HttpTransport extends HttpTransportSupport {
             }
         });
     }
-    
+
     /**
      * @param connection TODO
-     * 
      */
     private void safeClose(HttpURLConnection connection) {
-        if( connection!=null ) {
+        if (connection != null) {
             connection.disconnect();
         }
     }

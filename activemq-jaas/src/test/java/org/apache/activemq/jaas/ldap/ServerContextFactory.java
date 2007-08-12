@@ -47,16 +47,17 @@ import org.apache.mina.common.TransportType;
 import org.apache.mina.registry.Service;
 import org.apache.mina.registry.ServiceRegistry;
 
-
 /**
- * Adds additional bootstrapping for server socket listeners when firing
- * up the server.
- *
+ * Adds additional bootstrapping for server socket listeners when firing up the
+ * server.
+ * 
  * @version $Rev: 233391 $ $Date: 2005-08-18 16:38:47 -0600 (Thu, 18 Aug 2005) $
  * @see javax.naming.spi.InitialContextFactory
  */
 public class ServerContextFactory extends CoreContextFactory {
-    private static final Log log = LogFactory.getLog(ServerContextFactory.class);
+    
+    private static final Log LOG = LogFactory.getLog(ServerContextFactory.class);
+    
     private static Service ldapService;
     private static Service kerberosService;
     private static ServiceRegistry minaRegistry;
@@ -69,16 +70,16 @@ public class ServerContextFactory extends CoreContextFactory {
         if (minaRegistry != null) {
             if (ldapService != null) {
                 minaRegistry.unbind(ldapService);
-                if (log.isInfoEnabled()) {
-                    log.info("Unbind of LDAP Service complete: " + ldapService);
+                if (LOG.isInfoEnabled()) {
+                    LOG.info("Unbind of LDAP Service complete: " + ldapService);
                 }
                 ldapService = null;
             }
 
             if (kerberosService != null) {
                 minaRegistry.unbind(kerberosService);
-                if (log.isInfoEnabled()) {
-                    log.info("Unbind of KRB5 Service complete: " + kerberosService);
+                if (LOG.isInfoEnabled()) {
+                    LOG.info("Unbind of KRB5 Service complete: " + kerberosService);
                 }
                 kerberosService = null;
             }
@@ -86,8 +87,7 @@ public class ServerContextFactory extends CoreContextFactory {
     }
 
     public void afterStartup(ContextFactoryService service) throws NamingException {
-        ServerStartupConfiguration cfg =
-                (ServerStartupConfiguration) service.getConfiguration().getStartupConfiguration();
+        ServerStartupConfiguration cfg = (ServerStartupConfiguration)service.getConfiguration().getStartupConfiguration();
         Hashtable env = service.getConfiguration().getEnvironment();
 
         if (cfg.isEnableNetworking()) {
@@ -107,74 +107,74 @@ public class ServerContextFactory extends CoreContextFactory {
         minaRegistry = cfg.getMinaServiceRegistry();
     }
 
-
     /**
      * Starts the Kerberos protocol provider which is backed by the LDAP store.
-     *
-     * @throws NamingException if there are problems starting up the Kerberos provider
+     * 
+     * @throws NamingException if there are problems starting up the Kerberos
+     *                 provider
      */
     private void startKerberosProtocol(Hashtable env) throws NamingException {
         /*
-         * Looks like KdcConfiguration takes properties and we use Hashtable for JNDI
-         * so I'm copying over the String based properties into a new Properties obj.
+         * Looks like KdcConfiguration takes properties and we use Hashtable for
+         * JNDI so I'm copying over the String based properties into a new
+         * Properties obj.
          */
         Properties props = new Properties();
         Iterator list = env.keySet().iterator();
         while (list.hasNext()) {
-            String key = (String) list.next();
+            String key = (String)list.next();
 
             if (env.get(key) instanceof String) {
-                props.setProperty(key, (String) env.get(key));
+                props.setProperty(key, (String)env.get(key));
             }
         }
 
-        // construct the configuration, get the port, create the service, and prepare kdc objects
+        // construct the configuration, get the port, create the service, and
+        // prepare kdc objects
         KdcConfiguration config = new KdcConfiguration(props);
         int port = PropertiesUtils.get(env, KdcConfiguration.KERBEROS_PORT_KEY, KdcConfiguration.DEFAULT_KERBEROS_PORT);
         Service service = new Service("kerberos", TransportType.DATAGRAM, new InetSocketAddress(port));
         LdapContext ctx = getBaseRealmContext(config, env);
         PrincipalStore store = new JndiPrincipalStoreImpl(ctx, new LdapName("ou=Users"));
-        SamSubsystem.getInstance().setUserContext((DirContext) ctx, "ou=Users");
+        SamSubsystem.getInstance().setUserContext((DirContext)ctx, "ou=Users");
 
         try {
             minaRegistry.bind(service, new KerberosProtocolProvider(config, store));
             kerberosService = service;
-            if (log.isInfoEnabled()) {
-                log.info("Successful bind of KRB5 Service completed: " + kerberosService);
+            if (LOG.isInfoEnabled()) {
+                LOG.info("Successful bind of KRB5 Service completed: " + kerberosService);
             }
-        }
-        catch (IOException e) {
-            log.error("Could not start the kerberos service on port " +
-                    KdcConfiguration.DEFAULT_KERBEROS_PORT, e);
+        } catch (IOException e) {
+            LOG.error("Could not start the kerberos service on port " + KdcConfiguration.DEFAULT_KERBEROS_PORT, e);
         }
     }
 
-
     /**
-     * Maps a Kerberos Realm name to a position within the DIT.  The primary realm of
-     * the KDC will use this area for configuration and for storing user entries.
-     *
+     * Maps a Kerberos Realm name to a position within the DIT. The primary
+     * realm of the KDC will use this area for configuration and for storing
+     * user entries.
+     * 
      * @param config the KDC's configuration
-     * @param env    the JNDI environment properties
+     * @param env the JNDI environment properties
      * @return the base context for the primary realm of the KDC
      * @throws NamingException
      */
+    @SuppressWarnings("unchecked")
     private LdapContext getBaseRealmContext(KdcConfiguration config, Hashtable env) throws NamingException {
-        Hashtable cloned = (Hashtable) env.clone();
+        Hashtable cloned = (Hashtable)env.clone();
         String dn = NamespaceTools.inferLdapName(config.getPrimaryRealm());
         cloned.put(Context.PROVIDER_URL, dn);
 
-        if (log.isInfoEnabled()) {
-            log.info("Getting initial context for realm base at " + dn + " for " + config.getPrimaryRealm());
+        if (LOG.isInfoEnabled()) {
+            LOG.info("Getting initial context for realm base at " + dn + " for " + config.getPrimaryRealm());
         }
 
-        return new InitialLdapContext(cloned, new Control[]{});
+        return new InitialLdapContext(cloned, new Control[] {});
     }
-
 
     /**
      * Starts up the LDAP protocol provider to service LDAP requests
-     *
+     * 
      * @throws NamingException if there are problems starting the LDAP provider
      */
     private void startLdapProtocol(ServerStartupConfiguration cfg, Hashtable env) throws NamingException {
@@ -183,17 +183,16 @@ public class ServerContextFactory extends CoreContextFactory {
         Service service = new Service("ldap", TransportType.SOCKET, new InetSocketAddress(host, port));
 
         try {
-            minaRegistry.bind(service, new LdapProtocolProvider((Hashtable) env.clone()));
+            minaRegistry.bind(service, new LdapProtocolProvider((Hashtable)env.clone()));
             ldapService = service;
-            if (log.isInfoEnabled()) {
-                log.info("Successful bind of LDAP Service completed: " + ldapService);
+            if (LOG.isInfoEnabled()) {
+                LOG.info("Successful bind of LDAP Service completed: " + ldapService);
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             String msg = "Failed to bind the LDAP protocol service to the service registry: " + service;
             LdapConfigurationException lce = new LdapConfigurationException(msg);
             lce.setRootCause(e);
-            log.error(msg, e);
+            LOG.error(msg, e);
             throw lce;
         }
     }

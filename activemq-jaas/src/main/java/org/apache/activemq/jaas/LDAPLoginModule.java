@@ -17,6 +17,7 @@
 package org.apache.activemq.jaas;
 
 import java.io.IOException;
+import java.security.Principal;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -24,6 +25,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
 import javax.naming.AuthenticationException;
 import javax.naming.CommunicationException;
 import javax.naming.Context;
@@ -43,23 +45,17 @@ import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.NameCallback;
 import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
-import javax.security.auth.login.LoginException;
 import javax.security.auth.login.FailedLoginException;
+import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-
 /**
  * @version $Rev: $ $Date: $
  */
 public class LDAPLoginModule implements LoginModule {
-
-    private static Log log = LogFactory.getLog(LDAPLoginModule.class);
-
-    private Subject subject;
-    private CallbackHandler handler;
 
     private static final String INITIAL_CONTEXT_FACTORY = "initialContextFactory";
     private static final String CONNECTION_URL = "connectionURL";
@@ -76,6 +72,12 @@ public class LDAPLoginModule implements LoginModule {
     private static final String ROLE_SEARCH_SUBTREE = "roleSearchSubtree";
     private static final String USER_ROLE_NAME = "userRoleName";
 
+    private static Log log = LogFactory.getLog(LDAPLoginModule.class);
+
+    protected DirContext context;
+
+    private Subject subject;
+    private CallbackHandler handler;
     private String initialContextFactory;
     private String connectionURL;
     private String connectionUsername;
@@ -86,36 +88,30 @@ public class LDAPLoginModule implements LoginModule {
     private String roleBase;
     private String roleName;
     private String userRoleName;
-
     private String username;
-
-    protected DirContext context = null;
-
     private MessageFormat userSearchMatchingFormat;
     private MessageFormat roleSearchMatchingFormat;
-
-    private boolean userSearchSubtreeBool = false;
-    private boolean roleSearchSubtreeBool = false;
-
-    Set groups = new HashSet();
+    private boolean userSearchSubtreeBool;
+    private boolean roleSearchSubtreeBool;
+    private Set<GroupPrincipal> groups = new HashSet<GroupPrincipal>();
 
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
         this.subject = subject;
         this.handler = callbackHandler;
-        initialContextFactory = (String) options.get(INITIAL_CONTEXT_FACTORY);
-        connectionURL = (String) options.get(CONNECTION_URL);
-        connectionUsername = (String) options.get(CONNECTION_USERNAME);
-        connectionPassword = (String) options.get(CONNECTION_PASSWORD);
-        connectionProtocol = (String) options.get(CONNECTION_PROTOCOL);
-        authentication = (String) options.get(AUTHENTICATION);
-        userBase = (String) options.get(USER_BASE);
-        String userSearchMatching = (String) options.get(USER_SEARCH_MATCHING);
-        String userSearchSubtree = (String) options.get(USER_SEARCH_SUBTREE);
-        roleBase = (String) options.get(ROLE_BASE);
-        roleName = (String) options.get(ROLE_NAME);
-        String roleSearchMatching = (String) options.get(ROLE_SEARCH_MATCHING);
-        String roleSearchSubtree = (String) options.get(ROLE_SEARCH_SUBTREE);
-        userRoleName = (String) options.get(USER_ROLE_NAME);
+        initialContextFactory = (String)options.get(INITIAL_CONTEXT_FACTORY);
+        connectionURL = (String)options.get(CONNECTION_URL);
+        connectionUsername = (String)options.get(CONNECTION_USERNAME);
+        connectionPassword = (String)options.get(CONNECTION_PASSWORD);
+        connectionProtocol = (String)options.get(CONNECTION_PROTOCOL);
+        authentication = (String)options.get(AUTHENTICATION);
+        userBase = (String)options.get(USER_BASE);
+        String userSearchMatching = (String)options.get(USER_SEARCH_MATCHING);
+        String userSearchSubtree = (String)options.get(USER_SEARCH_SUBTREE);
+        roleBase = (String)options.get(ROLE_BASE);
+        roleName = (String)options.get(ROLE_NAME);
+        String roleSearchMatching = (String)options.get(ROLE_SEARCH_MATCHING);
+        String roleSearchSubtree = (String)options.get(ROLE_SEARCH_SUBTREE);
+        userRoleName = (String)options.get(USER_ROLE_NAME);
         userSearchMatchingFormat = new MessageFormat(userSearchMatching);
         roleSearchMatchingFormat = new MessageFormat(roleSearchMatching);
         userSearchSubtreeBool = Boolean.valueOf(userSearchSubtree).booleanValue();
@@ -130,12 +126,12 @@ public class LDAPLoginModule implements LoginModule {
         try {
             handler.handle(callbacks);
         } catch (IOException ioe) {
-            throw (LoginException) new LoginException().initCause(ioe);
+            throw (LoginException)new LoginException().initCause(ioe);
         } catch (UnsupportedCallbackException uce) {
-            throw (LoginException) new LoginException().initCause(uce);
+            throw (LoginException)new LoginException().initCause(uce);
         }
-        username = ((NameCallback) callbacks[0]).getName();
-        String password = new String(((PasswordCallback) callbacks[1]).getPassword());
+        username = ((NameCallback)callbacks[0]).getName();
+        String password = new String(((PasswordCallback)callbacks[1]).getPassword());
 
         if (username == null || "".equals(username) || password == null || "".equals(password)) {
             return false;
@@ -143,13 +139,13 @@ public class LDAPLoginModule implements LoginModule {
 
         try {
             boolean result = authenticate(username, password);
-            if(!result) {
+            if (!result) {
                 throw new FailedLoginException();
             } else {
                 return true;
             }
         } catch (Exception e) {
-            throw (LoginException) new LoginException("LDAP Error").initCause(e);
+            throw (LoginException)new LoginException("LDAP Error").initCause(e);
         }
     }
 
@@ -159,9 +155,9 @@ public class LDAPLoginModule implements LoginModule {
     }
 
     public boolean commit() throws LoginException {
-        Set principals = subject.getPrincipals();
+        Set<Principal> principals = subject.getPrincipals();
         principals.add(new UserPrincipal(username));
-        Iterator iter = groups.iterator();
+        Iterator<GroupPrincipal> iter = groups.iterator();
         while (iter.hasNext()) {
             principals.add(iter.next());
         }
@@ -188,7 +184,9 @@ public class LDAPLoginModule implements LoginModule {
 
         try {
 
-            String filter = userSearchMatchingFormat.format(new String[]{username});
+            String filter = userSearchMatchingFormat.format(new String[] {
+                username
+            });
             SearchControls constraints = new SearchControls();
             if (userSearchSubtreeBool) {
                 constraints.setSearchScope(SearchControls.SUBTREE_SCOPE);
@@ -196,8 +194,8 @@ public class LDAPLoginModule implements LoginModule {
                 constraints.setSearchScope(SearchControls.ONELEVEL_SCOPE);
             }
 
-            //setup attributes
-            ArrayList list = new ArrayList();
+            // setup attributes
+            ArrayList<String> list = new ArrayList<String>();
             if (userRoleName != null) {
                 list.add(userRoleName);
             }
@@ -205,17 +203,16 @@ public class LDAPLoginModule implements LoginModule {
             list.toArray(attribs);
             constraints.setReturningAttributes(attribs);
 
-
             NamingEnumeration results = context.search(userBase, filter, constraints);
 
             if (results == null || !results.hasMore()) {
                 return false;
             }
 
-            SearchResult result = (SearchResult) results.next();
+            SearchResult result = (SearchResult)results.next();
 
             if (results.hasMore()) {
-                //ignore for now
+                // ignore for now
             }
             NameParser parser = context.getNameParser("");
             Name contextName = parser.parse(context.getNameInNamespace());
@@ -229,17 +226,17 @@ public class LDAPLoginModule implements LoginModule {
             if (attrs == null) {
                 return false;
             }
-            ArrayList roles = null;
+            ArrayList<String> roles = null;
             if (userRoleName != null) {
                 roles = addAttributeValues(userRoleName, attrs, roles);
             }
 
-            //check the credentials by binding to server
+            // check the credentials by binding to server
             if (bindUser(context, dn, password)) {
-                //if authenticated add more roles
+                // if authenticated add more roles
                 roles = getRoles(context, dn, username, roles);
                 for (int i = 0; i < roles.size(); i++) {
-                    groups.add(new GroupPrincipal((String) roles.get(i)));
+                    groups.add(new GroupPrincipal(roles.get(i)));
                 }
             } else {
                 return false;
@@ -253,19 +250,20 @@ public class LDAPLoginModule implements LoginModule {
             return false;
         }
 
-
         return true;
     }
 
-    protected ArrayList getRoles(DirContext context, String dn, String username, ArrayList currentRoles) throws NamingException {
-        ArrayList list = currentRoles;
+    protected ArrayList<String> getRoles(DirContext context, String dn, String username, ArrayList<String> currentRoles) throws NamingException {
+        ArrayList<String> list = currentRoles;
         if (list == null) {
-            list = new ArrayList();
+            list = new ArrayList<String>();
         }
         if (roleName == null || "".equals(roleName)) {
             return list;
         }
-        String filter = roleSearchMatchingFormat.format(new String[]{doRFC2254Encoding(dn), username});
+        String filter = roleSearchMatchingFormat.format(new String[] {
+            doRFC2254Encoding(dn), username
+        });
 
         SearchControls constraints = new SearchControls();
         if (roleSearchSubtreeBool) {
@@ -273,10 +271,9 @@ public class LDAPLoginModule implements LoginModule {
         } else {
             constraints.setSearchScope(SearchControls.ONELEVEL_SCOPE);
         }
-        NamingEnumeration results =
-                context.search(roleBase, filter, constraints);
+        NamingEnumeration results = context.search(roleBase, filter, constraints);
         while (results.hasMore()) {
-            SearchResult result = (SearchResult) results.next();
+            SearchResult result = (SearchResult)results.next();
             Attributes attrs = result.getAttributes();
             if (attrs == null) {
                 continue;
@@ -287,30 +284,29 @@ public class LDAPLoginModule implements LoginModule {
 
     }
 
-
     protected String doRFC2254Encoding(String inputString) {
         StringBuffer buf = new StringBuffer(inputString.length());
         for (int i = 0; i < inputString.length(); i++) {
             char c = inputString.charAt(i);
             switch (c) {
-                case '\\':
-                    buf.append("\\5c");
-                    break;
-                case '*':
-                    buf.append("\\2a");
-                    break;
-                case '(':
-                    buf.append("\\28");
-                    break;
-                case ')':
-                    buf.append("\\29");
-                    break;
-                case '\0':
-                    buf.append("\\00");
-                    break;
-                default:
-                    buf.append(c);
-                    break;
+            case '\\':
+                buf.append("\\5c");
+                break;
+            case '*':
+                buf.append("\\2a");
+                break;
+            case '(':
+                buf.append("\\28");
+                break;
+            case ')':
+                buf.append("\\29");
+                break;
+            case '\0':
+                buf.append("\\00");
+                break;
+            default:
+                buf.append(c);
+                break;
             }
         }
         return buf.toString();
@@ -330,15 +326,13 @@ public class LDAPLoginModule implements LoginModule {
         }
 
         if (connectionUsername != null) {
-            context.addToEnvironment(Context.SECURITY_PRINCIPAL,
-                    connectionUsername);
+            context.addToEnvironment(Context.SECURITY_PRINCIPAL, connectionUsername);
         } else {
             context.removeFromEnvironment(Context.SECURITY_PRINCIPAL);
         }
 
         if (connectionPassword != null) {
-            context.addToEnvironment(Context.SECURITY_CREDENTIALS,
-                    connectionPassword);
+            context.addToEnvironment(Context.SECURITY_CREDENTIALS, connectionPassword);
         } else {
             context.removeFromEnvironment(Context.SECURITY_CREDENTIALS);
         }
@@ -346,23 +340,21 @@ public class LDAPLoginModule implements LoginModule {
         return isValid;
     }
 
-    private ArrayList addAttributeValues(String attrId, Attributes attrs, ArrayList values)
-            throws NamingException
-    {
+    private ArrayList<String> addAttributeValues(String attrId, Attributes attrs, ArrayList<String> values) throws NamingException {
 
         if (attrId == null || attrs == null) {
             return values;
         }
         if (values == null) {
-            values = new ArrayList();
+            values = new ArrayList<String>();
         }
         Attribute attr = attrs.get(attrId);
         if (attr == null) {
-            return (values);
+            return values;
         }
         NamingEnumeration e = attr.getAll();
         while (e.hasMore()) {
-            String value = (String) e.next();
+            String value = (String)e.next();
             values.add(value);
         }
         return values;
@@ -374,7 +366,7 @@ public class LDAPLoginModule implements LoginModule {
         }
 
         try {
-            Hashtable env = new Hashtable();
+            Hashtable<String, String> env = new Hashtable<String, String>();
             env.put(Context.INITIAL_CONTEXT_FACTORY, initialContextFactory);
             if (connectionUsername != null || !"".equals(connectionUsername)) {
                 env.put(Context.SECURITY_PRINCIPAL, connectionUsername);

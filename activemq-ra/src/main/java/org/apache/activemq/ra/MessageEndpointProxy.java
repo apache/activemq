@@ -27,29 +27,28 @@ import javax.resource.spi.endpoint.MessageEndpoint;
  * @author <a href="mailto:michael.gaffney@panacya.com">Michael Gaffney </a>
  */
 public class MessageEndpointProxy implements MessageListener, MessageEndpoint {
-    
+
     private static final MessageEndpointState ALIVE = new MessageEndpointAlive();
     private static final MessageEndpointState DEAD = new MessageEndpointDead();
-    
-    
-    private static int proxyCount = 0;    
+
+    private static int proxyCount;
     private final int proxyID;
-    
+
     private final MessageEndpoint endpoint;
     private final MessageListener messageListener;
     private MessageEndpointState state = ALIVE;
 
-    private static int getID() {
-        return ++proxyCount;
-    }       
-    
-    public MessageEndpointProxy(MessageEndpoint endpoint) {        
+    public MessageEndpointProxy(MessageEndpoint endpoint) {
         if (!(endpoint instanceof MessageListener)) {
-            throw new IllegalArgumentException("MessageEndpoint is not a MessageListener");            
-        }        
-        messageListener = (MessageListener) endpoint;
+            throw new IllegalArgumentException("MessageEndpoint is not a MessageListener");
+        }
+        messageListener = (MessageListener)endpoint;
         proxyID = getID();
         this.endpoint = endpoint;
+    }
+
+    private static int getID() {
+        return ++proxyCount;
     }
 
     public void beforeDelivery(Method method) throws NoSuchMethodException, ResourceException {
@@ -69,12 +68,9 @@ public class MessageEndpointProxy implements MessageListener, MessageEndpoint {
     }
 
     public String toString() {
-        return "MessageEndpointProxy{ " +
-                "proxyID: " + proxyID +
-                ", endpoint: " + endpoint +
-                " }";
+        return "MessageEndpointProxy{ " + "proxyID: " + proxyID + ", endpoint: " + endpoint + " }";
     }
-    
+
     private abstract static class MessageEndpointState {
 
         public void beforeDelivery(MessageEndpointProxy proxy, Method method) throws NoSuchMethodException, ResourceException {
@@ -92,28 +88,28 @@ public class MessageEndpointProxy implements MessageListener, MessageEndpoint {
         public void release(MessageEndpointProxy proxy) {
             throw new IllegalStateException();
         }
-        
+
         protected final void transition(MessageEndpointProxy proxy, MessageEndpointState nextState) {
             proxy.state = nextState;
             nextState.enter(proxy);
         }
-        
-        protected void enter(MessageEndpointProxy proxy) {            
-        }        
+
+        protected void enter(MessageEndpointProxy proxy) {
+        }
     }
-    
+
     private static class MessageEndpointAlive extends MessageEndpointState {
 
-        public void beforeDelivery(MessageEndpointProxy proxy, Method method) throws NoSuchMethodException, ResourceException {            
+        public void beforeDelivery(MessageEndpointProxy proxy, Method method) throws NoSuchMethodException, ResourceException {
             try {
                 proxy.endpoint.beforeDelivery(method);
             } catch (NoSuchMethodException e) {
                 transition(proxy, DEAD);
                 throw e;
             } catch (ResourceException e) {
-                transition(proxy, DEAD);                
+                transition(proxy, DEAD);
                 throw e;
-            }            
+            }
         }
 
         public void onMessage(MessageEndpointProxy proxy, Message message) {
@@ -124,13 +120,13 @@ public class MessageEndpointProxy implements MessageListener, MessageEndpoint {
             try {
                 proxy.endpoint.afterDelivery();
             } catch (ResourceException e) {
-                transition(proxy, DEAD);                
+                transition(proxy, DEAD);
                 throw e;
-            }                        
+            }
         }
 
         public void release(MessageEndpointProxy proxy) {
-            transition(proxy, DEAD);                
+            transition(proxy, DEAD);
         }
     }
 

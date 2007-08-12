@@ -16,121 +16,121 @@
  */
 package org.apache.activemq.transport.https;
 
+import java.net.URI;
+
 import org.apache.activemq.transport.http.HttpTransportServer;
 import org.mortbay.jetty.security.SslSocketConnector;
 
-import java.net.URI;
-
 public class HttpsTransportServer extends HttpTransportServer {
 
-	private String keyPassword = System.getProperty( "javax.net.ssl.keyPassword" );
-	private String keyStorePassword = System.getProperty( "javax.net.ssl.keyStorePassword" );
-	private String keyStore = System.getProperty( "javax.net.ssl.keyStore" );
-	private String keyStoreType = null;
-	private String secureRandomCertficateAlgorithm = null;
-	private String trustCertificateAlgorithm = null;
-	private String keyCertificateAlgorithm = null;
-	private String protocol = null;
-	
-	public HttpsTransportServer( URI uri ) {
-		super( uri );
-	}
+    private String keyPassword = System.getProperty("javax.net.ssl.keyPassword");
+    private String keyStorePassword = System.getProperty("javax.net.ssl.keyStorePassword");
+    private String keyStore = System.getProperty("javax.net.ssl.keyStore");
+    private String keyStoreType;
+    private String secureRandomCertficateAlgorithm;
+    private String trustCertificateAlgorithm;
+    private String keyCertificateAlgorithm;
+    private String protocol;
 
-	public void doStart() throws Exception {
-		SslSocketConnector sslConnector = new SslSocketConnector();
-		sslConnector.setKeystore( keyStore );
-		sslConnector.setPassword( keyStorePassword );
-		// if the keyPassword hasn't been set, default it to the
-		// key store password
-		if ( keyPassword == null ) {
-			sslConnector.setKeyPassword( keyStorePassword );	
-		}
-		if ( keyStoreType != null ) {
-			sslConnector.setKeystoreType( keyStoreType );
-		}
-		if ( secureRandomCertficateAlgorithm != null ) {
-			sslConnector.setSecureRandomAlgorithm( secureRandomCertficateAlgorithm );
-		}
-		if ( keyCertificateAlgorithm != null ) {
-			sslConnector.setSslKeyManagerFactoryAlgorithm( keyCertificateAlgorithm );
-		}
-		if ( trustCertificateAlgorithm != null ) {
-			sslConnector.setSslTrustManagerFactoryAlgorithm( trustCertificateAlgorithm );
-		}
-		if ( protocol != null ) {
-			sslConnector.setProtocol( protocol );
-		}
-		
+    public HttpsTransportServer(URI uri) {
+        super(uri);
+    }
+
+    public void doStart() throws Exception {
+        SslSocketConnector sslConnector = new SslSocketConnector();
+        sslConnector.setKeystore(keyStore);
+        sslConnector.setPassword(keyStorePassword);
+        // if the keyPassword hasn't been set, default it to the
+        // key store password
+        if (keyPassword == null) {
+            sslConnector.setKeyPassword(keyStorePassword);
+        }
+        if (keyStoreType != null) {
+            sslConnector.setKeystoreType(keyStoreType);
+        }
+        if (secureRandomCertficateAlgorithm != null) {
+            sslConnector.setSecureRandomAlgorithm(secureRandomCertficateAlgorithm);
+        }
+        if (keyCertificateAlgorithm != null) {
+            sslConnector.setSslKeyManagerFactoryAlgorithm(keyCertificateAlgorithm);
+        }
+        if (trustCertificateAlgorithm != null) {
+            sslConnector.setSslTrustManagerFactoryAlgorithm(trustCertificateAlgorithm);
+        }
+        if (protocol != null) {
+            sslConnector.setProtocol(protocol);
+        }
+
         setConnector(sslConnector);
-		
-		super.doStart();
-	}
-	
-	// Properties
-	//--------------------------------------------------------------------------------
-	
-	public String getKeyStore() {
-		return keyStore;
-	}
 
-	public void setKeyStore( String keyStore ) {
-		this.keyStore = keyStore;
-	}
+        super.doStart();
+    }
 
-	public String getKeyPassword() {
-		return keyPassword;
-	}
+    // Properties
+    // --------------------------------------------------------------------------------
 
-	public void setKeyPassword( String keyPassword ) {
-		this.keyPassword = keyPassword;
-	}
+    public String getKeyStore() {
+        return keyStore;
+    }
 
-	public String getKeyStoreType() {
-		return keyStoreType;
-	}
+    public void setKeyStore(String keyStore) {
+        this.keyStore = keyStore;
+    }
 
-	public void setKeyStoreType( String keyStoreType ) {
-		this.keyStoreType = keyStoreType;
-	}
+    public String getKeyPassword() {
+        return keyPassword;
+    }
 
-	public String getKeyStorePassword() {
-		return keyStorePassword;
-	}
+    public void setKeyPassword(String keyPassword) {
+        this.keyPassword = keyPassword;
+    }
 
-	public void setKeyStorePassword( String keyStorePassword ) {
-		this.keyStorePassword = keyStorePassword;
-	}
+    public String getKeyStoreType() {
+        return keyStoreType;
+    }
 
-	public String getProtocol() {
-		return protocol;
-	}
+    public void setKeyStoreType(String keyStoreType) {
+        this.keyStoreType = keyStoreType;
+    }
 
-	public void setProtocol( String protocol ) {
-		this.protocol = protocol;
-	}
+    public String getKeyStorePassword() {
+        return keyStorePassword;
+    }
 
-	public String getSecureRandomCertficateAlgorithm() {
-		return secureRandomCertficateAlgorithm;
-	}
+    public void setKeyStorePassword(String keyStorePassword) {
+        this.keyStorePassword = keyStorePassword;
+    }
 
-	public void setSecureRandomCertficateAlgorithm(String secureRandomCertficateAlgorithm) {
-		this.secureRandomCertficateAlgorithm = secureRandomCertficateAlgorithm;
-	}
+    public String getProtocol() {
+        return protocol;
+    }
 
-	public String getKeyCertificateAlgorithm() {
-		return keyCertificateAlgorithm;
-	}
+    public void setProtocol(String protocol) {
+        this.protocol = protocol;
+    }
 
-	public void setKeyCertificateAlgorithm(String keyCertificateAlgorithm) {
-		this.keyCertificateAlgorithm = keyCertificateAlgorithm;
-	}
+    public String getSecureRandomCertficateAlgorithm() {
+        return secureRandomCertficateAlgorithm;
+    }
 
-	public String getTrustCertificateAlgorithm() {
-		return trustCertificateAlgorithm;
-	}
+    public void setSecureRandomCertficateAlgorithm(String secureRandomCertficateAlgorithm) {
+        this.secureRandomCertficateAlgorithm = secureRandomCertficateAlgorithm;
+    }
 
-	public void setTrustCertificateAlgorithm(String trustCertificateAlgorithm) {
-		this.trustCertificateAlgorithm = trustCertificateAlgorithm;
-	}
+    public String getKeyCertificateAlgorithm() {
+        return keyCertificateAlgorithm;
+    }
+
+    public void setKeyCertificateAlgorithm(String keyCertificateAlgorithm) {
+        this.keyCertificateAlgorithm = keyCertificateAlgorithm;
+    }
+
+    public String getTrustCertificateAlgorithm() {
+        return trustCertificateAlgorithm;
+    }
+
+    public void setTrustCertificateAlgorithm(String trustCertificateAlgorithm) {
+        this.trustCertificateAlgorithm = trustCertificateAlgorithm;
+    }
 
 }

@@ -16,50 +16,38 @@
  */
 package org.apache.activemq.ra;
 
-import org.apache.activemq.ra.ActiveMQActivationSpec;
-import org.apache.activemq.ra.ActiveMQEndpointActivationKey;
-import org.apache.activemq.ra.ActiveMQEndpointWorker;
-import org.apache.activemq.ra.ActiveMQResourceAdapter;
-import org.jmock.cglib.Mock;
-import org.jmock.cglib.MockObjectTestCase;
-import org.jmock.core.Constraint;
-
 import javax.jms.Connection;
-import javax.jms.Topic;
 import javax.resource.spi.BootstrapContext;
 import javax.resource.spi.endpoint.MessageEndpointFactory;
 
+import org.jmock.cglib.Mock;
+import org.jmock.cglib.MockObjectTestCase;
 
 /**
  * @author <a href="mailto:michael.gaffney@panacya.com">Michael Gaffney </a>
  */
 public class ActiveMQAsfEndpointWorkerTest extends MockObjectTestCase {
 
-    private ActiveMQEndpointWorker worker;    
     private Mock mockResourceAdapter;
     private Mock mockActivationKey;
     private Mock mockEndpointFactory;
     private Mock mockBootstrapContext;
     private ActiveMQActivationSpec stubActivationSpec;
-    private Mock mockConnection;
+//    private Mock mockConnection;
 
     public ActiveMQAsfEndpointWorkerTest(String name) {
         setName(name);
     }
-    
+
     public void testTopicSubscriberDurableNoDups() throws Exception {
 
         /*
-        Constraint[] args = {isA(Topic.class), eq(stubActivationSpec.getSubscriptionId()), NULL,
-                                ANYTHING, ANYTHING};
-        
-        mockConnection.expects(once())
-                            .method("createDurableConnectionConsumer")
-                                .with(args)
-                                    .will(returnValue(null));
-        worker.start();
-        verifyMocks();
-        */
+         * Constraint[] args = {isA(Topic.class),
+         * eq(stubActivationSpec.getSubscriptionId()), NULL, ANYTHING,
+         * ANYTHING}; mockConnection.expects(once())
+         * .method("createDurableConnectionConsumer") .with(args)
+         * .will(returnValue(null)); worker.start(); verifyMocks();
+         */
     }
 
     protected void setUp() throws Exception {
@@ -82,46 +70,34 @@ public class ActiveMQAsfEndpointWorkerTest extends MockObjectTestCase {
         mockActivationKey = new Mock(ActiveMQEndpointActivationKey.class);
         mockEndpointFactory = new Mock(MessageEndpointFactory.class);
         mockBootstrapContext = new Mock(BootstrapContext.class);
-        mockConnection = new Mock(Connection.class);
-        
-        mockActivationKey.expects(atLeastOnce())
-                            .method("getMessageEndpointFactory")
-                                .will(returnValue((MessageEndpointFactory) mockEndpointFactory.proxy()));
-        
-        mockActivationKey.expects(atLeastOnce())
-					        .method("getActivationSpec")
-					            .will(returnValue(stubActivationSpec));
+//        mockConnection = new Mock(Connection.class);
 
-        mockResourceAdapter.expects(atLeastOnce())
-                            .method("getBootstrapContext")
-                                .will(returnValue((BootstrapContext) mockBootstrapContext.proxy()));
+        mockActivationKey.expects(atLeastOnce()).method("getMessageEndpointFactory").will(returnValue((MessageEndpointFactory)mockEndpointFactory.proxy()));
 
-        mockBootstrapContext.expects(atLeastOnce())
-                            .method("getWorkManager")
-                                .will(returnValue(null));
+        mockActivationKey.expects(atLeastOnce()).method("getActivationSpec").will(returnValue(stubActivationSpec));
+
+        mockResourceAdapter.expects(atLeastOnce()).method("getBootstrapContext").will(returnValue((BootstrapContext)mockBootstrapContext.proxy()));
+
+        mockBootstrapContext.expects(atLeastOnce()).method("getWorkManager").will(returnValue(null));
 
         final boolean isTransactedResult = true;
         setupIsTransacted(isTransactedResult);
     }
 
     private void setupIsTransacted(final boolean transactedResult) {
-        mockEndpointFactory.expects(atLeastOnce())
-                            .method("isDeliveryTransacted")
-                                .with(ANYTHING)
-                                    .will(returnValue(transactedResult));
+        mockEndpointFactory.expects(atLeastOnce()).method("isDeliveryTransacted").with(ANYTHING).will(returnValue(transactedResult));
     }
 
     private void setupEndpointWorker() throws Exception {
-        worker = new ActiveMQEndpointWorker((ActiveMQResourceAdapter)mockResourceAdapter.proxy(), 
-                                               (ActiveMQEndpointActivationKey)mockActivationKey.proxy());
+        new ActiveMQEndpointWorker((ActiveMQResourceAdapter)mockResourceAdapter.proxy(), (ActiveMQEndpointActivationKey)mockActivationKey.proxy());
     }
 
-    private void verifyMocks() {
-        mockResourceAdapter.verify();
-        mockActivationKey.verify();
-        mockEndpointFactory.verify();
-        mockBootstrapContext.verify();
-        mockConnection.verify();
-    }
+//    private void verifyMocks() {
+//        mockResourceAdapter.verify();
+//        mockActivationKey.verify();
+//        mockEndpointFactory.verify();
+//        mockBootstrapContext.verify();
+//        mockConnection.verify();
+//    }
 
 }

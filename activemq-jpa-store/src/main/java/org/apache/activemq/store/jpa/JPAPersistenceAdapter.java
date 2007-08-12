@@ -45,212 +45,214 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * An implementation of {@link PersistenceAdapter} that uses JPA to
- * store it's messages.
+ * An implementation of {@link PersistenceAdapter} that uses JPA to store it's
+ * messages.
  * 
  * @org.apache.xbean.XBean element="jpaPersistenceAdapter"
- * 
  * @version $Revision: 1.17 $
  */
 public class JPAPersistenceAdapter implements PersistenceAdapter {
 
-    private static final Log log = LogFactory.getLog(JPAPersistenceAdapter.class);
     String entityManagerName = "activemq";
-	Properties entityManagerProperties = System.getProperties();
-	EntityManagerFactory entityManagerFactory;
-	private WireFormat wireFormat;
-	private MemoryTransactionStore transactionStore;
-	
-	public void beginTransaction(ConnectionContext context) throws IOException {
-		if( context.getLongTermStoreContext()!=null )
-			throw new IOException("Transation already started.");
-		
-		EntityManager manager = getEntityManagerFactory().createEntityManager();		
-		manager.getTransaction().begin();
-		context.setLongTermStoreContext(manager);
-	}
+    Properties entityManagerProperties = System.getProperties();
+    EntityManagerFactory entityManagerFactory;
+    private WireFormat wireFormat;
+    private MemoryTransactionStore transactionStore;
 
-	public void commitTransaction(ConnectionContext context) throws IOException {
-		EntityManager manager = (EntityManager) context.getLongTermStoreContext();
-		if( manager==null )
-			throw new IOException("Transation not started.");
-		context.setLongTermStoreContext(null);
-		manager.getTransaction().commit();
-		manager.close();
-	}
-	
-	public void rollbackTransaction(ConnectionContext context) throws IOException {
-		EntityManager manager = (EntityManager) context.getLongTermStoreContext();
-		if( manager==null )
-			throw new IOException("Transation not started.");
-		context.setLongTermStoreContext(null);
-		manager.getTransaction().rollback();
-		manager.close();
-	}
-	
-	public EntityManager beginEntityManager(ConnectionContext context) {
-		if( context==null || context.getLongTermStoreContext()==null ) {
-			EntityManager manager = getEntityManagerFactory().createEntityManager();		
-			manager.getTransaction().begin();
-			return manager;
-		} else {
-			return (EntityManager) context.getLongTermStoreContext();
-		}
-	}
-	
-	public void commitEntityManager(ConnectionContext context, EntityManager manager) {		
-		if( context==null || context.getLongTermStoreContext()==null ) {
-			manager.getTransaction().commit();
-			manager.close();
-		} 
-	}
-	
-	public void rollbackEntityManager(ConnectionContext context, EntityManager manager) {		
-		if( context==null || context.getLongTermStoreContext()==null ) {
-			manager.getTransaction().rollback();
-			manager.close();
-		} 
-	}
+    public void beginTransaction(ConnectionContext context) throws IOException {
+        if (context.getLongTermStoreContext() != null) {
+            throw new IOException("Transation already started.");
+        }
+        EntityManager manager = getEntityManagerFactory().createEntityManager();
+        manager.getTransaction().begin();
+        context.setLongTermStoreContext(manager);
+    }
 
-	public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {
-		MessageStore rc =  new JPAMessageStore(this, destination);
+    public void commitTransaction(ConnectionContext context) throws IOException {
+        EntityManager manager = (EntityManager)context.getLongTermStoreContext();
+        if (manager == null) {
+            throw new IOException("Transation not started.");
+        }
+        context.setLongTermStoreContext(null);
+        manager.getTransaction().commit();
+        manager.close();
+    }
+
+    public void rollbackTransaction(ConnectionContext context) throws IOException {
+        EntityManager manager = (EntityManager)context.getLongTermStoreContext();
+        if (manager == null) {
+            throw new IOException("Transation not started.");
+        }
+        context.setLongTermStoreContext(null);
+        manager.getTransaction().rollback();
+        manager.close();
+    }
+
+    public EntityManager beginEntityManager(ConnectionContext context) {
+        if (context == null || context.getLongTermStoreContext() == null) {
+            EntityManager manager = getEntityManagerFactory().createEntityManager();
+            manager.getTransaction().begin();
+            return manager;
+        } else {
+            return (EntityManager)context.getLongTermStoreContext();
+        }
+    }
+
+    public void commitEntityManager(ConnectionContext context, EntityManager manager) {
+        if (context == null || context.getLongTermStoreContext() == null) {
+            manager.getTransaction().commit();
+            manager.close();
+        }
+    }
+
+    public void rollbackEntityManager(ConnectionContext context, EntityManager manager) {
+        if (context == null || context.getLongTermStoreContext() == null) {
+            manager.getTransaction().rollback();
+            manager.close();
+        }
+    }
+
+    public MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {
+        MessageStore rc = new JPAMessageStore(this, destination);
         if (transactionStore != null) {
             rc = transactionStore.proxy(rc);
         }
         return rc;
-	}
+    }
 
-	public TopicMessageStore createTopicMessageStore(ActiveMQTopic destination) throws IOException {
-		TopicMessageStore rc = new JPATopicMessageStore(this, destination);
+    public TopicMessageStore createTopicMessageStore(ActiveMQTopic destination) throws IOException {
+        TopicMessageStore rc = new JPATopicMessageStore(this, destination);
         if (transactionStore != null) {
             rc = transactionStore.proxy(rc);
         }
         return rc;
-	}
+    }
 
-	public TransactionStore createTransactionStore() throws IOException {
+    public TransactionStore createTransactionStore() throws IOException {
         if (transactionStore == null) {
             transactionStore = new MemoryTransactionStore();
         }
         return this.transactionStore;
-	}
-
-	public void deleteAllMessages() throws IOException {
-		EntityManager manager = beginEntityManager(null);
-		try {
-			Query query = manager.createQuery("delete from StoredMessage m");
-			query.executeUpdate();
-			query = manager.createQuery("delete from StoredSubscription ss");
-			query.executeUpdate();
-		} catch (Throwable e) {
-			rollbackEntityManager(null,manager);
-			throw IOExceptionSupport.create(e);
-		}
-		commitEntityManager(null,manager);		
-	}
-
-	public Set<ActiveMQDestination> getDestinations() {
-		HashSet<ActiveMQDestination> rc = new HashSet<ActiveMQDestination>();
-		
-		EntityManager manager = beginEntityManager(null);
-		try {
-			Query query = manager.createQuery("select distinct m.destination from StoredMessage m");
-			for (String dest : (List<String>)query.getResultList()) {
-				rc.add(ActiveMQDestination.createDestination(dest,ActiveMQDestination.QUEUE_TYPE));
-	        }
-		} catch (RuntimeException e) {
-			rollbackEntityManager(null,manager);
-			throw e;
-		}
-		commitEntityManager(null,manager);		
-		return rc;
-	}
-
-	public long getLastMessageBrokerSequenceId() throws IOException {
-		long rc=0;
-		EntityManager manager = beginEntityManager(null);
-		try {
-			Query query = manager.createQuery("select max(m.id) from StoredMessage m");
-			Long t = (Long) query.getSingleResult();
-			if( t != null ) {
-				rc = t;
-			}
-		} catch (Throwable e) {
-			rollbackEntityManager(null,manager);
-			throw IOExceptionSupport.create(e);
-		}
-		commitEntityManager(null,manager);		
-		return rc;
-	}
-
-	public boolean isUseExternalMessageReferences() {
-		return false;
-	}
-
-	public void setUsageManager(UsageManager usageManager) {
-	}
-
-	public void start() throws Exception {
-	}
-
-	public void stop() throws Exception {
-		if( entityManagerFactory !=null ) {
-			entityManagerFactory.close();
-		}
-	}
-
-	public EntityManagerFactory getEntityManagerFactory() {
-		if( entityManagerFactory == null ) {
-			entityManagerFactory = createEntityManagerFactory();
-		}
-		return entityManagerFactory;
-	}
-	protected EntityManagerFactory createEntityManagerFactory() {
-		return Persistence.createEntityManagerFactory(getEntityManagerName(), getEntityManagerProperties());
-	}
-
-	public void setEntityManagerFactory(EntityManagerFactory entityManagerFactory) {
-		this.entityManagerFactory = entityManagerFactory;
-	}
-
-	public Properties getEntityManagerProperties() {
-		return entityManagerProperties;
-	}
-	public void setEntityManagerProperties(
-			Properties entityManagerProperties) {
-		this.entityManagerProperties = entityManagerProperties;
-	}
-
-	public String getEntityManagerName() {
-		return entityManagerName;
-	}
-	public void setEntityManagerName(String entityManager) {
-		this.entityManagerName = entityManager;
-	}
-
-	public WireFormat getWireFormat() {
-		if(wireFormat==null) {
-			wireFormat = createWireFormat();
-		}
-		return wireFormat;
-	}
-
-	private WireFormat createWireFormat() {
-		OpenWireFormatFactory wff = new OpenWireFormatFactory();
-		return wff.createWireFormat(); 
-	}
-
-	public void setWireFormat(WireFormat wireFormat) {
-		this.wireFormat = wireFormat;
-	}
-
-    public void checkpoint(boolean sync) throws IOException{        
     }
 
-    public void setBrokerName(String brokerName){        
+    public void deleteAllMessages() throws IOException {
+        EntityManager manager = beginEntityManager(null);
+        try {
+            Query query = manager.createQuery("delete from StoredMessage m");
+            query.executeUpdate();
+            query = manager.createQuery("delete from StoredSubscription ss");
+            query.executeUpdate();
+        } catch (Throwable e) {
+            rollbackEntityManager(null, manager);
+            throw IOExceptionSupport.create(e);
+        }
+        commitEntityManager(null, manager);
     }
 
-    public void setDirectory(File dir){        
+    public Set<ActiveMQDestination> getDestinations() {
+        HashSet<ActiveMQDestination> rc = new HashSet<ActiveMQDestination>();
+
+        EntityManager manager = beginEntityManager(null);
+        try {
+            Query query = manager.createQuery("select distinct m.destination from StoredMessage m");
+            for (String dest : (List<String>)query.getResultList()) {
+                rc.add(ActiveMQDestination.createDestination(dest, ActiveMQDestination.QUEUE_TYPE));
+            }
+        } catch (RuntimeException e) {
+            rollbackEntityManager(null, manager);
+            throw e;
+        }
+        commitEntityManager(null, manager);
+        return rc;
+    }
+
+    public long getLastMessageBrokerSequenceId() throws IOException {
+        long rc = 0;
+        EntityManager manager = beginEntityManager(null);
+        try {
+            Query query = manager.createQuery("select max(m.id) from StoredMessage m");
+            Long t = (Long)query.getSingleResult();
+            if (t != null) {
+                rc = t;
+            }
+        } catch (Throwable e) {
+            rollbackEntityManager(null, manager);
+            throw IOExceptionSupport.create(e);
+        }
+        commitEntityManager(null, manager);
+        return rc;
+    }
+
+    public boolean isUseExternalMessageReferences() {
+        return false;
+    }
+
+    public void setUsageManager(UsageManager usageManager) {
+    }
+
+    public void start() throws Exception {
+    }
+
+    public void stop() throws Exception {
+        if (entityManagerFactory != null) {
+            entityManagerFactory.close();
+        }
+    }
+
+    public EntityManagerFactory getEntityManagerFactory() {
+        if (entityManagerFactory == null) {
+            entityManagerFactory = createEntityManagerFactory();
+        }
+        return entityManagerFactory;
+    }
+
+    protected EntityManagerFactory createEntityManagerFactory() {
+        return Persistence.createEntityManagerFactory(getEntityManagerName(), getEntityManagerProperties());
+    }
+
+    public void setEntityManagerFactory(EntityManagerFactory entityManagerFactory) {
+        this.entityManagerFactory = entityManagerFactory;
+    }
+
+    public Properties getEntityManagerProperties() {
+        return entityManagerProperties;
+    }
+
+    public void setEntityManagerProperties(Properties entityManagerProperties) {
+        this.entityManagerProperties = entityManagerProperties;
+    }
+
+    public String getEntityManagerName() {
+        return entityManagerName;
+    }
+
+    public void setEntityManagerName(String entityManager) {
+        this.entityManagerName = entityManager;
+    }
+
+    public WireFormat getWireFormat() {
+        if (wireFormat == null) {
+            wireFormat = createWireFormat();
+        }
+        return wireFormat;
+    }
+
+    private WireFormat createWireFormat() {
+        OpenWireFormatFactory wff = new OpenWireFormatFactory();
+        return wff.createWireFormat();
+    }
+
+    public void setWireFormat(WireFormat wireFormat) {
+        this.wireFormat = wireFormat;
+    }
+
+    public void checkpoint(boolean sync) throws IOException {
+    }
+
+    public void setBrokerName(String brokerName) {
+    }
+
+    public void setDirectory(File dir) {
     }
 
 }

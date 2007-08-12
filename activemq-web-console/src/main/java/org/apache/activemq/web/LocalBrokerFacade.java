@@ -16,32 +16,21 @@
  */
 package org.apache.activemq.web;
 
+import java.util.Iterator;
+import java.util.Set;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.BrokerView;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
-import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
 import org.apache.activemq.broker.jmx.ManagedRegionBroker;
 import org.apache.activemq.broker.jmx.ManagementContext;
-import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import javax.management.MBeanServer;
-import javax.management.MBeanServerInvocationHandler;
-import javax.management.ObjectName;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 
 /**
  * An implementation of {@link BrokerFacade} which uses a local in JVM broker
- *
+ * 
  * @version $Revision$
  */
 public class LocalBrokerFacade extends BrokerFacadeSupport {
@@ -78,7 +67,7 @@ public class LocalBrokerFacade extends BrokerFacadeSupport {
 
     public void purgeQueue(ActiveMQDestination destination) throws Exception {
         Set destinations = getManagedBroker().getQueueRegion().getDestinations(destination);
-        for (Iterator i=destinations.iterator(); i.hasNext();) {
+        for (Iterator i = destinations.iterator(); i.hasNext();) {
             Queue regionQueue = (Queue)i.next();
             regionQueue.purge();
         }

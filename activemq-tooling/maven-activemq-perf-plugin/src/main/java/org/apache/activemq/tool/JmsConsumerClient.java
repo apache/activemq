@@ -16,24 +16,23 @@
  */
 package org.apache.activemq.tool;
 
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
-import org.apache.activemq.tool.properties.JmsConsumerProperties;
-import org.apache.activemq.tool.properties.JmsClientProperties;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.jms.MessageConsumer;
-import javax.jms.JMSException;
 import javax.jms.ConnectionFactory;
-import javax.jms.Connection;
 import javax.jms.Destination;
+import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.Topic;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import org.apache.activemq.tool.properties.JmsClientProperties;
+import org.apache.activemq.tool.properties.JmsConsumerProperties;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class JmsConsumerClient extends AbstractJmsMeasurableClient {
-    private static final Log log = LogFactory.getLog(JmsConsumerClient.class);
+    private static final Log LOG = LogFactory.getLog(JmsConsumerClient.class);
 
     protected MessageConsumer jmsConsumer;
     protected JmsConsumerProperties client;
@@ -81,7 +80,7 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
         try {
             getConnection().start();
 
-            log.info("Starting to synchronously receive messages for " + duration + " ms...");
+            LOG.info("Starting to synchronously receive messages for " + duration + " ms...");
             long endTime = System.currentTimeMillis() + duration;
             while (System.currentTimeMillis() < endTime) {
                 getJmsConsumer().receive();
@@ -89,7 +88,7 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
             }
         } finally {
             if (client.isDurable() && client.isUnsubscribe()) {
-                log.info("Unsubscribing durable subscriber: " + getClientName());
+                LOG.info("Unsubscribing durable subscriber: " + getClientName());
                 getJmsConsumer().close();
                 getSession().unsubscribe(getClientName());
             }
@@ -104,7 +103,7 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
 
         try {
             getConnection().start();
-            log.info("Starting to synchronously receive " + count + " messages...");
+            LOG.info("Starting to synchronously receive " + count + " messages...");
 
             int recvCount = 0;
             while (recvCount < count) {
@@ -114,7 +113,7 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
             }
         } finally {
             if (client.isDurable() && client.isUnsubscribe()) {
-                log.info("Unsubscribing durable subscriber: " + getClientName());
+                LOG.info("Unsubscribing durable subscriber: " + getClientName());
                 getJmsConsumer().close();
                 getSession().unsubscribe(getClientName());
             }
@@ -135,7 +134,7 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
 
         try {
             getConnection().start();
-            log.info("Starting to asynchronously receive messages for " + duration + " ms...");
+            LOG.info("Starting to asynchronously receive messages for " + duration + " ms...");
             try {
                 Thread.sleep(duration);
             } catch (InterruptedException e) {
@@ -143,7 +142,7 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
             }
         } finally {
             if (client.isDurable() && client.isUnsubscribe()) {
-                log.info("Unsubscribing durable subscriber: " + getClientName());
+                LOG.info("Unsubscribing durable subscriber: " + getClientName());
                 getJmsConsumer().close();
                 getSession().unsubscribe(getClientName());
             }
@@ -167,7 +166,7 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
 
         try {
             getConnection().start();
-            log.info("Starting to asynchronously receive " + client.getRecvCount() + " messages...");
+            LOG.info("Starting to asynchronously receive " + client.getRecvCount() + " messages...");
             try {
                 while (recvCount.get() < count) {
                     recvCount.wait();
@@ -177,7 +176,7 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
             }
         } finally {
             if (client.isDurable() && client.isUnsubscribe()) {
-                log.info("Unsubscribing durable subscriber: " + getClientName());
+                LOG.info("Unsubscribing durable subscriber: " + getClientName());
                 getJmsConsumer().close();
                 getSession().unsubscribe(getClientName());
             }
@@ -197,10 +196,10 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
                 clientName = "JmsConsumer";
                 setClientName(clientName);
             }
-            log.info("Creating durable subscriber (" + clientName + ") to: " + dest.toString());
+            LOG.info("Creating durable subscriber (" + clientName + ") to: " + dest.toString());
             jmsConsumer = getSession().createDurableSubscriber((Topic) dest, clientName);
         } else {
-            log.info("Creating non-durable consumer to: " + dest.toString());
+            LOG.info("Creating non-durable consumer to: " + dest.toString());
             jmsConsumer = getSession().createConsumer(dest);
         }
         return jmsConsumer;
@@ -213,10 +212,10 @@ public class JmsConsumerClient extends AbstractJmsMeasurableClient {
                 clientName = "JmsConsumer";
                 setClientName(clientName);
             }
-            log.info("Creating durable subscriber (" + clientName + ") to: " + dest.toString());
+            LOG.info("Creating durable subscriber (" + clientName + ") to: " + dest.toString());
             jmsConsumer = getSession().createDurableSubscriber((Topic) dest, clientName, selector, noLocal);
         } else {
-            log.info("Creating non-durable consumer to: " + dest.toString());
+            LOG.info("Creating non-durable consumer to: " + dest.toString());
             jmsConsumer = getSession().createConsumer(dest, selector, noLocal);
         }
         return jmsConsumer;

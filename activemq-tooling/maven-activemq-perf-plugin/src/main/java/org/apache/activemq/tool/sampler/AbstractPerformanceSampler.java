@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,69 +16,69 @@
  */
 package org.apache.activemq.tool.sampler;
 
-import org.apache.activemq.tool.reports.PerformanceReportWriter;
-import org.apache.activemq.tool.properties.AbstractObjectProperties;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.activemq.tool.properties.AbstractObjectProperties;
+import org.apache.activemq.tool.reports.PerformanceReportWriter;
+
 public abstract class AbstractPerformanceSampler extends AbstractObjectProperties implements PerformanceSampler {
-	protected long rampUpTime   = 30 * 1000; // 30 secs
-	protected long rampDownTime = 30 * 1000; // 30 secs
-	protected long duration     = 5 * 60 * 1000; // 5 mins
-	protected long interval     = 1000; // 1 sec
-	protected PerformanceReportWriter perfReportWriter = null;
-	protected PerformanceEventListener perfEventListener = null;
-	protected final AtomicBoolean isRunning = new AtomicBoolean(false);
+    
+    protected long rampUpTime = 30 * 1000; // 30 secs
+    protected long rampDownTime = 30 * 1000; // 30 secs
+    protected long duration = 5 * 60 * 1000; // 5 mins
+    protected long interval = 1000; // 1 sec
+    protected PerformanceReportWriter perfReportWriter;
+    protected PerformanceEventListener perfEventListener;
+    protected final AtomicBoolean isRunning = new AtomicBoolean(false);
+    protected long sampleIndex;
 
-	protected long sampleIndex = 0;
+    public long getRampUpTime() {
+        return rampUpTime;
+    }
 
-	public long getRampUpTime() {
-		return rampUpTime;
-	}
+    public void setRampUpTime(long rampUpTime) {
+        this.rampUpTime = rampUpTime;
+    }
 
-	public void setRampUpTime(long rampUpTime) {
-		this.rampUpTime = rampUpTime;
-	}
+    public long getRampDownTime() {
+        return rampDownTime;
+    }
 
-	public long getRampDownTime() {
-		return rampDownTime;
-	}
+    public void setRampDownTime(long rampDownTime) {
+        this.rampDownTime = rampDownTime;
+    }
 
-	public void setRampDownTime(long rampDownTime) {
-		this.rampDownTime = rampDownTime;
-	}
+    public long getDuration() {
+        return duration;
+    }
 
-	public long getDuration() {
-		return duration;
-	}
+    public void setDuration(long duration) {
+        this.duration = duration;
+    }
 
-	public void setDuration(long duration) {
-		this.duration = duration;
-	}
+    public long getInterval() {
+        return interval;
+    }
 
-	public long getInterval() {
-		return interval;
-	}
+    public void setInterval(long interval) {
+        this.interval = interval;
+    }
 
-	public void setInterval(long interval) {
-		this.interval = interval;
-	}
+    public PerformanceReportWriter getPerfReportWriter() {
+        return perfReportWriter;
+    }
 
-	public PerformanceReportWriter getPerfReportWriter() {
-		return perfReportWriter;
-	}
+    public void setPerfReportWriter(PerformanceReportWriter perfReportWriter) {
+        this.perfReportWriter = perfReportWriter;
+    }
 
-	public void setPerfReportWriter(PerformanceReportWriter perfReportWriter) {
-		this.perfReportWriter = perfReportWriter;
-	}
+    public PerformanceEventListener getPerfEventListener() {
+        return perfEventListener;
+    }
 
-	public PerformanceEventListener getPerfEventListener() {
-		return perfEventListener;
-	}
-
-	public void setPerfEventListener(PerformanceEventListener perfEventListener) {
-		this.perfEventListener = perfEventListener;
-	}
+    public void setPerfEventListener(PerformanceEventListener perfEventListener) {
+        this.perfEventListener = perfEventListener;
+    }
 
     public void startSampler() {
         isRunning.set(true);
@@ -90,7 +90,7 @@ public abstract class AbstractPerformanceSampler extends AbstractObjectPropertie
         try {
             onRampUpStart();
             if (perfEventListener != null) {
-            	perfEventListener.onRampUpStart(this);
+                perfEventListener.onRampUpStart(this);
             }
 
             try {
@@ -101,14 +101,14 @@ public abstract class AbstractPerformanceSampler extends AbstractObjectPropertie
 
             onSamplerStart();
             if (perfEventListener != null) {
-            	perfEventListener.onSamplerStart(this);
+                perfEventListener.onSamplerStart(this);
             }
 
             sample();
 
             onSamplerEnd();
             if (perfEventListener != null) {
-            	perfEventListener.onSamplerEnd(this);
+                perfEventListener.onSamplerEnd(this);
             }
 
             try {
@@ -119,7 +119,7 @@ public abstract class AbstractPerformanceSampler extends AbstractObjectPropertie
 
             onRampDownEnd();
             if (perfEventListener != null) {
-            	perfEventListener.onRampDownEnd(this);
+                perfEventListener.onRampDownEnd(this);
             }
         } finally {
             isRunning.set(false);
@@ -127,7 +127,7 @@ public abstract class AbstractPerformanceSampler extends AbstractObjectPropertie
                 isRunning.notifyAll();
             }
         }
-	}
+    }
 
     protected void sample() {
         // Compute for the actual duration window of the sampler
@@ -147,11 +147,11 @@ public abstract class AbstractPerformanceSampler extends AbstractObjectPropertie
     public abstract void sampleData();
 
     public boolean isRunning() {
-		return isRunning.get();
-	}
+        return isRunning.get();
+    }
 
-	public void waitUntilDone() {
-		while (isRunning()) {
+    public void waitUntilDone() {
+        while (isRunning()) {
             try {
                 synchronized (isRunning) {
                     isRunning.wait(0);
@@ -160,11 +160,18 @@ public abstract class AbstractPerformanceSampler extends AbstractObjectPropertie
                 e.printStackTrace();
             }
         }
-	}
+    }
 
     // Call back functions to customize behavior of thread.
-    protected void onRampUpStart() {}
-    protected void onSamplerStart() {}
-    protected void onSamplerEnd() {}
-    protected void onRampDownEnd() {}
+    protected void onRampUpStart() {
+    }
+
+    protected void onSamplerStart() {
+    }
+
+    protected void onSamplerEnd() {
+    }
+
+    protected void onRampDownEnd() {
+    }
 }

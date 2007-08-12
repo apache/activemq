@@ -16,10 +16,6 @@
  */
 package org.apache.activemq.maven;
 
-import org.apache.activemq.console.Main;
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MojoExecutionException;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -27,16 +23,20 @@ import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 
+import org.apache.activemq.console.Main;
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
+
 /**
  * Goal which starts activemq broker.
- *
+ * 
  * @goal broker
  * @phase process-sources
  */
 public class ServerMojo extends AbstractMojo {
     /**
      * Location of the output directory. Defaults to target.
-     *
+     * 
      * @parameter expression="${project.build.directory}"
      * @required
      */
@@ -44,15 +44,16 @@ public class ServerMojo extends AbstractMojo {
 
     /**
      * Location of the predefined config files.
-     *
-     * @parameter expression="${configDirectory}" default-value="${basedir}/src/main/resources/broker-conf"
+     * 
+     * @parameter expression="${configDirectory}"
+     *            default-value="${basedir}/src/main/resources/broker-conf"
      * @required
      */
     private String configDirectory;
 
     /**
      * Type of activemq configuration to use. This is also the filename used.
-     *
+     * 
      * @parameter expression="${configType}" default-value="activemq"
      * @required
      */
@@ -60,20 +61,19 @@ public class ServerMojo extends AbstractMojo {
 
     /**
      * Location of activemq config file other those found in resources/config.
-     *
+     * 
      * @parameter expression="${configFile}"
      */
     private File configFile;
 
     /**
      * Broker URL.
-     *
+     * 
      * @parameter expression="${url}"
      */
     private String url;
 
-    public void execute()
-            throws MojoExecutionException {
+    public void execute() throws MojoExecutionException {
 
         File out = outputDirectory;
 
@@ -84,8 +84,8 @@ public class ServerMojo extends AbstractMojo {
 
         String[] args = new String[2];
         if (url != null) {
-           args[0] = "start";
-           args[1] = url;
+            args[0] = "start";
+            args[1] = url;
         } else {
             File config;
             if (configFile != null) {
@@ -100,23 +100,23 @@ public class ServerMojo extends AbstractMojo {
             } catch (IOException e) {
                 throw new MojoExecutionException(e.getMessage());
             }
-           args[0] = "start";
-           args[1] =  "xbean:" + (config.toURI()).toString();
+            args[0] = "start";
+            args[1] = "xbean:" + (config.toURI()).toString();
         }
-
 
         Main.main(args);
     }
 
     /**
      * Copy activemq configuration file to output directory.
-     *
+     * 
      * @param source
      * @return
      * @throws IOException
      */
     public File copy(File source) throws IOException {
-        FileChannel in = null, out = null;
+        FileChannel in = null;
+        FileChannel out = null;
 
         File dest = new File(outputDirectory.getAbsolutePath() + File.separator + "activemq.xml");
 
@@ -130,8 +130,12 @@ public class ServerMojo extends AbstractMojo {
             out.write(buf);
 
         } finally {
-            if (in != null) in.close();
-            if (out != null) out.close();
+            if (in != null) {
+                in.close();
+            }
+            if (out != null) {
+                out.close();
+            }
         }
 
         return dest;

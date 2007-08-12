@@ -16,10 +16,11 @@
  */
 package org.apache.activemq.tool.spi;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
+import java.util.Properties;
 
 import javax.jms.ConnectionFactory;
-import java.util.Properties;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
 
 public class ActiveMQPojoSPI implements SPIConnectionFactory {
     public static final String KEY_BROKER_URL        = "brokerUrl";

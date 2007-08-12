@@ -16,10 +16,14 @@
  */
 package org.apache.activemq.tool.spi;
 
-import javax.jms.ConnectionFactory;
 import java.util.Properties;
 
+import javax.jms.ConnectionFactory;
+
 public interface SPIConnectionFactory {
-    public ConnectionFactory createConnectionFactory(Properties settings) throws Exception;
-    public void configureConnectionFactory(ConnectionFactory jmsFactory, Properties settings) throws Exception;
+    
+    ConnectionFactory createConnectionFactory(Properties settings) throws Exception;
+
+    void configureConnectionFactory(ConnectionFactory jmsFactory, Properties settings) throws Exception;
+    
 }

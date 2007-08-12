@@ -16,16 +16,17 @@
  */
 package org.apache.activemq.benchmark;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 
 /**
  * @author James Strachan
@@ -36,6 +37,9 @@ public class Producer extends BenchmarkSupport {
     int loops = -1;
     int loopSize = 1000;
     private int messageSize = 1000;
+
+    public Producer() {
+    }
 
     public static void main(String[] args) {
         Producer tool = new Producer();
@@ -59,14 +63,10 @@ public class Producer extends BenchmarkSupport {
         }
         try {
             tool.run();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.out.println("Caught: " + e);
             e.printStackTrace();
         }
-    }
-
-    public Producer() {
     }
 
     public void run() throws Exception {
@@ -75,7 +75,7 @@ public class Producer extends BenchmarkSupport {
     }
 
     // Properties
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     public int getMessageSize() {
         return messageSize;
     }
@@ -93,7 +93,7 @@ public class Producer extends BenchmarkSupport {
     }
 
     // Implementation methods
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
     protected void publish() throws Exception {
         final String text = getMessage();
@@ -106,8 +106,7 @@ public class Producer extends BenchmarkSupport {
                 public void run() {
                     try {
                         publish(text, subject);
-                    }
-                    catch (JMSException e) {
+                    } catch (JMSException e) {
                         System.out.println("Caught: " + e);
                         e.printStackTrace();
                     }
@@ -135,8 +134,7 @@ public class Producer extends BenchmarkSupport {
         MessageProducer publisher = session.createProducer(destination);
         if (isDurable()) {
             publisher.setDeliveryMode(DeliveryMode.PERSISTENT);
-        }
-        else {
+        } else {
             publisher.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         }
 
@@ -147,8 +145,7 @@ public class Producer extends BenchmarkSupport {
             while (true) {
                 publishLoop(session, publisher, text);
             }
-        }
-        else {
+        } else {
             for (int i = 0; i < loops; i++) {
                 publishLoop(session, publisher, text);
             }

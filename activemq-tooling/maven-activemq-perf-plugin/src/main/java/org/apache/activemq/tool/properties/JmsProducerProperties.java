@@ -27,7 +27,8 @@ public class JmsProducerProperties extends JmsClientProperties {
     protected long sendCount  = 1000000; // Send a million messages by default
     protected long sendDuration = 5 * 60 * 1000; // Send for 5 mins by default
     protected String sendType = TIME_BASED_SENDING;
-    protected boolean createNewMsg = false; // If true, create a different message on each send, otherwise reuse.
+    // If true, create a different message on each send, otherwise reuse.
+    protected boolean createNewMsg; 
 
     public String getDeliveryMode() {
         return deliveryMode;

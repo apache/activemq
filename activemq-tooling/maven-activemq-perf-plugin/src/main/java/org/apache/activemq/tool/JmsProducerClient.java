@@ -16,21 +16,22 @@
  */
 package org.apache.activemq.tool;
 
-import org.apache.activemq.tool.properties.JmsProducerProperties;
+import java.util.Arrays;
+
+import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.MessageProducer;
+import javax.jms.TextMessage;
+
 import org.apache.activemq.tool.properties.JmsClientProperties;
+import org.apache.activemq.tool.properties.JmsProducerProperties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.jms.ConnectionFactory;
-import javax.jms.MessageProducer;
-import javax.jms.TextMessage;
-import javax.jms.JMSException;
-import javax.jms.Destination;
-import javax.jms.DeliveryMode;
-import java.util.Arrays;
-
 public class JmsProducerClient extends AbstractJmsMeasurableClient {
-    private static final Log log = LogFactory.getLog(JmsProducerClient.class);
+    private static final Log LOG = LogFactory.getLog(JmsProducerClient.class);
 
     protected JmsProducerProperties client;
     protected MessageProducer jmsProducer;
@@ -81,7 +82,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
         }
         try {
             getConnection().start();
-            log.info("Starting to publish " + client.getMessageSize() + " byte(s) of " + messageCount + " messages...");
+            LOG.info("Starting to publish " + client.getMessageSize() + " byte(s) of " + messageCount + " messages...");
 
             // Send one type of message only, avoiding the creation of different messages on sending
             if (!client.isCreateNewMsg()) {
@@ -148,7 +149,7 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
 
         try {
             getConnection().start();
-            log.info("Starting to publish " + client.getMessageSize() + " byte(s) messages for " + duration + " ms");
+            LOG.info("Starting to publish " + client.getMessageSize() + " byte(s) messages for " + duration + " ms");
 
             // Send one type of message only, avoiding the creation of different messages on sending
             if (!client.isCreateNewMsg()) {
@@ -202,13 +203,13 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
     public MessageProducer createJmsProducer() throws JMSException {
         jmsProducer = getSession().createProducer(null);
         if (client.getDeliveryMode().equalsIgnoreCase(JmsProducerProperties.DELIVERY_MODE_PERSISTENT)) {
-            log.info("Creating producer to possible multiple destinations with persistent delivery.");
+            LOG.info("Creating producer to possible multiple destinations with persistent delivery.");
             jmsProducer.setDeliveryMode(DeliveryMode.PERSISTENT);
         } else if (client.getDeliveryMode().equalsIgnoreCase(JmsProducerProperties.DELIVERY_MODE_NON_PERSISTENT)) {
-            log.info("Creating producer to possible multiple destinations with non-persistent delivery.");
+            LOG.info("Creating producer to possible multiple destinations with non-persistent delivery.");
             jmsProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         } else {
-            log.warn("Unknown deliveryMode value. Defaulting to non-persistent.");
+            LOG.warn("Unknown deliveryMode value. Defaulting to non-persistent.");
             jmsProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         }
         return jmsProducer;
@@ -217,13 +218,13 @@ public class JmsProducerClient extends AbstractJmsMeasurableClient {
     public MessageProducer createJmsProducer(Destination dest) throws JMSException {
         jmsProducer = getSession().createProducer(dest);
         if (client.getDeliveryMode().equalsIgnoreCase(JmsProducerProperties.DELIVERY_MODE_PERSISTENT)) {
-            log.info("Creating producer to: " + dest.toString() + " with persistent delivery.");
+            LOG.info("Creating producer to: " + dest.toString() + " with persistent delivery.");
             jmsProducer.setDeliveryMode(DeliveryMode.PERSISTENT);
         } else if (client.getDeliveryMode().equalsIgnoreCase(JmsProducerProperties.DELIVERY_MODE_NON_PERSISTENT)) {
-            log.info("Creating  producer to: " + dest.toString() + " with non-persistent delivery.");
+            LOG.info("Creating  producer to: " + dest.toString() + " with non-persistent delivery.");
             jmsProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         } else {
-            log.warn("Unknown deliveryMode value. Defaulting to non-persistent.");
+            LOG.warn("Unknown deliveryMode value. Defaulting to non-persistent.");
             jmsProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         }
         return jmsProducer;

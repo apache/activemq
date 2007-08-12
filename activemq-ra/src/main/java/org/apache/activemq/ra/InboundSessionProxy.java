@@ -16,16 +16,37 @@
  */
 package org.apache.activemq.ra;
 
-
-import javax.jms.*;
-
 import java.io.Serializable;
+
+import javax.jms.BytesMessage;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.MapMessage;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
+import javax.jms.ObjectMessage;
+import javax.jms.Queue;
+import javax.jms.QueueBrowser;
+import javax.jms.QueueReceiver;
+import javax.jms.QueueSender;
+import javax.jms.QueueSession;
+import javax.jms.Session;
+import javax.jms.StreamMessage;
+import javax.jms.TemporaryQueue;
+import javax.jms.TemporaryTopic;
+import javax.jms.TextMessage;
+import javax.jms.Topic;
+import javax.jms.TopicPublisher;
+import javax.jms.TopicSession;
+import javax.jms.TopicSubscriber;
 
 /**
  * A {@link Session} implementation which can be used with the ActiveMQ JCA
- * Resource Adapter to publish messages using the same JMS session that is used to dispatch
- * messages.
- *
+ * Resource Adapter to publish messages using the same JMS session that is used
+ * to dispatch messages.
+ * 
  * @version $Revision$
  */
 public class InboundSessionProxy implements Session, QueueSession, TopicSession {
@@ -39,9 +60,8 @@ public class InboundSessionProxy implements Session, QueueSession, TopicSession 
     public QueueSession getQueueSession() throws JMSException {
         Session session = getSession();
         if (session instanceof QueueSession) {
-            return (QueueSession) session;
-        }
-        else {
+            return (QueueSession)session;
+        } else {
             throw new JMSException("The underlying JMS Session does not support QueueSession semantics: " + session);
         }
     }
@@ -49,15 +69,14 @@ public class InboundSessionProxy implements Session, QueueSession, TopicSession 
     public TopicSession getTopicSession() throws JMSException {
         Session session = getSession();
         if (session instanceof TopicSession) {
-            return (TopicSession) session;
-        }
-        else {
+            return (TopicSession)session;
+        } else {
             throw new JMSException("The underlying JMS Session does not support TopicSession semantics: " + session);
         }
     }
 
     public InboundContext getSessionAndProducer() throws JMSException {
-        if( sessionAndProducer==null ) {
+        if (sessionAndProducer == null) {
             sessionAndProducer = InboundContextSupport.getActiveSessionAndProducer();
             if (sessionAndProducer == null) {
                 throw new JMSException("No currently active Session. This JMS provider cannot be used outside a MessageListener.onMessage() invocation");
@@ -90,14 +109,13 @@ public class InboundSessionProxy implements Session, QueueSession, TopicSession 
     public void run() {
         try {
             getSession().run();
-        }
-        catch (JMSException e) {
+        } catch (JMSException e) {
             throw new RuntimeException("Failed to run() on session due to: " + e, e);
         }
     }
 
     // Straightforward delegation methods
-    //-------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
     public QueueBrowser createBrowser(Queue queue) throws JMSException {
         return getSession().createBrowser(queue);
@@ -218,10 +236,10 @@ public class InboundSessionProxy implements Session, QueueSession, TopicSession 
     public TopicPublisher createPublisher(Topic topic) throws JMSException {
         return getTopicSession().createPublisher(topic);
     }
-    
+
     public String toString() {
         try {
-            return "InboundSessionProxy { "+getSession()+" }";
+            return "InboundSessionProxy { " + getSession() + " }";
         } catch (JMSException e) {
             return "InboundSessionProxy { null }";
         }

@@ -35,175 +35,178 @@ import javax.resource.spi.XATerminator;
 import javax.resource.spi.work.WorkManager;
 
 import junit.framework.TestCase;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.ra.ActiveMQManagedConnection;
-import org.apache.activemq.ra.ActiveMQManagedConnectionFactory;
-import org.apache.activemq.ra.ActiveMQResourceAdapter;
-import org.apache.activemq.ra.ManagedConnectionProxy;
-
 
 /**
  * @version $Revision$
  */
 public class ManagedConnectionTest extends TestCase {
-    
-    
+
     private static final String DEFAULT_HOST = "vm://localhost";
-    
+
     private ConnectionManagerAdapter connectionManager = new ConnectionManagerAdapter();
     private ActiveMQManagedConnectionFactory managedConnectionFactory;
     private ConnectionFactory connectionFactory;
     private ManagedConnectionProxy connection;
     private ActiveMQManagedConnection managedConnection;
-    
+
     /**
      * @see junit.framework.TestCase#setUp()
      */
     protected void setUp() throws Exception {
-        
-    	ActiveMQResourceAdapter adapter = new ActiveMQResourceAdapter(); 
-    	adapter.setServerUrl(DEFAULT_HOST);
-    	adapter.setUserName(ActiveMQConnectionFactory.DEFAULT_USER);
-    	adapter.setPassword(ActiveMQConnectionFactory.DEFAULT_PASSWORD);
-    	adapter.start(new BootstrapContext(){
-			public WorkManager getWorkManager() {
-				return null;
-			}
-			public XATerminator getXATerminator() {
-				return null;
-			}
 
-			public Timer createTimer() throws UnavailableException {
-				return null;
-			}
-		});
-    	
+        ActiveMQResourceAdapter adapter = new ActiveMQResourceAdapter();
+        adapter.setServerUrl(DEFAULT_HOST);
+        adapter.setUserName(ActiveMQConnectionFactory.DEFAULT_USER);
+        adapter.setPassword(ActiveMQConnectionFactory.DEFAULT_PASSWORD);
+        adapter.start(new BootstrapContext() {
+            public WorkManager getWorkManager() {
+                return null;
+            }
+
+            public XATerminator getXATerminator() {
+                return null;
+            }
+
+            public Timer createTimer() throws UnavailableException {
+                return null;
+            }
+        });
+
         managedConnectionFactory = new ActiveMQManagedConnectionFactory();
         managedConnectionFactory.setResourceAdapter(adapter);
-    	    	
-        connectionFactory = (ConnectionFactory) managedConnectionFactory.createConnectionFactory(connectionManager);
-        connection = (ManagedConnectionProxy) connectionFactory.createConnection();
+
+        connectionFactory = (ConnectionFactory)managedConnectionFactory.createConnectionFactory(connectionManager);
+        connection = (ManagedConnectionProxy)connectionFactory.createConnection();
         managedConnection = connection.getManagedConnection();
-        
+
     }
-    
+
     public void testConnectionCloseEvent() throws ResourceException, JMSException {
-        
-        final boolean test[] = new boolean[]{false};
+
+        final boolean test[] = new boolean[] {
+            false
+        };
         connectionManager.addConnectionEventListener(new ConnectionEventListenerAdapter() {
-                public void connectionClosed(ConnectionEvent arg0) {
-                    test[0]=true;
-                }
-            });
+            public void connectionClosed(ConnectionEvent arg0) {
+                test[0] = true;
+            }
+        });
         connection.close();
-        assertTrue( test[0] );
+        assertTrue(test[0]);
     }
-    
+
     public void testLocalTransactionCommittedEvent() throws ResourceException, JMSException {
 
-        final boolean test[] = new boolean[]{false};
+        final boolean test[] = new boolean[] {
+            false
+        };
         connectionManager.addConnectionEventListener(new ConnectionEventListenerAdapter() {
-                public void localTransactionCommitted(ConnectionEvent arg0) {
-                    test[0]=true;
-                }
-            });
-        
+            public void localTransactionCommitted(ConnectionEvent arg0) {
+                test[0] = true;
+            }
+        });
+
         managedConnection.getLocalTransaction().begin();
-        Session session = connection.createSession(true,0);
-        
+        Session session = connection.createSession(true, 0);
+
         doWork(session);
         session.commit();
-        
-        assertTrue( test[0] );
-        
+
+        assertTrue(test[0]);
+
     }
-    
+
     public void testLocalTransactionRollbackEvent() throws ResourceException, JMSException {
-        
-        final boolean test[] = new boolean[]{false};
+
+        final boolean test[] = new boolean[] {
+            false
+        };
         connectionManager.addConnectionEventListener(new ConnectionEventListenerAdapter() {
-	            public void localTransactionRolledback(ConnectionEvent arg0) {
-	                test[0]=true;
-	            }
-            });
+            public void localTransactionRolledback(ConnectionEvent arg0) {
+                test[0] = true;
+            }
+        });
         managedConnection.getLocalTransaction().begin();
-        Session session = connection.createSession(true,0);
+        Session session = connection.createSession(true, 0);
         doWork(session);
         session.rollback();
-        
-        assertTrue( test[0] );
-    }    
+
+        assertTrue(test[0]);
+    }
 
     public void testLocalTransactionStartedEvent() throws ResourceException, JMSException {
-        
-        final boolean test[] = new boolean[]{false};
+
+        final boolean test[] = new boolean[] {
+            false
+        };
         connectionManager.addConnectionEventListener(new ConnectionEventListenerAdapter() {
-                public void localTransactionStarted(ConnectionEvent arg0) {
-                    test[0]=true;
-                }
-            });
-        
-        // Begin the transaction...  that should kick off the event.
+            public void localTransactionStarted(ConnectionEvent arg0) {
+                test[0] = true;
+            }
+        });
+
+        // Begin the transaction... that should kick off the event.
         managedConnection.getLocalTransaction().begin();
-	    Session session = connection.createSession(true,0);
+        Session session = connection.createSession(true, 0);
         doWork(session);
-        
-        assertTrue( test[0] );
+
+        assertTrue(test[0]);
     }
 
     /**
-     * A managed connection that has been clean up should throw exceptions
-     * when it used.
+     * A managed connection that has been clean up should throw exceptions when
+     * it used.
      */
     public void testCleanup() throws ResourceException, JMSException {
-        
+
         // Do some work and close it...
-	    Session session = connection.createSession(true,0);
+        Session session = connection.createSession(true, 0);
         doWork(session);
         connection.close();
         try {
-	        // This should throw expection        
-	        doWork(session);
-	        fail("Using a session after the connection is closed should throw exception.");
-        } catch ( JMSException e) {
+            // This should throw expection
+            doWork(session);
+            fail("Using a session after the connection is closed should throw exception.");
+        } catch (JMSException e) {
         }
     }
 
     public void testSessionCloseIndependance() throws ResourceException, JMSException {
-        
-	    Session session1 = connection.createSession(true,0);
-	    Session session2 = connection.createSession(true,0);
-        assertTrue( session1!=session2 );
-	    
-	    doWork(session1);
+
+        Session session1 = connection.createSession(true, 0);
+        Session session2 = connection.createSession(true, 0);
+        assertTrue(session1 != session2);
+
+        doWork(session1);
         session1.close();
-        try {        	
-	        // This should throw expection
-	        doWork(session1);
-	        fail("Using a session after the connection is closed should throw exception.");
-        } catch ( JMSException e) {
+        try {
+            // This should throw expection
+            doWork(session1);
+            fail("Using a session after the connection is closed should throw exception.");
+        } catch (JMSException e) {
         }
-        
+
         // Make sure that closing session 1 does not close session 2
         doWork(session2);
         session2.close();
-        try {        	
-	        // This should throw expection
-	        doWork(session2);
-	        fail("Using a session after the connection is closed should throw exception.");
-        } catch ( JMSException e) {
+        try {
+            // This should throw expection
+            doWork(session2);
+            fail("Using a session after the connection is closed should throw exception.");
+        } catch (JMSException e) {
         }
     }
 
     /**
      * Does some work so that we can test commit/rollback etc.
+     * 
      * @throws JMSException
      */
     public void doWork(Session session) throws JMSException {
-	    Queue t = session.createQueue("TEST");
-	    MessageProducer producer = session.createProducer(t);
-	    producer.send(session.createTextMessage("test message."));
+        Queue t = session.createQueue("TEST");
+        MessageProducer producer = session.createProducer(t);
+        producer.send(session.createTextMessage("test message."));
     }
 
     public void testImplementsQueueAndTopicConnection() throws Exception {
@@ -218,7 +221,7 @@ public class ManagedConnectionTest extends TestCase {
     }
 
     public void testSamePropertiesButNotEqual() throws Exception {
-        ManagedConnectionProxy newConnection = (ManagedConnectionProxy) connectionFactory.createConnection();
+        ManagedConnectionProxy newConnection = (ManagedConnectionProxy)connectionFactory.createConnection();
         assertNonEquality(managedConnection, newConnection.getManagedConnection());
     }
 

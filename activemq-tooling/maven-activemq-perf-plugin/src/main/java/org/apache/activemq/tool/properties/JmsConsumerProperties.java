@@ -20,7 +20,7 @@ public class JmsConsumerProperties extends JmsClientProperties {
     public static final String TIME_BASED_RECEIVING = "time"; // Receive messages on a time-based interval
     public static final String COUNT_BASED_RECEIVING = "count"; // Receive a specific count of messages
 
-    protected boolean durable   = false; // Consumer is a durable subscriber
+    protected boolean durable; // Consumer is a durable subscriber
     protected boolean unsubscribe = true; // If true, unsubscribe a durable subscriber after it finishes running
     protected boolean asyncRecv = true;  // If true, use onMessage() to receive messages, else use receive()
 

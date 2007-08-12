@@ -17,10 +17,8 @@
 
 package org.apache.activemq.jaas;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.IOException;
+import java.security.Principal;
 import java.security.cert.X509Certificate;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -35,49 +33,45 @@ import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * A LoginModule that allows for authentication based on SSL certificates.
+ * Allows for subclasses to define methods used to verify user certificates and
+ * find user groups. Uses CertificateCallbacks to retrieve certificates.
  * 
- * Allows for subclasses to define methods used to verify user certificates and find user groups. 
- * Uses CertificateCallbacks to retrieve certificates.
- *  
  * @author sepandm@gmail.com (Sepand)
- *
  */
 public abstract class CertificateLoginModule implements LoginModule {
-    
+
+    private static final Log LOG = LogFactory.getLog(CertificateLoginModule.class);
+
     private CallbackHandler callbackHandler;
     private Subject subject;
-    
+
     private X509Certificate certificates[];
-    private String username = null;
-    private Set groups = null;
-    
-    private Set principals = new HashSet();
-    
-    private static final Log log = LogFactory.getLog(CertificateLoginModule.class);
+    private String username;
+    private Set groups;
+    private Set<Principal> principals = new HashSet<Principal>();
     private boolean debug;
 
     /**
-     * Overriding to allow for proper initialization.
-     * 
-     * Standard JAAS.
+     * Overriding to allow for proper initialization. Standard JAAS.
      */
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
         this.subject = subject;
         this.callbackHandler = callbackHandler;
-        
-        debug = "true".equalsIgnoreCase((String) options.get("debug"));
-        
+
+        debug = "true".equalsIgnoreCase((String)options.get("debug"));
+
         if (debug) {
-            log.debug("Initialized debug");
+            LOG.debug("Initialized debug");
         }
     }
 
     /**
-     * Overriding to allow for certificate-based login.
-     * 
-     * Standard JAAS.
+     * Overriding to allow for certificate-based login. Standard JAAS.
      */
     public boolean login() throws LoginException {
         Callback[] callbacks = new Callback[1];
@@ -90,31 +84,29 @@ public abstract class CertificateLoginModule implements LoginModule {
         } catch (UnsupportedCallbackException uce) {
             throw new LoginException(uce.getMessage() + " Unable to obtain client certificates.");
         }
-        certificates = ((CertificateCallback) callbacks[0]).getCertificates();
-        
+        certificates = ((CertificateCallback)callbacks[0]).getCertificates();
+
         username = getUserNameForCertificates(certificates);
-        if ( username == null )
-            throw new FailedLoginException("No user for client certificate: "
-                + getDistinguishedName(certificates));
+        if (username == null) {
+            throw new FailedLoginException("No user for client certificate: " + getDistinguishedName(certificates));
+        }
 
         groups = getUserGroups(username);
-        
+
         if (debug) {
-            log.debug("Certificate for user: " + username);
+            LOG.debug("Certificate for user: " + username);
         }
         return true;
     }
 
     /**
-     * Overriding to complete login process.
-     * 
-     * Standard JAAS.
+     * Overriding to complete login process. Standard JAAS.
      */
     public boolean commit() throws LoginException {
         principals.add(new UserPrincipal(username));
 
         String currentGroup = null;
-        for (Iterator iter = groups.iterator(); iter.hasNext(); ) {
+        for (Iterator iter = groups.iterator(); iter.hasNext();) {
             currentGroup = (String)iter.next();
             principals.add(new GroupPrincipal(currentGroup));
         }
@@ -124,7 +116,7 @@ public abstract class CertificateLoginModule implements LoginModule {
         clear();
 
         if (debug) {
-            log.debug("commit");
+            LOG.debug("commit");
         }
         return true;
     }
@@ -136,7 +128,7 @@ public abstract class CertificateLoginModule implements LoginModule {
         clear();
 
         if (debug) {
-            log.debug("abort");
+            LOG.debug("abort");
         }
         return true;
     }
@@ -149,11 +141,11 @@ public abstract class CertificateLoginModule implements LoginModule {
         principals.clear();
 
         if (debug) {
-            log.debug("logout");
+            LOG.debug("logout");
         }
         return true;
     }
-    
+
     /**
      * Helper method.
      */
@@ -161,25 +153,23 @@ public abstract class CertificateLoginModule implements LoginModule {
         groups.clear();
         certificates = null;
     }
-    
+
     /**
-     * Should return a unique name corresponding to the certificates given.
+     * Should return a unique name corresponding to the certificates given. The
+     * name returned will be used to look up access levels as well as group
+     * associations.
      * 
-     * The name returned will be used to look up access levels as well as
-     *      group associations.
-     *      
      * @param dn The distinguished name.
      * @return The unique name if the certificate is recognized, null otherwise.
      */
     protected abstract String getUserNameForCertificates(final X509Certificate[] certs) throws LoginException;
-    
+
     /**
-     * Should return a set of the groups this user belongs to.
-     * 
-     * The groups returned will be added to the user's credentials.
+     * Should return a set of the groups this user belongs to. The groups
+     * returned will be added to the user's credentials.
      * 
      * @param username The username of the client. This is the same name that
-     *      getUserNameForDn returned for the user's DN.
+     *                getUserNameForDn returned for the user's DN.
      * @return A Set of the names of the groups this user belongs to.
      */
     protected abstract Set getUserGroups(final String username) throws LoginException;

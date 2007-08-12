@@ -1,4 +1,4 @@
-    /**
+/**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,22 +16,22 @@
  */
 package org.apache.activemq.ra;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.io.Serializable;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
-import javax.jms.QueueConnectionFactory;
 import javax.jms.QueueConnection;
-import javax.jms.TopicConnectionFactory;
+import javax.jms.QueueConnectionFactory;
 import javax.jms.TopicConnection;
+import javax.jms.TopicConnectionFactory;
 import javax.naming.Reference;
 import javax.resource.Referenceable;
 import javax.resource.ResourceException;
 import javax.resource.spi.ConnectionManager;
-import java.io.Serializable;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision$
@@ -40,12 +40,11 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
 
     private static final long serialVersionUID = -5754338187296859149L;
 
-    private static final Log log = LogFactory.getLog(ActiveMQConnectionFactory.class);
+    private static final Log LOG = LogFactory.getLog(ActiveMQConnectionFactory.class);
     private ConnectionManager manager;
-    transient private ActiveMQManagedConnectionFactory factory;
+    private transient ActiveMQManagedConnectionFactory factory;
     private Reference reference;
     private final ActiveMQConnectionRequestInfo info;
-
 
     /**
      * @param factory
@@ -66,7 +65,8 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
     }
 
     /**
-     * @see javax.jms.ConnectionFactory#createConnection(java.lang.String, java.lang.String)
+     * @see javax.jms.ConnectionFactory#createConnection(java.lang.String,
+     *      java.lang.String)
      */
     public Connection createConnection(String userName, String password) throws JMSException {
         ActiveMQConnectionRequestInfo i = info.copy();
@@ -82,20 +82,19 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
      */
     private Connection createConnection(ActiveMQConnectionRequestInfo info) throws JMSException {
         try {
-            if( info.isUseInboundSessionEnabled() ) {
+            if (info.isUseInboundSessionEnabled()) {
                 return new InboundConnectionProxy();
             }
             if (manager == null) {
                 throw new JMSException("No JCA ConnectionManager configured! Either enable UseInboundSessionEnabled or get your JCA container to configure one.");
             }
-            return (Connection) manager.allocateConnection(factory, info);
-        }
-        catch (ResourceException e) {
+            return (Connection)manager.allocateConnection(factory, info);
+        } catch (ResourceException e) {
             // Throw the root cause if it was a JMSException..
             if (e.getCause() instanceof JMSException) {
-                throw (JMSException) e.getCause();
+                throw (JMSException)e.getCause();
             }
-            log.debug("Connection could not be created:", e);
+            LOG.debug("Connection could not be created:", e);
             throw new JMSException(e.getMessage());
         }
     }
@@ -115,18 +114,18 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
     }
 
     public QueueConnection createQueueConnection() throws JMSException {
-        return (QueueConnection) createConnection();
+        return (QueueConnection)createConnection();
     }
 
     public QueueConnection createQueueConnection(String userName, String password) throws JMSException {
-        return (QueueConnection) createConnection(userName, password);
+        return (QueueConnection)createConnection(userName, password);
     }
 
     public TopicConnection createTopicConnection() throws JMSException {
-        return (TopicConnection) createConnection();
+        return (TopicConnection)createConnection();
     }
 
     public TopicConnection createTopicConnection(String userName, String password) throws JMSException {
-        return (TopicConnection) createConnection(userName, password);
+        return (TopicConnection)createConnection(userName, password);
     }
 }

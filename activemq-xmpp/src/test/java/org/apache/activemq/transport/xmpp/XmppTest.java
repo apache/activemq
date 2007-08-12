@@ -27,7 +27,7 @@ import org.jivesoftware.smack.XMPPException;
  */
 public class XmppTest extends TestCase {
 
-    protected static boolean block = false;
+    protected static boolean block;
 
     private XmppBroker broker = new XmppBroker();
 
@@ -37,12 +37,13 @@ public class XmppTest extends TestCase {
     }
 
     public void testConnect() throws Exception {
-        //ConnectionConfiguration config = new ConnectionConfiguration("localhost", 61222);
-        //config.setDebuggerEnabled(true);
+        // ConnectionConfiguration config = new
+        // ConnectionConfiguration("localhost", 61222);
+        // config.setDebuggerEnabled(true);
 
         try {
-            //SmackConfiguration.setPacketReplyTimeout(1000);
-            //XMPPConnection con = new XMPPConnection(config);
+            // SmackConfiguration.setPacketReplyTimeout(1000);
+            // XMPPConnection con = new XMPPConnection(config);
             XMPPConnection con = new XMPPConnection("localhost", 61222);
             con.login("amq-user", "amq-pwd");
             Chat chat = con.createChat("test@localhost");
@@ -51,13 +52,11 @@ public class XmppTest extends TestCase {
                 chat.sendMessage("Hello from Message: " + i);
             }
             System.out.println("Sent all messages!");
-        }
-        catch (XMPPException e) {
+        } catch (XMPPException e) {
             if (block) {
                 System.out.println("Caught: " + e);
                 e.printStackTrace();
-            }
-            else {
+            } else {
                 throw e;
             }
         }
@@ -69,12 +68,10 @@ public class XmppTest extends TestCase {
         System.out.println("Done!");
     }
 
-
     @Override
     protected void setUp() throws Exception {
         broker.start();
     }
-
 
     @Override
     protected void tearDown() throws Exception {

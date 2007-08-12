@@ -16,6 +16,12 @@
  */
 package org.apache.activemq.transport.xmpp;
 
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
@@ -23,20 +29,13 @@ import org.apache.activemq.wireformat.WireFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.DataOutputStream;
-import java.io.IOException;
-
 /**
  * A wire format which uses XMPP format of messages
  *
  * @version $Revision$
  */
 public class XmppWireFormat implements WireFormat {
-    private static final Log log = LogFactory.getLog(XmppWireFormat.class);
-
+    
     private int version = 1;
 
     public WireFormat copy() {

@@ -16,14 +16,15 @@
  */
 package org.apache.activemq.web;
 
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.jms.Message;
 import javax.jms.ObjectMessage;
 import javax.jms.TextMessage;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Allow the user to browse a message on a queue by its ID
@@ -82,8 +83,8 @@ public class MessageQuery extends QueueBrowseQuery {
         return null;
     }
 
-    public Map getPropertiesMap() throws JMSException {
-        Map answer = new HashMap();
+    public Map<String, Object> getPropertiesMap() throws JMSException {
+        Map<String, Object> answer = new HashMap<String, Object>();
         Message aMessage = getMessage();
         Enumeration iter = aMessage.getPropertyNames();
         while (iter.hasMoreElements()) {
@@ -96,8 +97,8 @@ public class MessageQuery extends QueueBrowseQuery {
         return answer;
     }
 
-    protected Map createMapBody(MapMessage mapMessage) throws JMSException {
-        Map answer = new HashMap();
+    protected Map<String, Object> createMapBody(MapMessage mapMessage) throws JMSException {
+        Map<String, Object> answer = new HashMap<String, Object>();
         Enumeration iter = mapMessage.getMapNames();
         while (iter.hasMoreElements()) {
             String name = (String) iter.nextElement();

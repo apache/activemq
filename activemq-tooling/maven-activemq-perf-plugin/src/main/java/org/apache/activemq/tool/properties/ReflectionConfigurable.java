@@ -19,7 +19,7 @@ package org.apache.activemq.tool.properties;
 import java.util.Properties;
 
 public interface ReflectionConfigurable {
-    public void configureProperties(Properties props);
-    public Properties retrieveProperties(Properties props);
-    public boolean acceptConfig(String key, String val);
+    void configureProperties(Properties props);
+    Properties retrieveProperties(Properties props);
+    boolean acceptConfig(String key, String val);
 }

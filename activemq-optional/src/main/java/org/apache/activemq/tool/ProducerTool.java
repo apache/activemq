@@ -27,13 +27,13 @@ import javax.jms.TextMessage;
 
 /**
  * A simple tool for publishing messages
- *
+ * 
  * @version $Revision$
  */
 public class ProducerTool extends ToolSupport {
 
     protected int messageCount = 10;
-    protected long sleepTime = 0L;
+    protected long sleepTime;
     protected boolean verbose = true;
     protected int messageSize = 255;
 
@@ -66,20 +66,19 @@ public class ProducerTool extends ToolSupport {
     public void run() {
         try {
             System.out.println("Connecting to URL: " + url);
-            System.out.println("Publishing a Message with size "+messageSize+" to " + (topic ? "topic" : "queue") + ": " + subject);
+            System.out.println("Publishing a Message with size " + messageSize + " to " + (topic ? "topic" : "queue") + ": " + subject);
             System.out.println("Using " + (durable ? "durable" : "non-durable") + " publishing");
 
             Connection connection = createConnection();
             Session session = createSession(connection);
             MessageProducer producer = createProducer(session);
-            //connection.start();
+            // connection.start();
 
             sendLoop(session, producer);
 
             System.out.println("Done.");
             close(connection, session);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.out.println("Caught: " + e);
             e.printStackTrace();
         }
@@ -89,24 +88,23 @@ public class ProducerTool extends ToolSupport {
         MessageProducer producer = session.createProducer(destination);
         if (durable) {
             producer.setDeliveryMode(DeliveryMode.PERSISTENT);
-        }
-        else {
+        } else {
             producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
         }
         return producer;
     }
 
     protected void sendLoop(Session session, MessageProducer producer) throws Exception {
-    	
+
         for (int i = 0; i < messageCount; i++) {
-        
-        	
-        	TextMessage message = session.createTextMessage(createMessageText(i));
+
+            TextMessage message = session.createTextMessage(createMessageText(i));
 
             if (verbose) {
-            	String msg = message.getText();
-            	if( msg.length() > 50 )
-            		msg = msg.substring(0, 50)+"...";
+                String msg = message.getText();
+                if (msg.length() > 50) {
+                    msg = msg.substring(0, 50) + "...";
+                }
                 System.out.println("Sending message: " + msg);
             }
 
@@ -116,18 +114,19 @@ public class ProducerTool extends ToolSupport {
         producer.send(session.createMessage());
     }
 
-	/**
-	 * @param i
-	 * @return
-	 */
-	private String createMessageText(int index) {
-		StringBuffer buffer = new StringBuffer(messageSize);
-		buffer.append("Message: " + index + " sent at: " + new Date());
-		if( buffer.length() > messageSize ) {
-			return buffer.substring(0, messageSize);
-		}
-    	for( int i=buffer.length(); i < messageSize; i++)
-    		buffer.append(' ');
-    	return buffer.toString();
-	}
+    /**
+     * @param i
+     * @return
+     */
+    private String createMessageText(int index) {
+        StringBuffer buffer = new StringBuffer(messageSize);
+        buffer.append("Message: " + index + " sent at: " + new Date());
+        if (buffer.length() > messageSize) {
+            return buffer.substring(0, messageSize);
+        }
+        for (int i = buffer.length(); i < messageSize; i++) {
+            buffer.append(' ');
+        }
+        return buffer.toString();
+    }
 }

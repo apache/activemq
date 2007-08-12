@@ -17,7 +17,9 @@
 package org.apache.activemq.tool.sampler;
 
 public interface MeasurableClient {
-    public void   reset();
-    public String getClientName();
-    public long   getThroughput();
+    
+    void reset();
+    String getClientName();
+    long getThroughput();
+    
 }

@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.transport.http;
 
+import java.net.InetSocketAddress;
+import java.net.URI;
+
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.transport.TransportServerSupport;
 import org.apache.activemq.transport.util.TextWireFormat;
@@ -29,9 +32,6 @@ import org.mortbay.jetty.servlet.ServletHandler;
 import org.mortbay.jetty.servlet.ServletHolder;
 import org.mortbay.jetty.servlet.ServletMapping;
 import org.mortbay.jetty.servlet.SessionHandler;
-
-import java.net.InetSocketAddress;
-import java.net.URI;
 
 /**
  * @version $Revision$
@@ -72,39 +72,46 @@ public class HttpTransportServer extends TransportServerSupport {
     protected void setConnector(Connector connector) {
         this.connector = connector;
     }
-    
+
     protected void doStart() throws Exception {
         server = new Server();
-        if (connector==null)
+        if (connector == null) {
             connector = new SocketConnector();
+        }
         connector.setHost(bindAddress.getHost());
         connector.setPort(bindAddress.getPort());
         connector.setServer(server);
-        server.setConnectors(new Connector[] { connector });
+        server.setConnectors(new Connector[] {
+            connector
+        });
 
-        ContextHandler context_handler = new ContextHandler();
-        context_handler.setContextPath("/");
-        context_handler.setServer(server);
-        server.setHandler(context_handler);
+        ContextHandler contextHandler = new ContextHandler();
+        contextHandler.setContextPath("/");
+        contextHandler.setServer(server);
+        server.setHandler(contextHandler);
 
-        SessionHandler session_handler = new SessionHandler();
-        context_handler.setHandler(session_handler);
-        
-        ServletHandler servlet_handler = new ServletHandler();
-        session_handler.setHandler(servlet_handler);
+        SessionHandler sessionHandler = new SessionHandler();
+        contextHandler.setHandler(sessionHandler);
+
+        ServletHandler servletHandler = new ServletHandler();
+        sessionHandler.setHandler(servletHandler);
 
         ServletHolder holder = new ServletHolder();
         holder.setName("httpTunnel");
         holder.setClassName(HttpTunnelServlet.class.getName());
-        servlet_handler.setServlets(new ServletHolder[] { holder });
+        servletHandler.setServlets(new ServletHolder[] {
+            holder
+        });
 
         ServletMapping mapping = new ServletMapping();
         mapping.setServletName("httpTunnel");
         mapping.setPathSpec("/*");
-        servlet_handler.setServletMappings(new ServletMapping[] { mapping });
+        servletHandler.setServletMappings(new ServletMapping[] {
+            mapping
+        });
 
-        context_handler.setAttribute("acceptListener", getAcceptListener());
-        context_handler.setAttribute("wireFormat", getWireFormat());
+        contextHandler.setAttribute("acceptListener", getAcceptListener());
+        contextHandler.setAttribute("wireFormat", getWireFormat());
         server.start();
     }
 
@@ -116,7 +123,7 @@ public class HttpTransportServer extends TransportServerSupport {
         }
     }
 
-    public InetSocketAddress getSocketAddress() {        
+    public InetSocketAddress getSocketAddress() {
         return null;
     }
 

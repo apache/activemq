@@ -16,6 +16,11 @@
  */
 package org.apache.activemq.web;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Hashtable;
+import java.util.Map;
+
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -23,10 +28,6 @@ import javax.jms.Session;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Hashtable;
-import java.util.Map;
 
 /**
  * A servlet which will publish dummy market data prices
@@ -35,15 +36,11 @@ import java.util.Map;
  */
 public class PortfolioPublishServlet extends MessageServletSupport {
 
-    private static final int maxDeltaPercent = 1;
-    private static final Map lastPrices = new Hashtable();
-    private boolean ricoStyle = true;
+    private static final int MAX_DELTA_PERCENT = 1;
+    private static final Map<String, Double> LAST_PRICES = new Hashtable<String, Double>();
 
-    
     public void init() throws ServletException {
         super.init();
-        
-        ricoStyle = asBoolean(getServletConfig().getInitParameter("rico"), true);
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -51,17 +48,16 @@ public class PortfolioPublishServlet extends MessageServletSupport {
         String[] stocks = request.getParameterValues("stocks");
         if (stocks == null || stocks.length == 0) {
             out.println("<html><body>No <b>stocks</b> query parameter specified. Cannot publish market data</body></html>");
-        }
-        else {
-            Integer total=(Integer)request.getSession(true).getAttribute("total");
-            if (total==null)
-                total=Integer.valueOf(0);
-            
-            
+        } else {
+            Integer total = (Integer)request.getSession(true).getAttribute("total");
+            if (total == null) {
+                total = Integer.valueOf(0);
+            }
+
             int count = getNumberOfMessages(request);
-            total=Integer.valueOf(total.intValue()+count);
-            request.getSession().setAttribute("total",total);
-            
+            total = Integer.valueOf(total.intValue() + count);
+            request.getSession().setAttribute("total", total);
+
             try {
                 WebClient client = WebClient.getWebClient(request);
                 for (int i = 0; i < count; i++) {
@@ -74,11 +70,10 @@ public class PortfolioPublishServlet extends MessageServletSupport {
                 }
                 out.print(refreshRate);
                 out.println("'/></head>");
-                out.println("<body>Published <b>" + count + "</b> of "+total+ " price messages.  Refresh = "+refreshRate+"s");
+                out.println("<body>Published <b>" + count + "</b> of " + total + " price messages.  Refresh = " + refreshRate + "s");
                 out.println("</body></html>");
 
-            }
-            catch (JMSException e) {
+            } catch (JMSException e) {
                 out.println("<html><body>Failed sending price messages due to <b>" + e + "</b></body></html>");
                 log("Failed to send message: " + e, e);
             }
@@ -90,7 +85,7 @@ public class PortfolioPublishServlet extends MessageServletSupport {
 
         int idx = 0;
         while (true) {
-            idx = (int) Math.round(stocks.length * Math.random());
+            idx = (int)Math.round(stocks.length * Math.random());
             if (idx < stocks.length) {
                 break;
             }
@@ -104,7 +99,7 @@ public class PortfolioPublishServlet extends MessageServletSupport {
     }
 
     protected String createStockText(String stock) {
-        Double value = (Double) lastPrices.get(stock);
+        Double value = LAST_PRICES.get(stock);
         if (value == null) {
             value = new Double(Math.random() * 100);
         }
@@ -112,7 +107,7 @@ public class PortfolioPublishServlet extends MessageServletSupport {
         // lets mutate the value by some percentage
         double oldPrice = value.doubleValue();
         value = new Double(mutatePrice(oldPrice));
-        lastPrices.put(stock, value);
+        LAST_PRICES.put(stock, value);
         double price = value.doubleValue();
 
         double offer = price * 1.001;
@@ -122,7 +117,7 @@ public class PortfolioPublishServlet extends MessageServletSupport {
     }
 
     protected double mutatePrice(double price) {
-        double percentChange = (2 * Math.random() * maxDeltaPercent) - maxDeltaPercent;
+        double percentChange = (2 * Math.random() * MAX_DELTA_PERCENT) - MAX_DELTA_PERCENT;
 
         return price * (100 + percentChange) / 100;
     }

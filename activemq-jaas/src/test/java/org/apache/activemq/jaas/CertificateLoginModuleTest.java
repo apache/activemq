@@ -17,12 +17,8 @@
 
 package org.apache.activemq.jaas;
 
-import junit.framework.TestCase;
-
 import java.io.IOException;
-import java.io.InputStream;
 import java.security.Principal;
-import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -33,67 +29,71 @@ import java.util.Vector;
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
 
+import junit.framework.TestCase;
+
 public class CertificateLoginModuleTest extends TestCase {
-    private static final String userName = "testUser";
-    private static final List groupNames = new Vector();
+
+    private static final String USER_NAME = "testUser";
+    private static final List<String> GROUP_NAMES = new Vector<String>();
+
     private StubCertificateLoginModule loginModule;
-    
+
     private Subject subject;
-    
+
     public CertificateLoginModuleTest() {
-        groupNames.add("testGroup1");
-        groupNames.add("testGroup2");
-        groupNames.add("testGroup3");
-        groupNames.add("testGroup4");
+        GROUP_NAMES.add("testGroup1");
+        GROUP_NAMES.add("testGroup2");
+        GROUP_NAMES.add("testGroup3");
+        GROUP_NAMES.add("testGroup4");
     }
-    
+
     protected void setUp() throws Exception {
         subject = new Subject();
     }
 
     protected void tearDown() throws Exception {
     }
-    
-    private void loginWithCredentials(String userName, Set groupNames) throws LoginException {
-        loginModule = new StubCertificateLoginModule(userName, new HashSet(groupNames));
-        JaasCertificateCallbackHandler callbackHandler = new JaasCertificateCallbackHandler(null); 
-        
+
+    private void loginWithCredentials(String userName, Set<String> groupNames) throws LoginException {
+        loginModule = new StubCertificateLoginModule(userName, new HashSet<String>(groupNames));
+        JaasCertificateCallbackHandler callbackHandler = new JaasCertificateCallbackHandler(null);
+
         loginModule.initialize(subject, callbackHandler, null, new HashMap());
 
         loginModule.login();
         loginModule.commit();
     }
-    
+
     private void checkPrincipalsMatch(Subject subject) {
         boolean nameFound = false;
-        boolean groupsFound[] = new boolean[groupNames.size()];
+        boolean groupsFound[] = new boolean[GROUP_NAMES.size()];
         for (int i = 0; i < groupsFound.length; ++i) {
             groupsFound[i] = false;
         }
-        
-        for (Iterator iter = subject.getPrincipals().iterator(); iter.hasNext(); ) {
-            Principal currentPrincipal = (Principal) iter.next();
-            
+
+        for (Iterator iter = subject.getPrincipals().iterator(); iter.hasNext();) {
+            Principal currentPrincipal = (Principal)iter.next();
+
             if (currentPrincipal instanceof UserPrincipal) {
-                if (((UserPrincipal)currentPrincipal).getName().equals(userName)) {
-                    if (nameFound == false) {
+                if (((UserPrincipal)currentPrincipal).getName().equals(USER_NAME)) {
+                    if (!nameFound) {
                         nameFound = true;
                     } else {
                         fail("UserPrincipal found twice.");
                     }
-                        
+
                 } else {
                     fail("Unknown UserPrincipal found.");
                 }
-                    
+
             } else if (currentPrincipal instanceof GroupPrincipal) {
-                int principalIdx = groupNames.indexOf(((GroupPrincipal)currentPrincipal).getName());
-                
+                int principalIdx = GROUP_NAMES.indexOf(((GroupPrincipal)currentPrincipal).getName());
+
                 if (principalIdx < 0) {
                     fail("Unknown GroupPrincipal found.");
                 }
-                
-                if (groupsFound[principalIdx] == false) {
+
+                if (!groupsFound[principalIdx]) {
                     groupsFound[principalIdx] = true;
                 } else {
                     fail("GroupPrincipal found twice.");
@@ -103,41 +103,40 @@ public class CertificateLoginModuleTest extends TestCase {
             }
         }
     }
-    
+
     public void testLoginSuccess() throws IOException {
         try {
-            loginWithCredentials(userName, new HashSet(groupNames));
+            loginWithCredentials(USER_NAME, new HashSet<String>(GROUP_NAMES));
         } catch (Exception e) {
             fail("Unable to login: " + e.getMessage());
         }
-        
+
         checkPrincipalsMatch(subject);
     }
-    
+
     public void testLoginFailure() throws IOException {
         boolean loginFailed = false;
-        
+
         try {
-            loginWithCredentials(null, new HashSet());
+            loginWithCredentials(null, new HashSet<String>());
         } catch (LoginException e) {
             loginFailed = true;
         }
-        
+
         if (!loginFailed) {
             fail("Logged in with unknown certificate.");
         }
     }
-    
+
     public void testLogOut() throws IOException {
         try {
-            loginWithCredentials(userName, new HashSet(groupNames));
+            loginWithCredentials(USER_NAME, new HashSet<String>(GROUP_NAMES));
         } catch (Exception e) {
             fail("Unable to login: " + e.getMessage());
         }
-        
+
         loginModule.logout();
-        
+
         assertEquals("logout should have cleared Subject principals.", 0, subject.getPrincipals().size());
     }
 }
-

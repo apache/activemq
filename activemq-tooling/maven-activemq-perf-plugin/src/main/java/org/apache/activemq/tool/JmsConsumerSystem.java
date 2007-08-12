@@ -16,14 +16,13 @@
  */
 package org.apache.activemq.tool;
 
-import org.apache.activemq.tool.properties.JmsClientSystemProperties;
-import org.apache.activemq.tool.properties.JmsConsumerSystemProperties;
-import org.apache.activemq.tool.properties.JmsConsumerProperties;
-import org.apache.activemq.tool.properties.JmsClientProperties;
-import org.apache.activemq.tool.sampler.ThroughputSamplerTask;
-
 import javax.jms.JMSException;
-import java.util.Properties;
+
+import org.apache.activemq.tool.properties.JmsClientProperties;
+import org.apache.activemq.tool.properties.JmsClientSystemProperties;
+import org.apache.activemq.tool.properties.JmsConsumerProperties;
+import org.apache.activemq.tool.properties.JmsConsumerSystemProperties;
+import org.apache.activemq.tool.sampler.ThroughputSamplerTask;
 
 public class JmsConsumerSystem extends AbstractJmsClientSystem {
     protected JmsConsumerSystemProperties sysTest = new JmsConsumerSystemProperties();

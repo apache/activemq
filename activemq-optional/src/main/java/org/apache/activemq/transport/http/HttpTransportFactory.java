@@ -34,7 +34,8 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class HttpTransportFactory extends TransportFactory {
-    private static final Log log = LogFactory.getLog(HttpTransportFactory.class);
+    
+    private static final Log LOG = LogFactory.getLog(HttpTransportFactory.class);
 
     public TransportServer doBind(String brokerId, URI location) throws IOException {
         return new HttpTransportServer(location);
@@ -42,9 +43,9 @@ public class HttpTransportFactory extends TransportFactory {
 
     protected TextWireFormat asTextWireFormat(WireFormat wireFormat) {
         if (wireFormat instanceof TextWireFormat) {
-            return (TextWireFormat) wireFormat;
+            return (TextWireFormat)wireFormat;
         }
-        log.trace("Not created with a TextWireFormat: " + wireFormat);
+        LOG.trace("Not created with a TextWireFormat: " + wireFormat);
         return new XStreamWireFormat();
     }
 
@@ -53,17 +54,17 @@ public class HttpTransportFactory extends TransportFactory {
     }
 
     protected Transport createTransport(URI location, WireFormat wf) throws IOException {
-		TextWireFormat textWireFormat = asTextWireFormat(wf);
-		return new HttpClientTransport(textWireFormat, location);
+        TextWireFormat textWireFormat = asTextWireFormat(wf);
+        return new HttpClientTransport(textWireFormat, location);
     }
-    
+
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
-    	HttpClientTransport httpTransport = (HttpClientTransport) super.compositeConfigure(transport, format, options);
-		transport = httpTransport;
-    	if( httpTransport.isTrace() ) {
-			transport = new TransportLogger(httpTransport);
-    	}
-		return transport;
+        HttpClientTransport httpTransport = (HttpClientTransport)super.compositeConfigure(transport, format, options);
+        transport = httpTransport;
+        if (httpTransport.isTrace()) {
+            transport = new TransportLogger(httpTransport);
+        }
+        return transport;
     }
 
 }

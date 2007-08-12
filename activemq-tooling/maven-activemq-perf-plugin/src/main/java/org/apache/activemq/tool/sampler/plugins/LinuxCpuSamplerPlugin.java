@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,12 +16,11 @@
  */
 package org.apache.activemq.tool.sampler.plugins;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.StringTokenizer;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class LinuxCpuSamplerPlugin implements CpuSamplerPlugin, Runnable {
 
@@ -87,23 +86,23 @@ public class LinuxCpuSamplerPlugin implements CpuSamplerPlugin, Runnable {
         return data;
     }
 
-	public String getVmstat() {
-		return vmstat;
-	}
+    public String getVmstat() {
+        return vmstat;
+    }
 
-	public void setVmstat(String vmstat) {
-		this.vmstat = vmstat;
-	}
+    public void setVmstat(String vmstat) {
+        this.vmstat = vmstat;
+    }
 
     protected String convertToCSV(String header, String data) {
-		StringTokenizer headerTokens = new StringTokenizer(header, " ");
-		StringTokenizer dataTokens   = new StringTokenizer(data, " ");
+        StringTokenizer headerTokens = new StringTokenizer(header, " ");
+        StringTokenizer dataTokens = new StringTokenizer(data, " ");
 
-		String csv = "";
-		while (headerTokens.hasMoreTokens()) {
-			csv += (headerTokens.nextToken() + "=" + dataTokens.nextToken() + ",");
-		}
+        String csv = "";
+        while (headerTokens.hasMoreTokens()) {
+            csv += headerTokens.nextToken() + "=" + dataTokens.nextToken() + ",";
+        }
 
-		return csv;
-	}
+        return csv;
+    }
 }

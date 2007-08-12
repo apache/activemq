@@ -18,6 +18,8 @@ package org.apache.activemq.ra;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
 import javax.jms.ServerSession;
@@ -32,51 +34,49 @@ import org.apache.activemq.ActiveMQTopicSession;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @version $Revision$ $Date$
  */
 public class ServerSessionPoolImpl implements ServerSessionPool {
-    
-    private static final Log log = LogFactory.getLog(ServerSessionPoolImpl.class);
+
+    private static final Log LOG = LogFactory.getLog(ServerSessionPoolImpl.class);
 
     private final ActiveMQEndpointWorker activeMQAsfEndpointWorker;
     private final int maxSessions;
 
-    private List idleSessions = new CopyOnWriteArrayList();
-    private List activeSessions = new CopyOnWriteArrayList();
+    private List<ServerSessionImpl> idleSessions = new CopyOnWriteArrayList<ServerSessionImpl>();
+    private List<ServerSessionImpl> activeSessions = new CopyOnWriteArrayList<ServerSessionImpl>();
     private AtomicBoolean closing = new AtomicBoolean(false);
 
     public ServerSessionPoolImpl(ActiveMQEndpointWorker activeMQAsfEndpointWorker, int maxSessions) {
         this.activeMQAsfEndpointWorker = activeMQAsfEndpointWorker;
-        this.maxSessions=maxSessions;
+        this.maxSessions = maxSessions;
     }
 
     private ServerSessionImpl createServerSessionImpl() throws JMSException {
         MessageActivationSpec activationSpec = activeMQAsfEndpointWorker.endpointActivationKey.getActivationSpec();
         int acknowledge = (activeMQAsfEndpointWorker.transacted) ? Session.SESSION_TRANSACTED : activationSpec.getAcknowledgeModeForSession();
-        final ActiveMQSession session = (ActiveMQSession) activeMQAsfEndpointWorker.connection.createSession(activeMQAsfEndpointWorker.transacted,acknowledge);            
+        final ActiveMQSession session = (ActiveMQSession)activeMQAsfEndpointWorker.connection.createSession(activeMQAsfEndpointWorker.transacted, acknowledge);
         MessageEndpoint endpoint;
-        try {                
+        try {
             int batchSize = 0;
             if (activationSpec.getEnableBatchBooleanValue()) {
                 batchSize = activationSpec.getMaxMessagesPerBatchIntValue();
             }
-            if( activationSpec.isUseRAManagedTransactionEnabled() ) {
+            if (activationSpec.isUseRAManagedTransactionEnabled()) {
                 // The RA will manage the transaction commit.
-                endpoint = createEndpoint(null);   
+                endpoint = createEndpoint(null);
                 return new ServerSessionImpl(this, (ActiveMQSession)session, activeMQAsfEndpointWorker.workManager, endpoint, true, batchSize);
             } else {
                 // Give the container an object to manage to transaction with.
-                endpoint = createEndpoint(new LocalAndXATransaction(session.getTransactionContext()));                
+                endpoint = createEndpoint(new LocalAndXATransaction(session.getTransactionContext()));
                 return new ServerSessionImpl(this, (ActiveMQSession)session, activeMQAsfEndpointWorker.workManager, endpoint, false, batchSize);
             }
         } catch (UnavailableException e) {
             // The container could be limiting us on the number of endpoints
             // that are being created.
-            log.debug("Could not create an endpoint.", e);
+            LOG.debug("Could not create an endpoint.", e);
             session.close();
             return null;
         }
@@ -92,15 +92,15 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
     /**
      */
     public ServerSession getServerSession() throws JMSException {
-        log.debug("ServerSession requested.");
+        LOG.debug("ServerSession requested.");
         if (closing.get()) {
             throw new JMSException("Session Pool Shutting Down.");
         }
 
         if (idleSessions.size() > 0) {
-            ServerSessionImpl ss = (ServerSessionImpl) idleSessions.remove(idleSessions.size() - 1);
+            ServerSessionImpl ss = idleSessions.remove(idleSessions.size() - 1);
             activeSessions.add(ss);
-            log.debug("Using idle session: " + ss);
+            LOG.debug("Using idle session: " + ss);
             return ss;
         } else {
             // Are we at the upper limit?
@@ -121,7 +121,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
                 return getExistingServerSession();
             }
             activeSessions.add(ss);
-            log.debug("Created a new session: " + ss);
+            LOG.debug("Created a new session: " + ss);
             return ss;
         }
     }
@@ -135,52 +135,51 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
         ServerSession serverSession = getServerSession();
         Session s = serverSession.getSession();
         ActiveMQSession session = null;
-        if( s instanceof ActiveMQSession ) {
-            session = (ActiveMQSession) s;
-        } else if(s instanceof ActiveMQQueueSession) {
-            session = (ActiveMQSession) s;
-        } else if(s instanceof ActiveMQTopicSession) {
-            session = (ActiveMQSession) s;
+        if (s instanceof ActiveMQSession) {
+            session = (ActiveMQSession)s;
+        } else if (s instanceof ActiveMQQueueSession) {
+            session = (ActiveMQSession)s;
+        } else if (s instanceof ActiveMQTopicSession) {
+            session = (ActiveMQSession)s;
         } else {
-        	activeMQAsfEndpointWorker.connection.onAsyncException(new JMSException("Session pool provided an invalid session type: "+s.getClass()));
+            activeMQAsfEndpointWorker.connection.onAsyncException(new JMSException("Session pool provided an invalid session type: " + s.getClass()));
         }
         session.dispatch(messageDispatch);
         serverSession.start();
     }
 
-    
     /**
      * @return
      */
     private ServerSession getExistingServerSession() {
-        ServerSessionImpl ss = (ServerSessionImpl) activeSessions.remove(0);
+        ServerSessionImpl ss = activeSessions.remove(0);
         activeSessions.add(ss);
-        log.debug("Reusing an active session: " + ss);
+        LOG.debug("Reusing an active session: " + ss);
         return ss;
     }
 
     public void returnToPool(ServerSessionImpl ss) {
-        log.debug("Session returned to pool: " + ss);
+        LOG.debug("Session returned to pool: " + ss);
         activeSessions.remove(ss);
         idleSessions.add(ss);
-        synchronized(closing){
+        synchronized (closing) {
             closing.notify();
         }
     }
 
-     public void removeFromPool(ServerSessionImpl ss) {
+    public void removeFromPool(ServerSessionImpl ss) {
         activeSessions.remove(ss);
         try {
-            ActiveMQSession session = (ActiveMQSession) ss.getSession();
+            ActiveMQSession session = (ActiveMQSession)ss.getSession();
             List l = session.getUnconsumedMessages();
             for (Iterator i = l.iterator(); i.hasNext();) {
-                dispatchToSession((MessageDispatch) i.next());        			
+                dispatchToSession((MessageDispatch)i.next());
             }
         } catch (Throwable t) {
-            log.error("Error redispatching unconsumed messages from stale session", t);    	
+            LOG.error("Error redispatching unconsumed messages from stale session", t);
         }
         ss.close();
-        synchronized(closing){
+        synchronized (closing) {
             closing.notify();
         }
     }
@@ -189,7 +188,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
         synchronized (closing) {
             closing.set(true);
             closeIdleSessions();
-            while( activeSessions.size() > 0 ) {
+            while (activeSessions.size() > 0) {
                 System.out.println("ACtive Sessions = " + activeSessions.size());
                 try {
                     closing.wait(1000);
@@ -203,8 +202,8 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
     }
 
     private void closeIdleSessions() {
-        for (Iterator iter = idleSessions.iterator(); iter.hasNext();) {
-            ServerSessionImpl ss = (ServerSessionImpl) iter.next();
+        for (Iterator<ServerSessionImpl> iter = idleSessions.iterator(); iter.hasNext();) {
+            ServerSessionImpl ss = iter.next();
             ss.close();
         }
     }
@@ -212,14 +211,14 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
     /**
      * @return Returns the closing.
      */
-    public boolean isClosing(){
+    public boolean isClosing() {
         return closing.get();
     }
 
     /**
      * @param closing The closing to set.
      */
-    public void setClosing(boolean closing){
+    public void setClosing(boolean closing) {
         this.closing.set(closing);
     }
 

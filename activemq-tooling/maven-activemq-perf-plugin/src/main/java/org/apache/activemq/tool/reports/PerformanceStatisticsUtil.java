@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.tool.reports;
 
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
 
 public final class PerformanceStatisticsUtil {
     private PerformanceStatisticsUtil() {
@@ -26,7 +26,7 @@ public final class PerformanceStatisticsUtil {
     public static long getSum(List numList) {
         long sum = 0;
         if (numList != null) {
-            for (Iterator i=numList.iterator(); i.hasNext();) {
+            for (Iterator i = numList.iterator(); i.hasNext();) {
                 sum += ((Long)i.next()).longValue();
             }
         } else {
@@ -38,7 +38,7 @@ public final class PerformanceStatisticsUtil {
     public static long getMin(List numList) {
         long min = Long.MAX_VALUE;
         if (numList != null) {
-            for (Iterator i=numList.iterator(); i.hasNext();) {
+            for (Iterator i = numList.iterator(); i.hasNext();) {
                 min = Math.min(((Long)i.next()).longValue(), min);
             }
         } else {
@@ -50,7 +50,7 @@ public final class PerformanceStatisticsUtil {
     public static long getMax(List numList) {
         long max = Long.MIN_VALUE;
         if (numList != null) {
-            for (Iterator i=numList.iterator(); i.hasNext();) {
+            for (Iterator i = numList.iterator(); i.hasNext();) {
                 max = Math.max(((Long)i.next()).longValue(), max);
             }
         } else {
@@ -64,7 +64,7 @@ public final class PerformanceStatisticsUtil {
         if (numList != null) {
             int sampleCount = 0;
             long totalTP = 0;
-            for (Iterator i=numList.iterator(); i.hasNext();) {
+            for (Iterator i = numList.iterator(); i.hasNext();) {
                 sampleCount++;
                 totalTP += ((Long)i.next()).longValue();
             }
@@ -83,7 +83,7 @@ public final class PerformanceStatisticsUtil {
             int sampleCount = 0;
             long totalTP = 0;
             long sampleTP;
-            for (Iterator i=numList.iterator(); i.hasNext();) {
+            for (Iterator i = numList.iterator(); i.hasNext();) {
                 sampleCount++;
                 sampleTP = ((Long)i.next()).longValue();
                 if (sampleTP != minTP && sampleTP != maxTP) {

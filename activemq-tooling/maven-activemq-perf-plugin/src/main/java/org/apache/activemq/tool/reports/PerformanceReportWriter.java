@@ -19,10 +19,10 @@ package org.apache.activemq.tool.reports;
 import java.util.Properties;
 
 public interface PerformanceReportWriter {
-    public void openReportWriter();
-    public void closeReportWriter();
-    public void writeInfo(String info);
-    public void writeCsvData(int csvType, String csvData);
-    public void writeProperties(String header, Properties props);
-    public void writeProperties(Properties props);
+    void openReportWriter();
+    void closeReportWriter();
+    void writeInfo(String info);
+    void writeCsvData(int csvType, String csvData);
+    void writeProperties(String header, Properties props);
+    void writeProperties(Properties props);
 }

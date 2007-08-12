@@ -16,16 +16,15 @@
  */
 package org.apache.activemq.web.controller;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.activemq.web.BrokerFacade;
 import org.apache.activemq.web.DestinationFacade;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.Controller;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 /**
- *
  * @version $Revision$
  */
 public class PurgeDestination extends DestinationFacade implements Controller {
@@ -42,10 +41,8 @@ public class PurgeDestination extends DestinationFacade implements Controller {
     public void purgeDestination() throws Exception {
         if (isQueue()) {
             getBrokerFacade().purgeQueue(createDestination());
-        }
-        else {
+        } else {
             throw new UnsupportedOperationException("Purge supported for queues only. Receieved JMSDestinationType=" + getJMSDestinationType());
         }
     }
 }
-

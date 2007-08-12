@@ -30,17 +30,18 @@ import org.apache.activemq.TransactionContext;
  */
 public class LocalAndXATransaction implements XAResource, LocalTransaction {
 
-    final private TransactionContext transactionContext;
+    private final TransactionContext transactionContext;
     private boolean inManagedTx;
-    
+
     public LocalAndXATransaction(TransactionContext transactionContext) {
-        this.transactionContext=transactionContext;
+        this.transactionContext = transactionContext;
     }
 
     public void setInManagedTx(boolean inManagedTx) throws JMSException {
-        this.inManagedTx=inManagedTx;
-        if( !inManagedTx )
+        this.inManagedTx = inManagedTx;
+        if (!inManagedTx) {
             transactionContext.cleanup();
+        }
     }
 
     public void begin() throws ResourceException {
@@ -61,8 +62,8 @@ public class LocalAndXATransaction implements XAResource, LocalTransaction {
             try {
                 setInManagedTx(false);
             } catch (JMSException e) {
-                throw new ResourceException("commit failed.",e);
-            }            
+                throw new ResourceException("commit failed.", e);
+            }
         }
     }
 
@@ -75,8 +76,8 @@ public class LocalAndXATransaction implements XAResource, LocalTransaction {
             try {
                 setInManagedTx(false);
             } catch (JMSException e) {
-                throw new ResourceException("rollback failed.",e);
-            }            
+                throw new ResourceException("rollback failed.", e);
+            }
         }
     }
 
@@ -92,7 +93,7 @@ public class LocalAndXATransaction implements XAResource, LocalTransaction {
                 setInManagedTx(false);
             } catch (JMSException e) {
                 throw (XAException)new XAException(XAException.XAER_PROTO).initCause(e);
-            }            
+            }
         }
     }
 
@@ -105,8 +106,9 @@ public class LocalAndXATransaction implements XAResource, LocalTransaction {
     }
 
     public boolean isSameRM(XAResource xaresource) throws XAException {
-        if (xaresource == null)
+        if (xaresource == null) {
             return false;
+        }
         // Do we have to unwrap?
         if (xaresource instanceof LocalAndXATransaction) {
             xaresource = ((LocalAndXATransaction)xaresource).transactionContext;
@@ -130,14 +132,13 @@ public class LocalAndXATransaction implements XAResource, LocalTransaction {
         return transactionContext.setTransactionTimeout(arg0);
     }
 
-    
     public void start(Xid arg0, int arg1) throws XAException {
         transactionContext.start(arg0, arg1);
         try {
             setInManagedTx(true);
         } catch (JMSException e) {
             throw (XAException)new XAException(XAException.XAER_PROTO).initCause(e);
-        }            
+        }
     }
 
     public boolean isInManagedTx() {
@@ -146,6 +147,6 @@ public class LocalAndXATransaction implements XAResource, LocalTransaction {
 
     public void cleanup() {
         transactionContext.cleanup();
-        inManagedTx=false;
+        inManagedTx = false;
     }
 }

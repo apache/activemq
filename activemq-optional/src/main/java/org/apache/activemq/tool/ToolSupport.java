@@ -16,22 +16,21 @@
  */
 package org.apache.activemq.tool;
 
-import org.apache.activemq.ActiveMQConnection;
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.util.IndentPrinter;
-
 import javax.jms.Connection;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Session;
 
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.util.IndentPrinter;
+
 /**
  * Abstract base class useful for implementation inheritence
- *
+ * 
  * @version $Revision$
  */
 public class ToolSupport {
-
 
     protected Destination destination;
     protected String subject = "TOOL.DEFAULT";
@@ -39,12 +38,11 @@ public class ToolSupport {
     protected String user = ActiveMQConnection.DEFAULT_USER;
     protected String pwd = ActiveMQConnection.DEFAULT_PASSWORD;
     protected String url = ActiveMQConnection.DEFAULT_BROKER_URL;
-    protected boolean transacted = false;
-    protected boolean durable = false;
+    protected boolean transacted;
+    protected boolean durable;
     protected String clientID = getClass().getName();
     protected int ackMode = Session.AUTO_ACKNOWLEDGE;
     protected String consumerName = "James";
-
 
     protected Session createSession(Connection connection) throws Exception {
         if (durable) {
@@ -53,8 +51,7 @@ public class ToolSupport {
         Session session = connection.createSession(transacted, ackMode);
         if (topic) {
             destination = session.createTopic(subject);
-        }
-        else {
+        } else {
             destination = session.createQueue(subject);
         }
         return session;
@@ -78,7 +75,7 @@ public class ToolSupport {
     }
 
     protected void dumpStats(Connection connection) {
-        ActiveMQConnection c = (ActiveMQConnection) connection;
+        ActiveMQConnection c = (ActiveMQConnection)connection;
         c.getConnectionStats().dump(new IndentPrinter());
     }
 }

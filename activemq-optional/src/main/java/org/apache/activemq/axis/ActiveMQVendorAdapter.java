@@ -16,56 +16,54 @@
  */
 package org.apache.activemq.axis;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.axis.components.jms.BeanVendorAdapter;
-import org.apache.axis.transport.jms.JMSURLHelper;
+import java.util.HashMap;
 
 import javax.jms.ConnectionFactory;
 import javax.jms.QueueConnectionFactory;
 import javax.jms.TopicConnectionFactory;
-import java.util.HashMap;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.axis.components.jms.BeanVendorAdapter;
+import org.apache.axis.transport.jms.JMSURLHelper;
 
 /**
- * An adapter for using ActiveMQ inside <a href="http://ws.apache.org/axis/">Apache Axis</a>
- *
+ * An adapter for using ActiveMQ inside <a
+ * href="http://ws.apache.org/axis/">Apache Axis</a>
+ * 
  * @version $Revision$
  */
 public class ActiveMQVendorAdapter extends BeanVendorAdapter {
 
-    protected final static String QCF_CLASS = ActiveMQConnectionFactory.class.getName();
-    protected final static String TCF_CLASS = QCF_CLASS;
-
-
     /**
      * The URL to connect to the broker
      */
-    public final static String BROKER_URL = "brokerURL";
+    public static final String BROKER_URL = "brokerURL";
 
     /**
      * Specifies the default user name
      */
-    public final static String DEFAULT_USERNAME = "defaultUser";
+    public static final String DEFAULT_USERNAME = "defaultUser";
 
     /**
      * Specifies the default password
      */
-    public final static String DEFAULT_PASSWORD = "defaultPassword";
+    public static final String DEFAULT_PASSWORD = "defaultPassword";
+
+    protected static final String QCF_CLASS = ActiveMQConnectionFactory.class.getName();
+    protected static final String TCF_CLASS = QCF_CLASS;
 
 
-    public QueueConnectionFactory getQueueConnectionFactory(HashMap properties)
-            throws Exception {
-        properties = (HashMap) properties.clone();
+    public QueueConnectionFactory getQueueConnectionFactory(HashMap properties) throws Exception {
+        properties = (HashMap)properties.clone();
         properties.put(CONNECTION_FACTORY_CLASS, QCF_CLASS);
         return super.getQueueConnectionFactory(properties);
     }
 
-    public TopicConnectionFactory getTopicConnectionFactory(HashMap properties)
-            throws Exception {
-        properties = (HashMap) properties.clone();
+    public TopicConnectionFactory getTopicConnectionFactory(HashMap properties) throws Exception {
+        properties = (HashMap)properties.clone();
         properties.put(CONNECTION_FACTORY_CLASS, TCF_CLASS);
         return super.getTopicConnectionFactory(properties);
     }
-
 
     public void addVendorConnectionFactoryProperties(JMSURLHelper jmsUrl, HashMap properties) {
         if (jmsUrl.getPropertyValue(BROKER_URL) != null) {
@@ -84,15 +82,14 @@ public class ActiveMQVendorAdapter extends BeanVendorAdapter {
         String brokerURL = null;
 
         if (connectionFactory instanceof ActiveMQConnectionFactory) {
-            ActiveMQConnectionFactory amqConnectionFactory =
-                    (ActiveMQConnectionFactory) connectionFactory;
+            ActiveMQConnectionFactory amqConnectionFactory = (ActiveMQConnectionFactory)connectionFactory;
 
             // get existing queue connection factory properties
             brokerURL = amqConnectionFactory.getBrokerURL();
         }
 
         // compare broker url
-        String propertyBrokerURL = (String) properties.get(BROKER_URL);
+        String propertyBrokerURL = (String)properties.get(BROKER_URL);
         if (!brokerURL.equals(propertyBrokerURL)) {
             return false;
         }
