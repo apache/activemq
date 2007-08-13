@@ -28,20 +28,23 @@ import org.apache.activemq.transport.CommandJoiner;
 import org.apache.activemq.transport.InactivityMonitor;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
-import org.apache.activemq.transport.TransportLogger;
+import org.apache.activemq.transport.TransportLoggerFactory;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.reliable.DefaultReplayStrategy;
 import org.apache.activemq.transport.reliable.ExceptionIfDroppedReplayStrategy;
 import org.apache.activemq.transport.reliable.ReliableTransport;
 import org.apache.activemq.transport.reliable.ReplayStrategy;
 import org.apache.activemq.transport.reliable.Replayer;
+import org.apache.activemq.transport.tcp.TcpTransportFactory;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.wireformat.WireFormat;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class UdpTransportFactory extends TransportFactory {
-
+    private static final Log log = LogFactory.getLog(TcpTransportFactory.class);
     public TransportServer doBind(String brokerId, final URI location) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParamters(location));
@@ -75,7 +78,11 @@ public class UdpTransportFactory extends TransportFactory {
         transport = new CommandJoiner(transport, asOpenWireFormat(format));
 
         if (udpTransport.isTrace()) {
-            transport = new TransportLogger(transport);
+            try {
+                transport = TransportLoggerFactory.getInstance().createTransportLogger(transport);
+            } catch (Throwable e) {
+                log.error("Could not create TransportLogger object for: " + TransportLoggerFactory.defaultLogWriterName + ", reason: " + e, e);
+            }
         }
 
         transport = new InactivityMonitor(transport);
@@ -107,7 +114,7 @@ public class UdpTransportFactory extends TransportFactory {
         OpenWireFormat openWireFormat = asOpenWireFormat(format);
 
         if (udpTransport.isTrace()) {
-            transport = new TransportLogger(transport);
+            transport = TransportLoggerFactory.getInstance().createTransportLogger(transport);
         }
 
         transport = new InactivityMonitor(transport);

@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import java.net.URL;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.management.ObjectName;
@@ -29,6 +30,8 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.PropertyConfigurator;
 
 public class BrokerView implements BrokerViewMBean {
 
@@ -227,5 +230,16 @@ public class BrokerView implements BrokerViewMBean {
         context.setBroker(broker);
         return context;
     }
+    
+    //  doc comment inherited from BrokerViewMBean
+    public void reloadLog4jProperties() throws Exception {
+        LogManager.resetConfiguration();
+        ClassLoader cl = this.getClass().getClassLoader();
+        URL log4jprops = cl.getResource("log4j.properties");
+        if (log4jprops != null) {
+            PropertyConfigurator.configure(log4jprops);
+        }
+    }
+    
 
 }

@@ -141,4 +141,11 @@ public interface BrokerViewMBean extends Service {
      */
     void destroyDurableSubscriber(String clientId, String subscriberName) throws Exception;
 
+    /**
+     * Reloads log4j.properties from the classpath.
+     * This methods calls org.apache.activemq.transport.TransportLoggerControl.reloadLog4jProperties
+     * @throws Exception
+     */
+    public void reloadLog4jProperties() throws Exception;
+    
 }
