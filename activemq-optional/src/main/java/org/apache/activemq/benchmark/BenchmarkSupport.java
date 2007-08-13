@@ -176,7 +176,7 @@ public class BenchmarkSupport {
                 times++;
             }
             if (times > 0) {
-                average = total / times;
+                average = total / (double) times;
             }
 
             System.out.println(getClass().getName() + " Processed: " + processed + " messages this second. Average: " + average);
