@@ -1,137 +1,129 @@
 /**
- * $Header$
  *
- * Broker Office ESPECIAL (Release) - org.apache.activemq.ra
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- * Copyright (C) 2005-2007 Norvax, Inc.
- * All Rights Reserved
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * This is UNPUBLISHED PROPRIETARY SOURCE CODE of Norvax, Inc.; the contents
- * of this file may not be disclosed to third parties, copied or duplicated
- * in any form, in whole or in part, without the prior written permission of
- * Norvax, Inc. The copyright notice above does not evidence any actual or
- * intended publication of such source code.
- * 
- * Permission is hereby granted solely to the licensee for use of this source
- * code in its unaltered state. This source code may not be modified by
- * licensee except under direction of Norvax, Inc. Neither may this source
- * code be given under any circumstances to non-licensees in any form,
- * including source or binary. Modification of this source constitutes breach
- * of contract, which voids any potential pending support responsibilities by
- * Norvax, Inc. Divulging the exact or paraphrased contents of this source
- * code to unlicensed parties either directly or indirectly constitutes
- * violation of federal and international copyright and trade secret laws, and
- * will be duly prosecuted to the fullest extent permitted under law.
- * 
- * This software is provided by Norvax, Inc. ``as is'' and any express or
- * implied warranties, including, but not limited to, the implied warranties
- * of merchantability and fitness for a particular purpose are disclaimed. In
- * no event shall the regents or contributors be liable for any direct,
- * indirect, incidental, special, exemplary, or consequential damages
- * (including, but not limited to, procurement of substitute goods or
- * services; loss of use, data, or profits; or business interruption) however
- * caused and on any theory of liability, whether in contract, strict
- * liability, or tort (including negligence or otherwise) arising in any way
- * out of the use of this software, even if advised of the possibility of such
- * damage.
- * 
- **/
-
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.activemq.ra;
-
-import javax.resource.spi.ActivationSpec;
 
 import org.apache.activemq.RedeliveryPolicy;
 
+import javax.resource.spi.ResourceAdapter;
+import javax.resource.spi.ActivationSpec;
+import java.util.List;
+
 /**
- * Description: Description goes here.
- * 
- * @author <a href="mailto:cstach@norvax.com">Christopher G. Stach II</a>
- * @version $Revision$ $Date$
- * @since 0.1
+ * @version $Revision: 1.1 $
  */
 public interface MessageActivationSpec extends ActivationSpec {
+    boolean isValidUseRAManagedTransaction(List<String> errorMessages);
+
+    boolean isValidNoLocal(List<String> errorMessages);
+
+    boolean isValidMessageSelector(List<String> errorMessages);
+
+    boolean isValidMaxSessions(List<String> errorMessages);
+
+    boolean isValidMaxMessagesPerSessions(List<String> errorMessages);
+
+    boolean isValidMaxMessagesPerBatch(List<String> errorMessages);
+
+    boolean isValidEnableBatch(List<String> errorMessages);
 
     /**
+     * @see javax.resource.spi.ResourceAdapterAssociation#getResourceAdapter()
      */
-    String getClientId();
+    ResourceAdapter getResourceAdapter();
 
     /**
+     * @return Returns the destinationType.
      */
-    boolean isDurableSubscription();
+    String getDestinationType();
 
-    /**
-     */
     String getPassword();
 
-    /**
-     */
     String getUserName();
 
     /**
-     */
-    RedeliveryPolicy redeliveryPolicy();
-
-    /**
-     */
-    String getSubscriptionName();
-
-    /**
+     * @return Returns the messageSelector.
      */
     String getMessageSelector();
 
     /**
+     * @return Returns the noLocal.
      */
-    int getMaxMessagesPerSessionsIntValue();
+    String getNoLocal();
 
-    /**
-     */
-    boolean getNoLocalBooleanValue();
+    String getAcknowledgeMode();
 
-    /**
-     */
-    String getDestinationType();
+    String getClientId();
 
-    /**
-     */
     String getDestination();
 
-    /**
-     */
-    int getMaxSessionsIntValue();
+    String getSubscriptionDurability();
 
-    /**
-     *
-     */
+    String getSubscriptionName();
+
+    boolean isValidSubscriptionName(List<String> errorMessages);
+
+    boolean isValidClientId(List<String> errorMessages);
+
+    boolean isDurableSubscription();
+
+    boolean isValidSubscriptionDurability(List<String> errorMessages);
+
+    boolean isValidAcknowledgeMode(List<String> errorMessages);
+
+    boolean isValidDestinationType(List<String> errorMessages);
+
+    boolean isValidDestination(List<String> errorMessages);
+
+    boolean isEmpty(String value);
+
     int getAcknowledgeModeForSession();
 
-    /**
-     *
-     */
     String getMaxMessagesPerSessions();
 
-    /**
-     *
-     */
+    String getMaxSessions();
+
+    String getUseRAManagedTransaction();
+
+    int getMaxMessagesPerSessionsIntValue();
+
+    int getMaxSessionsIntValue();
+
     boolean isUseRAManagedTransactionEnabled();
 
-    /**
-     *
-     */
+    boolean getNoLocalBooleanValue();
+
     String getEnableBatch();
 
-    /**
-     *
-     */
     boolean getEnableBatchBooleanValue();
 
-    /**
-     *
-     */
     int getMaxMessagesPerBatchIntValue();
 
-    /**
-     *
-     */
     String getMaxMessagesPerBatch();
+
+    short getBackOffMultiplier();
+
+    long getInitialRedeliveryDelay();
+
+    int getMaximumRedeliveries();
+
+    boolean isUseExponentialBackOff();
+
+    RedeliveryPolicy redeliveryPolicy();
+
+    RedeliveryPolicy lazyCreateRedeliveryPolicy();
 }
