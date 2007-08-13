@@ -19,15 +19,15 @@
 <beans>
 
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
-  <broker useJmx="false"  xmlns="http://activemq.org/config/1.0">
-  
-    <persistenceAdapter>
-      <journaledJDBC journalLogFiles="2" dataDirectory="target/foo"/>
-    </persistenceAdapter>
+  <broker brokerName="linuxpc3" useJmx="true" xmlns="http://activemq.org/config/1.0" persistent="false" deleteAllMessagesOnStartup="true">
   
     <transportConnectors>
-      <transportConnector uri="tcp://localhost:61616"/>
+      <transportConnector uri="tcp://localhost:61616?trace=true&amp;logWriterName=custom&amp;dynamicManagement=true&amp;startLogging=true&amp;jmxPort=1299"/>
     </transportConnectors>
+    
+    <persistenceAdapter>
+      <memoryPersistenceAdapter/>
+    </persistenceAdapter>
     
   </broker>
   
