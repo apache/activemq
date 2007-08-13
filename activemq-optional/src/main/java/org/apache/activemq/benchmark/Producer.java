@@ -174,6 +174,7 @@ public class Producer extends BenchmarkSupport {
             buffer.append(line);
             buffer.append(File.separator);
         }
+        in.close();
         return buffer.toString();
     }
 }

@@ -90,7 +90,7 @@ public class ActiveMQVendorAdapter extends BeanVendorAdapter {
 
         // compare broker url
         String propertyBrokerURL = (String)properties.get(BROKER_URL);
-        if (!brokerURL.equals(propertyBrokerURL)) {
+        if (brokerURL == null || !brokerURL.equals(propertyBrokerURL)) {
             return false;
         }
         return true;
