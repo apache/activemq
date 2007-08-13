@@ -140,7 +140,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         }
     }
 
-    private boolean isValidUseRAManagedTransaction(List<String> errorMessages) {
+    public boolean isValidUseRAManagedTransaction(List<String> errorMessages) {
         try {
             new Boolean(noLocal);
             return true;
@@ -151,7 +151,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         return false;
     }
 
-    private boolean isValidNoLocal(List<String> errorMessages) {
+    public boolean isValidNoLocal(List<String> errorMessages) {
         try {
             new Boolean(noLocal);
             return true;
@@ -162,7 +162,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         return false;
     }
 
-    private boolean isValidMessageSelector(List<String> errorMessages) {
+    public boolean isValidMessageSelector(List<String> errorMessages) {
         try {
             if (!isEmpty(messageSelector)) {
                 new SelectorParser().parse(messageSelector);
@@ -174,7 +174,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         }
     }
 
-    private boolean isValidMaxSessions(List<String> errorMessages) {
+    public boolean isValidMaxSessions(List<String> errorMessages) {
         try {
             if (Integer.parseInt(maxSessions) > 0) {
                 return true;
@@ -186,7 +186,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         return false;
     }
 
-    private boolean isValidMaxMessagesPerSessions(List<String> errorMessages) {
+    public boolean isValidMaxMessagesPerSessions(List<String> errorMessages) {
         try {
             if (Integer.parseInt(maxMessagesPerSessions) > 0) {
                 return true;
@@ -198,7 +198,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         return false;
     }
 
-    private boolean isValidMaxMessagesPerBatch(List<String> errorMessages) {
+    public boolean isValidMaxMessagesPerBatch(List<String> errorMessages) {
         try {
             if (Integer.parseInt(maxMessagesPerBatch) > 0) {
                 return true;
@@ -210,7 +210,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         return false;
     }
 
-    private boolean isValidEnableBatch(List<String> errorMessages) {
+    public boolean isValidEnableBatch(List<String> errorMessages) {
         try {
             new Boolean(enableBatch);
             return true;
@@ -221,9 +221,6 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         return false;
     }
 
-    /**
-     * @see javax.resource.spi.ResourceAdapterAssociation#getResourceAdapter()
-     */
     public ResourceAdapter getResourceAdapter() {
         return resourceAdapter;
     }
@@ -247,9 +244,6 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
     // Java Bean getters and setters for this ActivationSpec class.
     //
     // ///////////////////////////////////////////////////////////////////////
-    /**
-     * @return Returns the destinationType.
-     */
     public String getDestinationType() {
         if (!isEmpty(destinationType)) {
             return destinationType;
@@ -264,9 +258,6 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         this.destinationType = destinationType;
     }
 
-    /**
-     * 
-     */
     public String getPassword() {
         if (!isEmpty(password)) {
             return password;
@@ -281,9 +272,6 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         this.password = password;
     }
 
-    /**
-     * 
-     */
     public String getUserName() {
         if (!isEmpty(userName)) {
             return userName;
@@ -298,9 +286,6 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         this.userName = userName;
     }
 
-    /**
-     * @return Returns the messageSelector.
-     */
     public String getMessageSelector() {
         if (!isEmpty(messageSelector)) {
             return messageSelector;
@@ -315,9 +300,6 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         this.messageSelector = messageSelector;
     }
 
-    /**
-     * @return Returns the noLocal.
-     */
     public String getNoLocal() {
         return noLocal;
     }
@@ -331,9 +313,6 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         }
     }
 
-    /**
-     * 
-     */
     public String getAcknowledgeMode() {
         if (!isEmpty(acknowledgeMode)) {
             return acknowledgeMode;
@@ -348,9 +327,6 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         this.acknowledgeMode = acknowledgeMode;
     }
 
-    /**
-     * 
-     */
     public String getClientId() {
         if (!isEmpty(clientId)) {
             return clientId;
@@ -365,9 +341,6 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         this.clientId = clientId;
     }
 
-    /**
-     * 
-     */
     public String getDestination() {
         if (!isEmpty(destination)) {
             return destination;
@@ -382,9 +355,6 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         this.destination = destination;
     }
 
-    /**
-     * 
-     */
     public String getSubscriptionDurability() {
         if (!isEmpty(subscriptionDurability)) {
             return subscriptionDurability;
@@ -399,9 +369,6 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         this.subscriptionDurability = subscriptionDurability;
     }
 
-    /**
-     * 
-     */
     public String getSubscriptionName() {
         if (!isEmpty(subscriptionName)) {
             return subscriptionName;
@@ -416,7 +383,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         this.subscriptionName = subscriptionName;
     }
 
-    private boolean isValidSubscriptionName(List<String> errorMessages) {
+    public boolean isValidSubscriptionName(List<String> errorMessages) {
         if (!isDurableSubscription() ? true : subscriptionName != null && subscriptionName.trim().length() > 0) {
             return true;
         }
@@ -424,7 +391,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         return false;
     }
 
-    private boolean isValidClientId(List<String> errorMessages) {
+    public boolean isValidClientId(List<String> errorMessages) {
         if (!isDurableSubscription() ? true : clientId != null && clientId.trim().length() > 0) {
             return true;
         }
@@ -432,14 +399,11 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         return false;
     }
 
-    /**
-     * 
-     */
     public boolean isDurableSubscription() {
         return DURABLE_SUBSCRIPTION.equals(subscriptionDurability);
     }
 
-    private boolean isValidSubscriptionDurability(List<String> errorMessages) {
+    public boolean isValidSubscriptionDurability(List<String> errorMessages) {
         // subscriptionDurability only applies to Topics
         if (DURABLE_SUBSCRIPTION.equals(subscriptionDurability) && getDestinationType() != null && !Topic.class.getName().equals(getDestinationType())) {
             errorMessages.add("subscriptionDurability cannot be set to: " + DURABLE_SUBSCRIPTION + " when destinationType is set to " + Queue.class.getName()
@@ -453,7 +417,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         return false;
     }
 
-    private boolean isValidAcknowledgeMode(List<String> errorMessages) {
+    public boolean isValidAcknowledgeMode(List<String> errorMessages) {
         if (AUTO_ACKNOWLEDGE_MODE.equals(acknowledgeMode) || DUPS_OK_ACKNOWLEDGE_MODE.equals(acknowledgeMode)) {
             return true;
         }
@@ -461,7 +425,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         return false;
     }
 
-    private boolean isValidDestinationType(List<String> errorMessages) {
+    public boolean isValidDestinationType(List<String> errorMessages) {
         if (Queue.class.getName().equals(destinationType) || Topic.class.getName().equals(destinationType)) {
             return true;
         }
@@ -469,7 +433,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         return false;
     }
 
-    private boolean isValidDestination(List<String> errorMessages) {
+    public boolean isValidDestination(List<String> errorMessages) {
         if (!(destination == null || destination.equals(""))) {
             return true;
         }
@@ -477,7 +441,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         return false;
     }
 
-    private boolean isEmpty(String value) {
+    public boolean isEmpty(String value) {
         return value == null || "".equals(value.trim());
     }
 
@@ -547,9 +511,6 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         }
     }
 
-    /**
-     * 
-     */
     public String getMaxSessions() {
         return maxSessions;
     }
@@ -563,9 +524,6 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         }
     }
 
-    /**
-     * 
-     */
     public String getUseRAManagedTransaction() {
         return useRAManagedTransaction;
     }
@@ -579,16 +537,10 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         }
     }
 
-    /**
-     * 
-     */
     public int getMaxMessagesPerSessionsIntValue() {
         return Integer.parseInt(maxMessagesPerSessions);
     }
 
-    /**
-     * 
-     */
     public int getMaxSessionsIntValue() {
         return Integer.parseInt(maxSessions);
     }
@@ -597,9 +549,6 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         return Boolean.valueOf(useRAManagedTransaction).booleanValue();
     }
 
-    /**
-     * 
-     */
     public boolean getNoLocalBooleanValue() {
         return Boolean.valueOf(noLocal).booleanValue();
     }
@@ -638,9 +587,6 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         }
     }
 
-    /**
-     * 
-     */
     public short getBackOffMultiplier() {
         if (redeliveryPolicy == null) {
             return 0;
@@ -648,9 +594,6 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         return redeliveryPolicy.getBackOffMultiplier();
     }
 
-    /**
-     * 
-     */
     public long getInitialRedeliveryDelay() {
         if (redeliveryPolicy == null) {
             return 0;
@@ -658,9 +601,6 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         return redeliveryPolicy.getInitialRedeliveryDelay();
     }
 
-    /**
-     * 
-     */
     public int getMaximumRedeliveries() {
         if (redeliveryPolicy == null) {
             return 0;
@@ -668,9 +608,6 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
         return redeliveryPolicy.getMaximumRedeliveries();
     }
 
-    /**
-     * 
-     */
     public boolean isUseExponentialBackOff() {
         if (redeliveryPolicy == null) {
             return false;
@@ -707,14 +644,11 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
     }
 
     // don't use getter to avoid causing introspection errors in containers
-    /**
-     * 
-     */
     public RedeliveryPolicy redeliveryPolicy() {
         return redeliveryPolicy;
     }
 
-    protected RedeliveryPolicy lazyCreateRedeliveryPolicy() {
+    public RedeliveryPolicy lazyCreateRedeliveryPolicy() {
         if (redeliveryPolicy == null) {
             redeliveryPolicy = new RedeliveryPolicy();
         }
