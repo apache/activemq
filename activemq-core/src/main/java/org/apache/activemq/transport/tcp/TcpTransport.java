@@ -36,6 +36,7 @@ import javax.net.SocketFactory;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportLoggerFactory;
 import org.apache.activemq.transport.TransportThreadSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceStopper;
@@ -62,7 +63,45 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     protected Socket socket;
     protected DataOutputStream dataOut;
     protected DataInputStream dataIn;
-    protected boolean trace;
+    /**
+     * trace=true -> the Transport stack where this TcpTransport
+     * object will be, will have a TransportLogger layer
+     * trace=false -> the Transport stack where this TcpTransport
+     * object will be, will NOT have a TransportLogger layer, and therefore
+     * will never be able to print logging messages.
+     * This parameter is most probably set in Connection or TransportConnector URIs.
+     */
+    protected boolean trace = false;
+    /**
+     * Name of the LogWriter implementation to use.
+     * Names are mapped to classes in the resources/META-INF/services/org/apache/activemq/transport/logwriters directory.
+     * This parameter is most probably set in Connection or TransportConnector URIs.
+     */
+    protected String logWriterName = TransportLoggerFactory.defaultLogWriterName;
+    /**
+     * Specifies if the TransportLogger will be manageable by JMX or not.
+     * Also, as long as there is at least 1 TransportLogger which is manageable,
+     * a TransportLoggerControl MBean will me created.
+     */
+    protected boolean dynamicManagement = false;
+    /**
+     * startLogging=true -> the TransportLogger object of the Transport stack
+     * will initially write messages to the log.
+     * startLogging=false -> the TransportLogger object of the Transport stack
+     * will initially NOT write messages to the log.
+     * This parameter only has an effect if trace == true.
+     * This parameter is most probably set in Connection or TransportConnector URIs.
+     */
+    protected boolean startLogging = true;
+    /**
+     * Specifies the port that will be used by the JMX server to manage
+     * the TransportLoggers.
+     * This should only be set in an URI by a client (producer or consumer) since
+     * a broker will already create a JMX server.
+     * It is useful for people who test a broker and clients in the same machine
+     * and want to control both via JMX; a different port will be needed.
+     */
+    protected int jmxPort = 1099;
     protected boolean useLocalHost = true;
     protected int minmumWireFormatVersion;
     protected SocketFactory socketFactory;
@@ -167,6 +206,45 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     public void setTrace(boolean trace) {
         this.trace = trace;
     }
+
+    public String getLogWriterName() {
+        return logWriterName;
+    }
+
+
+    public void setLogWriterName(String logFormat) {
+        this.logWriterName = logFormat;
+    }
+
+
+    public boolean isDynamicManagement() {
+        return dynamicManagement;
+    }
+
+
+    public void setDynamicManagement(boolean useJmx) {
+        this.dynamicManagement = useJmx;
+    }
+
+    public boolean isStartLogging() {
+        return startLogging;
+    }
+
+
+    public void setStartLogging(boolean startLogging) {
+        this.startLogging = startLogging;
+    }
+
+
+    public int getJmxPort() {
+        return jmxPort;
+    }
+
+
+    public void setJmxPort(int jmxPort) {
+        this.jmxPort = jmxPort;
+    }
+
 
     public int getMinmumWireFormatVersion() {
         return minmumWireFormatVersion;

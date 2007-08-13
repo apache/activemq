@@ -33,6 +33,7 @@ import javax.net.ServerSocketFactory;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.openwire.OpenWireFormatFactory;
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportLoggerFactory;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.TransportServerThreadSupport;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -57,7 +58,36 @@ public class TcpTransportServer extends TransportServerThreadSupport {
     protected final TcpTransportFactory transportFactory;
     protected long maxInactivityDuration = 30000;
     protected int minmumWireFormatVersion;
-    protected boolean trace;
+    /**
+     * trace=true -> the Transport stack where this TcpTransport
+     * object will be, will have a TransportLogger layer
+     * trace=false -> the Transport stack where this TcpTransport
+     * object will be, will NOT have a TransportLogger layer, and therefore
+     * will never be able to print logging messages.
+     * This parameter is most probably set in Connection or TransportConnector URIs.
+     */
+    protected boolean trace = false;
+    /**
+     * Name of the LogWriter implementation to use.
+     * Names are mapped to classes in the resources/META-INF/services/org/apache/activemq/transport/logwriters directory.
+     * This parameter is most probably set in Connection or TransportConnector URIs.
+     */
+    protected String logWriterName = TransportLoggerFactory.defaultLogWriterName;
+    /**
+     * Specifies if the TransportLogger will be manageable by JMX or not.
+     * Also, as long as there is at least 1 TransportLogger which is manageable,
+     * a TransportLoggerControl MBean will me created.
+     */
+    protected boolean dynamicManagement = false;
+    /**
+     * startLogging=true -> the TransportLogger object of the Transport stack
+     * will initially write messages to the log.
+     * startLogging=false -> the TransportLogger object of the Transport stack
+     * will initially NOT write messages to the log.
+     * This parameter only has an effect if trace == true.
+     * This parameter is most probably set in Connection or TransportConnector URIs.
+     */
+    protected boolean startLogging = true;
     protected Map<String, Object> transportOptions;
     protected final ServerSocketFactory serverSocketFactory;
 
@@ -147,6 +177,32 @@ public class TcpTransportServer extends TransportServerThreadSupport {
         this.trace = trace;
     }
 
+    public String getLogWriterName() {
+        return logWriterName;
+    }
+
+
+    public void setLogWriterName(String logFormat) {
+        this.logWriterName = logFormat;
+    }
+
+    public boolean isDynamicManagement() {
+        return dynamicManagement;
+    }
+
+    public void setDynamicManagement(boolean useJmx) {
+        this.dynamicManagement = useJmx;
+    }
+
+    public boolean isStartLogging() {
+        return startLogging;
+    }
+
+
+    public void setStartLogging(boolean startLogging) {
+        this.startLogging = startLogging;
+    }
+
     /**
      * pull Sockets from the ServerSocket
      */
@@ -163,6 +219,10 @@ public class TcpTransportServer extends TransportServerThreadSupport {
                         options.put("maxInactivityDuration", Long.valueOf(maxInactivityDuration));
                         options.put("minmumWireFormatVersion", Integer.valueOf(minmumWireFormatVersion));
                         options.put("trace", Boolean.valueOf(trace));
+                        options.put("logWriterName", logWriterName);
+                        options.put("dynamicManagement", Boolean.valueOf(dynamicManagement));
+                        options.put("startLogging", Boolean.valueOf(startLogging));
+
                         options.putAll(transportOptions);
                         WireFormat format = wireFormatFactory.createWireFormat();
                         Transport transport = createTransport(socket, format);
