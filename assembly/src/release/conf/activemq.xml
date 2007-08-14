@@ -99,12 +99,12 @@
     **
     ** http://activemq.apache.org/enterprise-integration-patterns.html
     -->
-  <camelContext id="camel" xmlns="http://activemq.apache.org/camel/schema/spring" packages="org.foo.bar">
-<!--
-    Create EIP routes here using Spring if we like; otherwise Camel will pick up all routes defined
-    in the package named 'org.foo.bar' or any of its child packages
--->
+  <camelContext id="camel" xmlns="http://activemq.apache.org/camel/schema/spring">
 
+    <!-- You can use a <package> element for each root package to search for Java routes -->
+    <package>org.foo.bar</package>
+
+    <!-- You can use Spring XML syntax to define the routes here using the <route> element -->
     <route>
       <from uri="activemq:example.A"/>
       <to uri="activemq:example.B"/>
