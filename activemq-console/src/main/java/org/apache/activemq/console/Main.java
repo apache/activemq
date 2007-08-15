@@ -61,6 +61,11 @@ public class Main {
         // Parse for extension directory option
         app.parseExtensions(tokens);
 
+		// lets add the conf directory first, to find the log4j.properties just in case its not 
+		// in the activemq.classpath system property or some jar incorrectly includes one
+		File confDir = new File(app.getActiveMQBase(), "conf");
+		app.addClassPath(confDir);
+
         // Add the following to the classpath:
         //
         // ${activemq.base}/conf
@@ -205,6 +210,7 @@ public class Main {
         System.out.println("ACTIVEMQ_BASE: " + getActiveMQBase());
 
         ClassLoader cl = getClassLoader();
+		Thread.currentThread().setContextClassLoader(cl);
 
         // Use reflection to run the task.
         try {
