@@ -39,6 +39,10 @@ public final class ControlFile {
     /** The File that holds the control data. */
     private final RandomAccessFile randomAccessFile;
     private final int maxRecordSize;
+    private final int firstRecordStart;
+    private final int secondRecordStart;
+    private final int firstRecordEnd;
+    private final int secondRecordEnd;
 
     private long version;
     private FileLock lock;
@@ -47,6 +51,13 @@ public final class ControlFile {
     public ControlFile(File file, int recordSize) throws IOException {
         this.file = file;
         this.maxRecordSize = recordSize + 4;
+        
+        // Calculate where the records start and end.
+        this.firstRecordStart = 8;
+        this.secondRecordStart = 8 + maxRecordSize + 8 + 8;
+        this.firstRecordEnd = firstRecordStart+maxRecordSize;
+        this.secondRecordEnd = secondRecordStart+maxRecordSize;
+
         randomAccessFile = new RandomAccessFile(file, "rw");
     }
 
@@ -105,26 +116,26 @@ public final class ControlFile {
             return null;
         }
 
-        randomAccessFile.seek(0);
+        randomAccessFile.seek(firstRecordStart-8);
         long v1 = randomAccessFile.readLong();
-        randomAccessFile.seek(maxRecordSize + 8);
+        randomAccessFile.seek(firstRecordEnd);
         long v1check = randomAccessFile.readLong();
 
-        randomAccessFile.seek(maxRecordSize + 16);
+        randomAccessFile.seek(secondRecordStart - 8);
         long v2 = randomAccessFile.readLong();
-        randomAccessFile.seek((maxRecordSize * 2) + 24);
+        randomAccessFile.seek(secondRecordEnd);
         long v2check = randomAccessFile.readLong();
 
         byte[] data = null;
         if (v2 == v2check) {
             version = v2;
-            randomAccessFile.seek(maxRecordSize + 24);
+            randomAccessFile.seek(secondRecordStart);
             int size = randomAccessFile.readInt();
             data = new byte[size];
             randomAccessFile.readFully(data);
         } else if (v1 == v1check) {
             version = v1;
-            randomAccessFile.seek(maxRecordSize + 8);
+            randomAccessFile.seek(firstRecordStart);
             int size = randomAccessFile.readInt();
             data = new byte[size];
             randomAccessFile.readFully(data);
@@ -147,12 +158,14 @@ public final class ControlFile {
         randomAccessFile.writeLong(version);
         randomAccessFile.writeInt(data.getLength());
         randomAccessFile.write(data.getData());
+        randomAccessFile.seek(firstRecordEnd);
         randomAccessFile.writeLong(version);
 
         // Write the second copy of the control data.
         randomAccessFile.writeLong(version);
         randomAccessFile.writeInt(data.getLength());
         randomAccessFile.write(data.getData());
+        randomAccessFile.seek(secondRecordEnd);
         randomAccessFile.writeLong(version);
 
         if (sync) {
