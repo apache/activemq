@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -60,14 +62,18 @@ public class StompTest extends CombinationTestSupport {
         connector = broker.addConnector(bindAddress);
         broker.start();
 
-        URI connectUri = connector.getConnectUri();
-        stompConnection.open("127.0.0.1", connectUri.getPort());
+        stompConnect();
 
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost");
         connection = cf.createConnection();
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         queue = new ActiveMQQueue(getQueueName());
         connection.start();
+    }
+
+    private void stompConnect() throws IOException, URISyntaxException, UnknownHostException {
+        URI connectUri = connector.getConnectUri();
+        stompConnection.open("127.0.0.1", connectUri.getPort());
     }
 
     protected Socket createSocket(URI connectUri) throws IOException {
@@ -80,8 +86,15 @@ public class StompTest extends CombinationTestSupport {
 
     protected void tearDown() throws Exception {
         connection.close();
-        stompConnection.close();
+        stompDisconnect();
         broker.stop();
+    }
+
+    private void stompDisconnect() throws IOException {
+        if (stompConnection != null) {
+            stompConnection.close();
+            stompConnection = null;
+        }
     }
 
     public void sendMessage(String msg) throws Exception {
@@ -188,8 +201,8 @@ public class StompTest extends CombinationTestSupport {
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
 
-        frame = "SEND\n" + "correlation-id:c123\n" + "priority:3\n" + "type:t345\n" + "JMSXGroupID:abc\n" + "foo:abc\n" + "bar:123\n" + "destination:/queue/" + getQueueName()
-                + "\n\n" + "Hello World" + Stomp.NULL;
+        frame = "SEND\n" + "correlation-id:c123\n" + "priority:3\n" + "type:t345\n" + "JMSXGroupID:abc\n" + "foo:abc\n" + "bar:123\n" + "destination:/queue/" + getQueueName() + "\n\n" + "Hello World"
+                + Stomp.NULL;
 
         stompConnection.sendFrame(frame);
 
@@ -238,7 +251,9 @@ public class StompTest extends CombinationTestSupport {
         frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "ack:auto\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
-        sendBytesMessage(new byte[] {1, 2, 3, 4, 5});
+        sendBytesMessage(new byte[] {
+            1, 2, 3, 4, 5
+        });
 
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("MESSAGE"));
@@ -363,8 +378,7 @@ public class StompTest extends CombinationTestSupport {
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("MESSAGE"));
 
-        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
-        stompConnection.sendFrame(frame);
+        stompDisconnect();
 
         // message should be received since message was not acknowledged
         MessageConsumer consumer = session.createConsumer(queue);
