@@ -28,9 +28,10 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.usage.MemoryUsage;
+import org.apache.activemq.usage.SystemUsage;
 
 /**
  * An implementation of {@link org.apache.activemq.store.MessageStore} which
@@ -125,13 +126,7 @@ public class MemoryMessageStore implements MessageStore {
         }
     }
 
-    /**
-     * @param usageManager The UsageManager that is controlling the
-     *                destination's memory usage.
-     */
-    public void setUsageManager(UsageManager usageManager) {
-    }
-
+    
     public int getMessageCount() {
         return messageTable.size();
     }
@@ -160,5 +155,14 @@ public class MemoryMessageStore implements MessageStore {
 
     public void resetBatching() {
         lastBatchId = null;
+    }
+
+    /**
+     * @param memoeyUSage
+     * @see org.apache.activemq.store.MessageStore#setMemoryUsage(org.apache.activemq.usage.MemoryUsage)
+     */
+    public void setMemoryUsage(MemoryUsage memoeyUSage){
+        // TODO Auto-generated method stub
+        
     }
 }

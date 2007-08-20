@@ -582,7 +582,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         }
 
         if (rc == 1 && regionDestination != null) {
-            regionDestination.getUsageManager().increaseUsage(size);
+            regionDestination.getBrokerMemoryUsage().increaseUsage(size);
         }
 
         // System.out.println(" + "+getDestination()+" :::: "+getMessageId()+"
@@ -599,7 +599,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         }
 
         if (rc == 0 && regionDestination != null) {
-            regionDestination.getUsageManager().decreaseUsage(size);
+            regionDestination.getBrokerMemoryUsage().decreaseUsage(size);
         }
         // System.out.println(" - "+getDestination()+" :::: "+getMessageId()+"
         // "+rc);

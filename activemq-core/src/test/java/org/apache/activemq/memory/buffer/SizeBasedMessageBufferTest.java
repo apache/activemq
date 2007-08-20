@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.memory.buffer;
 
+import org.apache.activemq.memory.buffer.MessageBuffer;
+import org.apache.activemq.memory.buffer.SizeBasedMessageBuffer;
+
 
 /**
  *

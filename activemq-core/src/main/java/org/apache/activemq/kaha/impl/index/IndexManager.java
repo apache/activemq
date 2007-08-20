@@ -19,6 +19,7 @@ package org.apache.activemq.kaha.impl.index;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.kaha.impl.DataManager;
 import org.apache.commons.logging.Log;
@@ -45,12 +46,14 @@ public final class IndexManager {
     private IndexItem firstFree;
     private IndexItem lastFree;
     private boolean dirty;
+    private final AtomicLong storeSize;
 
-    public IndexManager(File directory, String name, String mode, DataManager redoLog) throws IOException {
+    public IndexManager(File directory, String name, String mode, DataManager redoLog, AtomicLong storeSize) throws IOException {
         this.directory = directory;
         this.name = name;
         this.mode = mode;
         this.redoLog = redoLog;
+        this.storeSize=storeSize;
         initialize();
     }
 
@@ -106,6 +109,7 @@ public final class IndexManager {
             result = new IndexItem();
             result.setOffset(length);
             length += IndexItem.INDEX_SIZE;
+            storeSize.addAndGet(IndexItem.INDEX_SIZE);
         }
         return result;
     }
@@ -156,9 +160,14 @@ public final class IndexManager {
     synchronized long getLength() {
         return length;
     }
+    
+    public final long size() {
+        return length;
+    }
 
     public synchronized void setLength(long value) {
         this.length = value;
+        storeSize.addAndGet(length);
     }
 
     public String toString() {
@@ -187,5 +196,6 @@ public final class IndexManager {
             offset += IndexItem.INDEX_SIZE;
         }
         length = offset;
+        storeSize.addAndGet(length);
     }
 }

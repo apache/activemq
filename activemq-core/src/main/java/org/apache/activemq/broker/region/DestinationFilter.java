@@ -27,8 +27,9 @@ import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.usage.MemoryUsage;
+import org.apache.activemq.usage.SystemUsage;
 
 /**
  * 
@@ -79,8 +80,8 @@ public class DestinationFilter implements Destination {
         return next.getName();
     }
 
-    public UsageManager getUsageManager() {
-        return next.getUsageManager();
+    public MemoryUsage getBrokerMemoryUsage() {
+        return next.getBrokerMemoryUsage();
     }
 
     public boolean lock(MessageReference node, LockOwner lockOwner) {

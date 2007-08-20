@@ -27,11 +27,11 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionStore;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -151,7 +151,7 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
      * @param usageManager The UsageManager that is controlling the broker's
      *                memory usage.
      */
-    public void setUsageManager(UsageManager usageManager) {
+    public void setUsageManager(SystemUsage usageManager) {
     }
 
     public String toString() {
@@ -165,5 +165,9 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
     }
 
     public void checkpoint(boolean sync) throws IOException {
+    }
+    
+    public long size(){
+        return 0;
     }
 }

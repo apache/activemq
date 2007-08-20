@@ -36,8 +36,8 @@ import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.Response;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.transaction.Synchronization;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -47,7 +47,7 @@ public class TopicSubscription extends AbstractSubscription {
     private static final AtomicLong CURSOR_NAME_COUNTER = new AtomicLong(0);
     
     protected PendingMessageCursor matched;
-    protected final UsageManager usageManager;
+    protected final SystemUsage usageManager;
     protected AtomicLong dispatchedCounter = new AtomicLong();
     protected AtomicLong prefetchExtension = new AtomicLong();
     
@@ -62,7 +62,7 @@ public class TopicSubscription extends AbstractSubscription {
     private final AtomicLong dequeueCounter = new AtomicLong(0);
     private int memoryUsageHighWaterMark = 95;
 
-    public TopicSubscription(Broker broker, ConnectionContext context, ConsumerInfo info, UsageManager usageManager) throws Exception {
+    public TopicSubscription(Broker broker, ConnectionContext context, ConsumerInfo info, SystemUsage usageManager) throws Exception {
         super(broker, context, info);
         this.usageManager = usageManager;
         String matchedName = "TopicSubscription:" + CURSOR_NAME_COUNTER.getAndIncrement() + "[" + info.getConsumerId().toString() + "]";
@@ -71,7 +71,7 @@ public class TopicSubscription extends AbstractSubscription {
     }
 
     public void init() throws Exception {
-        this.matched.setUsageManager(usageManager);
+        this.matched.setSystemUsage(usageManager);
         this.matched.start();
     }
 
@@ -317,7 +317,7 @@ public class TopicSubscription extends AbstractSubscription {
     /**
      * @return the usageManager
      */
-    public UsageManager getUsageManager() {
+    public SystemUsage getUsageManager() {
         return this.usageManager;
     }
 

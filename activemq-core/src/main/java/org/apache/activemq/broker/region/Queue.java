@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -51,7 +52,6 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.kaha.Store;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
@@ -60,6 +60,8 @@ import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.thread.Valve;
 import org.apache.activemq.transaction.Synchronization;
+import org.apache.activemq.usage.MemoryUsage;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.BrokerSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -78,7 +80,8 @@ public class Queue implements Destination, Task {
     private final ActiveMQDestination destination;
     private final List<Subscription> consumers = new CopyOnWriteArrayList<Subscription>();
     private final Valve dispatchValve = new Valve(true);
-    private final UsageManager usageManager;
+    private final SystemUsage systemUsage;
+    private final MemoryUsage memoryUsage;
     private final DestinationStatistics destinationStatistics = new DestinationStatistics();
     private PendingMessageCursor messages;
     private final LinkedList<MessageReference> pagedInMessages = new LinkedList<MessageReference>();
@@ -107,12 +110,13 @@ public class Queue implements Destination, Task {
         };
     };
 
-    public Queue(Broker broker, ActiveMQDestination destination, final UsageManager memoryManager, MessageStore store, DestinationStatistics parentStats,
+    public Queue(Broker broker, ActiveMQDestination destination, final SystemUsage systemUsage, MessageStore store, DestinationStatistics parentStats,
                  TaskRunnerFactory taskFactory, Store tmpStore) throws Exception {
         this.broker = broker;
         this.destination = destination;
-        this.usageManager = new UsageManager(memoryManager, destination.toString());
-        this.usageManager.setUsagePortion(1.0f);
+        this.systemUsage=systemUsage;
+        this.memoryUsage = new MemoryUsage(systemUsage.getMemoryUsage(), destination.toString());
+        this.memoryUsage.setUsagePortion(1.0f);
         this.store = store;
         if (destination.isTemporary()) {
             this.messages = new VMPendingMessageCursor();
@@ -126,7 +130,7 @@ public class Queue implements Destination, Task {
         // flush messages to disk
         // when usage gets high.
         if (store != null) {
-            store.setUsageManager(usageManager);
+            store.setMemoryUsage(memoryUsage);
         }
 
         // let's copy the enabled property from the parent DestinationStatistics
@@ -139,7 +143,7 @@ public class Queue implements Destination, Task {
     public void initialize() throws Exception {
         if (store != null) {
             // Restore the persistent messages.
-            messages.setUsageManager(getUsageManager());
+            messages.setSystemUsage(systemUsage);
             if (messages.isRecoveryRequired()) {
                 store.recover(new MessageRecoveryListener() {
 
@@ -359,9 +363,9 @@ public class Queue implements Destination, Task {
             }
             return;
         }
-        if (context.isProducerFlowControl() && usageManager.isFull()) {
-            if (usageManager.isSendFailIfNoSpace()) {
-                throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
+        if (context.isProducerFlowControl() && memoryUsage.isFull()) {
+            if (systemUsage.isSendFailIfNoSpace()) {
+                throw new javax.jms.ResourceAllocationException("SystemUsage memory limit reached");
             }
 
             // We can avoid blocking due to low usage if the producer is sending
@@ -404,7 +408,7 @@ public class Queue implements Destination, Task {
 
                     // If the user manager is not full, then the task will not
                     // get called..
-                    if (!usageManager.notifyCallbackWhenNotFull(sendMessagesWaitingForSpaceTask)) {
+                    if (!memoryUsage.notifyCallbackWhenNotFull(sendMessagesWaitingForSpaceTask)) {
                         // so call it directly here.
                         sendMessagesWaitingForSpaceTask.run();
                     }
@@ -417,7 +421,7 @@ public class Queue implements Destination, Task {
                 // Producer flow control cannot be used, so we have do the flow
                 // control at the broker
                 // by blocking this thread until there is space available.
-                while (!usageManager.waitForSpace(1000)) {
+                while (!memoryUsage.waitForSpace(1000)) {
                     if (context.getStopping().get()) {
                         throw new IOException("Connection closed, send aborted.");
                     }
@@ -444,6 +448,7 @@ public class Queue implements Destination, Task {
         final ConnectionContext context = producerExchange.getConnectionContext();
         message.setRegionDestination(this);
         if (store != null && message.isPersistent()) {
+            systemUsage.getStoreUsage().waitForSpace();
             store.addMessage(context, message);
         }
         if (context.isInTransaction()) {
@@ -552,13 +557,13 @@ public class Queue implements Destination, Task {
         synchronized (messages) {
             size = messages.size();
         }
-        return "Queue: destination=" + destination.getPhysicalName() + ", subscriptions=" + consumers.size() + ", memory=" + usageManager.getPercentUsage() + "%, size=" + size
+        return "Queue: destination=" + destination.getPhysicalName() + ", subscriptions=" + consumers.size() + ", memory=" + memoryUsage.getPercentUsage() + "%, size=" + size
                + ", in flight groups=" + messageGroupOwners;
     }
 
     public void start() throws Exception {
-        if (usageManager != null) {
-            usageManager.start();
+        if (memoryUsage != null) {
+            memoryUsage.start();
         }
         messages.start();
         doPageIn(false);
@@ -571,8 +576,8 @@ public class Queue implements Destination, Task {
         if (messages != null) {
             messages.stop();
         }
-        if (usageManager != null) {
-            usageManager.stop();
+        if (memoryUsage != null) {
+            memoryUsage.stop();
         }
     }
 
@@ -586,8 +591,8 @@ public class Queue implements Destination, Task {
         return destination.getPhysicalName();
     }
 
-    public UsageManager getUsageManager() {
-        return usageManager;
+    public MemoryUsage getBrokerMemoryUsage() {
+        return memoryUsage;
     }
 
     public DestinationStatistics getDestinationStatistics() {
@@ -926,7 +931,7 @@ public class Queue implements Destination, Task {
      */
     public boolean iterate() {
 
-        while (!usageManager.isFull() && !messagesWaitingForSpace.isEmpty()) {
+        while (!memoryUsage.isFull() && !messagesWaitingForSpace.isEmpty()) {
             Runnable op = messagesWaitingForSpace.removeFirst();
             op.run();
         }

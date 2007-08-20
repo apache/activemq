@@ -29,8 +29,9 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageId;
-import org.apache.activemq.memory.UsageListener;
-import org.apache.activemq.memory.UsageManager;
+import org.apache.activemq.usage.Usage;
+import org.apache.activemq.usage.UsageListener;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.SubscriptionKey;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -42,10 +43,10 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     private final ConcurrentHashMap<ActiveMQDestination, Destination> destinations = new ConcurrentHashMap<ActiveMQDestination, Destination>();
     private final SubscriptionKey subscriptionKey;
     private final boolean keepDurableSubsActive;
-    private final UsageManager usageManager;
+    private final SystemUsage usageManager;
     private boolean active;
 
-    public DurableTopicSubscription(Broker broker, UsageManager usageManager, ConnectionContext context, ConsumerInfo info, boolean keepDurableSubsActive)
+    public DurableTopicSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, boolean keepDurableSubsActive)
         throws InvalidSelectorException {
         super(broker, context, info, new StoreDurableSubscriberCursor(context.getClientId(), info.getSubscriptionName(), broker.getTempDataStore(), info.getPrefetchSize()));
         this.usageManager = usageManager;
@@ -77,7 +78,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         dispatchMatched();
     }
 
-    public synchronized void activate(UsageManager memoryManager, ConnectionContext context, ConsumerInfo info) throws Exception {
+    public synchronized void activate(SystemUsage memoryManager, ConnectionContext context, ConsumerInfo info) throws Exception {
         LOG.debug("Activating " + this);
         if (!active) {
             this.active = true;
@@ -89,7 +90,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                     topic.activate(context, this);
                 }
             }
-            pending.setUsageManager(memoryManager);
+            pending.setSystemUsage(memoryManager);
             pending.start();
 
             // If nothing was in the persistent store, then try to use the
@@ -101,13 +102,13 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 }
             }
             dispatchMatched();
-            this.usageManager.addUsageListener(this);
+            this.usageManager.getMemoryUsage().addUsageListener(this);
         }
     }
 
     public synchronized void deactivate(boolean keepDurableSubsActive) throws Exception {
         active = false;
-        this.usageManager.removeUsageListener(this);
+        this.usageManager.getMemoryUsage().removeUsageListener(this);
         synchronized (pending) {
             pending.stop();
         }
@@ -239,10 +240,10 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
      * @param memoryManager
      * @param oldPercentUsage
      * @param newPercentUsage
-     * @see org.apache.activemq.memory.UsageListener#onMemoryUseChanged(org.apache.activemq.memory.UsageManager,
+     * @see org.apache.activemq.usage.UsageListener#onMemoryUseChanged(org.apache.activemq.usage.SystemUsage,
      *      int, int)
      */
-    public void onMemoryUseChanged(UsageManager memoryManager, int oldPercentUsage, int newPercentUsage) {
+    public void onUsageChanged(Usage usage, int oldPercentUsage, int newPercentUsage) {
         if (oldPercentUsage > newPercentUsage && oldPercentUsage >= 90) {
             try {
                 dispatchMatched();

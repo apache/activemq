@@ -24,6 +24,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.activemq.usage.Usage;
+import org.apache.activemq.usage.UsageListener;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -36,10 +38,10 @@ public class CacheEvictionUsageListener implements UsageListener {
     private final int usageLowMark;
 
     private final TaskRunner evictionTask;
-    private final UsageManager usageManager;
+    private final Usage usage;
 
-    public CacheEvictionUsageListener(UsageManager usageManager, int usageHighMark, int usageLowMark, TaskRunnerFactory taskRunnerFactory) {
-        this.usageManager = usageManager;
+    public CacheEvictionUsageListener(Usage usage, int usageHighMark, int usageLowMark, TaskRunnerFactory taskRunnerFactory) {
+        this.usage = usage;
         this.usageHighMark = usageHighMark;
         this.usageLowMark = usageLowMark;
         evictionTask = taskRunnerFactory.createTaskRunner(new Task() {
@@ -51,10 +53,10 @@ public class CacheEvictionUsageListener implements UsageListener {
 
     boolean evictMessages() {
         // Try to take the memory usage down below the low mark.
-        LOG.debug("Evicting cache memory usage: " + usageManager.getPercentUsage());
+        LOG.debug("Evicting cache memory usage: " + usage.getPercentUsage());
 
         List<CacheEvictor> list = new LinkedList<CacheEvictor>(evictors);
-        while (list.size() > 0 && usageManager.getPercentUsage() > usageLowMark) {
+        while (list.size() > 0 && usage.getPercentUsage() > usageLowMark) {
 
             // Evenly evict messages from all evictors
             for (Iterator<CacheEvictor> iter = list.iterator(); iter.hasNext();) {
@@ -67,10 +69,10 @@ public class CacheEvictionUsageListener implements UsageListener {
         return false;
     }
 
-    public void onMemoryUseChanged(UsageManager memoryManager, int oldPercentUsage, int newPercentUsage) {
+    public void onUsageChanged(Usage usage, int oldPercentUsage, int newPercentUsage) {
         // Do we need to start evicting cache entries? Usage > than the
         // high mark
-        if (oldPercentUsage < newPercentUsage && memoryManager.getPercentUsage() >= usageHighMark) {
+        if (oldPercentUsage < newPercentUsage && usage.getPercentUsage() >= usageHighMark) {
             try {
                 evictionTask.wakeup();
             } catch (InterruptedException e) {

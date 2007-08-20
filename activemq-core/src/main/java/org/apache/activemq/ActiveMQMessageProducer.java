@@ -33,7 +33,7 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.management.JMSProducerStatsImpl;
 import org.apache.activemq.management.StatsCapable;
 import org.apache.activemq.management.StatsImpl;
-import org.apache.activemq.memory.UsageManager;
+import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.util.IntrospectionSupport;
 
 /**
@@ -77,7 +77,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     private AtomicLong messageSequence;
     private long startTime;
     private MessageTransformer transformer;
-    private UsageManager producerWindow;
+    private MemoryUsage producerWindow;
 
     protected ActiveMQMessageProducer(ActiveMQSession session, ProducerId producerId, ActiveMQDestination destination) throws JMSException {
         super(session);
@@ -92,7 +92,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         // Enable producer window flow control if protocol > 3 and the window
         // size > 0
         if (session.connection.getProtocolVersion() >= 3 && this.info.getWindowSize() > 0) {
-            producerWindow = new UsageManager("Producer Window: " + producerId);
+            producerWindow = new MemoryUsage("Producer Window: " + producerId);
             producerWindow.setLimit(this.info.getWindowSize());
         }
 

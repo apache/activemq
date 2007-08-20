@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
@@ -40,8 +41,6 @@ import org.apache.activemq.command.JournalTransaction;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.kaha.impl.async.AsyncDataManager;
 import org.apache.activemq.kaha.impl.async.Location;
-import org.apache.activemq.memory.UsageListener;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -56,6 +55,9 @@ import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.activemq.usage.Usage;
+import org.apache.activemq.usage.UsageListener;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IOHelper;
@@ -80,7 +82,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private ReferenceStoreAdapter referenceStoreAdapter;
     private TaskRunnerFactory taskRunnerFactory;
     private WireFormat wireFormat = new OpenWireFormat();
-    private UsageManager usageManager;
+    private SystemUsage usageManager;
     private long cleanupInterval = 1000 * 60;
     private long checkpointInterval = 1000 * 10;
     private int maxCheckpointWorkers = 1;
@@ -96,6 +98,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private String brokerName = "";
     private File directory;
     private BrokerService brokerService;
+    private AtomicLong storeSize = new AtomicLong();
 
     public String getBrokerName() {
         return this.brokerName;
@@ -132,7 +135,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         this.directory.mkdirs();
 
         if (this.usageManager != null) {
-            this.usageManager.addUsageListener(this);
+            this.usageManager.getMemoryUsage().addUsageListener(this);
         }
         if (asyncDataManager == null) {
             asyncDataManager = createAsyncDataManager();
@@ -217,7 +220,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         if (!started.compareAndSet(true, false)) {
             return;
         }
-        this.usageManager.removeUsageListener(this);
+        this.usageManager.getMemoryUsage().removeUsageListener(this);
         synchronized (this) {
             Scheduler.cancel(periodicCheckpointTask);
             Scheduler.cancel(periodicCleanupTask);
@@ -571,7 +574,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         return writeCommand(trace, sync);
     }
 
-    public void onMemoryUseChanged(UsageManager memoryManager, int oldPercentUsage, int newPercentUsage) {
+    public void onUsageChanged(Usage usage, int oldPercentUsage, int newPercentUsage) {
         newPercentUsage = (newPercentUsage / 10) * 10;
         oldPercentUsage = (oldPercentUsage / 10) * 10;
         if (newPercentUsage >= 70 && oldPercentUsage < newPercentUsage) {
@@ -595,13 +598,13 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     // Subclass overridables
     // /////////////////////////////////////////////////////////////////
     protected AsyncDataManager createAsyncDataManager() {
-        AsyncDataManager manager = new AsyncDataManager();
+        AsyncDataManager manager = new AsyncDataManager(storeSize);
         manager.setDirectory(new File(directory, "journal"));
         return manager;
     }
 
     protected KahaReferenceStoreAdapter createReferenceStoreAdapter() throws IOException {
-        KahaReferenceStoreAdapter adaptor = new KahaReferenceStoreAdapter();
+        KahaReferenceStoreAdapter adaptor = new KahaReferenceStoreAdapter(storeSize);
         return adaptor;
     }
 
@@ -643,11 +646,11 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         this.wireFormat = wireFormat;
     }
 
-    public UsageManager getUsageManager() {
+    public SystemUsage getUsageManager() {
         return usageManager;
     }
 
-    public void setUsageManager(UsageManager usageManager) {
+    public void setUsageManager(SystemUsage usageManager) {
         this.usageManager = usageManager;
     }
 
@@ -688,5 +691,9 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
      */
     public void setReferenceStoreAdapter(ReferenceStoreAdapter referenceStoreAdapter) {
         this.referenceStoreAdapter = referenceStoreAdapter;
+    }
+    
+    public long size(){
+        return storeSize.get();
     }
 }

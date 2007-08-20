@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.kaha.ContainerId;
 import org.apache.activemq.kaha.ListContainer;
@@ -79,9 +80,16 @@ public class KahaStore implements Store {
     private FileLock lock;
     private boolean persistentIndex = true;
     private RandomAccessFile lockFile;
+    private final AtomicLong storeSize;
 
+    
     public KahaStore(String name, String mode) throws IOException {
+        this(name,mode,new AtomicLong());
+    }
+    
+    public KahaStore(String name, String mode,AtomicLong storeSize) throws IOException {
         this.mode = mode;
+        this.storeSize = storeSize;
         directory = new File(name);
         directory.mkdirs();
     }
@@ -337,14 +345,14 @@ public class KahaStore implements Store {
         DataManager dm = dataManagers.get(name);
         if (dm == null) {
             if (isUseAsyncDataManager()) {
-                AsyncDataManager t = new AsyncDataManager();
+                AsyncDataManager t = new AsyncDataManager(storeSize);
                 t.setDirectory(directory);
                 t.setFilePrefix("async-data-" + name + "-");
                 t.setMaxFileLength((int)maxDataFileLength);
                 t.start();
                 dm = new DataManagerFacade(t, name);
             } else {
-                DataManagerImpl t = new DataManagerImpl(directory, name);
+                DataManagerImpl t = new DataManagerImpl(directory, name,storeSize);
                 t.setMaxFileLength(maxDataFileLength);
                 dm = t;
             }
@@ -359,7 +367,7 @@ public class KahaStore implements Store {
     public synchronized IndexManager getIndexManager(DataManager dm, String name) throws IOException {
         IndexManager im = indexManagers.get(name);
         if (im == null) {
-            im = new IndexManager(directory, name, mode, logIndexChanges ? dm : null);
+            im = new IndexManager(directory, name, mode, logIndexChanges ? dm : null,storeSize);
             indexManagers.put(name, im);
         }
         return im;
@@ -546,6 +554,14 @@ public class KahaStore implements Store {
 
     public synchronized void setUseAsyncDataManager(boolean useAsyncWriter) {
         this.useAsyncDataManager = useAsyncWriter;
+    }
+
+    /**
+     * @return
+     * @see org.apache.activemq.kaha.Store#size()
+     */
+    public long size(){
+        return storeSize.get();
     }
 
 }

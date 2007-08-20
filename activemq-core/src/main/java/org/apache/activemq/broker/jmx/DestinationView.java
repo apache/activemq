@@ -94,15 +94,15 @@ public class DestinationView implements DestinationViewMBean {
     }
 
     public int getMemoryPercentageUsed() {
-        return destination.getUsageManager().getPercentUsage();
+        return destination.getBrokerMemoryUsage().getPercentUsage();
     }
 
     public long getMemoryLimit() {
-        return destination.getUsageManager().getLimit();
+        return destination.getBrokerMemoryUsage().getLimit();
     }
 
     public void setMemoryLimit(long limit) {
-        destination.getUsageManager().setLimit(limit);
+        destination.getBrokerMemoryUsage().setLimit(limit);
     }
 
     public double getAverageEnqueueTime() {

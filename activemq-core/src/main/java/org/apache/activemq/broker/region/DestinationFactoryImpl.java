@@ -29,11 +29,11 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTempDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.SubscriptionInfo;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.activemq.usage.SystemUsage;
 
 /**
  * Creates standard ActiveMQ implementations of
@@ -44,12 +44,12 @@ import org.apache.activemq.thread.TaskRunnerFactory;
  */
 public class DestinationFactoryImpl extends DestinationFactory {
 
-    protected final UsageManager memoryManager;
+    protected final SystemUsage memoryManager;
     protected final TaskRunnerFactory taskRunnerFactory;
     protected final PersistenceAdapter persistenceAdapter;
     protected RegionBroker broker;
 
-    public DestinationFactoryImpl(UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory, PersistenceAdapter persistenceAdapter) {
+    public DestinationFactoryImpl(SystemUsage memoryManager, TaskRunnerFactory taskRunnerFactory, PersistenceAdapter persistenceAdapter) {
         this.memoryManager = memoryManager;
         this.taskRunnerFactory = taskRunnerFactory;
         if (persistenceAdapter == null) {

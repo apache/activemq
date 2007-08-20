@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.StoreLocation;
@@ -57,10 +58,12 @@ public final class DataManagerImpl implements DataManager {
     private Map<Integer, DataFile> fileMap = new HashMap<Integer, DataFile>();
     private Marshaller redoMarshaller = RedoStoreIndexItem.MARSHALLER;
     private String dataFilePrefix;
+    private final AtomicLong storeSize;
 
-    public DataManagerImpl(File dir, final String name) {
+    public DataManagerImpl(File dir, final String name,AtomicLong storeSize) {
         this.directory = dir;
         this.name = name;
+        this.storeSize=storeSize;
 
         dataFilePrefix = NAME_PREFIX + name + "-";
         // build up list of current dataFiles
@@ -76,6 +79,7 @@ public final class DataManagerImpl implements DataManager {
                 String numStr = n.substring(dataFilePrefix.length(), n.length());
                 int num = Integer.parseInt(numStr);
                 DataFile dataFile = new DataFile(file, num);
+                storeSize.addAndGet(dataFile.getLength());
                 fileMap.put(dataFile.getNumber(), dataFile);
                 if (currentWriteFile == null || currentWriteFile.getNumber().intValue() < num) {
                     currentWriteFile = dataFile;
@@ -111,7 +115,9 @@ public final class DataManagerImpl implements DataManager {
         }
         item.setOffset(currentWriteFile.getLength());
         item.setFile(currentWriteFile.getNumber().intValue());
-        currentWriteFile.incrementLength(item.getSize() + ITEM_HEAD_SIZE);
+        int len = item.getSize() + ITEM_HEAD_SIZE;
+        currentWriteFile.incrementLength(len);
+        storeSize.addAndGet(len);
         return currentWriteFile;
     }
 
@@ -250,6 +256,7 @@ public final class DataManagerImpl implements DataManager {
         boolean result = true;
         for (Iterator<DataFile> i = fileMap.values().iterator(); i.hasNext();) {
             DataFile dataFile = i.next();
+            storeSize.addAndGet(-dataFile.getLength());
             result &= dataFile.delete();
         }
         fileMap.clear();
@@ -325,6 +332,7 @@ public final class DataManagerImpl implements DataManager {
         if (writer != null) {
             writer.force(dataFile);
         }
+        storeSize.addAndGet(-dataFile.getLength());
         boolean result = dataFile.delete();
         LOG.debug("discarding data file " + dataFile + (result ? "successful " : "failed"));
     }

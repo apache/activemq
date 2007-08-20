@@ -33,9 +33,9 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkConnector;
+import org.apache.activemq.usage.SystemUsage;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
 
@@ -117,9 +117,9 @@ public class AMQStackOverFlowTest extends TestCase {
         brokerService.setPersistent(false);
         brokerService.setUseJmx(true);
 
-        final UsageManager memoryManager = new UsageManager();
-        memoryManager.setLimit(10);
-        brokerService.setMemoryManager(memoryManager);
+        final SystemUsage memoryManager = new SystemUsage();
+        memoryManager.getMemoryUsage().setLimit(10);
+        brokerService.setUsageManager(memoryManager);
 
         final List<PolicyEntry> policyEntries = new ArrayList<PolicyEntry>();
 

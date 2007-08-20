@@ -85,15 +85,15 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     public int getMemoryPercentageUsed() {
-        return brokerService.getMemoryManager().getPercentUsage();
+        return brokerService.getUsageManager().getMemoryUsage().getPercentUsage();
     }
 
     public long getMemoryLimit() {
-        return brokerService.getMemoryManager().getLimit();
+        return brokerService.getUsageManager().getMemoryUsage().getLimit();
     }
 
     public void setMemoryLimit(long limit) {
-        brokerService.getMemoryManager().setLimit(limit);
+        brokerService.getUsageManager().getMemoryUsage().setLimit(limit);
     }
 
     public void resetStatistics() {

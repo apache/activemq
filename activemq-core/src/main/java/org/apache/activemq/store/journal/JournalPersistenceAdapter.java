@@ -49,8 +49,6 @@ import org.apache.activemq.command.JournalTrace;
 import org.apache.activemq.command.JournalTransaction;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.memory.UsageListener;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -63,6 +61,9 @@ import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.activemq.usage.Usage;
+import org.apache.activemq.usage.UsageListener;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
@@ -89,7 +90,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     private final ConcurrentHashMap<ActiveMQQueue, JournalMessageStore> queues = new ConcurrentHashMap<ActiveMQQueue, JournalMessageStore>();
     private final ConcurrentHashMap<ActiveMQTopic, JournalTopicMessageStore> topics = new ConcurrentHashMap<ActiveMQTopic, JournalTopicMessageStore>();
 
-    private UsageManager usageManager;
+    private SystemUsage usageManager;
     private long checkpointInterval = 1000 * 60 * 5;
     private long lastCheckpointRequest = System.currentTimeMillis();
     private long lastCleanup = System.currentTimeMillis();
@@ -139,7 +140,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
      * @param usageManager The UsageManager that is controlling the
      *                destination's memory usage.
      */
-    public void setUsageManager(UsageManager usageManager) {
+    public void setUsageManager(SystemUsage usageManager) {
         this.usageManager = usageManager;
         longTermPersistence.setUsageManager(usageManager);
     }
@@ -213,7 +214,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         });
         // checkpointExecutor.allowCoreThreadTimeOut(true);
 
-        this.usageManager.addUsageListener(this);
+        this.usageManager.getMemoryUsage().addUsageListener(this);
 
         if (longTermPersistence instanceof JDBCPersistenceAdapter) {
             // Disabled periodic clean up as it deadlocks with the checkpoint
@@ -232,7 +233,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
 
     public void stop() throws Exception {
 
-        this.usageManager.removeUsageListener(this);
+        this.usageManager.getMemoryUsage().removeUsageListener(this);
         if (!started.compareAndSet(true, false)) {
             return;
         }
@@ -605,7 +606,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         return writeCommand(trace, sync);
     }
 
-    public void onMemoryUseChanged(UsageManager memoryManager, int oldPercentUsage, int newPercentUsage) {
+    public void onUsageChanged(Usage usage, int oldPercentUsage, int newPercentUsage) {
         newPercentUsage = (newPercentUsage / 10) * 10;
         oldPercentUsage = (oldPercentUsage / 10) * 10;
         if (newPercentUsage >= 70 && oldPercentUsage < newPercentUsage) {
@@ -633,7 +634,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         longTermPersistence.deleteAllMessages();
     }
 
-    public UsageManager getUsageManager() {
+    public SystemUsage getUsageManager() {
         return usageManager;
     }
 
@@ -681,6 +682,10 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     }
 
     public void setDirectory(File dir) {
+    }
+    
+    public long size(){
+        return 0;
     }
 
 }

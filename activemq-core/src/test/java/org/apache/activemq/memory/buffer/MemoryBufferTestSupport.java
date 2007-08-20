@@ -19,6 +19,8 @@ package org.apache.activemq.memory.buffer;
 import junit.framework.TestCase;
 
 import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.memory.buffer.MessageBuffer;
+import org.apache.activemq.memory.buffer.MessageQueue;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

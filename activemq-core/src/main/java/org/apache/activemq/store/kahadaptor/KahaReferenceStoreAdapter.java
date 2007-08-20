@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -48,6 +49,8 @@ import org.apache.commons.logging.LogFactory;
 
 public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements ReferenceStoreAdapter {
 
+    
+
     private static final Log LOG = LogFactory.getLog(KahaPersistenceAdapter.class);
     private static final String STORE_STATE = "store-state";
     private static final String RECORD_REFERENCES = "record-references";
@@ -59,6 +62,10 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     private boolean storeValid;
     private Store stateStore;
 
+    public KahaReferenceStoreAdapter(AtomicLong size){
+        super(size);
+    }
+    
     public synchronized MessageStore createQueueMessageStore(ActiveMQQueue destination) throws IOException {
         throw new RuntimeException("Use createQueueReferenceStore instead");
     }

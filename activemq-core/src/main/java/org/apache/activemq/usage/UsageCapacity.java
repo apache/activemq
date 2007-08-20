@@ -14,8 +14,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.memory;
+package org.apache.activemq.usage;
 
-public interface UsageListener {
-    void onMemoryUseChanged(UsageManager memoryManager, int oldPercentUsage, int newPercentUsage);
+
+
+/**
+ Identify if a limit has been reached
+ * 
+ * @org.apache.xbean.XBean
+ * 
+ * @version $Revision: 1.3 $
+ */
+public interface UsageCapacity{
+
+    /**
+     * Has the limit been reached ?
+     * 
+     * @param size
+     * @return true if it has
+     */
+    boolean isLimit(long size);
+    
+    
+    /**
+     * @return the limit
+     */
+    long getLimit();
+    
+    /**
+     * @param limit the limit to set
+     */
+    void setLimit(long limit);
 }

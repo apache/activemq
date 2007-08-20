@@ -33,11 +33,12 @@ import org.apache.activemq.command.JournalQueueAck;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.transaction.Synchronization;
+import org.apache.activemq.usage.MemoryUsage;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.Callback;
 import org.apache.activemq.util.TransactionTemplate;
 import org.apache.commons.logging.Log;
@@ -67,7 +68,7 @@ public class JournalMessageStore implements MessageStore {
     private Map<MessageId, Message> cpAddedMessageIds;
 
 
-    private UsageManager usageManager;
+    private MemoryUsage memoryUsage;
 
     public JournalMessageStore(JournalPersistenceAdapter adapter, MessageStore checkpointStore, ActiveMQDestination destination) {
         this.peristenceAdapter = adapter;
@@ -77,9 +78,10 @@ public class JournalMessageStore implements MessageStore {
         this.transactionTemplate = new TransactionTemplate(adapter, new ConnectionContext());
     }
 
-    public void setUsageManager(UsageManager usageManager) {
-        this.usageManager = usageManager;
-        longTermStore.setUsageManager(usageManager);
+    
+    public void setMemoryUsage(MemoryUsage memoryUsage) {
+        this.memoryUsage=memoryUsage;
+        longTermStore.setMemoryUsage(memoryUsage);
     }
 
     /**
@@ -351,16 +353,16 @@ public class JournalMessageStore implements MessageStore {
     }
 
     public void start() throws Exception {
-        if (this.usageManager != null) {
-            this.usageManager.addUsageListener(peristenceAdapter);
+        if (this.memoryUsage != null) {
+            this.memoryUsage.addUsageListener(peristenceAdapter);
         }
         longTermStore.start();
     }
 
     public void stop() throws Exception {
         longTermStore.stop();
-        if (this.usageManager != null) {
-            this.usageManager.removeUsageListener(peristenceAdapter);
+        if (this.memoryUsage != null) {
+            this.memoryUsage.removeUsageListener(peristenceAdapter);
         }
     }
 

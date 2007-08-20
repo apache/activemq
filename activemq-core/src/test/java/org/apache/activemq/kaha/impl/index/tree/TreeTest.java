@@ -18,6 +18,7 @@ package org.apache.activemq.kaha.impl.index.tree;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicLong;
 
 import junit.framework.TestCase;
 import org.apache.activemq.kaha.Store;
@@ -43,7 +44,7 @@ public class TreeTest extends TestCase {
         super.setUp();
         directory = new File("activemq-data");
         directory.mkdirs();
-        indexManager = new IndexManager(directory, "im-test", "rw", null);
+        indexManager = new IndexManager(directory, "im-test", "rw", null,new AtomicLong());
         this.tree = new TreeIndex(directory, "testTree", indexManager);
         this.tree.setKeyMarshaller(Store.STRING_MARSHALLER);
     }

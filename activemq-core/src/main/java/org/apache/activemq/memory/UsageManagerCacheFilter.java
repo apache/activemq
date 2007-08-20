@@ -17,6 +17,7 @@
 package org.apache.activemq.memory;
 
 import java.util.concurrent.atomic.AtomicLong;
+import org.apache.activemq.usage.MemoryUsage;
 
 /**
  * Simple CacheFilter that increases/decreases usage on a UsageManager as
@@ -27,30 +28,30 @@ import java.util.concurrent.atomic.AtomicLong;
 public class UsageManagerCacheFilter extends CacheFilter {
 
     private final AtomicLong totalUsage = new AtomicLong(0);
-    private final UsageManager um;
+    private final MemoryUsage usage;
 
-    public UsageManagerCacheFilter(Cache next, UsageManager um) {
+    public UsageManagerCacheFilter(Cache next, MemoryUsage um) {
         super(next);
-        this.um = um;
+        this.usage = um;
     }
 
     public Object put(Object key, Object value) {
-        long usage = getUsageOfAddedObject(value);
+        long usageValue = getUsageOfAddedObject(value);
         Object rc = super.put(key, value);
         if (rc != null) {
-            usage -= getUsageOfRemovedObject(rc);
+            usageValue -= getUsageOfRemovedObject(rc);
         }
-        totalUsage.addAndGet(usage);
-        um.increaseUsage(usage);
+        totalUsage.addAndGet(usageValue);
+        usage.increaseUsage(usageValue);
         return rc;
     }
 
     public Object remove(Object key) {
         Object rc = super.remove(key);
         if (rc != null) {
-            long usage = getUsageOfRemovedObject(rc);
-            totalUsage.addAndGet(-usage);
-            um.decreaseUsage(usage);
+            long usageValue = getUsageOfRemovedObject(rc);
+            totalUsage.addAndGet(-usageValue);
+            usage.decreaseUsage(usageValue);
         }
         return rc;
     }
@@ -64,6 +65,6 @@ public class UsageManagerCacheFilter extends CacheFilter {
     }
 
     public void close() {
-        um.decreaseUsage(totalUsage.get());
+        usage.decreaseUsage(totalUsage.get());
     }
 }

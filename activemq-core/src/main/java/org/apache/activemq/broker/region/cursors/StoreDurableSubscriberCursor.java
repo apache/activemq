@@ -29,7 +29,7 @@ import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.kaha.Store;
-import org.apache.activemq.memory.UsageManager;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -96,7 +96,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         if (destination != null && !AdvisorySupport.isAdvisoryTopic(destination.getActiveMQDestination())) {
             TopicStorePrefetch tsp = new TopicStorePrefetch((Topic)destination, clientId, subscriberName);
             tsp.setMaxBatchSize(getMaxBatchSize());
-            tsp.setUsageManager(usageManager);
+            tsp.setSystemUsage(systemUsage);
             topics.put(destination, tsp);
             storePrefetches.add(tsp);
             if (started) {
@@ -244,11 +244,11 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         }
     }
 
-    public synchronized void setUsageManager(UsageManager usageManager) {
-        super.setUsageManager(usageManager);
+    public synchronized void setSystemUsage(SystemUsage usageManager) {
+        super.setSystemUsage(usageManager);
         for (Iterator<PendingMessageCursor> i = storePrefetches.iterator(); i.hasNext();) {
             PendingMessageCursor tsp = i.next();
-            tsp.setUsageManager(usageManager);
+            tsp.setSystemUsage(usageManager);
         }
     }
 

@@ -18,11 +18,13 @@ package org.apache.activemq.kaha.impl.index.hash;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicLong;
 import junit.framework.TestCase;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.impl.index.IndexItem;
 import org.apache.activemq.kaha.impl.index.IndexManager;
 import org.apache.activemq.util.IOHelper;
+
 
 /**
  * Test a HashIndex
@@ -42,7 +44,7 @@ public class HashTest extends TestCase {
         super.setUp();
         directory = new File(IOHelper.getDefaultDataDirectory());
         directory.mkdirs();
-        indexManager = new IndexManager(directory, "im-hash-test", "rw", null);
+        indexManager = new IndexManager(directory, "im-hash-test", "rw", null, new AtomicLong());
         this.hashIndex = new HashIndex(directory, "testHash", indexManager);
         this.hashIndex.setKeyMarshaller(Store.STRING_MARSHALLER);
     }

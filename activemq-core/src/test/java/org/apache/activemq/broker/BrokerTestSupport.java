@@ -51,8 +51,8 @@ import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.command.XATransactionId;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -74,7 +74,7 @@ public class BrokerTestSupport extends CombinationTestSupport {
 
     protected int maxWait = 4000;
 
-    protected UsageManager memoryManager;
+    protected SystemUsage memoryManager;
 
     protected void setUp() throws Exception {
         super.setUp();

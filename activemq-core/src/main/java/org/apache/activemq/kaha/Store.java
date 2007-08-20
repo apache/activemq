@@ -256,22 +256,14 @@ public interface Store {
      */
     void setMaxDataFileLength(long maxDataFileLength);
 
-    /**
-     * @see org.apache.activemq.kaha.IndexTypes
-     * @return the default index type
-     */
-    String getIndexTypeAsString();
-
-    /**
-     * Set the default index type
-     * 
-     * @param type
-     * @see org.apache.activemq.kaha.IndexTypes
-     */
-    void setIndexTypeAsString(String type);
 
     /**
      * @return true if the store has been initialized
      */
     boolean isInitialized();
+    
+    /**
+     * @return the amount of disk space the store is occupying
+     */
+    long size();
 }
