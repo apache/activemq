@@ -240,7 +240,7 @@ public class AMQDeadlockTest3 extends TestCase {
 
         final SystemUsage memoryManager = new SystemUsage();
         memoryManager.getMemoryUsage().setLimit(5000000);
-        brokerService.setUsageManager(memoryManager);
+        brokerService.setSystemUsage(memoryManager);
 
         final List<PolicyEntry> policyEntries = new ArrayList<PolicyEntry>();
 

@@ -148,7 +148,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
             } else {
                 flushToDisk();
                 node.decrementReferenceCount();
-                systemUsage.getTempDiskUsage().waitForSpace();
+                systemUsage.getTempUsage().waitForSpace();
                 getDiskList().addLast(node);
             }
         } catch (Exception e) {
@@ -168,7 +168,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 memoryList.addFirst(node);
             } else {
                 flushToDisk();
-                systemUsage.getTempDiskUsage().waitForSpace();
+                systemUsage.getTempUsage().waitForSpace();
                 node.decrementReferenceCount();
                 getDiskList().addFirst(node);
             }

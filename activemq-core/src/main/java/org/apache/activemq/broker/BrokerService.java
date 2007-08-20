@@ -118,7 +118,7 @@ public class BrokerService implements Service {
     private ObjectName brokerObjectName;
     private TaskRunnerFactory taskRunnerFactory;
     private TaskRunnerFactory persistenceTaskRunnerFactory;
-    private SystemUsage usageManager;
+    private SystemUsage systemUsage;
     private SystemUsage producerSystemUsage;
     private SystemUsage consumerSystemUsage;
     private PersistenceAdapter persistenceAdapter;
@@ -646,23 +646,23 @@ public class BrokerService implements Service {
         this.populateJMSXUserID = populateJMSXUserID;
     }
 
-    public SystemUsage getUsageManager() {
+    public SystemUsage getSystemUsage() {
         try {
-        if (usageManager == null) {
-            usageManager = new SystemUsage("Main",getPersistenceAdapter(),getTempDataStore());
-            usageManager.getMemoryUsage().setLimit(1024 * 1024 * 64); // Default to 64 Meg
-            usageManager.getTempDiskUsage().setLimit(1024 * 1024 * 1024 * 100);//10 Gb
-            usageManager.getStoreUsage().setLimit(1024 * 1024 * 1024 * 100); //100 GB
-        }
-        return usageManager;
-        }catch(IOException e) {
-            LOG.fatal("Cannot create SystemUsage",e);
+            if (systemUsage == null) {
+                systemUsage = new SystemUsage("Main", getPersistenceAdapter(), getTempDataStore());
+                systemUsage.getMemoryUsage().setLimit(1024 * 1024 * 64); // Default 64 Meg
+                systemUsage.getTempUsage().setLimit(1024 * 1024 * 1024 * 100); // 10 Gb
+                systemUsage.getStoreUsage().setLimit(1024 * 1024 * 1024 * 100); // 100 GB
+            }
+            return systemUsage;
+        } catch (IOException e) {
+            LOG.fatal("Cannot create SystemUsage", e);
             throw new RuntimeException("Fatally failed to create SystemUsage" + e.getMessage());
         }
     }
 
-    public void setUsageManager(SystemUsage memoryManager) {
-        this.usageManager = memoryManager;
+    public void setSystemUsage(SystemUsage memoryManager) {
+        this.systemUsage = memoryManager;
     }
 
     /**
@@ -671,7 +671,7 @@ public class BrokerService implements Service {
      */
     public SystemUsage getConsumerSystemUsage() throws IOException {
         if (consumerSystemUsage == null) {
-            consumerSystemUsage = new SystemUsage(getUsageManager(), "Consumer");
+            consumerSystemUsage = new SystemUsage(getSystemUsage(), "Consumer");
             consumerSystemUsage.getMemoryUsage().setUsagePortion(0.5f);
         }
         return consumerSystemUsage;
@@ -690,7 +690,7 @@ public class BrokerService implements Service {
      */
     public SystemUsage getProducerSystemUsage() throws IOException {
         if (producerSystemUsage == null) {
-            producerSystemUsage = new SystemUsage(getUsageManager(), "Producer");
+            producerSystemUsage = new SystemUsage(getSystemUsage(), "Producer");
             producerSystemUsage.getMemoryUsage().setUsagePortion(0.45f);
         }
         return producerSystemUsage;
