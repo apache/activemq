@@ -32,13 +32,13 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.openwire.OpenWireFormatFactory;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.store.memory.MemoryTransactionStore;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 import org.apache.commons.logging.Log;
@@ -187,7 +187,7 @@ public class JPAPersistenceAdapter implements PersistenceAdapter {
         return false;
     }
 
-    public void setUsageManager(UsageManager usageManager) {
+    public void setUsageManager(SystemUsage usageManager) {
     }
 
     public void start() throws Exception {
@@ -253,6 +253,10 @@ public class JPAPersistenceAdapter implements PersistenceAdapter {
     }
 
     public void setDirectory(File dir) {
+    }
+    
+    public long size(){
+        return 0;
     }
 
 }
