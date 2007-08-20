@@ -76,9 +76,19 @@
             </amq:policyMap>
         </amq:destinationPolicy>
 
-        <amq:memoryManager>
-            <amq:usageManager limit="200000" percentUsageMinDelta="20"/>
-        </amq:memoryManager>
+        <amq:systemUsage>
+            <amq:systemUsage>
+	            <amq:memoryUsage>
+    	            <amq:memoryUsage limit="10 mb" percentUsageMinDelta="20"/>
+	            </amq:memoryUsage>
+	            <amq:tempUsage>
+    	            <amq:tempUsage limit="100 mb"/>
+	            </amq:tempUsage>
+	            <amq:storeUsage>
+    	            <amq:storeUsage limit="1 gb" name="foo"/>
+	            </amq:storeUsage>
+            </amq:systemUsage>
+        </amq:systemUsage>
 
         <amq:persistenceAdapter>
             <amq:memoryPersistenceAdapter init-method="createTransactionStore"/>

@@ -119,7 +119,7 @@ public class AMQStackOverFlowTest extends TestCase {
 
         final SystemUsage memoryManager = new SystemUsage();
         memoryManager.getMemoryUsage().setLimit(10);
-        brokerService.setUsageManager(memoryManager);
+        brokerService.setSystemUsage(memoryManager);
 
         final List<PolicyEntry> policyEntries = new ArrayList<PolicyEntry>();
 

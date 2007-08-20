@@ -20,29 +20,42 @@ import org.apache.activemq.store.PersistenceAdapter;
 
 /**
  * Used to keep track of how much of something is being used so that a
- * productive working set usage can be controlled.
- * 
- * Main use case is manage memory usage.
+ * productive working set usage can be controlled. Main use case is manage
+ * memory usage.
  * 
  * @org.apache.xbean.XBean
- * 
  * @version $Revision: 1.3 $
  */
-public class StoreUsage extends Usage{
+public class StoreUsage extends Usage<StoreUsage> {
 
-    final private PersistenceAdapter store;
+    private PersistenceAdapter store;
 
-    public StoreUsage(String name,PersistenceAdapter store){
-        super(null,name,1.0f);
-        this.store=store;
-    }
-    
-    public StoreUsage(StoreUsage parent,String name){
-        super(parent,name,1.0f);
-        this.store=parent.store;
+    public StoreUsage() {
+        super(null, null, 1.0f);
     }
 
-    protected long retrieveUsage(){
+    public StoreUsage(String name, PersistenceAdapter store) {
+        super(null, name, 1.0f);
+        this.store = store;
+    }
+
+    public StoreUsage(StoreUsage parent, String name) {
+        super(parent, name, 1.0f);
+        this.store = parent.store;
+    }
+
+    protected long retrieveUsage() {
+        if (store == null)
+            return 0;
         return store.size();
+    }
+
+    public PersistenceAdapter getStore() {
+        return store;
+    }
+
+    public void setStore(PersistenceAdapter store) {
+        this.store = store;
+        onLimitChange();
     }
 }

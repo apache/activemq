@@ -20,30 +20,43 @@ import org.apache.activemq.kaha.Store;
 
 /**
  * Used to keep track of how much of something is being used so that a
- * productive working set usage can be controlled.
- * 
- * Main use case is manage memory usage.
+ * productive working set usage can be controlled. Main use case is manage
+ * memory usage.
  * 
  * @org.apache.xbean.XBean
- * 
  * @version $Revision: 1.3 $
  */
-public class TempUsage extends Usage{
+public class TempUsage extends Usage<TempUsage> {
 
-    final private Store store;
+    private Store store;
 
-        
-    public TempUsage(String name,Store store){
-        super(null,name,1.0f);
-        this.store=store;
-    }
-    
-    public TempUsage(TempUsage parent,String name){
-        super(parent,name,1.0f);
-        this.store=parent.store;
+    public TempUsage() {
+        super(null, null, 1.0f);
     }
 
-    protected long retrieveUsage(){
+    public TempUsage(String name, Store store) {
+        super(null, name, 1.0f);
+        this.store = store;
+    }
+
+    public TempUsage(TempUsage parent, String name) {
+        super(parent, name, 1.0f);
+        this.store = parent.store;
+    }
+
+    protected long retrieveUsage() {
+        if (store == null) {
+            return 0;
+        }
         return store.size();
+    }
+
+    public Store getStore() {
+        return store;
+    }
+
+    public void setStore(Store store) {
+        this.store = store;
+        onLimitChange();
     }
 }

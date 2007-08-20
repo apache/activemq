@@ -233,13 +233,16 @@ public class ConfigTest extends TestCase {
 
             // Check usage manager
             // System.out.print("Checking memory manager configurations... ");
-            SystemUsage memMgr = broker.getUsageManager();
-            assertTrue("Should have a memory manager", memMgr != null);
-            assertEquals("UsageManager Config Error (limit)", 200000, memMgr.getMemoryUsage().getLimit());
-            assertEquals("UsageManager Config Error (percentUsageMinDelta)", 20, memMgr.getMemoryUsage().getPercentUsageMinDelta());
+            SystemUsage systemUsage = broker.getSystemUsage();
+            assertTrue("Should have a SystemUsage", systemUsage != null);
+            assertEquals("SystemUsage Config Error (MemoryUsage.limit)", 1024 * 1024 * 10, systemUsage.getMemoryUsage().getLimit());
+            assertEquals("SystemUsage Config Error (MemoryUsage.percentUsageMinDelta)", 20, systemUsage.getMemoryUsage().getPercentUsageMinDelta());
+            assertEquals("SystemUsage Config Error (TempUsage.limit)", 1024 * 1024 * 100, systemUsage.getTempUsage().getLimit());
+            assertEquals("SystemUsage Config Error (StoreUsage.limit)", 1024 * 1024 * 1024, systemUsage.getStoreUsage().getLimit());
+            assertEquals("SystemUsage Config Error (StoreUsage.name)", "foo", systemUsage.getStoreUsage().getName());
+                        
             LOG.info("Success");
 
-            LOG.info("Success");
         } finally {
             if (broker != null) {
                 broker.stop();

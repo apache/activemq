@@ -16,24 +16,20 @@
  */
 package org.apache.activemq.usage;
 
-
 /**
  * Used to keep track of how much of something is being used so that a
- * productive working set usage can be controlled.
- * 
- * Main use case is manage memory usage.
+ * productive working set usage can be controlled. Main use case is manage
+ * memory usage.
  * 
  * @org.apache.xbean.XBean
- * 
  * @version $Revision: 1.3 $
  */
-public class MemoryUsage extends Usage{
+public class MemoryUsage extends Usage<MemoryUsage> {
 
-    private MemoryUsage parent;
     private long usage;
 
-    public MemoryUsage(){
-        this(null,"default");
+    public MemoryUsage() {
+        this(null, null);
     }
 
     /**
@@ -43,73 +39,72 @@ public class MemoryUsage extends Usage{
      * 
      * @param parent
      */
-    public MemoryUsage(MemoryUsage parent){
-        this(parent,"default");
+    public MemoryUsage(MemoryUsage parent) {
+        this(parent, "default");
     }
 
-    public MemoryUsage(String name){
-        this(null,name);
+    public MemoryUsage(String name) {
+        this(null, name);
     }
 
-    public MemoryUsage(MemoryUsage parent,String name){
-        this(parent,name,1.0f);
+    public MemoryUsage(MemoryUsage parent, String name) {
+        this(parent, name, 1.0f);
     }
 
-    public MemoryUsage(MemoryUsage parent,String name,float portion){
-        super(parent,name,portion);
+    public MemoryUsage(MemoryUsage parent, String name, float portion) {
+        super(parent, name, portion);
     }
-    
+
     /**
      * @throws InterruptedException
      */
-    public void waitForSpace() throws InterruptedException{
-        if(parent!=null){
+    public void waitForSpace() throws InterruptedException {
+        if (parent != null) {
             parent.waitForSpace();
         }
-        synchronized(usageMutex){
-            for(int i=0;percentUsage>=100;i++){
+        synchronized (usageMutex) {
+            for (int i = 0; percentUsage >= 100; i++) {
                 usageMutex.wait();
             }
         }
     }
 
     /**
-     * @param timeout 
+     * @param timeout
      * @throws InterruptedException
-     * 
      * @return true if space
      */
-    public boolean waitForSpace(long timeout) throws InterruptedException{
-        if(parent!=null){
-            if(!parent.waitForSpace(timeout)){
+    public boolean waitForSpace(long timeout) throws InterruptedException {
+        if (parent != null) {
+            if (!parent.waitForSpace(timeout)) {
                 return false;
             }
         }
-        synchronized(usageMutex){
-            if(percentUsage>=100){
+        synchronized (usageMutex) {
+            if (percentUsage >= 100) {
                 usageMutex.wait(timeout);
             }
-            return percentUsage<100;
+            return percentUsage < 100;
         }
     }
-    
-    public boolean isFull(){
-        if(parent!=null&&parent.isFull()){
+
+    public boolean isFull() {
+        if (parent != null && parent.isFull()) {
             return true;
         }
-        synchronized(usageMutex){
-            return percentUsage>=100;
+        synchronized (usageMutex) {
+            return percentUsage >= 100;
         }
     }
 
     /**
      * Tries to increase the usage by value amount but blocks if this object is
      * currently full.
-     * @param value 
      * 
+     * @param value
      * @throws InterruptedException
      */
-    public void enqueueUsage(long value) throws InterruptedException{
+    public void enqueueUsage(long value) throws InterruptedException {
         waitForSpace();
         increaseUsage(value);
     }
@@ -119,17 +114,17 @@ public class MemoryUsage extends Usage{
      * 
      * @param value
      */
-    public void increaseUsage(long value){
-        if(value==0){
+    public void increaseUsage(long value) {
+        if (value == 0) {
             return;
         }
-        if(parent!=null){
-            parent.increaseUsage(value);
+        if (parent != null) {
+            ((MemoryUsage)parent).increaseUsage(value);
         }
         int percentUsage;
-        synchronized(usageMutex){
-            usage+=value;
-            percentUsage=caclPercentUsage();
+        synchronized (usageMutex) {
+            usage += value;
+            percentUsage = caclPercentUsage();
         }
         setPercentUsage(percentUsage);
     }
@@ -139,22 +134,30 @@ public class MemoryUsage extends Usage{
      * 
      * @param value
      */
-    public void decreaseUsage(long value){
-        if(value==0){
+    public void decreaseUsage(long value) {
+        if (value == 0) {
             return;
         }
-        if(parent!=null){
+        if (parent != null) {
             parent.decreaseUsage(value);
         }
         int percentUsage;
-        synchronized(usageMutex){
-            usage-=value;
-            percentUsage=caclPercentUsage();
+        synchronized (usageMutex) {
+            usage -= value;
+            percentUsage = caclPercentUsage();
         }
         setPercentUsage(percentUsage);
     }
 
-    protected long retrieveUsage(){
+    protected long retrieveUsage() {
         return usage;
+    }
+
+    public long getUsage() {
+        return usage;
+    }
+
+    public void setUsage(long usage) {
+        this.usage = usage;
     }
 }

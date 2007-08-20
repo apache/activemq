@@ -108,7 +108,7 @@ public class AMQFailoverIssue extends TestCase {
         brokerService.setUseJmx(true);
         final SystemUsage memoryManager = new SystemUsage();
         memoryManager.getMemoryUsage().setLimit(5000000);
-        brokerService.setUsageManager(memoryManager);
+        brokerService.setSystemUsage(memoryManager);
         final List<PolicyEntry> policyEntries = new ArrayList<PolicyEntry>();
         final PolicyEntry entry = new PolicyEntry();
         entry.setQueue(">");

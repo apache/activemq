@@ -175,7 +175,7 @@ public class AMQDeadlockTestW4Brokers extends TestCase {
 
         final SystemUsage memoryManager = new SystemUsage();
         memoryManager.getMemoryUsage().setLimit(100000000);
-        brokerService.setUsageManager(memoryManager);
+        brokerService.setSystemUsage(memoryManager);
 
         final List<PolicyEntry> policyEntries = new ArrayList<PolicyEntry>();
 

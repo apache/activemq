@@ -91,7 +91,7 @@ public class MessageExpirationTest extends BrokerTestSupport {
 
         // Reduce the limit so that only 1 message can flow through the broker
         // at a time.
-        broker.getUsageManager().getMemoryUsage().setLimit(1);
+        broker.getSystemUsage().getMemoryUsage().setLimit(1);
 
         final Message m1 = createMessage(producerInfo, destination, deliveryMode);
         final Message m2 = createMessage(producerInfo, destination, deliveryMode, 1000);
