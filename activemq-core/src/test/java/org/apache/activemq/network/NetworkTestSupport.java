@@ -28,11 +28,11 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerTestSupport;
 import org.apache.activemq.broker.StubConnection;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.usage.SystemUsage;
 
 public class NetworkTestSupport extends BrokerTestSupport {
 
@@ -42,7 +42,7 @@ public class NetworkTestSupport extends BrokerTestSupport {
 
     protected PersistenceAdapter remotePersistenceAdapter;
     protected BrokerService remoteBroker;
-    protected UsageManager remoteMemoryManager;
+    protected SystemUsage remoteMemoryManager;
     protected TransportConnector remoteConnector;
 
     protected void setUp() throws Exception {

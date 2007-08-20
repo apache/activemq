@@ -34,7 +34,6 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -42,6 +41,7 @@ import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter;
 import org.apache.activemq.store.memory.MemoryTransactionStore;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
@@ -447,7 +447,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
      * @param usageManager The UsageManager that is controlling the
      *                destination's memory usage.
      */
-    public void setUsageManager(UsageManager usageManager) {
+    public void setUsageManager(SystemUsage usageManager) {
     }
 
     protected void databaseLockKeepAlive() {
@@ -492,5 +492,9 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     }
 
     public void checkpoint(boolean sync) throws IOException {
+    }
+
+    public long size(){
+        return 0;
     }
 }

@@ -23,7 +23,7 @@ import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.memory.UsageManager;
+import org.apache.activemq.usage.SystemUsage;
 
 /**
  * Interface to pending message (messages awaiting disptach to a consumer)
@@ -166,15 +166,15 @@ public interface PendingMessageCursor extends Service {
     /**
      * Set the UsageManager
      * 
-     * @param usageManager
-     * @see org.apache.activemq.memory.UsageManager
+     * @param systemUsage
+     * @see org.apache.activemq.usage.SystemUsage
      */
-    void setUsageManager(UsageManager usageManager);
+    void setSystemUsage(SystemUsage systemUsage);
 
     /**
      * @return the usageManager
      */
-    UsageManager getUsageManager();
+    SystemUsage getSystemUsage();
 
     /**
      * @return the memoryUsageHighWaterMark

@@ -24,7 +24,8 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
-import org.apache.activemq.memory.UsageManager;
+import org.apache.activemq.usage.MemoryUsage;
+import org.apache.activemq.usage.SystemUsage;
 
 /**
  * Represents a message store which is used by the persistent implementations
@@ -88,10 +89,10 @@ public interface MessageStore extends Service {
     ActiveMQDestination getDestination();
 
     /**
-     * @param usageManager The UsageManager that is controlling the
+     * @param memoeyUSage The SystemUsage that is controlling the
      *                destination's memory usage.
      */
-    void setUsageManager(UsageManager usageManager);
+    void setMemoryUsage(MemoryUsage memoeyUSage);
 
     /**
      * @return the number of messages ready to deliver

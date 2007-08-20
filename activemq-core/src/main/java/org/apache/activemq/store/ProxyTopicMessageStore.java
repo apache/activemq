@@ -24,7 +24,8 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
-import org.apache.activemq.memory.UsageManager;
+import org.apache.activemq.usage.MemoryUsage;
+import org.apache.activemq.usage.SystemUsage;
 
 /**
  * A simple proxy that delegates to another MessageStore.
@@ -108,8 +109,8 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
         return delegate.getAllSubscriptions();
     }
 
-    public void setUsageManager(UsageManager usageManager) {
-        delegate.setUsageManager(usageManager);
+    public void setMemoryUsage(MemoryUsage memoryUsage) {
+        delegate.setMemoryUsage(memoryUsage);
     }
 
     public int getMessageCount(String clientId, String subscriberName) throws IOException {

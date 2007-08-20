@@ -32,12 +32,12 @@ import org.apache.activemq.broker.region.policy.StrictOrderDispatchPolicy;
 import org.apache.activemq.broker.region.policy.SubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.region.policy.TimedSubscriptionRecoveryPolicy;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.apache.activemq.store.journal.JournalPersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.wireformat.ObjectStreamWireFormat;
 import org.apache.activemq.xbean.BrokerFactoryBean;
 import org.apache.commons.logging.Log;
@@ -233,10 +233,10 @@ public class ConfigTest extends TestCase {
 
             // Check usage manager
             // System.out.print("Checking memory manager configurations... ");
-            UsageManager memMgr = broker.getMemoryManager();
+            SystemUsage memMgr = broker.getUsageManager();
             assertTrue("Should have a memory manager", memMgr != null);
-            assertEquals("UsageManager Config Error (limit)", 200000, memMgr.getLimit());
-            assertEquals("UsageManager Config Error (percentUsageMinDelta)", 20, memMgr.getPercentUsageMinDelta());
+            assertEquals("UsageManager Config Error (limit)", 200000, memMgr.getMemoryUsage().getLimit());
+            assertEquals("UsageManager Config Error (percentUsageMinDelta)", 20, memMgr.getMemoryUsage().getPercentUsageMinDelta());
             LOG.info("Success");
 
             LOG.info("Success");

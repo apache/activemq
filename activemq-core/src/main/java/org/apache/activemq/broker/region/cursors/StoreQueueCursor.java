@@ -20,7 +20,7 @@ import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.kaha.Store;
-import org.apache.activemq.memory.UsageManager;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -58,7 +58,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         if (nonPersistent == null) {
             nonPersistent = new FilePendingMessageCursor(queue.getDestination(), tmpStore);
             nonPersistent.setMaxBatchSize(getMaxBatchSize());
-            nonPersistent.setUsageManager(usageManager);
+            nonPersistent.setSystemUsage(systemUsage);
         }
         nonPersistent.start();
         persistent.start();
@@ -201,13 +201,13 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         }
     }
 
-    public synchronized void setUsageManager(UsageManager usageManager) {
-        super.setUsageManager(usageManager);
+    public synchronized void setSystemUsage(SystemUsage usageManager) {
+        super.setSystemUsage(usageManager);
         if (persistent != null) {
-            persistent.setUsageManager(usageManager);
+            persistent.setSystemUsage(usageManager);
         }
         if (nonPersistent != null) {
-            nonPersistent.setUsageManager(usageManager);
+            nonPersistent.setSystemUsage(usageManager);
         }
     }
 

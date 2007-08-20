@@ -17,6 +17,7 @@
 package org.apache.activemq.kaha;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.kaha.impl.KahaStore;
 
@@ -39,7 +40,19 @@ public final class StoreFactory {
      * @throws IOException
      */
     public static Store open(String name, String mode) throws IOException {
-        return new KahaStore(name, mode);
+        return new KahaStore(name, mode,new AtomicLong());
+    }
+    
+    /**
+     * open or create a Store
+     * @param name
+     * @param mode
+     * @param size
+     * @return the opened/created store
+     * @throws IOException
+     */
+    public static Store open(String name, String mode, AtomicLong size) throws IOException {
+        return new KahaStore(name, mode,size);
     }
 
     /**

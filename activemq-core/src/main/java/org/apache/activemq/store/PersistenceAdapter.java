@@ -25,7 +25,7 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.memory.UsageManager;
+import org.apache.activemq.usage.SystemUsage;
 
 /**
  * Adapter to the actual persistence mechanism used with ActiveMQ
@@ -115,7 +115,7 @@ public interface PersistenceAdapter extends Service {
     /**
      * @param usageManager The UsageManager that is controlling the broker's memory usage.
      */
-    void setUsageManager(UsageManager usageManager);
+    void setUsageManager(SystemUsage usageManager);
     
     /**
      * Set the name of the broker using the adapter
@@ -136,4 +136,10 @@ public interface PersistenceAdapter extends Service {
      *
      */
     void checkpoint(boolean sync) throws IOException;
+    
+    /**
+     * A hint to return the size of the store on disk
+     * @return disk space used in bytes of 0 if not implemented
+     */
+    long size();
 }

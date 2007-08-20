@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.activemq.kaha.impl.async.DataFileAppender.WriteCommand;
@@ -89,6 +90,15 @@ public final class AsyncDataManager {
     private Location mark;
     private final AtomicReference<Location> lastAppendLocation = new AtomicReference<Location>();
     private Runnable cleanupTask;
+    private final AtomicLong storeSize;
+    
+    public AsyncDataManager(AtomicLong storeSize) {
+        this.storeSize=storeSize;
+    }
+    
+    public AsyncDataManager() {
+        this(new AtomicLong());
+    }
 
     @SuppressWarnings("unchecked")
     public synchronized void start() throws IOException {
@@ -128,6 +138,7 @@ public final class AsyncDataManager {
                     int num = Integer.parseInt(numStr);
                     DataFile dataFile = new DataFile(file, num, preferedFileLength);
                     fileMap.put(dataFile.getDataFileId(), dataFile);
+                    storeSize.addAndGet(dataFile.getLength());
                 } catch (NumberFormatException e) {
                     // Ignore file that do not match the pattern.
                 }
@@ -249,8 +260,10 @@ public final class AsyncDataManager {
         }
         location.setOffset(currentWriteFile.getLength());
         location.setDataFileId(currentWriteFile.getDataFileId().intValue());
-        currentWriteFile.incrementLength(location.getSize());
+        int size = location.getSize();
+        currentWriteFile.incrementLength(size);
         currentWriteFile.increment();
+        storeSize.addAndGet(size);
         return currentWriteFile;
     }
 
@@ -297,6 +310,7 @@ public final class AsyncDataManager {
         boolean result = true;
         for (Iterator i = fileMap.values().iterator(); i.hasNext();) {
             DataFile dataFile = (DataFile)i.next();
+            storeSize.addAndGet(-dataFile.getLength());
             result &= dataFile.delete();
         }
         fileMap.clear();
@@ -387,6 +401,7 @@ public final class AsyncDataManager {
         accessorPool.disposeDataFileAccessors(dataFile);
 
         fileMap.remove(dataFile.getDataFileId());
+        storeSize.addAndGet(-dataFile.getLength());
         dataFile.unlink();
         boolean result = dataFile.delete();
         LOG.debug("discarding data file " + dataFile + (result ? "successful " : "failed"));

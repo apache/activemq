@@ -43,13 +43,14 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerAck;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.filter.MessageEvaluationContext;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.thread.Valve;
 import org.apache.activemq.transaction.Synchronization;
+import org.apache.activemq.usage.MemoryUsage;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.SubscriptionKey;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -67,7 +68,8 @@ public class Topic implements Destination {
     protected final Valve dispatchValve = new Valve(true);
     // this could be NULL! (If an advisory)
     protected final TopicMessageStore store;
-    protected final UsageManager usageManager;
+    private final SystemUsage systemUsage;
+    private final MemoryUsage memoryUsage;
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
 
     private DispatchPolicy dispatchPolicy = new SimpleDispatchPolicy();
@@ -85,7 +87,7 @@ public class Topic implements Destination {
             // that the UsageManager is holding.
 
             synchronized (messagesWaitingForSpace) {
-                while (!usageManager.isFull() && !messagesWaitingForSpace.isEmpty()) {
+                while (!memoryUsage.isFull() && !messagesWaitingForSpace.isEmpty()) {
                     Runnable op = messagesWaitingForSpace.removeFirst();
                     op.run();
                 }
@@ -95,19 +97,20 @@ public class Topic implements Destination {
     };
     private final Broker broker;
 
-    public Topic(Broker broker, ActiveMQDestination destination, TopicMessageStore store, UsageManager memoryManager, DestinationStatistics parentStats,
+    public Topic(Broker broker, ActiveMQDestination destination, TopicMessageStore store, SystemUsage systemUsage, DestinationStatistics parentStats,
                  TaskRunnerFactory taskFactory) {
         this.broker = broker;
         this.destination = destination;
         this.store = store; // this could be NULL! (If an advisory)
-        this.usageManager = new UsageManager(memoryManager, destination.toString());
-        this.usageManager.setUsagePortion(1.0f);
+        this.systemUsage=systemUsage;
+        this.memoryUsage = new MemoryUsage(systemUsage.getMemoryUsage(), destination.toString());
+        this.memoryUsage.setUsagePortion(1.0f);
 
         // Let the store know what usage manager we are using so that he can
         // flush messages to disk
         // when usage gets high.
         if (store != null) {
-            store.setUsageManager(usageManager);
+            store.setMemoryUsage(memoryUsage);
         }
 
         // let's copy the enabled property from the parent DestinationStatistics
@@ -206,22 +209,16 @@ public class Topic implements Destination {
                 }
             }
             // Do we need to create the subscription?
-            if (info == null) {
-                info = new SubscriptionInfo();
+            if(info==null){
+                info=new SubscriptionInfo();
                 info.setClientId(clientId);
                 info.setSelector(selector);
                 info.setSubscriptionName(subscriptionName);
-                info.setDestination(getActiveMQDestination()); // This
-                // destination
-                // is an actual
-                // destination
-                // id.
-                info.setSubscribedDestination(subscription.getConsumerInfo().getDestination()); // This
-                // destination
-                // might
-                // be a
-                // pattern
-                store.addSubsciption(info, subscription.getConsumerInfo().isRetroactive());
+                info.setDestination(getActiveMQDestination()); 
+                // Thi destination is an actual destination id.
+                info.setSubscribedDestination(subscription.getConsumerInfo().getDestination()); 
+                // This destination might be a pattern
+                store.addSubsciption(info,subscription.getConsumerInfo().isRetroactive());
             }
 
             final MessageEvaluationContext msgContext = new MessageEvaluationContext();
@@ -287,8 +284,8 @@ public class Topic implements Destination {
             return;
         }
 
-        if (context.isProducerFlowControl() && usageManager.isFull()) {
-            if (usageManager.isSendFailIfNoSpace()) {
+        if (context.isProducerFlowControl() && memoryUsage.isFull()) {
+            if (systemUsage.isSendFailIfNoSpace()) {
                 throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
             }
 
@@ -327,7 +324,7 @@ public class Topic implements Destination {
 
                     // If the user manager is not full, then the task will not
                     // get called..
-                    if (!usageManager.notifyCallbackWhenNotFull(sendMessagesWaitingForSpaceTask)) {
+                    if (!memoryUsage.notifyCallbackWhenNotFull(sendMessagesWaitingForSpaceTask)) {
                         // so call it directly here.
                         sendMessagesWaitingForSpaceTask.run();
                     }
@@ -340,7 +337,7 @@ public class Topic implements Destination {
                 // Producer flow control cannot be used, so we have do the flow
                 // control at the broker
                 // by blocking this thread until there is space available.
-                while (!usageManager.waitForSpace(1000)) {
+                while (!memoryUsage.waitForSpace(1000)) {
                     if (context.getStopping().get()) {
                         throw new IOException("Connection closed, send aborted.");
                     }
@@ -365,6 +362,7 @@ public class Topic implements Destination {
         message.setRegionDestination(this);
 
         if (store != null && message.isPersistent() && !canOptimizeOutPersistence()) {
+            systemUsage.getStoreUsage().waitForSpace();
             store.addMessage(context, message);
         }
 
@@ -427,16 +425,16 @@ public class Topic implements Destination {
 
     public void start() throws Exception {
         this.subscriptionRecoveryPolicy.start();
-        if (usageManager != null) {
-            usageManager.start();
+        if (memoryUsage != null) {
+            memoryUsage.start();
         }
 
     }
 
     public void stop() throws Exception {
         this.subscriptionRecoveryPolicy.stop();
-        if (usageManager != null) {
-            usageManager.stop();
+        if (memoryUsage != null) {
+            memoryUsage.stop();
         }
     }
 
@@ -474,8 +472,8 @@ public class Topic implements Destination {
     // Properties
     // -------------------------------------------------------------------------
 
-    public UsageManager getUsageManager() {
-        return usageManager;
+    public MemoryUsage getBrokerMemoryUsage() {
+        return memoryUsage;
     }
 
     public DestinationStatistics getDestinationStatistics() {

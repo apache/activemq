@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -38,12 +39,12 @@ import org.apache.activemq.kaha.MessageMarshaller;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StoreFactory;
 import org.apache.activemq.kaha.impl.StoreLockedExcpetion;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionStore;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.IOHelper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -69,7 +70,16 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
     private String brokerName;
     private Store theStore;
     private boolean initialized;
+    private final AtomicLong storeSize;
 
+    
+    public KahaPersistenceAdapter(AtomicLong size) {
+        this.storeSize=size;
+    }
+    
+    public KahaPersistenceAdapter() {
+        this(new AtomicLong());
+    }
     public Set<ActiveMQDestination> getDestinations() {
         Set<ActiveMQDestination> rc = new HashSet<ActiveMQDestination>();
         try {
@@ -225,7 +235,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
      * @param usageManager The UsageManager that is controlling the broker's
      *                memory usage.
      */
-    public void setUsageManager(UsageManager usageManager) {
+    public void setUsageManager(SystemUsage usageManager) {
     }
 
     /**
@@ -245,7 +255,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
 
     protected synchronized Store getStore() throws IOException {
         if (theStore == null) {
-            theStore = StoreFactory.open(getStoreName(), "rw");
+            theStore = StoreFactory.open(getStoreName(), "rw",storeSize);
             theStore.setMaxDataFileLength(maxDataFileLength);
         }
         return theStore;
@@ -281,6 +291,10 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
             getStore().force();
         }
     }
+   
+    public long size(){
+       return storeSize.get();
+    }
 
     private void initialize() {
         if (!initialized) {
@@ -295,5 +309,6 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
             wireFormat.setTightEncodingEnabled(true);
         }
     }
+  
 
 }

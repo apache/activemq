@@ -24,9 +24,10 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.StoreEntry;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.usage.MemoryUsage;
+import org.apache.activemq.usage.SystemUsage;
 
 /**
  * An implementation of {@link org.apache.activemq.store.MessageStore} which
@@ -121,11 +122,7 @@ public class KahaMessageStore implements MessageStore {
         messageContainer.clear();
     }
 
-    /**
-     * @param usageManager The UsageManager that is controlling the
-     *                destination's memory usage.
-     */
-    public void setUsageManager(UsageManager usageManager) {
+    public void setMemoryUsage(MemoryUsage memoryUsage) {
     }
 
     /**

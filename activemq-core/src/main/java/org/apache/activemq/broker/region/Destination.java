@@ -25,8 +25,9 @@ import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.usage.MemoryUsage;
+import org.apache.activemq.usage.SystemUsage;
 
 /**
  * @version $Revision: 1.12 $
@@ -47,7 +48,7 @@ public interface Destination extends Service {
 
     ActiveMQDestination getActiveMQDestination();
 
-    UsageManager getUsageManager();
+    MemoryUsage getBrokerMemoryUsage();
 
     void dispose(ConnectionContext context) throws IOException;
 

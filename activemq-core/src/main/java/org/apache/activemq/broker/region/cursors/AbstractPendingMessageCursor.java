@@ -20,7 +20,7 @@ import java.util.LinkedList;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.memory.UsageManager;
+import org.apache.activemq.usage.SystemUsage;
 
 /**
  * Abstract method holder for pending message (messages awaiting disptach to a
@@ -31,7 +31,7 @@ import org.apache.activemq.memory.UsageManager;
 public class AbstractPendingMessageCursor implements PendingMessageCursor {
     protected int memoryUsageHighWaterMark = 90;
     protected int maxBatchSize = 100;
-    protected UsageManager usageManager;
+    protected SystemUsage systemUsage;
 
     public void start() throws Exception {
     }
@@ -110,16 +110,16 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
     public void gc() {
     }
 
-    public void setUsageManager(UsageManager usageManager) {
-        this.usageManager = usageManager;
+    public void setSystemUsage(SystemUsage usageManager) {
+        this.systemUsage = usageManager;
     }
 
     public boolean hasSpace() {
-        return usageManager != null ? (usageManager.getPercentUsage() < memoryUsageHighWaterMark) : true;
+        return systemUsage != null ? (systemUsage.getMemoryUsage().getPercentUsage() < memoryUsageHighWaterMark) : true;
     }
 
     public boolean isFull() {
-        return usageManager != null ? usageManager.isFull() : false;
+        return systemUsage != null ? systemUsage.getMemoryUsage().isFull() : false;
     }
 
     public void release() {
@@ -146,8 +146,8 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
     /**
      * @return the usageManager
      */
-    public UsageManager getUsageManager() {
-        return this.usageManager;
+    public SystemUsage getSystemUsage() {
+        return this.systemUsage;
     }
 
     /**

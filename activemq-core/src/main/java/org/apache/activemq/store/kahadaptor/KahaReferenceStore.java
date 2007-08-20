@@ -24,9 +24,10 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.StoreEntry;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.ReferenceStore;
+import org.apache.activemq.usage.MemoryUsage;
+import org.apache.activemq.usage.SystemUsage;
 
 public class KahaReferenceStore implements ReferenceStore {
 
@@ -171,9 +172,9 @@ public class KahaReferenceStore implements ReferenceStore {
         return messageContainer.size();
     }
 
-    public void setUsageManager(UsageManager usageManager) {
+    public void setMemoryUsage(MemoryUsage memoryUsage) {
     }
-
+    
     public boolean isSupportForCursors() {
         return true;
     }

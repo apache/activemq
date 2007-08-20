@@ -24,8 +24,8 @@ import javax.jms.InvalidSelectorException;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.activemq.usage.SystemUsage;
 
 /**
  * 
@@ -34,14 +34,14 @@ import org.apache.activemq.thread.TaskRunnerFactory;
 public class QueueRegion extends AbstractRegion {
 
     public QueueRegion(RegionBroker broker, DestinationStatistics destinationStatistics,
-                       UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory,
+                       SystemUsage memoryManager, TaskRunnerFactory taskRunnerFactory,
                        DestinationFactory destinationFactory) {
         super(broker, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
     }
 
     public String toString() {
         return "QueueRegion: destinations=" + destinations.size() + ", subscriptions=" + subscriptions.size()
-               + ", memory=" + memoryManager.getPercentUsage() + "%";
+               + ", memory=" + memoryManager.getMemoryUsage().getPercentUsage() + "%";
     }
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info)

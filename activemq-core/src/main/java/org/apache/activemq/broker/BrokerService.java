@@ -62,7 +62,6 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StoreFactory;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.network.ConnectionFilter;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkConnector;
@@ -78,6 +77,7 @@ import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.vm.VMTransportFactory;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.JMXSupport;
@@ -118,9 +118,9 @@ public class BrokerService implements Service {
     private ObjectName brokerObjectName;
     private TaskRunnerFactory taskRunnerFactory;
     private TaskRunnerFactory persistenceTaskRunnerFactory;
-    private UsageManager usageManager;
-    private UsageManager producerUsageManager;
-    private UsageManager consumerUsageManager;
+    private SystemUsage usageManager;
+    private SystemUsage producerSystemUsage;
+    private SystemUsage consumerSystemUsage;
     private PersistenceAdapter persistenceAdapter;
     private PersistenceAdapterFactory persistenceFactory;
     private DestinationFactory destinationFactory;
@@ -646,51 +646,61 @@ public class BrokerService implements Service {
         this.populateJMSXUserID = populateJMSXUserID;
     }
 
-    public UsageManager getMemoryManager() {
+    public SystemUsage getUsageManager() {
+        try {
         if (usageManager == null) {
-            usageManager = new UsageManager("Main");
-            usageManager.setLimit(1024 * 1024 * 64); // Default to 64 Meg
-            // limit
+            usageManager = new SystemUsage("Main",getPersistenceAdapter(),getTempDataStore());
+            usageManager.getMemoryUsage().setLimit(1024 * 1024 * 64); // Default to 64 Meg
+            usageManager.getTempDiskUsage().setLimit(1024 * 1024 * 1024 * 100);//10 Gb
+            usageManager.getStoreUsage().setLimit(1024 * 1024 * 1024 * 100); //100 GB
         }
         return usageManager;
+        }catch(IOException e) {
+            LOG.fatal("Cannot create SystemUsage",e);
+            throw new RuntimeException("Fatally failed to create SystemUsage" + e.getMessage());
+        }
     }
 
-    public void setMemoryManager(UsageManager memoryManager) {
+    public void setUsageManager(SystemUsage memoryManager) {
         this.usageManager = memoryManager;
     }
 
     /**
      * @return the consumerUsageManager
+     * @throws IOException 
      */
-    public UsageManager getConsumerUsageManager() {
-        if (consumerUsageManager == null) {
-            consumerUsageManager = new UsageManager(getMemoryManager(), "Consumer", 0.5f);
+    public SystemUsage getConsumerSystemUsage() throws IOException {
+        if (consumerSystemUsage == null) {
+            consumerSystemUsage = new SystemUsage(getUsageManager(), "Consumer");
+            consumerSystemUsage.getMemoryUsage().setUsagePortion(0.5f);
         }
-        return consumerUsageManager;
+        return consumerSystemUsage;
     }
 
     /**
      * @param consumerUsageManager the consumerUsageManager to set
      */
-    public void setConsumerUsageManager(UsageManager consumerUsageManager) {
-        this.consumerUsageManager = consumerUsageManager;
+    public void setConsumerSystemUsage(SystemUsage consumerUsageManager) {
+        this.consumerSystemUsage = consumerUsageManager;
     }
 
     /**
      * @return the producerUsageManager
+     * @throws IOException 
      */
-    public UsageManager getProducerUsageManager() {
-        if (producerUsageManager == null) {
-            producerUsageManager = new UsageManager(getMemoryManager(), "Producer", 0.45f);
+    public SystemUsage getProducerSystemUsage() throws IOException {
+        if (producerSystemUsage == null) {
+            producerSystemUsage = new SystemUsage(getUsageManager(), "Producer");
+            producerSystemUsage.getMemoryUsage().setUsagePortion(0.45f);
         }
-        return producerUsageManager;
+        return producerSystemUsage;
     }
 
     /**
      * @param producerUsageManager the producerUsageManager to set
      */
-    public void setProducerUsageManager(UsageManager producerUsageManager) {
-        this.producerUsageManager = producerUsageManager;
+    public void setProducerSystemUsage(SystemUsage producerUsageManager) {
+        this.producerSystemUsage = producerUsageManager;
     }
 
     public PersistenceAdapter getPersistenceAdapter() throws IOException {
@@ -1377,7 +1387,7 @@ public class BrokerService implements Service {
     protected Broker createRegionBroker() throws Exception {
         // we must start the persistence adaptor before we can create the region
         // broker
-        getPersistenceAdapter().setUsageManager(getProducerUsageManager());
+        getPersistenceAdapter().setUsageManager(getProducerSystemUsage());
         getPersistenceAdapter().setBrokerName(getBrokerName());
         if (this.deleteAllMessagesOnStartup) {
             getPersistenceAdapter().deleteAllMessages();
@@ -1392,14 +1402,14 @@ public class BrokerService implements Service {
         }
         RegionBroker regionBroker = null;
         if (destinationFactory == null) {
-            destinationFactory = new DestinationFactoryImpl(getProducerUsageManager(), getTaskRunnerFactory(), getPersistenceAdapter());
+            destinationFactory = new DestinationFactoryImpl(getProducerSystemUsage(), getTaskRunnerFactory(), getPersistenceAdapter());
         }
         if (isUseJmx()) {
             MBeanServer mbeanServer = getManagementContext().getMBeanServer();
-            regionBroker = new ManagedRegionBroker(this, mbeanServer, getBrokerObjectName(), getTaskRunnerFactory(), getConsumerUsageManager(), destinationFactory,
+            regionBroker = new ManagedRegionBroker(this, mbeanServer, getBrokerObjectName(), getTaskRunnerFactory(), getConsumerSystemUsage(), destinationFactory,
                                                    destinationInterceptor);
         } else {
-            regionBroker = new RegionBroker(this, getTaskRunnerFactory(), getConsumerUsageManager(), destinationFactory, destinationInterceptor);
+            regionBroker = new RegionBroker(this, getTaskRunnerFactory(), getConsumerSystemUsage(), destinationFactory, destinationInterceptor);
         }
         destinationFactory.setRegionBroker(regionBroker);
 

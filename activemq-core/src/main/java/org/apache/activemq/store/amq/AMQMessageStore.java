@@ -38,7 +38,6 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.kaha.impl.async.Location;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -47,6 +46,8 @@ import org.apache.activemq.store.ReferenceStore.ReferenceData;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.transaction.Synchronization;
+import org.apache.activemq.usage.MemoryUsage;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.Callback;
 import org.apache.activemq.util.TransactionTemplate;
 import org.apache.commons.logging.Log;
@@ -94,15 +95,15 @@ public class AMQMessageStore implements MessageStore {
         }, "Checkpoint: " + destination);
     }
 
-    public void setUsageManager(UsageManager usageManager) {
-        referenceStore.setUsageManager(usageManager);
+    public void setMemoryUsage(MemoryUsage memoryUsage) {
+        referenceStore.setMemoryUsage(memoryUsage);
     }
 
     /**
      * Not synchronized since the Journal has better throughput if you increase
      * the number of concurrent writes that it is doing.
      */
-    public void addMessage(ConnectionContext context, final Message message) throws IOException {
+    public final void addMessage(ConnectionContext context, final Message message) throws IOException {
         final MessageId id = message.getMessageId();
         final Location location = peristenceAdapter.writeCommand(message, message.isResponseRequired());
         if (!context.isInTransaction()) {
@@ -142,7 +143,7 @@ public class AMQMessageStore implements MessageStore {
         }
     }
 
-    void addMessage(final Message message, final Location location) throws InterruptedIOException {
+    final void addMessage(final Message message, final Location location) throws InterruptedIOException {
         ReferenceData data = new ReferenceData();
         data.setExpiration(message.getExpiration());
         data.setFileId(location.getDataFileId());

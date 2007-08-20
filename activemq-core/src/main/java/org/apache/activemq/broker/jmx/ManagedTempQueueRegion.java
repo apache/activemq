@@ -27,14 +27,14 @@ import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.TempQueueRegion;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.activemq.usage.SystemUsage;
 
 public class ManagedTempQueueRegion extends TempQueueRegion {
 
     private final ManagedRegionBroker regionBroker;
 
-    public ManagedTempQueueRegion(ManagedRegionBroker regionBroker, DestinationStatistics destinationStatistics, UsageManager memoryManager, TaskRunnerFactory taskRunnerFactory,
+    public ManagedTempQueueRegion(ManagedRegionBroker regionBroker, DestinationStatistics destinationStatistics, SystemUsage memoryManager, TaskRunnerFactory taskRunnerFactory,
                                   DestinationFactory destinationFactory) {
         super(regionBroker, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
         this.regionBroker = regionBroker;

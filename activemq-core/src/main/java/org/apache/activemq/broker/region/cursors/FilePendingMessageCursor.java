@@ -27,9 +27,10 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.kaha.CommandMarshaller;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.Store;
-import org.apache.activemq.memory.UsageListener;
-import org.apache.activemq.memory.UsageManager;
 import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.usage.Usage;
+import org.apache.activemq.usage.UsageListener;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -65,8 +66,8 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
 
     public void start() {
         if (started.compareAndSet(false, true)) {
-            if (usageManager != null) {
-                usageManager.addUsageListener(this);
+            if (systemUsage != null) {
+                systemUsage.getMemoryUsage().addUsageListener(this);
             }
         }
     }
@@ -74,8 +75,8 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
     public void stop() {
         if (started.compareAndSet(true, false)) {
             gc();
-            if (usageManager != null) {
-                usageManager.removeUsageListener(this);
+            if (systemUsage != null) {
+                systemUsage.getMemoryUsage().removeUsageListener(this);
             }
         }
     }
@@ -147,9 +148,10 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
             } else {
                 flushToDisk();
                 node.decrementReferenceCount();
+                systemUsage.getTempDiskUsage().waitForSpace();
                 getDiskList().addLast(node);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -166,10 +168,11 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 memoryList.addFirst(node);
             } else {
                 flushToDisk();
+                systemUsage.getTempDiskUsage().waitForSpace();
                 node.decrementReferenceCount();
                 getDiskList().addFirst(node);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -238,12 +241,12 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         return !isEmpty();
     }
 
-    public void setUsageManager(UsageManager usageManager) {
-        super.setUsageManager(usageManager);
-        usageManager.addUsageListener(this);
+    public void setSystemUsage(SystemUsage usageManager) {
+        super.setSystemUsage(usageManager);
+        usageManager.getMemoryUsage().addUsageListener(this);
     }
 
-    public void onMemoryUseChanged(UsageManager memoryManager, int oldPercentUsage, int newPercentUsage) {
+    public void onUsageChanged(Usage usage, int oldPercentUsage, int newPercentUsage) {
         if (newPercentUsage >= getMemoryUsageHighWaterMark()) {
             synchronized (this) {
                 flushRequired = true;
