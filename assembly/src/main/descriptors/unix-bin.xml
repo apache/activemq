@@ -144,7 +144,6 @@
         <include>commons-logging:commons-logging</include>
         <include>geronimo-jms_1.1_spec:geronimo-jms_1.1_spec</include>
         <include>${pom.groupId}:activemq-core</include>
-        <include>${pom.groupId}:activeio-core</include>
         <include>${pom.groupId}:activemq-console</include>
         <include>${pom.groupId}:activemq-jaas</include>
         <include>mx4j:mx4j</include>
@@ -175,6 +174,7 @@
         <include>${pom.groupId}:activemq-optional</include>
         <include>${pom.groupId}:activemq-xmpp</include>
         <include>${pom.groupId}:activecluster</include>
+        <include>${pom.groupId}:activeio-core</include>
         <include>commons-beanutils:commons-beanutils</include>
         <include>commons-collections:commons-collections</include>
         <include>commons-httpclient:commons-httpclient</include>
