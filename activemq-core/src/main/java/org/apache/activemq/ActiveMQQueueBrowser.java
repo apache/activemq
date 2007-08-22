@@ -96,7 +96,7 @@ public class ActiveMQQueueBrowser implements QueueBrowser, Enumeration {
         browseDone.set(false);
         ActiveMQPrefetchPolicy prefetchPolicy = session.connection.getPrefetchPolicy();
         return new ActiveMQMessageConsumer(session, consumerId, destination, null, selector, prefetchPolicy.getQueueBrowserPrefetch(), prefetchPolicy
-            .getMaximumPendingMessageLimit(), false, true, dispatchAsync) {
+            .getMaximumPendingMessageLimit(), false, true, dispatchAsync, null) {
             public void dispatch(MessageDispatch md) {
                 if (md.getMessage() == null) {
                     browseDone.set(true);

@@ -114,7 +114,7 @@ public class ActiveMQTopicSubscriber extends ActiveMQMessageConsumer implements
     protected ActiveMQTopicSubscriber(ActiveMQSession theSession,
                                       ConsumerId consumerId, ActiveMQDestination dest, String name, String selector, int prefetch, int maximumPendingMessageCount,
                                       boolean noLocalValue, boolean browserValue, boolean asyncDispatch) throws JMSException {
-        super(theSession, consumerId, dest, name, selector, prefetch, maximumPendingMessageCount, noLocalValue, browserValue, asyncDispatch);
+        super(theSession, consumerId, dest, name, selector, prefetch, maximumPendingMessageCount, noLocalValue, browserValue, asyncDispatch, null);
     }
 
     /**
