@@ -136,12 +136,13 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * @param noLocal
      * @param browser
      * @param dispatchAsync
+     * @param messageListener
      * @throws JMSException
      */
     public ActiveMQMessageConsumer(ActiveMQSession session, ConsumerId consumerId, ActiveMQDestination dest,
-                                   String name, String selector, int prefetch,
-                                   int maximumPendingMessageCount, boolean noLocal, boolean browser,
-                                   boolean dispatchAsync) throws JMSException {
+            String name, String selector, int prefetch,
+            int maximumPendingMessageCount, boolean noLocal, boolean browser,
+            boolean dispatchAsync, MessageListener messageListener) throws JMSException {
         if (dest == null) {
             throw new InvalidDestinationException("Don't understand null destinations");
         } else if (dest.getPhysicalName() == null) {
@@ -206,6 +207,10 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         this.optimizeAcknowledge = session.connection.isOptimizeAcknowledge() && session.isAutoAcknowledge()
                                    && !info.isBrowser();
         this.info.setOptimizedAcknowledge(this.optimizeAcknowledge);
+
+        if (messageListener != null) {
+            setMessageListener(messageListener);
+        }
         try {
             this.session.addConsumer(this);
             this.session.syncSendPacket(info);

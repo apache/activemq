@@ -251,6 +251,38 @@ public class JMSConsumerTest extends JmsTestSupport {
         assertEquals(4, counter.get());
     }
 
+    public void initCombosForTestPassMessageListenerIntoCreateConsumer() {
+        addCombinationValues("destinationType", new Object[] {Byte.valueOf(ActiveMQDestination.QUEUE_TYPE), Byte.valueOf(ActiveMQDestination.TOPIC_TYPE)});
+    }
+
+    public void testPassMessageListenerIntoCreateConsumer() throws Exception {
+
+        final AtomicInteger counter = new AtomicInteger(0);
+        final CountDownLatch done = new CountDownLatch(1);
+
+        // Receive a message with the JMS API
+        connection.start();
+        ActiveMQSession session = (ActiveMQSession) connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        destination = createDestination(session, destinationType);
+        MessageConsumer consumer = session.createConsumer(destination, new MessageListener() {
+            public void onMessage(Message m) {
+                counter.incrementAndGet();
+                if (counter.get() == 4) {
+                    done.countDown();
+                }
+            }
+        });
+
+        // Send the messages
+        sendMessages(session, destination, 4);
+
+        assertTrue(done.await(1000, TimeUnit.MILLISECONDS));
+        Thread.sleep(200);
+
+        // Make sure only 4 messages were delivered.
+        assertEquals(4, counter.get());
+    }
+
     public void initCombosForTestMessageListenerUnackedWithPrefetch1StayInQueue() {
         addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});
         addCombinationValues("ackMode", new Object[] {Integer.valueOf(Session.AUTO_ACKNOWLEDGE), Integer.valueOf(Session.DUPS_OK_ACKNOWLEDGE),

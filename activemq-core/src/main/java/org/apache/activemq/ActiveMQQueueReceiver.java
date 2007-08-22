@@ -68,7 +68,7 @@ public class ActiveMQQueueReceiver extends ActiveMQMessageConsumer implements Qu
                                     int maximumPendingMessageCount, boolean asyncDispatch)
         throws JMSException {
         super(theSession, consumerId, destination, null, selector, prefetch, maximumPendingMessageCount,
-              false, false, asyncDispatch);
+              false, false, asyncDispatch, null);
     }
 
     /**
