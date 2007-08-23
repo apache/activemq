@@ -27,7 +27,7 @@ public class ConnectionKey {
     private String password;
     private int hash;
 
-    public ConnectionKey(String password, String userName) {
+    public ConnectionKey(String userName, String password) {
         this.password = password;
         this.userName = userName;
         hash = 31;
