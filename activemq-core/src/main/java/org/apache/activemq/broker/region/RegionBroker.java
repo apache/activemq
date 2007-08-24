@@ -636,38 +636,48 @@ public class RegionBroker implements Broker {
         getRoot().sendToDeadLetterQueue(context, node);
     }
 
-    public void sendToDeadLetterQueue(ConnectionContext context, MessageReference node) {
-        try {
-            if (node != null) {
-                Message message = node.getMessage();
-                if (message != null) {
-                    DeadLetterStrategy deadLetterStrategy = node.getRegionDestination().getDeadLetterStrategy();
-                    if (deadLetterStrategy != null) {
-                        if (deadLetterStrategy.isSendToDeadLetterQueue(message)) {
-                            long expiration = message.getExpiration();
-                            message.setExpiration(0);
-                            message.setProperty("originalExpiration", new Long(expiration));
-                            if (!message.isPersistent()) {
-                                message.setPersistent(true);
-                                message.setProperty("originalDeliveryMode", "NON_PERSISTENT");
-                            }
-                            // The original destination and transaction id do
-                            // not get filled when the message is first
-                            // sent,
-                            // it is only populated if the message is routed to
-                            // another destination like the DLQ
-                            ActiveMQDestination deadLetterDestination = deadLetterStrategy.getDeadLetterQueueFor(message.getDestination());
-                            BrokerSupport.resend(context, message, deadLetterDestination);
-                        }
-                    }
-                } else {
-                    LOG.warn("Null message for node: " + node);
-                }
-            }
-        } catch (Exception e) {
-            LOG.warn("Failed to pass expired message to dead letter queue");
-        }
-    }
+    public void sendToDeadLetterQueue(ConnectionContext context,
+	        MessageReference node){
+		try{
+			boolean sent=false;
+			if(node!=null){
+				Message message=node.getMessage();
+				if(message!=null&&node.getRegionDestination()!=null){
+					DeadLetterStrategy deadLetterStrategy=node
+					        .getRegionDestination().getDeadLetterStrategy();
+					if(deadLetterStrategy!=null){
+						if(deadLetterStrategy.isSendToDeadLetterQueue(message)){
+							long expiration=message.getExpiration();
+							message.setExpiration(0);
+							message.setProperty("originalExpiration",new Long(
+							        expiration));
+							if(!message.isPersistent()){
+								message.setPersistent(true);
+								message.setProperty("originalDeliveryMode",
+								        "NON_PERSISTENT");
+							}
+							// The original destination and transaction id do
+							// not get filled when the message is first
+							// sent,
+							// it is only populated if the message is routed to
+							// another destination like the DLQ
+							ActiveMQDestination deadLetterDestination=deadLetterStrategy
+							        .getDeadLetterQueueFor(message
+							                .getDestination());
+							BrokerSupport.resend(context,message,
+							        deadLetterDestination);
+							sent=true;
+						}
+					}
+				}
+			}
+			if(sent==false){
+				LOG.warn("Failed to send "+node+" to dead letter queue");
+			}
+		}catch(Exception e){
+			LOG.warn("Failed to pass expired message to dead letter queue",e);
+		}
+	}
 
     public Broker getRoot() {
         try {
