@@ -127,7 +127,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
             if (brokerService != null) {
                 this.directory = brokerService.getBrokerDataDirectory();
             } else {
-                this.directory = new File(IOHelper.getDefaultDataDirectory(), brokerName);
+                this.directory = new File(IOHelper.getDefaultDataDirectory(), IOHelper.toFileSystemSafeName(brokerName));
                 this.directory = new File(directory, "amqstore");
             }
         }

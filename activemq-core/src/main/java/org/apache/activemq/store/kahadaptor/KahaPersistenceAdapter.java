@@ -195,7 +195,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
                 theStore.delete();
             }
         } else {
-            StoreFactory.delete(getStoreName());
+            StoreFactory.delete(getStoreDirectory());
         }
     }
 
@@ -255,7 +255,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
 
     protected synchronized Store getStore() throws IOException {
         if (theStore == null) {
-            theStore = StoreFactory.open(getStoreName(), "rw",storeSize);
+            theStore = StoreFactory.open(getStoreDirectory(), "rw",storeSize);
             theStore.setMaxDataFileLength(maxDataFileLength);
         }
         return theStore;
@@ -264,6 +264,11 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
     private String getStoreName() {
         initialize();
         return directory.getAbsolutePath();
+    }
+
+    private File getStoreDirectory() {
+        initialize();
+        return directory;
     }
 
     public String toString() {
@@ -301,7 +306,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
             initialized = true;
             if (this.directory == null) {
                 File file = new File(IOHelper.getDefaultDataDirectory());
-                file = new File(file, brokerName + "-kahastore");
+                file = new File(file, IOHelper.toFileSystemSafeName(brokerName) + "-kahastore");
                 setDirectory(file);
             }
             this.directory.mkdirs();

@@ -22,6 +22,7 @@ import java.io.RandomAccessFile;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.kaha.impl.DataManager;
+import org.apache.activemq.util.IOHelper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -175,7 +176,7 @@ public final class IndexManager {
     }
 
     protected void initialize() throws IOException {
-        file = new File(directory, NAME_PREFIX + name);
+        file = new File(directory, NAME_PREFIX + IOHelper.toFileSystemSafeName(name) );
         indexFile = new RandomAccessFile(file, mode);
         reader = new StoreIndexReader(indexFile);
         writer = new StoreIndexWriter(indexFile, name, redoLog);

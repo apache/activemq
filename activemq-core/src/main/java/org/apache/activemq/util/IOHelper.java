@@ -44,4 +44,32 @@ public final class IOHelper {
             return "";
         }
     }
+
+    /**
+     * Converts any string into a string that is safe to use as a file name.
+     * The result will only include ascii characters and numbers, and the "-","_", and "." characters.
+     *
+     * @param name
+     * @return
+     */
+    public static String toFileSystemSafeName( String name ) {
+    	int size = name.length();
+    	StringBuffer rc = new StringBuffer(size*2);
+    	for (int i = 0; i < size; i++) {
+			char c = name.charAt(i);
+			boolean valid = c >= 'a' && c <= 'z';
+			valid = valid || (c >= 'A' && c <= 'Z');
+			valid = valid || (c >= '0' && c <= '9');
+			valid = valid || (c == '_') || (c == '-') || (c == '.') || (c == '/') || (c == '\\');
+			
+			if(  valid ) {
+				rc.append(c);
+			} else {
+				// Encode the character using hex notation
+				rc.append('#');
+				rc.append(HexSupport.toHexFromInt(c, true));
+			}
+		}
+    	return rc.toString();
+    }
 }

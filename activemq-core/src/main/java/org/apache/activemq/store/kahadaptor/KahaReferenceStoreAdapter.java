@@ -270,7 +270,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
             }
         } else {
             File stateDirectory = new File(getDirectory(), "kr-state");
-            StoreFactory.delete(stateDirectory.getAbsolutePath());
+            StoreFactory.delete(stateDirectory);
         }
     }
 
@@ -278,7 +278,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
         File stateDirectory = new File(directory, "state");
         stateDirectory.mkdirs();
         try {
-            return StoreFactory.open(stateDirectory.getAbsolutePath(), "rw");
+            return StoreFactory.open(stateDirectory, "rw");
         } catch (IOException e) {
             LOG.error("Failed to create the state store", e);
         }

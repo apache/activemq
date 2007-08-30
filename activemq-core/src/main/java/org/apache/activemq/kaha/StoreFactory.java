@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.kaha;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -44,6 +45,18 @@ public final class StoreFactory {
     }
     
     /**
+     * Open or create a Store
+     * 
+     * @param directory
+     * @param mode
+     * @return
+     * @throws IOException
+     */
+    public static Store open(File directory, String mode) throws IOException {
+        return new KahaStore(directory, mode, new AtomicLong());
+    }
+    
+    /**
      * open or create a Store
      * @param name
      * @param mode
@@ -54,6 +67,21 @@ public final class StoreFactory {
     public static Store open(String name, String mode, AtomicLong size) throws IOException {
         return new KahaStore(name, mode,size);
     }
+    
+
+    /**
+     * Open or create a Store
+     * 
+     * @param directory
+     * @param mode
+     * @param size
+     * @return
+     * @throws IOException
+     */
+    public static Store open(File directory, String mode, AtomicLong size) throws IOException {
+        return new KahaStore(directory, mode, size);
+    }
+    
 
     /**
      * Delete a database
@@ -64,6 +92,18 @@ public final class StoreFactory {
      */
     public static boolean delete(String name) throws IOException {
         KahaStore store = new KahaStore(name, "rw");
+        return store.delete();
+    }
+    
+    /**
+     * Delete a database
+     * 
+     * @param directory
+     * @return true if successful
+     * @throws IOException
+     */
+    public static boolean delete(File directory) throws IOException {
+        KahaStore store = new KahaStore(directory, "rw");
         return store.delete();
     }
 }
