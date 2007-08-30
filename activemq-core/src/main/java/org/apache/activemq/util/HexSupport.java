@@ -41,6 +41,9 @@ public final class HexSupport {
         "e0", "e1", "e2", "e3", "e4", "e5", "e6", "e7", "e8", "e9", "ea", "eb", "ec", "ed", "ee", "ef",
         "f0", "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "fa", "fb", "fc", "fd", "fe", "ff",
     };
+    private static final int[] INT_OFFSETS = new int[]{
+    	24,16,8,0
+    };
     
     private HexSupport() {
     }
@@ -67,6 +70,24 @@ public final class HexSupport {
         StringBuffer rc = new StringBuffer(bytes.length * 2);
         for (int i = 0; i < bytes.length; i++) {
             rc.append(HEX_TABLE[0xFF & bytes[i]]);
+        }
+        return rc.toString();
+    }
+
+    /**
+     * 
+     * @param value 
+     * @param trim if the leading 0's should be trimmed off.
+     * @return
+     */
+    public static String toHexFromInt(int value, boolean trim) {
+        StringBuffer rc = new StringBuffer(INT_OFFSETS.length*2);
+        for (int i = 0; i < INT_OFFSETS.length; i++) {
+        	int b = 0xFF & (value>>INT_OFFSETS[i]);
+        	if( !(trim && b == 0) ) { 
+        		rc.append(HEX_TABLE[b]);
+        		trim=false;
+        	}
         }
         return rc.toString();
     }

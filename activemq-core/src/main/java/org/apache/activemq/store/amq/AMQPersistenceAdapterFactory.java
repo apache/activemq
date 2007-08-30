@@ -56,7 +56,7 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
      */
     public File getDataDirectory() {
         if (this.dataDirectory == null) {
-            this.dataDirectory = new File(IOHelper.getDefaultDataDirectory(), brokerName);
+            this.dataDirectory = new File(IOHelper.getDefaultDataDirectory(), IOHelper.toFileSystemSafeName(brokerName));
         }
         return this.dataDirectory;
     }

@@ -26,6 +26,7 @@ import org.apache.activemq.kaha.impl.index.Index;
 import org.apache.activemq.kaha.impl.index.IndexManager;
 import org.apache.activemq.util.DataByteArrayInputStream;
 import org.apache.activemq.util.DataByteArrayOutputStream;
+import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.LRUCache;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -390,7 +391,7 @@ public class HashIndex implements Index {
 
     private void openIndexFile() throws IOException {
         if (indexFile == null) {
-            file = new File(directory, NAME_PREFIX + name);
+            file = new File(directory, NAME_PREFIX + IOHelper.toFileSystemSafeName(name));
             indexFile = new RandomAccessFile(file, "rw");
         }
     }

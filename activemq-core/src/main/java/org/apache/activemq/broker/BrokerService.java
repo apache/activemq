@@ -1087,7 +1087,7 @@ public class BrokerService implements Service {
                     String str = result ? "Successfully deleted" : "Failed to delete";
                     LOG.info(str + " temporary storage");
                 }
-                tempDataStore = StoreFactory.open(getTmpDataDirectory().getPath(), "rw");
+                tempDataStore = StoreFactory.open(getTmpDataDirectory(), "rw");
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

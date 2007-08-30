@@ -43,6 +43,7 @@ import org.apache.activemq.kaha.impl.data.RedoListener;
 import org.apache.activemq.kaha.impl.index.IndexItem;
 import org.apache.activemq.kaha.impl.index.IndexManager;
 import org.apache.activemq.kaha.impl.index.RedoStoreIndexItem;
+import org.apache.activemq.util.IOHelper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -84,14 +85,22 @@ public class KahaStore implements Store {
 
     
     public KahaStore(String name, String mode) throws IOException {
-        this(name,mode,new AtomicLong());
+    	this(new File(IOHelper.toFileSystemSafeName(name)), mode, new AtomicLong());
+    }
+
+    public KahaStore(File directory, String mode) throws IOException {
+    	this(directory, mode, new AtomicLong());
+    }
+
+    public KahaStore(String name, String mode,AtomicLong storeSize) throws IOException {
+    	this(new File(IOHelper.toFileSystemSafeName(name)), mode, storeSize);
     }
     
-    public KahaStore(String name, String mode,AtomicLong storeSize) throws IOException {
+    public KahaStore(File directory, String mode, AtomicLong storeSize) throws IOException {
         this.mode = mode;
         this.storeSize = storeSize;
-        directory = new File(name);
-        directory.mkdirs();
+        this.directory = directory;
+        this.directory.mkdirs();
     }
 
     public synchronized void close() throws IOException {
