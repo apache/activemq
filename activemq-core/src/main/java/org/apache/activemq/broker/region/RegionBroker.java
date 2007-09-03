@@ -664,6 +664,9 @@ public class RegionBroker implements Broker {
 							ActiveMQDestination deadLetterDestination=deadLetterStrategy
 							        .getDeadLetterQueueFor(message
 							                .getDestination());
+							if (context.getBroker()==null) {
+								context.setBroker(getRoot());
+							}
 							BrokerSupport.resend(context,message,
 							        deadLetterDestination);
 							sent=true;
