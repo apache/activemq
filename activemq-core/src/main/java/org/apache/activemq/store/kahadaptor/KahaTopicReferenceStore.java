@@ -109,7 +109,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
     }
 
     protected ListContainer addSubscriberMessageContainer(String key) throws IOException {
-        ListContainer container = store.getListContainer(destination, "TSR-" + key);
+        ListContainer container = store.getListContainer(key, "TSR-" + destination);
         Marshaller marshaller = new ConsumerMessageRefMarshaller();
         container.setMarshaller(marshaller);
         TopicSubContainer tsc = new TopicSubContainer(container);
