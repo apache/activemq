@@ -217,9 +217,10 @@ public class KahaStore implements Store {
         return getMapContainer(id, containerName, persistentIndex);
     }
 
-    public synchronized MapContainer getMapContainer(Object id, String containerName, boolean persistentIndex)
+    public synchronized MapContainer getMapContainer(Object id, String originalContainerName, boolean persistentIndex)
         throws IOException {
         initialize();
+        String containerName = IOHelper.toFileSystemSafeName(originalContainerName);
         ContainerId containerId = new ContainerId();
         containerId.setKey(id);
         containerId.setDataContainerName(containerName);
@@ -286,9 +287,10 @@ public class KahaStore implements Store {
         return getListContainer(id, containerName, persistentIndex);
     }
 
-    public synchronized ListContainer getListContainer(Object id, String containerName,
+    public synchronized ListContainer getListContainer(Object id, String originalContainerName,
                                                        boolean persistentIndex) throws IOException {
         initialize();
+        String containerName = IOHelper.toFileSystemSafeName(originalContainerName);
         ContainerId containerId = new ContainerId();
         containerId.setKey(id);
         containerId.setDataContainerName(containerName);
