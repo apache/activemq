@@ -483,5 +483,13 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         }
         return null;
     }
+    
+    @Override
+    public <T> T narrow(Class<T> target) {
+        if (target == Socket.class) {
+            return target.cast(socket);
+        }
+        return super.narrow(target);
+    }
 
 }

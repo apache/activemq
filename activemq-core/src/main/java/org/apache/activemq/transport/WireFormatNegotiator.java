@@ -18,6 +18,7 @@ package org.apache.activemq.transport;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.net.Socket;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -111,6 +112,10 @@ public class WireFormatNegotiator extends TransportFilter {
                 }
 
                 wireFormat.renegotiateWireFormat(info);
+                Socket socket = next.narrow(Socket.class);
+                if (socket != null) {
+                    socket.setTcpNoDelay(wireFormat.isTcpNoDelayEnabled());
+                }
 
                 if (LOG.isDebugEnabled()) {
                     LOG.debug(this + " after negotiation: " + wireFormat);
