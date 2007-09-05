@@ -25,6 +25,7 @@ import org.apache.activemq.ActiveMQMessageProducerSupport;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.camel.Endpoint;
+import org.apache.camel.ExchangePattern;
 import org.apache.camel.Producer;
 import org.apache.camel.component.jms.JmsExchange;
 import org.apache.camel.util.ObjectHelper;
@@ -86,7 +87,7 @@ public class CamelMessageProducer extends ActiveMQMessageProducerSupport {
             throw new IllegalArgumentException("Invalid destination setting: " + destination + " when expected: " + this.destination);
         }
         try {
-            JmsExchange exchange = new JmsExchange(endpoint.getContext(), camelDestination.getBinding(), message);
+            JmsExchange exchange = new JmsExchange(endpoint.getContext(), ExchangePattern.InOnly, camelDestination.getBinding(), message);
             producer.process(exchange);
         } catch (JMSException e) {
             throw e;
