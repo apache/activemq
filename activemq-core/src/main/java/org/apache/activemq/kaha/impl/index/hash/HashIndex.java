@@ -392,6 +392,7 @@ public class HashIndex implements Index {
     private void openIndexFile() throws IOException {
         if (indexFile == null) {
             file = new File(directory, NAME_PREFIX + IOHelper.toFileSystemSafeName(name));
+            file.getParentFile().mkdirs();
             indexFile = new RandomAccessFile(file, "rw");
         }
     }
