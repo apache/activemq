@@ -50,9 +50,9 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         this.ackContainer = ackContainer;
         subscriberContainer = subsContainer;
         // load all the Ack containers
-        for (Iterator<String> i = subscriberContainer.keySet().iterator(); i.hasNext();) {
-            String key = i.next();
-            addSubscriberMessageContainer(key);
+        for (Iterator<SubscriptionInfo> i = subscriberContainer.values().iterator(); i.hasNext();) {
+            SubscriptionInfo info = i.next();
+            addSubscriberMessageContainer(info.getClientId(), info.getSubscriptionName());
         }
     }
 
@@ -108,12 +108,12 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         }
     }
 
-    protected ListContainer addSubscriberMessageContainer(String key) throws IOException {
-        ListContainer container = store.getListContainer(key, "TSR-" + destination);
+    protected ListContainer addSubscriberMessageContainer(String clientId, String subscriptionName) throws IOException {
+        ListContainer container = store.getListContainer(clientId+":"+subscriptionName+":"+destination.getQualifiedName(), "topic-subs-references");
         Marshaller marshaller = new ConsumerMessageRefMarshaller();
         container.setMarshaller(marshaller);
         TopicSubContainer tsc = new TopicSubContainer(container);
-        subscriberMessages.put(key, tsc);
+        subscriberMessages.put(getSubscriptionKey(clientId, subscriptionName), tsc);
         return container;
     }
 
@@ -156,7 +156,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
             adapter.addSubscriberState(info);
         }
         // add the subscriber
-        ListContainer container = addSubscriberMessageContainer(key);
+        ListContainer container = addSubscriberMessageContainer(info.getClientId(), info.getSubscriptionName());
         if (retroactive) {
             /*
              * for(StoreEntry

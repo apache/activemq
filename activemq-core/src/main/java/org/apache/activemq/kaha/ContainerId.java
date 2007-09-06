@@ -68,16 +68,15 @@ public class ContainerId implements Externalizable {
     }
 
     public int hashCode() {
-        return key.hashCode();
+        return key.hashCode() ^ dataContainerName.hashCode();
     }
 
     public boolean equals(Object obj) {
-        boolean result = false;
-        if (obj != null && obj instanceof ContainerId) {
-            ContainerId other = (ContainerId)obj;
-            result = other.key.equals(this.key);
+        if (obj == null || obj.getClass() != ContainerId.class) {
+            return false;
         }
-        return result;
+        ContainerId other = (ContainerId)obj;
+        return other.key.equals(this.key) && other.dataContainerName.equals(this.dataContainerName);
     }
 
     public void writeExternal(ObjectOutput out) throws IOException {
