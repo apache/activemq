@@ -118,7 +118,7 @@ public class Queue implements Destination, Task {
         this.memoryUsage = new MemoryUsage(systemUsage.getMemoryUsage(), destination.toString());
         this.memoryUsage.setUsagePortion(1.0f);
         this.store = store;
-        if (destination.isTemporary()) {
+        if (destination.isTemporary() || tmpStore==null ) {
             this.messages = new VMPendingMessageCursor();
         } else {
             this.messages = new StoreQueueCursor(this, tmpStore);

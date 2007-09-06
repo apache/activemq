@@ -1067,6 +1067,11 @@ public class BrokerService implements Service {
      */
     public synchronized Store getTempDataStore() {
         if (tempDataStore == null) {
+            
+            if (!isPersistent()) {
+                return null;
+            }
+            
             boolean result = true;
             boolean empty = true;
             try {

@@ -26,6 +26,7 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.cursors.FilePendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
+import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
 import org.apache.activemq.broker.region.policy.MessageEvictionStrategy;
 import org.apache.activemq.broker.region.policy.OldestMessageEvictionStrategy;
 import org.apache.activemq.command.ConsumerControl;
@@ -36,6 +37,7 @@ import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.Response;
+import org.apache.activemq.kaha.Store;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
@@ -66,8 +68,12 @@ public class TopicSubscription extends AbstractSubscription {
         super(broker, context, info);
         this.usageManager = usageManager;
         String matchedName = "TopicSubscription:" + CURSOR_NAME_COUNTER.getAndIncrement() + "[" + info.getConsumerId().toString() + "]";
-        this.matched = new FilePendingMessageCursor(matchedName, broker.getTempDataStore());
-
+        Store tempDataStore = broker.getTempDataStore();
+        if (tempDataStore != null) {
+            this.matched = new FilePendingMessageCursor(matchedName, tempDataStore);
+        } else {
+            this.matched = new VMPendingMessageCursor();
+        }
     }
 
     public void init() throws Exception {
