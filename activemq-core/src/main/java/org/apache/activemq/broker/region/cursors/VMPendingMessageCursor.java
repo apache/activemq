@@ -35,7 +35,19 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
      * @return true if there are no pending messages
      */
     public boolean isEmpty() {
-        return list.isEmpty();
+        if (list.isEmpty()) {
+            return true;
+        } else {
+            for (Iterator<MessageReference> iterator = list.iterator(); iterator.hasNext();) {
+                MessageReference node = iterator.next();
+                if (!node.isDropped()) {
+                    return false;
+                }
+                // We can remove dropped references.
+                iterator.remove();
+            }
+            return true;
+        }
     }
 
     /**

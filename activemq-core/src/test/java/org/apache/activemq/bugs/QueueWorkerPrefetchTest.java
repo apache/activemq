@@ -29,6 +29,7 @@ import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
+import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.Session;
 
@@ -42,6 +43,7 @@ import org.apache.activemq.broker.BrokerService;
  */
 public class QueueWorkerPrefetchTest extends TestCase implements MessageListener
 {
+    private static final int BATCH_SIZE = 10;
     private static final long WAIT_TIMEOUT = 1000*10;
 
     /** The connection URL. */
@@ -70,6 +72,14 @@ public class QueueWorkerPrefetchTest extends TestCase implements MessageListener
     /** Messages sent to the work-item queue. */
     private static class WorkMessage implements Serializable
     {
+        private final int id;
+        public WorkMessage(int id) {
+            this.id = id;
+        }
+        @Override
+        public String toString() {
+            return "Work: "+id;
+        }
     }
 
     /**
@@ -79,6 +89,7 @@ public class QueueWorkerPrefetchTest extends TestCase implements MessageListener
      */
     private static class Worker implements MessageListener
     {
+
         /** Counter shared between workers to decided when new work-item messages are created. */
         private static AtomicInteger counter = new AtomicInteger(0);
 
@@ -106,24 +117,23 @@ public class QueueWorkerPrefetchTest extends TestCase implements MessageListener
         {
             try
             {
-                boolean sendMessage = false;
-
-                // Don't create a new work item for every 1000th message. */
-                if (counter.incrementAndGet() % 1000 != 0)
-                {
-                    sendMessage = true;
+                WorkMessage work = (WorkMessage)((ObjectMessage)message).getObject();
+                
+                long c = counter.incrementAndGet();
+                if (c % 1 == 0) {
+                    System.out.println("Worker now has message count of: " + c);
                 }
 
-                if (sendMessage)
+                // Don't create a new work item for every BATCH_SIZE message. */
+                if (c % BATCH_SIZE != 0)
                 {
                     // Send new work item to work-item queue.
                     workItemProducer.send(session.createObjectMessage(
-                            new WorkMessage()));
+                            new WorkMessage(work.id+1)));
                 }
 
                 // Send ack to master.
-                masterItemProducer.send(session.createObjectMessage(
-                        new WorkMessage()));
+                masterItemProducer.send(session.createObjectMessage(work));
             }
             catch (JMSException e)
             {
@@ -145,7 +155,7 @@ public class QueueWorkerPrefetchTest extends TestCase implements MessageListener
     {
         long acks = acksReceived.incrementAndGet();
         latch.get().countDown();
-        if (acks % 100 == 0) {
+        if (acks % 1 == 0) {
             System.out.println("Master now has ack count of: " + acksReceived);
         }
     }
@@ -193,10 +203,10 @@ public class QueueWorkerPrefetchTest extends TestCase implements MessageListener
             workers[i] = new Worker(connection.createSession(false, Session.AUTO_ACKNOWLEDGE));
         }
 
-        // Send a message to the work queue, and wait for the 1000 acks from the workers.
+        // Send a message to the work queue, and wait for the BATCH_SIZE acks from the workers.
         acksReceived.set(0);
-        latch.set(new CountDownLatch(1000));
-        workItemProducer.send(masterSession.createObjectMessage(new WorkMessage()));
+        latch.set(new CountDownLatch(BATCH_SIZE));
+        workItemProducer.send(masterSession.createObjectMessage(new WorkMessage(1)));
         
         if (!latch.get().await(WAIT_TIMEOUT, TimeUnit.MILLISECONDS)) {
             fail("First batch only received " + acksReceived + " messages");
@@ -209,8 +219,8 @@ public class QueueWorkerPrefetchTest extends TestCase implements MessageListener
         // have a large pending queue.  Creating a new worker at this point however will
         // receive this new message.
         acksReceived.set(0);
-        latch.set(new CountDownLatch(1000));
-        workItemProducer.send(masterSession.createObjectMessage(new WorkMessage()));
+        latch.set(new CountDownLatch(BATCH_SIZE));
+        workItemProducer.send(masterSession.createObjectMessage(new WorkMessage(1)));
         
         if (!latch.get().await(WAIT_TIMEOUT, TimeUnit.MILLISECONDS)) {
             fail("Second batch only received " + acksReceived + " messages");

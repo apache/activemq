@@ -689,4 +689,8 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     public void setBrokerOutTime(long brokerOutTime) {
         this.brokerOutTime = brokerOutTime;
     }
+    
+    public boolean isDropped() {
+        return false;
+    }
 }
