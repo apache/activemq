@@ -55,5 +55,10 @@ public interface MessageReference {
      * Returns true if this message is expired
      */
     boolean isExpired();
+
+    /**
+     * Returns true if this message is dropped.
+     */
+    boolean isDropped();
     
 }
