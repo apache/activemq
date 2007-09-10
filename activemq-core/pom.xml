@@ -494,6 +494,7 @@
             <configuration>
               <namespace>http://activemq.org/config/1.0</namespace>
               <schema>target/xbean/activemq.xsd</schema>
+              <generateSpringSchemasFile>false</generateSpringSchemasFile>
             </configuration>
             <goals>
               <goal>mapping</goal>
