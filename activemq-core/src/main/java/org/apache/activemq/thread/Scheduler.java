@@ -17,54 +17,48 @@
 package org.apache.activemq.thread;
 
 import java.util.HashMap;
-
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * @version $Revision$
  */
 public final class Scheduler {
 
-    public static final ScheduledThreadPoolExecutor CLOCK_DAEMON = new ScheduledThreadPoolExecutor(5, createThreadFactory());
-    static {
-        CLOCK_DAEMON.setKeepAliveTime(5, TimeUnit.SECONDS);
-    }
-    private static final HashMap<Runnable, ScheduledFuture> CLOCK_TICKETS = new HashMap<Runnable, ScheduledFuture>();
+    private static final class SchedulerTimerTask extends TimerTask {
+		private final Runnable task;
+
+		private SchedulerTimerTask(Runnable task) {
+			this.task = task;
+		}
+
+		public void run() {
+			task.run();							
+		}
+	}
+
+	public static final Timer CLOCK_DAEMON = new Timer("ActiveMQ Scheduler", true);
+    private static final HashMap<Runnable, TimerTask> TIMER_TASKS = new HashMap<Runnable, TimerTask>();
 
     private Scheduler() {
     }
 
-    private static ThreadFactory createThreadFactory() {
-        return new ThreadFactory() {
-            public Thread newThread(Runnable runnable) {
-                Thread thread = new Thread(runnable, "ActiveMQ Scheduler");
-                thread.setDaemon(true);
-                return thread;
-            }
-        };
-    }
-
     public static synchronized void executePeriodically(final Runnable task, long period) {
-        ScheduledFuture ticket = CLOCK_DAEMON
-            .scheduleAtFixedRate(task, period, period, TimeUnit.MILLISECONDS);
-        CLOCK_TICKETS.put(task, ticket);
+    	TimerTask timerTask = new SchedulerTimerTask(task);
+        CLOCK_DAEMON.scheduleAtFixedRate(timerTask, period, period);
+        TIMER_TASKS.put(task, timerTask);
     }
 
     public static synchronized void cancel(Runnable task) {
-        ScheduledFuture ticket = CLOCK_TICKETS.remove(task);
+    	TimerTask ticket = TIMER_TASKS.remove(task);
         if (ticket != null) {
-            ticket.cancel(false);
-            if (ticket instanceof Runnable) {
-                CLOCK_DAEMON.remove((Runnable)ticket);
-            }
+            ticket.cancel();
         }
     }
 
     public static void executeAfterDelay(final Runnable task, long redeliveryDelay) {
-        CLOCK_DAEMON.schedule(task, redeliveryDelay, TimeUnit.MILLISECONDS);
+    	TimerTask timerTask = new SchedulerTimerTask(task);
+        CLOCK_DAEMON.schedule(timerTask, redeliveryDelay);
     }
 
 }
