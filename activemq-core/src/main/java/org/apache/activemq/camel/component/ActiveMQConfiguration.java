@@ -46,30 +46,12 @@ public class ActiveMQConfiguration extends JmsConfiguration {
     }
 
     @Override
-    public ActiveMQConnectionFactory getListenerConnectionFactory() {
-        return (ActiveMQConnectionFactory) super.getListenerConnectionFactory();
-    }
-
-    @Override
-    public void setListenerConnectionFactory(ConnectionFactory listenerConnectionFactory) {
-        if (listenerConnectionFactory instanceof ActiveMQConnectionFactory) {
-            super.setListenerConnectionFactory(listenerConnectionFactory);
-        }
-        else {
-            throw new IllegalArgumentException("ConnectionFactory " + listenerConnectionFactory
-                    + " is not an instanceof " + ActiveMQConnectionFactory.class.getName());
-        }
-    }
-
-    @Override
-    protected ConnectionFactory createListenerConnectionFactory() {
+    protected ConnectionFactory createConnectionFactory() {
         ActiveMQConnectionFactory answer = new ActiveMQConnectionFactory();
+        if (answer.getBeanName() == null) {
+            answer.setBeanName("Camel");
+        }
         answer.setBrokerURL(getBrokerURL());
         return answer;
-    }
-
-    @Override
-    protected ConnectionFactory createTemplateConnectionFactory() {
-        return new PooledConnectionFactory(getListenerConnectionFactory());
     }
 }
