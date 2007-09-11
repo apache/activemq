@@ -40,7 +40,7 @@ import org.apache.commons.logging.LogFactory;
 public class InactiveDurableTopicTest extends TestCase {
     private static final transient Log LOG = LogFactory.getLog(InactiveDurableTopicTest.class);
 
-    private static final int MESSAGE_COUNT = 100000;
+    private static final int MESSAGE_COUNT = 1000000;
     private static final String DEFAULT_PASSWORD = "";
     private static final String USERNAME = "testuser";
     private static final String CLIENTID = "mytestclient";
@@ -60,7 +60,7 @@ public class InactiveDurableTopicTest extends TestCase {
         super.setUp();
         broker = new BrokerService();
 
-        broker.setPersistenceAdapter(new KahaPersistenceAdapter());
+        //broker.setPersistenceAdapter(new KahaPersistenceAdapter());
         /*
          * JournalPersistenceAdapterFactory factory = new
          * JournalPersistenceAdapterFactory();
@@ -133,8 +133,8 @@ public class InactiveDurableTopicTest extends TestCase {
             for (loop = 0; loop < MESSAGE_COUNT; loop++) {
                 msg.setInt("key2", loop);
                 publisher.send(msg, DELIVERY_MODE, DELIVERY_PRIORITY, Message.DEFAULT_TIME_TO_LIVE);
-                if (loop % 500 == 0) {
-                    LOG.debug("Sent " + loop + " messages");
+                if (loop % 5000 == 0) {
+                    LOG.info("Sent " + loop + " messages");
                 }
             }
             Assert.assertEquals(loop, MESSAGE_COUNT);
