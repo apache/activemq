@@ -488,6 +488,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         if (!getTransacted()) {
             throw new javax.jms.IllegalStateException("Not a transacted session");
         }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(getSessionId() + " Transaction Commit");
+        }
         transactionContext.commit();
     }
 
@@ -504,6 +507,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         checkClosed();
         if (!getTransacted()) {
             throw new javax.jms.IllegalStateException("Not a transacted session");
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(getSessionId() + " Transaction Rollback");
         }
         transactionContext.rollback();
     }
@@ -1610,7 +1616,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             msg.onSend();
             msg.setProducerId(msg.getMessageId().getProducerId());
             if (this.debug) {
-                LOG.debug("Sending message: " + msg);
+                LOG.debug(getSessionId() + " sending message: " + msg);
             }
             if (!connection.isAlwaysSyncSend() && (!msg.isPersistent() || connection.isUseAsyncSend() || txid != null)) {
                 this.connection.asyncSendPacket(msg);
