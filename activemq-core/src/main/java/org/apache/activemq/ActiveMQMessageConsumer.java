@@ -413,7 +413,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     return null;
                 } else if (md.getMessage().isExpired()) {
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("Received expired message: " + md);
+                        LOG.debug(getConsumerId() + " received expired message: " + md);
                     }
                     beforeMessageIsConsumed(md);
                     afterMessageIsConsumed(md, true);
@@ -422,7 +422,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     }
                 } else {
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("Received message: " + md);
+                        LOG.debug(getConsumerId() + " received message: " + md);
                     }
                     return md;
                 }
@@ -613,7 +613,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                         try {
                             session.asyncSendPacket(ackToSend);
                         } catch (JMSException e) {
-                            LOG.error("Failed to delivered acknowledgements", e);
+                            LOG.error(getConsumerId() + " failed to delivered acknowledgements", e);
                         } finally {
                             deliveryingAcknowledgements.set(false);
                         }
@@ -940,7 +940,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                     // next message.
                                     afterMessageIsConsumed(md, false);
                                 }
-                                LOG.error("Exception while processing message: " + e, e);
+                                LOG.error(getConsumerId() + " Exception while processing message: " + e, e);
                             }
                         } else {
                             unconsumedMessages.enqueue(md);
@@ -951,7 +951,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     } else {
                         // ignore duplicate
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("Ignoring Duplicate: " + md.getMessage());
+                            LOG.debug(getConsumerId() + " Ignoring Duplicate: " + md.getMessage());
                         }
                         ackLater(md, MessageAck.STANDARD_ACK_TYPE);
                     }
