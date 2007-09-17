@@ -31,8 +31,7 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+
 
 /**
  * A Transport implementation that uses direct method invocations.
