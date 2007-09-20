@@ -37,12 +37,15 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Test case demonstrating situation where messages are not delivered to consumers.
  */
 public class QueueWorkerPrefetchTest extends TestCase implements MessageListener
 {
+	 private static final Log LOG = LogFactory.getLog(QueueWorkerPrefetchTest.class);
     private static final int BATCH_SIZE = 10;
     private static final long WAIT_TIMEOUT = 1000*10;
 
@@ -156,7 +159,7 @@ public class QueueWorkerPrefetchTest extends TestCase implements MessageListener
         long acks = acksReceived.incrementAndGet();
         latch.get().countDown();
         if (acks % 1 == 0) {
-            System.out.println("Master now has ack count of: " + acksReceived);
+            LOG.info("Master now has ack count of: " + acksReceived);
         }
     }
 
@@ -212,7 +215,7 @@ public class QueueWorkerPrefetchTest extends TestCase implements MessageListener
             fail("First batch only received " + acksReceived + " messages");
         }
 
-        System.out.println("First batch received");
+       LOG.info("First batch received");
 
         // Send another message to the work queue, and wait for the next 1000 acks.  It is
         // at this point where the workers never get notified of this message, as they
@@ -226,7 +229,7 @@ public class QueueWorkerPrefetchTest extends TestCase implements MessageListener
             fail("Second batch only received " + acksReceived + " messages");
         }
 
-        System.out.println("Second batch received");
+        LOG.info("Second batch received");
 
         // Cleanup all JMS resources.
         for (int i = 0; i < NUM_WORKERS; i++) {
