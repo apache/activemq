@@ -33,6 +33,8 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import junit.framework.AssertionFailedError;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -167,7 +169,15 @@ public abstract class JmsSendReceiveTestSupport extends TestSupport implements M
 
         for (int i = 0; i < data.length; i++) {
             Message received = receivedMessages.get(i);
-            assertMessageValid(i, received);
+            try {
+                assertMessageValid(i, received);
+            } catch (AssertionFailedError e) {
+                for (int j = 0; j < data.length; j++) {
+                    Message m = receivedMessages.get(j);
+                    System.out.println(j+" => "+m.getJMSMessageID());
+                }
+                throw e;
+            }
         }
     }
 
