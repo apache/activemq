@@ -124,6 +124,7 @@ public class JmsTestSupport extends CombinationTestSupport {
                 conn.close();
             } catch (Throwable e) {
             }
+            iter.remove();
         }
         broker.stop();
         super.tearDown();

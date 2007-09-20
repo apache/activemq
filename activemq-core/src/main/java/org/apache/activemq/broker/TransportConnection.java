@@ -313,36 +313,34 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
 
     public Response service(Command command) {
         Response response = null;
-        if (broker.getBrokerService().isStarted()) {
-            boolean responseRequired = command.isResponseRequired();
-            int commandId = command.getCommandId();
-            try {
-                response = command.visit(this);
-            } catch (Throwable e) {
-                if (responseRequired) {
-                    if (SERVICELOG.isDebugEnabled() && e.getClass() != BrokerStoppedException.class) {
-                        SERVICELOG.debug("Error occured while processing sync command: " + e, e);
-                    }
-                    response = new ExceptionResponse(e);
-                } else {
-                    serviceException(e);
-                }
-            }
+        boolean responseRequired = command.isResponseRequired();
+        int commandId = command.getCommandId();
+        try {
+            response = command.visit(this);
+        } catch (Throwable e) {
             if (responseRequired) {
-                if (response == null) {
-                    response = new Response();
+                if (SERVICELOG.isDebugEnabled() && e.getClass() != BrokerStoppedException.class) {
+                    SERVICELOG.debug("Error occured while processing sync command: " + e, e);
                 }
-                response.setCorrelationId(commandId);
+                response = new ExceptionResponse(e);
+            } else {
+                serviceException(e);
             }
-            // The context may have been flagged so that the response is not
-            // sent.
-            if (context != null) {
-                if (context.isDontSendReponse()) {
-                    context.setDontSendReponse(false);
-                    response = null;
-                }
-                context = null;
+        }
+        if (responseRequired) {
+            if (response == null) {
+                response = new Response();
             }
+            response.setCorrelationId(commandId);
+        }
+        // The context may have been flagged so that the response is not
+        // sent.
+        if (context != null) {
+            if (context.isDontSendReponse()) {
+                context.setDontSendReponse(false);
+                response = null;
+            }
+            context = null;
         }
         return response;
     }

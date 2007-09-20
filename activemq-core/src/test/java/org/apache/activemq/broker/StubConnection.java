@@ -29,6 +29,7 @@ import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.ServiceSupport;
 
@@ -38,6 +39,7 @@ public class StubConnection implements Service {
     private Connection connection;
     private Transport transport;
     private boolean shuttingDown;
+    private TransportListener listener;
 
     public StubConnection(BrokerService broker) throws Exception {
         this(TransportFactory.connect(broker.getVmConnectorURI()));
@@ -62,6 +64,9 @@ public class StubConnection implements Service {
             }
 
             public void onException(IOException error) {
+                if (listener != null) {
+                    listener.onException(error);
+                }
                 if (!shuttingDown) {
                     error.printStackTrace();
                 }
@@ -71,6 +76,9 @@ public class StubConnection implements Service {
     }
 
     protected void dispatch(Object command) throws InterruptedException, IOException {
+        if (listener != null) {
+            listener.onCommand(command);
+        }
         dispatchQueue.put(command);
     }
 
@@ -139,5 +147,13 @@ public class StubConnection implements Service {
             }
             ServiceSupport.dispose(transport);
         }
+    }
+
+    public TransportListener getListener() {
+        return listener;
+    }
+
+    public void setListener(TransportListener listener) {
+        this.listener = listener;
     }
 }
