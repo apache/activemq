@@ -31,8 +31,13 @@
   </parent>
 
   <artifactId>activemq-jaas</artifactId>
+  <packaging>bundle</packaging>
   <name>ActiveMQ :: JAAS</name>
   <description>A collection of generic JAAS Login Modules</description>
+
+  <properties>
+	<activemq.osgi.import.pkg>*</activemq.osgi.import.pkg>
+  </properties>
 
   <build>
     <plugins>

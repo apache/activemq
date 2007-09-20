@@ -29,8 +29,25 @@
   </parent>
 
   <artifactId>activemq-core</artifactId>
+  <packaging>bundle</packaging>
   <name>ActiveMQ :: Core</name>
   <description>The ActiveMQ Message Broker and Client implementations</description>
+
+  <properties>
+    <activemq.osgi.import.pkg>
+      javax.jmdns*;resolution:=optional,
+      org.apache.activeio*;resolution:=optional,
+      org.apache.commons.pool*;resolution:=optional,
+      org.apache.derby*;resolution:=optional,
+      org.apache.tools.ant*;resolution:=optional,
+      org.apache.xbean*;resolution:=optional,
+      org.apache.xpath*;resolution:=optional,
+      org.codehaus.jam*;resolution:=optional,
+      org.springframework*;resolution:=optional,
+      org.w3c.dom.traversal*;resolution:=optional,
+      *
+    </activemq.osgi.import.pkg>
+  </properties>
 
   <dependencies>
 
