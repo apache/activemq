@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.camel.component;
 
+import org.springframework.jms.connection.JmsTransactionManager;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.builder.RouteBuilder;
@@ -69,11 +70,12 @@ public class ActiveMQRouteTest extends ContextTestSupport {
                 from("activemq:queue:test.b").to("mock:result");
 
                 JmsEndpoint endpoint1 = (JmsEndpoint) endpoint("activemq:topic:quote.IONA");
+                endpoint1.getConfiguration().setTransactionManager(new JmsTransactionManager());
                 endpoint1.getConfiguration().setTransacted(true);
                 from(endpoint1).to("mock:transactedClient");
 
                 JmsEndpoint endpoint2 = (JmsEndpoint) endpoint("activemq:topic:quote.IONA");
-                endpoint1.getConfiguration().setTransacted(true);
+                endpoint2.getConfiguration().setTransacted(false);
                 from(endpoint2).to("mock:nonTrasnactedClient");
             }
         };
