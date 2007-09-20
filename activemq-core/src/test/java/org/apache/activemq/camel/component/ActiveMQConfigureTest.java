@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.camel.component;
 
-import org.apache.activemq.pool.PooledConnectionFactory;
 import org.apache.activemq.spring.ActiveMQConnectionFactory;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Endpoint;
@@ -37,7 +36,7 @@ public class ActiveMQConfigureTest extends ContextTestSupport {
         JmsProducer producer = endpoint.createProducer();
 
         JmsTemplate template = assertIsInstanceOf(JmsTemplate.class, producer.getTemplate());
-        assertIsInstanceOf(PooledConnectionFactory.class, template.getConnectionFactory());
+        assertIsInstanceOf(ActiveMQConnectionFactory.class, template.getConnectionFactory());
         assertEquals("pubSubDomain", false, template.isPubSubDomain());
     }
 
