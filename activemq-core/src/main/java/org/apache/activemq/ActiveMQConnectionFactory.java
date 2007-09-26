@@ -41,6 +41,7 @@ import org.apache.activemq.management.StatsCapable;
 import org.apache.activemq.management.StatsImpl;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.JMSExceptionSupport;
@@ -104,6 +105,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private boolean watchTopicAdvisories = true;
     private int producerWindowSize = DEFAULT_PRODUCER_WINDOW_SIZE;
     private long warnAboutUnstartedConnectionTimeout = 500L;
+    private TransportListener transportListener;
 
     // /////////////////////////////////////////////
     //
@@ -299,6 +301,9 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setWatchTopicAdvisories(isWatchTopicAdvisories());
         connection.setProducerWindowSize(getProducerWindowSize());
         connection.setWarnAboutUnstartedConnectionTimeout(getWarnAboutUnstartedConnectionTimeout());
+        if (transportListener != null) {
+            connection.addTransportListener(transportListener);
+        }
     }
 
     // /////////////////////////////////////////////
@@ -799,5 +804,21 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     public void setWarnAboutUnstartedConnectionTimeout(long warnAboutUnstartedConnectionTimeout) {
         this.warnAboutUnstartedConnectionTimeout = warnAboutUnstartedConnectionTimeout;
+    }
+
+    public TransportListener getTransportListener() {
+        return transportListener;
+    }
+
+    /**
+     * Allows a listener to be configured on the ConnectionFactory so that when this factory is used
+     * with frameworks which don't expose the Connection such as Spring JmsTemplate, you can still register
+     * a transport listener.
+     *
+     * @param transportListener sets the listener to be registered on all connections
+     * created by this factory
+     */
+    public void setTransportListener(TransportListener transportListener) {
+        this.transportListener = transportListener;
     }
 }
