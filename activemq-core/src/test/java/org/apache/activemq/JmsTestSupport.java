@@ -58,11 +58,12 @@ public class JmsTestSupport extends CombinationTestSupport {
     //
     // /////////////////////////////////////////////////////////////////
     protected ActiveMQDestination createDestination(Session session, byte type) throws JMSException {
+        String name = "TEST." + getClass().getName() + "." + getName();
         switch (type) {
         case ActiveMQDestination.QUEUE_TYPE:
-            return (ActiveMQDestination)session.createQueue("TEST");
+            return (ActiveMQDestination)session.createQueue(name);
         case ActiveMQDestination.TOPIC_TYPE:
-            return (ActiveMQDestination)session.createTopic("TEST");
+            return (ActiveMQDestination)session.createTopic(name);
         case ActiveMQDestination.TEMP_QUEUE_TYPE:
             return (ActiveMQDestination)session.createTemporaryQueue();
         case ActiveMQDestination.TEMP_TOPIC_TYPE:
