@@ -24,12 +24,12 @@
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>5.0-SNAPSHOT</version>
+  <version>5.0.0</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
 
   <properties>
-    <version>5.0-SNAPSHOT</version>
+    <version>5.0.0</version>
     <spring-version>2.0.6</spring-version>
     <activesoap-version>1.3</activesoap-version>
     <annogen-version>0.1.0</annogen-version>
