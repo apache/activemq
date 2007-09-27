@@ -32,7 +32,7 @@ public abstract class CompositeDestination implements VirtualDestination {
     private boolean copyMessage = true;
 
     public Destination intercept(Destination destination) {
-        return new CompositeDestinationInterceptor(destination, getForwardTo(), isForwardOnly(), isCopyMessage());
+        return new CompositeDestinationFilter(destination, getForwardTo(), isForwardOnly(), isCopyMessage());
     }
 
     public String getName() {

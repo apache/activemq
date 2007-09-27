@@ -80,11 +80,4 @@ public class VirtualTopic implements VirtualDestination {
         this.name = name;
     }
 
-    // Implementation methods
-    // -------------------------------------------------------------------------
-    protected ActiveMQDestination getQueueConsumersWildcard(ActiveMQDestination original) {
-        return new ActiveMQQueue(prefix + original.getPhysicalName() + postfix);
-    }
-
-
 }
