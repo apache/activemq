@@ -32,13 +32,13 @@ import org.apache.activemq.filter.MessageEvaluationContext;
  * 
  * @version $Revision$
  */
-public class CompositeDestinationInterceptor extends DestinationFilter {
+public class CompositeDestinationFilter extends DestinationFilter {
 
     private Collection forwardDestinations;
     private boolean forwardOnly;
     private boolean copyMessage;
 
-    public CompositeDestinationInterceptor(Destination next, Collection forwardDestinations, boolean forwardOnly, boolean copyMessage) {
+    public CompositeDestinationFilter(Destination next, Collection forwardDestinations, boolean forwardOnly, boolean copyMessage) {
         super(next);
         this.forwardDestinations = forwardDestinations;
         this.forwardOnly = forwardOnly;

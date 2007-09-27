@@ -39,22 +39,15 @@ import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisoryBroker;
 import org.apache.activemq.broker.ft.MasterConnector;
-import org.apache.activemq.broker.jmx.BrokerView;
-import org.apache.activemq.broker.jmx.ConnectorView;
-import org.apache.activemq.broker.jmx.ConnectorViewMBean;
-import org.apache.activemq.broker.jmx.FTConnectorView;
-import org.apache.activemq.broker.jmx.JmsConnectorView;
-import org.apache.activemq.broker.jmx.ManagedRegionBroker;
-import org.apache.activemq.broker.jmx.ManagementContext;
-import org.apache.activemq.broker.jmx.NetworkConnectorView;
-import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
-import org.apache.activemq.broker.jmx.ProxyConnectorView;
+import org.apache.activemq.broker.jmx.*;
 import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
+import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFactory;
 import org.apache.activemq.broker.region.DestinationFactoryImpl;
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.broker.region.virtual.MirroredQueue;
 import org.apache.activemq.broker.region.virtual.VirtualDestination;
 import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualTopic;
@@ -148,6 +141,7 @@ public class BrokerService implements Service {
     private BrokerPlugin[] plugins;
     private boolean keepDurableSubsActive = true;
     private boolean useVirtualTopics = true;
+    private boolean useMirroredQueues = false;
     private BrokerId brokerId;
     private DestinationInterceptor[] destinationInterceptors;
     private ActiveMQDestination[] destinations;
@@ -1044,6 +1038,20 @@ public class BrokerService implements Service {
         return destinationInterceptors;
     }
 
+    public boolean isUseMirroredQueues() {
+        return useMirroredQueues;
+    }
+
+    /**
+     * Sets whether or not <a
+     * href="http://activemq.apache.org/mirrored-queues.html">Mirrored
+     * Queues</a> should be supported by default if they have not been
+     * explicitly configured.
+     */
+    public void setUseMirroredQueues(boolean useMirroredQueues) {
+        this.useMirroredQueues = useMirroredQueues;
+    }
+
     /**
      * Sets the destination interceptors to use
      */
@@ -1158,6 +1166,13 @@ public class BrokerService implements Service {
      */
     public void setClustered(boolean clustered) {
         this.clustered = clustered;
+    }
+
+    /**
+     * Looks up and lazily creates if necessary the destination for the given JMS name
+     */
+    public Destination getDestination(ActiveMQDestination destination) throws Exception {
+        return getBroker().addDestination(getAdminConnectionContext(), destination);
     }
 
     // Implementation methods
@@ -1399,12 +1414,12 @@ public class BrokerService implements Service {
         }
         getPersistenceAdapter().start();
 
-        DestinationInterceptor destinationInterceptor = null;
-        if (destinationInterceptors != null) {
-            destinationInterceptor = new CompositeDestinationInterceptor(destinationInterceptors);
-        } else {
-            destinationInterceptor = createDefaultDestinationInterceptor();
+        if (destinationInterceptors == null) {
+            destinationInterceptors = createDefaultDestinationInterceptor();
         }
+        configureServices(destinationInterceptors);
+
+        DestinationInterceptor destinationInterceptor = new CompositeDestinationInterceptor(destinationInterceptors);
         RegionBroker regionBroker = null;
         if (destinationFactory == null) {
             destinationFactory = new DestinationFactoryImpl(getProducerSystemUsage(), getTaskRunnerFactory(), getPersistenceAdapter());
@@ -1426,16 +1441,23 @@ public class BrokerService implements Service {
     /**
      * Create the default destination interceptor
      */
-    protected DestinationInterceptor createDefaultDestinationInterceptor() {
-        if (!isUseVirtualTopics()) {
-            return null;
+    protected DestinationInterceptor[] createDefaultDestinationInterceptor() {
+        List<DestinationInterceptor> answer = new ArrayList<DestinationInterceptor>();
+        if (isUseVirtualTopics()) {
+            VirtualDestinationInterceptor interceptor = new VirtualDestinationInterceptor();
+            VirtualTopic virtualTopic = new VirtualTopic();
+            virtualTopic.setName("VirtualTopic.>");
+            VirtualDestination[] virtualDestinations = {virtualTopic};
+            interceptor.setVirtualDestinations(virtualDestinations);
+            answer.add(interceptor);
         }
-        VirtualDestinationInterceptor answer = new VirtualDestinationInterceptor();
-        VirtualTopic virtualTopic = new VirtualTopic();
-        virtualTopic.setName("VirtualTopic.>");
-        VirtualDestination[] virtualDestinations = {virtualTopic};
-        answer.setVirtualDestinations(virtualDestinations);
-        return answer;
+        if (isUseMirroredQueues()) {
+            MirroredQueue interceptor = new MirroredQueue();    
+            answer.add(interceptor);
+        }
+        DestinationInterceptor[] array = new DestinationInterceptor[answer.size()];
+        answer.toArray(array);
+        return array;
     }
 
     /**
@@ -1665,6 +1687,15 @@ public class BrokerService implements Service {
         connector.start();
 
         return connector;
+    }
+
+    /**
+     * Perform any custom dependency injection
+     */
+    protected void configureServices(Object[] services) {
+        for (Object service : services) {
+            configureService(service);
+        }
     }
 
     /**
