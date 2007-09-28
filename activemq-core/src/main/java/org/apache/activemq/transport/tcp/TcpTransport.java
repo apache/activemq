@@ -36,7 +36,6 @@ import javax.net.SocketFactory;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportLoggerFactory;
 import org.apache.activemq.transport.TransportThreadSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceStopper;
@@ -72,12 +71,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      * This parameter is most probably set in Connection or TransportConnector URIs.
      */
     protected boolean trace = false;
-    /**
-     * Name of the LogWriter implementation to use.
-     * Names are mapped to classes in the resources/META-INF/services/org/apache/activemq/transport/logwriters directory.
-     * This parameter is most probably set in Connection or TransportConnector URIs.
-     */
-    protected String logWriterName = TransportLoggerFactory.defaultLogWriterName;
+    
     /**
      * Specifies if the TransportLogger will be manageable by JMX or not.
      * Also, as long as there is at least 1 TransportLogger which is manageable,
@@ -206,16 +200,6 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     public void setTrace(boolean trace) {
         this.trace = trace;
     }
-
-    public String getLogWriterName() {
-        return logWriterName;
-    }
-
-
-    public void setLogWriterName(String logFormat) {
-        this.logWriterName = logFormat;
-    }
-
 
     public boolean isDynamicManagement() {
         return dynamicManagement;
