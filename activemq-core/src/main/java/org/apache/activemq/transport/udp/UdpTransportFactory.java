@@ -28,7 +28,7 @@ import org.apache.activemq.transport.CommandJoiner;
 import org.apache.activemq.transport.InactivityMonitor;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
-import org.apache.activemq.transport.TransportLoggerFactory;
+import org.apache.activemq.transport.TransportLogger;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.reliable.DefaultReplayStrategy;
 import org.apache.activemq.transport.reliable.ExceptionIfDroppedReplayStrategy;
@@ -78,11 +78,7 @@ public class UdpTransportFactory extends TransportFactory {
         transport = new CommandJoiner(transport, asOpenWireFormat(format));
 
         if (udpTransport.isTrace()) {
-            try {
-                transport = TransportLoggerFactory.getInstance().createTransportLogger(transport);
-            } catch (Throwable e) {
-                log.error("Could not create TransportLogger object for: " + TransportLoggerFactory.defaultLogWriterName + ", reason: " + e, e);
-            }
+            transport = new TransportLogger(transport);
         }
 
         transport = new InactivityMonitor(transport);
@@ -114,7 +110,7 @@ public class UdpTransportFactory extends TransportFactory {
         OpenWireFormat openWireFormat = asOpenWireFormat(format);
 
         if (udpTransport.isTrace()) {
-            transport = TransportLoggerFactory.getInstance().createTransportLogger(transport);
+            transport = new TransportLogger(transport);
         }
 
         transport = new InactivityMonitor(transport);
