@@ -31,8 +31,10 @@ import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
+import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.store.TransactionRecoveryListener;
 import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.transaction.LocalTransaction;
@@ -84,6 +86,7 @@ public class TransactionBroker extends BrokerFilter {
             final ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
             producerExchange.setMutable(true);
             producerExchange.setConnectionContext(context);
+            producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
             final ConsumerBrokerExchange consumerExchange = new ConsumerBrokerExchange();
             consumerExchange.setConnectionContext(context);
             transactionStore.recover(new TransactionRecoveryListener() {

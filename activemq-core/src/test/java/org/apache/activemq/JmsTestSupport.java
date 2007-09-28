@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -43,6 +44,7 @@ import org.apache.activemq.command.ActiveMQDestination;
  */
 public class JmsTestSupport extends CombinationTestSupport {
 
+    static final private AtomicLong TEST_COUNTER = new AtomicLong();
     public String userName;
     public String password;
 
@@ -58,7 +60,11 @@ public class JmsTestSupport extends CombinationTestSupport {
     //
     // /////////////////////////////////////////////////////////////////
     protected ActiveMQDestination createDestination(Session session, byte type) throws JMSException {
-        String name = "TEST." + getClass().getName() + "." + getName();
+        String testMethod = getName();
+        if( testMethod.indexOf(" ")>0 ) {
+            testMethod = testMethod.substring(0, testMethod.indexOf(" "));
+        }
+        String name = "TEST." + getClass().getName() + "." +testMethod+"."+TEST_COUNTER.getAndIncrement();
         switch (type) {
         case ActiveMQDestination.QUEUE_TYPE:
             return (ActiveMQDestination)session.createQueue(name);
