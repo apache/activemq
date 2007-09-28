@@ -48,6 +48,7 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerAck;
+import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
@@ -349,12 +350,13 @@ public class Queue implements Destination, Task {
         // There is delay between the client sending it and it arriving at the
         // destination.. it may have expired.
 
-        final boolean sendProducerAck = (!message.isResponseRequired() || producerExchange.getProducerState().getInfo().getWindowSize() > 0) && !context.isInRecoveryMode();
+        final ProducerInfo producerInfo = producerExchange.getProducerState().getInfo();
+        final boolean sendProducerAck = !message.isResponseRequired() && producerInfo.getWindowSize() > 0 && !context.isInRecoveryMode();
         if (message.isExpired()) {
             broker.messageExpired(context, message);
             destinationStatistics.getMessages().decrement();
             if (sendProducerAck) {
-                ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
+                ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
                 context.getConnection().dispatchAsync(ack);
             }
             return;
@@ -367,7 +369,7 @@ public class Queue implements Destination, Task {
             // We can avoid blocking due to low usage if the producer is sending
             // a sync message or
             // if it is using a producer window
-            if (producerExchange.getProducerState().getInfo().getWindowSize() > 0 || message.isResponseRequired()) {
+            if (producerInfo.getWindowSize() > 0 || message.isResponseRequired()) {
                 synchronized (messagesWaitingForSpace) {
                     messagesWaitingForSpace.add(new Runnable() {
                         public void run() {
@@ -384,7 +386,7 @@ public class Queue implements Destination, Task {
                                 }
 
                                 if (sendProducerAck) {
-                                    ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
+                                    ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
                                     context.getConnection().dispatchAsync(ack);
                                 } else {
                                     Response response = new Response();
@@ -435,7 +437,7 @@ public class Queue implements Destination, Task {
         }
         doMessageSend(producerExchange, message);
         if (sendProducerAck) {
-            ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
+            ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
             context.getConnection().dispatchAsync(ack);
         }
     }
