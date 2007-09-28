@@ -637,6 +637,11 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     }
 
     public Response processAddConnection(ConnectionInfo info) throws Exception {
+        
+        // Older clients should have been defaulting this field to true.. but they were not. 
+        if( wireFormatInfo!=null && wireFormatInfo.getVersion() <= 2 ) {
+            info.setClientMaster(true);
+        }
 
         TransportConnectionState state;
 
