@@ -410,6 +410,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         if (message == null) {
             return false;
         }
+                
         // Make sure we can dispatch a message.
         if (canDispatch(node) && !isSlave()) {
             MessageDispatch md = createMessageDispatch(node, message);

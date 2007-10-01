@@ -26,6 +26,7 @@ import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.kaha.Store;
@@ -42,7 +43,6 @@ import org.apache.commons.logging.LogFactory;
 public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
 
     private static final Log LOG = LogFactory.getLog(StoreDurableSubscriberCursor.class);
-    private int pendingCount;
     private String clientId;
     private String subscriberName;
     private Map<Destination, TopicStorePrefetch> topics = new HashMap<Destination, TopicStorePrefetch>();
@@ -50,6 +50,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     private boolean started;
     private PendingMessageCursor nonPersistent;
     private PendingMessageCursor currentCursor;
+    private final Subscription subscription;
 
     /**
      * @param topic
@@ -57,9 +58,10 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
      * @param subscriberName
      * @throws IOException
      */
-    public StoreDurableSubscriberCursor(String clientId, String subscriberName, Store store, int maxBatchSize) {
+    public StoreDurableSubscriberCursor(String clientId, String subscriberName, Store store, int maxBatchSize, Subscription subscription) {
         this.clientId = clientId;
         this.subscriberName = subscriberName;
+        this.subscription = subscription;
         this.nonPersistent = new FilePendingMessageCursor(clientId + subscriberName, store);
         storePrefetches.add(nonPersistent);
     }
@@ -69,7 +71,6 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
             started = true;
             for (PendingMessageCursor tsp : storePrefetches) {
                 tsp.start();
-                pendingCount += tsp.size();
             }
         }
     }
@@ -80,8 +81,6 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
             for (PendingMessageCursor tsp : storePrefetches) {
                 tsp.stop();
             }
-
-            pendingCount = 0;
         }
     }
 
@@ -94,14 +93,13 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
      */
     public synchronized void add(ConnectionContext context, Destination destination) throws Exception {
         if (destination != null && !AdvisorySupport.isAdvisoryTopic(destination.getActiveMQDestination())) {
-            TopicStorePrefetch tsp = new TopicStorePrefetch((Topic)destination, clientId, subscriberName);
+            TopicStorePrefetch tsp = new TopicStorePrefetch((Topic)destination, clientId, subscriberName, subscription);
             tsp.setMaxBatchSize(getMaxBatchSize());
             tsp.setSystemUsage(systemUsage);
             topics.put(destination, tsp);
             storePrefetches.add(tsp);
             if (started) {
                 tsp.start();
-                pendingCount += tsp.size();
             }
         }
     }
@@ -124,14 +122,18 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
      * @return true if there are no pending messages
      */
     public synchronized boolean isEmpty() {
-        return pendingCount <= 0;
+        for (PendingMessageCursor tsp : storePrefetches) {
+            if( !tsp.isEmpty() )
+                return false;
+        }
+        return true;
     }
 
     public boolean isEmpty(Destination destination) {
         boolean result = true;
         TopicStorePrefetch tsp = topics.get(destination);
         if (tsp != null) {
-            result = tsp.size() <= 0;
+            result = tsp.isEmpty();
         }
         return result;
     }
@@ -151,7 +153,6 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         if (node != null) {
             Message msg = node.getMessage();
             if (started) {
-                pendingCount++;
                 if (!msg.isPersistent()) {
                     nonPersistent.addMessageLast(node);
                 }
@@ -171,7 +172,6 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     }
 
     public synchronized void clear() {
-        pendingCount = 0;
         nonPersistent.clear();
         for (PendingMessageCursor tsp : storePrefetches) {
             tsp.clear();
@@ -179,7 +179,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     }
 
     public synchronized boolean hasNext() {
-        boolean result = pendingCount > 0;
+        boolean result = true;
         if (result) {
             try {
                 currentCursor = getNextCursor();
@@ -201,14 +201,12 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         if (currentCursor != null) {
             currentCursor.remove();
         }
-        pendingCount--;
     }
 
     public synchronized void remove(MessageReference node) {
         if (currentCursor != null) {
             currentCursor.remove(node);
         }
-        pendingCount--;
     }
 
     public synchronized void reset() {
@@ -226,6 +224,10 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     }
 
     public int size() {
+        int pendingCount=0;
+        for (PendingMessageCursor tsp : storePrefetches) {
+            pendingCount += tsp.size();
+        }
         return pendingCount;
     }
 

@@ -64,11 +64,8 @@ public class KahaReferenceStore implements ReferenceStore {
 
     protected final boolean recoverReference(MessageRecoveryListener listener, ReferenceRecord record)
         throws Exception {
-        if (listener.hasSpace()) {
-            listener.recoverMessageReference(new MessageId(record.getMessageId()));
-            return true;
-        }
-        return false;
+        listener.recoverMessageReference(new MessageId(record.getMessageId()));
+        return listener.hasSpace();
     }
 
     public synchronized void recover(MessageRecoveryListener listener) throws Exception {

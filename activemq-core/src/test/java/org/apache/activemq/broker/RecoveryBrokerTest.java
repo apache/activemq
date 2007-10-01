@@ -284,7 +284,7 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
         // The we should get the messages.
         for (int i = 0; i < 4; i++) {
             Message m2 = receiveMessage(connection2);
-            assertNotNull(m2);
+            assertNotNull("Did not get message "+i, m2);
         }
         assertNoMessagesLeft(connection2);
     }
