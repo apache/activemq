@@ -73,11 +73,8 @@ public class KahaMessageStore implements MessageStore {
     }
 
     protected boolean recoverMessage(MessageRecoveryListener listener, Message msg) throws Exception {
-        if (listener.hasSpace()) {
-            listener.recoverMessage(msg);
-            return true;
-        }
-        return false;
+        listener.recoverMessage(msg);
+        return listener.hasSpace();
     }
 
     public void removeMessage(ConnectionContext context, MessageAck ack) throws IOException {
