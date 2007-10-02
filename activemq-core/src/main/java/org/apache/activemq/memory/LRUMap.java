@@ -24,7 +24,7 @@ import java.util.Map;
  * 
  * @version $Revision:$
  */
-public class LRUMap extends LinkedHashMap {
+public class LRUMap<K,V> extends LinkedHashMap<K,V>{
 
     protected static final float DEFAULT_LOAD_FACTOR = (float) 0.75;
     protected static final int DEFAULT_INITIAL_CAPACITY = 5000;
@@ -45,7 +45,7 @@ public class LRUMap extends LinkedHashMap {
         this.maximumSize = maximumSize;
     }
 
-    protected boolean removeEldestEntry(Map.Entry eldest) {
+    protected boolean removeEldestEntry(Map.Entry<K,V> eldest) {
         return size() > maximumSize;
     }
 }
