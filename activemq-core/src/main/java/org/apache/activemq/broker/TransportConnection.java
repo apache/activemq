@@ -690,7 +690,13 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         state.setContext(context);
         state.setConnection(this);
 
+        try {
         broker.addConnection(context, info);
+        }catch(Exception e){
+        	brokerConnectionStates.remove(info);
+        	LOG.warn("Failed to add Connection",e);
+        	throw e;
+        }
         if (info.isManageable() && broker.isFaultTolerantConfiguration()) {
             // send ConnectionCommand
             ConnectionControl command = new ConnectionControl();
