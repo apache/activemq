@@ -755,6 +755,11 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                                 ack.setFirstMessageId(md.getMessage().getMessageId());
                                 asyncSendPacket(ack);
                             } else {
+                                
+                                MessageAck ack = new MessageAck(md, MessageAck.REDELIVERED_ACK_TYPE, 1);
+                                ack.setFirstMessageId(md.getMessage().getMessageId());
+                                asyncSendPacket(ack);
+
                                 // Figure out how long we should wait to resend
                                 // this message.
                                 long redeliveryDelay = 0;
