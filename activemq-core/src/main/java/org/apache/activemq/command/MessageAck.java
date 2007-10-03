@@ -46,6 +46,14 @@ public class MessageAck extends BaseCommand {
      */
     public static final byte POSION_ACK_TYPE = 1;
 
+    /**
+     * In case the client want's to explicitly let the broker know that a
+     * message was not processed and it was re-delivered to the consumer
+     * but it was not yet considered to be a poison message.  The messageCount 
+     * field will hold the number of times the message was re-delivered. 
+     */
+    public static final byte REDELIVERED_ACK_TYPE = 3;
+    
     protected byte ackType;
     protected ConsumerId consumerId;
     protected MessageId firstMessageId;
@@ -95,6 +103,10 @@ public class MessageAck extends BaseCommand {
 
     public boolean isDeliveredAck() {
         return ackType == DELIVERED_ACK_TYPE;
+    }
+    
+    public boolean isRedeliveredAck() {
+        return ackType == REDELIVERED_ACK_TYPE;
     }
 
     /**
