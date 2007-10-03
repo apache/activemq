@@ -19,6 +19,7 @@ package org.apache.activemq.broker.region.cursors;
 import java.util.Iterator;
 import java.util.LinkedList;
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.QueueMessageReference;
 
 /**
  * hold pending messages in a linked list (messages awaiting disptach to a
@@ -40,6 +41,9 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
         } else {
             for (Iterator<MessageReference> iterator = list.iterator(); iterator.hasNext();) {
                 MessageReference node = iterator.next();
+                if (node== QueueMessageReference.NULL_MESSAGE){
+                	continue;
+                }
                 if (!node.isDropped()) {
                     return false;
                 }
