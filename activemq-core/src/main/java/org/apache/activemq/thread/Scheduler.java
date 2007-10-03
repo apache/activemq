@@ -53,6 +53,7 @@ public final class Scheduler {
     	TimerTask ticket = TIMER_TASKS.remove(task);
         if (ticket != null) {
             ticket.cancel();
+            CLOCK_DAEMON.purge();//remove cancelled TimerTasks
         }
     }
 
