@@ -252,7 +252,6 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
 
     public void setSystemUsage(SystemUsage usageManager) {
         super.setSystemUsage(usageManager);
-        usageManager.getMemoryUsage().addUsageListener(this);
     }
 
     public void onUsageChanged(Usage usage, int oldPercentUsage, int newPercentUsage) {
