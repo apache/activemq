@@ -169,8 +169,12 @@ public final class AsyncDataManager {
 
             // If we know the last location that was ok.. then we can skip lots
             // of checking
+            try{
             l = recoveryCheck(currentWriteFile, l);
             lastAppendLocation.set(l);
+            }catch(IOException e){
+            	LOG.warn("recovery check failed", e);
+            }
         }
 
         storeState(false);
