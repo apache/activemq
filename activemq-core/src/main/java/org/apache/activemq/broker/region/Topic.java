@@ -31,6 +31,7 @@ import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
 import org.apache.activemq.broker.region.policy.FixedSizedSubscriptionRecoveryPolicy;
+import org.apache.activemq.broker.region.policy.NoSubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.SimpleDispatchPolicy;
 import org.apache.activemq.broker.region.policy.SubscriptionRecoveryPolicy;
@@ -73,7 +74,7 @@ public class Topic implements Destination {
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
 
     private DispatchPolicy dispatchPolicy = new SimpleDispatchPolicy();
-    private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy = new FixedSizedSubscriptionRecoveryPolicy();
+    private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy;
     private boolean sendAdvisoryIfNoConsumers;
     private DeadLetterStrategy deadLetterStrategy = new SharedDeadLetterStrategy();
     private final ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription> durableSubcribers = new ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription>();
@@ -105,7 +106,13 @@ public class Topic implements Destination {
         this.systemUsage=systemUsage;
         this.memoryUsage = new MemoryUsage(systemUsage.getMemoryUsage(), destination.toString());
         this.memoryUsage.setUsagePortion(1.0f);
-
+        //set default subscription recovery policy
+        if (destination.isTemporary() || AdvisorySupport.isAdvisoryTopic(destination) ){
+        	 subscriptionRecoveryPolicy= new NoSubscriptionRecoveryPolicy();
+        }else{
+        	//set the default
+        	subscriptionRecoveryPolicy= new FixedSizedSubscriptionRecoveryPolicy();
+        }
         // Let the store know what usage manager we are using so that he can
         // flush messages to disk
         // when usage gets high.
