@@ -90,6 +90,14 @@ public interface BrokerViewMBean extends Service {
 
     ObjectName[] getTemporaryQueueSubscribers();
 
+    String addConnector(String discoveryAddress) throws Exception;
+
+    String addNetworkConnector(String discoveryAddress) throws Exception;
+
+    boolean removeConnector(String connectorName) throws Exception;
+
+    boolean removeNetworkConnector(String connectorName) throws Exception;
+
     /**
      * Adds a Topic destination to the broker.
      * 
