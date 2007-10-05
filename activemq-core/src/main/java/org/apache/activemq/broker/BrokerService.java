@@ -782,12 +782,30 @@ public class BrokerService implements Service {
         this.managementContext = managementContext;
     }
 
+    public NetworkConnector getNetworkConnectorByName(String connectorName) {
+        for(NetworkConnector connector : networkConnectors) {
+            if(connector.getName().equals(connectorName)) {
+                return connector;
+            }
+        }
+        return null;
+    }
+
     public String[] getNetworkConnectorURIs() {
         return networkConnectorURIs;
     }
 
     public void setNetworkConnectorURIs(String[] networkConnectorURIs) {
         this.networkConnectorURIs = networkConnectorURIs;
+    }
+
+    public TransportConnector getConnectorByName(String connectorName) {
+        for(TransportConnector connector : transportConnectors) {
+            if(connector.getName().equals(connectorName)) {
+                return connector;
+            }
+        }
+        return null;
     }
 
     public String[] getTransportConnectorURIs() {

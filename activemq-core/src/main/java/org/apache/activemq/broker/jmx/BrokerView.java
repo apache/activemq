@@ -24,12 +24,14 @@ import javax.management.ObjectName;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
+import org.apache.activemq.network.NetworkConnector;
 //import org.apache.log4j.LogManager;
 //import org.apache.log4j.PropertyConfigurator;
 
@@ -154,6 +156,30 @@ public class BrokerView implements BrokerViewMBean {
 
     public ObjectName[] getInactiveDurableTopicSubscribers() {
         return broker.getInactiveDurableTopicSubscribers();
+    }
+
+    public String addConnector(String discoveryAddress) throws Exception {
+        TransportConnector connector = brokerService.addConnector(discoveryAddress);
+        connector.start();
+        return connector.getName();
+    }
+
+    public String addNetworkConnector(String discoveryAddress) throws Exception {
+        NetworkConnector connector = brokerService.addNetworkConnector(discoveryAddress);
+        connector.start();
+        return connector.getName();
+    }
+
+    public boolean removeConnector(String connectorName) throws Exception {
+        TransportConnector connector = brokerService.getConnectorByName(connectorName);
+        connector.stop();
+        return brokerService.removeConnector(connector);
+    }
+
+    public boolean removeNetworkConnector(String connectorName) throws Exception {
+        NetworkConnector connector = brokerService.getNetworkConnectorByName(connectorName);
+        connector.stop();
+        return brokerService.removeNetworkConnector(connector);
     }
 
     public void addTopic(String name) throws Exception {
