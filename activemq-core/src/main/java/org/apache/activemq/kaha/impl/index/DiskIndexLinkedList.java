@@ -258,12 +258,15 @@ public class DiskIndexLinkedList implements IndexLinkedList {
      */
     public synchronized IndexItem getNextEntry(IndexItem current) {
         IndexItem result = null;
-        if (current != null && current.getNextItem() >= 0) {
+        if (current != null ) {
+        	current = (IndexItem) refreshEntry(current);
+        	if(current.getNextItem() >= 0){
             try {
                 result = indexManager.getIndex(current.getNextItem());
             } catch (IOException e) {
                 throw new RuntimeException("Failed to get next index from " + indexManager + " for " + current, e);
             }
+        	}
         }
         // essential last get's updated consistently
         if (result != null && last != null && last.equals(result)) {
