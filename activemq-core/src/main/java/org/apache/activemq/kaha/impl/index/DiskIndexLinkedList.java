@@ -257,45 +257,50 @@ public class DiskIndexLinkedList implements IndexLinkedList {
      * @return next entry
      */
     public synchronized IndexItem getNextEntry(IndexItem current) {
-        IndexItem result = null;
-        if (current != null ) {
-        	current = (IndexItem) refreshEntry(current);
-        	if(current.getNextItem() >= 0){
-            try {
-                result = indexManager.getIndex(current.getNextItem());
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to get next index from " + indexManager + " for " + current, e);
-            }
-        	}
-        }
-        // essential last get's updated consistently
-        if (result != null && last != null && last.equals(result)) {
-            result = last;
-        }
-        return result;
-    }
+		IndexItem result = null;
+		if (current != null) {
+			current = (IndexItem) refreshEntry(current);
+			if (current.getNextItem() >= 0) {
+				try {
+					result = indexManager.getIndex(current.getNextItem());
+				} catch (IOException e) {
+					throw new RuntimeException("Failed to get next index from "
+							+ indexManager + " for " + current, e);
+				}
+			}
+		}
+		// essential last get's updated consistently
+		if (result != null && last != null && last.equals(result)) {
+			result = last;
+		}
+		return result;
+	}
 
     /**
-     * Retrive the prev entry after this entry
-     * 
-     * @param entry
-     * @return prev entry
-     */
+	 * Retrive the prev entry after this entry
+	 * 
+	 * @param entry
+	 * @return prev entry
+	 */
     public synchronized IndexItem getPrevEntry(IndexItem current) {
-        IndexItem result = null;
-        if (current != null && current.getPreviousItem() >= 0) {
-            try {
-                result = indexManager.getIndex(current.getPreviousItem());
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to  get current index for " + current, e);
-            }
-        }
-        // essential root get's updated consistently
-        if (result != null && root != null && root.equals(result)) {
-            return root;
-        }
-        return result;
-    }
+		IndexItem result = null;
+		if (current != null) {
+			if (current.getPreviousItem() >= 0) {
+				current = (IndexItem) refreshEntry(current);
+				try {
+					result = indexManager.getIndex(current.getPreviousItem());
+				} catch (IOException e) {
+					throw new RuntimeException(
+							"Failed to  get current index for " + current, e);
+				}
+			}
+		}
+		// essential root get's updated consistently
+		if (result != null && root != null && root.equals(result)) {
+			return root;
+		}
+		return result;
+	}
 
     public synchronized StoreEntry getEntry(StoreEntry current) {
         StoreEntry result = null;
