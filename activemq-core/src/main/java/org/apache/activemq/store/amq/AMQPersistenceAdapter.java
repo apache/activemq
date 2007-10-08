@@ -99,6 +99,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private File directory;
     private BrokerService brokerService;
     private AtomicLong storeSize = new AtomicLong();
+    private boolean persistentIndex=true;
 
     public String getBrokerName() {
         return this.brokerName;
@@ -418,6 +419,14 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     public void rollbackTransaction(ConnectionContext context) throws IOException {
         referenceStoreAdapter.rollbackTransaction(context);
     }
+    
+    public boolean isPersistentIndex() {
+		return persistentIndex;
+	}
+
+	public void setPersistentIndex(boolean persistentIndex) {
+		this.persistentIndex = persistentIndex;
+	}
 
     /**
      * @param location
@@ -605,6 +614,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 
     protected KahaReferenceStoreAdapter createReferenceStoreAdapter() throws IOException {
         KahaReferenceStoreAdapter adaptor = new KahaReferenceStoreAdapter(storeSize);
+        adaptor.setPersistentIndex(isPersistentIndex());
         return adaptor;
     }
 

@@ -37,6 +37,8 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
     private int journalThreadPriority = Thread.MAX_PRIORITY;
     private String brokerName = "localhost";
     private ReferenceStoreAdapter referenceStoreAdapter;
+    private boolean syncOnWrite;
+    private boolean persistentIndex;
 
     /**
      * @return a AMQPersistenceAdapter
@@ -47,6 +49,8 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
         result.setDirectory(getDataDirectory());
         result.setTaskRunnerFactory(getTaskRunnerFactory());
         result.setBrokerName(getBrokerName());
+        result.setSyncOnWrite(isSyncOnWrite());
+        result.setPersistentIndex(isPersistentIndex());
         result.setReferenceStoreAdapter(getReferenceStoreAdapter());
         return result;
     }
@@ -127,4 +131,20 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
     public void setReferenceStoreAdapter(ReferenceStoreAdapter referenceStoreAdapter) {
         this.referenceStoreAdapter = referenceStoreAdapter;
     }
+    
+    public boolean isPersistentIndex() {
+		return persistentIndex;
+	}
+
+	public void setPersistentIndex(boolean persistentIndex) {
+		this.persistentIndex = persistentIndex;
+	}
+
+	public boolean isSyncOnWrite() {
+		return syncOnWrite;
+	}
+
+	public void setSyncOnWrite(boolean syncOnWrite) {
+		this.syncOnWrite = syncOnWrite;
+	}
 }

@@ -61,6 +61,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     private ListContainer<SubscriptionInfo> durableSubscribers;
     private boolean storeValid;
     private Store stateStore;
+    private boolean persistentIndex = true;
 
     public KahaReferenceStoreAdapter(AtomicLong size){
         super(size);
@@ -273,6 +274,14 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
             StoreFactory.delete(stateDirectory);
         }
     }
+    
+    public boolean isPersistentIndex() {
+		return persistentIndex;
+	}
+
+	public void setPersistentIndex(boolean persistentIndex) {
+		this.persistentIndex = persistentIndex;
+	}
 
     private Store createStateStore(File directory) {
         File stateDirectory = new File(directory, "state");
@@ -292,4 +301,6 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     protected void removeSubscriberState(SubscriptionInfo info) {
         durableSubscribers.remove(info);
     }
+
+	
 }
