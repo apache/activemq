@@ -266,4 +266,8 @@ public interface Store {
      * @return the amount of disk space the store is occupying
      */
     long size();
+    
+    public boolean isPersistentIndex();
+    
+	public void setPersistentIndex(boolean persistentIndex);
 }
