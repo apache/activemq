@@ -33,7 +33,7 @@ public class SimpleDiscoveryAgentFactory extends DiscoveryAgentFactory {
         try {
             
             CompositeData data = URISupport.parseComposite(uri);
-            Map options = URISupport.parseParamters(uri);
+            Map options = data.getParameters();
 
             SimpleDiscoveryAgent rc = new SimpleDiscoveryAgent();
             rc.setGroup(uri.getHost());
