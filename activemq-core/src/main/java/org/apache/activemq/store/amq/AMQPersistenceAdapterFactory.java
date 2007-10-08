@@ -38,7 +38,7 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
     private String brokerName = "localhost";
     private ReferenceStoreAdapter referenceStoreAdapter;
     private boolean syncOnWrite;
-    private boolean persistentIndex;
+    private boolean persistentIndex=true;
 
     /**
      * @return a AMQPersistenceAdapter
