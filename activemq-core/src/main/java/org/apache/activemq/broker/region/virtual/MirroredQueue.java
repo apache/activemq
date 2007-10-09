@@ -29,7 +29,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Creates <a href="http://activemq.org/site/mirrored-queue.html">Mirrored
+ * Creates <a href="http://activemq.org/site/mirrored-queues.html">Mirrored
  * Queue</a> using a prefix and postfix to define the topic name on which to mirror the queue to.
  *
  * @version $Revision$
