@@ -96,14 +96,25 @@ public class ActiveMQMessageAudit {
     }
 
     /**
-     * Checks if this message has beeb seen before
+     * Checks if this message has been seen before
      * 
      * @param message
      * @return true if the message is a duplicate
      */
-    public synchronized boolean isDuplicateMessageReference(final MessageReference message) {
-        boolean answer = false;
+    public boolean isDuplicateMessageReference(final MessageReference message) {
         MessageId id = message.getMessageId();
+        return isDuplicateMessageId(id);
+    }
+    
+    /**
+     * Checks if this messageId has been seen before
+     * 
+     * @param id
+     * @return true if the message is a duplicate
+     */
+    public synchronized boolean isDuplicateMessageId(final MessageId id) {
+        boolean answer = false;
+        
         if (id != null) {
             ProducerId pid = id.getProducerId();
             if (pid != null) {
@@ -119,12 +130,21 @@ public class ActiveMQMessageAudit {
     }
 
     /**
-     * uun mark this messager as being received
+     * mark this message as being received
      * 
      * @param message
      */
-    public synchronized void rollbackMessageReference(final MessageReference message) {
+    public void rollbackMessageReference(final MessageReference message) {
         MessageId id = message.getMessageId();
+        rollbackMessageId(id);
+    }
+    
+    /**
+     * mark this message as being received
+     * 
+     * @param id
+     */
+    public synchronized void rollbackMessageId(final  MessageId id) {
         if (id != null) {
             ProducerId pid = id.getProducerId();
             if (pid != null) {
