@@ -247,6 +247,10 @@
               <packages>org.apache.activemq.blob:org.apache.activemq.jndi</packages>
             </group>
             <group>
+              <title>Enterprise Integration Pattern support via Camel</title>
+              <packages>org.apache.activemq.camel:org.apache.activemq.camel.*</packages>
+            </group>
+            <group>
               <title>Spring support</title>
               <packages>org.apache.activemq.spring:org.apache.activemq.xbean:org.apache.activemq.pool</packages>
             </group>
