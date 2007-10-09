@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.camel.component;
+package org.apache.activemq.camel.converter;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.camel.Converter;
