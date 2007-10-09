@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.camel.component;
 
-import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
 import static org.apache.activemq.camel.component.ActiveMQComponent.activeMQComponent;
+import org.apache.activemq.camel.converter.ActiveMQConverter;
 import org.apache.camel.component.mock.AssertionClause;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.commons.logging.Log;
