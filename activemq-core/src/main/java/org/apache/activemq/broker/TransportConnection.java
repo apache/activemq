@@ -150,45 +150,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     private AtomicInteger protocolVersion = new AtomicInteger(CommandTypes.PROTOCOL_VERSION);
     private DemandForwardingBridge duplexBridge;
     private final TaskRunnerFactory taskRunnerFactory;
-    private TransportConnectionState connectionState;
-
-    static class TransportConnectionState extends org.apache.activemq.state.ConnectionState {
-
-        private ConnectionContext context;
-        private TransportConnection connection;
-        private final Object connectMutex = new Object();
-        private AtomicInteger referenceCounter = new AtomicInteger();
-
-        public TransportConnectionState(ConnectionInfo info, TransportConnection transportConnection) {
-            super(info);
-            connection = transportConnection;
-        }
-
-        public ConnectionContext getContext() {
-            return context;
-        }
-
-        public TransportConnection getConnection() {
-            return connection;
-        }
-
-        public void setContext(ConnectionContext context) {
-            this.context = context;
-        }
-
-        public void setConnection(TransportConnection connection) {
-            this.connection = connection;
-        }
-
-        public int incrementReference() {
-            return referenceCounter.incrementAndGet();
-        }
-
-        public int decrementReference() {
-            return referenceCounter.decrementAndGet();
-        }
-
-    }
+    private TransportConnectionStateRegister connectionStateRegister = new SingleTransportConnectionStateRegister();
 
     /**
      * @param connector
@@ -555,7 +517,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         SessionState ss = cs.getSessionState(sessionId);
         if (ss == null) {
             throw new IllegalStateException(
-                                            "Cannot add a consumer to a session that had not been registered: "
+                                            broker.getBrokerName() + " Cannot add a consumer to a session that had not been registered: "
                                                 + sessionId);
         }
         // Avoid replaying dup commands
@@ -598,6 +560,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
             try {
                 cs.addSession(info);
             } catch (IllegalStateException e) {
+            	e.printStackTrace();
                 broker.removeSession(cs.getContext(), info);
             }
         }
@@ -659,7 +622,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         // If there are 2 concurrent connections for the same connection id,
         // then last one in wins, we need to sync here
         // to figure out the winner.
-        synchronized (state.connectMutex) {
+        synchronized (state.getConnectionMutex()) {
             if (state.getConnection() != this) {
                 LOG.debug("Killing previous stale connection: " + state.getConnection().getRemoteAddress());
                 state.getConnection().stop();
@@ -1306,90 +1269,44 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
 
-    // /////////////////////////////////////////////////////////////////
-    //
-    // The following methods handle the logical connection state. It is possible
-    // multiple logical connections multiplexed over a single physical
-    // connection.
-    // But have not yet exploited the feature from the clients, so for
-    // performance
-    // reasons (to avoid a hash lookup) this class only keeps track of 1
-    // logical connection state.
-    //
-    // A sub class could override these methods to a full multiple logical
-    // connection
-    // support.
-    //
-    // /////////////////////////////////////////////////////////////////
-
-    protected TransportConnectionState registerConnectionState(ConnectionId connectionId,
-                                                               TransportConnectionState state) {
-        TransportConnectionState rc = connectionState;
-        connectionState = state;
-        return rc;
-    }
-
-    protected TransportConnectionState unregisterConnectionState(ConnectionId connectionId) {
-        TransportConnectionState rc = connectionState;
-        connectionState = null;
-        return rc;
-    }
-
-    protected List<TransportConnectionState> listConnectionStates() {
-        List<TransportConnectionState> rc = new ArrayList<TransportConnectionState>();
-        if (connectionState != null) {
-            rc.add(connectionState);
+    protected synchronized TransportConnectionState registerConnectionState(ConnectionId connectionId,TransportConnectionState state) {
+        TransportConnectionState cs = null;
+        if (!connectionStateRegister.isEmpty() && !connectionStateRegister.doesHandleMultipleConnectionStates()){
+        	//swap implementations
+        	TransportConnectionStateRegister newRegister = new MapTransportConnectionStateRegister();
+        	newRegister.intialize(connectionStateRegister);
+        	connectionStateRegister = newRegister;
         }
-        return rc;
+    	cs= connectionStateRegister.registerConnectionState(connectionId, state);
+    	return cs;
     }
 
-    protected TransportConnectionState lookupConnectionState(String connectionId) {
-        TransportConnectionState cs = connectionState;
-        if (cs == null) {
-            throw new IllegalStateException(
-                                            "Cannot lookup a connectionId for a connection that had not been registered: "
-                                                + connectionId);
-        }
-        return cs;
+    protected synchronized TransportConnectionState unregisterConnectionState(ConnectionId connectionId) {
+        return connectionStateRegister.unregisterConnectionState(connectionId);
     }
 
-    protected TransportConnectionState lookupConnectionState(ConsumerId id) {
-        TransportConnectionState cs = connectionState;
-        if (cs == null) {
-            throw new IllegalStateException(
-                                            "Cannot lookup a consumer from a connection that had not been registered: "
-                                                + id.getParentId().getParentId());
-        }
-        return cs;
+    protected synchronized List<TransportConnectionState> listConnectionStates() {
+        return connectionStateRegister.listConnectionStates();
     }
 
-    protected TransportConnectionState lookupConnectionState(ProducerId id) {
-        TransportConnectionState cs = connectionState;
-        if (cs == null) {
-            throw new IllegalStateException(
-                                            "Cannot lookup a producer from a connection that had not been registered: "
-                                                + id.getParentId().getParentId());
-        }
-        return cs;
+    protected synchronized TransportConnectionState lookupConnectionState(String connectionId) {
+    	  return connectionStateRegister.lookupConnectionState(connectionId);
     }
 
-    protected TransportConnectionState lookupConnectionState(SessionId id) {
-        TransportConnectionState cs = connectionState;
-        if (cs == null) {
-            throw new IllegalStateException(
-                                            "Cannot lookup a session from a connection that had not been registered: "
-                                                + id.getParentId());
-        }
-        return cs;
+    protected synchronized TransportConnectionState lookupConnectionState(ConsumerId id) {
+    	  return connectionStateRegister.lookupConnectionState(id);
     }
 
-    protected TransportConnectionState lookupConnectionState(ConnectionId connectionId) {
-        TransportConnectionState cs = connectionState;
-        if (cs == null) {
-            throw new IllegalStateException("Cannot lookup a connection that had not been registered: "
-                                            + connectionId);
-        }
-        return cs;
+    protected synchronized TransportConnectionState lookupConnectionState(ProducerId id) {
+    	  return connectionStateRegister.lookupConnectionState(id);
+    }
+
+    protected synchronized TransportConnectionState lookupConnectionState(SessionId id) {
+        return connectionStateRegister.lookupConnectionState(id);
+    }
+
+    protected synchronized TransportConnectionState lookupConnectionState(ConnectionId connectionId) {
+        return connectionStateRegister.lookupConnectionState(connectionId);
     }
 
 }

@@ -100,6 +100,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
     protected final ConcurrentHashMap<ConsumerId, DemandSubscription> subscriptionMapByRemoteId = new ConcurrentHashMap<ConsumerId, DemandSubscription>();
     protected final BrokerId localBrokerPath[] = new BrokerId[] {null};
     protected CountDownLatch startedLatch = new CountDownLatch(2);
+    protected CountDownLatch localStartedLatch = new CountDownLatch(1);
     protected CountDownLatch remoteBrokerNameKnownLatch = new CountDownLatch(1);
     protected final AtomicBoolean remoteInterupted = new AtomicBoolean(false);
     protected final AtomicBoolean lastConnectSucceeded = new AtomicBoolean(false);
@@ -172,6 +173,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                         localBridgeStarted.set(false);
                         remoteBridgeStarted.set(false);
                         startedLatch = new CountDownLatch(2);
+                        localStartedLatch = new CountDownLatch(1);
                     }
                 }
 
@@ -261,6 +263,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                 LOG.info("Network connection between " + localBroker + " and " + remoteBroker + "(" + remoteBrokerName + ") has been established.");
 
                 startedLatch.countDown();
+                localStartedLatch.countDown();
                 setupStaticDestinations();
             }
         }
@@ -339,6 +342,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                     // stuck waiting for it to start up.
                     startedLatch.countDown();
                     startedLatch.countDown();
+                    localStartedLatch.countDown();
                     ss.throwFirstException();
                 }
             }
@@ -406,6 +410,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                                 localBroker.oneway(command);
                                 break;
                             case ConsumerInfo.DATA_STRUCTURE_TYPE:
+                            	localStartedLatch.await();
                                 if (!addConsumerInfo((ConsumerInfo)command)) {
                                     if (LOG.isDebugEnabled()) {
                                         LOG.debug("Ignoring ConsumerInfo: " + command);
@@ -430,6 +435,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                     }
                 }
             } catch (Throwable e) {
+            	e.printStackTrace();
                 serviceRemoteException(e);
             }
         }
@@ -554,7 +560,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
             try {
                 if (command.isMessageDispatch()) {
                     enqueueCounter.incrementAndGet();
-                    waitStarted();
+                    //localStartedLatch.await();
                     final MessageDispatch md = (MessageDispatch)command;
                     DemandSubscription sub = subscriptionMapByLocalId.get(md.getConsumerId());
                     if (sub != null) {
@@ -628,7 +634,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                         LOG.warn("Unexpected local command: " + command);
                     }
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
+            	e.printStackTrace();
                 serviceLocalException(e);
             }
         }
