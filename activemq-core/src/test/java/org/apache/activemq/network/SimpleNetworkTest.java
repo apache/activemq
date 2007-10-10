@@ -90,18 +90,19 @@ public class SimpleNetworkTest extends TestCase {
         }
     }
 
-    public void xtestFiltering() throws Exception {
+    public void testFiltering() throws Exception {
 
         MessageConsumer includedConsumer = remoteSession.createConsumer(included);
         MessageConsumer excludedConsumer = remoteSession.createConsumer(excluded);
         MessageProducer includedProducer = localSession.createProducer(included);
         MessageProducer excludedProducer = localSession.createProducer(excluded);
-        Thread.sleep(1000);
+        // allow for consumer infos to perculate arround
+        Thread.sleep(2000);
         Message test = localSession.createTextMessage("test");
         includedProducer.send(test);
         excludedProducer.send(test);
-        assertNull(excludedConsumer.receive(500));
-        assertNotNull(includedConsumer.receive(500));
+        assertNull(excludedConsumer.receive(1000));
+        assertNotNull(includedConsumer.receive(1000));
     }
 
     public void xtestConduitBridge() throws Exception {
