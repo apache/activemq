@@ -564,4 +564,12 @@ public final class AsyncDataManager {
         this.lastAppendLocation.set(lastSyncedLocation);
     }
 
+	public boolean isUseNio() {
+		return useNio;
+	}
+
+	public void setUseNio(boolean useNio) {
+		this.useNio = useNio;
+	}
+
 }
