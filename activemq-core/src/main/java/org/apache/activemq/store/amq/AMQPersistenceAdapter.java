@@ -100,6 +100,9 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private BrokerService brokerService;
     private AtomicLong storeSize = new AtomicLong();
     private boolean persistentIndex=true;
+    private boolean useNio = true;
+    private int maxFileLength = AsyncDataManager.DEFAULT_MAX_FILE_LENGTH;
+
 
     public String getBrokerName() {
         return this.brokerName;
@@ -609,6 +612,8 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     protected AsyncDataManager createAsyncDataManager() {
         AsyncDataManager manager = new AsyncDataManager(storeSize);
         manager.setDirectory(new File(directory, "journal"));
+        manager.setMaxFileLength(maxFileLength);
+        manager.setUseNio(useNio);    
         return manager;
     }
 
@@ -706,4 +711,20 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     public long size(){
         return storeSize.get();
     }
+
+	public boolean isUseNio() {
+		return useNio;
+	}
+
+	public void setUseNio(boolean useNio) {
+		this.useNio = useNio;
+	}
+
+	public int getMaxFileLength() {
+		return maxFileLength;
+	}
+
+	public void setMaxFileLength(int maxFileLength) {
+		this.maxFileLength = maxFileLength;
+	}
 }
