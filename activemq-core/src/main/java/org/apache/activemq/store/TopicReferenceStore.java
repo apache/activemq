@@ -31,17 +31,20 @@ import org.apache.activemq.command.SubscriptionInfo;
  */
 public interface TopicReferenceStore extends ReferenceStore, TopicMessageStore {
     /**
-     * Stores the last acknowledged messgeID for the given subscription so that
+     * Removes the last acknowledged messgeID for the given subscription so that
      * we can recover and commence dispatching messages from the last checkpoint
+     * N.B. - all messages previous to this one for a given subscriber
+     * should also be acknowledged
      * 
      * @param context
      * @param clientId
      * @param subscriptionName
      * @param messageId
      * @param subscriptionPersistentId
+     * @return true if there are no more references to the message - or the message is null
      * @throws IOException
      */
-    void acknowledge(ConnectionContext context, String clientId, String subscriptionName, MessageId messageId) throws IOException;
+    boolean acknowledgeReference(ConnectionContext context, String clientId, String subscriptionName, MessageId messageId) throws IOException;
 
     /**
      * @param clientId

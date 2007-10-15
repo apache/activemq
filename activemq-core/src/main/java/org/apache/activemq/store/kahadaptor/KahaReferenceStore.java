@@ -26,6 +26,7 @@ import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.ReferenceStore;
+import org.apache.activemq.store.ReferenceStore.ReferenceData;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
 
@@ -120,7 +121,7 @@ public class KahaReferenceStore implements ReferenceStore {
         }
         return result.getData();
     }
-
+    
     public void addReferenceFileIdsInUse() {
         for (StoreEntry entry = messageContainer.getFirst(); entry != null; entry = messageContainer
             .getNext(entry)) {

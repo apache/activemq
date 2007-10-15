@@ -17,9 +17,10 @@
 package org.apache.activemq.store;
 
 import java.io.IOException;
+
 import javax.jms.JMSException;
+
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 

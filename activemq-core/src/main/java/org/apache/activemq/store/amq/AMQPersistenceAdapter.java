@@ -83,7 +83,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private TaskRunnerFactory taskRunnerFactory;
     private WireFormat wireFormat = new OpenWireFormat();
     private SystemUsage usageManager;
-    private long cleanupInterval = 1000 * 60;
+    private long cleanupInterval = 1000 * 15;
     private long checkpointInterval = 1000 * 10;
     private int maxCheckpointWorkers = 1;
     private int maxCheckpointMessageAddSize = 1024 * 4;

@@ -25,6 +25,7 @@ import java.util.Map;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.JournalTopicAck;
+import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.kaha.impl.async.Location;
@@ -77,7 +78,7 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
 
     /**
      */
-    public void acknowledge(ConnectionContext context, String clientId, String subscriptionName, final MessageId messageId) throws IOException {
+    public void acknowledge(final ConnectionContext context, final String clientId, final String subscriptionName, final MessageId messageId) throws IOException {
         final boolean debug = LOG.isDebugEnabled();
         JournalTopicAck ack = new JournalTopicAck();
         ack.setDestination(destination);
@@ -92,7 +93,7 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
             if (debug) {
                 LOG.debug("Journalled acknowledge for: " + messageId + ", at: " + location);
             }
-            acknowledge(messageId, location, key);
+            acknowledge(context,messageId, location, clientId,subscriptionName);
         } else {
             if (debug) {
                 LOG.debug("Journalled transacted acknowledge for: " + messageId + ", at: " + location);
@@ -109,7 +110,7 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
                     }
                     synchronized (AMQTopicMessageStore.this) {
                         inFlightTxLocations.remove(location);
-                        acknowledge(messageId, location, key);
+                        acknowledge(context,messageId, location, clientId,subscriptionName);
                     }
                 }
 
@@ -142,44 +143,22 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
      * @param messageId
      * @param location
      * @param key
-     * @throws InterruptedIOException
+     * @throws IOException 
      */
-    protected void acknowledge(MessageId messageId, Location location, SubscriptionKey key) throws InterruptedIOException {
+    protected void acknowledge(ConnectionContext context,MessageId messageId, Location location, String clientId,String subscriptionName) throws IOException {
         synchronized (this) {
             lastLocation = location;
-            ackedLastAckLocations.put(key, messageId);
+            if (topicReferenceStore.acknowledgeReference(context, clientId, subscriptionName, messageId)){
+                MessageAck ack = new MessageAck();
+                ack.setLastMessageId(messageId);
+                removeMessage(context, ack);
+            }
         }
         try {
             asyncWriteTask.wakeup();
         } catch (InterruptedException e) {
             throw new InterruptedIOException();
         }
-    }
-
-    @Override
-    protected Location doAsyncWrite() throws IOException {
-        final Map<SubscriptionKey, MessageId> cpAckedLastAckLocations;
-        // swap out the hash maps..
-        synchronized (this) {
-            cpAckedLastAckLocations = this.ackedLastAckLocations;
-            this.ackedLastAckLocations = new HashMap<SubscriptionKey, MessageId>();
-        }
-        Location location = super.doAsyncWrite();
-
-        if (cpAckedLastAckLocations != null) {
-            transactionTemplate.run(new Callback() {
-                public void execute() throws Exception {
-                    // Checkpoint the acknowledged messages.
-                    Iterator<SubscriptionKey> iterator = cpAckedLastAckLocations.keySet().iterator();
-                    while (iterator.hasNext()) {
-                        SubscriptionKey subscriptionKey = iterator.next();
-                        MessageId identity = cpAckedLastAckLocations.get(subscriptionKey);
-                        topicReferenceStore.acknowledge(transactionTemplate.getContext(), subscriptionKey.clientId, subscriptionKey.subscriptionName, identity);
-                    }
-                }
-            });
-        }
-        return location;
     }
 
     /**

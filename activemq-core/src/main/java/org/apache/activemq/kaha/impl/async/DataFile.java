@@ -66,6 +66,10 @@ class DataFile extends LinkedNode implements Comparable<DataFile> {
     public synchronized int decrement() {
         return --referenceCount;
     }
+    
+    public synchronized int getReferenceCount(){
+    	return referenceCount;
+    }
 
     public synchronized boolean isUnused() {
         return referenceCount <= 0;

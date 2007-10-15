@@ -117,12 +117,55 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         return container;
     }
 
-    public synchronized void acknowledge(ConnectionContext context, String clientId, String subscriptionName,
-                                         MessageId messageId) throws IOException {
+    public synchronized boolean acknowledgeReference(ConnectionContext context,
+            String clientId, String subscriptionName, MessageId messageId)
+            throws IOException {
+        boolean removeMessage = false;
         String key = getSubscriptionKey(clientId, subscriptionName);
 
         TopicSubContainer container = subscriberMessages.get(key);
         if (container != null) {
+            ConsumerMessageRef ref = null;
+            if((ref = container.remove(messageId)) != null) {
+                TopicSubAck tsa = ackContainer.get(ref.getAckEntry());
+                if (tsa != null) {
+                    if (tsa.decrementCount() <= 0) {
+                        StoreEntry entry = ref.getAckEntry();
+                        entry = ackContainer.refresh(entry);
+                        ackContainer.remove(entry);
+                        ReferenceRecord rr = messageContainer.get(messageId);
+                        if (rr != null) {
+                            entry = tsa.getMessageEntry();
+                            entry = messageContainer.refresh(entry);
+                            messageContainer.remove(entry);
+                            removeInterest(rr);
+                            removeMessage = true;
+                        }else {
+                            System.err.println("REF RTEC OS NULL!!!");
+                        }
+                    } else {
+                        System.out.println("RED XOUVT IAS " + tsa.getCount());
+                        ackContainer.update(ref.getAckEntry(), tsa);
+                    }
+                }else{
+                    System.err.println("NO TAS!!!");
+                }
+            }else{
+                //no message held
+                removeMessage = true;
+            }
+        }
+        return removeMessage;
+
+    }
+    
+    public synchronized void acknowledge(ConnectionContext context,
+			String clientId, String subscriptionName, MessageId messageId)
+			throws IOException {
+		String key = getSubscriptionKey(clientId, subscriptionName);
+
+		TopicSubContainer container = subscriberMessages.get(key);
+		if (container != null) {
             ConsumerMessageRef ref = container.remove(messageId);
             if (ref != null) {
                 TopicSubAck tsa = ackContainer.get(ref.getAckEntry());
@@ -145,7 +188,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
                 }
             }
         }
-    }
+	}
 
     public synchronized void addSubsciption(SubscriptionInfo info, boolean retroactive) throws IOException {
         String key = getSubscriptionKey(info.getClientId(), info.getSubscriptionName());

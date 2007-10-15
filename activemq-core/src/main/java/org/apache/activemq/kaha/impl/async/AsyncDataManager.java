@@ -270,6 +270,12 @@ public final class AsyncDataManager {
         storeSize.addAndGet(size);
         return currentWriteFile;
     }
+    
+    public synchronized void removeLocation(Location location) throws IOException{
+       
+        DataFile dataFile = getDataFile(location);
+        dataFile.decrement();
+    }
 
     DataFile getDataFile(Location item) throws IOException {
         Integer key = Integer.valueOf(item.getDataFileId());
@@ -346,6 +352,7 @@ public final class AsyncDataManager {
     synchronized void addInterestInFile(DataFile dataFile) {
         if (dataFile != null) {
             dataFile.increment();
+            System.err.println("ADD INTEREST: " + dataFile);
         }
     }
 
@@ -355,6 +362,7 @@ public final class AsyncDataManager {
             DataFile dataFile = (DataFile)fileMap.get(key);
             removeInterestInFile(dataFile);
         }
+       
     }
 
     synchronized void removeInterestInFile(DataFile dataFile) throws IOException {
@@ -362,24 +370,20 @@ public final class AsyncDataManager {
             if (dataFile.decrement() <= 0) {
                 removeDataFile(dataFile);
             }
+            System.err.println("REMOVE INTEREST: " + dataFile);
         }
     }
 
     public synchronized void consolidateDataFilesNotIn(Set<Integer> inUse) throws IOException {
-
-        // Substract and the difference is the set of files that are no longer
-        // needed :)
         Set<Integer> unUsed = new HashSet<Integer>(fileMap.keySet());
         unUsed.removeAll(inUse);
-
         List<DataFile> purgeList = new ArrayList<DataFile>();
         for (Integer key : unUsed) {
             DataFile dataFile = (DataFile)fileMap.get(key);
             purgeList.add(dataFile);
         }
-
         for (DataFile dataFile : purgeList) {
-            removeDataFile(dataFile);
+            forceRemoveDataFile(dataFile);
         }
     }
 
@@ -399,16 +403,20 @@ public final class AsyncDataManager {
 
         // Make sure we don't delete too much data.
         if (dataFile == currentWriteFile || mark == null || dataFile.getDataFileId() >= mark.getDataFileId()) {
-            return;
+            LOG.debug("Won't remove DataFile" + dataFile);
+        	return;
         }
-
+        forceRemoveDataFile(dataFile);
+    }
+    
+    private synchronized void forceRemoveDataFile(DataFile dataFile) throws IOException {
         accessorPool.disposeDataFileAccessors(dataFile);
-
-        fileMap.remove(dataFile.getDataFileId());
+        DataFile removed = fileMap.remove(dataFile.getDataFileId());
         storeSize.addAndGet(-dataFile.getLength());
         dataFile.unlink();
         boolean result = dataFile.delete();
-        LOG.debug("discarding data file " + dataFile + (result ? "successful " : "failed"));
+        LOG.debug("discarding data file " + dataFile
+                + (result ? "successful " : "failed"));
 
     }
 
@@ -519,7 +527,8 @@ public final class AsyncDataManager {
     }
 
     public synchronized Location write(ByteSequence data, boolean sync) throws IOException, IllegalStateException {
-        return appender.storeItem(data, Location.USER_TYPE, sync);
+        Location loc = appender.storeItem(data, Location.USER_TYPE, sync);
+        return loc;
     }
 
     public synchronized Location write(ByteSequence data, byte type, boolean sync) throws IOException, IllegalStateException {
