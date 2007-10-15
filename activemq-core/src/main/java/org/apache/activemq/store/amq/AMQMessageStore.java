@@ -379,14 +379,17 @@ public class AMQMessageStore implements MessageStore {
      */
     public Message getMessage(MessageId identity) throws IOException {
         Location location = getLocation(identity);
-        DataStructure rc = peristenceAdapter.readCommand(location);
-        try {
-            return (Message) rc;
-        } catch (ClassCastException e) {
-            throw new IOException("Could not read message " + identity
-                    + " at location " + location
-                    + ", expected a message, but got: " + rc);
+        if (location != null) {
+            DataStructure rc = peristenceAdapter.readCommand(location);
+            try {
+                return (Message) rc;
+            } catch (ClassCastException e) {
+                throw new IOException("Could not read message " + identity
+                        + " at location " + location
+                        + ", expected a message, but got: " + rc);
+            }
         }
+        return null;
     }
     
     protected Location getLocation(MessageId messageId) throws IOException {
