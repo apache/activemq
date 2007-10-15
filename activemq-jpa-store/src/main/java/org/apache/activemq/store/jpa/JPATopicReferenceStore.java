@@ -249,4 +249,11 @@ public class JPATopicReferenceStore extends JPAReferenceStore implements TopicRe
         subscriberLastMessageMap.remove(id);
     }
 
+    public boolean acknowledgeReference(ConnectionContext context,
+            String clientId, String subscriptionName, MessageId messageId)
+            throws IOException {
+        acknowledge(context, clientId, subscriptionName, messageId);
+        return true;
+    }
+
 }
