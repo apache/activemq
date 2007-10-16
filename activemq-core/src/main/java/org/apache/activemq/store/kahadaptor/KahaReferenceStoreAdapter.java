@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -113,6 +114,11 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
             this.stateMap = null;
         }
         super.stop();
+    }
+    
+    public void commitTransaction(ConnectionContext context) throws IOException {
+        //we don;t need to force on a commit - as the reference store
+        //is rebuilt on a non clean shutdown
     }
 
     public boolean isStoreValid() {
