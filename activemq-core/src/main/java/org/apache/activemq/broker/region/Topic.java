@@ -42,6 +42,8 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerAck;
+import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.store.MessageRecoveryListener;
@@ -279,13 +281,16 @@ public class Topic implements Destination {
     public void send(final ProducerBrokerExchange producerExchange, final Message message) throws Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
 
+        final ProducerInfo producerInfo = producerExchange.getProducerState().getInfo();
+        final boolean sendProducerAck = !message.isResponseRequired() && producerInfo.getWindowSize() > 0 && !context.isInRecoveryMode();
+
         // There is delay between the client sending it and it arriving at the
         // destination.. it may have expired.
         if (broker.isExpired(message)) {
             broker.messageExpired(context, message);
             destinationStatistics.getMessages().decrement();
-            if ((!message.isResponseRequired() || producerExchange.getProducerState().getInfo().getWindowSize() > 0) && !context.isInRecoveryMode()) {
-                ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
+            if (sendProducerAck) {
+                ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
                 context.getConnection().dispatchAsync(ack);
             }
             return;
@@ -299,33 +304,39 @@ public class Topic implements Destination {
             // We can avoid blocking due to low usage if the producer is sending
             // a sync message or
             // if it is using a producer window
-            if (producerExchange.getProducerState().getInfo().getWindowSize() > 0 || message.isResponseRequired()) {
+            if (producerInfo.getWindowSize() > 0 || message.isResponseRequired()) {
                 synchronized (messagesWaitingForSpace) {
                     messagesWaitingForSpace.add(new Runnable() {
                         public void run() {
-
-                            // While waiting for space to free up... the message
-                            // may have expired.
-                            if (broker.isExpired(message)) {
-                                broker.messageExpired(context, message);
-                                destinationStatistics.getMessages().decrement();
-
-                                if (!message.isResponseRequired() && !context.isInRecoveryMode()) {
-                                    ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
-                                    context.getConnection().dispatchAsync(ack);
-                                }
-                                return;
-                            }
-
+                            
                             try {
-                                doMessageSend(producerExchange, message);
+
+                                // While waiting for space to free up... the
+                                // message may have expired.
+                                if (broker.isExpired(message)) {
+                                    broker.messageExpired(context, message);
+                                    destinationStatistics.getMessages().decrement();
+                                } else {
+                                    doMessageSend(producerExchange, message);
+                                }
+
+                                if (sendProducerAck) {
+                                    ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
+                                    context.getConnection().dispatchAsync(ack);
+                                } else {
+                                    Response response = new Response();
+                                    response.setCorrelationId(message.getCommandId());
+                                    context.getConnection().dispatchAsync(response);
+                                }
+
                             } catch (Exception e) {
-                                if (message.isResponseRequired() && !context.isInRecoveryMode()) {
+                                if (!sendProducerAck && !context.isInRecoveryMode()) {
                                     ExceptionResponse response = new ExceptionResponse(e);
                                     response.setCorrelationId(message.getCommandId());
                                     context.getConnection().dispatchAsync(response);
                                 }
                             }
+                            
                         }
                     });
 
@@ -362,6 +373,10 @@ public class Topic implements Destination {
         }
 
         doMessageSend(producerExchange, message);
+        if (sendProducerAck) {
+            ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
+            context.getConnection().dispatchAsync(ack);
+        }
     }
 
     void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
