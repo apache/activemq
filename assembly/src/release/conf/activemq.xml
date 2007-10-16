@@ -78,12 +78,22 @@
         <jdbcPersistenceAdapter dataSource="#postgres-ds"/>
     </persistenceAdapter>
     -->
-
+   
     <!--  Use the following to set the broker memory limit
-    <memoryManager>  
-        <usageManager id="memory-manager" limit="20 MB"/>
-    </memoryManager>
-    -->
+	<systemUsage>
+	            <systemUsage>
+		            <memoryUsage>
+	    	            	<memoryUsage limit="10 mb" percentUsageMinDelta="20"/>
+		            </memoryUsage>
+		            <tempUsage>
+	    	            	<tempUsage limit="100 mb"/>
+		            </tempUsage>
+		            <storeUsage>
+	    	            	<storeUsage limit="1 gb" name="foo"/>
+		            </storeUsage>
+	            </systemUsage>
+	    </systemUsage>
+   -->
     
     <!-- Use the following to configure how ActiveMQ is exposed in JMX
     <managementContext>
