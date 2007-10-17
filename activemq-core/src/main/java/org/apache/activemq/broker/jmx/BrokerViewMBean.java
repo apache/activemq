@@ -26,6 +26,11 @@ public interface BrokerViewMBean extends Service {
      * @return The unique id of the broker.
      */
     String getBrokerId();
+    
+    /**
+     * @return The name of the broker.
+     */
+    String getBrokerName();    
 
     /**
      * The Broker will fush it's caches so that the garbage collector can

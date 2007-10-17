@@ -53,6 +53,10 @@ public class BrokerView implements BrokerViewMBean {
     public String getBrokerId() {
         return broker.getBrokerId().toString();
     }
+    
+    public String getBrokerName() {
+        return broker.getBrokerName();
+    }    
 
     public void gc() throws Exception {
         brokerService.getBroker().gc();
