@@ -67,6 +67,8 @@ public class DestinationCursorConfigTest extends TestSupport {
         PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
         PendingSubscriberMessageStoragePolicy policy = entry.getPendingSubscriberPolicy();
         assertNotNull(policy);
+        assertFalse(entry.isProducerFlowControl());
+        assertTrue(entry.getMemoryLimit()==(1024*1024));
         assertTrue("subscriberPolicy is: " + policy, policy instanceof VMPendingSubscriberMessageStoragePolicy);
     }
 }
