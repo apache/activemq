@@ -51,6 +51,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private PendingQueueMessageStoragePolicy pendingQueuePolicy;
     private PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy;
     private PendingSubscriberMessageStoragePolicy pendingSubscriberPolicy;
+    private boolean producerFlowControl = true;
 
     public void configure(Queue queue, Store tmpStore) {
         if (dispatchPolicy != null) {
@@ -67,6 +68,7 @@ public class PolicyEntry extends DestinationMapEntry {
             PendingMessageCursor messages = pendingQueuePolicy.getQueuePendingMessageCursor(queue, tmpStore);
             queue.setMessages(messages);
         }
+        queue.setProducerFlowControl(isProducerFlowControl());
     }
 
     public void configure(Topic topic) {
@@ -83,6 +85,7 @@ public class PolicyEntry extends DestinationMapEntry {
         if (memoryLimit > 0) {
             topic.getBrokerMemoryUsage().setLimit(memoryLimit);
         }
+        topic.setProducerFlowControl(isProducerFlowControl());
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
@@ -261,6 +264,14 @@ public class PolicyEntry extends DestinationMapEntry {
      */
     public void setPendingSubscriberPolicy(PendingSubscriberMessageStoragePolicy pendingSubscriberPolicy) {
         this.pendingSubscriberPolicy = pendingSubscriberPolicy;
+    }
+
+    public boolean isProducerFlowControl() {
+        return producerFlowControl;
+    }
+
+    public void setProducerFlowControl(boolean producerFlowControl) {
+        this.producerFlowControl = producerFlowControl;
     }
 
 }

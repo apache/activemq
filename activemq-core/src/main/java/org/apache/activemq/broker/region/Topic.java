@@ -64,7 +64,7 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.21 $
  */
-public class Topic implements Destination {
+public class Topic  extends BaseDestination {
     private static final Log LOG = LogFactory.getLog(Topic.class);
     protected final ActiveMQDestination destination;
     protected final CopyOnWriteArrayList<Subscription> consumers = new CopyOnWriteArrayList<Subscription>();
@@ -296,7 +296,7 @@ public class Topic implements Destination {
             return;
         }
 
-        if (context.isProducerFlowControl() && memoryUsage.isFull()) {
+        if (isProducerFlowControl() && context.isProducerFlowControl() && memoryUsage.isFull()) {
             if (systemUsage.isSendFailIfNoSpace()) {
                 throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
             }

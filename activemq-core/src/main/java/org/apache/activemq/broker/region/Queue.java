@@ -72,7 +72,7 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.28 $
  */
-public class Queue implements Destination, Task {
+public class Queue extends BaseDestination implements Task {
 
     final Broker broker;
 
@@ -361,7 +361,7 @@ public class Queue implements Destination, Task {
             }
             return;
         }
-        if (context.isProducerFlowControl() && memoryUsage.isFull()) {
+        if (isProducerFlowControl() && context.isProducerFlowControl() && memoryUsage.isFull()) {
             if (systemUsage.isSendFailIfNoSpace()) {
                 throw new javax.jms.ResourceAllocationException("SystemUsage memory limit reached");
             }
