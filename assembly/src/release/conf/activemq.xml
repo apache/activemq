@@ -33,7 +33,7 @@
       <policyMap>
         <policyEntries>
 
-          <policyEntry topic="FOO.>">
+          <policyEntry topic="FOO.>" producerFlowControl="false" memoryLimit="1mb">
             <dispatchPolicy>
               <strictOrderDispatchPolicy/>
             </dispatchPolicy>
