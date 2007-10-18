@@ -34,7 +34,9 @@ public class VMIndexLinkedListTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         for (int i = 0; i < NUMBER; i++) {
-            testData.add(new IndexItem());
+            IndexItem item = new IndexItem();
+            item.setOffset(i);
+            testData.add(item);
         }
         root = new IndexItem();
         list = new VMIndexLinkedList(root);

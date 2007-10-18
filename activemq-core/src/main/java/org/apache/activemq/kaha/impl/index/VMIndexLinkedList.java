@@ -29,11 +29,11 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
 
     /**
      * Constructs an empty list.
+     * @param header 
      */
     public VMIndexLinkedList(IndexItem header) {
         this.root = header;
-        this.root.next = root;
-        root.prev = root;
+        this.root.next=this.root.prev=this.root;
     }
 
     public synchronized IndexItem getRoot() {
@@ -144,8 +144,7 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#clear()
      */
     public synchronized void clear() {
-        root.next = root;
-        root.prev = root;
+        root.next=root.prev=root;
         size = 0;
     }
 
@@ -258,12 +257,7 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
         if (e == root || e.equals(root)) {
             return;
         }
-        if (e.prev==null){
-        	e.prev=root;
-        }
-        if (e.next==null){
-        	e.next=root;
-        }
+        
         e.prev.next = e.next;
         e.next.prev = e.prev;
         size--;
