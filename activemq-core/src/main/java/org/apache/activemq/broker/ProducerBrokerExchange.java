@@ -32,6 +32,9 @@ public class ProducerBrokerExchange {
     private Region region;
     private ProducerState producerState;
     private boolean mutable = true;
+    
+    public ProducerBrokerExchange() {
+    }
 
     /**
      * @return the connectionContext

@@ -46,6 +46,7 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.filter.MessageEvaluationContext;
+import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.TopicMessageStore;
@@ -613,6 +614,7 @@ public class Topic  extends BaseDestination {
                         ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
                         producerExchange.setMutable(false);
                         producerExchange.setConnectionContext(context);
+                        producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
                         context.getBroker().send(producerExchange, message);
                     } finally {
                         context.setProducerFlowControl(originalFlowControl);
