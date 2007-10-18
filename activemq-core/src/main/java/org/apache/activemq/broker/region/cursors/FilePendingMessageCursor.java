@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.QueueMessageReference;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.kaha.CommandMarshaller;
 import org.apache.activemq.kaha.ListContainer;
@@ -83,8 +84,21 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      * @return true if there are no pending messages
      */
     public synchronized boolean isEmpty() {
-        boolean result =  memoryList.isEmpty() && isDiskListEmpty();
-        return result;
+        if(memoryList.isEmpty() && isDiskListEmpty()){
+            return true;
+        }
+        for (Iterator<MessageReference> iterator = memoryList.iterator(); iterator.hasNext();) {
+            MessageReference node = iterator.next();
+            if (node== QueueMessageReference.NULL_MESSAGE){
+                continue;
+            }
+            if (!node.isDropped()) {
+                return false;
+            }
+            // We can remove dropped references.
+            iterator.remove();
+        }
+        return isDiskListEmpty();
     }
 
     /**
