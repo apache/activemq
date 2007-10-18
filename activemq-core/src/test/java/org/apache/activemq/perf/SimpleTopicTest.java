@@ -37,22 +37,22 @@ public class SimpleTopicTest extends TestCase {
     protected BrokerService broker;
     // protected String
     // bindAddress="tcp://localhost:61616?wireFormat.cacheEnabled=true&wireFormat.tightEncodingEnabled=true&jms.useAsyncSend=false";
-    // protected String bindAddress="tcp://localhost:61616";
-    protected String bindAddress = "tcp://localhost:61616";
-    // protected String bindAddress="vm://localhost?marshal=true";
-    // protected String bindAddress="vm://localhost";
+    //protected String bindAddress="tcp://localhost:61616";
+    //protected String bindAddress = "tcp://localhost:61616";
+    //protected String bindAddress="vm://localhost?marshal=true";
+    protected String bindAddress="vm://localhost";
     protected PerfProducer[] producers;
     protected PerfConsumer[] consumers;
     protected String destinationName = getClass().getName();
     protected int samepleCount = 10;
-    protected long sampleInternal = 1000;
-    protected int numberOfConsumers = 10;
-    protected int numberofProducers = 1;
+    protected long sampleInternal = 10000;
+    protected int numberOfConsumers = 1;
+    protected int numberofProducers = 2;
     protected int playloadSize = 1024;
     protected byte[] array;
     protected ConnectionFactory factory;
     protected Destination destination;
-    protected long consumerSleepDuration;
+    protected long consumerSleepDuration=0;
 
     /**
      * Sets up a test where the producer and consumer have their own connection.
@@ -127,6 +127,7 @@ public class SimpleTopicTest extends TestCase {
     protected void configureBroker(BrokerService answer) throws Exception {
         answer.addConnector(bindAddress);
         answer.setDeleteAllMessagesOnStartup(true);
+        answer.setUseShutdownHook(false);
     }
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
@@ -163,7 +164,7 @@ public class SimpleTopicTest extends TestCase {
             totalCount += rate.getTotalCount();
         }
         int avgRate = totalRate / producers.length;
-        LOG.info("Avg producer rate = " + avgRate + " msg/sec | Total rate = " + totalRate + ", sent = " + totalCount);
+        System.out.println("Avg producer rate = " + avgRate + " msg/sec | Total rate = " + totalRate + ", sent = " + totalCount);
     }
 
     protected void dumpConsumerRate() {
@@ -176,7 +177,7 @@ public class SimpleTopicTest extends TestCase {
         }
         if (consumers != null && consumers.length > 0) {
             int avgRate = totalRate / consumers.length;
-            LOG.info("Avg consumer rate = " + avgRate + " msg/sec | Total rate = " + totalRate + ", received = " + totalCount);
+            System.out.println("Avg consumer rate = " + avgRate + " msg/sec | Total rate = " + totalRate + ", received = " + totalCount);
         }
     }
 }

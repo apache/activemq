@@ -26,13 +26,20 @@ import javax.jms.MessageListener;
 import javax.jms.Session;
 import javax.jms.Topic;
 
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQMessageAudit;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * @version $Revision: 1.3 $
  */
 public class PerfConsumer implements MessageListener {
+    private static final Log LOG = LogFactory.getLog(PerfConsumer.class);
     protected Connection connection;
     protected MessageConsumer consumer;
     protected long sleepDuration;
+    protected ActiveMQMessageAudit audit = new ActiveMQMessageAudit(16 * 1024,20);
 
     protected PerfRate rate = new PerfRate();
 
@@ -71,6 +78,14 @@ public class PerfConsumer implements MessageListener {
 
     public void onMessage(Message msg) {
         rate.increment();
+        try {
+            if (this.audit.isDuplicateMessage(msg)){
+                LOG.error("Duplicate Message!" + msg);
+            }
+        } catch (JMSException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
         try {
             if (sleepDuration != 0) {
                 Thread.sleep(sleepDuration);
