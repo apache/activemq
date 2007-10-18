@@ -40,7 +40,7 @@ import org.apache.commons.logging.LogFactory;
 public class InactiveDurableTopicTest extends TestCase {
     private static final transient Log LOG = LogFactory.getLog(InactiveDurableTopicTest.class);
 
-    private static final int MESSAGE_COUNT = 1000000;
+    private static final int MESSAGE_COUNT = 2000;
     private static final String DEFAULT_PASSWORD = "";
     private static final String USERNAME = "testuser";
     private static final String CLIENTID = "mytestclient";
