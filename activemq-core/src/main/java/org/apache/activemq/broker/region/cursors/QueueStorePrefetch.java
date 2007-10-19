@@ -29,7 +29,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * perist pending messages pending message (messages awaiting disptach to a
+ * persist pending messages pending message (messages awaiting dispatch to a
  * consumer) cursor
  * 
  * @version $Revision: 474985 $
@@ -42,6 +42,7 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements Message
     private final LinkedList<Message> batchList = new LinkedList<Message>();
     private Destination regionDestination;
     private int size;
+    private boolean fillBatchDuplicates;
 
     /**
      * @param topic
@@ -55,13 +56,14 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements Message
 
     }
 
-    public void start() throws Exception {
+    public void start() throws Exception{
+        super.start();
         store.resetBatching();
     }
 
     public void stop() throws Exception {
         store.resetBatching();
-        gc();
+        super.stop();
     }
 
     /**
@@ -127,10 +129,18 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements Message
     public void finished() {
     }
 
-    public boolean recoverMessage(Message message) throws Exception {
-        message.setRegionDestination(regionDestination);
-        message.incrementReferenceCount();
-        batchList.addLast(message);
+    public synchronized boolean recoverMessage(Message message)
+            throws Exception {
+        if (!isDuplicate(message.getMessageId())) {
+            message.setRegionDestination(regionDestination);
+            message.incrementReferenceCount();
+            batchList.addLast(message);
+        } else {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Ignoring batched duplicated from store: " + message);
+            }
+            fillBatchDuplicates=true;
+        }
         return true;
     }
 
@@ -153,8 +163,13 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements Message
     }
 
     // implementation
-    protected void fillBatch() throws Exception {
+    protected synchronized void fillBatch() throws Exception {
         store.recoverNextMessages(maxBatchSize, this);
+        while (fillBatchDuplicates && batchList.isEmpty()) {
+            fillBatchDuplicates=false;
+            store.recoverNextMessages(maxBatchSize, this);
+        }
+        fillBatchDuplicates=false;
     }
 
     public String toString() {

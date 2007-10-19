@@ -23,12 +23,57 @@ package org.apache.activemq.broker.region;
 public abstract class BaseDestination implements Destination {
 
     private boolean producerFlowControl = true;
-
+    private int maxProducersToAudit=1024;
+    private int maxAuditDepth=1;
+    private boolean enableAudit=true;
+    /**
+     * @return the producerFlowControl
+     */
     public boolean isProducerFlowControl() {
-        return this.producerFlowControl;
+        return producerFlowControl;
+    }
+    /**
+     * @param producerFlowControl the producerFlowControl to set
+     */
+    public void setProducerFlowControl(boolean producerFlowControl) {
+        this.producerFlowControl = producerFlowControl;
+    }
+    /**
+     * @return the maxProducersToAudit
+     */
+    public int getMaxProducersToAudit() {
+        return maxProducersToAudit;
+    }
+    /**
+     * @param maxProducersToAudit the maxProducersToAudit to set
+     */
+    public void setMaxProducersToAudit(int maxProducersToAudit) {
+        this.maxProducersToAudit = maxProducersToAudit;
+    }
+    /**
+     * @return the maxAuditDepth
+     */
+    public int getMaxAuditDepth() {
+        return maxAuditDepth;
+    }
+    /**
+     * @param maxAuditDepth the maxAuditDepth to set
+     */
+    public void setMaxAuditDepth(int maxAuditDepth) {
+        this.maxAuditDepth = maxAuditDepth;
+    }
+    /**
+     * @return the enableAudit
+     */
+    public boolean isEnableAudit() {
+        return enableAudit;
+    }
+    /**
+     * @param enableAudit the enableAudit to set
+     */
+    public void setEnableAudit(boolean enableAudit) {
+        this.enableAudit = enableAudit;
     }
 
-    public void setProducerFlowControl(boolean value) {
-        this.producerFlowControl = value;
-    }
+    
 }

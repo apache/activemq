@@ -211,14 +211,14 @@ public class TransactionBroker extends BrokerFilter {
 
                     public void afterRollback() {
                         if (audit != null) {
-                            audit.rollbackMessageReference(message);
+                            audit.rollback(message);
                         }
                     }
                 };
                 transaction.addSynchronization(sync);
             }
         }
-        if (audit == null || !audit.isDuplicateMessageReference(message)) {
+        if (audit == null || !audit.isDuplicate(message)) {
             context.setTransaction(transaction);
             try {
                 next.send(producerExchange, message);

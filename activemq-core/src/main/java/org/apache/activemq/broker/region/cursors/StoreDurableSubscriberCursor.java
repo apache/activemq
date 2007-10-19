@@ -69,6 +69,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     public synchronized void start() throws Exception {
         if (!started) {
             started = true;
+            super.start();
             for (PendingMessageCursor tsp : storePrefetches) {
                 tsp.start();
             }
@@ -78,6 +79,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     public synchronized void stop() throws Exception {
         if (started) {
             started = false;
+            super.stop();
             for (PendingMessageCursor tsp : storePrefetches) {
                 tsp.stop();
             }
@@ -96,6 +98,9 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
             TopicStorePrefetch tsp = new TopicStorePrefetch((Topic)destination, clientId, subscriberName, subscription);
             tsp.setMaxBatchSize(getMaxBatchSize());
             tsp.setSystemUsage(systemUsage);
+            tsp.setEnableAudit(isEnableAudit());
+            tsp.setMaxAuditDepth(getMaxAuditDepth());
+            tsp.setMaxProducersToAudit(getMaxProducersToAudit());
             topics.put(destination, tsp);
             storePrefetches.add(tsp);
             if (started) {
@@ -251,6 +256,36 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         for (Iterator<PendingMessageCursor> i = storePrefetches.iterator(); i.hasNext();) {
             PendingMessageCursor tsp = i.next();
             tsp.setSystemUsage(usageManager);
+        }
+    }
+    
+    public void setMaxProducersToAudit(int maxProducersToAudit) {
+        super.setMaxProducersToAudit(maxProducersToAudit);
+        for (PendingMessageCursor cursor : storePrefetches) {
+            cursor.setMaxAuditDepth(maxAuditDepth);
+        }
+        if (nonPersistent != null) {
+            nonPersistent.setMaxProducersToAudit(maxProducersToAudit);
+        }
+    }
+
+    public void setMaxAuditDepth(int maxAuditDepth) {
+        super.setMaxAuditDepth(maxAuditDepth);
+        for (PendingMessageCursor cursor : storePrefetches) {
+            cursor.setMaxAuditDepth(maxAuditDepth);
+        }
+        if (nonPersistent != null) {
+            nonPersistent.setMaxAuditDepth(maxAuditDepth);
+        }
+    }
+    
+    public synchronized void setEnableAudit(boolean enableAudit) {
+        super.setEnableAudit(enableAudit);
+        for (PendingMessageCursor cursor : storePrefetches) {
+            cursor.setEnableAudit(enableAudit);
+        }
+        if (nonPersistent != null) {
+            nonPersistent.setEnableAudit(enableAudit);
         }
     }
 

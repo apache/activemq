@@ -65,16 +65,18 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements Message
         this.subscriberName = subscriberName;
     }
 
-    public synchronized void start() {
+    public synchronized void start() throws Exception {
         if (!started) {
             started = true;
+            super.start();
             safeFillBatch();
         }
     }
 
-    public synchronized void stop() {
+    public synchronized void stop() throws Exception {
         if (started) {
             started = false;
+            super.stop();
             store.resetBatching(clientId, subscriberName);
             gc();
         }

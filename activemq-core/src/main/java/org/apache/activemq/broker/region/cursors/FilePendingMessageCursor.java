@@ -63,17 +63,18 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         this.store = store;
     }
 
-    public void start() {
+    public void start() throws Exception {
         if (started.compareAndSet(false, true)) {
+            super.start();
             if (systemUsage != null) {
                 systemUsage.getMemoryUsage().addUsageListener(this);
             }
         }
     }
 
-    public void stop() {
+    public void stop() throws Exception {
         if (started.compareAndSet(true, false)) {
-            gc();
+            super.stop();
             if (systemUsage != null) {
                 systemUsage.getMemoryUsage().removeUsageListener(this);
             }
@@ -118,7 +119,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         }
     }
 
-    public synchronized void destroy() {
+    public synchronized void destroy() throws Exception {
         stop();
         for (Iterator<MessageReference> i = memoryList.iterator(); i.hasNext();) {
             Message node = (Message)i.next();
