@@ -29,6 +29,7 @@ public class BitArrayBin {
     private int maxNumberOfArrays;
     private int firstIndex = -1;
     private int firstBin = -1;
+    private long lastBitSet=-1;
 
     /**
      * Create a BitArrayBin to a certain window size (number of messages to
@@ -60,8 +61,25 @@ public class BitArrayBin {
             if (offset >= 0) {
                 answer = ba.set(offset, value);
             }
+            if (value) {
+                lastBitSet=index;
+            }else {
+                lastBitSet=-1;
+            }
         }
         return answer;
+    }
+    
+    /**
+     * Test if in order
+     * @param index
+     * @return true if next message is in order
+     */
+    public boolean isInOrder(long index) {
+        if (lastBitSet== -1) {
+            return true;
+        }
+        return lastBitSet+1==index;
     }
 
     /**

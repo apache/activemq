@@ -44,7 +44,7 @@ class ConnectionAudit {
                         audit = new ActiveMQMessageAudit();
                         destinations.put(destination, audit);
                     }
-                    boolean result = audit.isDuplicateMessageReference(message);
+                    boolean result = audit.isDuplicate(message);
                     return result;
                 }
                 ActiveMQMessageAudit audit = dispatchers.get(dispatcher);
@@ -52,7 +52,7 @@ class ConnectionAudit {
                     audit = new ActiveMQMessageAudit();
                     dispatchers.put(dispatcher, audit);
                 }
-                boolean result = audit.isDuplicateMessageReference(message);
+                boolean result = audit.isDuplicate(message);
                 return result;
             }
         }
@@ -66,12 +66,12 @@ class ConnectionAudit {
                 if (destination.isQueue()) {
                     ActiveMQMessageAudit audit = destinations.get(destination);
                     if (audit != null) {
-                        audit.rollbackMessageReference(message);
+                        audit.rollback(message);
                     }
                 } else {
                     ActiveMQMessageAudit audit = dispatchers.get(dispatcher);
                     if (audit != null) {
-                        audit.rollbackMessageReference(message);
+                        audit.rollback(message);
                     }
                 }
             }

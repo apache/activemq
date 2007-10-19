@@ -142,6 +142,9 @@ public class Queue extends BaseDestination implements Task {
         if (store != null) {
             // Restore the persistent messages.
             messages.setSystemUsage(systemUsage);
+            messages.setEnableAudit(isEnableAudit());
+            messages.setMaxAuditDepth(getMaxAuditDepth());
+            messages.setMaxProducersToAudit(getMaxProducersToAudit());
             if (messages.isRecoveryRequired()) {
                 store.recover(new MessageRecoveryListener() {
 
@@ -442,7 +445,7 @@ public class Queue extends BaseDestination implements Task {
         }
     }
 
-    void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
+    synchronized void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
         message.setRegionDestination(this);
         if (store != null && message.isPersistent()) {
@@ -567,7 +570,7 @@ public class Queue extends BaseDestination implements Task {
         doPageIn(false);
     }
 
-    public void stop() throws Exception {
+    public void stop() throws Exception{
         if (taskRunner != null) {
             taskRunner.shutdown();
         }

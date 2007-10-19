@@ -51,6 +51,9 @@ public class PolicyEntry extends DestinationMapEntry {
     private PendingQueueMessageStoragePolicy pendingQueuePolicy;
     private PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy;
     private PendingSubscriberMessageStoragePolicy pendingSubscriberPolicy;
+    private int maxProducersToAudit=1024;
+    private int maxAuditDepth=1;
+    private boolean enableAudit=true;
     private boolean producerFlowControl = true;
 
     public void configure(Queue queue, Store tmpStore) {
@@ -69,6 +72,9 @@ public class PolicyEntry extends DestinationMapEntry {
             queue.setMessages(messages);
         }
         queue.setProducerFlowControl(isProducerFlowControl());
+        queue.setEnableAudit(isEnableAudit());
+        queue.setMaxAuditDepth(getMaxAuditDepth());
+        queue.setMaxProducersToAudit(getMaxProducersToAudit());
     }
 
     public void configure(Topic topic) {
@@ -86,6 +92,9 @@ public class PolicyEntry extends DestinationMapEntry {
             topic.getBrokerMemoryUsage().setLimit(memoryLimit);
         }
         topic.setProducerFlowControl(isProducerFlowControl());
+        topic.setEnableAudit(isEnableAudit());
+        topic.setMaxAuditDepth(getMaxAuditDepth());
+        topic.setMaxProducersToAudit(getMaxProducersToAudit());
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
@@ -266,12 +275,60 @@ public class PolicyEntry extends DestinationMapEntry {
         this.pendingSubscriberPolicy = pendingSubscriberPolicy;
     }
 
+    /**
+     * @return true if producer flow control enabled
+     */
     public boolean isProducerFlowControl() {
         return producerFlowControl;
     }
 
+    /**
+     * @param producerFlowControl
+     */
     public void setProducerFlowControl(boolean producerFlowControl) {
         this.producerFlowControl = producerFlowControl;
+    }
+
+    /**
+     * @return the maxProducersToAudit
+     */
+    public int getMaxProducersToAudit() {
+        return maxProducersToAudit;
+    }
+
+    /**
+     * @param maxProducersToAudit the maxProducersToAudit to set
+     */
+    public void setMaxProducersToAudit(int maxProducersToAudit) {
+        this.maxProducersToAudit = maxProducersToAudit;
+    }
+
+    /**
+     * @return the maxAuditDepth
+     */
+    public int getMaxAuditDepth() {
+        return maxAuditDepth;
+    }
+
+    /**
+     * @param maxAuditDepth the maxAuditDepth to set
+     */
+    public void setMaxAuditDepth(int maxAuditDepth) {
+        this.maxAuditDepth = maxAuditDepth;
+    }
+
+    /**
+     * @return the enableAudit
+     */
+    public boolean isEnableAudit() {
+        return enableAudit;
+    }
+
+    /**
+     * @param enableAudit the enableAudit to set
+     */
+    public void setEnableAudit(boolean enableAudit) {
+        this.enableAudit = enableAudit;
     }
 
 }

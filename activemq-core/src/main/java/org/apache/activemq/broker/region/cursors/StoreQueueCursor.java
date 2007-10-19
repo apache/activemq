@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.region.cursors;
 
+import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.Message;
@@ -55,10 +56,14 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
 
     public synchronized void start() throws Exception {
         started = true;
+        super.start();
         if (nonPersistent == null) {
             nonPersistent = new FilePendingMessageCursor(queue.getDestination(), tmpStore);
             nonPersistent.setMaxBatchSize(getMaxBatchSize());
             nonPersistent.setSystemUsage(systemUsage);
+            nonPersistent.setEnableAudit(isEnableAudit());
+            nonPersistent.setMaxAuditDepth(getMaxAuditDepth());
+            nonPersistent.setMaxProducersToAudit(getMaxProducersToAudit());
         }
         nonPersistent.start();
         persistent.start();
@@ -67,6 +72,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
 
     public synchronized void stop() throws Exception {
         started = false;
+        super.stop();
         if (nonPersistent != null) {
             nonPersistent.stop();
             nonPersistent.gc();
@@ -191,6 +197,39 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         }
         super.setMaxBatchSize(maxBatchSize);
     }
+    
+    
+    public synchronized void setMaxProducersToAudit(int maxProducersToAudit) {
+        super.setMaxProducersToAudit(maxProducersToAudit);
+        if (persistent != null) {
+            persistent.setMaxProducersToAudit(maxProducersToAudit);
+        }
+        if (nonPersistent != null) {
+            nonPersistent.setMaxProducersToAudit(maxProducersToAudit);
+        }
+    }
+
+    public synchronized void setMaxAuditDepth(int maxAuditDepth) {
+        super.setMaxAuditDepth(maxAuditDepth);
+        if (persistent != null) {
+            persistent.setMaxAuditDepth(maxAuditDepth);
+        }
+        if (nonPersistent != null) {
+            nonPersistent.setMaxAuditDepth(maxAuditDepth);
+        }
+    }
+    
+    public synchronized void setEnableAudit(boolean enableAudit) {
+        super.setEnableAudit(enableAudit);
+        if (persistent != null) {
+            persistent.setEnableAudit(enableAudit);
+        }
+        if (nonPersistent != null) {
+            nonPersistent.setEnableAudit(enableAudit);
+        }
+    }
+
+
 
     public synchronized void gc() {
         if (persistent != null) {
