@@ -268,8 +268,7 @@ public abstract class Usage<T extends Usage> implements Service {
                 }
             
             };
-            listenerNotifier.run();
-           //getExecutor().execute(listenerNotifier);
+            getExecutor().execute(listenerNotifier);
         }
     }
 
