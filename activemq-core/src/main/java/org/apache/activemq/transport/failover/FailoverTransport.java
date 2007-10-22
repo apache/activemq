@@ -253,6 +253,8 @@ public class FailoverTransport implements CompositeTransport {
             started = true;
             if (connectedTransport != null) {
                 stateTracker.restore(connectedTransport);
+            } else {
+                reconnect();
             }
         }
     }
