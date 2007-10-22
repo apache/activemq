@@ -142,4 +142,8 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
     public LinkedList<MessageReference> pageInList(int maxItems) {
         return list;
     }
+    
+    public boolean isTransient() {
+        return true;
+    }
 }
