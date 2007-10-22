@@ -140,15 +140,8 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
                             messageContainer.remove(entry);
                             removeInterest(rr);
                             removeMessage = true;
-                        }else {
-                            System.err.println("REF RTEC OS NULL!!!");
                         }
-                    } else {
-                        System.out.println("RED XOUVT IAS " + tsa.getCount());
-                        ackContainer.update(ref.getAckEntry(), tsa);
                     }
-                }else{
-                    System.err.println("NO TAS!!!");
                 }
             }else{
                 //no message held
