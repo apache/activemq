@@ -241,6 +241,12 @@ public interface PendingMessageCursor extends Service {
      * @param enableAudit the enableAudit to set
      */
     public void setEnableAudit(boolean enableAudit);
+    
+    /**
+     * @return true if the underlying state of this cursor 
+     * disappears when the broker shuts down
+     */
+    public boolean isTransient();
 
 
 }

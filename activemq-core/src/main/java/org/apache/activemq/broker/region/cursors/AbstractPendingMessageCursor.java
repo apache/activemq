@@ -234,6 +234,10 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
             audit= new ActiveMQMessageAudit(maxAuditDepth,maxProducersToAudit);
         }
     }
+    
+    public boolean isTransient() {
+        return false;
+    }
 
 
     protected synchronized boolean  isDuplicate(MessageId messageId) {

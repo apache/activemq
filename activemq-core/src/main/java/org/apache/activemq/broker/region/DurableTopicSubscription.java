@@ -128,7 +128,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             } else {
                 redeliveredMessages.put(node.getMessageId(), Integer.valueOf(1));
             }
-            if (keepDurableSubsActive) {
+            if (keepDurableSubsActive&& pending.isTransient()) {
                 synchronized (pending) {
                     pending.addMessageFirst(node);
                 }
@@ -137,7 +137,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             }
             iter.remove();
         }
-        if (!keepDurableSubsActive) {
+        if (!keepDurableSubsActive && pending.isTransient()) {
             synchronized (pending) {
                 try {
                     pending.reset();

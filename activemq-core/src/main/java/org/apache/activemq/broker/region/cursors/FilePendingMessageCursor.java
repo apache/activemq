@@ -280,6 +280,10 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
             }
         }
     }
+    
+    public boolean isTransient() {
+        return true;
+    }
 
     protected boolean isSpaceInMemoryList() {
         return hasSpace() && isDiskListEmpty();
