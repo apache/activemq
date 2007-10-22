@@ -47,8 +47,6 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
     public ActiveMQDestination destination;
     public int deliveryMode;
 
-    private String remoteURI = "tcp://localhost:0?wireFormat.tcpNoDelayEnabled=true";
-
     public static Test suite() {
         return suite(FanoutTransportBrokerTest.class);
     }
@@ -59,10 +57,10 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
 
     public void initCombosForTestPublisherFansout() {
         addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});
-        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST")});
+        addCombinationValues("destination", new Object[] {new ActiveMQTopic("TEST")});
     }
 
-    public void xtestPublisherFansout() throws Exception {
+    public void testPublisherFansout() throws Exception {
 
         // Start a normal consumer on the local broker
         StubConnection connection1 = createConnection();
@@ -105,7 +103,7 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
 
     public void initCombosForTestPublisherWaitsForServerToBeUp() {
         addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});
-        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST"), new ActiveMQTopic("TEST")});
+        addCombinationValues("destination", new Object[] {new ActiveMQTopic("TEST")});
     }
 
     public void testPublisherWaitsForServerToBeUp() throws Exception {
@@ -177,20 +175,21 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
 
         // Restart the remote server. State should be re-played and the publish
         // should continue.
-        remoteURI = remoteConnector.getServer().getConnectURI().toString();
+        LOG.info("Restarting Broker");
         restartRemoteBroker();
+        LOG.info("Broker Restarted");
 
         // This should reconnect, and resend
-        assertTrue(publishDone.await(10, TimeUnit.SECONDS));
+        assertTrue(publishDone.await(20, TimeUnit.SECONDS));
 
     }
 
     protected String getLocalURI() {
-        return "tcp://localhost:0?wireFormat.tcpNoDelayEnabled=true";
+        return "tcp://localhost:61616";
     }
 
     protected String getRemoteURI() {
-        return remoteURI;
+        return "tcp://localhost:61617";
     }
 
     protected StubConnection createFanoutConnection() throws Exception {
