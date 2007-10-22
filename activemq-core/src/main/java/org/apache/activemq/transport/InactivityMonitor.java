@@ -154,9 +154,7 @@ public class InactivityMonitor extends TransportFilter {
         if (monitorStarted.get()) {
             stopMonitorThreads();
         }
-        synchronized (readChecker) {
-            transportListener.onException(error);
-        }
+        transportListener.onException(error);
     }
 
     private synchronized void startMonitorThreads() throws IOException {
