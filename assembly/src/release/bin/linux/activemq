@@ -161,8 +161,8 @@ case "$DIST_OS" in
 esac
 
 # Resolve the architecture
-DIST_ARCH=`uname -p | tr [:upper:] [:lower:] | tr -d [:blank:]`
-if [ "$DIST_ARCH" = "unknown" ]
+DIST_ARCH=`uname -p 2>/dev/null | tr [:upper:] [:lower:] | tr -d [:blank:]`
+if [ "$DIST_ARCH" = "unknown" ] || [ "$DIST_ARCH" = "" ]
 then
     DIST_ARCH=`uname -m | tr [:upper:] [:lower:] | tr -d [:blank:]`
 fi
