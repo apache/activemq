@@ -99,20 +99,12 @@ public class BrokerTest extends BrokerTestSupport {
         assertNoMessagesLeft(connection2);
     }
 
-    public void initCombosForTestQueuBrowserWith2Consumers() {
+    public void initCombosForTestQueueBrowserWith2Consumers() {
         addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT),
                                                            Integer.valueOf(DeliveryMode.PERSISTENT)});
     }
 
-    /**
-     * This test is being disabled for now since it is failing. Looks like the
-     * queue browser has changed in trunk. It now seems to not give you message
-     * that have been dispatched to another consumer but not yet acked. Created
-     * JIRA issue: https://issues.apache.org/activemq/browse/AMQ-1268
-     * 
-     * @throws Exception
-     */
-    public void xtestQueueBrowserWith2Consumers() throws Exception {
+    public void testQueueBrowserWith2Consumers() throws Exception {
 
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
 
