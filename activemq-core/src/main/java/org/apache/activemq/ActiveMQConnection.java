@@ -111,7 +111,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     protected boolean dispatchAsync;
     protected boolean alwaysSessionAsync = true;
 
-    private TaskRunnerFactory sessionTaskRunner = new TaskRunnerFactory("ActiveMQ Session Task", ThreadPriorities.INBOUND_CLIENT_SESSION, true, 1000);
+    private TaskRunnerFactory sessionTaskRunner = new TaskRunnerFactory("ActiveMQ Session Task", ThreadPriorities.INBOUND_CLIENT_SESSION, false, 1000);
     private final ThreadPoolExecutor asyncConnectionThread;
 
     // Connection state variables
