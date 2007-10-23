@@ -380,7 +380,15 @@ public class Topic  extends BaseDestination {
         }
     }
 
-    void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
+    /**
+     * do send the message - this needs to be synchronized to ensure messages are stored AND dispatched in 
+     * the right order
+     * @param producerExchange
+     * @param message
+     * @throws IOException
+     * @throws Exception
+     */
+    synchronized void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
         message.setRegionDestination(this);
 
