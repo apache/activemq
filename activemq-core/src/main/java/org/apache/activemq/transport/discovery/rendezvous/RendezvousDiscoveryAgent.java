@@ -234,12 +234,4 @@ public class RendezvousDiscoveryAgent implements DiscoveryAgent, ServiceListener
         // TODO: is there a way to notify the JmDNS that the service failed?
     }
 
-    /**
-     * @param brokerName
-     * @see org.apache.activemq.transport.discovery.DiscoveryAgent#setBrokerName(java.lang.String)
-     */
-    public void setBrokerName(String brokerName) {
-        // implementation of interface
-
-    }
 }

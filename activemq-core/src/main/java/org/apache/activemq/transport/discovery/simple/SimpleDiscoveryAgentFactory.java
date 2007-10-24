@@ -36,7 +36,6 @@ public class SimpleDiscoveryAgentFactory extends DiscoveryAgentFactory {
             Map options = data.getParameters();
 
             SimpleDiscoveryAgent rc = new SimpleDiscoveryAgent();
-            rc.setGroup(uri.getHost());
             IntrospectionSupport.setProperties(rc, options);
             rc.setServices(data.getComponents());
             

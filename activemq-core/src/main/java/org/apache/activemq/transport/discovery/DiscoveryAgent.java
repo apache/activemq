@@ -52,11 +52,5 @@ public interface DiscoveryAgent extends Service {
      * so that other listeners of this DiscoveryAgent can also be made aware of the failure.
      */
     void serviceFailed(DiscoveryEvent event) throws IOException;
-
-    String getGroup();    
-    
-    void setGroup(String group);
-
-    void setBrokerName(String brokerName);
     
 }

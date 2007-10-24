@@ -141,7 +141,6 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
         this.discoveryAgent = discoveryAgent;
         if (discoveryAgent != null) {
             this.discoveryAgent.setDiscoveryListener(this);
-            this.discoveryAgent.setBrokerName(getBrokerName());
         }
     }
 
