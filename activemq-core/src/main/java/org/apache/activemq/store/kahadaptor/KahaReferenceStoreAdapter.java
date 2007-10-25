@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -61,6 +62,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     private ListContainer<SubscriptionInfo> durableSubscribers;
     private boolean storeValid;
     private Store stateStore;
+    private boolean persistentIndex = true;
 
     public KahaReferenceStoreAdapter(AtomicLong size){
         super(size);
@@ -112,6 +114,11 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
             this.stateMap = null;
         }
         super.stop();
+    }
+    
+    public void commitTransaction(ConnectionContext context) throws IOException {
+        //we don;t need to force on a commit - as the reference store
+        //is rebuilt on a non clean shutdown
     }
 
     public boolean isStoreValid() {
@@ -273,6 +280,14 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
             StoreFactory.delete(stateDirectory);
         }
     }
+    
+    public boolean isPersistentIndex() {
+		return persistentIndex;
+	}
+
+	public void setPersistentIndex(boolean persistentIndex) {
+		this.persistentIndex = persistentIndex;
+	}
 
     private Store createStateStore(File directory) {
         File stateDirectory = new File(directory, "state");
@@ -292,4 +307,6 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     protected void removeSubscriberState(SubscriptionInfo info) {
         durableSubscribers.remove(info);
     }
+
+	
 }

@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.QueueMessageReference;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.kaha.CommandMarshaller;
 import org.apache.activemq.kaha.ListContainer;
@@ -62,17 +63,18 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         this.store = store;
     }
 
-    public void start() {
+    public void start() throws Exception {
         if (started.compareAndSet(false, true)) {
+            super.start();
             if (systemUsage != null) {
                 systemUsage.getMemoryUsage().addUsageListener(this);
             }
         }
     }
 
-    public void stop() {
+    public void stop() throws Exception {
         if (started.compareAndSet(true, false)) {
-            gc();
+            super.stop();
             if (systemUsage != null) {
                 systemUsage.getMemoryUsage().removeUsageListener(this);
             }
@@ -83,8 +85,21 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      * @return true if there are no pending messages
      */
     public synchronized boolean isEmpty() {
-        boolean result =  memoryList.isEmpty() && isDiskListEmpty();
-        return result;
+        if(memoryList.isEmpty() && isDiskListEmpty()){
+            return true;
+        }
+        for (Iterator<MessageReference> iterator = memoryList.iterator(); iterator.hasNext();) {
+            MessageReference node = iterator.next();
+            if (node== QueueMessageReference.NULL_MESSAGE){
+                continue;
+            }
+            if (!node.isDropped()) {
+                return false;
+            }
+            // We can remove dropped references.
+            iterator.remove();
+        }
+        return isDiskListEmpty();
     }
 
     /**
@@ -104,7 +119,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         }
     }
 
-    public synchronized void destroy() {
+    public synchronized void destroy() throws Exception {
         stop();
         for (Iterator<MessageReference> i = memoryList.iterator(); i.hasNext();) {
             Message node = (Message)i.next();
@@ -252,7 +267,6 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
 
     public void setSystemUsage(SystemUsage usageManager) {
         super.setSystemUsage(usageManager);
-        usageManager.getMemoryUsage().addUsageListener(this);
     }
 
     public void onUsageChanged(Usage usage, int oldPercentUsage, int newPercentUsage) {
@@ -265,6 +279,10 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                 }
             }
         }
+    }
+    
+    public boolean isTransient() {
+        return true;
     }
 
     protected boolean isSpaceInMemoryList() {

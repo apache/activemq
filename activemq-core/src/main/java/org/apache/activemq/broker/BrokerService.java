@@ -123,7 +123,7 @@ public class BrokerService implements Service {
     private List<ProxyConnector> proxyConnectors = new CopyOnWriteArrayList<ProxyConnector>();
     private List<ObjectName> registeredMBeanNames = new CopyOnWriteArrayList<ObjectName>();
     private List<JmsConnector> jmsConnectors = new CopyOnWriteArrayList<JmsConnector>();
-    private Service[] services;
+    private List<Service> services = new ArrayList<Service>();
     private MasterConnector masterConnector;
     private String masterConnectorURI;
     private transient Thread shutdownHook;
@@ -449,8 +449,7 @@ public class BrokerService implements Service {
         removeShutdownHook();
         ServiceStopper stopper = new ServiceStopper();
         if (services != null) {
-            for (int i = 0; i < services.length; i++) {
-                Service service = services[i];
+            for (Service service: services) {
                 stopper.stop(service);
             }
         }
@@ -647,6 +646,7 @@ public class BrokerService implements Service {
                 systemUsage.getMemoryUsage().setLimit(1024 * 1024 * 64); // Default 64 Meg
                 systemUsage.getTempUsage().setLimit(1024 * 1024 * 1024 * 100); // 10 Gb
                 systemUsage.getStoreUsage().setLimit(1024 * 1024 * 1024 * 100); // 100 GB
+                addService(this.systemUsage);
             }
             return systemUsage;
         } catch (IOException e) {
@@ -656,7 +656,11 @@ public class BrokerService implements Service {
     }
 
     public void setSystemUsage(SystemUsage memoryManager) {
+        if (this.systemUsage != null) {
+            removeService(this.systemUsage);
+        }
         this.systemUsage = memoryManager;
+        addService(this.systemUsage);
     }
 
     /**
@@ -667,6 +671,7 @@ public class BrokerService implements Service {
         if (consumerSystemUsage == null) {
             consumerSystemUsage = new SystemUsage(getSystemUsage(), "Consumer");
             consumerSystemUsage.getMemoryUsage().setUsagePortion(0.5f);
+            addService(consumerSystemUsage);
         }
         return consumerSystemUsage;
     }
@@ -675,7 +680,11 @@ public class BrokerService implements Service {
      * @param consumerUsageManager the consumerUsageManager to set
      */
     public void setConsumerSystemUsage(SystemUsage consumerUsageManager) {
+        if (this.consumerSystemUsage != null) {
+            removeService(this.consumerSystemUsage);
+        }
         this.consumerSystemUsage = consumerUsageManager;
+        addService(this.producerSystemUsage);
     }
 
     /**
@@ -686,6 +695,7 @@ public class BrokerService implements Service {
         if (producerSystemUsage == null) {
             producerSystemUsage = new SystemUsage(getSystemUsage(), "Producer");
             producerSystemUsage.getMemoryUsage().setUsagePortion(0.45f);
+            addService(producerSystemUsage);
         }
         return producerSystemUsage;
     }
@@ -694,7 +704,11 @@ public class BrokerService implements Service {
      * @param producerUsageManager the producerUsageManager to set
      */
     public void setProducerSystemUsage(SystemUsage producerUsageManager) {
+        if (this.producerSystemUsage != null) {
+            removeService(this.producerSystemUsage);
+        }
         this.producerSystemUsage = producerUsageManager;
+        addService(this.producerSystemUsage);
     }
 
     public PersistenceAdapter getPersistenceAdapter() throws IOException {
@@ -782,12 +796,30 @@ public class BrokerService implements Service {
         this.managementContext = managementContext;
     }
 
+    public NetworkConnector getNetworkConnectorByName(String connectorName) {
+        for(NetworkConnector connector : networkConnectors) {
+            if(connector.getName().equals(connectorName)) {
+                return connector;
+            }
+        }
+        return null;
+    }
+
     public String[] getNetworkConnectorURIs() {
         return networkConnectorURIs;
     }
 
     public void setNetworkConnectorURIs(String[] networkConnectorURIs) {
         this.networkConnectorURIs = networkConnectorURIs;
+    }
+
+    public TransportConnector getConnectorByName(String connectorName) {
+        for(TransportConnector connector : transportConnectors) {
+            if(connector.getName().equals(connectorName)) {
+                return connector;
+            }
+        }
+        return null;
     }
 
     public String[] getTransportConnectorURIs() {
@@ -813,7 +845,7 @@ public class BrokerService implements Service {
     }
 
     public Service[] getServices() {
-        return services;
+        return (Service[]) services.toArray();
     }
 
     /**
@@ -821,7 +853,12 @@ public class BrokerService implements Service {
      * {@link MasterConnector}
      */
     public void setServices(Service[] services) {
-        this.services = services;
+        this.services.clear();
+        if (services != null) {
+            for (int i=0; i < services.length;i++) {
+                this.services.add(services[i]);
+            }
+        }
     }
 
     /**
@@ -829,15 +866,11 @@ public class BrokerService implements Service {
      * lifecycle
      */
     public void addService(Service service) {
-        if (services == null) {
-            services = new Service[] {service};
-        } else {
-            int length = services.length;
-            Service[] temp = new Service[length + 1];
-            System.arraycopy(services, 1, temp, 1, length);
-            temp[length] = service;
-            services = temp;
-        }
+        services.add(service);
+    }
+    
+    public void removeService(Service service) {
+        services.remove(service);
     }
 
     public boolean isUseLoggingForShutdownErrors() {
@@ -1658,13 +1691,9 @@ public class BrokerService implements Service {
                 JmsConnector connector = iter.next();
                 connector.start();
             }
-
-            if (services != null) {
-                for (int i = 0; i < services.length; i++) {
-                    Service service = services[i];
-                    configureService(service);
-                    service.start();
-                }
+            for (Service service:services) {
+                configureService(service);
+                service.start();
             }
         }
     }

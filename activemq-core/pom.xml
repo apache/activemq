@@ -247,6 +247,10 @@
               <packages>org.apache.activemq.blob:org.apache.activemq.jndi</packages>
             </group>
             <group>
+              <title>Enterprise Integration Pattern support via Camel</title>
+              <packages>org.apache.activemq.camel:org.apache.activemq.camel.*</packages>
+            </group>
+            <group>
               <title>Spring support</title>
               <packages>org.apache.activemq.spring:org.apache.activemq.xbean:org.apache.activemq.pool</packages>
             </group>
@@ -397,8 +401,8 @@
 
             <!-- The NIO implemenation is not working properly on OS X.. -->
             <exclude>**/nio/**</exclude>
-             <!-- The Duplex Network isn't finished yet. -->
-             <exclude>**/DuplexNetworkTest.*/**</exclude>
+             <!-- A test used for memory profiling only. -->
+             <exclude>**/NetworkConnectionsCleanedupTest.*/**</exclude>
 
             <exclude>**/AMQDeadlockTest3.*</exclude>
           </excludes>

@@ -229,7 +229,6 @@ public class TransportConnector implements Connector {
         getServer().start();
         DiscoveryAgent da = getDiscoveryAgent();
         if (da != null) {
-            da.setBrokerName(getBrokerInfo().getBrokerName());
             da.registerService(getConnectUri().toString());
             da.start();
         }

@@ -48,6 +48,7 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerAck;
+import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
@@ -71,7 +72,7 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.28 $
  */
-public class Queue implements Destination, Task {
+public class Queue extends BaseDestination implements Task {
 
     final Broker broker;
 
@@ -141,6 +142,9 @@ public class Queue implements Destination, Task {
         if (store != null) {
             // Restore the persistent messages.
             messages.setSystemUsage(systemUsage);
+            messages.setEnableAudit(isEnableAudit());
+            messages.setMaxAuditDepth(getMaxAuditDepth());
+            messages.setMaxProducersToAudit(getMaxProducersToAudit());
             if (messages.isRecoveryRequired()) {
                 store.recover(new MessageRecoveryListener() {
 
@@ -349,17 +353,18 @@ public class Queue implements Destination, Task {
         // There is delay between the client sending it and it arriving at the
         // destination.. it may have expired.
 
-        final boolean sendProducerAck = (!message.isResponseRequired() || producerExchange.getProducerState().getInfo().getWindowSize() > 0) && !context.isInRecoveryMode();
+        final ProducerInfo producerInfo = producerExchange.getProducerState().getInfo();
+        final boolean sendProducerAck = !message.isResponseRequired() && producerInfo.getWindowSize() > 0 && !context.isInRecoveryMode();
         if (message.isExpired()) {
             broker.messageExpired(context, message);
             destinationStatistics.getMessages().decrement();
             if (sendProducerAck) {
-                ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
+                ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
                 context.getConnection().dispatchAsync(ack);
             }
             return;
         }
-        if (context.isProducerFlowControl() && memoryUsage.isFull()) {
+        if (isProducerFlowControl() && context.isProducerFlowControl() && memoryUsage.isFull()) {
             if (systemUsage.isSendFailIfNoSpace()) {
                 throw new javax.jms.ResourceAllocationException("SystemUsage memory limit reached");
             }
@@ -367,7 +372,7 @@ public class Queue implements Destination, Task {
             // We can avoid blocking due to low usage if the producer is sending
             // a sync message or
             // if it is using a producer window
-            if (producerExchange.getProducerState().getInfo().getWindowSize() > 0 || message.isResponseRequired()) {
+            if (producerInfo.getWindowSize() > 0 || message.isResponseRequired()) {
                 synchronized (messagesWaitingForSpace) {
                     messagesWaitingForSpace.add(new Runnable() {
                         public void run() {
@@ -384,7 +389,7 @@ public class Queue implements Destination, Task {
                                 }
 
                                 if (sendProducerAck) {
-                                    ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
+                                    ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
                                     context.getConnection().dispatchAsync(ack);
                                 } else {
                                     Response response = new Response();
@@ -435,12 +440,12 @@ public class Queue implements Destination, Task {
         }
         doMessageSend(producerExchange, message);
         if (sendProducerAck) {
-            ProducerAck ack = new ProducerAck(producerExchange.getProducerState().getInfo().getProducerId(), message.getSize());
+            ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
             context.getConnection().dispatchAsync(ack);
         }
     }
 
-    void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
+    synchronized void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
         message.setRegionDestination(this);
         if (store != null && message.isPersistent()) {
@@ -565,7 +570,7 @@ public class Queue implements Destination, Task {
         doPageIn(false);
     }
 
-    public void stop() throws Exception {
+    public void stop() throws Exception{
         if (taskRunner != null) {
             taskRunner.shutdown();
         }

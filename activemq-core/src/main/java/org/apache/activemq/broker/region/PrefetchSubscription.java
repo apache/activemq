@@ -230,6 +230,28 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             if (!callDispatchMatched) {
                 throw new JMSException("Could not correlate acknowledgment with dispatched message: " + ack);
             }
+        } else if (ack.isRedeliveredAck() ) {
+            // Message was re-delivered but it was not yet considered to be a DLQ message.
+            // Acknowledge all dispatched messages up till the message id of the
+            // acknowledgment.
+            boolean inAckRange = false;
+            for (Iterator<MessageReference> iter = dispatched.iterator(); iter.hasNext();) {
+                final MessageReference node = iter.next();
+                MessageId messageId = node.getMessageId();
+                if (ack.getFirstMessageId() == null || ack.getFirstMessageId().equals(messageId)) {
+                    inAckRange = true;
+                }
+                if (inAckRange) {
+                    node.incrementRedeliveryCounter();
+                    if (ack.getLastMessageId().equals(messageId)) {
+                        callDispatchMatched = true;
+                        break;
+                    }
+                }
+            }
+            if (!callDispatchMatched) {
+                throw new JMSException("Could not correlate acknowledgment with dispatched message: " + ack);
+            }
         } else if (ack.isPoisonAck()) {
             // TODO: what if the message is already in a DLQ???
             // Handle the poison ACK case: we need to send the message to a DLQ
@@ -410,6 +432,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         if (message == null) {
             return false;
         }
+                
         // Make sure we can dispatch a message.
         if (canDispatch(node) && !isSlave()) {
             MessageDispatch md = createMessageDispatch(node, message);

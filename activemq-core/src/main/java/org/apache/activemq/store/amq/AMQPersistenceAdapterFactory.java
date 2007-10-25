@@ -17,6 +17,8 @@
 package org.apache.activemq.store.amq;
 
 import java.io.File;
+
+import org.apache.activemq.kaha.impl.async.AsyncDataManager;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.PersistenceAdapterFactory;
 import org.apache.activemq.store.ReferenceStoreAdapter;
@@ -37,6 +39,11 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
     private int journalThreadPriority = Thread.MAX_PRIORITY;
     private String brokerName = "localhost";
     private ReferenceStoreAdapter referenceStoreAdapter;
+    private boolean syncOnWrite;
+    private boolean persistentIndex=true;
+    private boolean useNio = true;
+    private int maxFileLength = AsyncDataManager.DEFAULT_MAX_FILE_LENGTH;
+
 
     /**
      * @return a AMQPersistenceAdapter
@@ -47,7 +54,11 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
         result.setDirectory(getDataDirectory());
         result.setTaskRunnerFactory(getTaskRunnerFactory());
         result.setBrokerName(getBrokerName());
+        result.setSyncOnWrite(isSyncOnWrite());
+        result.setPersistentIndex(isPersistentIndex());
         result.setReferenceStoreAdapter(getReferenceStoreAdapter());
+        result.setUseNio(isUseNio());
+        result.setMaxFileLength(getMaxFileLength());
         return result;
     }
 
@@ -127,4 +138,36 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
     public void setReferenceStoreAdapter(ReferenceStoreAdapter referenceStoreAdapter) {
         this.referenceStoreAdapter = referenceStoreAdapter;
     }
+    
+    public boolean isPersistentIndex() {
+		return persistentIndex;
+	}
+
+	public void setPersistentIndex(boolean persistentIndex) {
+		this.persistentIndex = persistentIndex;
+	}
+
+	public boolean isSyncOnWrite() {
+		return syncOnWrite;
+	}
+
+	public void setSyncOnWrite(boolean syncOnWrite) {
+		this.syncOnWrite = syncOnWrite;
+	}
+
+	public boolean isUseNio() {
+		return useNio;
+	}
+
+	public void setUseNio(boolean useNio) {
+		this.useNio = useNio;
+	}
+
+	public int getMaxFileLength() {
+		return maxFileLength;
+	}
+
+	public void setMaxFileLength(int maxFileLength) {
+		this.maxFileLength = maxFileLength;
+	}
 }

@@ -27,7 +27,7 @@ import org.apache.activemq.util.LRUCache;
 class ConnectionAudit {
 
     private boolean checkForDuplicates;
-    private LinkedHashMap<ActiveMQDestination, ActiveMQMessageAudit> queues = new LRUCache<ActiveMQDestination, ActiveMQMessageAudit>(1000);
+    private LinkedHashMap<ActiveMQDestination, ActiveMQMessageAudit> destinations = new LRUCache<ActiveMQDestination, ActiveMQMessageAudit>(1000);
     private LinkedHashMap<ActiveMQDispatcher, ActiveMQMessageAudit> dispatchers = new LRUCache<ActiveMQDispatcher, ActiveMQMessageAudit>(1000);
 
     synchronized void removeDispatcher(ActiveMQDispatcher dispatcher) {
@@ -39,12 +39,12 @@ class ConnectionAudit {
             ActiveMQDestination destination = message.getDestination();
             if (destination != null) {
                 if (destination.isQueue()) {
-                    ActiveMQMessageAudit audit = queues.get(destination);
+                    ActiveMQMessageAudit audit = destinations.get(destination);
                     if (audit == null) {
                         audit = new ActiveMQMessageAudit();
-                        queues.put(destination, audit);
+                        destinations.put(destination, audit);
                     }
-                    boolean result = audit.isDuplicateMessageReference(message);
+                    boolean result = audit.isDuplicate(message);
                     return result;
                 }
                 ActiveMQMessageAudit audit = dispatchers.get(dispatcher);
@@ -52,7 +52,7 @@ class ConnectionAudit {
                     audit = new ActiveMQMessageAudit();
                     dispatchers.put(dispatcher, audit);
                 }
-                boolean result = audit.isDuplicateMessageReference(message);
+                boolean result = audit.isDuplicate(message);
                 return result;
             }
         }
@@ -64,14 +64,14 @@ class ConnectionAudit {
             ActiveMQDestination destination = message.getDestination();
             if (destination != null) {
                 if (destination.isQueue()) {
-                    ActiveMQMessageAudit audit = queues.get(destination);
+                    ActiveMQMessageAudit audit = destinations.get(destination);
                     if (audit != null) {
-                        audit.rollbackMessageReference(message);
+                        audit.rollback(message);
                     }
                 } else {
                     ActiveMQMessageAudit audit = dispatchers.get(dispatcher);
                     if (audit != null) {
-                        audit.rollbackMessageReference(message);
+                        audit.rollback(message);
                     }
                 }
             }

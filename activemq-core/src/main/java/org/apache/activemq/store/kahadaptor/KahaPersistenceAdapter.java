@@ -49,6 +49,8 @@ import org.apache.activemq.util.IOHelper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import sun.misc.Perf.GetPerfAction;
+
 /**
  * @org.apache.xbean.XBean
  * @version $Revision: 1.4 $
@@ -71,6 +73,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
     private Store theStore;
     private boolean initialized;
     private final AtomicLong storeSize;
+    private boolean persistentIndex = true;
 
     
     public KahaPersistenceAdapter(AtomicLong size) {
@@ -80,6 +83,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
     public KahaPersistenceAdapter() {
         this(new AtomicLong());
     }
+    
     public Set<ActiveMQDestination> getDestinations() {
         Set<ActiveMQDestination> rc = new HashSet<ActiveMQDestination>();
         try {
@@ -244,6 +248,14 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
     public long getMaxDataFileLength() {
         return maxDataFileLength;
     }
+    
+    public boolean isPersistentIndex() {
+		return persistentIndex;
+	}
+
+	public void setPersistentIndex(boolean persistentIndex) {
+		this.persistentIndex = persistentIndex;
+	}
 
     /**
      * @param maxDataFileLength the maxDataFileLength to set
@@ -257,6 +269,7 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
         if (theStore == null) {
             theStore = StoreFactory.open(getStoreDirectory(), "rw",storeSize);
             theStore.setMaxDataFileLength(maxDataFileLength);
+            theStore.setPersistentIndex(isPersistentIndex());
         }
         return theStore;
     }

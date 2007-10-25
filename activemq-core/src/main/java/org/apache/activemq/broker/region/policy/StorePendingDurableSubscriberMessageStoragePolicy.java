@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.region.policy;
 
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.StoreDurableSubscriberCursor;
 import org.apache.activemq.kaha.Store;
@@ -40,7 +41,7 @@ public class StorePendingDurableSubscriberMessageStoragePolicy implements Pendin
      * @param maxBatchSize
      * @return the Pending Message cursor
      */
-    public PendingMessageCursor getSubscriberPendingMessageCursor(String clientId, String name, Store tmpStorage, int maxBatchSize) {
-        return new StoreDurableSubscriberCursor(clientId, name, tmpStorage, maxBatchSize);
+    public PendingMessageCursor getSubscriberPendingMessageCursor(String clientId, String name, Store tmpStorage, int maxBatchSize, Subscription sub) {
+        return new StoreDurableSubscriberCursor(clientId, name, tmpStorage, maxBatchSize, sub);
     }
 }

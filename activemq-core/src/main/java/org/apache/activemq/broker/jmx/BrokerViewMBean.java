@@ -26,6 +26,11 @@ public interface BrokerViewMBean extends Service {
      * @return The unique id of the broker.
      */
     String getBrokerId();
+    
+    /**
+     * @return The name of the broker.
+     */
+    String getBrokerName();    
 
     /**
      * The Broker will fush it's caches so that the garbage collector can
@@ -89,6 +94,14 @@ public interface BrokerViewMBean extends Service {
     ObjectName[] getTemporaryTopicSubscribers();
 
     ObjectName[] getTemporaryQueueSubscribers();
+
+    String addConnector(String discoveryAddress) throws Exception;
+
+    String addNetworkConnector(String discoveryAddress) throws Exception;
+
+    boolean removeConnector(String connectorName) throws Exception;
+
+    boolean removeNetworkConnector(String connectorName) throws Exception;
 
     /**
      * Adds a Topic destination to the broker.

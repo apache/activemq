@@ -104,7 +104,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private final LinkedList<MessageDispatch> deliveredMessages = new LinkedList<MessageDispatch>();
     private int deliveredCounter;
     private int additionalWindowSize;
-    private int rollbackCounter;
     private long redeliveryDelay;
     private int ackCounter;
     private int dispatchedCount;
@@ -627,6 +626,14 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     public void dispose() throws JMSException {
         if (!unconsumedMessages.isClosed()) {
+            
+//            if ( !deliveredMessages.isEmpty() ) {
+//                // We need to let the broker know how many times that message
+//                // was rolled back.
+//                rollbackCounter++;
+//                MessageDispatch lastMd = deliveredMessages.get(0);
+//            }
+
             // Do we have any acks we need to send out before closing?
             // Ack any delivered messages now. (session may still
             // commit/rollback the acks).
@@ -829,7 +836,6 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     public void commit() throws JMSException {
         deliveredMessages.clear();
-        rollbackCounter = 0;
         redeliveryDelay = 0;
     }
 
@@ -851,31 +857,39 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             }
 
             // Only increase the redlivery delay after the first redelivery..
-            if (rollbackCounter > 0) {
+            MessageDispatch lastMd = deliveredMessages.getFirst();
+            if (lastMd.getMessage().getRedeliveryCounter() > 0) {
                 redeliveryDelay = redeliveryPolicy.getRedeliveryDelay(redeliveryDelay);
             }
-            rollbackCounter++;
+
+            for (Iterator iter = deliveredMessages.iterator(); iter.hasNext();) {
+                MessageDispatch md = (MessageDispatch)iter.next();
+                md.getMessage().onMessageRolledBack();
+            }
+
             if (redeliveryPolicy.getMaximumRedeliveries() != RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES
-                && rollbackCounter > redeliveryPolicy.getMaximumRedeliveries()) {
+                && lastMd.getMessage().getRedeliveryCounter() > redeliveryPolicy.getMaximumRedeliveries()) {
                 // We need to NACK the messages so that they get sent to the
                 // DLQ.
                 // Acknowledge the last message.
-                MessageDispatch lastMd = deliveredMessages.get(0);
+                
                 MessageAck ack = new MessageAck(lastMd, MessageAck.POSION_ACK_TYPE, deliveredMessages.size());
                 session.asyncSendPacket(ack);
                 // ensure we don't filter this as a duplicate
                 session.connection.rollbackDuplicate(this, lastMd.getMessage());
                 // Adjust the window size.
                 additionalWindowSize = Math.max(0, additionalWindowSize - deliveredMessages.size());
-                rollbackCounter = 0;
                 redeliveryDelay = 0;
             } else {
+                
+                MessageAck ack = new MessageAck(lastMd, MessageAck.REDELIVERED_ACK_TYPE, deliveredMessages.size());
+                session.asyncSendPacket(ack);
+
                 // stop the delivery of messages.
                 unconsumedMessages.stop();
 
                 for (Iterator iter = deliveredMessages.iterator(); iter.hasNext();) {
                     MessageDispatch md = (MessageDispatch)iter.next();
-                    md.getMessage().onMessageRolledBack();
                     unconsumedMessages.enqueueFirst(md);
                 }
 

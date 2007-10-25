@@ -38,6 +38,7 @@ import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.commons.logging.Log;
@@ -286,6 +287,7 @@ public class AdvisoryBroker extends BrokerFilter {
             final ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
             producerExchange.setConnectionContext(context);
             producerExchange.setMutable(true);
+            producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
             try {
                 context.setProducerFlowControl(false);
                 next.send(producerExchange, advisoryMessage);

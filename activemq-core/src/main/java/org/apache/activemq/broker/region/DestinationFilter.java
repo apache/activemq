@@ -121,4 +121,14 @@ public class DestinationFilter implements Destination {
     public MessageStore getMessageStore() {
         return next.getMessageStore();
     }
+
+    public boolean isProducerFlowControl() {
+        return next.isProducerFlowControl();
+    }
+    
+    public void setProducerFlowControl(boolean value){
+        next.setProducerFlowControl(value);
+    }
+    
+    
 }

@@ -180,7 +180,7 @@ public class AMQMessageStore implements MessageStore {
 
     /**
      */
-    public void removeMessage(ConnectionContext context, final MessageAck ack) throws IOException {
+    public void removeMessage(final ConnectionContext context, final MessageAck ack) throws IOException {
         JournalQueueAck remove = new JournalQueueAck();
         remove.setDestination(destination);
         remove.setMessageAck(ack);
@@ -189,7 +189,7 @@ public class AMQMessageStore implements MessageStore {
             if (debug) {
                 LOG.debug("Journalled message remove for: " + ack.getLastMessageId() + ", at: " + location);
             }
-            removeMessage(ack, location);
+            removeMessage(ack,location);
         } else {
             if (debug) {
                 LOG.debug("Journalled transacted message remove for: " + ack.getLastMessageId() + ", at: " + location);
@@ -206,7 +206,7 @@ public class AMQMessageStore implements MessageStore {
                     }
                     synchronized (AMQMessageStore.this) {
                         inFlightTxLocations.remove(location);
-                        removeMessage(ack, location);
+                        removeMessage(ack,location);
                     }
                 }
 
@@ -240,7 +240,7 @@ public class AMQMessageStore implements MessageStore {
             }
         }
     }
-
+      
     public boolean replayRemoveMessage(ConnectionContext context, MessageAck messageAck) {
         try {
             // Only remove the message if it has not already been removed.
@@ -378,16 +378,31 @@ public class AMQMessageStore implements MessageStore {
      * 
      */
     public Message getMessage(MessageId identity) throws IOException {
+        Location location = getLocation(identity);
+        if (location != null) {
+            DataStructure rc = peristenceAdapter.readCommand(location);
+            try {
+                return (Message) rc;
+            } catch (ClassCastException e) {
+                throw new IOException("Could not read message " + identity
+                        + " at location " + location
+                        + ", expected a message, but got: " + rc);
+            }
+        }
+        return null;
+    }
+    
+    protected Location getLocation(MessageId messageId) throws IOException {
         ReferenceData data = null;
         synchronized (this) {
             // Is it still in flight???
-            data = messages.get(identity);
+            data = messages.get(messageId);
             if (data == null && cpAddedMessageIds != null) {
-                data = cpAddedMessageIds.get(identity);
+                data = cpAddedMessageIds.get(messageId);
             }
         }
         if (data == null) {
-            data = referenceStore.getMessageReference(identity);
+            data = referenceStore.getMessageReference(messageId);
             if (data == null) {
                 return null;
             }
@@ -395,12 +410,7 @@ public class AMQMessageStore implements MessageStore {
         Location location = new Location();
         location.setDataFileId(data.getFileId());
         location.setOffset(data.getOffset());
-        DataStructure rc = peristenceAdapter.readCommand(location);
-        try {
-            return (Message)rc;
-        } catch (ClassCastException e) {
-            throw new IOException("Could not read message " + identity + " at location " + location + ", expected a message, but got: " + rc);
-        }
+        return location;
     }
 
     /**
