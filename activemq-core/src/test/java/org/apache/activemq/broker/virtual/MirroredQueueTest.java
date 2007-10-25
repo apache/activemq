@@ -71,7 +71,6 @@ public class MirroredQueueTest extends EmbeddedBrokerTestSupport {
         messageList.assertMessagesArrived(total);
 
         LOG.info("Received: " + messageList);
-        System.out.println("Received: " + messageList.flushMessages());
     }
 
     protected Destination createConsumeDestination() {

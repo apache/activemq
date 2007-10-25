@@ -41,7 +41,6 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
     private long minConnectTime = 500;
     private DiscoveryListener listener;
     private String services[] = new String[] {};
-    private String group = "DEFAULT";
     private final AtomicBoolean running = new AtomicBoolean(false);
 
     class SimpleDiscoveryEvent extends DiscoveryEvent {
@@ -95,17 +94,6 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
         for (int i = 0; i < services.length; i++) {
             this.services[i] = services[i].toString();
         }
-    }
-
-    public String getGroup() {
-        return group;
-    }
-
-    public void setGroup(String group) {
-        this.group = group;
-    }
-
-    public void setBrokerName(String brokerName) {
     }
 
     public void serviceFailed(DiscoveryEvent devent) throws IOException {

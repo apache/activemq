@@ -81,6 +81,22 @@ public class TopicSubContainer {
         }
         return result;
     }
+    
+    public ConsumerMessageRef removeFirst() {
+		ConsumerMessageRef result = null;
+		if (!listContainer.isEmpty()) {
+			StoreEntry entry = listContainer.getFirst();
+
+			result = (ConsumerMessageRef) listContainer.get(entry);
+			listContainer.remove(entry);
+			if (listContainer != null && batchEntry != null
+					&& (listContainer.isEmpty() || batchEntry.equals(entry))) {
+				reset();
+			}
+
+		}
+		return result;
+	}
 
     public ConsumerMessageRef get(StoreEntry entry) {
         return (ConsumerMessageRef)listContainer.get(entry);

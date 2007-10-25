@@ -17,9 +17,12 @@
 package org.apache.activemq.broker.region.cursors;
 
 import java.util.LinkedList;
+
+import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.usage.SystemUsage;
 
 /**
@@ -32,11 +35,21 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
     protected int memoryUsageHighWaterMark = 90;
     protected int maxBatchSize = 100;
     protected SystemUsage systemUsage;
+    protected int maxProducersToAudit=1024;
+    protected int maxAuditDepth=1;
+    protected boolean enableAudit=true;
+    protected ActiveMQMessageAudit audit;
+    private boolean started=false;
 
-    public void start() throws Exception {
+    public synchronized void start() throws Exception  {
+        if (!started && enableAudit && audit==null) {
+            audit= new ActiveMQMessageAudit(maxAuditDepth,maxProducersToAudit);
+        }
+        started=true;
     }
 
-    public void stop() throws Exception {
+    public synchronized void stop() throws Exception  {
+        started=false;
         gc();
     }
 
@@ -168,4 +181,72 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
     public LinkedList pageInList(int maxItems) {
         throw new RuntimeException("Not supported");
     }
+
+    /**
+     * @return the maxProducersToAudit
+     */
+    public int getMaxProducersToAudit() {
+        return maxProducersToAudit;
+    }
+
+    /**
+     * @param maxProducersToAudit the maxProducersToAudit to set
+     */
+    public synchronized void setMaxProducersToAudit(int maxProducersToAudit) {
+        this.maxProducersToAudit = maxProducersToAudit;
+        if (audit != null) {
+            this.audit.setMaximumNumberOfProducersToTrack(maxProducersToAudit);
+        }
+    }
+
+    /**
+     * @return the maxAuditDepth
+     */
+    public int getMaxAuditDepth() {
+        return this.maxAuditDepth;
+    }
+    
+
+    /**
+     * @param maxAuditDepth the maxAuditDepth to set
+     */
+    public synchronized void setMaxAuditDepth(int maxAuditDepth) {
+        this.maxAuditDepth = maxAuditDepth;
+        if (audit != null) {
+            this.audit.setAuditDepth(maxAuditDepth);
+        }
+    }
+    
+    
+    /**
+     * @return the enableAudit
+     */
+    public boolean isEnableAudit() {
+        return this.enableAudit;
+    }
+
+    /**
+     * @param enableAudit the enableAudit to set
+     */
+    public synchronized void setEnableAudit(boolean enableAudit) {
+        this.enableAudit = enableAudit;
+        if (this.enableAudit && started && audit==null) {
+            audit= new ActiveMQMessageAudit(maxAuditDepth,maxProducersToAudit);
+        }
+    }
+    
+    public boolean isTransient() {
+        return false;
+    }
+
+
+    protected synchronized boolean  isDuplicate(MessageId messageId) {
+        if (!this.enableAudit || this.audit==null) {
+            return false;
+        }
+        return this.audit.isDuplicate(messageId);
+    }
+
+   
+   
 }

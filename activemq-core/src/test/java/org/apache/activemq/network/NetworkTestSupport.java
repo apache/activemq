@@ -151,7 +151,7 @@ public class NetworkTestSupport extends BrokerTestSupport {
         remoteBroker = createRemoteBroker(remotePersistenceAdapter);
         remoteBroker.start();
         String brokerId = remoteBroker.getBrokerName();
-        remoteConnector = new TransportConnector(broker.getBroker(), TransportFactory.bind(brokerId, new URI(getRemoteURI())));
+        remoteConnector = new TransportConnector(remoteBroker.getBroker(), TransportFactory.bind(brokerId, new URI(getRemoteURI())));
         remoteConnector.start();
         BrokerRegistry.getInstance().bind("remotehost", remoteBroker);
     }

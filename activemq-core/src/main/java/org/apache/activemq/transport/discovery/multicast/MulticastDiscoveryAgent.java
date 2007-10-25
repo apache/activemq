@@ -160,7 +160,6 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
     private boolean loopBackMode;
     private Map<String, RemoteBrokerData> brokersByService = new ConcurrentHashMap<String, RemoteBrokerData>();
     private String group = "default";
-    private String brokerName;
     private URI discoveryURI;
     private InetAddress inetAddress;
     private SocketAddress sockAddress;
@@ -197,43 +196,6 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
         this.selfService = name;
         if (started.get()) {
             doAdvertizeSelf();
-        }
-    }
-
-    /**
-     * Get the group used for discovery
-     * 
-     * @return the group
-     */
-    public String getGroup() {
-        return group;
-    }
-
-    /**
-     * Set the group for discovery
-     * 
-     * @param group
-     */
-    public void setGroup(String group) {
-        this.group = group;
-    }
-
-    /**
-     * @return Returns the brokerName.
-     */
-    public String getBrokerName() {
-        return brokerName;
-    }
-
-    /**
-     * @param brokerName The brokerName to set.
-     */
-    public void setBrokerName(String brokerName) {
-        if (brokerName != null) {
-            brokerName = brokerName.replace('.', '-');
-            brokerName = brokerName.replace(':', '-');
-            brokerName = brokerName.replace('%', '-');
-            this.brokerName = brokerName;
         }
     }
 
@@ -298,9 +260,6 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
         if (started.compareAndSet(false, true)) {
             if (group == null || group.length() == 0) {
                 throw new IOException("You must specify a group to discover");
-            }
-            if (brokerName == null || brokerName.length() == 0) {
-                LOG.warn("brokerName not set");
             }
             String type = getType();
             if (!type.endsWith(".")) {
@@ -369,15 +328,11 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
                 if (payload.startsWith(ALIVE)) {
                     String brokerName = getBrokerName(payload.substring(ALIVE.length()));
                     String service = payload.substring(ALIVE.length() + brokerName.length() + 2);
-                    if (!brokerName.equals(this.brokerName)) {
-                        processAlive(brokerName, service);
-                    }
+                    processAlive(brokerName, service);
                 } else {
                     String brokerName = getBrokerName(payload.substring(DEAD.length()));
                     String service = payload.substring(DEAD.length() + brokerName.length() + 2);
-                    if (!brokerName.equals(this.brokerName)) {
-                        processDead(brokerName, service);
-                    }
+                    processDead(service);
                 }
             }
         }
@@ -398,7 +353,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
         if (selfService != null) {
             String payload = getType();
             payload += started.get() ? ALIVE : DEAD;
-            payload += DELIMITER + brokerName + DELIMITER;
+            payload += DELIMITER + "localhost" + DELIMITER;
             payload += selfService;
             try {
                 byte[] data = payload.getBytes();
@@ -439,7 +394,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
         }
     }
 
-    private void processDead(String brokerName, String service) {
+    private void processDead(String service) {
         if (!service.equals(selfService)) {
             RemoteBrokerData data = brokersByService.remove(service);
             if (data != null && !data.isFailed()) {
@@ -453,7 +408,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
         for (Iterator<RemoteBrokerData> i = brokersByService.values().iterator(); i.hasNext();) {
             RemoteBrokerData data = i.next();
             if (data.getLastHeartBeat() < expireTime) {
-                processDead(brokerName, data.service);
+                processDead(data.service);
             }
         }
     }
@@ -551,5 +506,9 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
 
     public void setUseExponentialBackOff(boolean useExponentialBackOff) {
         this.useExponentialBackOff = useExponentialBackOff;
+    }
+
+    public void setGroup(String group) {
+        this.group = group;
     }
 }

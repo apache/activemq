@@ -61,4 +61,8 @@ public interface Destination extends Service {
     String getName();
 
     MessageStore getMessageStore();
+    
+    boolean isProducerFlowControl();
+    
+    void setProducerFlowControl(boolean value);
 }

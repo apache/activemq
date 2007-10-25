@@ -21,6 +21,12 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.Service;
 import org.apache.commons.logging.Log;
@@ -49,6 +55,8 @@ public abstract class Usage<T extends Usage> implements Service {
     private List<T> children = new CopyOnWriteArrayList<T>();
     private final List<Runnable> callbacks = new LinkedList<Runnable>();
     private int pollingTime = 100;
+    private ThreadPoolExecutor executor;
+    private AtomicBoolean started=new AtomicBoolean();
 
     public Usage(T parent, String name, float portion) {
         this.parent = parent;
@@ -233,25 +241,34 @@ public abstract class Usage<T extends Usage> implements Service {
         return (int)((((retrieveUsage() * 100) / limiter.getLimit()) / percentUsageMinDelta) * percentUsageMinDelta);
     }
 
-    private void fireEvent(int oldPercentUsage, int newPercentUsage) {
+    private void fireEvent(final int oldPercentUsage, final int newPercentUsage) {
         if (debug) {
             LOG.debug("Memory usage change.  from: " + oldPercentUsage + ", to: " + newPercentUsage);
         }
-        // Switching from being full to not being full..
-        if (oldPercentUsage >= 100 && newPercentUsage < 100) {
-            synchronized (usageMutex) {
-                usageMutex.notifyAll();
-                for (Iterator<Runnable> iter = new ArrayList<Runnable>(callbacks).iterator(); iter.hasNext();) {
-                    Runnable callback = iter.next();
-                    callback.run();
+        if (started.get()) {
+            // Switching from being full to not being full..
+            if (oldPercentUsage >= 100 && newPercentUsage < 100) {
+                synchronized (usageMutex) {
+                    usageMutex.notifyAll();
+                    for (Iterator<Runnable> iter = new ArrayList<Runnable>(callbacks).iterator(); iter.hasNext();) {
+                        Runnable callback = iter.next();
+                        callback.run();
+                    }
+                    callbacks.clear();
                 }
-                callbacks.clear();
             }
-        }
-        // Let the listeners know
-        for (Iterator<UsageListener> iter = listeners.iterator(); iter.hasNext();) {
-            UsageListener l = iter.next();
-            l.onUsageChanged(this, oldPercentUsage, newPercentUsage);
+            // Let the listeners know on a separate thread
+            Runnable listenerNotifier = new Runnable() {
+            
+                public void run() {
+                    for (Iterator<UsageListener> iter = listeners.iterator(); iter.hasNext();) {
+                        UsageListener l = iter.next();
+                        l.onUsageChanged(Usage.this, oldPercentUsage, newPercentUsage);
+                    }
+                }
+            
+            };
+            getExecutor().execute(listenerNotifier);
         }
     }
 
@@ -264,21 +281,46 @@ public abstract class Usage<T extends Usage> implements Service {
     }
 
     @SuppressWarnings("unchecked")
-    public void start() {
-        if (parent != null) {
-            parent.addChild(this);
+    public synchronized void start() {
+        if (started.compareAndSet(false, true)){
+            if (parent != null) {
+                parent.addChild(this);
+            }
+            for (T t:children) {
+                t.start();
+            }
         }
     }
 
     @SuppressWarnings("unchecked")
-    public void stop() {
-        if (parent != null) {
-            parent.removeChild(this);
+    public synchronized void stop() {
+        if (started.compareAndSet(true, false)){
+            if (parent != null) {
+                parent.removeChild(this);
+            }
+            if (this.executor != null){
+                this.executor.shutdownNow();
+            }
+            //clear down any callbacks
+            synchronized (usageMutex) {
+                usageMutex.notifyAll();
+                for (Iterator<Runnable> iter = new ArrayList<Runnable>(this.callbacks).iterator(); iter.hasNext();) {
+                    Runnable callback = iter.next();
+                    callback.run();
+                }
+                this.callbacks.clear();
+            }
+            for (T t:children) {
+                t.stop();
+            }
         }
     }
 
     private void addChild(T child) {
         children.add(child);
+        if (started.get()) {
+            child.start();
+        }
     }
 
     private void removeChild(T child) {
@@ -356,5 +398,22 @@ public abstract class Usage<T extends Usage> implements Service {
 
     public void setParent(T parent) {
         this.parent = parent;
+    }
+    
+    protected synchronized Executor getExecutor() {
+        if (this.executor == null) {
+            this.executor = new ThreadPoolExecutor(1, 1, 0,
+                    TimeUnit.NANOSECONDS,
+                    new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
+                        public Thread newThread(Runnable runnable) {
+                            Thread thread = new Thread(runnable, getName()
+                                    + " Usage Thread Pool");
+                            thread.setDaemon(true);
+                            return thread;
+                        }
+                    });
+
+        }
+        return this.executor;
     }
 }

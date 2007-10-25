@@ -83,7 +83,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private TaskRunnerFactory taskRunnerFactory;
     private WireFormat wireFormat = new OpenWireFormat();
     private SystemUsage usageManager;
-    private long cleanupInterval = 1000 * 60;
+    private long cleanupInterval = 1000 * 15;
     private long checkpointInterval = 1000 * 10;
     private int maxCheckpointWorkers = 1;
     private int maxCheckpointMessageAddSize = 1024 * 4;
@@ -99,6 +99,10 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private File directory;
     private BrokerService brokerService;
     private AtomicLong storeSize = new AtomicLong();
+    private boolean persistentIndex=true;
+    private boolean useNio = true;
+    private int maxFileLength = AsyncDataManager.DEFAULT_MAX_FILE_LENGTH;
+
 
     public String getBrokerName() {
         return this.brokerName;
@@ -418,6 +422,14 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     public void rollbackTransaction(ConnectionContext context) throws IOException {
         referenceStoreAdapter.rollbackTransaction(context);
     }
+    
+    public boolean isPersistentIndex() {
+		return persistentIndex;
+	}
+
+	public void setPersistentIndex(boolean persistentIndex) {
+		this.persistentIndex = persistentIndex;
+	}
 
     /**
      * @param location
@@ -600,11 +612,14 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     protected AsyncDataManager createAsyncDataManager() {
         AsyncDataManager manager = new AsyncDataManager(storeSize);
         manager.setDirectory(new File(directory, "journal"));
+        manager.setMaxFileLength(maxFileLength);
+        manager.setUseNio(useNio);    
         return manager;
     }
 
     protected KahaReferenceStoreAdapter createReferenceStoreAdapter() throws IOException {
         KahaReferenceStoreAdapter adaptor = new KahaReferenceStoreAdapter(storeSize);
+        adaptor.setPersistentIndex(isPersistentIndex());
         return adaptor;
     }
 
@@ -696,4 +711,20 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     public long size(){
         return storeSize.get();
     }
+
+	public boolean isUseNio() {
+		return useNio;
+	}
+
+	public void setUseNio(boolean useNio) {
+		this.useNio = useNio;
+	}
+
+	public int getMaxFileLength() {
+		return maxFileLength;
+	}
+
+	public void setMaxFileLength(int maxFileLength) {
+		this.maxFileLength = maxFileLength;
+	}
 }

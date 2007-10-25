@@ -49,7 +49,7 @@
 <td>${row.JMSPriority}</td>
 <td>${row.JMSRedelivered}</td>
 <td>${row.JMSReplyTo}</td>
-<td>${row.JMSTimestamp}</td>
+<td><jms:formatTimestamp timestamp="${row.JMSTimestamp}"/></td>
 <td>${row.JMSType}</td>
 <td>
     <a href="deleteMessage.action?JMSDestination=${row.JMSDestination}&messageId=${row.JMSMessageID}">Delete</a>

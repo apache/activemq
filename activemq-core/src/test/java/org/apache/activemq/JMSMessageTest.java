@@ -27,6 +27,7 @@ import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
+import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageEOFException;
 import javax.jms.MessageProducer;

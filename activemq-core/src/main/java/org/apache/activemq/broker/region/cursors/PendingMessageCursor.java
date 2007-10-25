@@ -210,5 +210,43 @@ public interface PendingMessageCursor extends Service {
      * @return a list of paged in messages
      */
     LinkedList pageInList(int maxItems);
+    
+    /**
+     * set the maximum number of producers to track at one time
+     * @param value
+     */
+    void setMaxProducersToAudit(int value);
+    
+    /**
+     * @return the maximum number of producers to audit
+     */
+    int getMaxProducersToAudit();
+    
+    /**
+     * Set the maximum depth of message ids to track
+     * @param depth 
+     */
+    void setMaxAuditDepth(int depth);
+    
+    /**
+     * @return the audit depth
+     */
+    int getMaxAuditDepth();
+    
+    /**
+     * @return the enableAudit
+     */
+    public boolean isEnableAudit();
+    /**
+     * @param enableAudit the enableAudit to set
+     */
+    public void setEnableAudit(boolean enableAudit);
+    
+    /**
+     * @return true if the underlying state of this cursor 
+     * disappears when the broker shuts down
+     */
+    public boolean isTransient();
+
 
 }

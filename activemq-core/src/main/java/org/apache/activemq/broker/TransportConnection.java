@@ -150,45 +150,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     private AtomicInteger protocolVersion = new AtomicInteger(CommandTypes.PROTOCOL_VERSION);
     private DemandForwardingBridge duplexBridge;
     private final TaskRunnerFactory taskRunnerFactory;
-    private TransportConnectionState connectionState;
-
-    static class TransportConnectionState extends org.apache.activemq.state.ConnectionState {
-
-        private ConnectionContext context;
-        private TransportConnection connection;
-        private final Object connectMutex = new Object();
-        private AtomicInteger referenceCounter = new AtomicInteger();
-
-        public TransportConnectionState(ConnectionInfo info, TransportConnection transportConnection) {
-            super(info);
-            connection = transportConnection;
-        }
-
-        public ConnectionContext getContext() {
-            return context;
-        }
-
-        public TransportConnection getConnection() {
-            return connection;
-        }
-
-        public void setContext(ConnectionContext context) {
-            this.context = context;
-        }
-
-        public void setConnection(TransportConnection connection) {
-            this.connection = connection;
-        }
-
-        public int incrementReference() {
-            return referenceCounter.incrementAndGet();
-        }
-
-        public int decrementReference() {
-            return referenceCounter.decrementAndGet();
-        }
-
-    }
+    private TransportConnectionStateRegister connectionStateRegister = new SingleTransportConnectionStateRegister();
 
     /**
      * @param connector
@@ -354,7 +316,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
 
-    public synchronized Response processWireFormat(WireFormatInfo info) throws Exception {
+    public Response processWireFormat(WireFormatInfo info) throws Exception {
         wireFormatInfo = info;
         protocolVersion.set(info.getVersion());
         return null;
@@ -377,7 +339,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
 
-    public synchronized Response processBeginTransaction(TransactionInfo info) throws Exception {
+    public Response processBeginTransaction(TransactionInfo info) throws Exception {
         TransportConnectionState cs = lookupConnectionState(info.getConnectionId());
         context = null;
         if (cs != null) {
@@ -394,14 +356,14 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
 
-    public synchronized Response processEndTransaction(TransactionInfo info) throws Exception {
+    public Response processEndTransaction(TransactionInfo info) throws Exception {
         // No need to do anything. This packet is just sent by the client
         // make sure he is synced with the server as commit command could
         // come from a different connection.
         return null;
     }
 
-    public synchronized Response processPrepareTransaction(TransactionInfo info) throws Exception {
+    public Response processPrepareTransaction(TransactionInfo info) throws Exception {
         TransportConnectionState cs = lookupConnectionState(info.getConnectionId());
         context = null;
         if (cs != null) {
@@ -428,7 +390,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         }
     }
 
-    public synchronized Response processCommitTransactionOnePhase(TransactionInfo info) throws Exception {
+    public Response processCommitTransactionOnePhase(TransactionInfo info) throws Exception {
         TransportConnectionState cs = lookupConnectionState(info.getConnectionId());
         context = cs.getContext();
         cs.removeTransactionState(info.getTransactionId());
@@ -436,7 +398,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
 
-    public synchronized Response processCommitTransactionTwoPhase(TransactionInfo info) throws Exception {
+    public Response processCommitTransactionTwoPhase(TransactionInfo info) throws Exception {
         TransportConnectionState cs = lookupConnectionState(info.getConnectionId());
         context = cs.getContext();
         cs.removeTransactionState(info.getTransactionId());
@@ -444,7 +406,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
 
-    public synchronized Response processRollbackTransaction(TransactionInfo info) throws Exception {
+    public Response processRollbackTransaction(TransactionInfo info) throws Exception {
         TransportConnectionState cs = lookupConnectionState(info.getConnectionId());
         context = cs.getContext();
         cs.removeTransactionState(info.getTransactionId());
@@ -452,14 +414,14 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
 
-    public synchronized Response processForgetTransaction(TransactionInfo info) throws Exception {
+    public Response processForgetTransaction(TransactionInfo info) throws Exception {
         TransportConnectionState cs = lookupConnectionState(info.getConnectionId());
         context = cs.getContext();
         broker.forgetTransaction(context, info.getTransactionId());
         return null;
     }
 
-    public synchronized Response processRecoverTransactions(TransactionInfo info) throws Exception {
+    public Response processRecoverTransactions(TransactionInfo info) throws Exception {
         TransportConnectionState cs = lookupConnectionState(info.getConnectionId());
         context = cs.getContext();
         TransactionId[] preparedTransactions = broker.getPreparedTransactions(context);
@@ -489,7 +451,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
 
-    public synchronized Response processAddDestination(DestinationInfo info) throws Exception {
+    public Response processAddDestination(DestinationInfo info) throws Exception {
         TransportConnectionState cs = lookupConnectionState(info.getConnectionId());
         broker.addDestinationInfo(cs.getContext(), info);
         if (info.getDestination().isTemporary()) {
@@ -498,7 +460,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
 
-    public synchronized Response processRemoveDestination(DestinationInfo info) throws Exception {
+    public Response processRemoveDestination(DestinationInfo info) throws Exception {
         TransportConnectionState cs = lookupConnectionState(info.getConnectionId());
         broker.removeDestinationInfo(cs.getContext(), info);
         if (info.getDestination().isTemporary()) {
@@ -507,7 +469,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
 
-    public synchronized Response processAddProducer(ProducerInfo info) throws Exception {
+    public Response processAddProducer(ProducerInfo info) throws Exception {
         SessionId sessionId = info.getProducerId().getParentId();
         ConnectionId connectionId = sessionId.getParentId();
         TransportConnectionState cs = lookupConnectionState(connectionId);
@@ -529,7 +491,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
 
-    public synchronized Response processRemoveProducer(ProducerId id) throws Exception {
+    public Response processRemoveProducer(ProducerId id) throws Exception {
         SessionId sessionId = id.getParentId();
         ConnectionId connectionId = sessionId.getParentId();
         TransportConnectionState cs = lookupConnectionState(connectionId);
@@ -548,14 +510,14 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
 
-    public synchronized Response processAddConsumer(ConsumerInfo info) throws Exception {
+    public Response processAddConsumer(ConsumerInfo info) throws Exception {
         SessionId sessionId = info.getConsumerId().getParentId();
         ConnectionId connectionId = sessionId.getParentId();
         TransportConnectionState cs = lookupConnectionState(connectionId);
         SessionState ss = cs.getSessionState(sessionId);
         if (ss == null) {
             throw new IllegalStateException(
-                                            "Cannot add a consumer to a session that had not been registered: "
+                                            broker.getBrokerName() + " Cannot add a consumer to a session that had not been registered: "
                                                 + sessionId);
         }
         // Avoid replaying dup commands
@@ -570,7 +532,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
 
-    public synchronized Response processRemoveConsumer(ConsumerId id) throws Exception {
+    public Response processRemoveConsumer(ConsumerId id) throws Exception {
         SessionId sessionId = id.getParentId();
         ConnectionId connectionId = sessionId.getParentId();
         TransportConnectionState cs = lookupConnectionState(connectionId);
@@ -589,7 +551,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
 
-    public synchronized Response processAddSession(SessionInfo info) throws Exception {
+    public Response processAddSession(SessionInfo info) throws Exception {
         ConnectionId connectionId = info.getSessionId().getParentId();
         TransportConnectionState cs = lookupConnectionState(connectionId);
         // Avoid replaying dup commands
@@ -598,13 +560,14 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
             try {
                 cs.addSession(info);
             } catch (IllegalStateException e) {
+            	e.printStackTrace();
                 broker.removeSession(cs.getContext(), info);
             }
         }
         return null;
     }
 
-    public synchronized Response processRemoveSession(SessionId id) throws Exception {
+    public Response processRemoveSession(SessionId id) throws Exception {
         ConnectionId connectionId = id.getParentId();
         TransportConnectionState cs = lookupConnectionState(connectionId);
         SessionState session = cs.getSessionState(id);
@@ -637,6 +600,11 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     }
 
     public Response processAddConnection(ConnectionInfo info) throws Exception {
+        
+        // Older clients should have been defaulting this field to true.. but they were not. 
+        if( wireFormatInfo!=null && wireFormatInfo.getVersion() <= 2 ) {
+            info.setClientMaster(true);
+        }
 
         TransportConnectionState state;
 
@@ -654,7 +622,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         // If there are 2 concurrent connections for the same connection id,
         // then last one in wins, we need to sync here
         // to figure out the winner.
-        synchronized (state.connectMutex) {
+        synchronized (state.getConnectionMutex()) {
             if (state.getConnection() != this) {
                 LOG.debug("Killing previous stale connection: " + state.getConnection().getRemoteAddress());
                 state.getConnection().stop();
@@ -685,7 +653,13 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         state.setContext(context);
         state.setConnection(this);
 
+        try {
         broker.addConnection(context, info);
+        }catch(Exception e){
+        	brokerConnectionStates.remove(info);
+        	LOG.warn("Failed to add Connection",e);
+        	throw e;
+        }
         if (info.isManageable() && broker.isFaultTolerantConfiguration()) {
             // send ConnectionCommand
             ConnectionControl command = new ConnectionControl();
@@ -695,7 +669,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
 
-    public synchronized Response processRemoveConnection(ConnectionId id) {
+    public Response processRemoveConnection(ConnectionId id) {
         TransportConnectionState cs = lookupConnectionState(id);
         // Don't allow things to be added to the connection state while we are
         // shutting down.
@@ -1109,7 +1083,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         this.pendingStop = pendingStop;
     }
 
-    public synchronized Response processBrokerInfo(BrokerInfo info) {
+    public Response processBrokerInfo(BrokerInfo info) {
         if (info.isSlaveBroker()) {
             // stream messages from this broker (the master) to
             // the slave
@@ -1295,90 +1269,44 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         return null;
     }
 
-    // /////////////////////////////////////////////////////////////////
-    //
-    // The following methods handle the logical connection state. It is possible
-    // multiple logical connections multiplexed over a single physical
-    // connection.
-    // But have not yet exploited the feature from the clients, so for
-    // performance
-    // reasons (to avoid a hash lookup) this class only keeps track of 1
-    // logical connection state.
-    //
-    // A sub class could override these methods to a full multiple logical
-    // connection
-    // support.
-    //
-    // /////////////////////////////////////////////////////////////////
-
-    protected TransportConnectionState registerConnectionState(ConnectionId connectionId,
-                                                               TransportConnectionState state) {
-        TransportConnectionState rc = connectionState;
-        connectionState = state;
-        return rc;
-    }
-
-    protected TransportConnectionState unregisterConnectionState(ConnectionId connectionId) {
-        TransportConnectionState rc = connectionState;
-        connectionState = null;
-        return rc;
-    }
-
-    protected List<TransportConnectionState> listConnectionStates() {
-        List<TransportConnectionState> rc = new ArrayList<TransportConnectionState>();
-        if (connectionState != null) {
-            rc.add(connectionState);
+    protected synchronized TransportConnectionState registerConnectionState(ConnectionId connectionId,TransportConnectionState state) {
+        TransportConnectionState cs = null;
+        if (!connectionStateRegister.isEmpty() && !connectionStateRegister.doesHandleMultipleConnectionStates()){
+        	//swap implementations
+        	TransportConnectionStateRegister newRegister = new MapTransportConnectionStateRegister();
+        	newRegister.intialize(connectionStateRegister);
+        	connectionStateRegister = newRegister;
         }
-        return rc;
+    	cs= connectionStateRegister.registerConnectionState(connectionId, state);
+    	return cs;
     }
 
-    protected TransportConnectionState lookupConnectionState(String connectionId) {
-        TransportConnectionState cs = connectionState;
-        if (cs == null) {
-            throw new IllegalStateException(
-                                            "Cannot lookup a connectionId for a connection that had not been registered: "
-                                                + connectionId);
-        }
-        return cs;
+    protected synchronized TransportConnectionState unregisterConnectionState(ConnectionId connectionId) {
+        return connectionStateRegister.unregisterConnectionState(connectionId);
     }
 
-    protected TransportConnectionState lookupConnectionState(ConsumerId id) {
-        TransportConnectionState cs = connectionState;
-        if (cs == null) {
-            throw new IllegalStateException(
-                                            "Cannot lookup a consumer from a connection that had not been registered: "
-                                                + id.getParentId().getParentId());
-        }
-        return cs;
+    protected synchronized List<TransportConnectionState> listConnectionStates() {
+        return connectionStateRegister.listConnectionStates();
     }
 
-    protected TransportConnectionState lookupConnectionState(ProducerId id) {
-        TransportConnectionState cs = connectionState;
-        if (cs == null) {
-            throw new IllegalStateException(
-                                            "Cannot lookup a producer from a connection that had not been registered: "
-                                                + id.getParentId().getParentId());
-        }
-        return cs;
+    protected synchronized TransportConnectionState lookupConnectionState(String connectionId) {
+    	  return connectionStateRegister.lookupConnectionState(connectionId);
     }
 
-    protected TransportConnectionState lookupConnectionState(SessionId id) {
-        TransportConnectionState cs = connectionState;
-        if (cs == null) {
-            throw new IllegalStateException(
-                                            "Cannot lookup a session from a connection that had not been registered: "
-                                                + id.getParentId());
-        }
-        return cs;
+    protected synchronized TransportConnectionState lookupConnectionState(ConsumerId id) {
+    	  return connectionStateRegister.lookupConnectionState(id);
     }
 
-    protected TransportConnectionState lookupConnectionState(ConnectionId connectionId) {
-        TransportConnectionState cs = connectionState;
-        if (cs == null) {
-            throw new IllegalStateException("Cannot lookup a connection that had not been registered: "
-                                            + connectionId);
-        }
-        return cs;
+    protected synchronized TransportConnectionState lookupConnectionState(ProducerId id) {
+    	  return connectionStateRegister.lookupConnectionState(id);
+    }
+
+    protected synchronized TransportConnectionState lookupConnectionState(SessionId id) {
+        return connectionStateRegister.lookupConnectionState(id);
+    }
+
+    protected synchronized TransportConnectionState lookupConnectionState(ConnectionId connectionId) {
+        return connectionStateRegister.lookupConnectionState(connectionId);
     }
 
 }

@@ -29,14 +29,14 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
 
     /**
      * Constructs an empty list.
+     * @param header 
      */
     public VMIndexLinkedList(IndexItem header) {
         this.root = header;
-        this.root.next = root;
-        root.prev = root;
+        this.root.next=this.root.prev=this.root;
     }
 
-    public IndexItem getRoot() {
+    public synchronized IndexItem getRoot() {
         return root;
     }
 
@@ -45,7 +45,7 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#getFirst()
      */
-    public IndexItem getFirst() {
+    public synchronized IndexItem getFirst() {
         if (size == 0) {
             return null;
         }
@@ -57,7 +57,7 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#getLast()
      */
-    public IndexItem getLast() {
+    public synchronized IndexItem getLast() {
         if (size == 0) {
             return null;
         }
@@ -69,7 +69,7 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#removeFirst()
      */
-    public StoreEntry removeFirst() {
+    public synchronized StoreEntry removeFirst() {
         if (size == 0) {
             return null;
         }
@@ -83,7 +83,7 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#removeLast()
      */
-    public Object removeLast() {
+    public synchronized Object removeLast() {
         if (size == 0) {
             return null;
         }
@@ -97,7 +97,7 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#addFirst(org.apache.activemq.kaha.impl.IndexItem)
      */
-    public void addFirst(IndexItem item) {
+    public synchronized void addFirst(IndexItem item) {
         addBefore(item, root.next);
     }
 
@@ -106,7 +106,7 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#addLast(org.apache.activemq.kaha.impl.IndexItem)
      */
-    public void addLast(IndexItem item) {
+    public synchronized void addLast(IndexItem item) {
         addBefore(item, root);
     }
 
@@ -115,7 +115,7 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#size()
      */
-    public int size() {
+    public synchronized int size() {
         return size;
     }
 
@@ -124,7 +124,7 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#isEmpty()
      */
-    public boolean isEmpty() {
+    public synchronized boolean isEmpty() {
         return size == 0;
     }
 
@@ -133,7 +133,7 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#add(org.apache.activemq.kaha.impl.IndexItem)
      */
-    public boolean add(IndexItem item) {
+    public synchronized boolean add(IndexItem item) {
         addBefore(item, root);
         return true;
     }
@@ -143,9 +143,8 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#clear()
      */
-    public void clear() {
-        root.next = root;
-        root.prev = root;
+    public synchronized void clear() {
+        root.next=root.prev=root;
         size = 0;
     }
 
@@ -155,7 +154,7 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#get(int)
      */
-    public IndexItem get(int index) {
+    public synchronized IndexItem get(int index) {
         return entry(index);
     }
 
@@ -165,7 +164,7 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#add(int,
      *      org.apache.activemq.kaha.impl.IndexItem)
      */
-    public void add(int index, IndexItem element) {
+    public synchronized void add(int index, IndexItem element) {
         addBefore(element, index == size ? root : entry(index));
     }
 
@@ -174,7 +173,7 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#remove(int)
      */
-    public Object remove(int index) {
+    public synchronized Object remove(int index) {
         IndexItem e = entry(index);
         remove(e);
         return e;
@@ -206,7 +205,7 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#indexOf(org.apache.activemq.kaha.impl.IndexItem)
      */
-    public int indexOf(StoreEntry o) {
+    public synchronized int indexOf(StoreEntry o) {
         int index = 0;
         for (IndexItem e = root.next; e != root; e = e.next) {
             if (o == e) {
@@ -222,7 +221,7 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#getNextEntry(org.apache.activemq.kaha.impl.IndexItem)
      */
-    public IndexItem getNextEntry(IndexItem entry) {
+    public synchronized IndexItem getNextEntry(IndexItem entry) {
         return entry.next != root ? entry.next : null;
     }
 
@@ -231,7 +230,7 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#getPrevEntry(org.apache.activemq.kaha.impl.IndexItem)
      */
-    public IndexItem getPrevEntry(IndexItem entry) {
+    public synchronized IndexItem getPrevEntry(IndexItem entry) {
         return entry.prev != root ? entry.prev : null;
     }
 
@@ -241,7 +240,7 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#addBefore(org.apache.activemq.kaha.impl.IndexItem,
      *      org.apache.activemq.kaha.impl.IndexItem)
      */
-    public void addBefore(IndexItem insert, IndexItem e) {
+    public synchronized void addBefore(IndexItem insert, IndexItem e) {
         insert.next = e;
         insert.prev = e.prev;
         insert.prev.next = insert;
@@ -254,10 +253,11 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * 
      * @see org.apache.activemq.kaha.impl.IndexLinkedList#remove(org.apache.activemq.kaha.impl.IndexItem)
      */
-    public void remove(IndexItem e) {
-        if (e == root) {
+    public synchronized void remove(IndexItem e) {
+        if (e == root || e.equals(root)) {
             return;
         }
+        
         e.prev.next = e.next;
         e.next.prev = e.prev;
         size--;
@@ -266,7 +266,7 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
     /**
      * @return clone
      */
-    public Object clone() {
+    public synchronized Object clone() {
         IndexLinkedList clone = new VMIndexLinkedList(this.root);
         for (IndexItem e = root.next; e != root; e = e.next) {
             clone.add(e);
@@ -274,7 +274,7 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
         return clone;
     }
 
-    public StoreEntry getEntry(StoreEntry current) {
+    public synchronized StoreEntry getEntry(StoreEntry current) {
         return current;
     }
 
@@ -283,7 +283,7 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
      * 
      * @param current
      */
-    public StoreEntry refreshEntry(StoreEntry current) {
+    public synchronized StoreEntry refreshEntry(StoreEntry current) {
         return current;
     }
 }

@@ -48,7 +48,8 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     public DurableTopicSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, boolean keepDurableSubsActive)
         throws InvalidSelectorException {
-        super(broker, context, info, new StoreDurableSubscriberCursor(context.getClientId(), info.getSubscriptionName(), broker.getTempDataStore(), info.getPrefetchSize()));
+        super(broker, context, info);
+        this.pending = new StoreDurableSubscriberCursor(context.getClientId(), info.getSubscriptionName(), broker.getTempDataStore(), info.getPrefetchSize(), this);
         this.usageManager = usageManager;
         this.keepDurableSubsActive = keepDurableSubsActive;
         subscriptionKey = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
@@ -127,7 +128,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             } else {
                 redeliveredMessages.put(node.getMessageId(), Integer.valueOf(1));
             }
-            if (keepDurableSubsActive) {
+            if (keepDurableSubsActive&& pending.isTransient()) {
                 synchronized (pending) {
                     pending.addMessageFirst(node);
                 }
@@ -136,7 +137,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             }
             iter.remove();
         }
-        if (!keepDurableSubsActive) {
+        if (!keepDurableSubsActive && pending.isTransient()) {
             synchronized (pending) {
                 try {
                     pending.reset();

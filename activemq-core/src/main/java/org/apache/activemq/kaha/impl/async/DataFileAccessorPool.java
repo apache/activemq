@@ -59,9 +59,8 @@ public class DataFileAccessorPool {
             return rc;
         }
 
-        public void closeDataFileReader(DataFileAccessor reader) {
+        public synchronized void closeDataFileReader(DataFileAccessor reader) {
             openCounter--;
-            used = true;
             if (pool.size() >= maxOpenReadersPerFile || disposed) {
                 reader.dispose();
             } else {
@@ -69,15 +68,15 @@ public class DataFileAccessorPool {
             }
         }
 
-        public void clearUsedMark() {
+        public synchronized void clearUsedMark() {
             used = false;
         }
 
-        public boolean isUsed() {
+        public synchronized boolean isUsed() {
             return used;
         }
 
-        public void dispose() {
+        public synchronized void dispose() {
             for (DataFileAccessor reader : pool) {
                 reader.dispose();
             }
@@ -85,7 +84,7 @@ public class DataFileAccessorPool {
             disposed = true;
         }
 
-        public int getOpenCounter() {
+        public synchronized int getOpenCounter() {
             return openCounter;
         }
 

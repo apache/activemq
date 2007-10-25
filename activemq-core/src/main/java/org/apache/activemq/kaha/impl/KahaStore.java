@@ -438,6 +438,14 @@ public class KahaStore implements Store {
             persistentIndex = true;
         }
     }
+    
+    public boolean isPersistentIndex() {
+		return persistentIndex;
+	}
+
+	public void setPersistentIndex(boolean persistentIndex) {
+		this.persistentIndex = persistentIndex;
+	}
 
     public synchronized void initialize() throws IOException {
         if (closed) {

@@ -253,11 +253,14 @@ public class FailoverTransport implements CompositeTransport {
             started = true;
             if (connectedTransport != null) {
                 stateTracker.restore(connectedTransport);
+            } else {
+                reconnect();
             }
         }
     }
 
     public void stop() throws Exception {
+        Transport transportToStop=null;
         synchronized (reconnectMutex) {
             LOG.debug("Stopped.");
             if (!started) {
@@ -267,7 +270,7 @@ public class FailoverTransport implements CompositeTransport {
             disposed = true;
 
             if (connectedTransport != null) {
-                connectedTransport.stop();
+                transportToStop = connectedTransport;
                 connectedTransport = null;
             }
             reconnectMutex.notifyAll();
@@ -276,6 +279,9 @@ public class FailoverTransport implements CompositeTransport {
             sleepMutex.notifyAll();
         }
         reconnectTask.shutdown();
+        if( transportToStop!=null ) {
+            transportToStop.stop();
+        }
     }
 
     public long getInitialReconnectDelay() {

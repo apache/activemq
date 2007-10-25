@@ -76,6 +76,7 @@ public class FanoutTransport implements CompositeTransport {
     private int maxReconnectAttempts;
     private Exception connectionFailure;
     private FanoutTransportHandler primary;
+    private boolean fanOutQueues;
 
     static class RequestCounter {
 
@@ -210,13 +211,18 @@ public class FanoutTransport implements CompositeTransport {
                                 primary = fanoutHandler;
                             }
                             t.setTransportListener(fanoutHandler);
-                            connectedCount++;
                             if (started) {
                                 restoreTransport(fanoutHandler);
                             }
+                            connectedCount++;
                         } catch (Exception e) {
                             LOG.debug("Connect fail to: " + uri + ", reason: " + e);
 
+                            if( fanoutHandler.transport !=null ) {
+                                ServiceSupport.dispose(fanoutHandler.transport);
+                                fanoutHandler.transport=null;
+                            }
+                            
                             if (maxReconnectAttempts > 0 && ++fanoutHandler.connectFailures >= maxReconnectAttempts) {
                                 LOG.error("Failed to connect to transport after: " + fanoutHandler.connectFailures + " attempt(s)");
                                 connectionFailure = e;
@@ -301,6 +307,14 @@ public class FanoutTransport implements CompositeTransport {
         reconnectTask.shutdown();
     }
 
+	public int getMinAckCount() {
+		return minAckCount;
+	}
+
+	public void setMinAckCount(int minAckCount) {
+		this.minAckCount = minAckCount;
+	}    
+    
     public long getInitialReconnectDelay() {
         return initialReconnectDelay;
     }
@@ -338,24 +352,14 @@ public class FanoutTransport implements CompositeTransport {
         try {
             synchronized (reconnectMutex) {
 
-                // If it was a request and it was not being tracked by
-                // the state tracker,
-                // then hold it in the requestMap so that we can replay
-                // it later.
-                boolean fanout = isFanoutCommand(command);
-                if (stateTracker.track(command) == null && command.isResponseRequired()) {
-                    int size = fanout ? minAckCount : 1;
-                    requestMap.put(new Integer(command.getCommandId()), new RequestCounter(command, size));
-                }
-
                 // Wait for transport to be connected.
-                while (connectedCount != minAckCount && !disposed && connectionFailure == null) {
+                while (connectedCount < minAckCount && !disposed && connectionFailure == null) {
                     LOG.debug("Waiting for at least " + minAckCount + " transports to be connected.");
                     reconnectMutex.wait(1000);
                 }
 
                 // Still not fully connected.
-                if (connectedCount != minAckCount) {
+                if (connectedCount < minAckCount) {
 
                     Exception error;
 
@@ -374,6 +378,16 @@ public class FanoutTransport implements CompositeTransport {
                     throw IOExceptionSupport.create(error);
                 }
 
+                // If it was a request and it was not being tracked by
+                // the state tracker,
+                // then hold it in the requestMap so that we can replay
+                // it later.
+                boolean fanout = isFanoutCommand(command);
+                if (stateTracker.track(command) == null && command.isResponseRequired()) {
+                    int size = fanout ? minAckCount : 1;
+                    requestMap.put(new Integer(command.getCommandId()), new RequestCounter(command, size));
+                }
+                
                 // Send the message.
                 if (fanout) {
                     for (Iterator<FanoutTransportHandler> iter = transports.iterator(); iter.hasNext();) {
@@ -410,6 +424,9 @@ public class FanoutTransport implements CompositeTransport {
      */
     private boolean isFanoutCommand(Command command) {
         if (command.isMessage()) {
+            if( fanOutQueues ) {
+                return true;
+            }
             return ((Message)command).getDestination().isTopic();
         }
         if (command.getDataStructureType() == ConsumerInfo.DATA_STRUCTURE_TYPE) {
@@ -543,4 +560,13 @@ public class FanoutTransport implements CompositeTransport {
     public boolean isFaultTolerant() {
         return true;
     }
+
+    public boolean isFanOutQueues() {
+        return fanOutQueues;
+    }
+
+    public void setFanOutQueues(boolean fanOutQueues) {
+        this.fanOutQueues = fanOutQueues;
+    }
+
 }

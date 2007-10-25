@@ -77,7 +77,8 @@ public abstract class CursorSupport extends TestCase {
         consumer = getConsumer(consumerConnection);
         List<Message> consumerList = new ArrayList<Message>();
         for (int i = 0; i < MESSAGE_COUNT; i++) {
-            Message msg = consumer.receive();
+            Message msg = consumer.receive(1000*5);
+            assertNotNull("Message "+i+" was missing.", msg);
             consumerList.add(msg);
         }
         assertEquals(senderList, consumerList);

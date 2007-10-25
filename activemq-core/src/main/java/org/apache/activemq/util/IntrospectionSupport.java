@@ -203,7 +203,7 @@ public final class IntrospectionSupport {
         for (int i = 0; i < methods.length; i++) {
             Method method = methods[i];
             Class params[] = method.getParameterTypes();
-            if (method.getName().equals(name) && params.length == 1 && isSettableType(params[0])) {
+            if (method.getName().equals(name) && params.length == 1 ) {
                 return method;
             }
         }

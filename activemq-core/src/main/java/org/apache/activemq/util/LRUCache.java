@@ -32,10 +32,10 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
     protected int maxCacheSize = 10000;
 
     /**
-     * Default constructorfor an LRU Cache The default capacity is 10000
+     * Default constructor for an LRU Cache The default capacity is 10000
      */
     public LRUCache() {
-        super(1000, 0.75f, true);
+        this(0,10000, 0.75f, true);
     }
 
     /**
@@ -44,7 +44,7 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
      * @param maximumCacheSize
      */
     public LRUCache(int maximumCacheSize) {
-        this(maximumCacheSize, maximumCacheSize, 0.75f, true);
+        this(0, maximumCacheSize, 0.75f, true);
     }
 
     /**
@@ -57,7 +57,7 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
      * @param accessOrder the ordering mode - <tt>true</tt> for access-order,
      *                <tt>false</tt> for insertion-order.
      * @throws IllegalArgumentException if the initial capacity is negative or
-     *                 the load factor is nonpositive.
+     *                 the load factor is non-positive.
      */
 
     public LRUCache(int initialCapacity, int maximumCacheSize, float loadFactor, boolean accessOrder) {
@@ -79,7 +79,7 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
         this.maxCacheSize = maxCacheSize;
     }
 
-    protected boolean removeEldestEntry(Map.Entry entry) {
+    protected boolean removeEldestEntry(Map.Entry<K,V> eldest) {
         return size() > maxCacheSize;
     }
 }

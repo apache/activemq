@@ -261,7 +261,16 @@
       <groupId>org.mortbay.jetty</groupId>
       <artifactId>jsp-2.1</artifactId>
     </dependency>
-                           
+                     
+    <dependency>
+      <groupId>stax</groupId>
+      <artifactId>stax-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>stax</groupId>
+      <artifactId>stax</artifactId>
+    </dependency>
+      
 
     <dependency>
       <groupId>junit</groupId>

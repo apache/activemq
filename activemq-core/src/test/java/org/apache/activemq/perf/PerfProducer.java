@@ -17,6 +17,7 @@
 package org.apache.activemq.perf;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
@@ -62,7 +63,9 @@ public class PerfProducer implements Runnable {
             rate.reset();
             running = true;
             connection.start();
-            new Thread(this).start();
+            Thread t = new  Thread(this);
+            t.setName("Producer");
+            t.start();
         }
     }
 
@@ -70,7 +73,7 @@ public class PerfProducer implements Runnable {
         synchronized (this) {
             running = false;
         }
-        stopped.await();
+        stopped.await(1,TimeUnit.SECONDS);
         connection.stop();
     }
 

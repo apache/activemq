@@ -40,7 +40,7 @@ public class RollbacksWhileConsumingLargeQueueTest extends EmbeddedBrokerTestSup
 
     private static final transient Log LOG = LogFactory.getLog(RollbacksWhileConsumingLargeQueueTest.class);
 
-    protected int numberOfMessagesOnQueue = 6500;
+    protected int numberOfMessagesOnQueue = 650;
     private Connection connection;
     private AtomicInteger deliveryCounter = new AtomicInteger(0);
     private AtomicInteger ackCounter = new AtomicInteger(0);

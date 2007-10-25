@@ -26,6 +26,7 @@ import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.ReferenceStore;
+import org.apache.activemq.store.ReferenceStore.ReferenceData;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
 
@@ -64,11 +65,8 @@ public class KahaReferenceStore implements ReferenceStore {
 
     protected final boolean recoverReference(MessageRecoveryListener listener, ReferenceRecord record)
         throws Exception {
-        if (listener.hasSpace()) {
-            listener.recoverMessageReference(new MessageId(record.getMessageId()));
-            return true;
-        }
-        return false;
+        listener.recoverMessageReference(new MessageId(record.getMessageId()));
+        return listener.hasSpace();
     }
 
     public synchronized void recover(MessageRecoveryListener listener) throws Exception {
@@ -123,7 +121,7 @@ public class KahaReferenceStore implements ReferenceStore {
         }
         return result.getData();
     }
-
+    
     public void addReferenceFileIdsInUse() {
         for (StoreEntry entry = messageContainer.getFirst(); entry != null; entry = messageContainer
             .getNext(entry)) {

@@ -111,7 +111,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     protected boolean dispatchAsync;
     protected boolean alwaysSessionAsync = true;
 
-    private TaskRunnerFactory sessionTaskRunner = new TaskRunnerFactory("ActiveMQ Session Task", ThreadPriorities.INBOUND_CLIENT_SESSION, true, 1000);
+    private TaskRunnerFactory sessionTaskRunner = new TaskRunnerFactory("ActiveMQ Session Task", ThreadPriorities.INBOUND_CLIENT_SESSION, false, 1000);
     private final ThreadPoolExecutor asyncConnectionThread;
 
     // Connection state variables
@@ -593,6 +593,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                     // then we may need to call
                     // factory.onConnectionClose(this);
                     sessionTaskRunner.shutdown();
+                    
+                    if (asyncConnectionThread != null){
+                    	asyncConnectionThread.shutdown();
+                    }
 
                     closed.set(true);
                     closing.set(false);
@@ -1652,20 +1656,23 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     public void onException(final IOException error) {
-        onAsyncException(error);
-        asyncConnectionThread.execute(new Runnable() {
-            public void run() {
-                transportFailed(error);
-                ServiceSupport.dispose(ActiveMQConnection.this.transport);
-                brokerInfoReceived.countDown();
+		onAsyncException(error);
+		if (!closing.get() && !closed.get()) {
+			asyncConnectionThread.execute(new Runnable() {
+				public void run() {
+					transportFailed(error);
+					ServiceSupport.dispose(ActiveMQConnection.this.transport);
+					brokerInfoReceived.countDown();
 
-                for (Iterator<TransportListener> iter = transportListeners.iterator(); iter.hasNext();) {
-                    TransportListener listener = iter.next();
-                    listener.onException(error);
-                }
-            }
-        });
-    }
+					for (Iterator<TransportListener> iter = transportListeners
+							.iterator(); iter.hasNext();) {
+						TransportListener listener = iter.next();
+						listener.onException(error);
+					}
+				}
+			});
+		}
+	}
 
     public void transportInterupted() {
         for (Iterator<ActiveMQSession> i = this.sessions.iterator(); i.hasNext();) {
