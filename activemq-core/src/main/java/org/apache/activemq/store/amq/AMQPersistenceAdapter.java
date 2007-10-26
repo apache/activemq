@@ -351,8 +351,11 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
      */
     public void cleanup() {
         try {
+            // Capture the lastDataFile so that we don't delete any data files
+            // after this one.
+            Integer lastDataFile = asyncDataManager.getCurrentDataFileId();            
             Set<Integer> inUse = referenceStoreAdapter.getReferenceFileIdsInUse();
-            asyncDataManager.consolidateDataFilesNotIn(inUse);
+            asyncDataManager.consolidateDataFilesNotIn(inUse, lastDataFile);
         } catch (IOException e) {
             LOG.error("Could not cleanup data files: " + e, e);
         }
