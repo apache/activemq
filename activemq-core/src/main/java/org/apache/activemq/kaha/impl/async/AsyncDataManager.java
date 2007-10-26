@@ -374,9 +374,20 @@ public final class AsyncDataManager {
         }
     }
 
-    public synchronized void consolidateDataFilesNotIn(Set<Integer> inUse) throws IOException {
+    public synchronized void consolidateDataFilesNotIn(Set<Integer> inUse, Integer lastDataFile) throws IOException {
         Set<Integer> unUsed = new HashSet<Integer>(fileMap.keySet());
         unUsed.removeAll(inUse);
+        
+        // Don't purge any data files past lastDataFile
+        if( lastDataFile!=null ) {
+            for (Iterator iterator = unUsed.iterator(); iterator.hasNext();) {
+                DataFile dataFile = (DataFile)iterator.next();
+                if( dataFile.getDataFileId() >= lastDataFile ) {
+                    iterator.remove();
+                }
+            }
+        }
+        
         List<DataFile> purgeList = new ArrayList<DataFile>();
         for (Integer key : unUsed) {
             DataFile dataFile = (DataFile)fileMap.get(key);
@@ -581,4 +592,10 @@ public final class AsyncDataManager {
 		this.useNio = useNio;
 	}
 
+	
+    synchronized public Integer getCurrentDataFileId() {
+        if( currentWriteFile==null )
+            return null;
+        return currentWriteFile.getDataFileId();
+    }
 }
