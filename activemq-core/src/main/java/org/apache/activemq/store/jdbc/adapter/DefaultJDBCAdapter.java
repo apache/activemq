@@ -325,7 +325,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
 
     public void doSetLastAck(TransactionContext c, ActiveMQDestination destination, String clientId,
                              String subscriptionName, long seq) throws SQLException, IOException {
-        PreparedStatement s = c.getAddMessageStatement();
+        PreparedStatement s = c.getUpdateLastAckStatement();
         try {
             if (s == null) {
                 s = c.getConnection().prepareStatement(statements.getUpdateLastAckOfDurableSubStatement());
