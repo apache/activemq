@@ -380,9 +380,9 @@ public final class AsyncDataManager {
         
         // Don't purge any data files past lastDataFile
         if( lastDataFile!=null ) {
-            for (Iterator iterator = unUsed.iterator(); iterator.hasNext();) {
-                DataFile dataFile = (DataFile)iterator.next();
-                if( dataFile.getDataFileId() >= lastDataFile ) {
+            for (Iterator<Integer> iterator = unUsed.iterator(); iterator.hasNext();) {
+                Integer i = iterator.next();
+                if( i >= lastDataFile ) {
                     iterator.remove();
                 }
             }
