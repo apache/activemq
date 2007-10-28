@@ -350,15 +350,11 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 
     /**
      * Cleans up the data files
-     * 
-     * @return
      * @throws IOException
      */
     public void cleanup() {
         try {
-            // Capture the lastDataFile so that we don't delete any data files
-            // after this one.
-            Set<Integer>inProgress = new CopyOnWriteArraySet<Integer>();
+            Set<Integer>inProgress = new HashSet<Integer>();
             for (Set<Integer> set: dataFilesInProgress.values()) {
                 inProgress.addAll(set);
             }
