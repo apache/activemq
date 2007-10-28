@@ -151,6 +151,7 @@ public class AMQMessageStore implements MessageStore {
         synchronized (this) {
             lastLocation = location;
             messages.put(message.getMessageId(), data);
+            this.peristenceAdapter.addInProgressDataFile(this, location.getDataFileId());
         }
         try {
             asyncWriteTask.wakeup();
@@ -338,6 +339,7 @@ public class AMQMessageStore implements MessageStore {
                     Entry<MessageId, ReferenceData> entry = iterator.next();
                     try {
                         referenceStore.addMessageReference(context, entry.getKey(), entry.getValue());
+                        AMQMessageStore.this.peristenceAdapter.removeInProgressDataFile(AMQMessageStore.this,entry.getValue().getFileId());
                     } catch (Throwable e) {
                         LOG.warn("Message could not be added to long term store: " + e.getMessage(), e);
                     }

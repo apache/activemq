@@ -352,7 +352,6 @@ public final class AsyncDataManager {
     synchronized void addInterestInFile(DataFile dataFile) {
         if (dataFile != null) {
             dataFile.increment();
-            System.err.println("ADD INTEREST: " + dataFile);
         }
     }
 
@@ -370,24 +369,14 @@ public final class AsyncDataManager {
             if (dataFile.decrement() <= 0) {
                 removeDataFile(dataFile);
             }
-            System.err.println("REMOVE INTEREST: " + dataFile);
         }
     }
 
-    public synchronized void consolidateDataFilesNotIn(Set<Integer> inUse, Integer lastDataFile) throws IOException {
+    public synchronized void consolidateDataFilesNotIn(Set<Integer> inUse, Set<Integer>inProgress) throws IOException {
         Set<Integer> unUsed = new HashSet<Integer>(fileMap.keySet());
         unUsed.removeAll(inUse);
-        
-        // Don't purge any data files past lastDataFile
-        if( lastDataFile!=null ) {
-            for (Iterator<Integer> iterator = unUsed.iterator(); iterator.hasNext();) {
-                Integer i = iterator.next();
-                if( i >= lastDataFile ) {
-                    iterator.remove();
-                }
-            }
-        }
-        
+        unUsed.removeAll(inProgress);
+                
         List<DataFile> purgeList = new ArrayList<DataFile>();
         for (Integer key : unUsed) {
             DataFile dataFile = (DataFile)fileMap.get(key);
