@@ -27,10 +27,10 @@ public class AMQStoreDurableTopicTest extends SimpleDurableTopicTest {
 
     protected void configureBroker(BrokerService answer) throws Exception {
         File dataFileDir = new File("target/test-amq-data/perfTest/amqdb");
+        answer.setDeleteAllMessagesOnStartup(true);
         AMQPersistenceAdapter adaptor = new AMQPersistenceAdapter();
         adaptor.setDirectory(dataFileDir);
         answer.setPersistenceAdapter(adaptor);
-        answer.setDeleteAllMessagesOnStartup(true);
         answer.addConnector(bindAddress);
     }
 }

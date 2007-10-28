@@ -35,7 +35,7 @@ public class AMQStoreQueueTest extends SimpleQueueTest {
 
         answer.setPersistenceAdapter(adaptor);
         answer.addConnector(bindAddress);
-        // answer.setDeleteAllMessagesOnStartup(true);
+        answer.setDeleteAllMessagesOnStartup(true);
 
     }
 

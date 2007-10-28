@@ -21,12 +21,15 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.activeio.journal.Journal;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
@@ -55,15 +58,16 @@ import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.usage.Usage;
 import org.apache.activemq.usage.UsageListener;
-import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.wireformat.WireFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 
 /**
  * An implementation of {@link PersistenceAdapter} designed for use with a
@@ -102,6 +106,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private boolean persistentIndex=true;
     private boolean useNio = true;
     private int maxFileLength = AsyncDataManager.DEFAULT_MAX_FILE_LENGTH;
+    private Map<AMQMessageStore,Set<Integer>> dataFilesInProgress = new ConcurrentHashMap<AMQMessageStore,Set<Integer>> ();
 
 
     public String getBrokerName() {
@@ -353,9 +358,14 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         try {
             // Capture the lastDataFile so that we don't delete any data files
             // after this one.
-            Integer lastDataFile = asyncDataManager.getCurrentDataFileId();            
+            Set<Integer>inProgress = new CopyOnWriteArraySet<Integer>();
+            for (Set<Integer> set: dataFilesInProgress.values()) {
+                inProgress.addAll(set);
+            }
+            Integer lastDataFile = asyncDataManager.getCurrentDataFileId();   
+            inProgress.add(lastDataFile);
             Set<Integer> inUse = referenceStoreAdapter.getReferenceFileIdsInUse();
-            asyncDataManager.consolidateDataFilesNotIn(inUse, lastDataFile);
+            asyncDataManager.consolidateDataFilesNotIn(inUse, inProgress);
         } catch (IOException e) {
             LOG.error("Could not cleanup data files: " + e, e);
         }
@@ -730,4 +740,20 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 	public void setMaxFileLength(int maxFileLength) {
 		this.maxFileLength = maxFileLength;
 	}
+	
+	protected void addInProgressDataFile(AMQMessageStore store,int dataFileId) {
+	    Set<Integer>set = dataFilesInProgress.get(store);
+	    if (set == null) {
+	        set = new CopyOnWriteArraySet<Integer>();
+	        dataFilesInProgress.put(store, set);
+	    }
+	    set.add(dataFileId);
+	}
+	
+	protected void removeInProgressDataFile(AMQMessageStore store,int dataFileId) {
+        Set<Integer>set = dataFilesInProgress.get(store);
+        if (set != null) {
+            set.remove(dataFileId);
+        }
+    }
 }
