@@ -87,9 +87,8 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private TaskRunnerFactory taskRunnerFactory;
     private WireFormat wireFormat = new OpenWireFormat();
     private SystemUsage usageManager;
-    private long cleanupInterval = 1000 * 15;
-    private long checkpointInterval = 1000 * 10;
-    private int maxCheckpointWorkers = 1;
+    private long cleanupInterval = 1000 * 30;
+    private long checkpointInterval = 1000 * 60;
     private int maxCheckpointMessageAddSize = 1024 * 4;
     private AMQTransactionStore transactionStore = new AMQTransactionStore(this);
     private TaskRunner checkpointTask;
@@ -682,18 +681,17 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         return maxCheckpointMessageAddSize;
     }
 
+    /**
+     * When set using XBean, you can use values such as: "20
+     * mb", "1024 kb", or "1 gb"
+     * 
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
+     */
     public void setMaxCheckpointMessageAddSize(int maxCheckpointMessageAddSize) {
         this.maxCheckpointMessageAddSize = maxCheckpointMessageAddSize;
     }
 
-    public int getMaxCheckpointWorkers() {
-        return maxCheckpointWorkers;
-    }
-
-    public void setMaxCheckpointWorkers(int maxCheckpointWorkers) {
-        this.maxCheckpointWorkers = maxCheckpointWorkers;
-    }
-
+   
     public synchronized File getDirectory() {
         return directory;
     }
@@ -733,9 +731,31 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 		return maxFileLength;
 	}
 
+	 /**
+     * When set using XBean, you can use values such as: "20
+     * mb", "1024 kb", or "1 gb"
+     * 
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
+     */
 	public void setMaxFileLength(int maxFileLength) {
 		this.maxFileLength = maxFileLength;
 	}
+	
+	public long getCleanupInterval() {
+        return cleanupInterval;
+    }
+
+    public void setCleanupInterval(long cleanupInterval) {
+        this.cleanupInterval = cleanupInterval;
+    }
+
+    public long getCheckpointInterval() {
+        return checkpointInterval;
+    }
+
+    public void setCheckpointInterval(long checkpointInterval) {
+        this.checkpointInterval = checkpointInterval;
+    }
 	
 	protected void addInProgressDataFile(AMQMessageStore store,int dataFileId) {
 	    Set<Integer>set = dataFilesInProgress.get(store);
@@ -752,4 +772,6 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
             set.remove(dataFileId);
         }
     }
+
+    
 }
