@@ -40,6 +40,7 @@ class HashPage {
     private int binId;
     private int persistedSize;
     private List<HashEntry> hashIndexEntries;
+    private static final HashEntry nullEntry = new HashEntry();
     /*
      * for persistence only
      */
@@ -192,6 +193,11 @@ class HashPage {
     void addHashEntry(int index, HashEntry entry) throws IOException {
         // index = index >= 0 ? index : 0;
         // index = (index == 0 || index< size()) ? index : size()-1;
+        if (index > hashIndexEntries.size()) {
+            for (int i = hashIndexEntries.size(); i < (index+1);i++) {
+                hashIndexEntries.add(nullEntry);
+            }
+        }
         hashIndexEntries.add(index, entry);
     }
 
