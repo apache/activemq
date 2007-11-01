@@ -44,6 +44,7 @@ import org.apache.activemq.command.JournalTransaction;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.kaha.impl.async.AsyncDataManager;
 import org.apache.activemq.kaha.impl.async.Location;
+import org.apache.activemq.kaha.impl.index.hash.HashIndex;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -105,6 +106,9 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private boolean persistentIndex=true;
     private boolean useNio = true;
     private int maxFileLength = AsyncDataManager.DEFAULT_MAX_FILE_LENGTH;
+    private int indexBinSize = HashIndex.DEFAULT_BIN_SIZE;
+    private int indexKeySize = HashIndex.DEFAULT_KEY_SIZE;
+    private int indexPageSize = HashIndex.DEFAULT_PAGE_SIZE;
     private Map<AMQMessageStore,Set<Integer>> dataFilesInProgress = new ConcurrentHashMap<AMQMessageStore,Set<Integer>> ();
 
 
@@ -628,6 +632,9 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     protected KahaReferenceStoreAdapter createReferenceStoreAdapter() throws IOException {
         KahaReferenceStoreAdapter adaptor = new KahaReferenceStoreAdapter(storeSize);
         adaptor.setPersistentIndex(isPersistentIndex());
+        adaptor.setIndexBinSize(getIndexBinSize());
+        adaptor.setIndexKeySize(getIndexKeySize());
+        adaptor.setIndexPageSize(getIndexPageSize());
         return adaptor;
     }
 
@@ -756,6 +763,31 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     public void setCheckpointInterval(long checkpointInterval) {
         this.checkpointInterval = checkpointInterval;
     }
+    
+    public int getIndexBinSize() {
+        return indexBinSize;
+    }
+
+    public void setIndexBinSize(int indexBinSize) {
+        this.indexBinSize = indexBinSize;
+    }
+
+    public int getIndexKeySize() {
+        return indexKeySize;
+    }
+
+    public void setIndexKeySize(int indexKeySize) {
+        this.indexKeySize = indexKeySize;
+    }
+
+    public int getIndexPageSize() {
+        return indexPageSize;
+    }
+
+    public void setIndexPageSize(int indexPageSize) {
+        this.indexPageSize = indexPageSize;
+    }
+
 	
 	protected void addInProgressDataFile(AMQMessageStore store,int dataFileId) {
 	    Set<Integer>set = dataFilesInProgress.get(store);
@@ -771,7 +803,5 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         if (set != null) {
             set.remove(dataFileId);
         }
-    }
-
-    
+    }    
 }

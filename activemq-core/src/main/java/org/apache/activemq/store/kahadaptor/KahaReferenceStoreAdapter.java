@@ -39,6 +39,7 @@ import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.MessageIdMarshaller;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StoreFactory;
+import org.apache.activemq.kaha.impl.index.hash.HashIndex;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.ReferenceStore;
 import org.apache.activemq.store.ReferenceStoreAdapter;
@@ -63,6 +64,9 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     private boolean storeValid;
     private Store stateStore;
     private boolean persistentIndex = true;
+    private int indexBinSize = HashIndex.DEFAULT_BIN_SIZE;
+    private int indexKeySize = HashIndex.DEFAULT_KEY_SIZE;
+    private int indexPageSize = HashIndex.DEFAULT_PAGE_SIZE;
 
     public KahaReferenceStoreAdapter(AtomicLong size){
         super(size);
@@ -176,7 +180,10 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
                                                                                 String containerName)
         throws IOException {
         Store store = getStore();
-        MapContainer<MessageId, ReferenceRecord> container = store.getMapContainer(id, containerName);
+        MapContainer<MessageId, ReferenceRecord> container = store.getMapContainer(id, containerName,persistentIndex);
+        container.setIndexBinSize(getIndexBinSize());
+        container.setIndexKeySize(getIndexKeySize());
+        container.setIndexPageSize(getIndexPageSize());
         container.setKeyMarshaller(new MessageIdMarshaller());
         container.setValueMarshaller(new ReferenceRecordMarshaller());
         container.load();
@@ -306,6 +313,30 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
 
     protected void removeSubscriberState(SubscriptionInfo info) {
         durableSubscribers.remove(info);
+    }
+
+    public int getIndexBinSize() {
+        return indexBinSize;
+    }
+
+    public void setIndexBinSize(int indexBinSize) {
+        this.indexBinSize = indexBinSize;
+    }
+
+    public int getIndexKeySize() {
+        return indexKeySize;
+    }
+
+    public void setIndexKeySize(int indexKeySize) {
+        this.indexKeySize = indexKeySize;
+    }
+
+    public int getIndexPageSize() {
+        return indexPageSize;
+    }
+
+    public void setIndexPageSize(int indexPageSize) {
+        this.indexPageSize = indexPageSize;
     }
 
 	

@@ -85,9 +85,6 @@ public class TreeIndex implements Index {
      * @param marshaller
      */
     public void setKeyMarshaller(Marshaller marshaller) {
-        if (loaded.get()) {
-            throw new RuntimeException("Pages already loaded - can't set marshaller now");
-        }
         this.keyMarshaller = marshaller;
     }
 
