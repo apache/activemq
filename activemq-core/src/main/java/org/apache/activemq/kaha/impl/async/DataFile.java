@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
+import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.LinkedNode;
 
 /**
@@ -102,6 +103,10 @@ class DataFile extends LinkedNode implements Comparable<DataFile> {
 
     public synchronized boolean delete() throws IOException {
         return file.delete();
+    }
+    
+    public synchronized void move(File targetDirectory) throws IOException{
+        IOHelper.moveFile(file,targetDirectory);
     }
 
     public int compareTo(DataFile df) {

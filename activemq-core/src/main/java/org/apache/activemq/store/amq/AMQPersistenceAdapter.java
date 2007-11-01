@@ -101,10 +101,12 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private boolean syncOnWrite;
     private String brokerName = "";
     private File directory;
+    private File directoryArchive;
     private BrokerService brokerService;
     private AtomicLong storeSize = new AtomicLong();
     private boolean persistentIndex=true;
     private boolean useNio = true;
+    private boolean archiveDataLogs=false;
     private int maxFileLength = AsyncDataManager.DEFAULT_MAX_FILE_LENGTH;
     private int indexBinSize = HashIndex.DEFAULT_BIN_SIZE;
     private int indexKeySize = HashIndex.DEFAULT_KEY_SIZE;
@@ -143,8 +145,14 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
                 this.directory = new File(directory, "amqstore");
             }
         }
+        if (this.directoryArchive == null) {
+            this.directoryArchive = new File(this.directory,"archive");
+        }
         LOG.info("AMQStore starting using directory: " + directory);
         this.directory.mkdirs();
+        if (archiveDataLogs) {
+            this.directoryArchive.mkdirs();
+        }
 
         if (this.usageManager != null) {
             this.usageManager.getMemoryUsage().addUsageListener(this);
@@ -624,6 +632,8 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     protected AsyncDataManager createAsyncDataManager() {
         AsyncDataManager manager = new AsyncDataManager(storeSize);
         manager.setDirectory(new File(directory, "journal"));
+        manager.setDirectoryArchive(getDirectoryArchive());
+        manager.setArchiveDataLogs(isArchiveDataLogs());
         manager.setMaxFileLength(maxFileLength);
         manager.setUseNio(useNio);    
         return manager;
@@ -793,6 +803,22 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     public void setIndexPageSize(int indexPageSize) {
         this.indexPageSize = indexPageSize;
     }
+    
+    public File getDirectoryArchive() {
+        return directoryArchive;
+    }
+
+    public void setDirectoryArchive(File directoryArchive) {
+        this.directoryArchive = directoryArchive;
+    }
+
+    public boolean isArchiveDataLogs() {
+        return archiveDataLogs;
+    }
+
+    public void setArchiveDataLogs(boolean archiveDataLogs) {
+        this.archiveDataLogs = archiveDataLogs;
+    }    
 
 	
 	protected void addInProgressDataFile(AMQMessageStore store,int dataFileId) {
@@ -809,5 +835,5 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         if (set != null) {
             set.remove(dataFileId);
         }
-    }    
+    }
 }
