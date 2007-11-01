@@ -77,6 +77,7 @@ public class HashIndex implements Index {
     public HashIndex(File directory, String name, IndexManager indexManager) throws IOException {
         this.directory = directory;
         this.name = name;
+        this.indexManager = indexManager;
         openIndexFile();
         pageCache = new LRUCache<Long, HashPage>(pageCacheSize, pageCacheSize, 0.75f, true);
     }
@@ -176,7 +177,6 @@ public class HashIndex implements Index {
 
     public synchronized void load() {
         if (loaded.compareAndSet(false, true)) {
-            this.indexManager = indexManager;
             int capacity = 1;
             while (capacity < numberOfBins) {
                 capacity <<= 1;
