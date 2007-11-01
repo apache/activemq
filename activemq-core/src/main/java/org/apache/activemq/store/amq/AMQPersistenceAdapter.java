@@ -784,6 +784,12 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         return indexPageSize;
     }
 
+    /**
+     * When set using XBean, you can use values such as: "20
+     * mb", "1024 kb", or "1 gb"
+     * 
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
+     */
     public void setIndexPageSize(int indexPageSize) {
         this.indexPageSize = indexPageSize;
     }
