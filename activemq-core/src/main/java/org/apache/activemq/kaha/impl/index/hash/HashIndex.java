@@ -37,10 +37,10 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1.1.1 $
  */
 public class HashIndex implements Index {
-
+    public static final int DEFAULT_PAGE_SIZE;
+    public static final int DEFAULT_KEY_SIZE;
+    public static final int DEFAULT_BIN_SIZE;
     private static final String NAME_PREFIX = "hash-index-";
-    private static final int DEFAULT_PAGE_SIZE;
-    private static final int DEFAULT_KEY_SIZE;
     private static final Log LOG = LogFactory.getLog(HashIndex.class);
     private final String name;
     private File directory;
@@ -49,6 +49,7 @@ public class HashIndex implements Index {
     private IndexManager indexManager;
     private int pageSize = DEFAULT_PAGE_SIZE;
     private int keySize = DEFAULT_KEY_SIZE;
+    private int numberOfBins = DEFAULT_BIN_SIZE;
     private int keysPerPage = pageSize / keySize;
     private DataByteArrayInputStream dataIn;
     private DataByteArrayOutputStream dataOut;
@@ -60,21 +61,10 @@ public class HashIndex implements Index {
     private HashPage lastFree;
     private AtomicBoolean loaded = new AtomicBoolean();
     private LRUCache<Long, HashPage> pageCache;
-    private boolean enablePageCaching;
-    private int pageCacheSize = 10;
+    private boolean enablePageCaching=true;
+    private int pageCacheSize = 1;
 
-    /**
-     * Constructor
-     * 
-     * @param directory
-     * @param name
-     * @param indexManager
-     * @throws IOException
-     */
-    public HashIndex(File directory, String name, IndexManager indexManager) throws IOException {
-        this(directory, name, indexManager, 1024);
-    }
-
+    
     /**
      * Constructor
      * 
@@ -84,15 +74,9 @@ public class HashIndex implements Index {
      * @param numberOfBins
      * @throws IOException
      */
-    public HashIndex(File directory, String name, IndexManager indexManager, int numberOfBins) throws IOException {
+    public HashIndex(File directory, String name, IndexManager indexManager) throws IOException {
         this.directory = directory;
         this.name = name;
-        this.indexManager = indexManager;
-        int capacity = 1;
-        while (capacity < numberOfBins) {
-            capacity <<= 1;
-        }
-        this.bins = new HashBin[capacity];
         openIndexFile();
         pageCache = new LRUCache<Long, HashPage>(pageCacheSize, pageCacheSize, 0.75f, true);
     }
@@ -139,6 +123,23 @@ public class HashIndex implements Index {
         }
         this.pageSize = pageSize;
     }
+    
+    /**
+     * @return number of bins
+     */
+    public int getNumberOfBins() {
+        return this.numberOfBins;
+    }
+
+    /**
+     * @param numberOfBins
+     */
+    public void setNumberOfBins(int numberOfBins) {
+        if (loaded.get() && numberOfBins != this.numberOfBins) {
+            throw new RuntimeException("Pages already loaded - can't reset bin size");
+        }
+        this.numberOfBins = numberOfBins;
+    }
 
     /**
      * @return the enablePageCaching
@@ -175,6 +176,12 @@ public class HashIndex implements Index {
 
     public synchronized void load() {
         if (loaded.compareAndSet(false, true)) {
+            this.indexManager = indexManager;
+            int capacity = 1;
+            while (capacity < numberOfBins) {
+                capacity <<= 1;
+            }
+            this.bins = new HashBin[capacity];
             keysPerPage = pageSize / keySize;
             dataIn = new DataByteArrayInputStream();
             dataOut = new DataByteArrayOutputStream(pageSize);
@@ -439,5 +446,6 @@ public class HashIndex implements Index {
     static {
         DEFAULT_PAGE_SIZE = Integer.parseInt(System.getProperty("defaultPageSize", "16384"));
         DEFAULT_KEY_SIZE = Integer.parseInt(System.getProperty("defaultKeySize", "96"));
+        DEFAULT_BIN_SIZE= Integer.parseInt(System.getProperty("defaultBinSize", "1024"));
     }
 }
