@@ -181,9 +181,36 @@ class HashBin {
     }
 
     private void addHashEntry(int index, HashEntry entry) throws IOException {
-        HashPageInfo page = getInsertPage(index);
-        int offset = index % maximumEntries;
-        page.addHashEntry(offset, entry);
+        HashPageInfo pageToUse = null;
+        int offset = 0;
+        if (index >= maximumBinSize()) {
+            HashPage hp = hashIndex.createPage(id);
+            pageToUse = addHashPageInfo(hp.getId(), 0);
+            pageToUse.setPage(hp);
+            offset = 0;
+        } else {
+            
+            int count = 0;
+            int countSoFar=0;
+            int pageNo = 0;
+            for (HashPageInfo page : hashPages) {
+                count += page.size();
+                if (index < count ) {
+                    offset = index - countSoFar;
+                    break;
+                }
+                if (index == count && page.size()+1 <= maximumEntries) {
+                    offset = page.size();
+                    break;
+                }
+                countSoFar += page.size();
+                pageNo++;
+            }
+            pageToUse = hashPages.get(pageNo);
+        }
+        pageToUse.begin();
+        
+        pageToUse.addHashEntry(offset, entry);
         doOverFlow(index);
     }
 
@@ -202,23 +229,10 @@ class HashBin {
         HashEntry result = page.getHashEntry(offset);
         return result;
     }
+    
 
     private int maximumBinSize() {
         return maximumEntries * hashPages.size();
-    }
-
-    private HashPageInfo getInsertPage(int index) throws IOException {
-        HashPageInfo result = null;
-        if (index >= maximumBinSize()) {
-            HashPage page = hashIndex.createPage(id);
-            result = addHashPageInfo(page.getId(), 0);
-            result.setPage(page);
-        } else {
-            int offset = index / maximumEntries;
-            result = hashPages.get(offset);
-        }
-        result.begin();
-        return result;
     }
 
     private HashPageInfo getRetrievePage(int index) throws IOException {
@@ -250,16 +264,6 @@ class HashBin {
         }
         return result;
     }
-
-//    private int getInsertPageNo(int index) {
-//        int result = index / maximumEntries;
-//        return result;
-//    }
-//
-//    private int getOffset(int index) {
-//        int result = index % maximumEntries;
-//        return result;
-//    }
 
     private void doOverFlow(int index) throws IOException {
         int pageNo = index / maximumEntries;
