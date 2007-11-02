@@ -55,6 +55,8 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
 
     private static final Log LOG = LogFactory.getLog(KahaPersistenceAdapter.class);
     private static final String STORE_STATE = "store-state";
+    private static final String INDEX_VERSION_NAME = "INDEX_VERSION";
+    private static final Integer INDEX_VERSION = new Integer(2);
     private static final String RECORD_REFERENCES = "record-references";
     private static final String TRANSACTIONS = "transactions-state";
     private MapContainer stateMap;
@@ -67,6 +69,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     private int indexBinSize = HashIndex.DEFAULT_BIN_SIZE;
     private int indexKeySize = HashIndex.DEFAULT_KEY_SIZE;
     private int indexPageSize = HashIndex.DEFAULT_PAGE_SIZE;
+   
 
     public KahaReferenceStoreAdapter(AtomicLong size){
         super(size);
@@ -94,12 +97,21 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
                 storeValid = status.get();
             }
             if (storeValid) {
+                //check what version the indexes are at
+                Integer indexVersion = (Integer) stateMap.get(INDEX_VERSION_NAME);
+                if (indexVersion==null || indexVersion.intValue() < INDEX_VERSION.intValue()) {
+                    storeValid = false;
+                    LOG.warn("Indexes at an older version - need to regenerate");
+                }
+            }
+            if (storeValid) {
                 if (stateMap.containsKey(RECORD_REFERENCES)) {
                     recordReferences = (Map<Integer, AtomicInteger>)stateMap.get(RECORD_REFERENCES);
                 }
             }
         }
         stateMap.put(STORE_STATE, new AtomicBoolean());
+        stateMap.put(INDEX_VERSION_NAME, INDEX_VERSION);
         durableSubscribers = store.getListContainer("durableSubscribers");
         durableSubscribers.setMarshaller(new CommandMarshaller());
         preparedTransactions = store.getMapContainer("transactions", TRANSACTIONS, false);
@@ -112,6 +124,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     public synchronized void stop() throws Exception {
         stateMap.put(RECORD_REFERENCES, recordReferences);
         stateMap.put(STORE_STATE, new AtomicBoolean(true));
+        stateMap.put(INDEX_VERSION_NAME, INDEX_VERSION);
         if (this.stateStore != null) {
             this.stateStore.close();
             this.stateStore = null;
