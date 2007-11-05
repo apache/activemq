@@ -115,7 +115,7 @@ public class VMTransport implements Transport, Task {
             enqueueValve.turnOff();
             if (messageQueue != null && !async) {
                 Object command;
-                while ((command = messageQueue.poll()) != null) {
+                while ((command = messageQueue.poll()) != null && !stopping.get() ) {
                     transportListener.onCommand(command);
                 }
             }
@@ -124,27 +124,37 @@ public class VMTransport implements Transport, Task {
         } finally {
             enqueueValve.turnOn();
         }
+        // If we get stopped while starting up, then do the actual stop now 
+        // that the enqueueValve is back on.
+        if( stopping.get() ) {
+            stop();
+        }
     }
 
     public void stop() throws Exception {
-        TaskRunner tr = null;
-        try {
-            stopping.set(true);
-            enqueueValve.turnOff();
-            if (!disposed) {
-                started = false;
-                disposed = true;
-                if (taskRunner != null) {
-                    tr = taskRunner;
-                    taskRunner = null;
+        stopping.set(true);
+        
+        // If stop() is called while being start()ed.. then we can't stop until we return to the start() method.
+        if( enqueueValve.isOn() ) {
+            
+            TaskRunner tr = null;
+            try {
+                enqueueValve.turnOff();
+                if (!disposed) {
+                    started = false;
+                    disposed = true;
+                    if (taskRunner != null) {
+                        tr = taskRunner;
+                        taskRunner = null;
+                    }
                 }
+            } finally {
+                stopping.set(false);
+                enqueueValve.turnOn();
             }
-        } finally {
-            stopping.set(false);
-            enqueueValve.turnOn();
-        }
-        if (tr != null) {
-            tr.shutdown(1000);
+            if (tr != null) {
+                tr.shutdown(1000);
+            }
         }
     }
     
