@@ -48,7 +48,7 @@ public final class Valve {
         }
     }
 
-    boolean isOn() {
+    public boolean isOn() {
         synchronized (mutex) {
             return on;
         }
