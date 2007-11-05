@@ -100,7 +100,7 @@ REM Uncomment to enable remote debugging
 REM SET ACTIVEMQ_DEBUG_OPTS=-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005
 
 REM Setup ActiveMQ Classpath. Default is the conf directory.
-set ACTIVEMQ_CLASSPATH=%ACTIVEMQ_HOME%/conf;%ACTIVEMQ_CLASSPATH%
+set ACTIVEMQ_CLASSPATH=%ACTIVEMQ_BASE%/conf;%ACTIVEMQ_CLASSPATH%
 
 REM Set the task to run
 set ACTIVEMQ_TASK="start"
