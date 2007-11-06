@@ -33,13 +33,13 @@ import org.apache.activemq.command.ActiveMQMessage;
  * from one to the other
  */
 public interface FrameTranslator {
-    ActiveMQMessage convertFrame(StompFrame frame) throws JMSException, ProtocolException;
+    ActiveMQMessage convertFrame(ProtocolConverter converter, StompFrame frame) throws JMSException, ProtocolException;
 
-    StompFrame convertMessage(ActiveMQMessage message) throws IOException, JMSException;
+    StompFrame convertMessage(ProtocolConverter converter, ActiveMQMessage message) throws IOException, JMSException;
 
-    String convertDestination(Destination d);
+    String convertDestination(ProtocolConverter converter, Destination d);
 
-    ActiveMQDestination convertDestination(String name) throws ProtocolException;
+    ActiveMQDestination convertDestination(ProtocolConverter converter, String name) throws ProtocolException;
 
     /**
      * Helper class which holds commonly needed functions used when implementing
@@ -50,9 +50,9 @@ public interface FrameTranslator {
         private Helper() {
         }
 
-        public static void copyStandardHeadersFromMessageToFrame(ActiveMQMessage message, StompFrame command, FrameTranslator ft) throws IOException {
+        public static void copyStandardHeadersFromMessageToFrame(ProtocolConverter converter, ActiveMQMessage message, StompFrame command, FrameTranslator ft) throws IOException {
             final Map<String, String> headers = command.getHeaders();
-            headers.put(Stomp.Headers.Message.DESTINATION, ft.convertDestination(message.getDestination()));
+            headers.put(Stomp.Headers.Message.DESTINATION, ft.convertDestination(converter, message.getDestination()));
             headers.put(Stomp.Headers.Message.MESSAGE_ID, message.getJMSMessageID());
 
             if (message.getJMSCorrelationID() != null) {
@@ -66,7 +66,7 @@ public interface FrameTranslator {
             headers.put(Stomp.Headers.Message.PRORITY, "" + message.getJMSPriority());
 
             if (message.getJMSReplyTo() != null) {
-                headers.put(Stomp.Headers.Message.REPLY_TO, ft.convertDestination(message.getJMSReplyTo()));
+                headers.put(Stomp.Headers.Message.REPLY_TO, ft.convertDestination(converter, message.getJMSReplyTo()));
             }
             headers.put(Stomp.Headers.Message.TIMESTAMP, "" + message.getJMSTimestamp());
 
@@ -83,10 +83,10 @@ public interface FrameTranslator {
             }
         }
 
-        public static void copyStandardHeadersFromFrameToMessage(StompFrame command, ActiveMQMessage msg, FrameTranslator ft) throws ProtocolException, JMSException {
+        public static void copyStandardHeadersFromFrameToMessage(ProtocolConverter converter, StompFrame command, ActiveMQMessage msg, FrameTranslator ft) throws ProtocolException, JMSException {
             final Map<String, String> headers = new HashMap<String, String>(command.getHeaders());
             final String destination = headers.remove(Stomp.Headers.Send.DESTINATION);
-            msg.setDestination(ft.convertDestination(destination));
+            msg.setDestination(ft.convertDestination(converter, destination));
 
             // the standard JMS headers
             msg.setJMSCorrelationID(headers.remove(Stomp.Headers.Send.CORRELATION_ID));
@@ -108,7 +108,7 @@ public interface FrameTranslator {
 
             o = headers.remove(Stomp.Headers.Send.REPLY_TO);
             if (o != null) {
-                msg.setJMSReplyTo(ft.convertDestination((String)o));
+                msg.setJMSReplyTo(ft.convertDestination(converter, (String)o));
             }
 
             o = headers.remove(Stomp.Headers.Send.PERSISTENT);
