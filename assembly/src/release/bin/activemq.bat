@@ -94,7 +94,7 @@ REM set SUNJMX=-Dcom.sun.management.jmxremote.port=1616 -Dcom.sun.management.jmx
 if "%SSL_OPTS%" == "" set SSL_OPTS=-Djavax.net.ssl.keyStorePassword=password -Djavax.net.ssl.trustStorePassword=password -Djavax.net.ssl.keyStore="%ACTIVEMQ_BASE%/conf/broker.ks" -Djavax.net.ssl.trustStore="%ACTIVEMQ_BASE%/conf/broker.ts"
 
 REM Uncomment to enable YourKit profiling
-REM SET ACTIVEMQ_DEBUG_OPTS="-Xrunyjpagent"
+REM SET ACTIVEMQ_DEBUG_OPTS="-agentlib:yjpagent"
 
 REM Uncomment to enable remote debugging
 REM SET ACTIVEMQ_DEBUG_OPTS=-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005
