@@ -43,6 +43,7 @@ import org.apache.activemq.util.IOExceptionSupport;
  */
 public class VMTransport implements Transport, Task {
 
+    private static final Object DISCONNECT = new Object();
     private static final AtomicLong NEXT_ID = new AtomicLong(0);
     private static final TaskRunnerFactory TASK_RUNNER_FACTORY = new TaskRunnerFactory("VMTransport", Thread.NORM_PRIORITY, true, 1000);
     protected VMTransport peer;
@@ -91,7 +92,11 @@ public class VMTransport implements Transport, Task {
                     peer.getMessageQueue().put(command);
                     peer.wakeup();
                 } else {
-                    peer.transportListener.onCommand(command);
+                    if( command == DISCONNECT ) {
+                        peer.transportListener.onException(new TransportDisposedIOException("Peer (" + peer.toString() + ") disposed."));
+                    } else {
+                        peer.transportListener.onCommand(command);
+                    }
                 }
                 enqueueValve.decrement();
             } else {
@@ -137,6 +142,12 @@ public class VMTransport implements Transport, Task {
         // If stop() is called while being start()ed.. then we can't stop until we return to the start() method.
         if( enqueueValve.isOn() ) {
             
+            // let the peer know that we are disconnecting..
+            try {
+                oneway(DISCONNECT);
+            } catch (Exception ignore) {
+            }
+
             TaskRunner tr = null;
             try {
                 enqueueValve.turnOff();
@@ -183,9 +194,13 @@ public class VMTransport implements Transport, Task {
         }
 
         LinkedBlockingQueue<Object> mq = getMessageQueue();
-        Command command = (Command)mq.poll();
+        Object command = mq.poll();
         if (command != null) {
-            tl.onCommand(command);
+            if( command == DISCONNECT ) {
+                tl.onException(new TransportDisposedIOException("Peer (" + peer.toString() + ") disposed."));
+            } else {
+                tl.onCommand(command);
+            }
             return !mq.isEmpty();
         } else {
             return false;
