@@ -39,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class DurableConsumerTest extends TestCase {
     private static final Log LOG = LogFactory.getLog(DurableConsumerTest.class);
-    private static int COUNT = 1024*100;
+    private static int COUNT = 1024*10;
     private static String CONSUMER_NAME = "DURABLE_TEST";
     protected BrokerService broker;
    
