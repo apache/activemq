@@ -846,6 +846,10 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
             active = true;
             this.processDispatch(connector.getBrokerInfo());
             connector.onStarted(this);
+        } catch (Exception e) {
+            // Force clean up on an error starting up.
+            stop();
+            throw e;
         } finally {
             // stop() can be called from within the above block,
             // but we want to be sure start() completes before

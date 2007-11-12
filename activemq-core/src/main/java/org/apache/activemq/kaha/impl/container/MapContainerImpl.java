@@ -52,6 +52,9 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
     protected Marshaller keyMarshaller = Store.OBJECT_MARSHALLER;
     protected Marshaller valueMarshaller = Store.OBJECT_MARSHALLER;
     protected File directory;
+    private int indexBinSize = HashIndex.DEFAULT_BIN_SIZE;
+    private int indexKeySize = HashIndex.DEFAULT_KEY_SIZE;
+    private int indexPageSize = HashIndex.DEFAULT_PAGE_SIZE;
 
     public MapContainerImpl(File directory, ContainerId id, IndexItem root, IndexManager indexManager,
                             DataManager dataManager, boolean persistentIndex) {
@@ -66,7 +69,11 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
                 String name = containerId.getDataContainerName() + "_" + containerId.getKey();
                 name = name.replaceAll("[^a-zA-Z0-9\\.\\_\\-]", "_");
                 try {
-                    this.index = new HashIndex(directory, name, indexManager);
+                    HashIndex hashIndex = new HashIndex(directory, name, indexManager);
+                    hashIndex.setNumberOfBins(getIndexBinSize());
+                    hashIndex.setKeySize(getIndexKeySize());
+                    hashIndex.setPageSize(getIndexPageSize());
+                    this.index = hashIndex;
                 } catch (IOException e) {
                     LOG.error("Failed to create HashIndex", e);
                     throw new RuntimeException(e);
@@ -527,4 +534,30 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
         }
         return index;
     }
+
+    public int getIndexBinSize() {
+        return indexBinSize;
+    }
+
+    public void setIndexBinSize(int indexBinSize) {
+        this.indexBinSize = indexBinSize;
+    }
+
+    public int getIndexKeySize() {
+        return indexKeySize;
+    }
+
+    public void setIndexKeySize(int indexKeySize) {
+        this.indexKeySize = indexKeySize;
+    }
+
+    public int getIndexPageSize() {
+        return indexPageSize;
+    }
+
+    public void setIndexPageSize(int indexPageSize) {
+        this.indexPageSize = indexPageSize;
+    }
+
+    
 }

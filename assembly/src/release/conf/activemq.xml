@@ -60,7 +60,7 @@
       <!-- by default just auto discover the other brokers -->
       <networkConnector name="default-nc" uri="multicast://default"/>
       <!--
-      <networkConnector name="host1 and host2" uri="static://(tcp://host1:61616,tcp://host2:61616)" failover="true"/>
+      <networkConnector name="host1 and host2" uri="static://(tcp://host1:61616,tcp://host2:61616)"/>
       -->
     </networkConnectors>
 

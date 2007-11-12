@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.util;
 
+import java.io.File;
+import java.io.IOException;
+
 /**
  * @version $Revision$
  */
@@ -52,24 +55,71 @@ public final class IOHelper {
      * @param name
      * @return
      */
-    public static String toFileSystemSafeName( String name ) {
-    	int size = name.length();
-    	StringBuffer rc = new StringBuffer(size*2);
-    	for (int i = 0; i < size; i++) {
-			char c = name.charAt(i);
-			boolean valid = c >= 'a' && c <= 'z';
-			valid = valid || (c >= 'A' && c <= 'Z');
-			valid = valid || (c >= '0' && c <= '9');
-			valid = valid || (c == '_') || (c == '-') || (c == '.') || (c == '/') || (c == '\\');
-			
-			if(  valid ) {
-				rc.append(c);
-			} else {
-				// Encode the character using hex notation
-				rc.append('#');
-				rc.append(HexSupport.toHexFromInt(c, true));
-			}
-		}
-    	return rc.toString();
+    public static String toFileSystemSafeName(String name) {
+        int size = name.length();
+        StringBuffer rc = new StringBuffer(size * 2);
+        for (int i = 0; i < size; i++) {
+            char c = name.charAt(i);
+            boolean valid = c >= 'a' && c <= 'z';
+            valid = valid || (c >= 'A' && c <= 'Z');
+            valid = valid || (c >= '0' && c <= '9');
+            valid = valid || (c == '_') || (c == '-') || (c == '.')
+                    || (c == '/') || (c == '\\');
+
+            if (valid) {
+                rc.append(c);
+            } else {
+                // Encode the character using hex notation
+                rc.append('#');
+                rc.append(HexSupport.toHexFromInt(c, true));
+            }
+        }
+        return rc.toString();
     }
+
+    public static boolean deleteFile(File fileToDelete) {
+        if (fileToDelete == null || !fileToDelete.exists()) {
+            return true;
+        }
+        boolean result = deleteChildren(fileToDelete);
+        result &= fileToDelete.delete();
+        return result;
+    }
+    
+    public static boolean deleteChildren(File parent) {
+        if (parent == null || !parent.exists()) {
+            return false;
+        }
+        boolean result = true;
+        if (parent.isDirectory()) {
+            File[] files = parent.listFiles();
+            if (files == null) {
+                result = false;
+            } else {
+                for (int i = 0; i < files.length; i++) {
+                    File file = files[i];
+                    if (file.getName().equals(".")
+                            || file.getName().equals("..")) {
+                        continue;
+                    }
+                    if (file.isDirectory()) {
+                        result &= deleteFile(file);
+                    } else {
+                        result &= file.delete();
+                    }
+                }
+            }
+        }
+       
+        return result;
+    }
+    
+    
+    public static void moveFile(File src, File targetDirectory) throws IOException {
+        if (!src.renameTo(new File(targetDirectory, src.getName()))) {
+            throw new IOException("Failed to move " + src + " to " + targetDirectory);
+        }
+    }
+
+   
 }

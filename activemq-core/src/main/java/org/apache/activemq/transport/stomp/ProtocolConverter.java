@@ -25,15 +25,19 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.jms.Destination;
 import javax.jms.JMSException;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQTempQueue;
+import org.apache.activemq.command.ActiveMQTempTopic;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
@@ -65,9 +69,12 @@ public class ProtocolConverter {
     private final LongSequenceGenerator consumerIdGenerator = new LongSequenceGenerator();
     private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
     private final LongSequenceGenerator transactionIdGenerator = new LongSequenceGenerator();
+    private final LongSequenceGenerator tempDestinationGenerator = new LongSequenceGenerator();
 
     private final ConcurrentHashMap<Integer, ResponseHandler> resposeHandlers = new ConcurrentHashMap<Integer, ResponseHandler>();
     private final ConcurrentHashMap<ConsumerId, StompSubscription> subscriptionsByConsumerId = new ConcurrentHashMap<ConsumerId, StompSubscription>();
+    private final ConcurrentHashMap<String, ActiveMQDestination> tempDestinations = new ConcurrentHashMap<String, ActiveMQDestination>();
+    private final ConcurrentHashMap<String, String> tempDestinationAmqToStompMap = new ConcurrentHashMap<String, String>();
     private final Map<String, LocalTransactionId> transactions = new ConcurrentHashMap<String, LocalTransactionId>();
     private final StompTransportFilter transportFilter;
 
@@ -325,7 +332,7 @@ public class ProtocolConverter {
         String subscriptionId = headers.get(Stomp.Headers.Subscribe.ID);
         String destination = headers.get(Stomp.Headers.Subscribe.DESTINATION);
 
-        ActiveMQDestination actualDest = frameTranslator.convertDestination(destination);
+        ActiveMQDestination actualDest = frameTranslator.convertDestination(this, destination);
         ConsumerId id = new ConsumerId(sessionId, consumerIdGenerator.getNextSequenceId());
         ConsumerInfo consumerInfo = new ConsumerInfo(id);
         consumerInfo.setPrefetchSize(1000);
@@ -336,7 +343,7 @@ public class ProtocolConverter {
 
         IntrospectionSupport.setProperties(consumerInfo, headers, "activemq.");
 
-        consumerInfo.setDestination(frameTranslator.convertDestination(destination));
+        consumerInfo.setDestination(frameTranslator.convertDestination(this, destination));
 
         StompSubscription stompSubscription = new StompSubscription(this, subscriptionId, consumerInfo);
         stompSubscription.setDestination(actualDest);
@@ -360,7 +367,7 @@ public class ProtocolConverter {
         ActiveMQDestination destination = null;
         Object o = headers.get(Stomp.Headers.Unsubscribe.DESTINATION);
         if (o != null) {
-            destination = frameTranslator.convertDestination((String)o);
+            destination = frameTranslator.convertDestination(this, (String)o);
         }
 
         String subscriptionId = headers.get(Stomp.Headers.Unsubscribe.ID);
@@ -489,15 +496,40 @@ public class ProtocolConverter {
     }
 
     public ActiveMQMessage convertMessage(StompFrame command) throws IOException, JMSException {
-        ActiveMQMessage msg = frameTranslator.convertFrame(command);
+        ActiveMQMessage msg = frameTranslator.convertFrame(this, command);
         return msg;
     }
 
     public StompFrame convertMessage(ActiveMQMessage message) throws IOException, JMSException {
-        return frameTranslator.convertMessage(message);
+        return frameTranslator.convertMessage(this, message);
     }
 
     public StompTransportFilter getTransportFilter() {
         return transportFilter;
     }
+
+	public ActiveMQDestination createTempQueue(String name) {
+        ActiveMQDestination rc = tempDestinations.get(name);
+        if( rc == null ) {
+            rc = new ActiveMQTempQueue(connectionId, tempDestinationGenerator.getNextSequenceId());
+            sendToActiveMQ(new DestinationInfo(connectionId, DestinationInfo.ADD_OPERATION_TYPE, rc), null);
+            tempDestinations.put(name, rc);
+        }        
+        return rc;
+	}
+
+	public ActiveMQDestination createTempTopic(String name) {
+        ActiveMQDestination rc = tempDestinations.get(name);
+        if( rc == null ) {
+            rc = new ActiveMQTempTopic(connectionId, tempDestinationGenerator.getNextSequenceId());
+            sendToActiveMQ(new DestinationInfo(connectionId, DestinationInfo.ADD_OPERATION_TYPE, rc), null);
+            tempDestinations.put(name, rc);
+            tempDestinationAmqToStompMap.put(rc.getQualifiedName(), name);
+        }        
+        return rc;
+	}
+
+	public String getCreatedTempDestinationName(ActiveMQDestination destination) {
+		return tempDestinationAmqToStompMap.get(destination.getQualifiedName());
+	}
 }

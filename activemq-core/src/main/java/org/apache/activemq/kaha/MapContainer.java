@@ -222,4 +222,40 @@ public interface MapContainer<K, V> extends Map<K, V> {
      * @return the StoreEntry
      */
     StoreEntry getEntry(K key);
+    
+    /**
+     * Set the index bin size
+     * @param size
+     */
+    void setIndexBinSize(int size);
+    
+    /**
+     * @return index bin size
+     */
+    int getIndexBinSize();
+    
+    
+    /**
+     * Add the index key size
+     * @param size
+     */
+    void setIndexKeySize(int size);
+    
+    
+    /**
+     * @return the index key size
+     */
+    int getIndexKeySize();
+    
+   
+    /**
+     * Set the index page size
+     * @param size
+     */
+    void setIndexPageSize(int size);
+    
+    /**
+     * @return the index page size
+     */
+    int getIndexPageSize();
 }

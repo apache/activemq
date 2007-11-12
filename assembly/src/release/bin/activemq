@@ -142,10 +142,10 @@ fi
 ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $SUNJMX $SSL_OPTS"
 
 # Set default classpath
-ACTIVEMQ_CLASSPATH="${ACTIVEMQ_HOME}/conf;"$ACTIVEMQ_CLASSPATH
+ACTIVEMQ_CLASSPATH="${ACTIVEMQ_BASE}/conf;"$ACTIVEMQ_CLASSPATH
 
 # Uncomment to enable YourKit profiling
-#ACTIVEMQ_DEBUG_OPTS="-Xrunyjpagent"
+#ACTIVEMQ_DEBUG_OPTS="-agentlib:yjpagent"
 
 # Uncomment to enable remote debugging
 #ACTIVEMQ_DEBUG_OPTS="-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"
