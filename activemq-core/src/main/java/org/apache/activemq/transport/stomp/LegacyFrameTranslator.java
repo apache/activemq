@@ -32,7 +32,9 @@ import org.apache.activemq.command.ActiveMQTextMessage;
  * Implements ActiveMQ 4.0 translations
  */
 public class LegacyFrameTranslator implements FrameTranslator {
-    public ActiveMQMessage convertFrame(StompFrame command) throws JMSException, ProtocolException {
+	
+	
+    public ActiveMQMessage convertFrame(ProtocolConverter converter, StompFrame command) throws JMSException, ProtocolException {
         final Map headers = command.getHeaders();
         final ActiveMQMessage msg;
         if (headers.containsKey(Stomp.Headers.CONTENT_LENGTH)) {
@@ -49,17 +51,17 @@ public class LegacyFrameTranslator implements FrameTranslator {
             }
             msg = text;
         }
-        FrameTranslator.Helper.copyStandardHeadersFromFrameToMessage(command, msg, this);
+        FrameTranslator.Helper.copyStandardHeadersFromFrameToMessage(converter, command, msg, this);
         return msg;
     }
 
-    public StompFrame convertMessage(ActiveMQMessage message) throws IOException, JMSException {
+    public StompFrame convertMessage(ProtocolConverter converter, ActiveMQMessage message) throws IOException, JMSException {
         StompFrame command = new StompFrame();
         command.setAction(Stomp.Responses.MESSAGE);
         Map<String, String> headers = new HashMap<String, String>(25);
         command.setHeaders(headers);
 
-        FrameTranslator.Helper.copyStandardHeadersFromMessageToFrame(message, command, this);
+        FrameTranslator.Helper.copyStandardHeadersFromMessageToFrame(converter, message, command, this);
 
         if (message.getDataStructureType() == ActiveMQTextMessage.DATA_STRUCTURE_TYPE) {
 
@@ -79,23 +81,28 @@ public class LegacyFrameTranslator implements FrameTranslator {
         return command;
     }
 
-    public String convertDestination(Destination d) {
+    public String convertDestination(ProtocolConverter converter, Destination d) {
         if (d == null) {
             return null;
         }
         ActiveMQDestination activeMQDestination = (ActiveMQDestination)d;
         String physicalName = activeMQDestination.getPhysicalName();
 
+        String rc = converter.getCreatedTempDestinationName(activeMQDestination);
+        if( rc!=null ) {
+        	return rc;
+        }
+        
         StringBuffer buffer = new StringBuffer();
         if (activeMQDestination.isQueue()) {
             if (activeMQDestination.isTemporary()) {
-                buffer.append("/temp-queue/");
+                buffer.append("/remote-temp-queue/");
             } else {
                 buffer.append("/queue/");
             }
         } else {
             if (activeMQDestination.isTemporary()) {
-                buffer.append("/temp-topic/");
+                buffer.append("/remote-temp-topic/");
             } else {
                 buffer.append("/topic/");
             }
@@ -104,7 +111,7 @@ public class LegacyFrameTranslator implements FrameTranslator {
         return buffer.toString();
     }
 
-    public ActiveMQDestination convertDestination(String name) throws ProtocolException {
+    public ActiveMQDestination convertDestination(ProtocolConverter converter, String name) throws ProtocolException {
         if (name == null) {
             return null;
         } else if (name.startsWith("/queue/")) {
@@ -113,12 +120,16 @@ public class LegacyFrameTranslator implements FrameTranslator {
         } else if (name.startsWith("/topic/")) {
             String tName = name.substring("/topic/".length(), name.length());
             return ActiveMQDestination.createDestination(tName, ActiveMQDestination.TOPIC_TYPE);
-        } else if (name.startsWith("/temp-queue/")) {
-            String tName = name.substring("/temp-queue/".length(), name.length());
+        } else if (name.startsWith("/remote-temp-queue/")) {
+            String tName = name.substring("/remote-temp-queue/".length(), name.length());
             return ActiveMQDestination.createDestination(tName, ActiveMQDestination.TEMP_QUEUE_TYPE);
-        } else if (name.startsWith("/temp-topic/")) {
-            String tName = name.substring("/temp-topic/".length(), name.length());
+        } else if (name.startsWith("/remote-temp-topic/")) {
+            String tName = name.substring("/remote-temp-topic/".length(), name.length());
             return ActiveMQDestination.createDestination(tName, ActiveMQDestination.TEMP_TOPIC_TYPE);
+        } else if (name.startsWith("/temp-queue/")) {
+            return converter.createTempQueue(name);
+        } else if (name.startsWith("/temp-topic/")) {
+            return converter.createTempTopic(name);
         } else {
             throw new ProtocolException("Illegal destination name: [" + name + "] -- ActiveMQ STOMP destinations "
                                         + "must begine with one of: /queue/ /topic/ /temp-queue/ /temp-topic/");

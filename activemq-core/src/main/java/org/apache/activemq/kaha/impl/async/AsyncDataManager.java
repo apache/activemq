@@ -39,6 +39,7 @@ import org.apache.activemq.kaha.impl.async.DataFileAppender.WriteCommand;
 import org.apache.activemq.kaha.impl.async.DataFileAppender.WriteKey;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.IOHelper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -63,8 +64,8 @@ public final class AsyncDataManager {
 
     public static final byte DATA_ITEM_TYPE = 1;
     public static final byte REDO_ITEM_TYPE = 2;
-
     public static final String DEFAULT_DIRECTORY = "data";
+    public static final String DEFAULT_ARCHIVE_DIRECTORY = "data-archive";
     public static final String DEFAULT_FILE_PREFIX = "data-";
     public static final int DEFAULT_MAX_FILE_LENGTH = 1024 * 1024 * 32;
 
@@ -73,6 +74,7 @@ public final class AsyncDataManager {
     protected final Map<WriteKey, WriteCommand> inflightWrites = new ConcurrentHashMap<WriteKey, WriteCommand>();
 
     File directory = new File(DEFAULT_DIRECTORY);
+    File directoryArchive = new File (DEFAULT_ARCHIVE_DIRECTORY);
     String filePrefix = DEFAULT_FILE_PREFIX;
     ControlFile controlFile;
     boolean started;
@@ -91,6 +93,7 @@ public final class AsyncDataManager {
     private final AtomicReference<Location> lastAppendLocation = new AtomicReference<Location>();
     private Runnable cleanupTask;
     private final AtomicLong storeSize;
+    private boolean archiveDataLogs;
     
     public AsyncDataManager(AtomicLong storeSize) {
         this.storeSize=storeSize;
@@ -352,7 +355,6 @@ public final class AsyncDataManager {
     synchronized void addInterestInFile(DataFile dataFile) {
         if (dataFile != null) {
             dataFile.increment();
-            System.err.println("ADD INTEREST: " + dataFile);
         }
     }
 
@@ -370,13 +372,14 @@ public final class AsyncDataManager {
             if (dataFile.decrement() <= 0) {
                 removeDataFile(dataFile);
             }
-            System.err.println("REMOVE INTEREST: " + dataFile);
         }
     }
 
-    public synchronized void consolidateDataFilesNotIn(Set<Integer> inUse) throws IOException {
+    public synchronized void consolidateDataFilesNotIn(Set<Integer> inUse, Set<Integer>inProgress) throws IOException {
         Set<Integer> unUsed = new HashSet<Integer>(fileMap.keySet());
         unUsed.removeAll(inUse);
+        unUsed.removeAll(inProgress);
+                
         List<DataFile> purgeList = new ArrayList<DataFile>();
         for (Integer key : unUsed) {
             DataFile dataFile = (DataFile)fileMap.get(key);
@@ -409,15 +412,21 @@ public final class AsyncDataManager {
         forceRemoveDataFile(dataFile);
     }
     
-    private synchronized void forceRemoveDataFile(DataFile dataFile) throws IOException {
+    private synchronized void forceRemoveDataFile(DataFile dataFile)
+            throws IOException {
         accessorPool.disposeDataFileAccessors(dataFile);
         DataFile removed = fileMap.remove(dataFile.getDataFileId());
         storeSize.addAndGet(-dataFile.getLength());
         dataFile.unlink();
-        boolean result = dataFile.delete();
-        LOG.debug("discarding data file " + dataFile
-                + (result ? "successful " : "failed"));
-
+        if (archiveDataLogs) {
+            dataFile.move(getDirectoryArchive());
+            LOG.debug("moced data file " + dataFile + " to "
+                    + getDirectoryArchive());
+        } else {
+            boolean result = dataFile.delete();
+            LOG.debug("discarding data file " + dataFile
+                    + (result ? "successful " : "failed"));
+        }
     }
 
     /**
@@ -580,5 +589,26 @@ public final class AsyncDataManager {
 	public void setUseNio(boolean useNio) {
 		this.useNio = useNio;
 	}
+	
+	public File getDirectoryArchive() {
+        return directoryArchive;
+    }
 
+    public void setDirectoryArchive(File directoryArchive) {
+        this.directoryArchive = directoryArchive;
+    }
+    
+    public boolean isArchiveDataLogs() {
+        return archiveDataLogs;
+    }
+
+    public void setArchiveDataLogs(boolean archiveDataLogs) {
+        this.archiveDataLogs = archiveDataLogs;
+    }
+
+    synchronized public Integer getCurrentDataFileId() {
+        if( currentWriteFile==null )
+            return null;
+        return currentWriteFile.getDataFileId();
+    }
 }

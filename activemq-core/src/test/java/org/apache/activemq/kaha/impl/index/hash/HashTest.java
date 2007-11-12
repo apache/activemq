@@ -25,15 +25,17 @@ import org.apache.activemq.kaha.impl.index.IndexItem;
 import org.apache.activemq.kaha.impl.index.IndexManager;
 import org.apache.activemq.util.IOHelper;
 
-
 /**
  * Test a HashIndex
  */
 public class HashTest extends TestCase {
 
-    private static final int COUNT = 1000;
+    private static final int COUNT = 10000;
+
     private HashIndex hashIndex;
+
     private File directory;
+
     private IndexManager indexManager;
 
     /**
@@ -44,8 +46,12 @@ public class HashTest extends TestCase {
         super.setUp();
         directory = new File(IOHelper.getDefaultDataDirectory());
         directory.mkdirs();
-        indexManager = new IndexManager(directory, "im-hash-test", "rw", null, new AtomicLong());
+        IOHelper.deleteChildren(directory);
+        indexManager = new IndexManager(directory, "im-hash-test", "rw", null,
+                new AtomicLong());
         this.hashIndex = new HashIndex(directory, "testHash", indexManager);
+        this.hashIndex.setNumberOfBins(12);
+        this.hashIndex.setPageSize(32 * 1024);
         this.hashIndex.setKeyMarshaller(Store.STRING_MARSHALLER);
     }
 
@@ -56,7 +62,7 @@ public class HashTest extends TestCase {
         doTest(600);
         hashIndex.clear();
         hashIndex.unload();
-        doTest(1024 * 4);
+        doTest(128);
     }
 
     public void doTest(int pageSize) throws Exception {
@@ -66,8 +72,11 @@ public class HashTest extends TestCase {
         doInsert(keyRoot);
         checkRetrieve(keyRoot);
         doRemove(keyRoot);
+
         doInsert(keyRoot);
-        doRemoveBackwards(keyRoot);
+        doRemoveHalf(keyRoot);
+        doInsertHalf(keyRoot);
+        checkRetrieve(keyRoot);
     }
 
     void doInsert(String keyRoot) throws Exception {
@@ -75,14 +84,32 @@ public class HashTest extends TestCase {
             IndexItem value = indexManager.createNewIndex();
             indexManager.storeIndex(value);
             hashIndex.store(keyRoot + i, value);
-
         }
     }
 
     void checkRetrieve(String keyRoot) throws IOException {
         for (int i = 0; i < COUNT; i++) {
-            IndexItem item = (IndexItem)hashIndex.get(keyRoot + i);
+            IndexItem item = (IndexItem) hashIndex.get(keyRoot + i);
             assertNotNull(item);
+        }
+    }
+
+    void doRemoveHalf(String keyRoot) throws Exception {
+        for (int i = 0; i < COUNT; i++) {
+            if (i % 2 == 0) {
+                hashIndex.remove(keyRoot + i);
+            }
+
+        }
+    }
+
+    void doInsertHalf(String keyRoot) throws Exception {
+        for (int i = 0; i < COUNT; i++) {
+            if (i % 2 == 0) {
+                IndexItem value = indexManager.createNewIndex();
+                indexManager.storeIndex(value);
+                hashIndex.store(keyRoot + i, value);
+            }
         }
     }
 
@@ -91,7 +118,7 @@ public class HashTest extends TestCase {
             hashIndex.remove(keyRoot + i);
         }
         for (int i = 0; i < COUNT; i++) {
-            IndexItem item = (IndexItem)hashIndex.get(keyRoot + i);
+            IndexItem item = (IndexItem) hashIndex.get(keyRoot + i);
             assertNull(item);
         }
     }
@@ -101,7 +128,7 @@ public class HashTest extends TestCase {
             hashIndex.remove(keyRoot + i);
         }
         for (int i = 0; i < COUNT; i++) {
-            IndexItem item = (IndexItem)hashIndex.get(keyRoot + i);
+            IndexItem item = (IndexItem) hashIndex.get(keyRoot + i);
             assertNull(item);
         }
     }

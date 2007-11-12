@@ -170,7 +170,8 @@ public class TransportConnector implements Connector {
             }
 
             private void onAcceptError(Exception error, String remoteHost) {
-                LOG.error("Could not accept connection " + (remoteHost == null ? "" : "from " + remoteHost) + ": " + error, error);
+                LOG.error("Could not accept connection " + (remoteHost == null ? "" : "from " + remoteHost) + ": " + error.getMessage());
+                LOG.debug("Reason: " + error.getMessage(), error);
             }
         });
         this.server.setBrokerInfo(brokerInfo);

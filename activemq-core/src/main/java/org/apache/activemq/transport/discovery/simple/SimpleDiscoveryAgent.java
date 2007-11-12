@@ -23,6 +23,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryListener;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A simple DiscoveryAgent that allows static configuration of the discovered
@@ -32,13 +34,15 @@ import org.apache.activemq.transport.discovery.DiscoveryListener;
  */
 public class SimpleDiscoveryAgent implements DiscoveryAgent {
 
+    private final static Log LOG = LogFactory.getLog(SimpleDiscoveryAgent.class); 
+    
     private long initialReconnectDelay = 1000;
     private long maxReconnectDelay = 1000 * 30;
     private long backOffMultiplier = 2;
-    private boolean useExponentialBackOff;
+    private boolean useExponentialBackOff=true;
     private int maxReconnectAttempts;
     private final Object sleepMutex = new Object();
-    private long minConnectTime = 500;
+    private long minConnectTime = 5000;
     private DiscoveryListener listener;
     private String services[] = new String[] {};
     private final AtomicBoolean running = new AtomicBoolean(false);
@@ -109,11 +113,12 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
                     // fails right
                     // away.
                     if (event.connectTime + minConnectTime > System.currentTimeMillis()) {
+                        LOG.debug("Failure occured soon after the discovery event was generated.  It will be clasified as a connection failure: "+event);
 
                         event.connectFailures++;
 
                         if (maxReconnectAttempts > 0 && event.connectFailures >= maxReconnectAttempts) {
-                            // Don' try to re-connect
+                            LOG.debug("Reconnect attempts exceeded "+maxReconnectAttempts+" tries.  Reconnecting has been disabled.");
                             return;
                         }
 
@@ -123,6 +128,7 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
                                     return;
                                 }
 
+                                LOG.debug("Waiting "+event.reconnectDelay+" ms before attepting to reconnect.");
                                 sleepMutex.wait(event.reconnectDelay);
                             } catch (InterruptedException ie) {
                                 Thread.currentThread().interrupt();

@@ -192,6 +192,9 @@ public final class MarshallingSupport {
         case LIST_TYPE:
             value = unmarshalPrimitiveList(in);
             break;
+        case NULL:
+            value = null;
+            break;
         default:
             throw new IOException("Unknown primitive type: " + type);
         }

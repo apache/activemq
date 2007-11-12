@@ -21,12 +21,15 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.activeio.journal.Journal;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
@@ -41,6 +44,7 @@ import org.apache.activemq.command.JournalTransaction;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.kaha.impl.async.AsyncDataManager;
 import org.apache.activemq.kaha.impl.async.Location;
+import org.apache.activemq.kaha.impl.index.hash.HashIndex;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -55,15 +59,16 @@ import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.usage.Usage;
 import org.apache.activemq.usage.UsageListener;
-import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.wireformat.WireFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 
 /**
  * An implementation of {@link PersistenceAdapter} designed for use with a
@@ -83,9 +88,8 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private TaskRunnerFactory taskRunnerFactory;
     private WireFormat wireFormat = new OpenWireFormat();
     private SystemUsage usageManager;
-    private long cleanupInterval = 1000 * 15;
-    private long checkpointInterval = 1000 * 10;
-    private int maxCheckpointWorkers = 1;
+    private long cleanupInterval = 1000 * 30;
+    private long checkpointInterval = 1000 * 60;
     private int maxCheckpointMessageAddSize = 1024 * 4;
     private AMQTransactionStore transactionStore = new AMQTransactionStore(this);
     private TaskRunner checkpointTask;
@@ -97,11 +101,17 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private boolean syncOnWrite;
     private String brokerName = "";
     private File directory;
+    private File directoryArchive;
     private BrokerService brokerService;
     private AtomicLong storeSize = new AtomicLong();
     private boolean persistentIndex=true;
     private boolean useNio = true;
+    private boolean archiveDataLogs=false;
     private int maxFileLength = AsyncDataManager.DEFAULT_MAX_FILE_LENGTH;
+    private int indexBinSize = HashIndex.DEFAULT_BIN_SIZE;
+    private int indexKeySize = HashIndex.DEFAULT_KEY_SIZE;
+    private int indexPageSize = HashIndex.DEFAULT_PAGE_SIZE;
+    private Map<AMQMessageStore,Set<Integer>> dataFilesInProgress = new ConcurrentHashMap<AMQMessageStore,Set<Integer>> ();
 
 
     public String getBrokerName() {
@@ -135,8 +145,14 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
                 this.directory = new File(directory, "amqstore");
             }
         }
+        if (this.directoryArchive == null) {
+            this.directoryArchive = new File(this.directory,"archive");
+        }
         LOG.info("AMQStore starting using directory: " + directory);
         this.directory.mkdirs();
+        if (archiveDataLogs) {
+            this.directoryArchive.mkdirs();
+        }
 
         if (this.usageManager != null) {
             this.usageManager.getMemoryUsage().addUsageListener(this);
@@ -345,14 +361,18 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 
     /**
      * Cleans up the data files
-     * 
-     * @return
      * @throws IOException
      */
     public void cleanup() {
         try {
+            Set<Integer>inProgress = new HashSet<Integer>();
+            for (Set<Integer> set: dataFilesInProgress.values()) {
+                inProgress.addAll(set);
+            }
+            Integer lastDataFile = asyncDataManager.getCurrentDataFileId();   
+            inProgress.add(lastDataFile);
             Set<Integer> inUse = referenceStoreAdapter.getReferenceFileIdsInUse();
-            asyncDataManager.consolidateDataFilesNotIn(inUse);
+            asyncDataManager.consolidateDataFilesNotIn(inUse, inProgress);
         } catch (IOException e) {
             LOG.error("Could not cleanup data files: " + e, e);
         }
@@ -612,6 +632,8 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     protected AsyncDataManager createAsyncDataManager() {
         AsyncDataManager manager = new AsyncDataManager(storeSize);
         manager.setDirectory(new File(directory, "journal"));
+        manager.setDirectoryArchive(getDirectoryArchive());
+        manager.setArchiveDataLogs(isArchiveDataLogs());
         manager.setMaxFileLength(maxFileLength);
         manager.setUseNio(useNio);    
         return manager;
@@ -620,6 +642,9 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     protected KahaReferenceStoreAdapter createReferenceStoreAdapter() throws IOException {
         KahaReferenceStoreAdapter adaptor = new KahaReferenceStoreAdapter(storeSize);
         adaptor.setPersistentIndex(isPersistentIndex());
+        adaptor.setIndexBinSize(getIndexBinSize());
+        adaptor.setIndexKeySize(getIndexKeySize());
+        adaptor.setIndexPageSize(getIndexPageSize());
         return adaptor;
     }
 
@@ -673,18 +698,17 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         return maxCheckpointMessageAddSize;
     }
 
+    /**
+     * When set using XBean, you can use values such as: "20
+     * mb", "1024 kb", or "1 gb"
+     * 
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
+     */
     public void setMaxCheckpointMessageAddSize(int maxCheckpointMessageAddSize) {
         this.maxCheckpointMessageAddSize = maxCheckpointMessageAddSize;
     }
 
-    public int getMaxCheckpointWorkers() {
-        return maxCheckpointWorkers;
-    }
-
-    public void setMaxCheckpointWorkers(int maxCheckpointWorkers) {
-        this.maxCheckpointWorkers = maxCheckpointWorkers;
-    }
-
+   
     public synchronized File getDirectory() {
         return directory;
     }
@@ -724,7 +748,92 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 		return maxFileLength;
 	}
 
+	 /**
+     * When set using XBean, you can use values such as: "20
+     * mb", "1024 kb", or "1 gb"
+     * 
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
+     */
 	public void setMaxFileLength(int maxFileLength) {
 		this.maxFileLength = maxFileLength;
 	}
+	
+	public long getCleanupInterval() {
+        return cleanupInterval;
+    }
+
+    public void setCleanupInterval(long cleanupInterval) {
+        this.cleanupInterval = cleanupInterval;
+    }
+
+    public long getCheckpointInterval() {
+        return checkpointInterval;
+    }
+
+    public void setCheckpointInterval(long checkpointInterval) {
+        this.checkpointInterval = checkpointInterval;
+    }
+    
+    public int getIndexBinSize() {
+        return indexBinSize;
+    }
+
+    public void setIndexBinSize(int indexBinSize) {
+        this.indexBinSize = indexBinSize;
+    }
+
+    public int getIndexKeySize() {
+        return indexKeySize;
+    }
+
+    public void setIndexKeySize(int indexKeySize) {
+        this.indexKeySize = indexKeySize;
+    }
+
+    public int getIndexPageSize() {
+        return indexPageSize;
+    }
+
+    /**
+     * When set using XBean, you can use values such as: "20
+     * mb", "1024 kb", or "1 gb"
+     * 
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
+     */
+    public void setIndexPageSize(int indexPageSize) {
+        this.indexPageSize = indexPageSize;
+    }
+    
+    public File getDirectoryArchive() {
+        return directoryArchive;
+    }
+
+    public void setDirectoryArchive(File directoryArchive) {
+        this.directoryArchive = directoryArchive;
+    }
+
+    public boolean isArchiveDataLogs() {
+        return archiveDataLogs;
+    }
+
+    public void setArchiveDataLogs(boolean archiveDataLogs) {
+        this.archiveDataLogs = archiveDataLogs;
+    }    
+
+	
+	protected void addInProgressDataFile(AMQMessageStore store,int dataFileId) {
+	    Set<Integer>set = dataFilesInProgress.get(store);
+	    if (set == null) {
+	        set = new CopyOnWriteArraySet<Integer>();
+	        dataFilesInProgress.put(store, set);
+	    }
+	    set.add(dataFileId);
+	}
+	
+	protected void removeInProgressDataFile(AMQMessageStore store,int dataFileId) {
+        Set<Integer>set = dataFilesInProgress.get(store);
+        if (set != null) {
+            set.remove(dataFileId);
+        }
+    }
 }

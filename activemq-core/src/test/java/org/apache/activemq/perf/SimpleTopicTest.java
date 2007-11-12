@@ -37,14 +37,14 @@ public class SimpleTopicTest extends TestCase {
     protected BrokerService broker;
     // protected String
     // bindAddress="tcp://localhost:61616?wireFormat.cacheEnabled=true&wireFormat.tightEncodingEnabled=true&jms.useAsyncSend=false";
-    //protected String bindAddress="tcp://localhost:61616";
+    protected String bindAddress="tcp://localhost:61616";
     //protected String bindAddress = "tcp://localhost:61616";
     //protected String bindAddress="vm://localhost?marshal=true";
-    protected String bindAddress="vm://localhost";
+    //protected String bindAddress="vm://localhost";
     protected PerfProducer[] producers;
     protected PerfConsumer[] consumers;
     protected String destinationName = getClass().getName();
-    protected int samepleCount = 10;
+    protected int samepleCount = 20;
     protected long sampleInternal = 10000;
     protected int numberOfConsumers = 1;
     protected int numberofProducers = 2;
