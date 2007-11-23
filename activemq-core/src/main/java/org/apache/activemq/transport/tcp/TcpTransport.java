@@ -104,6 +104,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     private Map<String, Object> socketOptions;
     private Boolean keepAlive;
     private Boolean tcpNoDelay;
+    private Thread runnerThread;
 
     /**
      * Connect to a remote Node - e.g. a Broker
@@ -165,6 +166,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      */
     public void run() {
         LOG.trace("TCP consumer thread starting");
+        this.runnerThread=Thread.currentThread();
         try {
             while (!isStopped()) {
                 doRun();
@@ -436,7 +438,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     public void stop() throws Exception {
         super.stop();
         CountDownLatch countDownLatch = stoppedLatch.get();
-        if (countDownLatch != null) {
+        if (countDownLatch != null && Thread.currentThread() != this.runnerThread) {
             countDownLatch.await();
         }
     }
