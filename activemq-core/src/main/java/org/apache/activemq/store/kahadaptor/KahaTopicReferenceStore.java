@@ -215,8 +215,9 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
     }
 
     public SubscriptionInfo[] getAllSubscriptions() throws IOException {
-        return subscriberContainer.values()
+        SubscriptionInfo[] result = subscriberContainer.values()
             .toArray(new SubscriptionInfo[subscriberContainer.size()]);
+        return result;
     }
 
     public int getMessageCount(String clientId, String subscriberName) throws IOException {
