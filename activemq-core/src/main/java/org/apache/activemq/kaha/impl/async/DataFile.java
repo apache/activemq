@@ -43,6 +43,10 @@ class DataFile extends LinkedNode implements Comparable<DataFile> {
         this.dataFileId = Integer.valueOf(number);
         length = (int)(file.exists() ? file.length() : 0);
     }
+    
+    File getFile() {
+        return file;
+    }
 
     public Integer getDataFileId() {
         return dataFileId;
