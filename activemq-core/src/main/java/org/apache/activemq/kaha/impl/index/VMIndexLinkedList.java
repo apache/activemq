@@ -35,6 +35,10 @@ public final class VMIndexLinkedList implements Cloneable, IndexLinkedList {
         this.root = header;
         this.root.next=this.root.prev=this.root;
     }
+    
+    public  void setRoot(IndexItem newRoot) {
+        this.root=newRoot;
+    }
 
     public synchronized IndexItem getRoot() {
         return root;
