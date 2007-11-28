@@ -25,14 +25,15 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.filter.MessageEvaluationContext;
+import org.apache.activemq.usage.SystemUsage;
 
 public class QueueBrowserSubscription extends QueueSubscription {
 
     boolean browseDone;
 
-    public QueueBrowserSubscription(Broker broker, ConnectionContext context, ConsumerInfo info)
+    public QueueBrowserSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info)
         throws InvalidSelectorException {
-        super(broker, context, info);
+        super(broker,usageManager, context, info);
     }
 
     protected boolean canDispatch(MessageReference node) {

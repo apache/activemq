@@ -30,6 +30,7 @@ public class BitArrayBin {
     private int firstIndex = -1;
     private int firstBin = -1;
     private long lastBitSet=-1;
+    private long lastInOrderBit=-1;
 
     /**
      * Create a BitArrayBin to a certain window size (number of messages to
@@ -76,10 +77,15 @@ public class BitArrayBin {
      * @return true if next message is in order
      */
     public boolean isInOrder(long index) {
-        if (lastBitSet== -1) {
-            return true;
+        boolean result = false;
+        if (lastInOrderBit == -1) {
+            result = true;
+        } else {
+            result = lastInOrderBit + 1 == index;
         }
-        return lastBitSet+1==index;
+        lastInOrderBit = index;
+        return result;
+
     }
 
     /**

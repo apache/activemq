@@ -118,15 +118,15 @@ public class MemoryUsage extends Usage<MemoryUsage> {
         if (value == 0) {
             return;
         }
-        if (parent != null) {
-            ((MemoryUsage)parent).increaseUsage(value);
-        }
         int percentUsage;
         synchronized (usageMutex) {
             usage += value;
             percentUsage = caclPercentUsage();
         }
         setPercentUsage(percentUsage);
+        if (parent != null) {
+            ((MemoryUsage)parent).increaseUsage(value);
+        }
     }
 
     /**
@@ -138,15 +138,15 @@ public class MemoryUsage extends Usage<MemoryUsage> {
         if (value == 0) {
             return;
         }
-        if (parent != null) {
-            parent.decreaseUsage(value);
-        }
         int percentUsage;
         synchronized (usageMutex) {
             usage -= value;
             percentUsage = caclPercentUsage();
         }
         setPercentUsage(percentUsage);
+        if (parent != null) {
+            parent.decreaseUsage(value);
+        }
     }
 
     protected long retrieveUsage() {

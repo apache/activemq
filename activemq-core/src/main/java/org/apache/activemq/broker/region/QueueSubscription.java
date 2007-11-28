@@ -28,6 +28,7 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.transaction.Synchronization;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -35,8 +36,8 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
 
     private static final Log LOG = LogFactory.getLog(QueueSubscription.class);
 
-    public QueueSubscription(Broker broker, ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
-        super(broker, context, info);
+    public QueueSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
+        super(broker,usageManager, context, info);
     }
 
     /**

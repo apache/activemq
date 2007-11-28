@@ -247,6 +247,12 @@ public interface PendingMessageCursor extends Service {
      * disappears when the broker shuts down
      */
     public boolean isTransient();
+    
+    /**
+     * Mark a message as already dispatched
+     * @param message
+     */
+    public void dispatched(MessageReference message);
 
 
 }

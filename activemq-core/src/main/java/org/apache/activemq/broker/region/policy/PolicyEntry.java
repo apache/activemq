@@ -51,11 +51,13 @@ public class PolicyEntry extends DestinationMapEntry {
     private PendingQueueMessageStoragePolicy pendingQueuePolicy;
     private PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy;
     private PendingSubscriberMessageStoragePolicy pendingSubscriberPolicy;
-    private int maxProducersToAudit=1024;
-    private int maxAuditDepth=1;
+    private int maxProducersToAudit=32;
+    private int maxAuditDepth=1024;
+    private int maxQueueAuditDepth=1;
     private boolean enableAudit=true;
     private boolean producerFlowControl = true;
-
+    private boolean optimizedDispatch=false;
+   
     public void configure(Queue queue, Store tmpStore) {
         if (dispatchPolicy != null) {
             queue.setDispatchPolicy(dispatchPolicy);
@@ -73,7 +75,7 @@ public class PolicyEntry extends DestinationMapEntry {
         }
         queue.setProducerFlowControl(isProducerFlowControl());
         queue.setEnableAudit(isEnableAudit());
-        queue.setMaxAuditDepth(getMaxAuditDepth());
+        queue.setMaxAuditDepth(getMaxQueueAuditDepth());
         queue.setMaxProducersToAudit(getMaxProducersToAudit());
     }
 
@@ -132,6 +134,8 @@ public class PolicyEntry extends DestinationMapEntry {
             cursor.setSystemUsage(memoryManager);
             sub.setPending(cursor);
         }
+        sub.setMaxAuditDepth(getMaxAuditDepth());
+        sub.setMaxProducersToAudit(getMaxProducersToAudit());
     }
 
     // Properties
@@ -329,6 +333,22 @@ public class PolicyEntry extends DestinationMapEntry {
      */
     public void setEnableAudit(boolean enableAudit) {
         this.enableAudit = enableAudit;
+    }
+
+    public int getMaxQueueAuditDepth() {
+        return maxQueueAuditDepth;
+    }
+
+    public void setMaxQueueAuditDepth(int maxQueueAuditDepth) {
+        this.maxQueueAuditDepth = maxQueueAuditDepth;
+    }
+
+    public boolean isOptimizedDispatch() {
+        return optimizedDispatch;
+    }
+
+    public void setOptimizedDispatch(boolean optimizedDispatch) {
+        this.optimizedDispatch = optimizedDispatch;
     }
 
 }

@@ -50,6 +50,7 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
 
     public synchronized void stop() throws Exception  {
         started=false;
+        audit=null;
         gc();
     }
 
@@ -238,6 +239,13 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
     public boolean isTransient() {
         return false;
     }
+    
+    /**
+     * Mark a message as already dispatched
+     * @param message
+     */
+    public void dispatched(MessageReference message) {   
+    }
 
 
     protected synchronized boolean  isDuplicate(MessageId messageId) {
@@ -246,7 +254,12 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
         }
         return this.audit.isDuplicate(messageId);
     }
-
-   
+    
+    protected synchronized void rollback(MessageId id) {
+        if (this.audit != null) {
+            audit.rollback(id);
+        }
+    }
+  
    
 }

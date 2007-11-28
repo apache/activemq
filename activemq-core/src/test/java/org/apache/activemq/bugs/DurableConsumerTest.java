@@ -63,6 +63,8 @@ public class DurableConsumerTest extends TestCase {
         MessageConsumer consumer = consumerSession.createDurableSubscriber(topic, CONSUMER_NAME);
         consumerConnection.start();
         consumerConnection.close();
+        broker.stop();
+        broker =createBroker();
         
         Connection producerConnection = factory.createConnection();
        
@@ -79,7 +81,8 @@ public class DurableConsumerTest extends TestCase {
             }
         }
         producerConnection.close();
-        
+        broker.stop();
+        broker =createBroker();
         
         consumerConnection = factory.createConnection();
         consumerConnection.setClientID(CONSUMER_NAME);
