@@ -245,15 +245,19 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
                     entry = container.getNextEntry(entry);
                 }
             }
-
+           
             if (entry != null) {
                 do {
                     ConsumerMessageRef consumerRef = container.get(entry);
-                    ReferenceRecord msg = messageContainer.getValue(consumerRef.getMessageEntry());
+                    ReferenceRecord msg = messageContainer.getValue(consumerRef
+                            .getMessageEntry());
                     if (msg != null) {
-                        recoverReference(listener, msg);
-                        count++;
-                        container.setBatchEntry(msg.getMessageId(), entry);
+                        if (recoverReference(listener, msg)) {
+                            count++;
+                            container.setBatchEntry(msg.getMessageId(), entry);
+                        } else {
+                            break;
+                        }
                     } else {
                         container.reset();
                     }

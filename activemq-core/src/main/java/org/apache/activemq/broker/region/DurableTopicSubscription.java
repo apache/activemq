@@ -43,14 +43,13 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     private final ConcurrentHashMap<ActiveMQDestination, Destination> destinations = new ConcurrentHashMap<ActiveMQDestination, Destination>();
     private final SubscriptionKey subscriptionKey;
     private final boolean keepDurableSubsActive;
-    private final SystemUsage usageManager;
     private boolean active;
 
     public DurableTopicSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, boolean keepDurableSubsActive)
         throws InvalidSelectorException {
-        super(broker, context, info);
+        super(broker,usageManager, context, info);
         this.pending = new StoreDurableSubscriberCursor(context.getClientId(), info.getSubscriptionName(), broker.getTempDataStore(), info.getPrefetchSize(), this);
-        this.usageManager = usageManager;
+        this.pending.setSystemUsage(usageManager);
         this.keepDurableSubsActive = keepDurableSubsActive;
         subscriptionKey = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
     }
@@ -191,7 +190,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         return active;
     }
 
-    protected synchronized void acknowledge(ConnectionContext context, MessageAck ack, MessageReference node) throws IOException {
+    protected void acknowledge(ConnectionContext context, MessageAck ack, MessageReference node) throws IOException {
         node.getRegionDestination().acknowledge(context, this, ack, node);
         redeliveredMessages.remove(node.getMessageId());
         node.decrementReferenceCount();
@@ -238,7 +237,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     }
 
     /**
-     * @param memoryManager
+     * @param usageManager
      * @param oldPercentUsage
      * @param newPercentUsage
      * @see org.apache.activemq.usage.UsageListener#onMemoryUseChanged(org.apache.activemq.usage.SystemUsage,

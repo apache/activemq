@@ -67,17 +67,20 @@ public class TopicSubContainer {
         if (!listContainer.isEmpty()) {
             StoreEntry entry = listContainer.getFirst();
             while (entry != null) {
-                ConsumerMessageRef ref = (ConsumerMessageRef)listContainer.get(entry);
-                listContainer.remove(entry);
-                if (listContainer != null && batchEntry != null && (listContainer.isEmpty() || batchEntry.equals(entry))) {
-                    reset();
-                }
+                ConsumerMessageRef ref = (ConsumerMessageRef)listContainer.get(entry);          
                 if (ref != null && ref.getMessageId().equals(id)) {
                     result = ref;
+                    listContainer.remove(entry);
+                    if (batchEntry != null && batchEntry.equals(entry)) {
+                        reset();
+                    }
                     break;
                 }
-                entry = listContainer.getFirst();
+                entry = listContainer.getNext(entry);
             }
+        }
+        if (listContainer != null  && (listContainer.isEmpty() )) {
+            reset();
         }
         return result;
     }

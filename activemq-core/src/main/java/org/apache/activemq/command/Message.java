@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
@@ -81,6 +82,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     private transient short referenceCount;
     private transient ActiveMQConnection connection;
     private transient org.apache.activemq.broker.region.Destination regionDestination;
+    private transient MemoryUsage memoryUsage;
 
     private BrokerId[] brokerPath;
     private BrokerId[] cluster;
@@ -127,6 +129,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         copy.regionDestination = regionDestination;
         copy.brokerInTime = brokerInTime;
         copy.brokerOutTime = brokerOutTime;
+        copy.memoryUsage=this.memoryUsage;
         // copying the broker path breaks networks - if a consumer re-uses a
         // consumed
         // message and forwards it on
@@ -567,6 +570,17 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
 
     public void setRegionDestination(org.apache.activemq.broker.region.Destination destination) {
         this.regionDestination = destination;
+        if(this.memoryUsage==null) {
+            this.memoryUsage=regionDestination.getBrokerMemoryUsage();
+        }
+    }
+    
+    public MemoryUsage getMemoryUsage() {
+        return this.memoryUsage;
+    }
+    
+    public void setMemoryUsage(MemoryUsage usage) {
+        this.memoryUsage=usage;
     }
 
     public boolean isMarshallAware() {
@@ -581,16 +595,15 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
             size = getSize();
         }
 
-        if (rc == 1 && regionDestination != null) {
-            regionDestination.getBrokerMemoryUsage().increaseUsage(size);
+        if (rc == 1 && getMemoryUsage() != null) {
+            getMemoryUsage().increaseUsage(size);
         }
 
-        // System.out.println(" + "+getDestination()+" :::: "+getMessageId()+"
-        // "+rc);
+        //System.out.println(" + "+getMemoryUsage().getName()+" :::: "+getMessageId()+"rc="+rc);
         return rc;
     }
 
-    public synchronized int decrementReferenceCount() {
+    public int decrementReferenceCount() {
         int rc;
         int size;
         synchronized (this) {
@@ -598,11 +611,10 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
             size = getSize();
         }
 
-        if (rc == 0 && regionDestination != null) {
-            regionDestination.getBrokerMemoryUsage().decreaseUsage(size);
+        if (rc == 0 && getMemoryUsage() != null) {
+            getMemoryUsage().decreaseUsage(size);
         }
-        // System.out.println(" - "+getDestination()+" :::: "+getMessageId()+"
-        // "+rc);
+        //System.out.println(" - "+getMemoryUsage().getName()+" :::: "+getMessageId()+"rc="+rc);
 
         return rc;
     }

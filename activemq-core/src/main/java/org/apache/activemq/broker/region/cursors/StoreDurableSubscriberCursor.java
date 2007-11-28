@@ -288,6 +288,20 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
             nonPersistent.setEnableAudit(enableAudit);
         }
     }
+    
+    /**
+     * Mark a message as already dispatched
+     * @param message
+     */
+    public void dispatched(MessageReference message) {
+        super.dispatched(message);
+        for (PendingMessageCursor cursor : storePrefetches) {
+            cursor.dispatched(message);
+        }
+        if (nonPersistent != null) {
+            nonPersistent.dispatched(message);
+        }
+    }
 
     protected synchronized PendingMessageCursor getNextCursor() throws Exception {
         if (currentCursor == null || currentCursor.isEmpty()) {

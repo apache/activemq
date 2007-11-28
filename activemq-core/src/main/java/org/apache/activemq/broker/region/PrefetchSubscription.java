@@ -23,6 +23,7 @@ import java.util.LinkedList;
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 
+import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
@@ -38,6 +39,7 @@ import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.transaction.Synchronization;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -55,14 +57,20 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     protected long enqueueCounter;
     protected long dispatchCounter;
     protected long dequeueCounter;
+    protected boolean optimizedDispatch=false;
+    private int maxProducersToAudit=32;
+    private int maxAuditDepth=2048;
+    protected final SystemUsage usageManager;
+    protected ActiveMQMessageAudit audit = new ActiveMQMessageAudit();
 
-    public PrefetchSubscription(Broker broker, ConnectionContext context, ConsumerInfo info, PendingMessageCursor cursor) throws InvalidSelectorException {
+    public PrefetchSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, PendingMessageCursor cursor) throws InvalidSelectorException {
         super(broker, context, info);
+        this.usageManager=usageManager;
         pending = cursor;
     }
 
-    public PrefetchSubscription(Broker broker, ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
-        this(broker, context, info, new VMPendingMessageCursor());
+    public PrefetchSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
+        this(broker,usageManager,context, info, new VMPendingMessageCursor());
     }
 
     /**
@@ -118,8 +126,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         boolean pendingEmpty = false;
         pendingEmpty = pending.isEmpty();
         enqueueCounter++;
-
-        if (!isFull() && pendingEmpty && !isSlave()) {
+        if (optimizedDispatch && !isFull() && pendingEmpty && !isSlave()) {
             dispatch(node);
         } else {
             optimizePrefetch();
@@ -128,6 +135,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     LOG.debug("Prefetch limit.");
                 }
                 pending.addMessageLast(node);
+                dispatchMatched();
             }
         }
     }
@@ -364,6 +372,9 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
     public synchronized void setPending(PendingMessageCursor pending) {
         this.pending = pending;
+        if (this.pending!=null) {
+            this.pending.setSystemUsage(usageManager);
+        }
     }
 
     /**
@@ -440,6 +451,9 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             if (node != QueueMessageReference.NULL_MESSAGE) {
                 dispatchCounter++;
                 dispatched.addLast(node);
+                if(pending != null) {
+                    pending.dispatched(message);
+                }
             } else {
                 prefetchExtension = Math.max(0, prefetchExtension - 1);
             }
@@ -459,8 +473,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 context.getConnection().dispatchSync(md);
                 onDispatch(node, message);
             }
-            // System.err.println(broker.getBrokerName() + " " + this + " (" +
-            // enqueueCounter + ", " + dispatchCounter +") " + node);
             return true;
         } else {
             return false;
@@ -534,6 +546,30 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
      * @throws IOException
      */
     protected void acknowledge(ConnectionContext context, final MessageAck ack, final MessageReference node) throws IOException {
+    }
+
+    public boolean isOptimizedDispatch() {
+        return optimizedDispatch;
+    }
+
+    public void setOptimizedDispatch(boolean optimizedDispatch) {
+        this.optimizedDispatch = optimizedDispatch;
+    }
+
+    public int getMaxProducersToAudit() {
+        return maxProducersToAudit;
+    }
+
+    public void setMaxProducersToAudit(int maxProducersToAudit) {
+        this.maxProducersToAudit = maxProducersToAudit;
+    }
+
+    public int getMaxAuditDepth() {
+        return maxAuditDepth;
+    }
+
+    public void setMaxAuditDepth(int maxAuditDepth) {
+        this.maxAuditDepth = maxAuditDepth;
     }
 
 }
