@@ -64,7 +64,7 @@ public class DurableConsumerTest extends TestCase {
         consumerConnection.start();
         consumerConnection.close();
         broker.stop();
-        broker =createBroker();
+        broker =createBroker(false);
         
         Connection producerConnection = factory.createConnection();
        
@@ -82,7 +82,7 @@ public class DurableConsumerTest extends TestCase {
         }
         producerConnection.close();
         broker.stop();
-        broker =createBroker();
+        broker =createBroker(false);
         
         consumerConnection = factory.createConnection();
         consumerConnection.setClientID(CONSUMER_NAME);
@@ -105,7 +105,7 @@ public class DurableConsumerTest extends TestCase {
     
     protected void setUp() throws Exception {
         if (broker == null) {
-            broker = createBroker();
+            broker = createBroker(true);
         }
         
        
@@ -131,19 +131,19 @@ public class DurableConsumerTest extends TestCase {
      * 
      * @throws Exception
      */
-    protected BrokerService createBroker() throws Exception {
+    protected BrokerService createBroker(boolean deleteStore) throws Exception {
         BrokerService answer = new BrokerService();
-        configureBroker(answer);
+        configureBroker(answer,deleteStore);
         answer.start();
         return answer;
     }
 
     
 
-    protected void configureBroker(BrokerService answer) throws Exception {
+    protected void configureBroker(BrokerService answer,boolean deleteStore) throws Exception {
+        answer.setDeleteAllMessagesOnStartup(deleteStore);
         answer.addConnector(bindAddress);
-        answer.setDeleteAllMessagesOnStartup(true);
-        answer.setUseShutdownHook(false);
+        answer.setUseShutdownHook(true);
     }
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
