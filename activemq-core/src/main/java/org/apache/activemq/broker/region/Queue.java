@@ -449,7 +449,11 @@ public class Queue extends BaseDestination implements Task {
         final ConnectionContext context = producerExchange.getConnectionContext();
         message.setRegionDestination(this);
         if (store != null && message.isPersistent()) {
-            systemUsage.getStoreUsage().waitForSpace();
+            while (!systemUsage.getStoreUsage().waitForSpace(1000)) {
+                if (context.getStopping().get()) {
+                    throw new IOException("Connection closed, send aborted.");
+                }
+            }
             store.addMessage(context, message);
         }
         if (context.isInTransaction()) {
