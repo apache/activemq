@@ -388,7 +388,11 @@ public class Topic  extends BaseDestination  implements Task{
         message.setRegionDestination(this);
 
         if (store != null && message.isPersistent() && !canOptimizeOutPersistence()) {
-            systemUsage.getStoreUsage().waitForSpace();
+            while (!systemUsage.getStoreUsage().waitForSpace(1000)) {
+                if (context.getStopping().get()) {
+                    throw new IOException("Connection closed, send aborted.");
+                }
+            }
             store.addMessage(context, message);
         }
 
