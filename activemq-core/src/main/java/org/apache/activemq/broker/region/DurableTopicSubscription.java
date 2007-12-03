@@ -38,7 +38,7 @@ import org.apache.commons.logging.LogFactory;
 
 public class DurableTopicSubscription extends PrefetchSubscription implements UsageListener {
 
-    private static final Log LOG = LogFactory.getLog(PrefetchSubscription.class);
+    private static final Log LOG = LogFactory.getLog(DurableTopicSubscription.class);
     private final ConcurrentHashMap<MessageId, Integer> redeliveredMessages = new ConcurrentHashMap<MessageId, Integer>();
     private final ConcurrentHashMap<ActiveMQDestination, Destination> destinations = new ConcurrentHashMap<ActiveMQDestination, Destination>();
     private final SubscriptionKey subscriptionKey;
