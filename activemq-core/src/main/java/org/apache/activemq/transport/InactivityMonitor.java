@@ -105,9 +105,7 @@ public class InactivityMonitor extends TransportFilter {
             // TODO: use a thread pool for this..
             Thread thread = new Thread("ActiveMQ: Inactivity Handler: "+next.getRemoteAddress()) {
                 public void run() {
-                    synchronized (readChecker) {
                         onException(new InactivityIOException("Channel was inactive for too long: "+next.getRemoteAddress()));
-                    }
                 };
             };
             thread.setDaemon(true);
