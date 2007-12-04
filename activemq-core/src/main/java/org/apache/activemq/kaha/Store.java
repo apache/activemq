@@ -49,6 +49,11 @@ public interface Store {
      * Command Marshaller
      */
     Marshaller COMMAND_MARSHALLER = new CommandMarshaller();
+    
+    /**
+     * MessageId marshaller
+     */
+    Marshaller MESSAGEID_MARSHALLER = new MessageIdMarshaller();
 
     /**
      * close the store
@@ -270,4 +275,5 @@ public interface Store {
     public boolean isPersistentIndex();
     
 	public void setPersistentIndex(boolean persistentIndex);
+	
 }
