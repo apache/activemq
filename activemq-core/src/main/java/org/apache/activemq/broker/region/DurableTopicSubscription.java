@@ -17,7 +17,9 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.jms.InvalidSelectorException;
 import org.apache.activemq.broker.Broker;
@@ -118,9 +120,8 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 topic.deactivate(context, this);
             }
         }
-        for (Iterator iter = dispatched.iterator(); iter.hasNext();) {
+        for (final MessageReference node : dispatched) {
             // Mark the dispatched messages as redelivered for next time.
-            MessageReference node = (MessageReference)iter.next();
             Integer count = redeliveredMessages.get(node.getMessageId());
             if (count != null) {
                 redeliveredMessages.put(node.getMessageId(), Integer.valueOf(count.intValue() + 1));
@@ -134,8 +135,8 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             } else {
                 node.decrementReferenceCount();
             }
-            iter.remove();
         }
+        dispatched.clear();
         if (!keepDurableSubsActive && pending.isTransient()) {
             synchronized (pending) {
                 try {

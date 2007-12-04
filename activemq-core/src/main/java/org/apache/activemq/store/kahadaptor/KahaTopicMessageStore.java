@@ -117,7 +117,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
             subscriberContainer.put(key, info);
         }
         // add the subscriber
-        ListContainer container = addSubscriberMessageContainer(key);
+        addSubscriberMessageContainer(key);
         /*
          * if(retroactive){ for(StoreEntry
          * entry=ackContainer.getFirst();entry!=null;entry=ackContainer.getNext(entry)){
@@ -200,33 +200,39 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
         return result;
     }
 
-    protected ListContainer addSubscriberMessageContainer(Object key) throws IOException {
-        ListContainer container = store.getListContainer(key, "topic-subs");
+    protected MapContainer addSubscriberMessageContainer(Object key) throws IOException {
+        MapContainer container = store.getMapContainer(key, "topic-subs");
+        container.setKeyMarshaller(Store.MESSAGEID_MARSHALLER);
         Marshaller marshaller = new ConsumerMessageRefMarshaller();
-        container.setMarshaller(marshaller);
+        container.setValueMarshaller(marshaller);
         TopicSubContainer tsc = new TopicSubContainer(container);
         subscriberMessages.put(key, tsc);
         return container;
     }
 
-    protected void removeSubscriberMessageContainer(Object key) throws IOException {
+    protected void removeSubscriberMessageContainer(Object key)
+            throws IOException {
         subscriberContainer.remove(key);
         TopicSubContainer container = subscriberMessages.remove(key);
-        for (Iterator i = container.iterator(); i.hasNext();) {
-            ConsumerMessageRef ref = (ConsumerMessageRef)i.next();
-            if (ref != null) {
-                TopicSubAck tsa = ackContainer.get(ref.getAckEntry());
-                if (tsa != null) {
-                    if (tsa.decrementCount() <= 0) {
-                        ackContainer.remove(ref.getAckEntry());
-                        messageContainer.remove(tsa.getMessageEntry());
-                    } else {
-                        ackContainer.update(ref.getAckEntry(), tsa);
+        if (container != null) {
+            for (Iterator i = container.iterator(); i.hasNext();) {
+                ConsumerMessageRef ref = (ConsumerMessageRef) i.next();
+                if (ref != null) {
+                    TopicSubAck tsa = ackContainer.get(ref.getAckEntry());
+                    if (tsa != null) {
+                        if (tsa.decrementCount() <= 0) {
+                            ackContainer.remove(ref.getAckEntry());
+                            messageContainer.remove(tsa.getMessageEntry());
+                        } else {
+                            ackContainer.update(ref.getAckEntry(), tsa);
+                        }
                     }
                 }
             }
+            container.clear();
         }
         store.deleteListContainer(key, "topic-subs");
+
     }
 
     public int getMessageCount(String clientId, String subscriberName) throws IOException {

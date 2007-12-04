@@ -23,7 +23,7 @@ import java.io.IOException;
  * @version $Revision$
  */
 public final class IOHelper {
-
+    protected static final int MAX_FILE_NAME_LENGTH;
     private IOHelper() {
     }
 
@@ -74,6 +74,10 @@ public final class IOHelper {
                 rc.append(HexSupport.toHexFromInt(c, true));
             }
         }
+        String result = rc.toString();
+        if (result.length() > MAX_FILE_NAME_LENGTH) {
+            result = result.substring(0,MAX_FILE_NAME_LENGTH);
+        }
         return rc.toString();
     }
 
@@ -119,6 +123,10 @@ public final class IOHelper {
         if (!src.renameTo(new File(targetDirectory, src.getName()))) {
             throw new IOException("Failed to move " + src + " to " + targetDirectory);
         }
+    }
+    
+    static {
+        MAX_FILE_NAME_LENGTH = Integer.valueOf(System.getProperty("MaximumFileNameLength","200")).intValue();             
     }
 
    

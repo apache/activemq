@@ -33,6 +33,7 @@ import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.TopicReferenceStore;
+import org.apache.activemq.util.SubscriptionKey;
 
 public class KahaTopicReferenceStore extends KahaReferenceStore implements TopicReferenceStore {
 
@@ -40,6 +41,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
     protected Map<String, TopicSubContainer> subscriberMessages = new ConcurrentHashMap<String, TopicSubContainer>();
     private Map<String, SubscriptionInfo> subscriberContainer;
     private Store store;
+    private static final String TOPIC_SUB_NAME = "tsn";
 
     public KahaTopicReferenceStore(Store store, KahaReferenceStoreAdapter adapter,
                                    MapContainer<MessageId, ReferenceRecord> messageContainer, ListContainer<TopicSubAck> ackContainer,
@@ -108,10 +110,12 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         }
     }
 
-    protected ListContainer addSubscriberMessageContainer(String clientId, String subscriptionName) throws IOException {
-        ListContainer container = store.getListContainer(clientId+":"+subscriptionName+":"+destination.getQualifiedName(), "topic-subs-references");
+    
+    protected MapContainer addSubscriberMessageContainer(String clientId, String subscriptionName) throws IOException {
+        MapContainer container = store.getMapContainer(getSubscriptionContainerName(getSubscriptionKey(clientId, subscriptionName)));
+        container.setKeyMarshaller(Store.MESSAGEID_MARSHALLER);
         Marshaller marshaller = new ConsumerMessageRefMarshaller();
-        container.setMarshaller(marshaller);
+        container.setValueMarshaller(marshaller);
         TopicSubContainer tsc = new TopicSubContainer(container);
         subscriberMessages.put(getSubscriptionKey(clientId, subscriptionName), tsc);
         return container;
@@ -192,7 +196,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
             adapter.addSubscriberState(info);
         }
         // add the subscriber
-        ListContainer container = addSubscriberMessageContainer(info.getClientId(), info.getSubscriptionName());
+        addSubscriberMessageContainer(info.getClientId(), info.getSubscriptionName());
         if (retroactive) {
             /*
              * for(StoreEntry
@@ -210,8 +214,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         if (info != null) {
             adapter.removeSubscriberState(info);
         }
-        String key = getSubscriptionKey(clientId, subscriptionName);
-        removeSubscriberMessageContainer(key);
+        removeSubscriberMessageContainer(clientId,subscriptionName);
     }
 
     public SubscriptionInfo[] getAllSubscriptions() throws IOException {
@@ -293,9 +296,11 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         }
     }
 
-    protected void removeSubscriberMessageContainer(String key) throws IOException {
-        subscriberContainer.remove(key);
-        TopicSubContainer container = subscriberMessages.remove(key);
+    protected void removeSubscriberMessageContainer(String clientId, String subscriptionName) throws IOException {
+        String subscriberKey = getSubscriptionKey(clientId, subscriptionName);
+        String containerName = getSubscriptionContainerName(subscriberKey);
+        subscriberContainer.remove(subscriberKey);
+        TopicSubContainer container = subscriberMessages.remove(subscriberKey);
         for (Iterator i = container.iterator(); i.hasNext();) {
             ConsumerMessageRef ref = (ConsumerMessageRef)i.next();
             if (ref != null) {
@@ -310,12 +315,18 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
                 }
             }
         }
-        store.deleteListContainer(destination, "topic-subs-references-" + key);
+        store.deleteMapContainer(containerName);
     }
 
     protected String getSubscriptionKey(String clientId, String subscriberName) {
-        String result = clientId + ":";
-        result += subscriberName != null ? subscriberName : "NOT_SET";
-        return result;
+        StringBuffer buffer = new StringBuffer();
+        buffer.append(clientId).append(":");  
+        String name = subscriberName != null ? subscriberName : "NOT_SET";
+        return buffer.append(name).toString();
+    }
+    
+    private String getSubscriptionContainerName(String subscriptionKey) {
+        StringBuffer buffer = new StringBuffer(subscriptionKey);
+        return buffer.append(":").append(destination.getQualifiedName()).append(TOPIC_SUB_NAME).toString();
     }
 }

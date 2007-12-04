@@ -383,11 +383,15 @@ public class Topic  extends BaseDestination  implements Task{
      * @throws IOException
      * @throws Exception
      */
-    synchronized void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
-        final ConnectionContext context = producerExchange.getConnectionContext();
+    synchronized void doMessageSend(
+            final ProducerBrokerExchange producerExchange, final Message message)
+            throws IOException, Exception {
+        final ConnectionContext context = producerExchange
+                .getConnectionContext();
         message.setRegionDestination(this);
 
-        if (store != null && message.isPersistent() && !canOptimizeOutPersistence()) {
+        if (store != null && message.isPersistent()
+                && !canOptimizeOutPersistence()) {
             while (!systemUsage.getStoreUsage().waitForSpace(1000)) {
                 if (context.getStopping().get()) {
                     throw new IOException("Connection closed, send aborted.");
@@ -397,31 +401,35 @@ public class Topic  extends BaseDestination  implements Task{
         }
 
         message.incrementReferenceCount();
-        try {
 
-            if (context.isInTransaction()) {
-                context.getTransaction().addSynchronization(new Synchronization() {
-                    public void afterCommit() throws Exception {
-                        // It could take while before we receive the commit
-                        // operration.. by that time the message could have
-                        // expired..
-                        if (broker.isExpired(message)) {
-                            broker.messageExpired(context, message);
-                            message.decrementReferenceCount();
-                            destinationStatistics.getMessages().decrement();
-                            return;
-                        }
-                        dispatch(context, message);
+        if (context.isInTransaction()) {
+            context.getTransaction().addSynchronization(new Synchronization() {
+                public void afterCommit() throws Exception {
+                    // It could take while before we receive the commit
+                    // operration.. by that time the message could have
+                    // expired..
+                    if (broker.isExpired(message)) {
+                        broker.messageExpired(context, message);
+                        message.decrementReferenceCount();
+                        destinationStatistics.getMessages().decrement();
+                        return;
                     }
-                });
+                    try {
+                        dispatch(context, message);
+                    } finally {
+                        message.decrementReferenceCount();
+                    }
+                }
+            });
 
-            } else {
+        } else {
+            try {
                 dispatch(context, message);
+            } finally {
+                message.decrementReferenceCount();
             }
-
-        } finally {
-            message.decrementReferenceCount();
         }
+
     }
 
     private boolean canOptimizeOutPersistence() {

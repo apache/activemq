@@ -404,6 +404,11 @@
             <exclude>**/nio/**</exclude>
              <!-- A test used for memory profiling only. -->
              <exclude>**/NetworkConnectionsCleanedupTest.*/**</exclude>
+             
+             <exclude>**/NetworkConnectionsCleanedupTest.*/**</exclude>
+             
+             <exclude>**/amq1490/*</exclude>
+             <exclude>**/archive/*</exclude>
 
             <exclude>**/AMQDeadlockTest3.*</exclude>
           </excludes>

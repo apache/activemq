@@ -113,7 +113,7 @@ public class BrokerService implements Service {
     private TaskRunnerFactory persistenceTaskRunnerFactory;
     private SystemUsage systemUsage;
     private SystemUsage producerSystemUsage;
-    private SystemUsage storeSystemUsage;
+    private SystemUsage consumerSystemUsaage;
     private PersistenceAdapter persistenceAdapter;
     private PersistenceAdapterFactory persistenceFactory;
     private DestinationFactory destinationFactory;
@@ -668,23 +668,23 @@ public class BrokerService implements Service {
      * @throws IOException 
      */
     public SystemUsage getConsumerSystemUsage() throws IOException {
-        if (this.storeSystemUsage == null) {
-            this.storeSystemUsage = new SystemUsage(getSystemUsage(), "Store");
-            this.storeSystemUsage.getMemoryUsage().setUsagePortion(0.5f);
-            addService(this.storeSystemUsage);
+        if (this.consumerSystemUsaage == null) {
+            this.consumerSystemUsaage = new SystemUsage(getSystemUsage(), "Consumer");
+            this.consumerSystemUsaage.getMemoryUsage().setUsagePortion(0.5f);
+            addService(this.consumerSystemUsaage);
         }
-        return this.storeSystemUsage;
+        return this.consumerSystemUsaage;
     }
 
     /**
-     * @param storeSystemUsage the storeSystemUsage to set
+     * @param consumerSystemUsaage the storeSystemUsage to set
      */
-    public void setConsumerSystemUsage(SystemUsage storeSystemUsage) {
-        if (this.storeSystemUsage != null) {
-            removeService(this.storeSystemUsage);
+    public void setConsumerSystemUsage(SystemUsage consumerSystemUsaage) {
+        if (this.consumerSystemUsaage != null) {
+            removeService(this.consumerSystemUsaage);
         }
-        this.storeSystemUsage = storeSystemUsage;
-        addService(this.storeSystemUsage);
+        this.consumerSystemUsaage = consumerSystemUsaage;
+        addService(this.consumerSystemUsaage);
     }
 
     /**
