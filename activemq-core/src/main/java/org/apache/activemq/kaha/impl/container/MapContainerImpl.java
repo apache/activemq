@@ -37,6 +37,7 @@ import org.apache.activemq.kaha.impl.index.IndexLinkedList;
 import org.apache.activemq.kaha.impl.index.IndexManager;
 import org.apache.activemq.kaha.impl.index.VMIndex;
 import org.apache.activemq.kaha.impl.index.hash.HashIndex;
+import org.apache.activemq.util.IOHelper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -67,7 +68,7 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
         if (index == null) {
             if (persistentIndex) {
                 String name = containerId.getDataContainerName() + "_" + containerId.getKey();
-                name = name.replaceAll("[^a-zA-Z0-9\\.\\_\\-]", "_");
+                name=IOHelper.toFileSystemSafeName(name);
                 try {
                     HashIndex hashIndex = new HashIndex(directory, name, indexManager);
                     hashIndex.setNumberOfBins(getIndexBinSize());

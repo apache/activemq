@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,9 +40,10 @@ import org.apache.activemq.kaha.impl.async.DataFileAppender.WriteCommand;
 import org.apache.activemq.kaha.impl.async.DataFileAppender.WriteKey;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.util.ByteSequence;
-import org.apache.activemq.util.IOHelper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+
 
 /**
  * Manages DataFiles
@@ -87,6 +89,7 @@ public final class AsyncDataManager {
     private DataFileAccessorPool accessorPool = new DataFileAccessorPool(this);
 
     private Map<Integer, DataFile> fileMap = new HashMap<Integer, DataFile>();
+    private Map<File, DataFile> fileByFileMap = new LinkedHashMap<File, DataFile>();
     private DataFile currentWriteFile;
 
     private Location mark;
@@ -131,7 +134,7 @@ public final class AsyncDataManager {
                 return dir.equals(directory) && n.startsWith(filePrefix);
             }
         });
-
+       
         if (files != null) {
             for (int i = 0; i < files.length; i++) {
                 try {
@@ -157,6 +160,7 @@ public final class AsyncDataManager {
                     currentWriteFile.linkAfter(df);
                 }
                 currentWriteFile = df;
+                fileByFileMap.put(df.getFile(), df);
             }
         }
 
@@ -254,8 +258,10 @@ public final class AsyncDataManager {
             int nextNum = currentWriteFile != null ? currentWriteFile.getDataFileId().intValue() + 1 : 1;
 
             String fileName = filePrefix + nextNum;
-            DataFile nextWriteFile = new DataFile(new File(directory, fileName), nextNum, preferedFileLength);
+            File file = new File(directory, fileName);
+            DataFile nextWriteFile = new DataFile(file, nextNum, preferedFileLength);
             fileMap.put(nextWriteFile.getDataFileId(), nextWriteFile);
+            fileByFileMap.put(file, nextWriteFile);
             if (currentWriteFile != null) {
                 currentWriteFile.linkAfter(nextWriteFile);
                 if (currentWriteFile.isUnused()) {
@@ -289,6 +295,16 @@ public final class AsyncDataManager {
         }
         return dataFile;
     }
+    
+    File getFile(Location item) throws IOException {
+        Integer key = Integer.valueOf(item.getDataFileId());
+        DataFile dataFile = fileMap.get(key);
+        if (dataFile == null) {
+            LOG.error("Looking for key " + key + " but not found in fileMap: " + fileMap);
+            throw new IOException("Could not locate data file " + filePrefix + "-" + item.getDataFileId());
+        }
+        return dataFile.getFile();
+    }
 
     private DataFile getNextDataFile(DataFile dataFile) {
         return (DataFile)dataFile.getNext();
@@ -303,6 +319,7 @@ public final class AsyncDataManager {
         storeState(false);
         appender.close();
         fileMap.clear();
+        fileByFileMap.clear();
         controlFile.unlock();
         controlFile.dispose();
         started = false;
@@ -327,6 +344,7 @@ public final class AsyncDataManager {
             result &= dataFile.delete();
         }
         fileMap.clear();
+        fileByFileMap.clear();
         lastAppendLocation.set(null);
         mark = null;
         currentWriteFile = null;
@@ -415,6 +433,7 @@ public final class AsyncDataManager {
     private synchronized void forceRemoveDataFile(DataFile dataFile)
             throws IOException {
         accessorPool.disposeDataFileAccessors(dataFile);
+        fileByFileMap.remove(dataFile.getFile());
         DataFile removed = fileMap.remove(dataFile.getDataFileId());
         storeSize.addAndGet(-dataFile.getLength());
         dataFile.unlink();
@@ -461,16 +480,6 @@ public final class AsyncDataManager {
                     cur = new Location();
                     cur.setDataFileId(head.getDataFileId());
                     cur.setOffset(0);
-
-                    // DataFileAccessor reader =
-                    // accessorPool.openDataFileAccessor(head);
-                    // try {
-                    // if( !reader.readLocationDetailsAndValidate(cur) ) {
-                    // return null;
-                    // }
-                    // } finally {
-                    // accessorPool.closeDataFileAccessor(reader);
-                    // }
                 } else {
                     // Set to the next offset..
                     cur = new Location(location);
@@ -490,6 +499,64 @@ public final class AsyncDataManager {
                 } else {
                     cur.setDataFileId(dataFile.getDataFileId().intValue());
                     cur.setOffset(0);
+                }
+            }
+
+            // Load in location size and type.
+            DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
+            try {
+                reader.readLocationDetails(cur);
+            } finally {
+                accessorPool.closeDataFileAccessor(reader);
+            }
+
+            if (cur.getType() == 0) {
+                return null;
+            } else if (cur.getType() > 0) {
+                // Only return user records.
+                return cur;
+            }
+        }
+    }
+    
+    public synchronized Location getNextLocation(File file, Location lastLocation,boolean thisFileOnly) throws IllegalStateException, IOException{
+        DataFile df = fileByFileMap.get(file);
+        return getNextLocation(df, lastLocation,thisFileOnly);
+    }
+    
+    public synchronized Location getNextLocation(DataFile dataFile,
+            Location lastLocation,boolean thisFileOnly) throws IOException, IllegalStateException {
+
+        Location cur = null;
+        while (true) {
+            if (cur == null) {
+                if (lastLocation == null) {
+                    DataFile head = (DataFile)dataFile.getHeadNode();
+                    cur = new Location();
+                    cur.setDataFileId(head.getDataFileId());
+                    cur.setOffset(0);
+                } else {
+                    // Set to the next offset..
+                    cur = new Location(lastLocation);
+                    cur.setOffset(cur.getOffset() + cur.getSize());
+                }
+            } else {
+                cur.setOffset(cur.getOffset() + cur.getSize());
+            }
+
+            
+            // Did it go into the next file??
+            if (dataFile.getLength() <= cur.getOffset()) {
+                if (thisFileOnly) {
+                    return null;
+                }else {
+                dataFile = getNextDataFile(dataFile);
+                if (dataFile == null) {
+                    return null;
+                } else {
+                    cur.setDataFileId(dataFile.getDataFileId().intValue());
+                    cur.setOffset(0);
+                }
                 }
             }
 
@@ -610,5 +677,13 @@ public final class AsyncDataManager {
         if( currentWriteFile==null )
             return null;
         return currentWriteFile.getDataFileId();
+    }
+    
+    /**
+     * Get a set of files - only valid after start()
+     * @return files currently being used
+     */
+    public Set<File> getFiles(){
+        return fileByFileMap.keySet();
     }
 }

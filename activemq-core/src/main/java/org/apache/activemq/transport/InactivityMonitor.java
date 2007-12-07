@@ -74,13 +74,18 @@ public class InactivityMonitor extends TransportFilter {
 
         if (!commandSent.get()) {
             LOG.trace("No message sent since last write check, sending a KeepAliveInfo");
-            try {
-                synchronized (writeChecker) {
-                    next.oneway(new KeepAliveInfo());
-                }
-            } catch (IOException e) {
-                onException(e);
-            }
+            // TODO: use a thread pool for this..
+            Thread thread = new Thread("ActiveMQ: Activity Generator: "+next.getRemoteAddress()) {
+                public void run() {
+                    try {
+                        oneway(new KeepAliveInfo());
+                    } catch (IOException e) {
+                        onException(e);
+                    }
+                };
+            };
+            thread.setDaemon(true);
+            thread.start();
         } else {
             LOG.trace("Message sent since last write check, resetting flag");
         }
@@ -96,9 +101,16 @@ public class InactivityMonitor extends TransportFilter {
 
         if (!commandReceived.get()) {
             LOG.debug("No message received since last read check for " + toString() + "! Throwing InactivityIOException.");
-            synchronized (readChecker) {
-                onException(new InactivityIOException("Channel was inactive for too long."));
-            }
+
+            // TODO: use a thread pool for this..
+            Thread thread = new Thread("ActiveMQ: Inactivity Handler: "+next.getRemoteAddress()) {
+                public void run() {
+                        onException(new InactivityIOException("Channel was inactive for too long: "+next.getRemoteAddress()));
+                };
+            };
+            thread.setDaemon(true);
+            thread.start();
+
         } else {
             LOG.trace("Message received since last read check, resetting flag: ");
         }

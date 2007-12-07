@@ -56,7 +56,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     private static final Log LOG = LogFactory.getLog(KahaPersistenceAdapter.class);
     private static final String STORE_STATE = "store-state";
     private static final String INDEX_VERSION_NAME = "INDEX_VERSION";
-    private static final Integer INDEX_VERSION = new Integer(2);
+    private static final Integer INDEX_VERSION = new Integer(3);
     private static final String RECORD_REFERENCES = "record-references";
     private static final String TRANSACTIONS = "transactions-state";
     private MapContainer stateMap;
@@ -91,11 +91,13 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
         boolean empty = store.getMapContainerIds().isEmpty();
         stateMap = store.getMapContainer("state", STORE_STATE);
         stateMap.load();
+        storeValid=true;
         if (!empty) {
             AtomicBoolean status = (AtomicBoolean)stateMap.get(STORE_STATE);
             if (status != null) {
                 storeValid = status.get();
             }
+           
             if (storeValid) {
                 //check what version the indexes are at
                 Integer indexVersion = (Integer) stateMap.get(INDEX_VERSION_NAME);
@@ -236,7 +238,9 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
      * @see org.apache.activemq.store.ReferenceStoreAdapter#clearMessages()
      */
     public void clearMessages() throws IOException {
-        deleteAllMessages();
+        //don't delete messages as it will clear state - call base
+        //class method to clear out the data instead
+        super.deleteAllMessages();
     }
 
     /**
@@ -247,6 +251,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     public void recoverState() throws IOException {
         for (Iterator<SubscriptionInfo> i = durableSubscribers.iterator(); i.hasNext();) {
             SubscriptionInfo info = i.next();
+            LOG.info("Recovering subscriber state for durable subscriber: " + info);
             TopicReferenceStore ts = createTopicReferenceStore((ActiveMQTopic)info.getDestination());
             ts.addSubsciption(info, false);
         }

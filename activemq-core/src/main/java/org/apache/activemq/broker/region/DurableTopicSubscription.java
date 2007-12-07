@@ -17,7 +17,9 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.jms.InvalidSelectorException;
 import org.apache.activemq.broker.Broker;
@@ -38,19 +40,18 @@ import org.apache.commons.logging.LogFactory;
 
 public class DurableTopicSubscription extends PrefetchSubscription implements UsageListener {
 
-    private static final Log LOG = LogFactory.getLog(PrefetchSubscription.class);
+    private static final Log LOG = LogFactory.getLog(DurableTopicSubscription.class);
     private final ConcurrentHashMap<MessageId, Integer> redeliveredMessages = new ConcurrentHashMap<MessageId, Integer>();
     private final ConcurrentHashMap<ActiveMQDestination, Destination> destinations = new ConcurrentHashMap<ActiveMQDestination, Destination>();
     private final SubscriptionKey subscriptionKey;
     private final boolean keepDurableSubsActive;
-    private final SystemUsage usageManager;
     private boolean active;
 
     public DurableTopicSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, boolean keepDurableSubsActive)
         throws InvalidSelectorException {
-        super(broker, context, info);
+        super(broker,usageManager, context, info);
         this.pending = new StoreDurableSubscriberCursor(context.getClientId(), info.getSubscriptionName(), broker.getTempDataStore(), info.getPrefetchSize(), this);
-        this.usageManager = usageManager;
+        this.pending.setSystemUsage(usageManager);
         this.keepDurableSubsActive = keepDurableSubsActive;
         subscriptionKey = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
     }
@@ -119,9 +120,8 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 topic.deactivate(context, this);
             }
         }
-        for (Iterator iter = dispatched.iterator(); iter.hasNext();) {
+        for (final MessageReference node : dispatched) {
             // Mark the dispatched messages as redelivered for next time.
-            MessageReference node = (MessageReference)iter.next();
             Integer count = redeliveredMessages.get(node.getMessageId());
             if (count != null) {
                 redeliveredMessages.put(node.getMessageId(), Integer.valueOf(count.intValue() + 1));
@@ -135,8 +135,8 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             } else {
                 node.decrementReferenceCount();
             }
-            iter.remove();
         }
+        dispatched.clear();
         if (!keepDurableSubsActive && pending.isTransient()) {
             synchronized (pending) {
                 try {
@@ -191,7 +191,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         return active;
     }
 
-    protected synchronized void acknowledge(ConnectionContext context, MessageAck ack, MessageReference node) throws IOException {
+    protected void acknowledge(ConnectionContext context, MessageAck ack, MessageReference node) throws IOException {
         node.getRegionDestination().acknowledge(context, this, ack, node);
         redeliveredMessages.remove(node.getMessageId());
         node.decrementReferenceCount();
@@ -238,7 +238,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     }
 
     /**
-     * @param memoryManager
+     * @param usageManager
      * @param oldPercentUsage
      * @param newPercentUsage
      * @see org.apache.activemq.usage.UsageListener#onMemoryUseChanged(org.apache.activemq.usage.SystemUsage,

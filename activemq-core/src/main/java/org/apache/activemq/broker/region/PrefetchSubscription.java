@@ -17,12 +17,15 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 
+import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
@@ -38,6 +41,7 @@ import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.transaction.Synchronization;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -50,19 +54,25 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
     private static final Log LOG = LogFactory.getLog(PrefetchSubscription.class);
     protected PendingMessageCursor pending;
-    protected final LinkedList<MessageReference> dispatched = new LinkedList<MessageReference>();
+    protected final List<MessageReference> dispatched = new CopyOnWriteArrayList<MessageReference>();
     protected int prefetchExtension;
     protected long enqueueCounter;
     protected long dispatchCounter;
     protected long dequeueCounter;
+    protected boolean optimizedDispatch=true;
+    private int maxProducersToAudit=32;
+    private int maxAuditDepth=2048;
+    protected final SystemUsage usageManager;
+    protected ActiveMQMessageAudit audit = new ActiveMQMessageAudit();
 
-    public PrefetchSubscription(Broker broker, ConnectionContext context, ConsumerInfo info, PendingMessageCursor cursor) throws InvalidSelectorException {
+    public PrefetchSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, PendingMessageCursor cursor) throws InvalidSelectorException {
         super(broker, context, info);
+        this.usageManager=usageManager;
         pending = cursor;
     }
 
-    public PrefetchSubscription(Broker broker, ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
-        this(broker, context, info, new VMPendingMessageCursor());
+    public PrefetchSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
+        this(broker,usageManager,context, info, new VMPendingMessageCursor());
     }
 
     /**
@@ -118,8 +128,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         boolean pendingEmpty = false;
         pendingEmpty = pending.isEmpty();
         enqueueCounter++;
-
-        if (!isFull() && pendingEmpty && !isSlave()) {
+        if (optimizedDispatch && !isFull() && pendingEmpty && !isSlave()) {
             dispatch(node);
         } else {
             optimizePrefetch();
@@ -128,6 +137,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     LOG.debug("Prefetch limit.");
                 }
                 pending.addMessageLast(node);
+                dispatchMatched();
             }
         }
     }
@@ -140,7 +150,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 if (node.getMessageId().equals(mdn.getMessageId())) {
                     pending.remove();
                     createMessageDispatch(node, node.getMessage());
-                    dispatched.addLast(node);
+                    dispatched.add(node);
                     return;
                 }
             }
@@ -150,7 +160,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         throw new JMSException("Slave broker out of sync with master: Dispatched message (" + mdn.getMessageId() + ") was not in the pending list");
     }
 
-    public synchronized void acknowledge(final ConnectionContext context, final MessageAck ack) throws Exception {
+    public synchronized void acknowledge(final ConnectionContext context,
+            final MessageAck ack) throws Exception {
         // Handle the standard acknowledgment case.
         boolean callDispatchMatched = false;
         if (ack.isStandardAck()) {
@@ -158,36 +169,42 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             // acknowledgment.
             int index = 0;
             boolean inAckRange = false;
-            for (Iterator<MessageReference> iter = dispatched.iterator(); iter.hasNext();) {
-                final MessageReference node = iter.next();
+            List<MessageReference> removeList = new ArrayList<MessageReference>();
+            for (final MessageReference node : dispatched) {
                 MessageId messageId = node.getMessageId();
-                if (ack.getFirstMessageId() == null || ack.getFirstMessageId().equals(messageId)) {
+                if (ack.getFirstMessageId() == null
+                        || ack.getFirstMessageId().equals(messageId)) {
                     inAckRange = true;
                 }
                 if (inAckRange) {
                     // Don't remove the nodes until we are committed.
                     if (!context.isInTransaction()) {
                         dequeueCounter++;
-                        node.getRegionDestination().getDestinationStatistics().getDequeues().increment();
-                        iter.remove();
+                        node.getRegionDestination().getDestinationStatistics()
+                                .getDequeues().increment();
+                        removeList.add(node);
                     } else {
                         // setup a Synchronization to remove nodes from the
                         // dispatched list.
-                        context.getTransaction().addSynchronization(new Synchronization() {
+                        context.getTransaction().addSynchronization(
+                                new Synchronization() {
 
-                            public void afterCommit() throws Exception {
-                                synchronized (PrefetchSubscription.this) {
-                                    dequeueCounter++;
-                                    dispatched.remove(node);
-                                    node.getRegionDestination().getDestinationStatistics().getDequeues().increment();
-                                    prefetchExtension--;
-                                }
-                            }
+                                    public void afterCommit() throws Exception {
+                                        synchronized (PrefetchSubscription.this) {
+                                            dequeueCounter++;
+                                            dispatched.remove(node);
+                                            node.getRegionDestination()
+                                                    .getDestinationStatistics()
+                                                    .getDequeues().increment();
+                                            prefetchExtension--;
+                                        }
+                                    }
 
-                            public void afterRollback() throws Exception {
-                                super.afterRollback();
-                            }
-                        });
+                                    public void afterRollback()
+                                            throws Exception {
+                                        super.afterRollback();
+                                    }
+                                });
                     }
                     index++;
                     acknowledge(context, ack, node);
@@ -196,21 +213,28 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                             // extend prefetch window only if not a pulling
                             // consumer
                             if (getPrefetchSize() != 0) {
-                                prefetchExtension = Math.max(prefetchExtension, index + 1);
+                                prefetchExtension = Math.max(prefetchExtension,
+                                        index + 1);
                             }
                         } else {
-                            prefetchExtension = Math.max(0, prefetchExtension - (index + 1));
+                            prefetchExtension = Math.max(0, prefetchExtension
+                                    - (index + 1));
                         }
                         callDispatchMatched = true;
                         break;
                     }
                 }
             }
+            for (final MessageReference node : removeList) {
+                dispatched.remove(node);
+            }
             // this only happens after a reconnect - get an ack which is not
             // valid
             if (!callDispatchMatched) {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Could not correlate acknowledgment with dispatched message: " + ack);
+                    LOG
+                            .debug("Could not correlate acknowledgment with dispatched message: "
+                                    + ack);
                 }
             }
         } else if (ack.isDeliveredAck()) {
@@ -219,7 +243,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             // Acknowledge all dispatched messages up till the message id of the
             // acknowledgment.
             int index = 0;
-            for (Iterator<MessageReference> iter = dispatched.iterator(); iter.hasNext(); index++) {
+            for (Iterator<MessageReference> iter = dispatched.iterator(); iter
+                    .hasNext(); index++) {
                 final MessageReference node = iter.next();
                 if (ack.getLastMessageId().equals(node.getMessageId())) {
                     prefetchExtension = Math.max(prefetchExtension, index + 1);
@@ -228,17 +253,20 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 }
             }
             if (!callDispatchMatched) {
-                throw new JMSException("Could not correlate acknowledgment with dispatched message: " + ack);
+                throw new JMSException(
+                        "Could not correlate acknowledgment with dispatched message: "
+                                + ack);
             }
-        } else if (ack.isRedeliveredAck() ) {
-            // Message was re-delivered but it was not yet considered to be a DLQ message.
+        } else if (ack.isRedeliveredAck()) {
+            // Message was re-delivered but it was not yet considered to be a
+            // DLQ message.
             // Acknowledge all dispatched messages up till the message id of the
             // acknowledgment.
             boolean inAckRange = false;
-            for (Iterator<MessageReference> iter = dispatched.iterator(); iter.hasNext();) {
-                final MessageReference node = iter.next();
+            for (final MessageReference node : dispatched) {
                 MessageId messageId = node.getMessageId();
-                if (ack.getFirstMessageId() == null || ack.getFirstMessageId().equals(messageId)) {
+                if (ack.getFirstMessageId() == null
+                        || ack.getFirstMessageId().equals(messageId)) {
                     inAckRange = true;
                 }
                 if (inAckRange) {
@@ -250,49 +278,65 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 }
             }
             if (!callDispatchMatched) {
-                throw new JMSException("Could not correlate acknowledgment with dispatched message: " + ack);
+                throw new JMSException(
+                        "Could not correlate acknowledgment with dispatched message: "
+                                + ack);
             }
         } else if (ack.isPoisonAck()) {
             // TODO: what if the message is already in a DLQ???
             // Handle the poison ACK case: we need to send the message to a DLQ
             if (ack.isInTransaction()) {
-                throw new JMSException("Poison ack cannot be transacted: " + ack);
+                throw new JMSException("Poison ack cannot be transacted: "
+                        + ack);
             }
             // Acknowledge all dispatched messages up till the message id of the
             // acknowledgment.
             int index = 0;
             boolean inAckRange = false;
-            for (Iterator<MessageReference> iter = dispatched.iterator(); iter.hasNext();) {
-                final MessageReference node = iter.next();
+            List<MessageReference> removeList = new ArrayList<MessageReference>();
+            for (final MessageReference node : dispatched) {
                 MessageId messageId = node.getMessageId();
-                if (ack.getFirstMessageId() == null || ack.getFirstMessageId().equals(messageId)) {
+                if (ack.getFirstMessageId() == null
+                        || ack.getFirstMessageId().equals(messageId)) {
                     inAckRange = true;
                 }
                 if (inAckRange) {
                     sendToDLQ(context, node);
-                    node.getRegionDestination().getDestinationStatistics().getDequeues().increment();
-                    iter.remove();
+                    node.getRegionDestination().getDestinationStatistics()
+                            .getDequeues().increment();
+                    removeList.add(node);
                     dequeueCounter++;
                     index++;
                     acknowledge(context, ack, node);
                     if (ack.getLastMessageId().equals(messageId)) {
-                        prefetchExtension = Math.max(0, prefetchExtension - (index + 1));
+                        prefetchExtension = Math.max(0, prefetchExtension
+                                - (index + 1));
                         callDispatchMatched = true;
                         break;
                     }
                 }
             }
+            for (final MessageReference node : removeList) {
+                dispatched.remove(node);
+            }
             if (!callDispatchMatched) {
-                throw new JMSException("Could not correlate acknowledgment with dispatched message: " + ack);
+                throw new JMSException(
+                        "Could not correlate acknowledgment with dispatched message: "
+                                + ack);
             }
         }
         if (callDispatchMatched) {
             dispatchMatched();
         } else {
             if (isSlave()) {
-                throw new JMSException("Slave broker out of sync with master: Acknowledgment (" + ack + ") was not in the dispatch list: " + dispatched);
+                throw new JMSException(
+                        "Slave broker out of sync with master: Acknowledgment ("
+                                + ack + ") was not in the dispatch list: "
+                                + dispatched);
             } else {
-                LOG.debug("Acknowledgment out of sync (Normally occurs when failover connection reconnects): " + ack);
+                LOG
+                        .debug("Acknowledgment out of sync (Normally occurs when failover connection reconnects): "
+                                + ack);
             }
         }
     }
@@ -364,6 +408,9 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
     public synchronized void setPending(PendingMessageCursor pending) {
         this.pending = pending;
+        if (this.pending!=null) {
+            this.pending.setSystemUsage(usageManager);
+        }
     }
 
     /**
@@ -439,7 +486,10 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             // NULL messages don't count... they don't get Acked.
             if (node != QueueMessageReference.NULL_MESSAGE) {
                 dispatchCounter++;
-                dispatched.addLast(node);
+                dispatched.add(node);
+                if(pending != null) {
+                    pending.dispatched(message);
+                }
             } else {
                 prefetchExtension = Math.max(0, prefetchExtension - 1);
             }
@@ -459,8 +509,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 context.getConnection().dispatchSync(md);
                 onDispatch(node, message);
             }
-            // System.err.println(broker.getBrokerName() + " " + this + " (" +
-            // enqueueCounter + ", " + dispatchCounter +") " + node);
             return true;
         } else {
             return false;
@@ -534,6 +582,30 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
      * @throws IOException
      */
     protected void acknowledge(ConnectionContext context, final MessageAck ack, final MessageReference node) throws IOException {
+    }
+
+    public boolean isOptimizedDispatch() {
+        return optimizedDispatch;
+    }
+
+    public void setOptimizedDispatch(boolean optimizedDispatch) {
+        this.optimizedDispatch = optimizedDispatch;
+    }
+
+    public int getMaxProducersToAudit() {
+        return maxProducersToAudit;
+    }
+
+    public void setMaxProducersToAudit(int maxProducersToAudit) {
+        this.maxProducersToAudit = maxProducersToAudit;
+    }
+
+    public int getMaxAuditDepth() {
+        return maxAuditDepth;
+    }
+
+    public void setMaxAuditDepth(int maxAuditDepth) {
+        this.maxAuditDepth = maxAuditDepth;
     }
 
 }

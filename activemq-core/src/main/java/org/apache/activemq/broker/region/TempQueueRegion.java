@@ -41,7 +41,7 @@ public class TempQueueRegion extends AbstractRegion {
 
     protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
         final ActiveMQTempDestination tempDest = (ActiveMQTempDestination)destination;
-        return new Queue(broker.getRoot(), destination, memoryManager, null, destinationStatistics, taskRunnerFactory, null) {
+        return new Queue(broker.getRoot(), destination, usageManager, null, destinationStatistics, taskRunnerFactory, null) {
 
             public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
 
@@ -58,14 +58,14 @@ public class TempQueueRegion extends AbstractRegion {
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
         if (info.isBrowser()) {
-            return new QueueBrowserSubscription(broker, context, info);
+            return new QueueBrowserSubscription(broker,usageManager,context, info);
         } else {
-            return new QueueSubscription(broker, context, info);
+            return new QueueSubscription(broker, usageManager,context, info);
         }
     }
 
     public String toString() {
-        return "TempQueueRegion: destinations=" + destinations.size() + ", subscriptions=" + subscriptions.size() + ", memory=" + memoryManager.getMemoryUsage().getPercentUsage() + "%";
+        return "TempQueueRegion: destinations=" + destinations.size() + ", subscriptions=" + subscriptions.size() + ", memory=" + usageManager.getMemoryUsage().getPercentUsage() + "%";
     }
 
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {

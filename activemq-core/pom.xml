@@ -37,6 +37,7 @@
     <activemq.osgi.import.pkg>
       javax.jmdns*;resolution:=optional,
       org.apache.activeio*;resolution:=optional,
+      org.apache.camel*;resolution:=optional,
       org.apache.commons.pool*;resolution:=optional,
       org.apache.derby*;resolution:=optional,
       org.apache.tools.ant*;resolution:=optional,
@@ -403,6 +404,11 @@
             <exclude>**/nio/**</exclude>
              <!-- A test used for memory profiling only. -->
              <exclude>**/NetworkConnectionsCleanedupTest.*/**</exclude>
+             
+             <exclude>**/NetworkConnectionsCleanedupTest.*/**</exclude>
+             
+             <exclude>**/amq1490/*</exclude>
+             <exclude>**/archive/*</exclude>
 
             <exclude>**/AMQDeadlockTest3.*</exclude>
           </excludes>

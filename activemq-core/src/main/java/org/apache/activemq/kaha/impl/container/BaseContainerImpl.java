@@ -187,8 +187,9 @@ public abstract class BaseContainerImpl {
     protected final void delete(final IndexItem keyItem, final IndexItem prevItem, final IndexItem nextItem) {
         if (keyItem != null) {
             try {
+                root = indexList.getRoot();
                 IndexItem prev = prevItem == null ? root : prevItem;
-                IndexItem next = nextItem != root ? nextItem : null;
+                IndexItem next = (nextItem == null || !nextItem.equals(root)) ? nextItem : null;
                 dataManager.removeInterestInFile(keyItem.getKeyFile());
                 dataManager.removeInterestInFile(keyItem.getValueFile());
                 if (next != null) {

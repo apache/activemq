@@ -59,13 +59,15 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
         topicReferenceStore.recoverSubscription(clientId, subscriptionName, new RecoveryListenerAdapter(this, listener));
     }
 
-    public void recoverNextMessages(String clientId, String subscriptionName, int maxReturned, final MessageRecoveryListener listener) throws Exception {
+    public void recoverNextMessages(String clientId, String subscriptionName,
+            int maxReturned, final MessageRecoveryListener listener)
+            throws Exception {
         RecoveryListenerAdapter recoveryListener = new RecoveryListenerAdapter(this, listener);
-        topicReferenceStore.recoverNextMessages(clientId, subscriptionName, maxReturned, recoveryListener);
-        if (recoveryListener.size() == 0) {
-            flush();
-            topicReferenceStore.recoverNextMessages(clientId, subscriptionName, maxReturned, recoveryListener);
-        }
+            topicReferenceStore.recoverNextMessages(clientId, subscriptionName,maxReturned, recoveryListener);
+            if (recoveryListener.size() == 0) {
+                flush();
+                topicReferenceStore.recoverNextMessages(clientId,subscriptionName, maxReturned, recoveryListener);
+            }
     }
 
     public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {
@@ -145,14 +147,18 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
      * @param key
      * @throws IOException 
      */
-    protected void acknowledge(ConnectionContext context,MessageId messageId, Location location, String clientId,String subscriptionName) throws IOException {
+    protected void acknowledge(ConnectionContext context, MessageId messageId,
+            Location location, String clientId, String subscriptionName)
+            throws IOException {
         synchronized (this) {
             lastLocation = location;
-            if (topicReferenceStore.acknowledgeReference(context, clientId, subscriptionName, messageId)){
-                MessageAck ack = new MessageAck();
-                ack.setLastMessageId(messageId);
-                removeMessage(context, ack);
-            }
+        }
+        if (topicReferenceStore.acknowledgeReference(context, clientId,
+                subscriptionName, messageId)) {
+            MessageAck ack = new MessageAck();
+            ack.setLastMessageId(messageId);
+            removeMessage(context, ack);
+
         }
         try {
             asyncWriteTask.wakeup();

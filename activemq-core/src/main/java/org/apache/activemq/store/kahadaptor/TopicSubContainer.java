@@ -19,7 +19,7 @@ package org.apache.activemq.store.kahadaptor;
 import java.util.Iterator;
 
 import org.apache.activemq.command.MessageId;
-import org.apache.activemq.kaha.ListContainer;
+import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.StoreEntry;
 
 /**
@@ -28,11 +28,11 @@ import org.apache.activemq.kaha.StoreEntry;
  * @version $Revision: 1.10 $
  */
 public class TopicSubContainer {
-    private transient ListContainer listContainer;
+    private transient MapContainer mapContainer;
     private transient StoreEntry batchEntry;
 
-    public TopicSubContainer(ListContainer container) {
-        this.listContainer = container;
+    public TopicSubContainer(MapContainer container) {
+        this.mapContainer = container;
     }
 
     /**
@@ -55,75 +55,56 @@ public class TopicSubContainer {
     }
 
     public boolean isEmpty() {
-        return listContainer.isEmpty();
+        return mapContainer.isEmpty();
     }
 
     public StoreEntry add(ConsumerMessageRef ref) {
-        return listContainer.placeLast(ref);
+        return mapContainer.place(ref.getMessageId(),ref);
     }
 
     public ConsumerMessageRef remove(MessageId id) {
         ConsumerMessageRef result = null;
-        if (!listContainer.isEmpty()) {
-            StoreEntry entry = listContainer.getFirst();
-            while (entry != null) {
-                ConsumerMessageRef ref = (ConsumerMessageRef)listContainer.get(entry);
-                listContainer.remove(entry);
-                if (listContainer != null && batchEntry != null && (listContainer.isEmpty() || batchEntry.equals(entry))) {
-                    reset();
-                }
-                if (ref != null && ref.getMessageId().equals(id)) {
-                    result = ref;
-                    break;
-                }
-                entry = listContainer.getFirst();
+        StoreEntry entry = mapContainer.getEntry(id);
+        if (entry != null) {
+            result = (ConsumerMessageRef) mapContainer.getValue(entry);
+            mapContainer.remove(entry);
+            if (batchEntry != null && batchEntry.equals(entry)) {
+                reset();
             }
+        }
+        if(mapContainer.isEmpty()) {
+            reset();
         }
         return result;
     }
     
-    public ConsumerMessageRef removeFirst() {
-		ConsumerMessageRef result = null;
-		if (!listContainer.isEmpty()) {
-			StoreEntry entry = listContainer.getFirst();
-
-			result = (ConsumerMessageRef) listContainer.get(entry);
-			listContainer.remove(entry);
-			if (listContainer != null && batchEntry != null
-					&& (listContainer.isEmpty() || batchEntry.equals(entry))) {
-				reset();
-			}
-
-		}
-		return result;
-	}
-
+    
     public ConsumerMessageRef get(StoreEntry entry) {
-        return (ConsumerMessageRef)listContainer.get(entry);
+        return (ConsumerMessageRef)mapContainer.getValue(entry);
     }
 
     public StoreEntry getEntry() {
-        return listContainer.getFirst();
+        return mapContainer.getFirst();
     }
 
     public StoreEntry refreshEntry(StoreEntry entry) {
-        return listContainer.refresh(entry);
+        return mapContainer.refresh(entry);
     }
 
     public StoreEntry getNextEntry(StoreEntry entry) {
-        return listContainer.getNext(entry);
+        return mapContainer.getNext(entry);
     }
 
     public Iterator iterator() {
-        return listContainer.iterator();
+        return mapContainer.values().iterator();
     }
 
     public int size() {
-        return listContainer.size();
+        return mapContainer.size();
     }
 
     public void clear() {
         reset();
-        listContainer.clear();
+        mapContainer.clear();
     }
 }

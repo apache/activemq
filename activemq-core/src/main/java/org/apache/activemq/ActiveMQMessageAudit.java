@@ -33,8 +33,8 @@ import org.apache.activemq.util.LRUCache;
  */
 public class ActiveMQMessageAudit {
 
-    private static final int DEFAULT_WINDOW_SIZE = 1024;
-    private static final int MAXIMUM_PRODUCER_COUNT = 128;
+    private static final int DEFAULT_WINDOW_SIZE = 2048;
+    private static final int MAXIMUM_PRODUCER_COUNT = 64;
     private int auditDepth;
     private int maximumNumberOfProducersToTrack;
     private LRUCache<Object, BitArrayBin> map;
@@ -220,23 +220,33 @@ public class ActiveMQMessageAudit {
     
     /**
      * Check the MessageId is in order
+     * @param message 
+     * @return
+     */
+    public synchronized boolean isInOrder(final MessageReference message) {
+        return isInOrder(message.getMessageId());
+    }
+    
+    /**
+     * Check the MessageId is in order
      * @param id
      * @return
      */
     public synchronized boolean isInOrder(final MessageId id) {
-        boolean answer = true;
-        
+        boolean answer = false;
+
         if (id != null) {
             ProducerId pid = id.getProducerId();
             if (pid != null) {
                 BitArrayBin bab = map.get(pid);
-                if (bab != null) {
-                    answer = bab.isInOrder(id.getProducerSequenceId());
+                if (bab == null) {
+                    bab = new BitArrayBin(auditDepth);
+                    map.put(pid, bab);
                 }
-               
+                answer = bab.isInOrder(id.getProducerSequenceId());
+
             }
         }
         return answer;
     }
-
 }

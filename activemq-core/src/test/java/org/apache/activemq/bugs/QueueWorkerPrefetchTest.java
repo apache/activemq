@@ -123,10 +123,7 @@ public class QueueWorkerPrefetchTest extends TestCase implements MessageListener
                 WorkMessage work = (WorkMessage)((ObjectMessage)message).getObject();
                 
                 long c = counter.incrementAndGet();
-                if (c % 1 == 0) {
-                    System.out.println("Worker now has message count of: " + c);
-                }
-
+                
                 // Don't create a new work item for every BATCH_SIZE message. */
                 if (c % BATCH_SIZE != 0)
                 {

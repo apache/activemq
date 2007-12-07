@@ -24,6 +24,12 @@ import org.apache.activemq.kaha.StoreEntry;
  * @version $Revision$
  */
 public interface IndexLinkedList {
+    
+    /**
+     * Set the new Root
+     * @param newRoot
+     */
+    void setRoot(IndexItem newRoot);
 
     /**
      * @return the root used by the List

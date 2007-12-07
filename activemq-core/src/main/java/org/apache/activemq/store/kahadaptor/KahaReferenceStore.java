@@ -63,10 +63,14 @@ public class KahaReferenceStore implements ReferenceStore {
         throw new RuntimeException("Use addMessageReference instead");
     }
 
-    protected final boolean recoverReference(MessageRecoveryListener listener, ReferenceRecord record)
-        throws Exception {
-        listener.recoverMessageReference(new MessageId(record.getMessageId()));
-        return listener.hasSpace();
+    protected final boolean recoverReference(MessageRecoveryListener listener,
+            ReferenceRecord record) throws Exception {
+        MessageId id = new MessageId(record.getMessageId());
+        if (listener.hasSpace()) {
+            listener.recoverMessageReference(id);
+            return true;
+        }
+        return false;
     }
 
     public synchronized void recover(MessageRecoveryListener listener) throws Exception {
@@ -90,14 +94,15 @@ public class KahaReferenceStore implements ReferenceStore {
                 entry = messageContainer.getNext(entry);
             }
         }
-        if (entry != null) {
+        if (entry != null) {      
             int count = 0;
             do {
                 ReferenceRecord msg = messageContainer.getValue(entry);
-                if (msg != null) {
-                    recoverReference(listener, msg);
-                    count++;
-                    lastBatchId = msg.getMessageId();
+                if (msg != null ) {
+                    if ( recoverReference(listener, msg)) {
+                        count++;
+                        lastBatchId = msg.getMessageId();
+                    }
                 } else {
                     lastBatchId = null;
                 }
@@ -134,7 +139,7 @@ public class KahaReferenceStore implements ReferenceStore {
         removeMessage(ack.getLastMessageId());
     }
 
-    public synchronized void removeMessage(MessageId msgId) throws IOException {
+    public synchronized void removeMessage(MessageId msgId) throws IOException {    
         StoreEntry entry = messageContainer.getEntry(msgId);
         if (entry != null) {
             ReferenceRecord rr = messageContainer.remove(msgId);

@@ -105,6 +105,7 @@ public class ActiveMQMessageAuditTest extends TestCase {
             String id = idGen.generateId();
             if (i==0) {
                 assertFalse(audit.isDuplicate(id));
+                assertTrue(audit.isInOrder(id));
             }
             if (i > 1 && i%2 != 0) {
                 list.add(id);
