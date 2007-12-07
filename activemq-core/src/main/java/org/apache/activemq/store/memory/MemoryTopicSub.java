@@ -38,7 +38,7 @@ class MemoryTopicSub {
         map.put(id, message);
     }
 
-    void removeMessage(MessageId id) {
+    synchronized void removeMessage(MessageId id) {
         map.remove(id);
         if (map.isEmpty()) {
             lastBatch = null;
@@ -49,7 +49,7 @@ class MemoryTopicSub {
         return map.size();
     }
 
-    void recoverSubscription(MessageRecoveryListener listener) throws Exception {
+    synchronized void recoverSubscription(MessageRecoveryListener listener) throws Exception {
         for (Iterator iter = map.entrySet().iterator(); iter.hasNext();) {
             Map.Entry entry = (Entry)iter.next();
             Object msg = entry.getValue();
@@ -61,7 +61,7 @@ class MemoryTopicSub {
         }
     }
 
-    void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception {
+    synchronized void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception {
         boolean pastLackBatch = lastBatch == null;
         MessageId lastId = null;
         // the message table is a synchronizedMap - so just have to synchronize
@@ -88,7 +88,7 @@ class MemoryTopicSub {
 
     }
 
-    void resetBatching() {
+    synchronized void resetBatching() {
         lastBatch = null;
     }
 }
