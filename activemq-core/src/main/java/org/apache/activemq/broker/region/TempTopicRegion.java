@@ -47,13 +47,13 @@ public class TempTopicRegion extends AbstractRegion {
             throw new JMSException("A durable subscription cannot be created for a temporary topic.");
         }
         try {
-            TopicSubscription answer = new TopicSubscription(broker, context, info, memoryManager);
+            TopicSubscription answer = new TopicSubscription(broker, context, info, usageManager);
             // lets configure the subscription depending on the destination
             ActiveMQDestination destination = info.getDestination();
             if (destination != null && broker.getDestinationPolicy() != null) {
                 PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
                 if (entry != null) {
-                    entry.configure(broker, memoryManager, answer);
+                    entry.configure(broker, usageManager, answer);
                 }
             }
             answer.init();
@@ -67,7 +67,7 @@ public class TempTopicRegion extends AbstractRegion {
     }
 
     public String toString() {
-        return "TempTopicRegion: destinations=" + destinations.size() + ", subscriptions=" + subscriptions.size() + ", memory=" + memoryManager.getMemoryUsage().getPercentUsage() + "%";
+        return "TempTopicRegion: destinations=" + destinations.size() + ", subscriptions=" + subscriptions.size() + ", memory=" + usageManager.getMemoryUsage().getPercentUsage() + "%";
     }
 
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {

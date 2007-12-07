@@ -178,15 +178,7 @@ public class KahaStore implements Store {
             }
         }
         if (directory != null && directory.isDirectory()) {
-            File[] files = directory.listFiles();
-            if (files != null) {
-                for (int i = 0; i < files.length; i++) {
-                    File file = files[i];
-                    if (!file.isDirectory()) {
-                        result &= file.delete();
-                    }
-                }
-            }
+            result =IOHelper.deleteChildren(directory);
             String str = result ? "successfully deleted" : "failed to delete";
             LOG.info("Kaha Store " + str + " data directory " + directory);
         }

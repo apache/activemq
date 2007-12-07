@@ -119,6 +119,7 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements Message
         Message result = batchList.removeFirst();
         result.decrementReferenceCount();
         result.setRegionDestination(regionDestination);
+        result.setMemoryUsage(this.getSystemUsage().getMemoryUsage());
         return result;
     }
 
@@ -133,6 +134,7 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements Message
             throws Exception {
         if (!isDuplicate(message.getMessageId())) {
             message.setRegionDestination(regionDestination);
+            message.setMemoryUsage(this.getSystemUsage().getMemoryUsage());
             message.incrementReferenceCount();
             batchList.addLast(message);
         } else {

@@ -100,7 +100,7 @@ public class TopicRegion extends AbstractRegion {
                                            + " subscriberName: " + key.getSubscriptionName());
                 }
             }
-            sub.activate(memoryManager, context, info);
+            sub.activate(usageManager, context, info);
             return sub;
         } else {
             return super.addConsumer(context, info);
@@ -140,7 +140,7 @@ public class TopicRegion extends AbstractRegion {
     }
 
     public String toString() {
-        return "TopicRegion: destinations=" + destinations.size() + ", subscriptions=" + subscriptions.size() + ", memory=" + memoryManager.getMemoryUsage().getPercentUsage() + "%";
+        return "TopicRegion: destinations=" + destinations.size() + ", subscriptions=" + subscriptions.size() + ", memory=" + usageManager.getMemoryUsage().getPercentUsage() + "%";
     }
 
     @Override
@@ -230,12 +230,12 @@ public class TopicRegion extends AbstractRegion {
             SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
             DurableTopicSubscription sub = durableSubscriptions.get(key);
             if (sub == null) {
-                sub = new DurableTopicSubscription(broker, memoryManager, context, info, keepDurableSubsActive);
+                sub = new DurableTopicSubscription(broker, usageManager, context, info, keepDurableSubsActive);
                 ActiveMQDestination destination = info.getDestination();
                 if (destination != null && broker.getDestinationPolicy() != null) {
                     PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
                     if (entry != null) {
-                        entry.configure(broker, memoryManager, sub);
+                        entry.configure(broker, usageManager, sub);
                     }
                 }
                 durableSubscriptions.put(key, sub);
@@ -245,13 +245,13 @@ public class TopicRegion extends AbstractRegion {
             return sub;
         }
         try {
-            TopicSubscription answer = new TopicSubscription(broker, context, info, memoryManager);
+            TopicSubscription answer = new TopicSubscription(broker, context, info, usageManager);
             // lets configure the subscription depending on the destination
             ActiveMQDestination destination = info.getDestination();
             if (destination != null && broker.getDestinationPolicy() != null) {
                 PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
                 if (entry != null) {
-                    entry.configure(broker, memoryManager, answer);
+                    entry.configure(broker, usageManager, answer);
                 }
             }
             answer.init();

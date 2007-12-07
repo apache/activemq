@@ -821,6 +821,9 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
                     next = indexList.getNextEntry(root);
                 } else if (insertPos >= indexList.size()) {
                     prev = indexList.getLast();
+                    if (prev==null) {
+                        prev=root;
+                    }
                     next = null;
                 } else {
                     prev = indexList.get(insertPos);
@@ -836,6 +839,7 @@ public class ListContainerImpl extends BaseContainerImpl implements ListContaine
                     updateIndexes(next);
                 }
                 storeIndex(index);
+                indexList.setRoot(root);
             }
         } catch (IOException e) {
             LOG.error("Failed to insert " + value, e);

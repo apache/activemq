@@ -42,7 +42,7 @@ public class DiskIndexLinkedList implements IndexLinkedList {
         return root;
     }
 
-    void setRoot(IndexItem e) {
+    public void setRoot(IndexItem e) {
         this.root = e;
     }
 
@@ -186,7 +186,7 @@ public class DiskIndexLinkedList implements IndexLinkedList {
      * @throws IndexOutOfBoundsException if the specified index is out of range (<tt>index &lt; 0 || index &gt; size()</tt>).
      */
     public synchronized void add(int index, IndexItem element) {
-        if (index == size - 1) {
+        if (index == size) {
             last = element;
         }
         size++;
@@ -297,7 +297,7 @@ public class DiskIndexLinkedList implements IndexLinkedList {
 		}
 		// essential root get's updated consistently
 		if (result != null && root != null && root.equals(result)) {
-			return root;
+			return null;
 		}
 		return result;
 	}
@@ -340,7 +340,7 @@ public class DiskIndexLinkedList implements IndexLinkedList {
     }
 
     public synchronized void remove(IndexItem e) {
-        if (e == root || e.equals(root)) {
+        if (e==null || e == root || e.equals(root)) {
             return;
         }
         if (e == last || e.equals(last)) {

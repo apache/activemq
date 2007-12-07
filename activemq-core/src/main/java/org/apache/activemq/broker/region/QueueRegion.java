@@ -41,15 +41,15 @@ public class QueueRegion extends AbstractRegion {
 
     public String toString() {
         return "QueueRegion: destinations=" + destinations.size() + ", subscriptions=" + subscriptions.size()
-               + ", memory=" + memoryManager.getMemoryUsage().getPercentUsage() + "%";
+               + ", memory=" + usageManager.getMemoryUsage().getPercentUsage() + "%";
     }
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info)
         throws InvalidSelectorException {
         if (info.isBrowser()) {
-            return new QueueBrowserSubscription(broker, context, info);
+            return new QueueBrowserSubscription(broker,usageManager, context, info);
         } else {
-            return new QueueSubscription(broker, context, info);
+            return new QueueSubscription(broker, usageManager,context, info);
         }
     }
 

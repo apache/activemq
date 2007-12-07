@@ -50,6 +50,8 @@ import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.TopicMessageStore;
+import org.apache.activemq.thread.Task;
+import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.thread.Valve;
 import org.apache.activemq.transaction.Synchronization;
@@ -65,7 +67,7 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.21 $
  */
-public class Topic  extends BaseDestination {
+public class Topic  extends BaseDestination  implements Task{
     private static final Log LOG = LogFactory.getLog(Topic.class);
     protected final ActiveMQDestination destination;
     protected final CopyOnWriteArrayList<Subscription> consumers = new CopyOnWriteArrayList<Subscription>();
@@ -81,28 +83,20 @@ public class Topic  extends BaseDestination {
     private boolean sendAdvisoryIfNoConsumers;
     private DeadLetterStrategy deadLetterStrategy = new SharedDeadLetterStrategy();
     private final ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription> durableSubcribers = new ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription>();
-    
+    private final TaskRunner taskRunner;
     private final LinkedList<Runnable> messagesWaitingForSpace = new LinkedList<Runnable>();
     private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
         public void run() {
-
-            // We may need to do this in async thread since this is run for
-            // within a synchronization
-            // that the UsageManager is holding.
-
-            synchronized (messagesWaitingForSpace) {
-                while (!memoryUsage.isFull() && !messagesWaitingForSpace.isEmpty()) {
-                    Runnable op = messagesWaitingForSpace.removeFirst();
-                    op.run();
+                try {
+                    Topic.this.taskRunner.wakeup();
+                } catch (InterruptedException e) {
                 }
-            }
-
         };
     };
     private final Broker broker;
 
     public Topic(Broker broker, ActiveMQDestination destination, TopicMessageStore store, SystemUsage systemUsage, DestinationStatistics parentStats,
-                 TaskRunnerFactory taskFactory) {
+                 TaskRunnerFactory taskFactory) throws Exception {
         this.broker = broker;
         this.destination = destination;
         this.store = store; // this could be NULL! (If an advisory)
@@ -115,7 +109,8 @@ public class Topic  extends BaseDestination {
         }else{
         	//set the default
         	subscriptionRecoveryPolicy= new FixedSizedSubscriptionRecoveryPolicy();
-        }
+        } 
+        this.taskRunner = taskFactory.createTaskRunner(this, "Topic  " + destination.getPhysicalName());
         // Let the store know what usage manager we are using so that he can
         // flush messages to disk
         // when usage gets high.
@@ -388,41 +383,53 @@ public class Topic  extends BaseDestination {
      * @throws IOException
      * @throws Exception
      */
-    synchronized void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
-        final ConnectionContext context = producerExchange.getConnectionContext();
+    synchronized void doMessageSend(
+            final ProducerBrokerExchange producerExchange, final Message message)
+            throws IOException, Exception {
+        final ConnectionContext context = producerExchange
+                .getConnectionContext();
         message.setRegionDestination(this);
 
-        if (store != null && message.isPersistent() && !canOptimizeOutPersistence()) {
-            systemUsage.getStoreUsage().waitForSpace();
+        if (store != null && message.isPersistent()
+                && !canOptimizeOutPersistence()) {
+            while (!systemUsage.getStoreUsage().waitForSpace(1000)) {
+                if (context.getStopping().get()) {
+                    throw new IOException("Connection closed, send aborted.");
+                }
+            }
             store.addMessage(context, message);
         }
 
         message.incrementReferenceCount();
-        try {
 
-            if (context.isInTransaction()) {
-                context.getTransaction().addSynchronization(new Synchronization() {
-                    public void afterCommit() throws Exception {
-                        // It could take while before we receive the commit
-                        // operration.. by that time the message could have
-                        // expired..
-                        if (broker.isExpired(message)) {
-                            broker.messageExpired(context, message);
-                            message.decrementReferenceCount();
-                            destinationStatistics.getMessages().decrement();
-                            return;
-                        }
-                        dispatch(context, message);
+        if (context.isInTransaction()) {
+            context.getTransaction().addSynchronization(new Synchronization() {
+                public void afterCommit() throws Exception {
+                    // It could take while before we receive the commit
+                    // operration.. by that time the message could have
+                    // expired..
+                    if (broker.isExpired(message)) {
+                        broker.messageExpired(context, message);
+                        message.decrementReferenceCount();
+                        destinationStatistics.getMessages().decrement();
+                        return;
                     }
-                });
+                    try {
+                        dispatch(context, message);
+                    } finally {
+                        message.decrementReferenceCount();
+                    }
+                }
+            });
 
-            } else {
+        } else {
+            try {
                 dispatch(context, message);
+            } finally {
+                message.decrementReferenceCount();
             }
-
-        } finally {
-            message.decrementReferenceCount();
         }
+
     }
 
     private boolean canOptimizeOutPersistence() {
@@ -463,6 +470,9 @@ public class Topic  extends BaseDestination {
     }
 
     public void stop() throws Exception {
+        if (taskRunner != null) {
+            taskRunner.shutdown();
+        }
         this.subscriptionRecoveryPolicy.stop();
         if (memoryUsage != null) {
             memoryUsage.stop();
@@ -499,6 +509,15 @@ public class Topic  extends BaseDestination {
         }
         return result.toArray(new Message[result.size()]);
     }
+    
+    public boolean iterate() {
+        while (!memoryUsage.isFull() && !messagesWaitingForSpace.isEmpty()) {
+            Runnable op = messagesWaitingForSpace.removeFirst();
+            op.run();
+        }
+        return false;
+    }
+
 
     // Properties
     // -------------------------------------------------------------------------

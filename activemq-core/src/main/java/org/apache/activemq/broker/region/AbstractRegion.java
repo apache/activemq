@@ -56,7 +56,7 @@ public abstract class AbstractRegion implements Region {
     protected final Map<ActiveMQDestination, Destination> destinations = new ConcurrentHashMap<ActiveMQDestination, Destination>();
     protected final DestinationMap destinationMap = new DestinationMap();
     protected final Map<ConsumerId, Subscription> subscriptions = new ConcurrentHashMap<ConsumerId, Subscription>();
-    protected final SystemUsage memoryManager;
+    protected final SystemUsage usageManager;
     protected final DestinationFactory destinationFactory;
     protected final DestinationStatistics destinationStatistics;
     protected final RegionBroker broker;
@@ -73,7 +73,7 @@ public abstract class AbstractRegion implements Region {
         }
         this.broker = broker;
         this.destinationStatistics = destinationStatistics;
-        this.memoryManager = memoryManager;
+        this.usageManager = memoryManager;
         this.taskRunnerFactory = taskRunnerFactory;
         if (broker == null) {
             throw new IllegalArgumentException("null destinationFactory");
