@@ -47,8 +47,6 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
 
     private static final Log LOG = LogFactory.getLog(AMQTopicMessageStore.class);
     private TopicReferenceStore topicReferenceStore;
-    private Map<SubscriptionKey, MessageId> ackedLastAckLocations = new HashMap<SubscriptionKey, MessageId>();
-
     public AMQTopicMessageStore(AMQPersistenceAdapter adapter, TopicReferenceStore topicReferenceStore, ActiveMQTopic destinationName) {
         super(adapter, topicReferenceStore, destinationName);
         this.topicReferenceStore = topicReferenceStore;
@@ -158,12 +156,6 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
             MessageAck ack = new MessageAck();
             ack.setLastMessageId(messageId);
             removeMessage(context, ack);
-
-        }
-        try {
-            asyncWriteTask.wakeup();
-        } catch (InterruptedException e) {
-            throw new InterruptedIOException();
         }
     }
 

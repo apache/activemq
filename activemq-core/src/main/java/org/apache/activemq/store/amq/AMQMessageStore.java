@@ -127,8 +127,8 @@ public class AMQMessageStore implements MessageStore {
                     }
                     synchronized (AMQMessageStore.this) {
                         inFlightTxLocations.remove(location);
-                        addMessage(message, location);
                     }
+                    addMessage(message, location);
                 }
 
                 public void afterRollback() throws Exception {
@@ -153,10 +153,15 @@ public class AMQMessageStore implements MessageStore {
             messages.put(message.getMessageId(), data);
             this.peristenceAdapter.addInProgressDataFile(this, location.getDataFileId());
         }
-        try {
-            asyncWriteTask.wakeup();
-        } catch (InterruptedException e) {
-            throw new InterruptedIOException();
+        if (messages.size() > this.peristenceAdapter
+                .getMaxCheckpointMessageAddSize()) {
+            flush();
+        } else {
+            try {
+                asyncWriteTask.wakeup();
+            } catch (InterruptedException e) {
+                throw new InterruptedIOException();
+            }
         }
     }
 
@@ -233,7 +238,10 @@ public class AMQMessageStore implements MessageStore {
                 messageAcks.add(ack);
             }
         }
-        if (data == null) {
+        if (messageAcks.size() > this.peristenceAdapter.getMaxCheckpointMessageAddSize()) {
+            flush();
+        }
+        else if (data == null) {
             try {
                 asyncWriteTask.wakeup();
             } catch (InterruptedException e) {
