@@ -51,9 +51,9 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
 
     private Class load(String className, ClassLoader cl) throws ClassNotFoundException {
         try {
-            return ClassLoading.loadClass(className, cl);
+            return Class.forName(className, false, cl);
         } catch (ClassNotFoundException e) {
-            return ClassLoading.loadClass(className, FALLBACK_CLASS_LOADER);
+            return Class.forName(className, false, FALLBACK_CLASS_LOADER);
         }
     }
 
