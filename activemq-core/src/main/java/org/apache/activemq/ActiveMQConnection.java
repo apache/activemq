@@ -580,8 +580,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         // If we announced ourselfs to the broker.. Try to let
                         // the broker
                         // know that the connection is being shutdown.
-                        syncSendPacket(info.createRemoveCommand(), closeTimeout);
-                        asyncSendPacket(new ShutdownInfo());
+                        doSyncSendPacket(info.createRemoveCommand(), closeTimeout);
+                        doAsyncSendPacket(new ShutdownInfo());
                     }
 
                     ServiceSupport.dispose(this.transport);
@@ -1144,17 +1144,20 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @throws JMSException
      */
     public void asyncSendPacket(Command command) throws JMSException {
-        if (isClosed()) {
+        if (isClosed() || closing.get()) {
             throw new ConnectionClosedException();
         } else {
-
-            try {
-                this.transport.oneway(command);
-            } catch (IOException e) {
-                throw JMSExceptionSupport.create(e);
-            }
+            doAsyncSendPacket(command);
         }
     }
+
+	private void doAsyncSendPacket(Command command) throws JMSException {
+		try {
+		    this.transport.oneway(command);
+		} catch (IOException e) {
+		    throw JMSExceptionSupport.create(e);
+		}
+	}
 
     /**
      * Send a packet through a Connection - for internal use only
@@ -1193,26 +1196,30 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @throws JMSException
      */
     public Response syncSendPacket(Command command, int timeout) throws JMSException {
-        if (isClosed()) {
+        if (isClosed() || closing.get()) {
             throw new ConnectionClosedException();
         } else {
-
-            try {
-                Response response = (Response)this.transport.request(command, timeout);
-                if (response != null && response.isException()) {
-                    ExceptionResponse er = (ExceptionResponse)response;
-                    if (er.getException() instanceof JMSException) {
-                        throw (JMSException)er.getException();
-                    } else {
-                        throw JMSExceptionSupport.create(er.getException());
-                    }
-                }
-                return response;
-            } catch (IOException e) {
-                throw JMSExceptionSupport.create(e);
-            }
+            return doSyncSendPacket(command, timeout);
         }
     }
+
+	private Response doSyncSendPacket(Command command, int timeout)
+			throws JMSException {
+		try {
+		    Response response = (Response)this.transport.request(command, timeout);
+		    if (response != null && response.isException()) {
+		        ExceptionResponse er = (ExceptionResponse)response;
+		        if (er.getException() instanceof JMSException) {
+		            throw (JMSException)er.getException();
+		        } else {
+		            throw JMSExceptionSupport.create(er.getException());
+		        }
+		    }
+		    return response;
+		} catch (IOException e) {
+		    throw JMSExceptionSupport.create(e);
+		}
+	}
 
     /**
      * @return statistics for this Connection
