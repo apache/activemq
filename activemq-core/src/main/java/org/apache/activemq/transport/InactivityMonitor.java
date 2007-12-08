@@ -46,13 +46,25 @@ public class InactivityMonitor extends TransportFilter {
     private final AtomicBoolean inReceive = new AtomicBoolean(false);
 
     private final Runnable readChecker = new Runnable() {
+        long lastRunTime;
         public void run() {
+            long now = System.currentTimeMillis();
+            if( lastRunTime != 0 && LOG.isDebugEnabled() ) {
+                LOG.debug(""+(now-lastRunTime)+" ms elapsed since last read check.");
+            }
+            lastRunTime = now; 
             readCheck();
         }
     };
 
     private final Runnable writeChecker = new Runnable() {
+        long lastRunTime;
         public void run() {
+            long now = System.currentTimeMillis();
+            if( lastRunTime != 0 && LOG.isDebugEnabled() ) {
+                LOG.debug(""+(now-lastRunTime)+" ms elapsed since last read check.");
+            }
+            lastRunTime = now; 
             writeCheck();
         }
     };
