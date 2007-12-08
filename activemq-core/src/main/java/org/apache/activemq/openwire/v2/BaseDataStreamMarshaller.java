@@ -26,7 +26,6 @@ import org.apache.activemq.openwire.BooleanStream;
 import org.apache.activemq.openwire.DataStreamMarshaller;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.util.ByteSequence;
-import org.apache.activemq.util.ClassLoading;
 
 public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
 
@@ -228,7 +227,7 @@ public abstract class BaseDataStreamMarshaller implements DataStreamMarshaller {
 
     private Throwable createThrowable(String className, String message) {
         try {
-            Class clazz = ClassLoading.loadClass(className, BaseDataStreamMarshaller.class.getClassLoader());
+            Class clazz = Class.forName(className, false, BaseDataStreamMarshaller.class.getClassLoader());
             Constructor constructor = clazz.getConstructor(new Class[] {String.class});
             return (Throwable)constructor.newInstance(new Object[] {message});
         } catch (Throwable e) {

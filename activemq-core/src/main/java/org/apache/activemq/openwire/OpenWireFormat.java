@@ -28,7 +28,6 @@ import org.apache.activemq.command.DataStructure;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.ByteSequenceData;
-import org.apache.activemq.util.ClassLoading;
 import org.apache.activemq.util.DataByteArrayInputStream;
 import org.apache.activemq.util.DataByteArrayOutputStream;
 import org.apache.activemq.wireformat.WireFormat;
@@ -326,7 +325,7 @@ public final class OpenWireFormat implements WireFormat {
         String mfName = "org.apache.activemq.openwire.v" + version + ".MarshallerFactory";
         Class mfClass;
         try {
-            mfClass = ClassLoading.loadClass(mfName, getClass().getClassLoader());
+            mfClass = Class.forName(mfName, false, getClass().getClassLoader());
         } catch (ClassNotFoundException e) {
             throw (IllegalArgumentException)new IllegalArgumentException("Invalid version: " + version
                                                                          + ", could not load " + mfName)
