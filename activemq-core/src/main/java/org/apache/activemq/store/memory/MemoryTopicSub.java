@@ -34,7 +34,7 @@ class MemoryTopicSub {
     private Map<MessageId, Message> map = new LinkedHashMap<MessageId, Message>();
     private MessageId lastBatch;
 
-    void addMessage(MessageId id, Message message) {
+    synchronized void addMessage(MessageId id, Message message) {
         map.put(id, message);
     }
 
