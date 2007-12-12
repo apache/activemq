@@ -39,6 +39,7 @@ import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.MessageIdMarshaller;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StoreFactory;
+import org.apache.activemq.kaha.impl.StoreLockedExcpetion;
 import org.apache.activemq.kaha.impl.index.hash.HashIndex;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.ReferenceStore;
@@ -53,7 +54,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
 
     
 
-    private static final Log LOG = LogFactory.getLog(KahaPersistenceAdapter.class);
+    private static final Log LOG = LogFactory.getLog(KahaReferenceStoreAdapter.class);
     private static final String STORE_STATE = "store-state";
     private static final String INDEX_VERSION_NAME = "INDEX_VERSION";
     private static final Integer INDEX_VERSION = new Integer(3);
@@ -87,7 +88,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     @Override
     public synchronized void start() throws Exception {
         super.start();
-        Store store = getStateStore();
+        Store store = getStateStore();        
         boolean empty = store.getMapContainerIds().isEmpty();
         stateMap = store.getMapContainer("state", STORE_STATE);
         stateMap.load();
