@@ -272,8 +272,22 @@ public interface Store {
      */
     long size();
     
+    /**
+     * @return true if persistent indexes are used by default
+     */
     public boolean isPersistentIndex();
     
+	/**
+	 * Set a persistent index as the default if the parameter is true
+	 * @param persistentIndex
+	 */
 	public void setPersistentIndex(boolean persistentIndex);
+	
+	/**
+	 * An explict call to initialize - this will also be called
+	 * implicitly for any other operation on the store.
+	 * @throws IOException
+	 */
+	public void initialize() throws IOException;
 	
 }

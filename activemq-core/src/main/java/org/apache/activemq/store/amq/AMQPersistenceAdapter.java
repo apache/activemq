@@ -18,6 +18,8 @@ package org.apache.activemq.store.amq;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.channels.FileLock;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -83,6 +85,10 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private static final Log LOG = LogFactory.getLog(AMQPersistenceAdapter.class);
     private final ConcurrentHashMap<ActiveMQQueue, AMQMessageStore> queues = new ConcurrentHashMap<ActiveMQQueue, AMQMessageStore>();
     private final ConcurrentHashMap<ActiveMQTopic, AMQMessageStore> topics = new ConcurrentHashMap<ActiveMQTopic, AMQMessageStore>();
+    private static final String PROPERTY_PREFIX = "org.apache.activemq.store.amq";
+    private static final boolean BROKEN_FILE_LOCK;
+    private static final boolean DISABLE_LOCKING;
+
     private AsyncDataManager asyncDataManager;
     private ReferenceStoreAdapter referenceStoreAdapter;
     private TaskRunnerFactory taskRunnerFactory;
@@ -112,7 +118,10 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private int indexKeySize = HashIndex.DEFAULT_KEY_SIZE;
     private int indexPageSize = HashIndex.DEFAULT_PAGE_SIZE;
     private Map<AMQMessageStore,Set<Integer>> dataFilesInProgress = new ConcurrentHashMap<AMQMessageStore,Set<Integer>> ();
-
+    private String directoryPath = "";
+    private RandomAccessFile lockFile;
+    private FileLock lock;
+    private boolean disableLocking = DISABLE_LOCKING;
 
     public String getBrokerName() {
         return this.brokerName;
@@ -141,13 +150,17 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
             if (brokerService != null) {
                 this.directory = brokerService.getBrokerDataDirectory();
             } else {
+                
                 this.directory = new File(IOHelper.getDefaultDataDirectory(), IOHelper.toFileSystemSafeName(brokerName));
                 this.directory = new File(directory, "amqstore");
+                this.directoryPath=directory.getAbsolutePath();
             }
         }
         if (this.directoryArchive == null) {
             this.directoryArchive = new File(this.directory,"archive");
         }
+        lockFile = new RandomAccessFile(new File(directory, "lock"), "rw");
+        lock();
         LOG.info("AMQStore starting using directory: " + directory);
         this.directory.mkdirs();
         if (archiveDataLogs) {
@@ -240,6 +253,11 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         if (!started.compareAndSet(true, false)) {
             return;
         }
+        if (lockFile != null) {
+            lockFile.close();
+            lockFile = null;
+        }
+        unlock();
         this.usageManager.getMemoryUsage().removeUsageListener(this);
         synchronized (this) {
             Scheduler.cancel(periodicCheckpointTask);
@@ -818,7 +836,15 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 
     public void setArchiveDataLogs(boolean archiveDataLogs) {
         this.archiveDataLogs = archiveDataLogs;
-    }    
+    }  
+    
+    public boolean isDisableLocking() {
+        return disableLocking;
+    }
+
+    public void setDisableLocking(boolean disableLocking) {
+        this.disableLocking = disableLocking;
+    }
 
 	
 	protected void addInProgressDataFile(AMQMessageStore store,int dataFileId) {
@@ -836,4 +862,72 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
             set.remove(dataFileId);
         }
     }
+	
+	
+	
+	protected void lock() throws IOException, InterruptedException {
+        boolean logged = false;
+        boolean aquiredLock = false;
+        do {
+            if (doLock()) {
+                aquiredLock = true;
+            } else {
+                if (!logged) {
+                    LOG.warn("Waiting to Lock the Store " + getDirectory());
+                    logged = true;
+                }
+                Thread.sleep(1000);
+            }
+
+            if (aquiredLock && logged) {
+                LOG.info("Aquired lock for AMQ Store" + getDirectory());
+            }
+
+        } while (!aquiredLock && !disableLocking);
+    }
+	
+	private synchronized void unlock() throws IOException {
+        if (!disableLocking && (null != directory) && (null != lock)) {
+            System.clearProperty(getPropertyKey());
+            if (lock.isValid()) {
+                lock.release();
+            }
+            lock = null;
+        }
+    }
+
+	
+	protected boolean doLock() throws IOException {
+	    boolean result = true;
+	    if (!disableLocking && directory != null && lock == null) {
+            String key = getPropertyKey();
+            String property = System.getProperty(key);
+            if (null == property) {
+                if (!BROKEN_FILE_LOCK) {
+                    lock = lockFile.getChannel().tryLock();
+                    if (lock == null) {
+                        result = false;
+                    } else {
+                        System.setProperty(key, new Date().toString());
+                    }
+                }
+            } else { // already locked
+                result = false;
+            }
+        }
+	    return result;
+	}
+	
+	private String getPropertyKey() throws IOException {
+        return getClass().getName() + ".lock." + directory.getCanonicalPath();
+    }
+	
+	static {
+	    BROKEN_FILE_LOCK = "true".equals(System.getProperty(PROPERTY_PREFIX
+	            + ".FileLockBroken",
+	            "false"));
+	    DISABLE_LOCKING = "true".equals(System.getProperty(PROPERTY_PREFIX
+	           + ".DisableLocking",
+	           "false"));
+	}
 }

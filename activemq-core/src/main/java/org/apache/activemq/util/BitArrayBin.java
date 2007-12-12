@@ -43,7 +43,7 @@ public class BitArrayBin {
         maxNumberOfArrays = Math.max(maxNumberOfArrays, 1);
         list = new LinkedList<BitArray>();
         for (int i = 0; i < maxNumberOfArrays; i++) {
-            list.add(new BitArray());
+            list.add(null);
         }
     }
 
@@ -130,6 +130,10 @@ public class BitArrayBin {
                 bin = list.size() - 1;
             }
             answer = list.get(bin);
+            if (answer == null) {
+                answer = new BitArray();
+                list.set(bin, answer);
+            }
         }
         return answer;
     }

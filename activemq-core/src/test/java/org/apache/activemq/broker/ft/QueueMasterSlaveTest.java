@@ -38,20 +38,15 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
     protected String uriString = "failover://(tcp://localhost:62001,tcp://localhost:62002)?randomize=false";
 
     protected void setUp() throws Exception {
+        messageCount = 10000;
         if (System.getProperty("basedir") == null) {
             File file = new File(".");
             System.setProperty("basedir", file.getAbsolutePath());
         }
         failureCount = super.messageCount / 2;
         super.topic = isTopic();
-        BrokerFactoryBean brokerFactory = new BrokerFactoryBean(new ClassPathResource(getMasterXml()));
-        brokerFactory.afterPropertiesSet();
-        master = brokerFactory.getBroker();
-        brokerFactory = new BrokerFactoryBean(new ClassPathResource(getSlaveXml()));
-        brokerFactory.afterPropertiesSet();
-        slave = brokerFactory.getBroker();
-        master.start();
-        slave.start();
+        createMaster();
+        createSlave();
         // wait for thing to connect
         Thread.sleep(1000);
         super.setUp();
@@ -87,5 +82,19 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
 
     protected boolean isTopic() {
         return false;
+    }
+    
+    protected void createMaster() throws Exception {
+        BrokerFactoryBean brokerFactory = new BrokerFactoryBean(new ClassPathResource(getMasterXml()));
+        brokerFactory.afterPropertiesSet();
+        master = brokerFactory.getBroker();
+        master.start();
+    }
+    
+    protected void createSlave() throws Exception {
+        BrokerFactoryBean brokerFactory = new BrokerFactoryBean(new ClassPathResource(getSlaveXml()));
+        brokerFactory.afterPropertiesSet();
+        slave = brokerFactory.getBroker();
+        slave.start();
     }
 }

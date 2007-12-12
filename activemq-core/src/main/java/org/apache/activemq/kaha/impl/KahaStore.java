@@ -445,10 +445,10 @@ public class KahaStore implements Store {
         }
         if (!initialized) {
 
-            LOG.info("Kaha Store using data directory " + directory);
+            
             lockFile = new RandomAccessFile(new File(directory, "lock"), "rw");
             lock();
-
+            LOG.info("Kaha Store using data directory " + directory);
             DataManager defaultDM = getDataManager(DEFAULT_CONTAINER_NAME);
             rootIndexManager = getIndexManager(defaultDM, DEFAULT_CONTAINER_NAME);
             IndexItem mapRoot = new IndexItem();
@@ -486,6 +486,7 @@ public class KahaStore implements Store {
                 if (!BROKEN_FILE_LOCK) {
                     lock = lockFile.getChannel().tryLock();
                     if (lock == null) {
+                        initialized=false;
                         throw new StoreLockedExcpetion("Kaha Store " + directory.getName()
                                                        + "  is already opened by another application");
                     } else {
@@ -493,6 +494,7 @@ public class KahaStore implements Store {
                     }
                 }
             } else { // already locked
+                initialized=false;
                 throw new StoreLockedExcpetion("Kaha Store " + directory.getName()
                                                + " is already opened by this application.");
             }
@@ -501,7 +503,7 @@ public class KahaStore implements Store {
 
     private synchronized void unlock() throws IOException {
         if (!DISABLE_LOCKING && (null != directory) && (null != lock)) {
-            System.getProperties().remove(getPropertyKey());
+            System.clearProperty(getPropertyKey());
             if (lock.isValid()) {
                 lock.release();
             }
@@ -510,7 +512,6 @@ public class KahaStore implements Store {
     }
 
     private String getPropertyKey() throws IOException {
-        // Is replaceAll() needed? Should test without it.
         return getClass().getName() + ".lock." + directory.getCanonicalPath();
     }
 
