@@ -38,7 +38,6 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
     protected String uriString = "failover://(tcp://localhost:62001,tcp://localhost:62002)?randomize=false";
 
     protected void setUp() throws Exception {
-        messageCount = 10000;
         if (System.getProperty("basedir") == null) {
             File file = new File(".");
             System.setProperty("basedir", file.getAbsolutePath());
