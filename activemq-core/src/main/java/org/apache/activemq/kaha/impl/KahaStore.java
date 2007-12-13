@@ -503,9 +503,11 @@ public class KahaStore implements Store {
 
     private synchronized void unlock() throws IOException {
         if (!DISABLE_LOCKING && (null != directory) && (null != lock)) {
-            System.clearProperty(getPropertyKey());
+            //clear property doesn't work on some platforms
+            System.getProperties().remove(getPropertyKey());
             if (lock.isValid()) {
                 lock.release();
+                lock.channel().close();
             }
             lock = null;
         }
