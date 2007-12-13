@@ -887,10 +887,12 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     }
 	
 	private synchronized void unlock() throws IOException {
-        if (!disableLocking && (null != directory) && (null != lock)) {
-            System.clearProperty(getPropertyKey());
+        if (!disableLocking && (null != lock)) {
+            //clear property doesn't work on some platforms
+            System.getProperties().remove(getPropertyKey());
             if (lock.isValid()) {
                 lock.release();
+                lock.channel().close();
             }
             lock = null;
         }
