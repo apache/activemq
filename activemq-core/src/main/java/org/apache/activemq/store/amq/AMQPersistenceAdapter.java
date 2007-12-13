@@ -253,11 +253,11 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         if (!started.compareAndSet(true, false)) {
             return;
         }
+        unlock();
         if (lockFile != null) {
             lockFile.close();
             lockFile = null;
         }
-        unlock();
         this.usageManager.getMemoryUsage().removeUsageListener(this);
         synchronized (this) {
             Scheduler.cancel(periodicCheckpointTask);
@@ -890,9 +890,12 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         if (!disableLocking && (null != lock)) {
             //clear property doesn't work on some platforms
             System.getProperties().remove(getPropertyKey());
+            System.clearProperty(getPropertyKey());
+            assert(System.getProperty(getPropertyKey())==null);
             if (lock.isValid()) {
                 lock.release();
                 lock.channel().close();
+                
             }
             lock = null;
         }

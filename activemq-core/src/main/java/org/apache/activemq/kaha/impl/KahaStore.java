@@ -108,6 +108,7 @@ public class KahaStore implements Store {
             closed = true;
             if (initialized) {
                 unlock();
+                lockFile.close();
 
                 for (ListContainerImpl container : lists.values()) {
                     container.close();
