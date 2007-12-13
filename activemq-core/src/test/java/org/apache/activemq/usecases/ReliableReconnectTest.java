@@ -68,6 +68,12 @@ public class ReliableReconnectTest extends TestSupport {
         topic = true;
         destination = createDestination(getClass().getName());
     }
+    
+    protected void tearDown() throws Exception {
+        if (broker!=null) {
+            broker.stop();
+        }
+    }
 
     public ActiveMQConnectionFactory getConnectionFactory() throws Exception {
         String url = "failover://" + DEFAULT_BROKER_URL;
@@ -77,6 +83,7 @@ public class ReliableReconnectTest extends TestSupport {
     protected void startBroker() throws JMSException {
         try {
             broker = BrokerFactory.createBroker(new URI("broker://()/localhost"));
+            broker.setUseShutdownHook(false);
             broker.addConnector(DEFAULT_BROKER_URL);
             broker.start();
         } catch (Exception e) {
