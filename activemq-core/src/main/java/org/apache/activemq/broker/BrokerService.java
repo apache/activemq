@@ -724,6 +724,7 @@ public class BrokerService implements Service {
      */
     public void setPersistenceAdapter(PersistenceAdapter persistenceAdapter) {
         this.persistenceAdapter = persistenceAdapter;
+        configureService(this.persistenceAdapter);
     }
 
     public TaskRunnerFactory getTaskRunnerFactory() {
