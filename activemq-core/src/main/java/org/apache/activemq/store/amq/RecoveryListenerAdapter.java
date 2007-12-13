@@ -56,7 +56,6 @@ final class RecoveryListenerAdapter implements MessageRecoveryListener {
             return recoverMessage(message);
         } else {
             LOG.error("Message id " + ref + " could not be recovered from the data store!");
-            Thread.dumpStack();
         }
         return false;
     }
