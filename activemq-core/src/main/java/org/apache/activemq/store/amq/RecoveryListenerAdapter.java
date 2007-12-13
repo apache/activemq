@@ -55,7 +55,9 @@ final class RecoveryListenerAdapter implements MessageRecoveryListener {
         if (message != null) {
             return recoverMessage(message);
         } else {
-            LOG.error("Message id " + ref + " could not be recovered from the data store!");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Message id " + ref + " could not be recovered from the data store - already dispatched");
+            }
         }
         return false;
     }
