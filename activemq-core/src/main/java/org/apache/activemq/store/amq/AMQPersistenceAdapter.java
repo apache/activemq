@@ -140,6 +140,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 
     public void setBrokerService(BrokerService brokerService) {
         this.brokerService = brokerService;
+        Thread.dumpStack();
     }
 
     public synchronized void start() throws Exception {
@@ -149,8 +150,8 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         if (this.directory == null) {
             if (brokerService != null) {
                 this.directory = brokerService.getBrokerDataDirectory();
+               
             } else {
-                
                 this.directory = new File(IOHelper.getDefaultDataDirectory(), IOHelper.toFileSystemSafeName(brokerName));
                 this.directory = new File(directory, "amqstore");
                 this.directoryPath=directory.getAbsolutePath();
@@ -159,10 +160,10 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         if (this.directoryArchive == null) {
             this.directoryArchive = new File(this.directory,"archive");
         }
+        this.directory.mkdirs();
         lockFile = new RandomAccessFile(new File(directory, "lock"), "rw");
         lock();
-        LOG.info("AMQStore starting using directory: " + directory);
-        this.directory.mkdirs();
+        LOG.info("AMQStore starting using directory: " + directory); 
         if (archiveDataLogs) {
             this.directoryArchive.mkdirs();
         }
