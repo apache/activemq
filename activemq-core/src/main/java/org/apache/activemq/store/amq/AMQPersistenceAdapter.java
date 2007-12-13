@@ -140,7 +140,6 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 
     public void setBrokerService(BrokerService brokerService) {
         this.brokerService = brokerService;
-        Thread.dumpStack();
     }
 
     public synchronized void start() throws Exception {
