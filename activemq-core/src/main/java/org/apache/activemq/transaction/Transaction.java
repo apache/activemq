@@ -109,4 +109,8 @@ public abstract class Transaction {
     public boolean isPrepared() {
         return getState() == PREPARED_STATE;
     }
+    
+    public int size() {
+        return synchronizations.size();
+    }
 }

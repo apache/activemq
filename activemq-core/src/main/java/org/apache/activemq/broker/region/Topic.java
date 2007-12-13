@@ -351,9 +351,15 @@ public class Topic  extends BaseDestination  implements Task{
                 // Producer flow control cannot be used, so we have do the flow
                 // control at the broker
                 // by blocking this thread until there is space available.
+                int count = 0;
                 while (!memoryUsage.waitForSpace(1000)) {
                     if (context.getStopping().get()) {
                         throw new IOException("Connection closed, send aborted.");
+                    }
+                    if (count > 2 && context.isInTransaction()) {
+                        count =0;
+                        int size = context.getTransaction().size();
+                        LOG.warn("Waiting for space to send  transacted message - transaction elements = " + size + " need more space to commit. Message = " + message);
                     }
                 }
 
