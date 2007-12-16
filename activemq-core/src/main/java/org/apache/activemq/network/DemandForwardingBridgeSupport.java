@@ -394,7 +394,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                     ConnectionError ce = (ConnectionError)command;
                     serviceRemoteException(ce.getException());
                 } else {
-                    if (configuration.isDuplex() || createdByDuplex) {
+                    if (isDuplex()) {
                         if (command.isMessage()) {
                             ActiveMQMessage message = (ActiveMQMessage)command;
                             if (AdvisorySupport.isConsumerAdvisoryTopic(message.getDestination())) {
@@ -569,7 +569,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                             LOG.trace("bridging " + configuration.getBrokerName() + " -> " + remoteBrokerName + ": " + message);
                         }
 
-                        if (!message.isResponseRequired()) {
+                        if (!message.isResponseRequired() || isDuplex()) {
 
                             // If the message was originally sent using async
                             // send, we will preserve that QOS
@@ -932,6 +932,10 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
 
     public long getEnqueueCounter() {
         return enqueueCounter.get();
+    }
+    
+    protected boolean isDuplex() {
+        return configuration.isDuplex() || createdByDuplex;
     }
 
 }
