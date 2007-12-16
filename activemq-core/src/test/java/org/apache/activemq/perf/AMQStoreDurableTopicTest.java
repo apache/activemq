@@ -25,12 +25,22 @@ import org.apache.activemq.store.amq.AMQPersistenceAdapter;
  */
 public class AMQStoreDurableTopicTest extends SimpleDurableTopicTest {
 
-    protected void configureBroker(BrokerService answer) throws Exception {
+    protected void configureBroker(BrokerService answer,String uri) throws Exception {
         File dataFileDir = new File("target/test-amq-data/perfTest/amqdb");
+        dataFileDir.mkdirs();
         answer.setDeleteAllMessagesOnStartup(true);
         AMQPersistenceAdapter adaptor = new AMQPersistenceAdapter();
-        adaptor.setDirectory(dataFileDir);
+        adaptor.setArchiveDataLogs(true);
+        adaptor.setMaxFileLength(1024 * 64);
+        answer.setDataDirectoryFile(dataFileDir);
         answer.setPersistenceAdapter(adaptor);
-        answer.addConnector(bindAddress);
+        answer.addConnector(uri);
+    }
+    
+    protected void setUp() throws Exception {
+        numberofProducers=6;
+        numberOfConsumers=6;
+        this.consumerSleepDuration=0;
+        super.setUp();
     }
 }

@@ -16,22 +16,33 @@
  */
 package org.apache.activemq.perf;
 
+import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
-import javax.jms.Session;
 
-/**
- * @version $Revision: 1.3 $
- */
-public class SimpleQueueTest extends SimpleTopicTest {
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.network.NetworkConnector;
 
-    protected Destination createDestination(Session s, String destinationName) throws JMSException {
-        return s.createQueue(destinationName);
-    }
+
+public class SimpleDurableTopicNetworkTest extends SimpleNetworkTest {
     
     protected void setUp() throws Exception {
-        this.consumerSleepDuration=2000;
+        numberofProducers=6;
+        numberOfConsumers=6;
+        samepleCount=100;
+        playloadSize = 1;
         super.setUp();
     }
+    
+    
+    protected PerfProducer createProducer(ConnectionFactory fac, Destination dest, int number, byte payload[]) throws JMSException {
+        PerfProducer pp = new PerfProducer(fac, dest, payload);
+        pp.setDeliveryMode(DeliveryMode.PERSISTENT);
+        return pp;
+    }
 
+    protected PerfConsumer createConsumer(ConnectionFactory fac, Destination dest, int number) throws JMSException {
+        return new PerfConsumer(fac, dest, "subs:" + number);
+    }
 }

@@ -47,18 +47,18 @@ public class QueueConnectionMemoryTest extends SimpleQueueTest {
         // just cancel super class test
     }
 
-    protected void configureBroker(BrokerService answer) throws Exception {
+    protected void configureBroker(BrokerService answer,String uri) throws Exception {
         KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter();
         answer.setPersistenceAdapter(adaptor);
-        answer.addConnector(bindAddress);
+        answer.addConnector(uri);
         answer.setDeleteAllMessagesOnStartup(true);
     }
 
     public void testMemory() throws Exception {
         if (broker == null) {
-            broker = createBroker();
+            broker = createBroker(bindAddress);
         }
-        factory = createConnectionFactory();
+        factory = createConnectionFactory(bindAddress);
         Connection con = factory.createConnection();
         Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
         destination = createDestination(session, destinationName);

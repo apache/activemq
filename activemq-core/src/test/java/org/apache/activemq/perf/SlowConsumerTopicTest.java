@@ -66,7 +66,7 @@ public class SlowConsumerTopicTest extends SimpleTopicTest {
     }
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
-        ActiveMQConnectionFactory result = super.createConnectionFactory();
+        ActiveMQConnectionFactory result = super.createConnectionFactory(bindAddress);
         ActiveMQPrefetchPolicy policy = new ActiveMQPrefetchPolicy();
         policy.setTopicPrefetch(1000);
         result.setPrefetchPolicy(policy);
