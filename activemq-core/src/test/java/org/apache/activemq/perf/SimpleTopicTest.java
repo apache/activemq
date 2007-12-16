@@ -61,9 +61,9 @@ public class SimpleTopicTest extends TestCase {
      */
     protected void setUp() throws Exception {
         if (broker == null) {
-            broker = createBroker();
+            broker = createBroker(bindAddress);
         }
-        factory = createConnectionFactory();
+        factory = createConnectionFactory(bindAddress);
         Connection con = factory.createConnection();
         Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
         destination = createDestination(session, destinationName);
@@ -109,9 +109,9 @@ public class SimpleTopicTest extends TestCase {
      * 
      * @throws Exception
      */
-    protected BrokerService createBroker() throws Exception {
+    protected BrokerService createBroker(String uri) throws Exception {
         BrokerService answer = new BrokerService();
-        configureBroker(answer);
+        configureBroker(answer,uri);
         answer.start();
         return answer;
     }
@@ -123,15 +123,16 @@ public class SimpleTopicTest extends TestCase {
     protected PerfConsumer createConsumer(ConnectionFactory fac, Destination dest, int number) throws JMSException {
         return new PerfConsumer(fac, dest);
     }
-
-    protected void configureBroker(BrokerService answer) throws Exception {
-        answer.addConnector(bindAddress);
+    
+    
+    protected void configureBroker(BrokerService answer,String uri) throws Exception {
         answer.setDeleteAllMessagesOnStartup(true);
+        answer.addConnector(uri);
         answer.setUseShutdownHook(false);
     }
 
-    protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
-        return new ActiveMQConnectionFactory(bindAddress);
+    protected ActiveMQConnectionFactory createConnectionFactory(String uri) throws Exception {
+        return new ActiveMQConnectionFactory(uri);
     }
 
     public void testPerformance() throws JMSException, InterruptedException {

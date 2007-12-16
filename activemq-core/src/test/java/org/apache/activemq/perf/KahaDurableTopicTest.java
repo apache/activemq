@@ -32,10 +32,10 @@ public class KahaDurableTopicTest extends SimpleDurableTopicTest {
      * result=factory.getBroker(); result.start(); return result; }
      */
 
-    protected void configureBroker(BrokerService answer) throws Exception {
+    protected void configureBroker(BrokerService answer,String uri) throws Exception {
         KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter();
         answer.setPersistenceAdapter(adaptor);
-        answer.addConnector(bindAddress);
+        answer.addConnector(uri);
         answer.setDeleteAllMessagesOnStartup(true);
     }
 

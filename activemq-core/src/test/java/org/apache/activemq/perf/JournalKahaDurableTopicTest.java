@@ -27,7 +27,7 @@ import org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter;
  */
 public class JournalKahaDurableTopicTest extends SimpleDurableTopicTest {
 
-    protected void configureBroker(BrokerService answer) throws Exception {
+    protected void configureBroker(BrokerService answer,String uri) throws Exception {
 
         File dataFileDir = new File("target/test-amq-data/perfTest");
         File journalDir = new File(dataFileDir, "journal").getCanonicalFile();
@@ -38,7 +38,7 @@ public class JournalKahaDurableTopicTest extends SimpleDurableTopicTest {
         journalAdaptor.setMaxCheckpointWorkers(1);
 
         answer.setPersistenceAdapter(journalAdaptor);
-        answer.addConnector(bindAddress);
+        answer.addConnector(uri);
         answer.setDeleteAllMessagesOnStartup(true);
 
     }
