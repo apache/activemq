@@ -1144,7 +1144,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @throws JMSException
      */
     public void asyncSendPacket(Command command) throws JMSException {
-        if (isClosed() || closing.get()) {
+        if (isClosed()) {
             throw new ConnectionClosedException();
         } else {
             doAsyncSendPacket(command);
