@@ -47,7 +47,7 @@ public class SimpleTopicTest extends TestCase {
     protected int samepleCount = 20;
     protected long sampleInternal = 10000;
     protected int numberOfConsumers = 1;
-    protected int numberofProducers = 2;
+    protected int numberofProducers = 0;
     protected int playloadSize = 1024;
     protected byte[] array;
     protected ConnectionFactory factory;
@@ -164,8 +164,12 @@ public class SimpleTopicTest extends TestCase {
             totalRate += rate.getRate();
             totalCount += rate.getTotalCount();
         }
-        int avgRate = totalRate / producers.length;
-        System.out.println("Avg producer rate = " + avgRate + " msg/sec | Total rate = " + totalRate + ", sent = " + totalCount);
+        if (producers != null && producers.length > 0) {
+            int avgRate = totalRate / producers.length;
+            System.out.println("Avg producer rate = " + avgRate
+                    + " msg/sec | Total rate = " + totalRate + ", sent = "
+                    + totalCount);
+        }
     }
 
     protected void dumpConsumerRate() {
