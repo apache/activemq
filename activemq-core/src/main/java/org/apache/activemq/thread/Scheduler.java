@@ -25,17 +25,7 @@ import java.util.TimerTask;
  */
 public final class Scheduler {
 
-    private static final class SchedulerTimerTask extends TimerTask {
-		private final Runnable task;
-
-		private SchedulerTimerTask(Runnable task) {
-			this.task = task;
-		}
-
-		public void run() {
-			task.run();							
-		}
-	}
+    
 
 	public static final Timer CLOCK_DAEMON = new Timer("ActiveMQ Scheduler", true);
     private static final HashMap<Runnable, TimerTask> TIMER_TASKS = new HashMap<Runnable, TimerTask>();
