@@ -270,6 +270,7 @@ class HashBin {
         HashPageInfo info = hashPages.get(pageNo);
         if (info.size() > maximumEntries) {
             // overflowed
+            info.begin();
             HashEntry entry = info.removeHashEntry(info.size() - 1);
             doOverFlow(pageNo + 1, entry);
         }
