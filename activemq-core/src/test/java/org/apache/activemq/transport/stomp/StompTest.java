@@ -35,49 +35,49 @@ import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
+import org.apache.activemq.broker.BrokerFactory;
+import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.activemq.transport.reliable.UnreliableUdpTransportTest;
+import org.apache.activemq.security.AuthorizationPlugin;
+import org.apache.activemq.security.SimpleSecurityBrokerSystemTest;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class StompTest extends CombinationTestSupport {
     private static final Log LOG = LogFactory.getLog(StompTest.class);
 
-    protected String bindAddress = "stomp://localhost:0";
+    protected String bindAddress = "stomp://localhost:61613";
+    protected String confUri = "xbean:org/apache/activemq/transport/stomp/stomp-auth-broker.xml";
 
     private BrokerService broker;
-    private TransportConnector connector;
     private StompConnection stompConnection = new StompConnection();
     private Connection connection;
     private Session session;
     private ActiveMQQueue queue;
-
+    
     protected void setUp() throws Exception {
-        broker = new BrokerService();
-        broker.setPersistent(false);
-
-        connector = broker.addConnector(bindAddress);
+        broker = BrokerFactory.createBroker(new URI(confUri));
         broker.start();
 
         stompConnect();
 
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost");
-        connection = cf.createConnection();
+        connection = cf.createConnection("system", "manager");
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         queue = new ActiveMQQueue(getQueueName());
         connection.start();
     }
 
     private void stompConnect() throws IOException, URISyntaxException, UnknownHostException {
-        URI connectUri = connector.getConnectUri();
-        stompConnection.open("127.0.0.1", connectUri.getPort());
+        URI connectUri = new URI(bindAddress);
+        stompConnection.open(createSocket(connectUri));
     }
 
     protected Socket createSocket(URI connectUri) throws IOException {
-        return new Socket();
+        return new Socket("127.0.0.1", connectUri.getPort());
     }
 
     protected String getQueueName() {
@@ -117,7 +117,7 @@ public class StompTest extends CombinationTestSupport {
 
     public void testConnect() throws Exception {
 
-        String connectFrame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n" + "request-id: 1\n" + "\n" + Stomp.NULL;
+        String connectFrame = "CONNECT\n" + "login: system\n" + "passcode: manager\n" + "request-id: 1\n" + "\n" + Stomp.NULL;
         stompConnection.sendFrame(connectFrame);
 
         String f = stompConnection.receiveFrame();
@@ -130,7 +130,7 @@ public class StompTest extends CombinationTestSupport {
 
         MessageConsumer consumer = session.createConsumer(queue);
 
-        String frame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n\n" + Stomp.NULL;
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
         frame = stompConnection.receiveFrame();
@@ -155,7 +155,7 @@ public class StompTest extends CombinationTestSupport {
 
         MessageConsumer consumer = session.createConsumer(queue);
 
-        String frame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n\n" + Stomp.NULL;
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
         frame = stompConnection.receiveFrame();
@@ -174,7 +174,7 @@ public class StompTest extends CombinationTestSupport {
 
         MessageConsumer consumer = session.createConsumer(queue, "foo = 'abc'");
 
-        String frame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n\n" + Stomp.NULL;
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
         frame = stompConnection.receiveFrame();
@@ -195,7 +195,7 @@ public class StompTest extends CombinationTestSupport {
 
         MessageConsumer consumer = session.createConsumer(queue);
 
-        String frame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n\n" + Stomp.NULL;
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
         frame = stompConnection.receiveFrame();
@@ -222,7 +222,7 @@ public class StompTest extends CombinationTestSupport {
 
     public void testSubscribeWithAutoAck() throws Exception {
 
-        String frame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n\n" + Stomp.NULL;
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
         frame = stompConnection.receiveFrame();
@@ -242,7 +242,7 @@ public class StompTest extends CombinationTestSupport {
 
     public void testSubscribeWithAutoAckAndBytesMessage() throws Exception {
 
-        String frame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n\n" + Stomp.NULL;
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
         frame = stompConnection.receiveFrame();
@@ -271,7 +271,7 @@ public class StompTest extends CombinationTestSupport {
 
     public void testSubscribeWithMessageSentWithProperties() throws Exception {
 
-        String frame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n\n" + Stomp.NULL;
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
         frame = stompConnection.receiveFrame();
@@ -305,7 +305,7 @@ public class StompTest extends CombinationTestSupport {
         int ctr = 10;
         String[] data = new String[ctr];
 
-        String frame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n\n" + Stomp.NULL;
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
         frame = stompConnection.receiveFrame();
@@ -343,7 +343,7 @@ public class StompTest extends CombinationTestSupport {
 
     public void testSubscribeWithAutoAckAndSelector() throws Exception {
 
-        String frame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n\n" + Stomp.NULL;
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
         frame = stompConnection.receiveFrame();
@@ -365,7 +365,7 @@ public class StompTest extends CombinationTestSupport {
 
     public void testSubscribeWithClientAck() throws Exception {
 
-        String frame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n\n" + Stomp.NULL;
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
         frame = stompConnection.receiveFrame();
@@ -389,7 +389,7 @@ public class StompTest extends CombinationTestSupport {
 
     public void testUnsubscribe() throws Exception {
 
-        String frame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n\n" + Stomp.NULL;
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
@@ -426,7 +426,7 @@ public class StompTest extends CombinationTestSupport {
     public void testTransactionCommit() throws Exception {
         MessageConsumer consumer = session.createConsumer(queue);
 
-        String frame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n\n" + Stomp.NULL;
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
         String f = stompConnection.receiveFrame();
@@ -450,7 +450,7 @@ public class StompTest extends CombinationTestSupport {
     public void testTransactionRollback() throws Exception {
         MessageConsumer consumer = session.createConsumer(queue);
 
-        String frame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n\n" + Stomp.NULL;
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
 
         String f = stompConnection.receiveFrame();
@@ -486,7 +486,7 @@ public class StompTest extends CombinationTestSupport {
 
     public void testDisconnectedClientsAreRemovedFromTheBroker() throws Exception {
         assertClients(1);
-        String frame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n\n" + Stomp.NULL;
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
 
         stompConnection.sendFrame(frame);
 
@@ -502,7 +502,61 @@ public class StompTest extends CombinationTestSupport {
 
         assertClients(1);
     }
+    
+    public void testConnectNotAuthenticatedWrongUser() throws Exception {
+        String frame = "CONNECT\n" + "login: dejanb\n" + "passcode: manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
 
+        String f = stompConnection.receiveFrame();
+        
+        assertTrue(f.startsWith("ERROR"));  
+        assertClients(1);
+        
+    }
+    
+    public void testConnectNotAuthenticatedWrongPassword() throws Exception {
+        
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: dejanb\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        String f = stompConnection.receiveFrame();
+        
+        assertTrue(f.startsWith("ERROR"));  
+        assertClients(1);        
+    }    
+    
+    public void testSendNotAuthorized() throws Exception {
+
+        String frame = "CONNECT\n" + "login: guest\n" + "passcode: password\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SEND\n" + "destination:/queue/USERS." + getQueueName() + "\n\n" + "Hello World" + Stomp.NULL;
+
+        stompConnection.sendFrame(frame);
+        String f = stompConnection.receiveFrame();
+        assertTrue(f.startsWith("ERROR"));
+
+    }
+    
+    public void testSubscribeNotAuthorized() throws Exception {
+
+        String frame = "CONNECT\n" + "login: guest\n" + "passcode: password\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto\n\n" + Stomp.NULL;
+
+        stompConnection.sendFrame(frame);
+        String f = stompConnection.receiveFrame();
+        assertTrue(f.startsWith("ERROR"));
+
+    } 
+    
     protected void assertClients(int expected) throws Exception {
         org.apache.activemq.broker.Connection[] clients = broker.getBroker().getClients();
         int actual = clients.length;
