@@ -30,9 +30,13 @@ public class StompConnection {
 
     private Socket stompSocket;
     private ByteArrayOutputStream inputBuffer = new ByteArrayOutputStream();
-
+    
     public void open(String host, int port) throws IOException, UnknownHostException {
-        stompSocket = new Socket(host, port);
+        open(new Socket(host, port));
+    }
+    
+    public void open(Socket socket) {
+    	stompSocket = socket;
     }
 
     public void close() throws IOException {
@@ -75,5 +79,13 @@ public class StompConnection {
             }
         }
     }
+
+	public Socket getStompSocket() {
+		return stompSocket;
+	}
+
+	public void setStompSocket(Socket stompSocket) {
+		this.stompSocket = stompSocket;
+	}
 
 }

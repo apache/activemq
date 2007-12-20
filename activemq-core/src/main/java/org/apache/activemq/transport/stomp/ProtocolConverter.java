@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.jms.Destination;
 import javax.jms.JMSException;
 
 import org.apache.activemq.command.ActiveMQDestination;
@@ -33,11 +32,13 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTempQueue;
 import org.apache.activemq.command.ActiveMQTempTopic;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ConnectionError;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DestinationInfo;
+import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
@@ -51,6 +52,7 @@ import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.util.ByteArrayOutputStream;
+import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
@@ -94,17 +96,23 @@ public class ProtocolConverter {
         }
     }
 
-    protected ResponseHandler createResponseHandler(StompFrame command) {
+    protected ResponseHandler createResponseHandler(final StompFrame command) {
         final String receiptId = command.getHeaders().get(Stomp.Headers.RECEIPT_REQUESTED);
-        // A response may not be needed.
         if (receiptId != null) {
             return new ResponseHandler() {
                 public void onResponse(ProtocolConverter converter, Response response) throws IOException {
-                    StompFrame sc = new StompFrame();
-                    sc.setAction(Stomp.Responses.RECEIPT);
-                    sc.setHeaders(new HashMap<String, String>(1));
-                    sc.getHeaders().put(Stomp.Headers.Response.RECEIPT_ID, receiptId);
-                    transportFilter.sendToStomp(sc);
+                    if (response.isException()) {
+                        // Generally a command can fail.. but that does not invalidate the connection.
+                        // We report back the failure but we don't close the connection.
+                        Throwable exception = ((ExceptionResponse)response).getException();
+                        handleException(exception, command);
+                    } else {
+                        StompFrame sc = new StompFrame();
+                        sc.setAction(Stomp.Responses.RECEIPT);
+                        sc.setHeaders(new HashMap<String, String>(1));
+                        sc.getHeaders().put(Stomp.Headers.Response.RECEIPT_ID, receiptId);
+                        transportFilter.sendToStomp(sc);
+                    }
                 }
             };
         }
@@ -160,28 +168,33 @@ public class ProtocolConverter {
             }
 
         } catch (ProtocolException e) {
-
-            // Let the stomp client know about any protocol errors.
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            PrintWriter stream = new PrintWriter(new OutputStreamWriter(baos, "UTF-8"));
-            e.printStackTrace(stream);
-            stream.close();
-
-            HashMap<String, String> headers = new HashMap<String, String>();
-            headers.put(Stomp.Headers.Error.MESSAGE, e.getMessage());
-
-            final String receiptId = command.getHeaders().get(Stomp.Headers.RECEIPT_REQUESTED);
-            if (receiptId != null) {
-                headers.put(Stomp.Headers.Response.RECEIPT_ID, receiptId);
-            }
-
-            StompFrame errorMessage = new StompFrame(Stomp.Responses.ERROR, headers, baos.toByteArray());
-            sendToStomp(errorMessage);
-
-            if (e.isFatal()) {
-                getTransportFilter().onException(e);
+            handleException(e, command);
+            // Some protocol errors can cause the connection to get closed.
+            if( e.isFatal() ) {
+               getTransportFilter().onException(e);
             }
         }
+    }
+    
+    protected void handleException(Throwable exception, StompFrame command) throws IOException {
+        // Let the stomp client know about any protocol errors.
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintWriter stream = new PrintWriter(new OutputStreamWriter(baos, "UTF-8"));
+        exception.printStackTrace(stream);
+        stream.close();
+
+        HashMap<String, String> headers = new HashMap<String, String>();
+        headers.put(Stomp.Headers.Error.MESSAGE, exception.getMessage());
+
+        if (command != null) {
+        	final String receiptId = command.getHeaders().get(Stomp.Headers.RECEIPT_REQUESTED);
+        	if (receiptId != null) {
+        		headers.put(Stomp.Headers.Response.RECEIPT_ID, receiptId);
+        	}
+        }
+
+        StompFrame errorMessage = new StompFrame(Stomp.Responses.ERROR, headers, baos.toByteArray());
+        sendToStomp(errorMessage);
     }
 
     protected void onStompSend(StompFrame command) throws IOException, JMSException {
@@ -393,7 +406,7 @@ public class ProtocolConverter {
         throw new ProtocolException("No subscription matched.");
     }
 
-    protected void onStompConnect(StompFrame command) throws ProtocolException {
+    protected void onStompConnect(final StompFrame command) throws ProtocolException {
 
         if (connected.get()) {
             throw new ProtocolException("Allready connected.");
@@ -424,13 +437,28 @@ public class ProtocolConverter {
         sendToActiveMQ(connectionInfo, new ResponseHandler() {
             public void onResponse(ProtocolConverter converter, Response response) throws IOException {
 
+                if (response.isException()) {
+                    // If the connection attempt fails we close the socket.
+                    Throwable exception = ((ExceptionResponse)response).getException();
+                    handleException(exception, command);
+                    getTransportFilter().onException(IOExceptionSupport.create(exception));
+                    return;
+                }
+
                 final SessionInfo sessionInfo = new SessionInfo(sessionId);
                 sendToActiveMQ(sessionInfo, null);
 
                 final ProducerInfo producerInfo = new ProducerInfo(producerId);
                 sendToActiveMQ(producerInfo, new ResponseHandler() {
                     public void onResponse(ProtocolConverter converter, Response response) throws IOException {
-
+                        
+                        if (response.isException()) {
+                            // If the connection attempt fails we close the socket.
+                            Throwable exception = ((ExceptionResponse)response).getException();
+                            handleException(exception, command);
+                            getTransportFilter().onException(IOExceptionSupport.create(exception));
+                        }
+                        
                         connected.set(true);
                         HashMap<String, String> responseHeaders = new HashMap<String, String>();
 
@@ -483,8 +511,13 @@ public class ProtocolConverter {
             ResponseHandler rh = resposeHandlers.remove(Integer.valueOf(response.getCorrelationId()));
             if (rh != null) {
                 rh.onResponse(this, response);
+            } else {
+                // Pass down any unexpected errors. Should this close the connection?
+                if (response.isException()) {
+                    Throwable exception = ((ExceptionResponse)response).getException();
+                    handleException(exception, null);
+                }
             }
-
         } else if (command.isMessageDispatch()) {
 
             MessageDispatch md = (MessageDispatch)command;
@@ -492,6 +525,10 @@ public class ProtocolConverter {
             if (sub != null) {
                 sub.onMessageDispatch(md);
             }
+        } else if (command.getDataStructureType() == ConnectionError.DATA_STRUCTURE_TYPE) {
+            // Pass down any unexpected async errors. Should this close the connection?
+            Throwable exception = ((ConnectionError)command).getException();
+            handleException(exception, null);
         }
     }
 
