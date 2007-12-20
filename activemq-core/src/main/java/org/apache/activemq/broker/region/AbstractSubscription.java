@@ -115,7 +115,7 @@ public abstract class AbstractSubscription implements Subscription {
     }
 
     public boolean isSlave() {
-        return getContext().isSlave();
+        return broker.getBrokerService().isSlave();
     }
 
     public ConnectionContext getContext() {

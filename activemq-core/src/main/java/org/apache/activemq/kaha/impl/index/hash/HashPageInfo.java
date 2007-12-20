@@ -88,7 +88,7 @@ class HashPageInfo {
 
     void begin() throws IOException {
         if (page == null) {
-            page = hashIndex.getFullPage(id);
+            page = hashIndex.lookupPage(id);
         }
     }
 
