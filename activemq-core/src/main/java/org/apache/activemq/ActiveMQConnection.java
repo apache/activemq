@@ -196,7 +196,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         // idle
         asyncConnectionThread = new ThreadPoolExecutor(1, 1, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
             public Thread newThread(Runnable r) {
-                Thread thread = new Thread(r, "AcitveMQ Connection Worker: " + transport);
+                Thread thread = new Thread(r, "ActiveMQ Connection Worker: " + transport);
                 thread.setDaemon(true);
                 return thread;
             }
