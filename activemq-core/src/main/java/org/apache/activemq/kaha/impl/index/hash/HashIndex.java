@@ -62,7 +62,7 @@ public class HashIndex implements Index {
     private AtomicBoolean loaded = new AtomicBoolean();
     private LRUCache<Long, HashPage> pageCache;
     private boolean enablePageCaching=true;
-    private int pageCacheSize = 1;
+    private int pageCacheSize = 10;
 
     
     /**

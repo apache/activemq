@@ -143,9 +143,6 @@ class HashBin {
                 }
             }
             if (!replace) {
-                if (low > size()) {
-                    LOG.info("SIZE() " + size() + " low = " + low);
-                }
                 addHashEntry(low, newEntry);
                 size++;
             }
@@ -189,7 +186,6 @@ class HashBin {
             pageToUse.setPage(hp);
             offset = 0;
         } else {
-            
             int count = 0;
             int countSoFar=0;
             int pageNo = 0;
@@ -206,10 +202,14 @@ class HashBin {
                 countSoFar += page.size();
                 pageNo++;
             }
+            while(pageNo >= hashPages.size()) {
+                HashPage hp = hashIndex.createPage(id);
+                addHashPageInfo(hp.getId(), 0);               
+            }
             pageToUse = hashPages.get(pageNo);
+           
         }
-        pageToUse.begin();
-        
+        pageToUse.begin();  
         pageToUse.addHashEntry(offset, entry);
         doOverFlow(index);
     }
