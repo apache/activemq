@@ -104,7 +104,7 @@ public class ReconnectTest extends TestCase {
             try {
                 if (!stopped.await(5, TimeUnit.SECONDS)) {
                     connection.close();
-                    stopped.await();
+                    stopped.await(5, TimeUnit.SECONDS);
                 } else {
                     connection.close();
                 }
