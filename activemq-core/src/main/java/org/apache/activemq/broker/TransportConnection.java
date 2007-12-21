@@ -876,7 +876,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
             doStop();
             stopLatch.countDown();
         } else {
-            stopLatch.await();
+            stopLatch.await(1, TimeUnit.SECONDS);
         }
     }
 
