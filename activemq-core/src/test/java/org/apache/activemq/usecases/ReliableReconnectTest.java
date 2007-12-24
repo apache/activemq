@@ -34,6 +34,8 @@ import javax.jms.Topic;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.activemq.test.TestSupport;
 import org.apache.activemq.util.IdGenerator;
 
@@ -43,7 +45,7 @@ import org.apache.activemq.util.IdGenerator;
 public class ReliableReconnectTest extends TestSupport {
     
     protected static final int MESSAGE_COUNT = 100;
-    protected static final String DEFAULT_BROKER_URL = "vm://localhost";
+    protected static final String DEFAULT_BROKER_URL = ActiveMQConnectionFactory.DEFAULT_BROKER_URL;
     private static final int RECEIVE_TIMEOUT = 10000;
     
     protected int deliveryMode = DeliveryMode.PERSISTENT;
@@ -80,10 +82,17 @@ public class ReliableReconnectTest extends TestSupport {
         return new ActiveMQConnectionFactory(url);
     }
 
-    protected void startBroker() throws JMSException {
+    protected void startBroker(boolean deleteOnStart) throws JMSException {
         try {
             broker = BrokerFactory.createBroker(new URI("broker://()/localhost"));
             broker.setUseShutdownHook(false);
+            broker.setDeleteAllMessagesOnStartup(deleteOnStart);
+           
+            broker.setUseJmx(false);
+            PersistenceAdapter adaptor = broker.getPersistenceAdapter();
+            if (adaptor instanceof AMQPersistenceAdapter) {
+                ((AMQPersistenceAdapter)adaptor).setDisableLocking(true);
+            }
             broker.addConnector(DEFAULT_BROKER_URL);
             broker.start();
         } catch (Exception e) {
@@ -143,7 +152,7 @@ public class ReliableReconnectTest extends TestSupport {
     }
 
     public void testReconnect() throws Exception {
-        startBroker();
+        startBroker(true);
         // register an interest as a durable subscriber
         Connection consumerConnection = createConsumerConnection();
         createConsumer(consumerConnection);
@@ -168,7 +177,7 @@ public class ReliableReconnectTest extends TestSupport {
         }
         // System.err.println("Stopping broker");
         broker.stop();
-        startBroker();
+        startBroker(false);
         // System.err.println("Started Broker again");
         synchronized (messagesReceived) {
             if (messagesReceived.get() < MESSAGE_COUNT) {
