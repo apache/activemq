@@ -41,6 +41,7 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.DestinationFilter;
 import org.apache.activemq.filter.DestinationMap;
+import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
@@ -81,7 +82,7 @@ public abstract class AbstractRegion implements Region {
         this.destinationFactory = destinationFactory;
     }
 
-    public void start() throws Exception {
+    public final void start() throws Exception {
         started = true;
 
         Set<ActiveMQDestination> inactiveDests = getInactiveDestinations();
@@ -90,6 +91,7 @@ public abstract class AbstractRegion implements Region {
 
             ConnectionContext context = new ConnectionContext();
             context.setBroker(broker.getBrokerService().getBroker());
+            context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
             context.getBroker().addDestination(context, dest);
         }
 
