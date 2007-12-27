@@ -56,18 +56,18 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         subscriptionKey = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
     }
 
-    public synchronized boolean isActive() {
+    public boolean isActive() {
         return active;
     }
 
-    protected synchronized boolean isFull() {
+    protected boolean isFull() {
         return !active || super.isFull();
     }
 
-    public synchronized void gc() {
+    public void gc() {
     }
 
-    public synchronized void add(ConnectionContext context, Destination destination) throws Exception {
+    public void add(ConnectionContext context, Destination destination) throws Exception {
         super.add(context, destination);
         destinations.put(destination.getActiveMQDestination(), destination);
         if (active || keepDurableSubsActive) {
@@ -77,38 +77,43 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 topic.recoverRetroactiveMessages(context, this);
             }
         }
-        dispatchMatched();
+        dispatchPending();
     }
 
-    public synchronized void activate(SystemUsage memoryManager, ConnectionContext context, ConsumerInfo info) throws Exception {
+    public void activate(SystemUsage memoryManager, ConnectionContext context,
+            ConsumerInfo info) throws Exception {
         LOG.debug("Activating " + this);
         if (!active) {
             this.active = true;
             this.context = context;
             this.info = info;
             if (!keepDurableSubsActive) {
-                for (Iterator<Destination> iter = destinations.values().iterator(); iter.hasNext();) {
-                    Topic topic = (Topic)iter.next();
+                for (Iterator<Destination> iter = destinations.values()
+                        .iterator(); iter.hasNext();) {
+                    Topic topic = (Topic) iter.next();
                     topic.activate(context, this);
                 }
             }
-            pending.setSystemUsage(memoryManager);
-            pending.start();
+            synchronized (pending) {
+                pending.setSystemUsage(memoryManager);
+                pending.start();
 
-            // If nothing was in the persistent store, then try to use the
-            // recovery policy.
-            if (pending.isEmpty()) {
-                for (Iterator<Destination> iter = destinations.values().iterator(); iter.hasNext();) {
-                    Topic topic = (Topic)iter.next();
-                    topic.recoverRetroactiveMessages(context, this);
+                // If nothing was in the persistent store, then try to use the
+                // recovery policy.
+                if (pending.isEmpty()) {
+                    for (Iterator<Destination> iter = destinations.values()
+                            .iterator(); iter.hasNext();) {
+                        Topic topic = (Topic) iter.next();
+                        topic.recoverRetroactiveMessages(context, this);
+                    }
                 }
             }
-            dispatchMatched();
+            dispatchPending();
             this.usageManager.getMemoryUsage().addUsageListener(this);
         }
     }
 
-    public synchronized void deactivate(boolean keepDurableSubsActive) throws Exception {
+    public void deactivate(boolean keepDurableSubsActive) throws Exception {
         active = false;
         this.usageManager.getMemoryUsage().removeUsageListener(this);
         synchronized (pending) {
@@ -136,7 +141,9 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
                 node.decrementReferenceCount();
             }
         }
-        dispatched.clear();
+        synchronized(dispatched) {
+            dispatched.clear();
+        }
         if (!keepDurableSubsActive && pending.isTransient()) {
             synchronized (pending) {
                 try {
@@ -163,7 +170,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         return md;
     }
 
-    public synchronized void add(MessageReference node) throws Exception {
+    public void add(MessageReference node) throws Exception {
         if (!active && !keepDurableSubsActive) {
             return;
         }
@@ -171,11 +178,13 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         super.add(node);
     }
 
-    protected synchronized void doAddRecoveredMessage(MessageReference message) throws Exception {
+    protected void doAddRecoveredMessage(MessageReference message) throws Exception {
+        synchronized(pending) {
         pending.addRecoveredMessage(message);
+        }
     }
 
-    public synchronized int getPendingQueueSize() {
+    public int getPendingQueueSize() {
         if (active || keepDurableSubsActive) {
             return super.getPendingQueueSize();
         }
@@ -187,7 +196,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         throw new UnsupportedOperationException("You cannot dynamically change the selector for durable topic subscriptions");
     }
 
-    protected synchronized boolean canDispatch(MessageReference node) {
+    protected boolean canDispatch(MessageReference node) {
         return active;
     }
 
@@ -217,24 +226,28 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     /**
      * Release any references that we are holding.
      */
-    public synchronized void destroy() {
-        try {
-            synchronized (pending) {
+    public void destroy() {
+        synchronized (pending) {
+            try {
+
                 pending.reset();
                 while (pending.hasNext()) {
                     MessageReference node = pending.next();
                     node.decrementReferenceCount();
                 }
+
+            } finally {
+                pending.release();
+                pending.clear();
             }
-        } finally {
-            pending.release();
-            pending.clear();
         }
-        for (Iterator iter = dispatched.iterator(); iter.hasNext();) {
-            MessageReference node = (MessageReference)iter.next();
-            node.decrementReferenceCount();
+        synchronized(dispatched) {
+            for (Iterator iter = dispatched.iterator(); iter.hasNext();) {
+                MessageReference node = (MessageReference) iter.next();
+                node.decrementReferenceCount();
+            }
+            dispatched.clear();
         }
-        dispatched.clear();
     }
 
     /**
@@ -247,7 +260,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     public void onUsageChanged(Usage usage, int oldPercentUsage, int newPercentUsage) {
         if (oldPercentUsage > newPercentUsage && oldPercentUsage >= 90) {
             try {
-                dispatchMatched();
+                dispatchPending();
             } catch (IOException e) {
                 LOG.warn("problem calling dispatchMatched", e);
             }

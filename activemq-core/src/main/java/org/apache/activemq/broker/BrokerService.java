@@ -39,7 +39,16 @@ import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisoryBroker;
 import org.apache.activemq.broker.ft.MasterConnector;
-import org.apache.activemq.broker.jmx.*;
+import org.apache.activemq.broker.jmx.BrokerView;
+import org.apache.activemq.broker.jmx.ConnectorView;
+import org.apache.activemq.broker.jmx.ConnectorViewMBean;
+import org.apache.activemq.broker.jmx.FTConnectorView;
+import org.apache.activemq.broker.jmx.JmsConnectorView;
+import org.apache.activemq.broker.jmx.ManagedRegionBroker;
+import org.apache.activemq.broker.jmx.ManagementContext;
+import org.apache.activemq.broker.jmx.NetworkConnectorView;
+import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
+import org.apache.activemq.broker.jmx.ProxyConnectorView;
 import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFactory;
@@ -151,6 +160,7 @@ public class BrokerService implements Service {
     private CountDownLatch stoppedLatch = new CountDownLatch(1);
     private boolean supportFailOver;
     private boolean clustered;
+   
 
     static {
         String localHostName = "localhost";
@@ -363,7 +373,7 @@ public class BrokerService implements Service {
     /**
      * @return true if this Broker is a slave to a Master
      */
-    public synchronized boolean isSlave() {
+    public boolean isSlave() {
         return masterConnector != null && masterConnector.isSlave();
     }
 

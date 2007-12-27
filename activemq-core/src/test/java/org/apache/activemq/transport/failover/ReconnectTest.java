@@ -66,8 +66,10 @@ public class ReconnectTest extends TestCase {
         private ActiveMQConnection connection;
         private AtomicBoolean stop = new AtomicBoolean(false);
         private Throwable error;
+        private String name;
 
-        public Worker() throws URISyntaxException, JMSException {
+        public Worker(String name) throws URISyntaxException, JMSException {
+            this.name=name;
             URI uri = new URI("failover://(mock://(" + tcpUri + "))");
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(uri);
             connection = (ActiveMQConnection)factory.createConnection();
@@ -115,7 +117,7 @@ public class ReconnectTest extends TestCase {
 
         public void run() {
             try {
-                ActiveMQQueue queue = new ActiveMQQueue("FOO");
+                ActiveMQQueue queue = new ActiveMQQueue("FOO_"+name);
                 Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
                 MessageConsumer consumer = session.createConsumer(queue);
                 MessageProducer producer = session.createProducer(queue);
@@ -213,7 +215,7 @@ public class ReconnectTest extends TestCase {
 
         workers = new Worker[WORKER_COUNT];
         for (int i = 0; i < WORKER_COUNT; i++) {
-            workers[i] = new Worker();
+            workers[i] = new Worker(""+i);
             workers[i].start();
         }
 
