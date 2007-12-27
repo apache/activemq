@@ -31,15 +31,15 @@ public class AMQStoreDurableTopicTest extends SimpleDurableTopicTest {
         answer.setDeleteAllMessagesOnStartup(true);
         AMQPersistenceAdapter adaptor = new AMQPersistenceAdapter();
         adaptor.setArchiveDataLogs(true);
-        adaptor.setMaxFileLength(1024 * 64);
+        //adaptor.setMaxFileLength(1024 * 64);
         answer.setDataDirectoryFile(dataFileDir);
         answer.setPersistenceAdapter(adaptor);
         answer.addConnector(uri);
     }
     
     protected void setUp() throws Exception {
-        numberofProducers=6;
-        numberOfConsumers=6;
+        numberofProducers=2;
+        numberOfConsumers=10;
         this.consumerSleepDuration=0;
         super.setUp();
     }

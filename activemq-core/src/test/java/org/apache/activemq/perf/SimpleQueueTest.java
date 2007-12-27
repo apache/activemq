@@ -30,7 +30,9 @@ public class SimpleQueueTest extends SimpleTopicTest {
     }
     
     protected void setUp() throws Exception {
-        this.consumerSleepDuration=2000;
+        numberOfConsumers = 50;
+        numberofProducers = 50;
+        this.consumerSleepDuration=10;
         super.setUp();
     }
 

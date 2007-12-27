@@ -94,8 +94,8 @@ public class Queue extends BaseDestination implements Task {
     private DeadLetterStrategy deadLetterStrategy = new SharedDeadLetterStrategy();
     private MessageGroupMapFactory messageGroupMapFactory = new MessageGroupHashBucketFactory();
     private int maximumPagedInMessages = garbageSizeBeforeCollection * 2;
-    private final MessageEvaluationContext queueMsgConext = new MessageEvaluationContext();
     private final Object exclusiveLockMutex = new Object();
+    private final Object sendLock = new Object();
     private final TaskRunner taskRunner;
     
     private final LinkedList<Runnable> messagesWaitingForSpace = new LinkedList<Runnable>();
@@ -204,149 +204,144 @@ public class Queue extends BaseDestination implements Task {
         return true;
     }
 
-    public synchronized  void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
+    public void addSubscription(ConnectionContext context,Subscription sub) throws Exception {
         sub.add(context, this);
         destinationStatistics.getConsumers().increment();
         maximumPagedInMessages += sub.getConsumerInfo().getPrefetchSize();
 
-        MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
-        try {
-        	
-        	//needs to be synchronized - so no contention with dispatching
-            synchronized (consumers) {
-                consumers.add(sub);
-                if (sub.getConsumerInfo().isExclusive()) {
-                    LockOwner owner = (LockOwner)sub;
-                    if (exclusiveOwner == null) {
+        MessageEvaluationContext msgContext = new MessageEvaluationContext();
+
+        // needs to be synchronized - so no contention with dispatching
+        synchronized (consumers) {
+            consumers.add(sub);
+            if (sub.getConsumerInfo().isExclusive()) {
+                LockOwner owner = (LockOwner) sub;
+                if (exclusiveOwner == null) {
+                    exclusiveOwner = owner;
+                } else {
+                    // switch the owner if the priority is higher.
+                    if (owner.getLockPriority() > exclusiveOwner
+                            .getLockPriority()) {
                         exclusiveOwner = owner;
-                    } else {
-                        // switch the owner if the priority is higher.
-                        if (owner.getLockPriority() > exclusiveOwner.getLockPriority()) {
-                            exclusiveOwner = owner;
+                    }
+                }
+            }
+        }
+
+        // we hold the lock on the dispatchValue - so lets build the paged in
+        // list directly;
+        buildList(false);
+
+        // synchronize with dispatch method so that no new messages are sent
+        // while
+        // setting up a subscription. avoid out of order messages,
+        // duplicates
+        // etc.
+
+        msgContext.setDestination(destination);
+        synchronized (pagedInMessages) {
+            // Add all the matching messages in the queue to the
+            // subscription.
+            for (Iterator<MessageReference> i = pagedInMessages.iterator(); i
+                    .hasNext();) {
+                QueueMessageReference node = (QueueMessageReference) i.next();
+                if (node.isDropped()
+                        || (!sub.getConsumerInfo().isBrowser() && node
+                                .getLockOwner() != null)) {
+                    continue;
+                }
+                try {
+                    msgContext.setMessageReference(node);
+                    if (sub.matches(node, msgContext)) {
+                        sub.add(node);
+                    }
+                } catch (IOException e) {
+                    log.warn("Could not load message: " + e, e);
+                }
+            }
+        }
+
+    }
+
+    public void removeSubscription(ConnectionContext context, Subscription sub)
+            throws Exception {
+        destinationStatistics.getConsumers().decrement();
+        maximumPagedInMessages -= sub.getConsumerInfo().getPrefetchSize();
+        // synchronize with dispatch method so that no new messages are sent
+        // while
+        // removing up a subscription.
+        synchronized (consumers) {
+            consumers.remove(sub);
+            if (sub.getConsumerInfo().isExclusive()) {
+                LockOwner owner = (LockOwner) sub;
+                // Did we loose the exclusive owner??
+                if (exclusiveOwner == owner) {
+                    // Find the exclusive consumer with the higest Lock
+                    // Priority.
+                    exclusiveOwner = null;
+                    for (Iterator<Subscription> iter = consumers.iterator(); iter
+                            .hasNext();) {
+                        Subscription s = iter.next();
+                        LockOwner so = (LockOwner) s;
+                        if (s.getConsumerInfo().isExclusive()
+                                && (exclusiveOwner == null || so
+                                        .getLockPriority() > exclusiveOwner
+                                        .getLockPriority())) {
+                            exclusiveOwner = so;
                         }
                     }
                 }
             }
-            
-            //we hold the lock on the dispatchValue - so lets build the paged in
-            //list directly;
-            buildList(false);
-           
-            // synchronize with dispatch method so that no new messages are sent
-            // while
-            // setting up a subscription. avoid out of order messages,
-            // duplicates
-            // etc.  
-            
-         
-            
-                msgContext.setDestination(destination);
-                synchronized (pagedInMessages) {
-                    // Add all the matching messages in the queue to the
-                    // subscription.
-                    for (Iterator<MessageReference> i = pagedInMessages.iterator(); i.hasNext();) {
-                        QueueMessageReference node = (QueueMessageReference)i.next();
-                        if (node.isDropped() ||  (!sub.getConsumerInfo().isBrowser() && node.getLockOwner()!=null)) {
-                            continue;
-                        }
-                        try {
-                            msgContext.setMessageReference(node);
-                            if (sub.matches(node, msgContext)) {
-                                sub.add(node);
-                            }
-                        } catch (IOException e) {
-                            log.warn("Could not load message: " + e, e);
-                        }
+            if (consumers.isEmpty()) {
+                messages.gc();
+            }
+        }
+        sub.remove(context, this);
+        boolean wasExclusiveOwner = false;
+        if (exclusiveOwner == sub) {
+            exclusiveOwner = null;
+            wasExclusiveOwner = true;
+        }
+        ConsumerId consumerId = sub.getConsumerInfo().getConsumerId();
+        MessageGroupSet ownedGroups = getMessageGroupOwners().removeConsumer(
+                consumerId);
+        if (!sub.getConsumerInfo().isBrowser()) {
+            MessageEvaluationContext msgContext = new MessageEvaluationContext();
+
+            msgContext.setDestination(destination);
+            // lets copy the messages to dispatch to avoid deadlock
+            List<QueueMessageReference> messagesToDispatch = new ArrayList<QueueMessageReference>();
+            synchronized (pagedInMessages) {
+                for (Iterator<MessageReference> i = pagedInMessages.iterator(); i
+                        .hasNext();) {
+                    QueueMessageReference node = (QueueMessageReference) i
+                            .next();
+                    if (node.isDropped()) {
+                        continue;
+                    }
+                    String groupID = node.getGroupID();
+                    // Re-deliver all messages that the sub locked
+                    if (node.getLockOwner() == sub
+                            || wasExclusiveOwner
+                            || (groupID != null && ownedGroups
+                                    .contains(groupID))) {
+                        messagesToDispatch.add(node);
                     }
                 }
-          
-            
-            
-        } finally {
-            msgContext.clear();
+            }
+            // now lets dispatch from the copy of the collection to
+            // avoid deadlocks
+            for (Iterator<QueueMessageReference> iter = messagesToDispatch
+                    .iterator(); iter.hasNext();) {
+                QueueMessageReference node = iter.next();
+                node.incrementRedeliveryCounter();
+                node.unlock();
+                msgContext.setMessageReference(node);
+                dispatchPolicy.dispatch(node, msgContext, consumers);
+            }
+
         }
     }
-
-    public synchronized void removeSubscription(ConnectionContext context,
-	        Subscription sub) throws Exception{
-		destinationStatistics.getConsumers().decrement();
-		maximumPagedInMessages-=sub.getConsumerInfo().getPrefetchSize();
-		// synchronize with dispatch method so that no new messages are sent
-		// while
-		// removing up a subscription.
-		synchronized(consumers){
-			consumers.remove(sub);
-			if(sub.getConsumerInfo().isExclusive()){
-				LockOwner owner=(LockOwner)sub;
-				// Did we loose the exclusive owner??
-				if(exclusiveOwner==owner){
-					// Find the exclusive consumer with the higest Lock
-					// Priority.
-					exclusiveOwner=null;
-					for(Iterator<Subscription> iter=consumers.iterator();iter
-					        .hasNext();){
-						Subscription s=iter.next();
-						LockOwner so=(LockOwner)s;
-						if(s.getConsumerInfo().isExclusive()
-						        &&(exclusiveOwner==null||so.getLockPriority()>exclusiveOwner
-						                .getLockPriority())){
-							exclusiveOwner=so;
-						}
-					}
-				}
-			}
-			if(consumers.isEmpty()){
-				messages.gc();
-			}
-		}
-		sub.remove(context,this);
-		boolean wasExclusiveOwner=false;
-		if(exclusiveOwner==sub){
-			exclusiveOwner=null;
-			wasExclusiveOwner=true;
-		}
-		ConsumerId consumerId=sub.getConsumerInfo().getConsumerId();
-		MessageGroupSet ownedGroups=getMessageGroupOwners().removeConsumer(
-		        consumerId);
-		if(!sub.getConsumerInfo().isBrowser()){
-			MessageEvaluationContext msgContext=context
-			        .getMessageEvaluationContext();
-			try{
-				msgContext.setDestination(destination);
-				// lets copy the messages to dispatch to avoid deadlock
-				List<QueueMessageReference> messagesToDispatch=new ArrayList<QueueMessageReference>();
-				synchronized(pagedInMessages){
-					for(Iterator<MessageReference> i=pagedInMessages.iterator();i
-					        .hasNext();){
-						QueueMessageReference node=(QueueMessageReference)i
-						        .next();
-						if(node.isDropped()){
-							continue;
-						}
-						String groupID=node.getGroupID();
-						// Re-deliver all messages that the sub locked
-						if(node.getLockOwner()==sub
-						        ||wasExclusiveOwner
-						        ||(groupID!=null&&ownedGroups.contains(groupID))){
-							messagesToDispatch.add(node);
-						}
-					}
-				}
-				// now lets dispatch from the copy of the collection to
-				// avoid deadlocks
-				for(Iterator<QueueMessageReference> iter=messagesToDispatch
-				        .iterator();iter.hasNext();){
-					QueueMessageReference node=iter.next();
-					node.incrementRedeliveryCounter();
-					node.unlock();
-					msgContext.setMessageReference(node);
-					dispatchPolicy.dispatch(node,msgContext,consumers);
-				}
-			}finally{
-				msgContext.clear();
-			}
-		}
-	}
 
     public void send(final ProducerBrokerExchange producerExchange, final Message message) throws Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
@@ -445,16 +440,21 @@ public class Queue extends BaseDestination implements Task {
         }
     }
 
-    synchronized void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
+    void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
-        message.setRegionDestination(this);
-        if (store != null && message.isPersistent()) {
-            while (!systemUsage.getStoreUsage().waitForSpace(1000)) {
-                if (context.getStopping().get()) {
-                    throw new IOException("Connection closed, send aborted.");
+        synchronized (sendLock) {
+            message.setRegionDestination(this);
+            if (store != null && message.isPersistent()) {
+                while (!systemUsage.getStoreUsage().waitForSpace(1000)) {
+                    if (context.getStopping().get()) {
+                        throw new IOException(
+                                "Connection closed, send aborted.");
+                    }
                 }
+
+                store.addMessage(context, message);
+
             }
-            store.addMessage(context, message);
         }
         if (context.isInTransaction()) {
             // If this is a transacted message.. increase the usage now so that
@@ -1010,57 +1010,51 @@ public class Queue extends BaseDestination implements Task {
     	return  result;
     }
 
-    private   synchronized List<MessageReference> buildList(boolean force) throws Exception {
-
+    private List<MessageReference> buildList(boolean force) throws Exception {
         final int toPageIn = maximumPagedInMessages - pagedInMessages.size();
         List<MessageReference> result = null;
         if ((force || !consumers.isEmpty()) && toPageIn > 0) {
             messages.setMaxBatchSize(toPageIn);
-            try {
-                int count = 0;
-                result = new ArrayList<MessageReference>(toPageIn);
-                synchronized (messages) {
+            int count = 0;
+            result = new ArrayList<MessageReference>(toPageIn);
+            synchronized (messages) {
 
-                    try {
-                        messages.reset();
-                        while (messages.hasNext() && count < toPageIn) {
-                            MessageReference node = messages.next();
-                            messages.remove();
-                            if (!broker.isExpired(node)) {
-                                node = createMessageReference(node.getMessage());
-                                result.add(node);
-                                count++;
-                            } else {
-                                broker.messageExpired(createConnectionContext(), node);
-                                destinationStatistics.getMessages().decrement();
-                            }
+                try {
+                    messages.reset();
+                    while (messages.hasNext() && count < toPageIn) {
+                        MessageReference node = messages.next();
+                        messages.remove();
+                        if (!broker.isExpired(node)) {
+                            node = createMessageReference(node.getMessage());
+                            result.add(node);
+                            count++;
+                        } else {
+                            broker.messageExpired(createConnectionContext(),
+                                    node);
+                            destinationStatistics.getMessages().decrement();
                         }
-                    } finally {
-                        messages.release();
                     }
+                } finally {
+                    messages.release();
                 }
-                synchronized (pagedInMessages) {
-                    pagedInMessages.addAll(result);
-                }
-            } finally {
-                queueMsgConext.clear();
+            }
+            synchronized (pagedInMessages) {
+                pagedInMessages.addAll(result);
             }
         }
         return result;
     }
 
-    private  synchronized void doDispatch(List<MessageReference> list) throws Exception {
+    private synchronized void doDispatch(List<MessageReference> list) throws Exception {
         if (list != null && !list.isEmpty()) {
-            try {
-                for (int i = 0; i < list.size(); i++) {
-                    MessageReference node = list.get(i);
-                    queueMsgConext.setDestination(destination);
-                    queueMsgConext.setMessageReference(node);
-                    dispatchPolicy.dispatch(node, queueMsgConext, consumers);
-                }
-            } finally {
-                queueMsgConext.clear();
+            MessageEvaluationContext msgContext = new MessageEvaluationContext();
+            for (int i = 0; i < list.size(); i++) {
+                MessageReference node = list.get(i);
+                msgContext.setDestination(destination);
+                msgContext.setMessageReference(node);
+                dispatchPolicy.dispatch(node, msgContext, consumers);
             }
+
         }
     }
 

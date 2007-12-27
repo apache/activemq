@@ -79,7 +79,7 @@ public class PerfConsumer implements MessageListener {
     public void onMessage(Message msg) {
         rate.increment();
         try {
-            if (!this.audit.isInOrder(msg.getJMSMessageID())) {
+            if (msg.getJMSDestination() instanceof Topic && !this.audit.isInOrder(msg.getJMSMessageID())) {
                 LOG.error("Message out of order!!" + msg);
             }
             if (this.audit.isDuplicate(msg)){

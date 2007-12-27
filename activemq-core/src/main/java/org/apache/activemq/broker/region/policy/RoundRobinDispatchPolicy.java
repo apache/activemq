@@ -44,13 +44,6 @@ public class RoundRobinDispatchPolicy implements DispatchPolicy {
      *      org.apache.activemq.filter.MessageEvaluationContext, java.util.List)
      */
     public boolean dispatch(MessageReference node, MessageEvaluationContext msgContext, List<Subscription> consumers) throws Exception {
-
-        // Big synch here so that only 1 message gets dispatched at a time.
-        // Ensures
-        // Everyone sees the same order and that the consumer list is not used
-        // while
-        // it's being rotated.
-        synchronized (consumers) {
             int count = 0;
 
             Subscription firstMatchingConsumer = null;
@@ -79,7 +72,5 @@ public class RoundRobinDispatchPolicy implements DispatchPolicy {
                 }
             }
             return count > 0;
-        }
     }
-
 }
