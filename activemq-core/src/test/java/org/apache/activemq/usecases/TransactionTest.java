@@ -17,7 +17,9 @@
 package org.apache.activemq.usecases;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -56,7 +58,7 @@ public final class TransactionTest extends TestCase {
 
     public void testTransaction() throws Exception {
 
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
         connection = factory.createConnection();
         queue = new ActiveMQQueue(getClass().getName() + "." + getName());
 
@@ -104,8 +106,20 @@ public final class TransactionTest extends TestCase {
         }
 
         LOG.info("Waiting for latch");
-        latch.await();
-
+        latch.await(2,TimeUnit.SECONDS);
+        if (receivedText==null) {
+            /*
+            Map<Thread,StackTraceElement[]> map = Thread.getAllStackTraces();
+            for (Map.Entry<Thread,StackTraceElement[]> entry: map.entrySet()) {
+                System.out.println(entry.getKey());
+                for (StackTraceElement element :entry.getValue()) {
+                    System.out.println(element);
+                }
+            }
+            */
+            fail("No message received");
+        }
+        assertNotNull(receivedText);
         LOG.info("test completed, destination=" + receivedText);
     }
 
