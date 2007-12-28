@@ -17,12 +17,10 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
@@ -78,7 +76,7 @@ public class Queue extends BaseDestination implements Task {
 
     private final Log log;
     private final ActiveMQDestination destination;
-    private final List<Subscription> consumers = new CopyOnWriteArrayList<Subscription>();
+    private final List<Subscription> consumers = new ArrayList<Subscription>(50);
     private final SystemUsage systemUsage;
     private final MemoryUsage memoryUsage;
     private final DestinationStatistics destinationStatistics = new DestinationStatistics();

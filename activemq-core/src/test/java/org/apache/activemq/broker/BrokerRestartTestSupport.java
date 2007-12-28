@@ -24,7 +24,8 @@ public class BrokerRestartTestSupport extends BrokerTestSupport {
 
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = new BrokerService();
-        broker.setPersistent(false);
+        //broker.setPersistent(false);
+        broker.setDeleteAllMessagesOnStartup(true);
         persistenceAdapter = broker.getPersistenceAdapter();
         return broker;
     }
@@ -35,7 +36,7 @@ public class BrokerRestartTestSupport extends BrokerTestSupport {
      */
     protected BrokerService createRestartedBroker() throws Exception {
         BrokerService broker = new BrokerService();
-        broker.setPersistenceAdapter(persistenceAdapter);
+        //broker.setPersistenceAdapter(persistenceAdapter);
         return broker;
     }
 

@@ -40,6 +40,7 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
     protected boolean enableAudit=true;
     protected ActiveMQMessageAudit audit;
     private boolean started=false;
+  
 
     public synchronized void start() throws Exception  {
         if (!started && enableAudit && audit==null) {
@@ -259,6 +260,10 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
         if (this.audit != null) {
             audit.rollback(id);
         }
+    }
+    
+    protected synchronized boolean isStarted() {
+        return started;
     }
   
    

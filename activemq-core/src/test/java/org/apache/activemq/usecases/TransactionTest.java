@@ -107,18 +107,6 @@ public final class TransactionTest extends TestCase {
 
         LOG.info("Waiting for latch");
         latch.await(2,TimeUnit.SECONDS);
-        if (receivedText==null) {
-            /*
-            Map<Thread,StackTraceElement[]> map = Thread.getAllStackTraces();
-            for (Map.Entry<Thread,StackTraceElement[]> entry: map.entrySet()) {
-                System.out.println(entry.getKey());
-                for (StackTraceElement element :entry.getValue()) {
-                    System.out.println(element);
-                }
-            }
-            */
-            fail("No message received");
-        }
         assertNotNull(receivedText);
         LOG.info("test completed, destination=" + receivedText);
     }

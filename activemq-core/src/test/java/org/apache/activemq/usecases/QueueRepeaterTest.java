@@ -18,6 +18,7 @@ package org.apache.activemq.usecases;
 
 import java.util.Date;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
 import javax.jms.Destination;
@@ -56,7 +57,7 @@ public final class QueueRepeaterTest extends TestCase {
 
     public void testTransaction() throws Exception {
 
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
         connection = factory.createConnection();
         queue = new ActiveMQQueue(getClass().getName() + "." + getName());
 
@@ -104,8 +105,8 @@ public final class QueueRepeaterTest extends TestCase {
         }
 
         LOG.info("Waiting for latch");
-        latch.await();
-
+        latch.await(2,TimeUnit.SECONDS);
+        assertNotNull(receivedText);
         LOG.info("test completed, destination=" + receivedText);
     }
 
