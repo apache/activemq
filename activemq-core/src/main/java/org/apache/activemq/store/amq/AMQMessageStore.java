@@ -432,7 +432,7 @@ public class AMQMessageStore implements MessageStore {
      */
     public void recover(final MessageRecoveryListener listener) throws Exception {
         flush();
-        referenceStore.recover(new RecoveryListenerAdapter(this, listener));
+        referenceStore.recover(new RecoveryListenerAdapter(this, listener));         
     }
 
     public void start() throws Exception {
@@ -483,29 +483,41 @@ public class AMQMessageStore implements MessageStore {
     }
 
     public void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception {
-        /*
-         * RecoveryListenerAdapter recoveryListener=new
-         * RecoveryListenerAdapter(this,listener);
-         * if(referenceStore.supportsExternalBatchControl()){
-         * synchronized(this){
-         * referenceStore.recoverNextMessages(maxReturned,recoveryListener);
-         * if(recoveryListener.size()==0&&recoveryListener.hasSpace()){ // check
-         * for inflight messages int count=0; Iterator<Entry<MessageId,ReferenceData>>
-         * iterator=messages.entrySet().iterator();
-         * while(iterator.hasNext()&&count<maxReturned&&recoveryListener.hasSpace()){
-         * Entry<MessageId,ReferenceData> entry=iterator.next(); ReferenceData
-         * data=entry.getValue(); Message message=getMessage(data);
-         * recoveryListener.recoverMessage(message); count++; }
-         * referenceStore.setBatch(recoveryListener.getLastRecoveredMessageId()); } }
-         * }else{ flush();
-         * referenceStore.recoverNextMessages(maxReturned,recoveryListener); }
-         */
+        
+          RecoveryListenerAdapter recoveryListener = new RecoveryListenerAdapter(
+                this, listener);
+        if (referenceStore.supportsExternalBatchControl()) {
+            synchronized (this) {
+                referenceStore.recoverNextMessages(maxReturned,
+                        recoveryListener);
+                if (recoveryListener.size() == 0 && recoveryListener.hasSpace()) {
+                    int count = 0;
+                    Iterator<Entry<MessageId, ReferenceData>> iterator = messages
+                            .entrySet().iterator();
+                    while (iterator.hasNext() && count < maxReturned
+                            && recoveryListener.hasSpace()) {
+                        Entry<MessageId, ReferenceData> entry = iterator.next();
+                        ReferenceData data = entry.getValue();
+                        Message message = getMessage(data);
+                        recoveryListener.recoverMessage(message);
+                        count++;
+                    }
+                    referenceStore.setBatch(recoveryListener
+                            .getLastRecoveredMessageId());
+                }
+            }
+        } else {
+            flush();
+            referenceStore.recoverNextMessages(maxReturned, recoveryListener);
+        }
+         /*
         RecoveryListenerAdapter recoveryListener = new RecoveryListenerAdapter(this, listener);
         referenceStore.recoverNextMessages(maxReturned, recoveryListener);
         if (recoveryListener.size() == 0 && recoveryListener.hasSpace()) {
             flush();
             referenceStore.recoverNextMessages(maxReturned, recoveryListener);
         }
+        */
     }
 
     Message getMessage(ReferenceData data) throws IOException {

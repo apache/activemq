@@ -120,7 +120,7 @@ public class TestSupport extends TestCase {
     }
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
-        return new ActiveMQConnectionFactory("vm://localhost");
+        return new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
     }
 
     /**

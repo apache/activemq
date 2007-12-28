@@ -43,6 +43,7 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements Message
     private Destination regionDestination;
     private int size;
     private boolean fillBatchDuplicates;
+    private boolean cacheEnabled;
 
     /**
      * @param topic
@@ -56,7 +57,13 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements Message
 
     }
 
-    public void start() throws Exception{
+    public synchronized void start() throws Exception{
+        if (!isStarted()) {
+            this.size = getStoreSize();
+            if (this.size==0) {
+                cacheEnabled=true;
+            }
+        }
         super.start();
         store.resetBatching();
     }
@@ -78,16 +85,22 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements Message
     }
 
     public synchronized int size() {
-        try {
-            size = store.getMessageCount();
-        } catch (IOException e) {
-            LOG.error("Failed to get message count", e);
-            throw new RuntimeException(e);
+        if (isStarted()) {
+            return size;
         }
+        this.size = getStoreSize();
         return size;
+        
     }
 
     public synchronized void addMessageLast(MessageReference node) throws Exception {
+        if (cacheEnabled && !isFull()) {
+            //optimization - A persistent queue will add the message to
+            //to store then retrieve it again from the store.
+            recoverMessage(node.getMessage());
+        }else {
+            cacheEnabled=false;
+        }
         size++;
     }
 
@@ -95,12 +108,16 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements Message
         size++;
     }
 
-    public void remove() {
+    public synchronized void remove() {
         size--;
+        if (size==0 && isStarted()) {
+            cacheEnabled=true;
+        }
     }
 
     public void remove(MessageReference node) {
         size--;
+        cacheEnabled=false;
     }
 
     public synchronized boolean hasNext() {
@@ -157,10 +174,11 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements Message
         }
     }
 
-    public void gc() {
+    public synchronized void gc() {
         for (Message msg : batchList) {
             msg.decrementReferenceCount();
         }
+        cacheEnabled=false;
         batchList.clear();
     }
 
@@ -172,6 +190,15 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements Message
             store.recoverNextMessages(maxBatchSize, this);
         }
         fillBatchDuplicates=false;
+    }
+    
+    protected synchronized int getStoreSize() {
+        try {
+            return store.getMessageCount();
+        } catch (IOException e) {
+            LOG.error("Failed to get message count", e);
+            throw new RuntimeException(e);
+        }
     }
 
     public String toString() {
