@@ -301,16 +301,18 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         String containerName = getSubscriptionContainerName(subscriberKey);
         subscriberContainer.remove(subscriberKey);
         TopicSubContainer container = subscriberMessages.remove(subscriberKey);
-        for (Iterator i = container.iterator(); i.hasNext();) {
-            ConsumerMessageRef ref = (ConsumerMessageRef)i.next();
-            if (ref != null) {
-                TopicSubAck tsa = ackContainer.get(ref.getAckEntry());
-                if (tsa != null) {
-                    if (tsa.decrementCount() <= 0) {
-                        ackContainer.remove(ref.getAckEntry());
-                        messageContainer.remove(tsa.getMessageEntry());
-                    } else {
-                        ackContainer.update(ref.getAckEntry(), tsa);
+        if (container != null) {
+            for (Iterator i = container.iterator(); i.hasNext();) {
+                ConsumerMessageRef ref = (ConsumerMessageRef)i.next();
+                if (ref != null) {
+                    TopicSubAck tsa = ackContainer.get(ref.getAckEntry());
+                    if (tsa != null) {
+                        if (tsa.decrementCount() <= 0) {
+                            ackContainer.remove(ref.getAckEntry());
+                            messageContainer.remove(tsa.getMessageEntry());
+                        } else {
+                            ackContainer.update(ref.getAckEntry(), tsa);
+                        }
                     }
                 }
             }
