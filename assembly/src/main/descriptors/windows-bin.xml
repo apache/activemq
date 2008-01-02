@@ -47,6 +47,7 @@
     </fileSet>
 
     <!-- Copy over the files that should not get the line endings converted but need to be chmod to 755 -->
+    <!-- Do not copy unix files
     <fileSet>
       <directory>src/release</directory>
       <outputDirectory></outputDirectory>
@@ -58,8 +59,10 @@
       </includes>
       <fileMode>0755</fileMode>
     </fileSet>
+    -->
 
     <!-- Copy over the files that need unix line endings and also chmod to 755 -->
+    <!-- Do not copy unix files
     <fileSet>
       <directory>src/release</directory>
       <outputDirectory></outputDirectory>
@@ -72,6 +75,7 @@
       <fileMode>0755</fileMode>
       <lineEnding>unix</lineEnding>
     </fileSet>
+    -->
 
     <!-- Copy over files that should not get the line endings converted -->
     <fileSet>
