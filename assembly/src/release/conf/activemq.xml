@@ -164,6 +164,7 @@
     <property name="url" value="jdbc:mysql://localhost/activemq?relaxAutoCommit=true"/>
     <property name="username" value="activemq"/>
     <property name="password" value="activemq"/>
+    <property name="maxActive" value="200"/>
     <property name="poolPreparedStatements" value="true"/>
   </bean>
   -->  
@@ -175,6 +176,7 @@
     <property name="url" value="jdbc:oracle:thin:@localhost:1521:AMQDB"/>
     <property name="username" value="scott"/>
     <property name="password" value="tiger"/>
+    <property name="maxActive" value="200"/>
     <property name="poolPreparedStatements" value="true"/>
   </bean>
   -->
