@@ -117,6 +117,10 @@ public class BrokerView implements BrokerViewMBean {
     public boolean isStatisticsEnabled() {
         return broker.getDestinationStatistics().isEnabled();
     }
+    
+    public boolean isPersistent() {
+        return brokerService.isPersistent();
+    }
 
     public void terminateJVM(int exitCode) {
         System.exit(exitCode);

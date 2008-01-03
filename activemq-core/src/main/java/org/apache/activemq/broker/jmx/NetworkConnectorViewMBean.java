@@ -37,6 +37,8 @@ public interface NetworkConnectorViewMBean extends Service {
     boolean isDispatchAsync();
 
     boolean isDynamicOnly();
+    
+    boolean isDuplex();
 
     void setBridgeTempDestinations(boolean bridgeTempDestinations);
 
