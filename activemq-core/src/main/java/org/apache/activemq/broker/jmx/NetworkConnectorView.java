@@ -69,6 +69,10 @@ public class NetworkConnectorView implements NetworkConnectorViewMBean {
     public boolean isDynamicOnly() {
         return connector.isDynamicOnly();
     }
+    
+    public boolean isDuplex() {
+        return connector.isDuplex();
+    }
 
     public void setBridgeTempDestinations(boolean bridgeTempDestinations) {
         connector.setBridgeTempDestinations(bridgeTempDestinations);

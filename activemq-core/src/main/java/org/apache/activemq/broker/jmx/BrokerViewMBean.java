@@ -61,6 +61,8 @@ public interface BrokerViewMBean extends Service {
     long getMemoryLimit();
 
     void setMemoryLimit(long limit);
+    
+    boolean isPersistent();
 
     /**
      * Shuts down the JVM.
