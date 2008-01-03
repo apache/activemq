@@ -88,6 +88,13 @@ public interface SubscriptionViewMBean {
      * @return number of messages dispatched
      */
     int getDispatchedQueueSize();
+    
+    /**
+     * The same as the number of messages dispatched - 
+     * making it explicit
+     * @return
+     */
+    int getMessageCountAwaitingAcknowledge();
 
     /**
      * @return number of messages that matched the subscription
