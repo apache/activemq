@@ -233,6 +233,10 @@ public class SubscriptionView implements SubscriptionViewMBean {
     public int getDispatchedQueueSize() {
         return subscription != null ? subscription.getDispatchedQueueSize() : 0;
     }
+    
+    public int getMessageCountAwaitingAcknowledge() {
+        return getDispatchedQueueSize();
+    }
 
     /**
      * @return number of messages that matched the subscription
