@@ -338,6 +338,9 @@
 
             <!-- These are performance tests so take too long to run -->
             <exclude>**/perf/*</exclude>
+            
+            <!-- These are load tests so take too long to run -->
+            <exclude>**/load/*</exclude>
 
             <!-- http://jira.activemq.org/jira/browse/AMQ-594 -->
             <exclude>**/SimpleNetworkTest.*</exclude>
