@@ -63,13 +63,15 @@
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-jms_1.1_spec</artifactId>
     </dependency>
-
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
       <artifactId>geronimo-j2ee-management_1.0_spec</artifactId>
     </dependency>
-    
-    
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging-api</artifactId>
+    </dependency>
+
   </dependencies>
 
   <build>
@@ -86,7 +88,7 @@
               <goal>createbundle</goal>
             </goals>
             <configuration>
-              <includes>activemq-core,activemq-console,activemq-jaas,activemq-optional,geronimo-jms_1.1_spec,geronimo-j2ee-management_1.0_spec</includes>
+              <includes>activemq-core,activemq-console,activemq-jaas,activemq-optional,geronimo-jms_1.1_spec,geronimo-j2ee-management_1.0_spec,commons-logging-api</includes>
             </configuration>
           </execution>
         </executions>
