@@ -16,9 +16,6 @@
  */
 package org.apache.activemq.load;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.DeliveryMode;
@@ -29,12 +26,17 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.perf.PerfRate;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision: 1.3 $
  */
 public class LoadClient implements Runnable{
+    private static final Log LOG = LogFactory.getLog(LoadClient.class);
+    protected static int SLEEP_TIME = 2;
     protected String name;
     protected ConnectionFactory factory;
     protected Connection connection;
@@ -45,9 +47,10 @@ public class LoadClient implements Runnable{
     protected MessageProducer producer;
     protected PerfRate rate = new PerfRate();
     protected int deliveryMode = DeliveryMode.PERSISTENT;
-    private boolean connectionPerMessage = false;
-    private boolean running;
-    private int timeout = 10000;
+    protected ActiveMQMessageAudit audit = new ActiveMQMessageAudit();
+    protected boolean connectionPerMessage = false;
+    protected boolean running;
+    protected int timeout = 10000;
     
 
     public LoadClient(String name,ConnectionFactory factory) {
@@ -65,8 +68,8 @@ public class LoadClient implements Runnable{
                 connection = factory.createConnection();
                 connection.start();
                 session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-                consumer = session.createConsumer(this.startDestination);
-                producer = session.createProducer(this.nextDestination);
+                consumer = session.createConsumer(getConsumeDestination());
+                producer = session.createProducer(getSendDestination());
                 producer.setDeliveryMode(this.deliveryMode);
                 
             }
@@ -79,7 +82,9 @@ public class LoadClient implements Runnable{
 
     public void stop() throws JMSException, InterruptedException {
         running = false;
-        connection.stop();
+        if(connection != null) {
+            connection.stop();
+        }
     }
 
     
@@ -87,34 +92,46 @@ public class LoadClient implements Runnable{
         try {
             while (running) {
                 String result = consume();
-                if (result == null && running) {
-                    throw new Exception(name + "Failed to consume ");
+                if(result != null) {
+                    send(result);
+                    rate.increment();
                 }
-                send(result);
-                rate.increment();
+                else if (running) {
+                    LOG.error(name + " Failed to consume!");
+                }
             }
         } catch (Throwable e) {
             e.printStackTrace();
         } 
     }
     
-    protected String consume() throws JMSException {
+    protected String consume() throws Exception {
         Connection con  = null;
         MessageConsumer c = consumer;
         if (connectionPerMessage){
             con = factory.createConnection();
             con.start();
             Session s = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            c = s.createConsumer(startDestination);
+            c = s.createConsumer(getConsumeDestination());
         }
         TextMessage result = (TextMessage) c.receive(timeout);
-        if (connectionPerMessage) {
-            con.close();
+        if (result != null) {
+            if (audit.isDuplicate(result.getJMSMessageID())) {
+                throw new JMSException("Received duplicate " + result.getText());
+            }
+            if (!audit.isInOrder(result.getJMSMessageID())) {
+                throw new JMSException("Out of order " + result.getText());
+            }
+            
+            if (connectionPerMessage) {
+                Thread.sleep(SLEEP_TIME);//give the broker a chance
+                con.close();
+            }
         }
         return result != null ? result.getText() : null;
     }
     
-    protected void send(String text) throws JMSException {
+    protected void send(String text) throws Exception {
         Connection con  = connection;
         MessageProducer p = producer;
         Session s = session;
@@ -122,13 +139,13 @@ public class LoadClient implements Runnable{
             con = factory.createConnection();
             con.start();
             s = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            p = s.createProducer(nextDestination);
+            p = s.createProducer(getSendDestination());
             p.setDeliveryMode(deliveryMode);
         }
         TextMessage message = s.createTextMessage(text);
         p.send(message);
-        //System.out.println(name + " SENT " + text + " TO " + nextDestination);
         if (connectionPerMessage) {
+            Thread.sleep(SLEEP_TIME);//give the broker a chance
             con.close();
         }
     }
@@ -203,6 +220,14 @@ public class LoadClient implements Runnable{
 
     public void setTimeout(int timeout) {
         this.timeout = timeout;
+    }
+    
+    protected Destination getSendDestination() {
+        return nextDestination;
+    }
+    
+    protected Destination getConsumeDestination() {
+        return startDestination;
     }
 
 }

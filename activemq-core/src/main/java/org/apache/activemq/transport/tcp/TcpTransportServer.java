@@ -27,9 +27,13 @@ import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ServerSocketFactory;
 
+import org.apache.activemq.ThreadPriorities;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.openwire.OpenWireFormatFactory;
 import org.apache.activemq.transport.Transport;
@@ -57,6 +61,7 @@ public class TcpTransportServer extends TransportServerThreadSupport {
     protected final TcpTransportFactory transportFactory;
     protected long maxInactivityDuration = 30000;
     protected int minmumWireFormatVersion;
+   
     /**
      * trace=true -> the Transport stack where this TcpTransport
      * object will be, will have a TransportLogger layer
@@ -83,11 +88,14 @@ public class TcpTransportServer extends TransportServerThreadSupport {
     protected boolean startLogging = true;
     protected Map<String, Object> transportOptions;
     protected final ServerSocketFactory serverSocketFactory;
-
+    protected BlockingQueue<Socket> socketQueue = new LinkedBlockingQueue<Socket>();
+    protected Thread socketHandlerThread;
+  
     public TcpTransportServer(TcpTransportFactory transportFactory, URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
         super(location);
         this.transportFactory = transportFactory;
         this.serverSocketFactory = serverSocketFactory;
+        
     }
 
     public void bind() throws IOException {
@@ -199,18 +207,7 @@ public class TcpTransportServer extends TransportServerThreadSupport {
                     if (isStopped() || getAcceptListener() == null) {
                         socket.close();
                     } else {
-                        HashMap<String, Object> options = new HashMap<String, Object>();
-                        options.put("maxInactivityDuration", Long.valueOf(maxInactivityDuration));
-                        options.put("minmumWireFormatVersion", Integer.valueOf(minmumWireFormatVersion));
-                        options.put("trace", Boolean.valueOf(trace));
-                        options.put("dynamicManagement", Boolean.valueOf(dynamicManagement));
-                        options.put("startLogging", Boolean.valueOf(startLogging));
-
-                        options.putAll(transportOptions);
-                        WireFormat format = wireFormatFactory.createWireFormat();
-                        Transport transport = createTransport(socket, format);
-                        Transport configuredTransport = transportFactory.serverConfigure(transport, format, options);
-                        getAcceptListener().onAccept(configuredTransport);
+                       socketQueue.put(socket);
                     }
                 }
             } catch (SocketTimeoutException ste) {
@@ -259,6 +256,36 @@ public class TcpTransportServer extends TransportServerThreadSupport {
         }
         return result;
     }
+    
+    protected void doStart() throws Exception {
+        Runnable run = new Runnable() {
+            public void run() {
+                try {
+                    while (!isStopped() && !isStopping()) {
+                        Socket sock = socketQueue.poll(1, TimeUnit.SECONDS);
+                        if (sock != null) {
+                            handleSocket(sock);
+                        }
+                    }
+
+                } catch (InterruptedException e) {
+                    LOG.info("socketQueue interuppted - stopping");
+                    if (!isStopping()) {
+                        onAcceptError(e);
+                    }
+                }
+
+            }
+
+        };
+        socketHandlerThread = new Thread(null, run,
+                "ActiveMQ Transport Server Thread Handler: " + toString(),
+                getStackSize());
+        socketHandlerThread.setDaemon(true);
+        socketHandlerThread.setPriority(ThreadPriorities.BROKER_MANAGEMENT-1);
+        super.doStart();
+        socketHandlerThread.start();
+    }
 
     protected void doStop(ServiceStopper stopper) throws Exception {
         super.doStop(stopper);
@@ -274,4 +301,37 @@ public class TcpTransportServer extends TransportServerThreadSupport {
     public void setTransportOption(Map<String, Object> transportOptions) {
         this.transportOptions = transportOptions;
     }
+    
+    protected void handleSocket(Socket socket) {
+        try {
+            HashMap<String, Object> options = new HashMap<String, Object>();
+            options.put("maxInactivityDuration", Long
+                    .valueOf(maxInactivityDuration));
+            options.put("minmumWireFormatVersion", Integer
+                    .valueOf(minmumWireFormatVersion));
+            options.put("trace", Boolean.valueOf(trace));
+            options
+                    .put("dynamicManagement", Boolean
+                            .valueOf(dynamicManagement));
+            options.put("startLogging", Boolean.valueOf(startLogging));
+
+            options.putAll(transportOptions);
+            WireFormat format = wireFormatFactory.createWireFormat();
+            Transport transport = createTransport(socket, format);
+            Transport configuredTransport = transportFactory.serverConfigure(
+                    transport, format, options);
+            getAcceptListener().onAccept(configuredTransport);
+        } catch (SocketTimeoutException ste) {
+            // expect this to happen
+        } catch (Exception e) {
+            if (!isStopping()) {
+                onAcceptError(e);
+            } else if (!isStopped()) {
+                LOG.warn("run()", e);
+                onAcceptError(e);
+            }
+        }
+    }
+    
+    
 }
