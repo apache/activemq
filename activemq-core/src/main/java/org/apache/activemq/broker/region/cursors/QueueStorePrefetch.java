@@ -176,6 +176,7 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements Message
 
     public synchronized void gc() {
         for (Message msg : batchList) {
+            rollback(msg.getMessageId());
             msg.decrementReferenceCount();
         }
         cacheEnabled=false;

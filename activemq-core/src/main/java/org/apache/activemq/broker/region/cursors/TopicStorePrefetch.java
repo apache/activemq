@@ -231,6 +231,7 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements Message
 
     public synchronized void gc() {
         for (Message msg : batchList.values()) {
+            rollback(msg.getMessageId());
             msg.decrementReferenceCount();
         }
         batchList.clear();

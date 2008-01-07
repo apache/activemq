@@ -42,12 +42,12 @@ public class LoadTest extends TestCase {
     protected LoadClient[] clients;
     protected ConnectionFactory factory;
     protected Destination destination;
-    protected int numberOfClients = 10;
+    protected int numberOfClients = 50;
     protected int deliveryMode = DeliveryMode.PERSISTENT;
     protected int batchSize = 1000;
-    protected int numberOfBatches = 4;
+    protected int numberOfBatches = 10;
     protected int timeout = Integer.MAX_VALUE;
-    protected boolean connectionPerMessage = true;
+    protected boolean connectionPerMessage = false;
     protected Connection managementConnection;
     protected Session managementSession;
 
@@ -66,14 +66,15 @@ public class LoadTest extends TestCase {
         
         Destination startDestination = createDestination(managementSession, getClass()+".start");
         Destination endDestination = createDestination(managementSession, getClass()+".end");
-        LOG.info("Running with " + numberOfClients + " clients");
-        controller = new LoadController(factory);
+        LOG.info("Running with " + numberOfClients + " clients - sending "
+                + numberOfBatches + " batches of " + batchSize + " messages");
+        controller = new LoadController("Controller",factory);
         controller.setBatchSize(batchSize);
         controller.setNumberOfBatches(numberOfBatches);
         controller.setDeliveryMode(deliveryMode);
         controller.setConnectionPerMessage(connectionPerMessage);
         controller.setStartDestination(startDestination);
-        controller.setControlDestination(endDestination);
+        controller.setNextDestination(endDestination);
         controller.setTimeout(timeout);
         clients = new LoadClient[numberOfClients];
         for (int i = 0; i < numberOfClients; i++) {
@@ -147,7 +148,7 @@ public class LoadTest extends TestCase {
             clients[i].start();
         }
         controller.start();
-        controller.stop();
+        assertEquals((batchSize* numberOfBatches),controller.awaitTestComplete());
         
     }
 
