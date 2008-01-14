@@ -414,6 +414,10 @@
              <exclude>**/archive/*</exclude>
 
             <exclude>**/AMQDeadlockTest3.*</exclude>
+            <!-- This test will pass with an xbean 3.3 or > version but as of now xbean 3.3 
+                 is breaking the activemq-jpa module due to a broker qdox parser.  Once that's 
+                 fixed we can upgarde the version and enable this test again -->
+            <exclude>**/MemoryPropertyTest.*</exclude>
           </excludes>
         </configuration>
       </plugin>
