@@ -725,16 +725,20 @@ public class BrokerService implements Service {
         if (persistenceAdapter == null) {
             persistenceAdapter = createPersistenceAdapter();
             configureService(persistenceAdapter);
+            this.persistenceAdapter = registerPersistenceAdapterMBean(persistenceAdapter);
         }
         return persistenceAdapter;
     }
 
     /**
      * Sets the persistence adaptor implementation to use for this broker
+     * @throws IOException 
      */
-    public void setPersistenceAdapter(PersistenceAdapter persistenceAdapter) {
+    public void setPersistenceAdapter(PersistenceAdapter persistenceAdapter) throws IOException {
         this.persistenceAdapter = persistenceAdapter;
         configureService(this.persistenceAdapter);
+        this.persistenceAdapter = registerPersistenceAdapterMBean(persistenceAdapter);
+        
     }
 
     public TaskRunnerFactory getTaskRunnerFactory() {
@@ -1311,6 +1315,24 @@ public class BrokerService implements Service {
                     throw IOExceptionSupport.create("Transport Connector could not be registered in JMX: " + e.getMessage(), e);
                 }
             }
+        }
+    }
+    
+    protected PersistenceAdapter registerPersistenceAdapterMBean(PersistenceAdapter adaptor) throws IOException {
+        MBeanServer mbeanServer = getManagementContext().getMBeanServer();
+        if (mbeanServer != null) {
+
+          
+        }
+        return adaptor;
+    }
+
+    protected void unregisterPersistenceAdapterMBean(PersistenceAdapter adaptor) throws IOException {
+        if (isUseJmx()) {
+            MBeanServer mbeanServer = getManagementContext().getMBeanServer();
+            if (mbeanServer != null) {
+                
+            }       
         }
     }
 

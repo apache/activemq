@@ -120,7 +120,7 @@ public class RegionBroker implements Broker {
         return answer;
     }
 
-    public Set getDestinations(ActiveMQDestination destination) {
+    public Set <Destination> getDestinations(ActiveMQDestination destination) {
         switch (destination.getDestinationType()) {
         case ActiveMQDestination.QUEUE_TYPE:
             return queueRegion.getDestinations(destination);
