@@ -322,10 +322,45 @@ public class RegionBroker implements Broker {
     public void removeSession(ConnectionContext context, SessionInfo info) throws Exception {
     }
 
-    public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
+    public void addProducer(ConnectionContext context, ProducerInfo info)
+            throws Exception {
+        ActiveMQDestination destination = info.getDestination();
+        if (destination != null) {
+            switch (destination.getDestinationType()) {
+            case ActiveMQDestination.QUEUE_TYPE:
+                queueRegion.addProducer(context, info);
+                break;
+            case ActiveMQDestination.TOPIC_TYPE:
+                topicRegion.addProducer(context, info);
+                break;
+            case ActiveMQDestination.TEMP_QUEUE_TYPE:
+                tempQueueRegion.addProducer(context, info);
+                break;
+            case ActiveMQDestination.TEMP_TOPIC_TYPE:
+                tempTopicRegion.addProducer(context, info);
+                break;
+            }
+        }
     }
 
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
+        ActiveMQDestination destination = info.getDestination();
+        if (destination != null) {
+            switch (destination.getDestinationType()) {
+            case ActiveMQDestination.QUEUE_TYPE:
+                queueRegion.removeProducer(context, info);
+                break;
+            case ActiveMQDestination.TOPIC_TYPE:
+                topicRegion.removeProducer(context, info);
+                break;
+            case ActiveMQDestination.TEMP_QUEUE_TYPE:
+                tempQueueRegion.removeProducer(context, info);
+                break;
+            case ActiveMQDestination.TEMP_TOPIC_TYPE:
+                tempTopicRegion.removeProducer(context, info);
+                break;
+            }
+        }
     }
 
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {

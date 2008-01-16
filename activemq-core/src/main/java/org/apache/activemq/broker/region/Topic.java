@@ -76,8 +76,7 @@ public class Topic  extends BaseDestination  implements Task{
     protected final TopicMessageStore store;
     private final SystemUsage systemUsage;
     private final MemoryUsage memoryUsage;
-    protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
-
+   
     private DispatchPolicy dispatchPolicy = new SimpleDispatchPolicy();
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy;
     private boolean sendAdvisoryIfNoConsumers;

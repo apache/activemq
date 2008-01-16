@@ -79,7 +79,6 @@ public class Queue extends BaseDestination implements Task {
     private final List<Subscription> consumers = new ArrayList<Subscription>(50);
     private final SystemUsage systemUsage;
     private final MemoryUsage memoryUsage;
-    private final DestinationStatistics destinationStatistics = new DestinationStatistics();
     private PendingMessageCursor messages;
     private final LinkedList<MessageReference> pagedInMessages = new LinkedList<MessageReference>();
     private LockOwner exclusiveOwner;
