@@ -29,6 +29,7 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessagePull;
+import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
 
@@ -86,6 +87,21 @@ public interface Region extends Service {
      * @throws Exception TODO
      */
     void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception;
+    
+    /**
+     * Adds a Producer.
+     * @param context the environment the operation is being executed under.
+     * @throws Exception TODO
+     */
+    void addProducer(ConnectionContext context, ProducerInfo info) throws Exception;
+
+    /**
+     * Removes a Producer.
+     * @param context the environment the operation is being executed under.
+     * @throws Exception TODO
+     */
+    void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception;
+
 
     /**
      * Deletes a durable subscription.

@@ -27,6 +27,7 @@ import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
@@ -128,6 +129,17 @@ public class DestinationFilter implements Destination {
     
     public void setProducerFlowControl(boolean value){
         next.setProducerFlowControl(value);
+    }
+
+    public void addProducer(ConnectionContext context, ProducerInfo info)
+            throws Exception {
+        next.addProducer(context, info);
+        
+    }
+
+    public void removeProducer(ConnectionContext context, ProducerInfo info)
+            throws Exception {
+       next.removeProducer(context, info);
     }
     
     

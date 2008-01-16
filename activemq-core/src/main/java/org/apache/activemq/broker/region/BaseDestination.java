@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.broker.region;
 
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.command.ProducerInfo;
+
 
 /**
  * @version $Revision: 1.12 $
@@ -26,6 +29,7 @@ public abstract class BaseDestination implements Destination {
     private int maxProducersToAudit=1024;
     private int maxAuditDepth=1;
     private boolean enableAudit=true;
+    protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
     /**
      * @return the producerFlowControl
      */
@@ -73,6 +77,14 @@ public abstract class BaseDestination implements Destination {
      */
     public void setEnableAudit(boolean enableAudit) {
         this.enableAudit = enableAudit;
+    }
+    
+    public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception{
+        destinationStatistics.getProducers().increment();
+    }
+
+    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception{
+        destinationStatistics.getProducers().decrement();
     }
 
     

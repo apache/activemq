@@ -32,6 +32,7 @@ public class DestinationStatistics extends StatsImpl {
     protected CountStatisticImpl enqueues;
     protected CountStatisticImpl dequeues;
     protected CountStatisticImpl consumers;
+    protected CountStatisticImpl producers;
     protected CountStatisticImpl messages;
     protected PollCountStatisticImpl messagesCached;
     protected CountStatisticImpl dispatched;
@@ -43,6 +44,7 @@ public class DestinationStatistics extends StatsImpl {
         dispatched = new CountStatisticImpl("dispatched", "The number of messages that have been dispatched from the destination");
         dequeues = new CountStatisticImpl("dequeues", "The number of messages that have been acknowledged from the destination");
         consumers = new CountStatisticImpl("consumers", "The number of consumers that that are subscribing to messages from the destination");
+        producers = new CountStatisticImpl("producers", "The number of producers that that are publishing messages to the destination");
         messages = new CountStatisticImpl("messages", "The number of messages that that are being held by the destination");
         messagesCached = new PollCountStatisticImpl("messagesCached", "The number of messages that are held in the destination's memory cache");
         processTime = new TimeStatisticImpl("processTime", "information around length of time messages are held by a destination");
@@ -50,6 +52,7 @@ public class DestinationStatistics extends StatsImpl {
         addStatistic("dispatched", dispatched);
         addStatistic("dequeues", dequeues);
         addStatistic("consumers", consumers);
+        addStatistic("prodcuers", producers);
         addStatistic("messages", messages);
         addStatistic("messagesCached", messagesCached);
         addStatistic("processTime", processTime);
@@ -65,6 +68,10 @@ public class DestinationStatistics extends StatsImpl {
 
     public CountStatisticImpl getConsumers() {
         return consumers;
+    }
+    
+    public CountStatisticImpl getProducers() {
+        return producers;
     }
 
     public PollCountStatisticImpl getMessagesCached() {
@@ -100,6 +107,7 @@ public class DestinationStatistics extends StatsImpl {
         dispatched.setEnabled(enabled);
         dequeues.setEnabled(enabled);
         consumers.setEnabled(enabled);
+        producers.setEnabled(enabled);
         messages.setEnabled(enabled);
         messagesCached.setEnabled(enabled);
         processTime.setEnabled(enabled);
@@ -112,6 +120,7 @@ public class DestinationStatistics extends StatsImpl {
             dispatched.setParent(parent.dispatched);
             dequeues.setParent(parent.dequeues);
             consumers.setParent(parent.consumers);
+            producers.setParent(parent.producers);
             messagesCached.setParent(parent.messagesCached);
             messages.setParent(parent.messages);
             processTime.setParent(parent.processTime);
@@ -120,6 +129,7 @@ public class DestinationStatistics extends StatsImpl {
             dispatched.setParent(null);
             dequeues.setParent(null);
             consumers.setParent(null);
+            producers.setParent(null);
             messagesCached.setParent(null);
             messages.setParent(null);
             processTime.setParent(null);

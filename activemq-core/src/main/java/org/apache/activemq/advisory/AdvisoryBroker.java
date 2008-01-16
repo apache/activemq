@@ -277,7 +277,17 @@ public class AdvisoryBroker extends BrokerFilter {
 
     protected void fireProducerAdvisory(ConnectionContext context, ActiveMQDestination producerDestination,ActiveMQTopic topic, Command command, ConsumerId targetConsumerId) throws Exception {
         ActiveMQMessage advisoryMessage = new ActiveMQMessage();
-        advisoryMessage.setIntProperty("producerCount", producers.size());
+        int count = 0;
+        if (producerDestination != null) {
+            Set<Destination> set = getDestinations(producerDestination);
+            if (set != null) {
+                for (Destination dest : set) {
+                    count += dest.getDestinationStatistics().getConsumers()
+                            .getCount();
+                }
+            }
+        }
+        advisoryMessage.setIntProperty("producerCount", count);
         fireAdvisory(context, topic, command, targetConsumerId, advisoryMessage);
     }
 

@@ -37,6 +37,7 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessagePull;
+import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.DestinationFilter;
@@ -408,5 +409,26 @@ public abstract class AbstractRegion implements Region {
     public void setAutoCreateDestinations(boolean autoCreateDestinations) {
         this.autoCreateDestinations = autoCreateDestinations;
     }
+    
+    public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception{
+        for (Iterator iter = destinationMap.get(info.getDestination()).iterator(); iter.hasNext();) {
+            Destination dest = (Destination)iter.next();
+            dest.addProducer(context, info);
+        }
+    }
+
+    /**
+     * Removes a Producer.
+     * @param context the environment the operation is being executed under.
+     * @throws Exception TODO
+     */
+    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception{
+        for (Iterator iter = destinationMap.get(info.getDestination()).iterator(); iter.hasNext();) {
+            Destination dest = (Destination)iter.next();
+            dest.removeProducer(context, info);
+        }
+    }
+
+
 
 }
