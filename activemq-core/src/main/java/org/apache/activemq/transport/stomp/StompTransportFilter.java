@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
 /**
  * The StompTransportFilter normally sits on top of a TcpTransport that has been
  * configured with the StompWireFormat and is used to convert STOMP commands to
- * ActiveMQ commands. All of the coversion work is done by delegating to the
+ * ActiveMQ commands. All of the conversion work is done by delegating to the
  * ProtocolConverter.
  * 
  * @author <a href="http://hiramchirino.com">chirino</a>

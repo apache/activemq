@@ -48,6 +48,7 @@ public interface Stomp {
         String RECEIPT_REQUESTED = "receipt";
         String TRANSACTION = "transaction";
         String CONTENT_LENGTH = "content-length";
+        String TRANSFORMATION = "transformation";
 
         public interface Response {
             String RECEIPT_ID = "receipt-id";

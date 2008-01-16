@@ -49,11 +49,13 @@ public class StompSubscription {
 
     private String ackMode = AUTO_ACK;
     private ActiveMQDestination destination;
+    private String transformation;
 
-    public StompSubscription(ProtocolConverter stompTransport, String subscriptionId, ConsumerInfo consumerInfo) {
+    public StompSubscription(ProtocolConverter stompTransport, String subscriptionId, ConsumerInfo consumerInfo, String transformation) {
         this.protocolConverter = stompTransport;
         this.subscriptionId = subscriptionId;
         this.consumerInfo = consumerInfo;
+        this.transformation = transformation;
     }
 
     void onMessageDispatch(MessageDispatch md) throws IOException, JMSException {
@@ -68,7 +70,10 @@ public class StompSubscription {
             MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
             protocolConverter.getTransportFilter().sendToActiveMQ(ack);
         }
-
+        if (transformation != null) {
+       		message.setReadOnlyProperties(false);
+        	message.setStringProperty(Stomp.Headers.TRANSFORMATION, transformation);
+        }
         StompFrame command = protocolConverter.convertMessage(message);
 
         command.setAction(Stomp.Responses.MESSAGE);

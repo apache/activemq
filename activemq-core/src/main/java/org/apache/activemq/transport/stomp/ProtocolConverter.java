@@ -52,6 +52,7 @@ import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.util.ByteArrayOutputStream;
+import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.IntrospectionSupport;
@@ -84,6 +85,7 @@ public class ProtocolConverter {
     private int lastCommandId;
     private final AtomicBoolean connected = new AtomicBoolean(false);
     private final FrameTranslator frameTranslator;
+    private final FactoryFinder FRAME_TRANSLATOR_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/frametranslator/");
 
     public ProtocolConverter(StompTransportFilter stompTransportFilter, FrameTranslator translator) {
         this.transportFilter = stompTransportFilter;
@@ -131,12 +133,26 @@ public class ProtocolConverter {
     protected void sendToStomp(StompFrame command) throws IOException {
         transportFilter.sendToStomp(command);
     }
+    
+    protected FrameTranslator findTranslator(String header) {
+		FrameTranslator translator = frameTranslator;
+		try {
+			if (header != null) {
+				translator = (FrameTranslator) FRAME_TRANSLATOR_FINDER
+						.newInstance(header);
+			}
+		} catch (Exception ignore) {
+			// if anything goes wrong use the default translator
+		}
+		
+		return translator;
+	}
 
     /**
-     * Convert a stomp command
-     * 
-     * @param command
-     */
+	 * Convert a stomp command
+	 * 
+	 * @param command
+	 */
     public void onStompCommad(StompFrame command) throws IOException, JMSException {
         try {
 
@@ -340,12 +356,13 @@ public class ProtocolConverter {
 
     protected void onStompSubscribe(StompFrame command) throws ProtocolException {
         checkConnected();
+        FrameTranslator translator = findTranslator(command.getHeaders().get(Stomp.Headers.TRANSFORMATION));
         Map<String, String> headers = command.getHeaders();
 
         String subscriptionId = headers.get(Stomp.Headers.Subscribe.ID);
         String destination = headers.get(Stomp.Headers.Subscribe.DESTINATION);
 
-        ActiveMQDestination actualDest = frameTranslator.convertDestination(this, destination);
+        ActiveMQDestination actualDest = translator.convertDestination(this, destination);
         ConsumerId id = new ConsumerId(sessionId, consumerIdGenerator.getNextSequenceId());
         ConsumerInfo consumerInfo = new ConsumerInfo(id);
         consumerInfo.setPrefetchSize(1000);
@@ -356,9 +373,9 @@ public class ProtocolConverter {
 
         IntrospectionSupport.setProperties(consumerInfo, headers, "activemq.");
 
-        consumerInfo.setDestination(frameTranslator.convertDestination(this, destination));
+        consumerInfo.setDestination(translator.convertDestination(this, destination));
 
-        StompSubscription stompSubscription = new StompSubscription(this, subscriptionId, consumerInfo);
+        StompSubscription stompSubscription = new StompSubscription(this, subscriptionId, consumerInfo, headers.get(Stomp.Headers.TRANSFORMATION));
         stompSubscription.setDestination(actualDest);
 
         String ackMode = headers.get(Stomp.Headers.Subscribe.ACK_MODE);
@@ -380,7 +397,7 @@ public class ProtocolConverter {
         ActiveMQDestination destination = null;
         Object o = headers.get(Stomp.Headers.Unsubscribe.DESTINATION);
         if (o != null) {
-            destination = frameTranslator.convertDestination(this, (String)o);
+            destination = findTranslator(command.getHeaders().get(Stomp.Headers.TRANSFORMATION)).convertDestination(this, (String)o);
         }
 
         String subscriptionId = headers.get(Stomp.Headers.Unsubscribe.ID);
@@ -533,12 +550,12 @@ public class ProtocolConverter {
     }
 
     public ActiveMQMessage convertMessage(StompFrame command) throws IOException, JMSException {
-        ActiveMQMessage msg = frameTranslator.convertFrame(this, command);
+        ActiveMQMessage msg = findTranslator(command.getHeaders().get(Stomp.Headers.TRANSFORMATION)).convertFrame(this, command);
         return msg;
     }
 
     public StompFrame convertMessage(ActiveMQMessage message) throws IOException, JMSException {
-        return frameTranslator.convertMessage(this, message);
+        return findTranslator(message.getStringProperty(Stomp.Headers.TRANSFORMATION)).convertMessage(this, message);
     }
 
     public StompTransportFilter getTransportFilter() {
