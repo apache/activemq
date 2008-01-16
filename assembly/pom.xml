@@ -157,7 +157,7 @@
       <artifactId>jmdns</artifactId>
     </dependency>
     <dependency>
-      <groupId>xstream</groupId>
+      <groupId>com.thoughtworks.xstream</groupId>
       <artifactId>xstream</artifactId>
     </dependency>
     <dependency>

@@ -683,7 +683,7 @@
       </dependency>
 
       <dependency>
-        <groupId>xstream</groupId>
+        <groupId>com.thoughtworks.xstream</groupId>
         <artifactId>xstream</artifactId>
         <version>${xstream-version}</version>
       </dependency>
