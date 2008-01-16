@@ -65,7 +65,7 @@ public class BrokerFilter implements Broker {
         return next.getDestinationMap();
     }
 
-    public Set getDestinations(ActiveMQDestination destination) {
+    public Set <Destination>getDestinations(ActiveMQDestination destination) {
         return next.getDestinations(destination);
     }
 

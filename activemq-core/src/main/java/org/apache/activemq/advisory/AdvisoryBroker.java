@@ -17,6 +17,7 @@
 package org.apache.activemq.advisory;
 
 import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.broker.Broker;
@@ -83,7 +84,7 @@ public class AdvisoryBroker extends BrokerFilter {
         if (!AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
             ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination());
             consumers.put(info.getConsumerId(), info);
-            fireConsumerAdvisory(context, topic, info);
+            fireConsumerAdvisory(context,info.getDestination(), topic, info);
         } else {
 
             // We need to replay all the previously collected state objects
@@ -114,7 +115,7 @@ public class AdvisoryBroker extends BrokerFilter {
                 for (Iterator<ProducerInfo> iter = producers.values().iterator(); iter.hasNext();) {
                     ProducerInfo value = iter.next();
                     ActiveMQTopic topic = AdvisorySupport.getProducerAdvisoryTopic(value.getDestination());
-                    fireProducerAdvisory(context, topic, value, info.getConsumerId());
+                    fireProducerAdvisory(context, value.getDestination(),topic, value, info.getConsumerId());
                 }
             }
 
@@ -123,7 +124,7 @@ public class AdvisoryBroker extends BrokerFilter {
                 for (Iterator<ConsumerInfo> iter = consumers.values().iterator(); iter.hasNext();) {
                     ConsumerInfo value = iter.next();
                     ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(value.getDestination());
-                    fireConsumerAdvisory(context, topic, value, info.getConsumerId());
+                    fireConsumerAdvisory(context,value.getDestination(), topic, value, info.getConsumerId());
                 }
             }
         }
@@ -219,7 +220,7 @@ public class AdvisoryBroker extends BrokerFilter {
         if (!AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
             ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination());
             consumers.remove(info.getConsumerId());
-            fireConsumerAdvisory(context, topic, info.createRemoveCommand());
+            fireConsumerAdvisory(context,info.getDestination(), topic, info.createRemoveCommand());
         }
     }
 
@@ -230,7 +231,7 @@ public class AdvisoryBroker extends BrokerFilter {
         if (info.getDestination() != null && !AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
             ActiveMQTopic topic = AdvisorySupport.getProducerAdvisoryTopic(info.getDestination());
             producers.remove(info.getProducerId());
-            fireProducerAdvisory(context, topic, info.createRemoveCommand());
+            fireProducerAdvisory(context, info.getDestination(),topic, info.createRemoveCommand());
         }
     }
 
@@ -253,21 +254,28 @@ public class AdvisoryBroker extends BrokerFilter {
         fireAdvisory(context, topic, command, targetConsumerId, advisoryMessage);
     }
 
-    protected void fireConsumerAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command) throws Exception {
-        fireConsumerAdvisory(context, topic, command, null);
+    protected void fireConsumerAdvisory(ConnectionContext context, ActiveMQDestination consumerDestination,ActiveMQTopic topic, Command command) throws Exception {
+        fireConsumerAdvisory(context, consumerDestination,topic, command, null);
     }
 
-    protected void fireConsumerAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId) throws Exception {
+    protected void fireConsumerAdvisory(ConnectionContext context, ActiveMQDestination consumerDestination,ActiveMQTopic topic, Command command, ConsumerId targetConsumerId) throws Exception {
         ActiveMQMessage advisoryMessage = new ActiveMQMessage();
-        advisoryMessage.setIntProperty("consumerCount", consumers.size());
+        int count = 0;
+        Set<Destination>set = getDestinations(consumerDestination);
+        if (set != null) {
+            for (Destination dest:set) {
+                count += dest.getDestinationStatistics().getConsumers().getCount();
+            }
+        }
+        advisoryMessage.setIntProperty("consumerCount", count);
         fireAdvisory(context, topic, command, targetConsumerId, advisoryMessage);
     }
 
-    protected void fireProducerAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command) throws Exception {
-        fireProducerAdvisory(context, topic, command, null);
+    protected void fireProducerAdvisory(ConnectionContext context,ActiveMQDestination producerDestination, ActiveMQTopic topic, Command command) throws Exception {
+        fireProducerAdvisory(context,producerDestination, topic, command, null);
     }
 
-    protected void fireProducerAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId) throws Exception {
+    protected void fireProducerAdvisory(ConnectionContext context, ActiveMQDestination producerDestination,ActiveMQTopic topic, Command command, ConsumerId targetConsumerId) throws Exception {
         ActiveMQMessage advisoryMessage = new ActiveMQMessage();
         advisoryMessage.setIntProperty("producerCount", producers.size());
         fireAdvisory(context, topic, command, targetConsumerId, advisoryMessage);
