@@ -162,6 +162,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
                                TaskRunnerFactory taskRunnerFactory) {
         this.connector = connector;
         this.broker = broker;
+        this.messageAuthorizationPolicy = connector.getMessageAuthorizationPolicy();
         RegionBroker rb = (RegionBroker)broker.getAdaptor(RegionBroker.class);
         brokerConnectionStates = rb.getConnectionStates();
         if (connector != null) {
@@ -638,16 +639,17 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         // Setup the context.
         String clientId = info.getClientId();
         context = new ConnectionContext();
-        context.setConnection(this);
         context.setBroker(broker);
-        context.setConnector(connector);
-        context.setTransactions(new ConcurrentHashMap<TransactionId, Transaction>());
         context.setClientId(clientId);
-        context.setUserName(info.getUserName());
-        context.setConnectionId(info.getConnectionId());
         context.setClientMaster(info.isClientMaster());
-        context.setWireFormatInfo(wireFormatInfo);
+        context.setConnection(this);
+        context.setConnectionId(info.getConnectionId());
+        context.setConnector(connector);
+        context.setMessageAuthorizationPolicy(getMessageAuthorizationPolicy());
         context.setNetworkConnection(networkConnection);
+        context.setTransactions(new ConcurrentHashMap<TransactionId, Transaction>());
+        context.setUserName(info.getUserName());
+        context.setWireFormatInfo(wireFormatInfo);
         this.manageable = info.isManageable();
         state.setContext(context);
         state.setConnection(this);
