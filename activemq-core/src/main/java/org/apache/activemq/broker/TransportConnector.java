@@ -96,14 +96,18 @@ public class TransportConnector implements Connector {
      */
     public ManagedTransportConnector asManagedConnector(MBeanServer mbeanServer, ObjectName connectorName) throws IOException, URISyntaxException {
         ManagedTransportConnector rc = new ManagedTransportConnector(mbeanServer, connectorName, getBroker(), getServer());
+        //rc.setBroker(getBroker());
+        rc.setBrokerInfo(getBrokerInfo());
+        rc.setConnectUri(getConnectUri());
+        rc.setDisableAsyncDispatch(isDisableAsyncDispatch());
+        rc.setDiscoveryAgent(getDiscoveryAgent());
+        rc.setDiscoveryUri(getDiscoveryUri());
+        rc.setEnableStatusMonitor(isEnableStatusMonitor());
+        rc.setMessageAuthorizationPolicy(getMessageAuthorizationPolicy());
+        rc.setName(getName());
+        //rc.setServer(getServer());
         rc.setTaskRunnerFactory(getTaskRunnerFactory());
-        rc.setUri(uri);
-        rc.setConnectUri(connectUri);
-        rc.setDiscoveryAgent(discoveryAgent);
-        rc.setDiscoveryUri(discoveryUri);
-        rc.setName(name);
-        rc.setDisableAsyncDispatch(disableAsyncDispatch);
-        rc.setBrokerInfo(brokerInfo);
+        rc.setUri(getUri());
         return rc;
     }
 
