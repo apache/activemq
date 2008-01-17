@@ -37,7 +37,7 @@ import javax.net.ssl.TrustManager;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.InactivityMonitor;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportLogger;
+import org.apache.activemq.transport.TransportLoggerFactory;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.WireFormatNegotiator;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -54,7 +54,8 @@ import org.apache.commons.logging.LogFactory;
  * factory will have their needClientAuth option set to false.
  * 
  * @author sepandm@gmail.com (Sepand)
- * @version $Revision: $
+ * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
+ * @version $Revision$
  */
 public class SslTransportFactory extends TcpTransportFactory {
     // The log this uses.,
@@ -104,7 +105,12 @@ public class SslTransportFactory extends TcpTransportFactory {
         sslTransport.setSocketOptions(socketOptions);
 
         if (sslTransport.isTrace()) {
-            transport = new TransportLogger(transport);
+            try {
+                transport = TransportLoggerFactory.getInstance().createTransportLogger(transport,
+                        sslTransport.getLogWriterName(), sslTransport.isDynamicManagement(), sslTransport.isStartLogging(), sslTransport.getJmxPort());
+            } catch (Throwable e) {
+                LOG.error("Could not create TransportLogger object for: " + sslTransport.getLogWriterName() + ", reason: " + e, e);
+            }
         }
 
         transport = new InactivityMonitor(transport);

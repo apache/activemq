@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -32,9 +34,10 @@ import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.network.NetworkConnector;
-//import org.apache.log4j.LogManager;
-//import org.apache.log4j.PropertyConfigurator;
 
+/**
+ * @version $Revision$
+ */
 public class BrokerView implements BrokerViewMBean {
 
     final ManagedRegionBroker broker;
@@ -266,16 +269,25 @@ public class BrokerView implements BrokerViewMBean {
     }
     
     //  doc comment inherited from BrokerViewMBean
-    public void reloadLog4jProperties() throws Exception {
-        /*
-        LogManager.resetConfiguration();
-        ClassLoader cl = this.getClass().getClassLoader();
-        URL log4jprops = cl.getResource("log4j.properties");
-        if (log4jprops != null) {
-            PropertyConfigurator.configure(log4jprops);
+    public void reloadLog4jProperties() throws Throwable {
+
+        // Avoid a direct dependency on log4j.. use reflection.
+        try {
+            ClassLoader cl = getClass().getClassLoader();
+            Class logManagerClass = cl.loadClass("org.apache.log4j.LogManager");
+            
+            Method resetConfiguration = logManagerClass.getMethod("resetConfiguration", new Class[]{});
+            resetConfiguration.invoke(null, new Object[]{});
+            
+            URL log4jprops = cl.getResource("log4j.properties");
+            if (log4jprops != null) {
+                Class propertyConfiguratorClass = cl.loadClass("org.apache.log4j.PropertyConfigurator");
+                Method configure = propertyConfiguratorClass.getMethod("configure", new Class[]{URL.class});
+                configure.invoke(null, new Object[]{log4jprops});
+            }
+        } catch (InvocationTargetException e) {
+            throw e.getTargetException();
         }
-        */
     }
     
-
 }

@@ -22,7 +22,7 @@ import java.util.Map;
 
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
-import org.apache.activemq.transport.TransportLogger;
+import org.apache.activemq.transport.TransportLoggerFactory;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.transport.xstream.XStreamWireFormat;
@@ -31,6 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
+ * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
  * @version $Revision$
  */
 public class HttpTransportFactory extends TransportFactory {
@@ -59,10 +60,14 @@ public class HttpTransportFactory extends TransportFactory {
     }
 
     public Transport compositeConfigure(Transport transport, WireFormat format, Map options) {
-        HttpClientTransport httpTransport = (HttpClientTransport)super.compositeConfigure(transport, format, options);
+        HttpClientTransport httpTransport = (HttpClientTransport) super.compositeConfigure(transport, format, options);
         transport = httpTransport;
-        if (httpTransport.isTrace()) {
-            transport = new TransportLogger(httpTransport);
+        if( httpTransport.isTrace() ) {
+            try {
+                transport = TransportLoggerFactory.getInstance().createTransportLogger(transport);
+            } catch (Throwable e) {
+                LOG.error("Could not create TransportLogger object for: " + TransportLoggerFactory.defaultLogWriterName + ", reason: " + e, e);
+            }
         }
         return transport;
     }

@@ -20,6 +20,10 @@ import javax.management.ObjectName;
 
 import org.apache.activemq.Service;
 
+/**
+ * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (for the reloadLog4jProperties method)
+ * @version $Revision$
+ */
 public interface BrokerViewMBean extends Service {
 
     /**
@@ -159,8 +163,8 @@ public interface BrokerViewMBean extends Service {
     /**
      * Reloads log4j.properties from the classpath.
      * This methods calls org.apache.activemq.transport.TransportLoggerControl.reloadLog4jProperties
-     * @throws Exception
+     * @throws Throwable 
      */
-    public void reloadLog4jProperties() throws Exception;
+    public void reloadLog4jProperties() throws Throwable;
     
 }
