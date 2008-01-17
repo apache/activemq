@@ -30,7 +30,7 @@ import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.InactivityMonitor;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
-import org.apache.activemq.transport.TransportLogger;
+import org.apache.activemq.transport.TransportLoggerFactory;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.WireFormatNegotiator;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -40,6 +40,10 @@ import org.apache.activemq.wireformat.WireFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+/**
+ * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
+ * @version $Revision$
+ */
 public class TcpTransportFactory extends TransportFactory {
     private static final Log LOG = LogFactory.getLog(TcpTransportFactory.class);
 
@@ -84,7 +88,12 @@ public class TcpTransportFactory extends TransportFactory {
         tcpTransport.setSocketOptions(socketOptions);
         
         if (tcpTransport.isTrace()) {
-            transport = new TransportLogger(transport);
+            try {
+                transport = TransportLoggerFactory.getInstance().createTransportLogger(transport, tcpTransport.getLogWriterName(),
+                        tcpTransport.isDynamicManagement(), tcpTransport.isStartLogging(), tcpTransport.getJmxPort());
+            } catch (Throwable e) {
+                LOG.error("Could not create TransportLogger object for: " + tcpTransport.getLogWriterName() + ", reason: " + e, e);
+            }
         }
 
         if (isUseInactivityMonitor(transport)) {
