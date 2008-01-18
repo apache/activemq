@@ -137,7 +137,7 @@ public class AdvisoryBroker extends BrokerFilter {
         // Don't advise advisory topics.
         if (info.getDestination() != null && !AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
             ActiveMQTopic topic = AdvisorySupport.getProducerAdvisoryTopic(info.getDestination());
-            fireAdvisory(context, topic, info);
+            fireProducerAdvisory(context, info.getDestination(), topic, info);
             producers.put(info.getProducerId(), info);
         }
     }
@@ -282,8 +282,7 @@ public class AdvisoryBroker extends BrokerFilter {
             Set<Destination> set = getDestinations(producerDestination);
             if (set != null) {
                 for (Destination dest : set) {
-                    count += dest.getDestinationStatistics().getConsumers()
-                            .getCount();
+                    count += dest.getDestinationStatistics().getProducers().getCount();
                 }
             }
         }

@@ -46,22 +46,18 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
      * 
      * @throws IOException
      */
-    protected void acknowledge(ConnectionContext context, final MessageAck ack, final MessageReference n) throws IOException {
+    protected void acknowledge(final ConnectionContext context, final MessageAck ack, final MessageReference n) throws IOException {
 
         final Destination q = n.getRegionDestination();
-        q.acknowledge(context, this, ack, n);
-
         final QueueMessageReference node = (QueueMessageReference)n;
         final Queue queue = (Queue)q;
         if (!ack.isInTransaction()) {
-            node.drop();
-            queue.dropEvent();
+            queue.removeMessage(context, this, node, ack);
         } else {
             node.setAcked(true);
             context.getTransaction().addSynchronization(new Synchronization() {
                 public void afterCommit() throws Exception {
-                    node.drop();
-                    queue.dropEvent();
+                    queue.removeMessage(context, QueueSubscription.this, node, ack);
                 }
 
                 public void afterRollback() throws Exception {

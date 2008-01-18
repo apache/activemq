@@ -18,7 +18,6 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -48,14 +47,12 @@ import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.store.MessageRecoveryListener;
-import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.thread.Valve;
 import org.apache.activemq.transaction.Synchronization;
-import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.SubscriptionKey;
 import org.apache.commons.logging.Log;
@@ -69,14 +66,9 @@ import org.apache.commons.logging.LogFactory;
  */
 public class Topic  extends BaseDestination  implements Task{
     private static final Log LOG = LogFactory.getLog(Topic.class);
-    protected final ActiveMQDestination destination;
+    private final TopicMessageStore topicStore;
     protected final CopyOnWriteArrayList<Subscription> consumers = new CopyOnWriteArrayList<Subscription>();
-    protected final Valve dispatchValve = new Valve(true);
-    // this could be NULL! (If an advisory)
-    protected final TopicMessageStore store;
-    private final SystemUsage systemUsage;
-    private final MemoryUsage memoryUsage;
-   
+    protected final Valve dispatchValve = new Valve(true);   
     private DispatchPolicy dispatchPolicy = new SimpleDispatchPolicy();
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy;
     private boolean sendAdvisoryIfNoConsumers;
@@ -92,16 +84,12 @@ public class Topic  extends BaseDestination  implements Task{
                 }
         };
     };
-    private final Broker broker;
+   
 
     public Topic(Broker broker, ActiveMQDestination destination, TopicMessageStore store, SystemUsage systemUsage, DestinationStatistics parentStats,
                  TaskRunnerFactory taskFactory) throws Exception {
-        this.broker = broker;
-        this.destination = destination;
-        this.store = store; // this could be NULL! (If an advisory)
-        this.systemUsage=systemUsage;
-        this.memoryUsage = new MemoryUsage(systemUsage.getMemoryUsage(), destination.toString());
-        this.memoryUsage.setUsagePortion(1.0f);
+        super(broker, store, destination,systemUsage, parentStats);
+        this.topicStore=store;
         //set default subscription recovery policy
         if (destination.isTemporary() || AdvisorySupport.isAdvisoryTopic(destination) ){
         	 subscriptionRecoveryPolicy= new NoSubscriptionRecoveryPolicy();
@@ -110,16 +98,6 @@ public class Topic  extends BaseDestination  implements Task{
         	subscriptionRecoveryPolicy= new FixedSizedSubscriptionRecoveryPolicy();
         } 
         this.taskRunner = taskFactory.createTaskRunner(this, "Topic  " + destination.getPhysicalName());
-        // Let the store know what usage manager we are using so that he can
-        // flush messages to disk
-        // when usage gets high.
-        if (store != null) {
-            store.setMemoryUsage(memoryUsage);
-        }
-
-        // let's copy the enabled property from the parent DestinationStatistics
-        this.destinationStatistics.setEnabled(parentStats.isEnabled());
-        this.destinationStatistics.setParent(parentStats);
     }
 
     public boolean lock(MessageReference node, LockOwner sub) {
@@ -174,8 +152,8 @@ public class Topic  extends BaseDestination  implements Task{
     }
 
     public void deleteSubscription(ConnectionContext context, SubscriptionKey key) throws IOException {
-        if (store != null) {
-            store.deleteSubscription(key.clientId, key.subscriptionName);
+        if (topicStore != null) {
+            topicStore.deleteSubscription(key.clientId, key.subscriptionName);
             Object removed = durableSubcribers.remove(key);
             if (removed != null) {
                 destinationStatistics.getConsumers().decrement();
@@ -194,7 +172,7 @@ public class Topic  extends BaseDestination  implements Task{
                 consumers.add(subscription);
             }
 
-            if (store == null) {
+            if (topicStore == null) {
                 return;
             }
 
@@ -202,13 +180,13 @@ public class Topic  extends BaseDestination  implements Task{
             String clientId = subscription.getClientId();
             String subscriptionName = subscription.getSubscriptionName();
             String selector = subscription.getConsumerInfo().getSelector();
-            SubscriptionInfo info = store.lookupSubscription(clientId, subscriptionName);
+            SubscriptionInfo info = topicStore.lookupSubscription(clientId, subscriptionName);
             if (info != null) {
                 // Check to see if selector changed.
                 String s1 = info.getSelector();
                 if (s1 == null ^ selector == null || (s1 != null && !s1.equals(selector))) {
                     // Need to delete the subscription
-                    store.deleteSubscription(clientId, subscriptionName);
+                    topicStore.deleteSubscription(clientId, subscriptionName);
                     info = null;
                 }
             }
@@ -222,13 +200,13 @@ public class Topic  extends BaseDestination  implements Task{
                 // Thi destination is an actual destination id.
                 info.setSubscribedDestination(subscription.getConsumerInfo().getDestination()); 
                 // This destination might be a pattern
-                store.addSubsciption(info,subscription.getConsumerInfo().isRetroactive());
+                topicStore.addSubsciption(info,subscription.getConsumerInfo().isRetroactive());
             }
 
             final MessageEvaluationContext msgContext = new MessageEvaluationContext();
             msgContext.setDestination(destination);
             if (subscription.isRecoveryRequired()) {
-                store.recoverSubscription(clientId, subscriptionName, new MessageRecoveryListener() {
+                topicStore.recoverSubscription(clientId, subscriptionName, new MessageRecoveryListener() {
                     public boolean recoverMessage(Message message) throws Exception {
                         message.setRegionDestination(Topic.this);
                         try {
@@ -395,14 +373,14 @@ public class Topic  extends BaseDestination  implements Task{
                 .getConnectionContext();
         message.setRegionDestination(this);
 
-        if (store != null && message.isPersistent()
+        if (topicStore != null && message.isPersistent()
                 && !canOptimizeOutPersistence()) {
             while (!systemUsage.getStoreUsage().waitForSpace(1000)) {
                 if (context.getStopping().get()) {
                     throw new IOException("Connection closed, send aborted.");
                 }
             }
-            store.addMessage(context, message);
+            topicStore.addMessage(context, message);
         }
 
         message.incrementReferenceCount();
@@ -446,15 +424,15 @@ public class Topic  extends BaseDestination  implements Task{
     }
 
     public void acknowledge(ConnectionContext context, Subscription sub, final MessageAck ack, final MessageReference node) throws IOException {
-        if (store != null && node.isPersistent()) {
+        if (topicStore != null && node.isPersistent()) {
             DurableTopicSubscription dsub = (DurableTopicSubscription)sub;
-            store.acknowledge(context, dsub.getClientId(), dsub.getSubscriptionName(), node.getMessageId());
+            topicStore.acknowledge(context, dsub.getClientId(), dsub.getSubscriptionName(), node.getMessageId());
         }
     }
 
     public void dispose(ConnectionContext context) throws IOException {
-        if (store != null) {
-            store.removeAllMessages(context);
+        if (topicStore != null) {
+            topicStore.removeAllMessages(context);
         }
         destinationStatistics.setParent(null);
     }
@@ -463,7 +441,7 @@ public class Topic  extends BaseDestination  implements Task{
     }
 
     public Message loadMessage(MessageId messageId) throws IOException {
-        return store != null ? store.getMessage(messageId) : null;
+        return topicStore != null ? topicStore.getMessage(messageId) : null;
     }
 
     public void start() throws Exception {
@@ -487,8 +465,8 @@ public class Topic  extends BaseDestination  implements Task{
     public Message[] browse() {
         final Set<Message> result = new CopyOnWriteArraySet<Message>();
         try {
-            if (store != null) {
-                store.recover(new MessageRecoveryListener() {
+            if (topicStore != null) {
+                topicStore.recover(new MessageRecoveryListener() {
                     public boolean recoverMessage(Message message) throws Exception {
                         result.add(message);
                         return true;
@@ -527,21 +505,7 @@ public class Topic  extends BaseDestination  implements Task{
     // Properties
     // -------------------------------------------------------------------------
 
-    public MemoryUsage getBrokerMemoryUsage() {
-        return memoryUsage;
-    }
-
-    public DestinationStatistics getDestinationStatistics() {
-        return destinationStatistics;
-    }
-
-    public ActiveMQDestination getActiveMQDestination() {
-        return destination;
-    }
-
-    public String getDestination() {
-        return destination.getPhysicalName();
-    }
+    
 
     public DispatchPolicy getDispatchPolicy() {
         return dispatchPolicy;
@@ -567,10 +531,6 @@ public class Topic  extends BaseDestination  implements Task{
         this.sendAdvisoryIfNoConsumers = sendAdvisoryIfNoConsumers;
     }
 
-    public MessageStore getMessageStore() {
-        return store;
-    }
-
     public DeadLetterStrategy getDeadLetterStrategy() {
         return deadLetterStrategy;
     }
@@ -579,10 +539,7 @@ public class Topic  extends BaseDestination  implements Task{
         this.deadLetterStrategy = deadLetterStrategy;
     }
 
-    public String getName() {
-        return getActiveMQDestination().getPhysicalName();
-    }
-
+    
     // Implementation methods
     // -------------------------------------------------------------------------
     protected void dispatch(final ConnectionContext context, Message message) throws Exception {

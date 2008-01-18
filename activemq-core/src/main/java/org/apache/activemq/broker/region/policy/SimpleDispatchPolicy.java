@@ -31,22 +31,24 @@ import org.apache.activemq.filter.MessageEvaluationContext;
  */
 public class SimpleDispatchPolicy implements DispatchPolicy {
 
-    public boolean dispatch(MessageReference node, MessageEvaluationContext msgContext, List consumers) throws Exception {
+    public boolean dispatch(MessageReference node,MessageEvaluationContext msgContext, List<Subscription> consumers)
+            throws Exception {
+
         int count = 0;
-        for (Iterator iter = consumers.iterator(); iter.hasNext();) {
-            Subscription sub = (Subscription)iter.next();
+        synchronized (consumers) {
+            for (Subscription sub:consumers) {
+                // Don't deliver to browsers
+                if (sub.getConsumerInfo().isBrowser()) {
+                    continue;
+                }
+                // Only dispatch to interested subscriptions
+                if (!sub.matches(node, msgContext)) {
+                    continue;
+                }
 
-            // Don't deliver to browsers
-            if (sub.getConsumerInfo().isBrowser()) {
-                continue;
+                sub.add(node);
+                count++;
             }
-            // Only dispatch to interested subscriptions
-            if (!sub.matches(node, msgContext)) {
-                continue;
-            }
-
-            sub.add(node);
-            count++;
         }
         return count > 0;
     }
