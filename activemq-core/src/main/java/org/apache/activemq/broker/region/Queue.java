@@ -19,6 +19,7 @@ package org.apache.activemq.broker.region;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -58,7 +59,6 @@ import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transaction.Synchronization;
-import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.BrokerSupport;
 import org.apache.commons.logging.Log;
@@ -71,26 +71,16 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.28 $
  */
 public class Queue extends BaseDestination implements Task {
-
-    final Broker broker;
-
+    private static int MAXIMUM_PAGE_SIZE  = 1000;
     private final Log log;
-    private final ActiveMQDestination destination;
     private final List<Subscription> consumers = new ArrayList<Subscription>(50);
-    private final SystemUsage systemUsage;
-    private final MemoryUsage memoryUsage;
     private PendingMessageCursor messages;
-    private final LinkedList<MessageReference> pagedInMessages = new LinkedList<MessageReference>();
+    private final LinkedHashMap<MessageId,MessageReference> pagedInMessages = new LinkedHashMap<MessageId,MessageReference>();
     private LockOwner exclusiveOwner;
     private MessageGroupMap messageGroupOwners;
-
-    private int garbageSize;
-    private int garbageSizeBeforeCollection = 1000;
     private DispatchPolicy dispatchPolicy = new RoundRobinDispatchPolicy();
-    private final MessageStore store;
     private DeadLetterStrategy deadLetterStrategy = new SharedDeadLetterStrategy();
     private MessageGroupMapFactory messageGroupMapFactory = new MessageGroupHashBucketFactory();
-    private int maximumPagedInMessages = garbageSizeBeforeCollection * 2;
     private final Object exclusiveLockMutex = new Object();
     private final Object sendLock = new Object();
     private final TaskRunner taskRunner;
@@ -104,15 +94,11 @@ public class Queue extends BaseDestination implements Task {
             }
         };
     };
-
+    
     public Queue(Broker broker, ActiveMQDestination destination, final SystemUsage systemUsage, MessageStore store, DestinationStatistics parentStats,
                  TaskRunnerFactory taskFactory, Store tmpStore) throws Exception {
-        this.broker = broker;
-        this.destination = destination;
-        this.systemUsage=systemUsage;
-        this.memoryUsage = new MemoryUsage(systemUsage.getMemoryUsage(), destination.toString());
-        this.memoryUsage.setUsagePortion(1.0f);
-        this.store = store;
+        super(broker, store, destination,systemUsage, parentStats);
+        
         if (destination.isTemporary() || tmpStore==null ) {
             this.messages = new VMPendingMessageCursor();
         } else {
@@ -120,19 +106,7 @@ public class Queue extends BaseDestination implements Task {
         }
 
         this.taskRunner = taskFactory.createTaskRunner(this, "Queue  " + destination.getPhysicalName());
-
-        // Let the store know what usage manager we are using so that he can
-        // flush messages to disk
-        // when usage gets high.
-        if (store != null) {
-            store.setMemoryUsage(memoryUsage);
-        }
-
-        // let's copy the enabled property from the parent DestinationStatistics
-        this.destinationStatistics.setEnabled(parentStats.isEnabled());
-        destinationStatistics.setParent(parentStats);
         this.log = LogFactory.getLog(getClass().getName() + "." + destination.getPhysicalName());
-
     }
 
     public void initialize() throws Exception {
@@ -204,8 +178,6 @@ public class Queue extends BaseDestination implements Task {
     public void addSubscription(ConnectionContext context,Subscription sub) throws Exception {
         sub.add(context, this);
         destinationStatistics.getConsumers().increment();
-        maximumPagedInMessages += sub.getConsumerInfo().getPrefetchSize();
-
         MessageEvaluationContext msgContext = new MessageEvaluationContext();
 
         // needs to be synchronized - so no contention with dispatching
@@ -239,7 +211,7 @@ public class Queue extends BaseDestination implements Task {
         synchronized (pagedInMessages) {
             // Add all the matching messages in the queue to the
             // subscription.
-            for (Iterator<MessageReference> i = pagedInMessages.iterator(); i
+            for (Iterator<MessageReference> i = pagedInMessages.values().iterator(); i
                     .hasNext();) {
                 QueueMessageReference node = (QueueMessageReference) i.next();
                 if (node.isDropped()
@@ -263,7 +235,6 @@ public class Queue extends BaseDestination implements Task {
     public void removeSubscription(ConnectionContext context, Subscription sub)
             throws Exception {
         destinationStatistics.getConsumers().decrement();
-        maximumPagedInMessages -= sub.getConsumerInfo().getPrefetchSize();
         // synchronize with dispatch method so that no new messages are sent
         // while
         // removing up a subscription.
@@ -309,7 +280,7 @@ public class Queue extends BaseDestination implements Task {
             // lets copy the messages to dispatch to avoid deadlock
             List<QueueMessageReference> messagesToDispatch = new ArrayList<QueueMessageReference>();
             synchronized (pagedInMessages) {
-                for (Iterator<MessageReference> i = pagedInMessages.iterator(); i
+                for (Iterator<MessageReference> i = pagedInMessages.values().iterator(); i
                         .hasNext();) {
                     QueueMessageReference node = (QueueMessageReference) i
                             .next();
@@ -493,40 +464,9 @@ public class Queue extends BaseDestination implements Task {
         destinationStatistics.setParent(null);
     }
 
-    public void dropEvent() {
-        dropEvent(false);
-    }
-
-    public void dropEvent(boolean skipGc) {
-        // TODO: need to also decrement when messages expire.
-        destinationStatistics.getMessages().decrement();
-        synchronized (pagedInMessages) {
-            garbageSize++;
-        }
-        if (!skipGc && garbageSize > garbageSizeBeforeCollection) {
-            gc();
-        }
-        try {
-            taskRunner.wakeup();
-        } catch (InterruptedException e) {
-            log.warn("Task Runner failed to wakeup ", e);
-        }
-    }
-
-    public void gc() {
-        synchronized (pagedInMessages) {
-            for (Iterator<MessageReference> i = pagedInMessages.iterator(); i.hasNext();) {
-                // Remove dropped messages from the queue.
-                QueueMessageReference node = (QueueMessageReference)i.next();
-                if (node.isDropped()) {
-                    garbageSize--;
-                    i.remove();
-                    continue;
-                }
-            }
-        }
-    }
-
+	public void gc(){
+	}
+    
     public void acknowledge(ConnectionContext context, Subscription sub, MessageAck ack, MessageReference node) throws IOException {
         if (store != null && node.isPersistent()) {
             // the original ack may be a ranged ack, but we are trying to delete
@@ -589,18 +529,7 @@ public class Queue extends BaseDestination implements Task {
         return destination;
     }
 
-    public String getDestination() {
-        return destination.getPhysicalName();
-    }
-
-    public MemoryUsage getBrokerMemoryUsage() {
-        return memoryUsage;
-    }
-
-    public DestinationStatistics getDestinationStatistics() {
-        return destinationStatistics;
-    }
-
+    
     public MessageGroupMap getMessageGroupOwners() {
         if (messageGroupOwners == null) {
             messageGroupOwners = getMessageGroupMapFactory().createMessageGroupMap();
@@ -632,10 +561,6 @@ public class Queue extends BaseDestination implements Task {
         this.messageGroupMapFactory = messageGroupMapFactory;
     }
 
-    public String getName() {
-        return getActiveMQDestination().getPhysicalName();
-    }
-
     public PendingMessageCursor getMessages() {
         return this.messages;
     }
@@ -652,10 +577,6 @@ public class Queue extends BaseDestination implements Task {
         return result;
     }
 
-    public MessageStore getMessageStore() {
-        return store;
-    }
-
     public Message[] browse() {
         List<Message> l = new ArrayList<Message>();
         try {
@@ -664,7 +585,7 @@ public class Queue extends BaseDestination implements Task {
             log.error("caught an exception browsing " + this, e);
         }
         synchronized (pagedInMessages) {
-            for (Iterator<MessageReference> i = pagedInMessages.iterator(); i.hasNext();) {
+            for (Iterator<MessageReference> i = pagedInMessages.values().iterator(); i.hasNext();) {
                 MessageReference r = i.next();
                 r.incrementReferenceCount();
                 try {
@@ -736,15 +657,18 @@ public class Queue extends BaseDestination implements Task {
         return null;
     }
 
-    public void purge() throws Exception {
+    public void purge() throws Exception {   
+        ConnectionContext c = createConnectionContext();
+        List<MessageReference> list = null;
+        do {
+            pageInMessages();
+            synchronized (pagedInMessages) {
+                list = new ArrayList<MessageReference>(pagedInMessages.values());
+            }
 
-        pageInMessages();
-
-        synchronized (pagedInMessages) {
-            ConnectionContext c = createConnectionContext();
-            for (Iterator<MessageReference> i = pagedInMessages.iterator(); i.hasNext();) {
+            for (MessageReference ref : list) {
                 try {
-                    QueueMessageReference r = (QueueMessageReference)i.next();
+                    QueueMessageReference r = (QueueMessageReference) ref;
 
                     // We should only delete messages that can be locked.
                     if (r.lock(LockOwner.HIGH_PRIORITY_LOCK_OWNER)) {
@@ -752,18 +676,13 @@ public class Queue extends BaseDestination implements Task {
                         ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
                         ack.setDestination(destination);
                         ack.setMessageID(r.getMessageId());
-                        acknowledge(c, null, ack, r);
-                        r.drop();
-                        dropEvent(true);
+                        removeMessage(c, null, r, ack);
                     }
                 } catch (IOException e) {
                 }
             }
-
-            // Run gc() by hand. Had we run it in the loop it could be
-            // quite expensive.
-            gc();
-        }
+        } while (!pagedInMessages.isEmpty() || this.destinationStatistics.getMessages().getCount() > 0);
+        gc();
     }
 
     /**
@@ -799,22 +718,29 @@ public class Queue extends BaseDestination implements Task {
      * @return the number of messages removed
      */
     public int removeMatchingMessages(MessageReferenceFilter filter, int maximumMessages) throws Exception {
-        pageInMessages();
-        int counter = 0;
-        synchronized (pagedInMessages) {
-            ConnectionContext c = createConnectionContext();
-            for (Iterator<MessageReference> i = pagedInMessages.iterator(); i.hasNext();) {
-                IndirectMessageReference r = (IndirectMessageReference)i.next();
-                if (filter.evaluate(c, r)) {
-                    removeMessage(c, r);
-                    if (++counter >= maximumMessages && maximumMessages > 0) {
-                        break;
-                    }
-
-                }
+        int movedCounter = 0;
+        int count = 0;
+        ConnectionContext context = createConnectionContext();
+        List<MessageReference> list = null;
+        do {
+            pageInMessages();
+            synchronized (pagedInMessages) {
+                list = new ArrayList<MessageReference>(pagedInMessages.values());
             }
-        }
-        return counter;
+            for (MessageReference ref : list) {
+                IndirectMessageReference r = (IndirectMessageReference) ref;
+                if (filter.evaluate(context, r)) {
+
+                    removeMessage(context, r);
+                    if (++movedCounter >= maximumMessages
+                            && maximumMessages > 0) {
+                        return movedCounter;
+                    }
+                }
+                count++;
+            }
+        } while (count < this.destinationStatistics.getMessages().getCount());
+        return movedCounter;
     }
 
     /**
@@ -850,26 +776,36 @@ public class Queue extends BaseDestination implements Task {
      * @return the number of messages copied
      */
     public int copyMatchingMessages(ConnectionContext context, MessageReferenceFilter filter, ActiveMQDestination dest, int maximumMessages) throws Exception {
-        pageInMessages();
-        int counter = 0;
-        synchronized (pagedInMessages) {
-            for (Iterator<MessageReference> i = pagedInMessages.iterator(); i.hasNext();) {
-                MessageReference r = i.next();
+        int movedCounter = 0;
+        int count = 0;
+        List<MessageReference> list = null;
+        do {
+            pageInMessages();
+            synchronized (pagedInMessages) {
+                list = new ArrayList<MessageReference>(pagedInMessages.values());
+            }
+            for (MessageReference ref : list) {
+                IndirectMessageReference r = (IndirectMessageReference) ref;
                 if (filter.evaluate(context, r)) {
-                    r.incrementReferenceCount();
-                    try {
-                        Message m = r.getMessage();
-                        BrokerSupport.resend(context, m, dest);
-                        if (++counter >= maximumMessages && maximumMessages > 0) {
-                            break;
+                    // We should only copy messages that can be locked.
+                    if (lockMessage(r)) {
+                        r.incrementReferenceCount();
+                        try {
+                            Message m = r.getMessage();
+                            BrokerSupport.resend(context, m, dest);
+                            if (++movedCounter >= maximumMessages
+                                    && maximumMessages > 0) {
+                                return movedCounter;
+                            }
+                        } finally {
+                            r.decrementReferenceCount();
                         }
-                    } finally {
-                        r.decrementReferenceCount();
                     }
                 }
+                count++;
             }
-        }
-        return counter;
+        } while (count < this.destinationStatistics.getMessages().getCount());
+        return movedCounter;
     }
 
     /**
@@ -900,12 +836,17 @@ public class Queue extends BaseDestination implements Task {
      * Moves the messages matching the given filter up to the maximum number of
      * matched messages
      */
-    public int moveMatchingMessagesTo(ConnectionContext context, MessageReferenceFilter filter, ActiveMQDestination dest, int maximumMessages) throws Exception {
-        pageInMessages();
-        int counter = 0;
-        synchronized (pagedInMessages) {
-            for (Iterator<MessageReference> i = pagedInMessages.iterator(); i.hasNext();) {
-                IndirectMessageReference r = (IndirectMessageReference)i.next();
+    public int moveMatchingMessagesTo(ConnectionContext context,MessageReferenceFilter filter, ActiveMQDestination dest,int maximumMessages) throws Exception {
+        int movedCounter = 0;
+        int count = 0;
+        List<MessageReference> list = null;
+        do {
+            pageInMessages();
+            synchronized (pagedInMessages) {
+                list = new ArrayList<MessageReference>(pagedInMessages.values());
+            }
+            for (MessageReference ref : list) {
+                IndirectMessageReference r = (IndirectMessageReference) ref;
                 if (filter.evaluate(context, r)) {
                     // We should only move messages that can be locked.
                     if (lockMessage(r)) {
@@ -914,17 +855,19 @@ public class Queue extends BaseDestination implements Task {
                             Message m = r.getMessage();
                             BrokerSupport.resend(context, m, dest);
                             removeMessage(context, r);
-                            if (++counter >= maximumMessages && maximumMessages > 0) {
-                                break;
+                            if (++movedCounter >= maximumMessages
+                                    && maximumMessages > 0) {
+                                return movedCounter;
                             }
                         } finally {
                             r.decrementReferenceCount();
                         }
                     }
                 }
+                count++;
             }
-        }
-        return counter;
+        } while (count < this.destinationStatistics.getMessages().getCount());
+        return movedCounter;
     }
 
     /**
@@ -937,7 +880,6 @@ public class Queue extends BaseDestination implements Task {
             Runnable op = messagesWaitingForSpace.removeFirst();
             op.run();
         }
-
         try {
             pageInMessages(false);
         } catch (Exception e) {
@@ -976,9 +918,21 @@ public class Queue extends BaseDestination implements Task {
         ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
         ack.setDestination(destination);
         ack.setMessageID(r.getMessageId());
-        acknowledge(c, null, ack, r);
-        r.drop();
-        dropEvent();
+        removeMessage(c, null, r, ack);
+    }
+    
+    protected void removeMessage(ConnectionContext context,Subscription sub,QueueMessageReference reference,MessageAck ack) throws IOException {
+        reference.drop();
+        acknowledge(context, sub, ack, reference);
+        destinationStatistics.getMessages().decrement();
+        synchronized(pagedInMessages) {
+            pagedInMessages.remove(reference.getMessageId());
+        }
+        try {
+            taskRunner.wakeup();
+        } catch (InterruptedException e) {
+            log.warn("Task Runner failed to wakeup ", e);
+        }
     }
 
     protected boolean lockMessage(IndirectMessageReference r) {
@@ -1008,7 +962,7 @@ public class Queue extends BaseDestination implements Task {
     }
 
     private List<MessageReference> buildList(boolean force) throws Exception {
-        final int toPageIn = maximumPagedInMessages - pagedInMessages.size();
+        final int toPageIn = MAXIMUM_PAGE_SIZE - pagedInMessages.size();
         List<MessageReference> result = null;
         if ((force || !consumers.isEmpty()) && toPageIn > 0) {
             messages.setMaxBatchSize(toPageIn);
@@ -1036,7 +990,9 @@ public class Queue extends BaseDestination implements Task {
                 }
             }
             synchronized (pagedInMessages) {
-                pagedInMessages.addAll(result);
+                for(MessageReference ref:result) {
+                    pagedInMessages.put(ref.getMessageId(), ref);
+                }
             }
         }
         return result;

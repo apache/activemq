@@ -326,6 +326,7 @@ public class RegionBroker implements Broker {
             throws Exception {
         ActiveMQDestination destination = info.getDestination();
         if (destination != null) {
+            addDestination(context, destination);
             switch (destination.getDestinationType()) {
             case ActiveMQDestination.QUEUE_TYPE:
                 queueRegion.addProducer(context, info);

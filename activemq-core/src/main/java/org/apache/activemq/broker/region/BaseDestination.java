@@ -16,8 +16,13 @@
  */
 package org.apache.activemq.broker.region;
 
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.usage.MemoryUsage;
+import org.apache.activemq.usage.SystemUsage;
 
 
 /**
@@ -25,11 +30,40 @@ import org.apache.activemq.command.ProducerInfo;
  */
 public abstract class BaseDestination implements Destination {
 
+    protected final ActiveMQDestination destination;
+    protected final Broker broker;
+    protected final MessageStore store;
+    protected final SystemUsage systemUsage;
+    protected final MemoryUsage memoryUsage;
     private boolean producerFlowControl = true;
     private int maxProducersToAudit=1024;
     private int maxAuditDepth=1;
     private boolean enableAudit=true;
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
+    
+    /**
+     * @param broker 
+     * @param store 
+     * @param destination
+     * @param systemUsage 
+     * @param parentStats
+     */
+    public BaseDestination(Broker broker,MessageStore store,ActiveMQDestination destination, SystemUsage systemUsage,DestinationStatistics parentStats) {
+        this.broker=broker;
+        this.store=store;
+        this.destination=destination;
+        this.systemUsage=systemUsage;
+        this.memoryUsage = new MemoryUsage(systemUsage.getMemoryUsage(), destination.toString());
+        this.memoryUsage.setUsagePortion(1.0f);
+        // Let the store know what usage manager we are using so that he can
+        // flush messages to disk when usage gets high.
+        if (store != null) {
+            store.setMemoryUsage(this.memoryUsage);
+        } 
+        // let's copy the enabled property from the parent DestinationStatistics
+        this.destinationStatistics.setEnabled(parentStats.isEnabled());
+        this.destinationStatistics.setParent(parentStats);        
+    }
     /**
      * @return the producerFlowControl
      */
@@ -86,6 +120,31 @@ public abstract class BaseDestination implements Destination {
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception{
         destinationStatistics.getProducers().decrement();
     }
+    
+    public final MemoryUsage getBrokerMemoryUsage() {
+        return memoryUsage;
+    }
+
+    public DestinationStatistics getDestinationStatistics() {
+        return destinationStatistics;
+    }
+
+    public ActiveMQDestination getActiveMQDestination() {
+        return destination;
+    }
+
+    public final String getDestination() {
+        return destination.getPhysicalName();
+    }
+    
+    public final String getName() {
+        return getActiveMQDestination().getPhysicalName();
+    }
+    
+    public final MessageStore getMessageStore() {
+        return store;
+    }
+
 
     
 }
