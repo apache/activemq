@@ -91,7 +91,7 @@ public class DurableConsumerTest extends TestCase {
         consumer = consumerSession.createDurableSubscriber(topic, CONSUMER_NAME);
         consumerConnection.start();
         for (int i =0; i < COUNT;i++) {
-            Message msg =  consumer.receive(1000);
+            Message msg =  consumer.receive(5000);
             assertNotNull(msg);
             if (i != 0 && i%1000==0) {
                 LOG.info("Received msg " + i);
