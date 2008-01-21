@@ -128,7 +128,7 @@ public class HttpClientTransport extends HttpTransportSupport {
                     DataInputStream stream = new DataInputStream(httpMethod.getResponseBodyAsStream());
                     Object command = (Object)getTextWireFormat().unmarshal(stream);
                     if (command == null) {
-                        LOG.warn("Received null command from url: " + remoteUrl);
+                        LOG.debug("Received null command from url: " + remoteUrl);
                     } else {
                         doConsume(command);
                     }
