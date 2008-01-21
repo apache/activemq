@@ -252,7 +252,7 @@ public abstract class Usage<T extends Usage> implements Service {
                     usageMutex.notifyAll();
                     for (Iterator<Runnable> iter = new ArrayList<Runnable>(callbacks).iterator(); iter.hasNext();) {
                         Runnable callback = iter.next();
-                        callback.run();
+                        getExecutor().execute(callback);
                     }
                     callbacks.clear();
                 }
