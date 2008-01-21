@@ -571,7 +571,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     public void setRegionDestination(org.apache.activemq.broker.region.Destination destination) {
         this.regionDestination = destination;
         if(this.memoryUsage==null) {
-            this.memoryUsage=regionDestination.getBrokerMemoryUsage();
+            this.memoryUsage=regionDestination.getMemoryUsage();
         }
     }
     

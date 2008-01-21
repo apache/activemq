@@ -229,9 +229,17 @@ public class TopicRegion extends AbstractRegion {
             }
             SubscriptionKey key = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
             DurableTopicSubscription sub = durableSubscriptions.get(key);
+            ActiveMQDestination destination = info.getDestination();
             if (sub == null) {
-                sub = new DurableTopicSubscription(broker, usageManager, context, info, keepDurableSubsActive);
-                ActiveMQDestination destination = info.getDestination();
+                Destination dest=null;
+                try {
+                    dest = lookup(context, destination);
+                } catch (Exception e) {
+                    JMSException jmsEx = new JMSException("Failed to retrieve destination from region "+ e);
+                    jmsEx.setLinkedException(e);
+                    throw jmsEx;
+                }
+                sub = new DurableTopicSubscription(broker,dest, usageManager, context, info, keepDurableSubsActive);
                 if (destination != null && broker.getDestinationPolicy() != null) {
                     PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
                     if (entry != null) {

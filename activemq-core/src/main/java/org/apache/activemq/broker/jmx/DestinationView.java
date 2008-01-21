@@ -94,15 +94,15 @@ public class DestinationView implements DestinationViewMBean {
     }
 
     public int getMemoryPercentageUsed() {
-        return destination.getBrokerMemoryUsage().getPercentUsage();
+        return destination.getMemoryUsage().getPercentUsage();
     }
 
     public long getMemoryLimit() {
-        return destination.getBrokerMemoryUsage().getLimit();
+        return destination.getMemoryUsage().getLimit();
     }
 
     public void setMemoryLimit(long limit) {
-        destination.getBrokerMemoryUsage().setLimit(limit);
+        destination.getMemoryUsage().setLimit(limit);
     }
 
     public double getAverageEnqueueTime() {
@@ -267,4 +267,51 @@ public class DestinationView implements DestinationViewMBean {
         }
 
     }
+
+    public int getMaxAuditDepth() {
+        return destination.getMaxAuditDepth();
+     }
+
+     public int getMaxProducersToAudit() {
+         return destination.getMaxProducersToAudit();
+     }
+
+     public boolean isEnableAudit() {
+         return destination.isEnableAudit();
+     }
+
+     
+     public void setEnableAudit(boolean enableAudit) {
+         destination.setEnableAudit(enableAudit);
+     }
+
+     public void setMaxAuditDepth(int maxAuditDepth) {
+         destination.setMaxAuditDepth(maxAuditDepth);
+     }
+ 
+     public void setMaxProducersToAudit(int maxProducersToAudit) {
+         destination.setMaxProducersToAudit(maxProducersToAudit);
+     }
+
+    
+    public float getMemoryLimitPortion() {
+        return destination.getMemoryUsage().getUsagePortion();
+    }
+
+    public long getProducerCount() {
+        return destination.getDestinationStatistics().getProducers().getCount();
+    }
+
+    public boolean isProducerFlowControl() {
+       return destination.isProducerFlowControl();
+    }
+    
+    public void setMemoryLimitPortion(float value) {
+        destination.getMemoryUsage().setUsagePortion(value);
+    }
+
+    public void setProducerFlowControl(boolean producerFlowControl) {
+      destination.setProducerFlowControl(producerFlowControl);      
+    }
+  
 }

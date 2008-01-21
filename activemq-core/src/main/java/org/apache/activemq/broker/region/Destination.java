@@ -53,7 +53,7 @@ public interface Destination extends Service {
 
     ActiveMQDestination getActiveMQDestination();
 
-    MemoryUsage getBrokerMemoryUsage();
+    MemoryUsage getMemoryUsage();
 
     void dispose(ConnectionContext context) throws IOException;
 
@@ -70,4 +70,20 @@ public interface Destination extends Service {
     boolean isProducerFlowControl();
     
     void setProducerFlowControl(boolean value);
+    
+    int getMaxProducersToAudit();
+    
+    void setMaxProducersToAudit(int maxProducersToAudit);
+   
+    int getMaxAuditDepth();
+   
+    void setMaxAuditDepth(int maxAuditDepth);
+  
+    boolean isEnableAudit();
+    
+    void setEnableAudit(boolean enableAudit);
+    
+    boolean isActive();
+    
+    
 }

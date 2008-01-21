@@ -64,6 +64,12 @@ public abstract class BaseDestination implements Destination {
         this.destinationStatistics.setEnabled(parentStats.isEnabled());
         this.destinationStatistics.setParent(parentStats);        
     }
+    
+    /**
+     * initialize the destination
+     * @throws Exception
+     */
+    public abstract void initialize() throws Exception;
     /**
      * @return the producerFlowControl
      */
@@ -121,7 +127,7 @@ public abstract class BaseDestination implements Destination {
         destinationStatistics.getProducers().decrement();
     }
     
-    public final MemoryUsage getBrokerMemoryUsage() {
+    public final MemoryUsage getMemoryUsage() {
         return memoryUsage;
     }
 
@@ -143,6 +149,11 @@ public abstract class BaseDestination implements Destination {
     
     public final MessageStore getMessageStore() {
         return store;
+    }
+    
+    public final boolean isActive() {
+        return destinationStatistics.getConsumers().getCount() != 0 ||
+            destinationStatistics.getProducers().getCount() != 0;
     }
 
 

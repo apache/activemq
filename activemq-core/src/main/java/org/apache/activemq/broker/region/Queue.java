@@ -150,6 +150,9 @@ public class Queue extends BaseDestination implements Task {
                         return true;
                     }
                 });
+            }else {
+                int messageCount = store.getMessageCount();
+                destinationStatistics.getMessages().setCount(messageCount);
             }
         }
     }
@@ -320,7 +323,8 @@ public class Queue extends BaseDestination implements Task {
         final boolean sendProducerAck = !message.isResponseRequired() && producerInfo.getWindowSize() > 0 && !context.isInRecoveryMode();
         if (message.isExpired()) {
             broker.messageExpired(context, message);
-            destinationStatistics.getMessages().decrement();
+            //message not added to stats yet
+            //destinationStatistics.getMessages().decrement();
             if (sendProducerAck) {
                 ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
                 context.getConnection().dispatchAsync(ack);
@@ -346,7 +350,8 @@ public class Queue extends BaseDestination implements Task {
                                 // message may have expired.
                                 if (broker.isExpired(message)) {
                                     broker.messageExpired(context, message);
-                                    destinationStatistics.getMessages().decrement();
+                                    //message not added to stats yet
+                                    //destinationStatistics.getMessages().decrement();
                                 } else {
                                     doMessageSend(producerExchange, message);
                                 }
@@ -436,7 +441,8 @@ public class Queue extends BaseDestination implements Task {
                         // op, by that time the message could have expired..
                         if (broker.isExpired(message)) {
                             broker.messageExpired(context, message);
-                            destinationStatistics.getMessages().decrement();
+                            //message not added to stats yet
+                            //destinationStatistics.getMessages().decrement();
                             return;
                         }
                         sendMessage(context, message);

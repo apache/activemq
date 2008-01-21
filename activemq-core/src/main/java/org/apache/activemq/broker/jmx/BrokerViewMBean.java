@@ -20,6 +20,7 @@ import javax.management.ObjectName;
 
 import org.apache.activemq.Service;
 
+
 /**
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (for the reloadLog4jProperties method)
  * @version $Revision$
@@ -65,6 +66,18 @@ public interface BrokerViewMBean extends Service {
     long getMemoryLimit();
 
     void setMemoryLimit(long limit);
+        
+    int getStorePercentageUsed();
+
+    long getStoreLimit();
+
+    void setStoreLimit(long limit);
+    
+    int getTmpPercentageUsed();
+
+    long getTmpLimit();
+
+    void setTmpLimit(long limit);
     
     boolean isPersistent();
 
