@@ -70,7 +70,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         throw new RuntimeException("Use addMessageReference instead");
     }
 
-    public void addMessageReference(final ConnectionContext context, final MessageId messageId,
+    public synchronized void addMessageReference(final ConnectionContext context, final MessageId messageId,
                                     final ReferenceData data) {
         final ReferenceRecord record = new ReferenceRecord(messageId.toString(), data);
         final int subscriberCount = subscriberMessages.size();
