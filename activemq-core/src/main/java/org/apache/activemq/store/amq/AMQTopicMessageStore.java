@@ -145,16 +145,21 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
      * @param key
      * @throws IOException 
      */
-    protected void acknowledge(ConnectionContext context, MessageId messageId,
+    protected void acknowledge(final ConnectionContext context, MessageId messageId,
             Location location, String clientId, String subscriptionName)
             throws IOException {
+        MessageAck ack = null;
         synchronized (this) {
             lastLocation = location;
+        
+            if (topicReferenceStore.acknowledgeReference(context, clientId,
+                    subscriptionName, messageId)) {
+                ack = new MessageAck();
+                ack.setLastMessageId(messageId);
+               
+            }
         }
-        if (topicReferenceStore.acknowledgeReference(context, clientId,
-                subscriptionName, messageId)) {
-            MessageAck ack = new MessageAck();
-            ack.setLastMessageId(messageId);
+        if (ack != null) {
             removeMessage(context, ack);
         }
     }
