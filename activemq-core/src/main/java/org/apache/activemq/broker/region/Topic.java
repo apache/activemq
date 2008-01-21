@@ -99,6 +99,13 @@ public class Topic  extends BaseDestination  implements Task{
         } 
         this.taskRunner = taskFactory.createTaskRunner(this, "Topic  " + destination.getPhysicalName());
     }
+    
+    public void initialize() throws Exception{
+        if (store != null) {
+            int messageCount = store.getMessageCount();
+            destinationStatistics.getMessages().setCount(messageCount);
+        }
+    }
 
     public boolean lock(MessageReference node, LockOwner sub) {
         return true;
@@ -288,7 +295,8 @@ public class Topic  extends BaseDestination  implements Task{
                                 // message may have expired.
                                 if (broker.isExpired(message)) {
                                     broker.messageExpired(context, message);
-                                    destinationStatistics.getMessages().decrement();
+                                    //destinationStatistics.getEnqueues().increment();
+                                    //destinationStatistics.getMessages().decrement();
                                 } else {
                                     doMessageSend(producerExchange, message);
                                 }
@@ -394,7 +402,8 @@ public class Topic  extends BaseDestination  implements Task{
                     if (broker.isExpired(message)) {
                         broker.messageExpired(context, message);
                         message.decrementReferenceCount();
-                        destinationStatistics.getMessages().decrement();
+                        //destinationStatistics.getEnqueues().increment();
+                        //destinationStatistics.getMessages().decrement();
                         return;
                     }
                     try {
@@ -543,6 +552,7 @@ public class Topic  extends BaseDestination  implements Task{
     // Implementation methods
     // -------------------------------------------------------------------------
     protected void dispatch(final ConnectionContext context, Message message) throws Exception {
+        destinationStatistics.getMessages().increment();
         destinationStatistics.getEnqueues().increment();
         dispatchValve.increment();
         MessageEvaluationContext msgContext = context.getMessageEvaluationContext();

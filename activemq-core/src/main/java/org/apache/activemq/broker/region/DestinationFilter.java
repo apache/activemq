@@ -81,8 +81,8 @@ public class DestinationFilter implements Destination {
         return next.getName();
     }
 
-    public MemoryUsage getBrokerMemoryUsage() {
-        return next.getBrokerMemoryUsage();
+    public MemoryUsage getMemoryUsage() {
+        return next.getMemoryUsage();
     }
 
     public boolean lock(MessageReference node, LockOwner lockOwner) {
@@ -141,6 +141,34 @@ public class DestinationFilter implements Destination {
             throws Exception {
        next.removeProducer(context, info);
     }
+
+    public int getMaxAuditDepth() {
+       return next.getMaxAuditDepth();
+    }
+
+    public int getMaxProducersToAudit() {
+        return next.getMaxProducersToAudit();
+    }
+
+    public boolean isEnableAudit() {
+        return next.isEnableAudit();
+    }
+
     
+    public void setEnableAudit(boolean enableAudit) {
+        next.setEnableAudit(enableAudit);
+    }
+
+    public void setMaxAuditDepth(int maxAuditDepth) {
+       next.setMaxAuditDepth(maxAuditDepth);
+    }
+
     
+    public void setMaxProducersToAudit(int maxProducersToAudit) {
+       next.setMaxProducersToAudit(maxProducersToAudit);
+    }
+    
+    public boolean isActive() {
+        return next.isActive();
+    }
 }

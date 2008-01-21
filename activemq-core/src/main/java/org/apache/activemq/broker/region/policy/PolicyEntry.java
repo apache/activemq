@@ -67,7 +67,7 @@ public class PolicyEntry extends DestinationMapEntry {
         }
         queue.setMessageGroupMapFactory(getMessageGroupMapFactory());
         if (memoryLimit > 0) {
-            queue.getBrokerMemoryUsage().setLimit(memoryLimit);
+            queue.getMemoryUsage().setLimit(memoryLimit);
         }
         if (pendingQueuePolicy != null) {
             PendingMessageCursor messages = pendingQueuePolicy.getQueuePendingMessageCursor(queue, tmpStore);
@@ -91,7 +91,7 @@ public class PolicyEntry extends DestinationMapEntry {
         }
         topic.setSendAdvisoryIfNoConsumers(sendAdvisoryIfNoConsumers);
         if (memoryLimit > 0) {
-            topic.getBrokerMemoryUsage().setLimit(memoryLimit);
+            topic.getMemoryUsage().setLimit(memoryLimit);
         }
         topic.setProducerFlowControl(isProducerFlowControl());
         topic.setEnableAudit(isEnableAudit());

@@ -67,6 +67,11 @@ public interface DestinationViewMBean {
      * @return The number of consumers subscribed this destination.
      */
     long getConsumerCount();
+    
+    /**
+     * @return the number of producers publishing to the destination
+     */
+    long getProducerCount();
 
     /**
      * Returns the number of messages in this destination which are yet to be
@@ -119,11 +124,32 @@ public interface DestinationViewMBean {
      */
     String sendTextMessage(Map headers, String body) throws Exception;
 
+    /**
+     * @return the percentage of amount of memory used
+     */
     int getMemoryPercentageUsed();
 
+    /**
+     * @return the amount of memory allocated to this destination
+     */
     long getMemoryLimit();
 
+    /**
+     * set the amount of memory allocated to this destination
+     * @param limit
+     */
     void setMemoryLimit(long limit);
+    
+    /**
+     * @return the portion of memory from the broker memory limit for this destination
+     */
+    float getMemoryLimitPortion();
+    
+    /**
+     * set the portion of memory from the broker memory limit for this destination
+     * @param value
+     */
+    void setMemoryLimitPortion(float value);
 
     /**
      * Browses the current destination returning a list of messages
@@ -150,5 +176,34 @@ public interface DestinationViewMBean {
      * @return average time a message is held by a destination
      */
     double getAverageEnqueueTime();
+    
+    /**
+     * @return the producerFlowControl
+     */
+    boolean isProducerFlowControl();
+    /**
+     * @param producerFlowControl the producerFlowControl to set
+     */
+    public void setProducerFlowControl(boolean producerFlowControl);
+    
+    /**
+     * @return the maxProducersToAudit
+     */
+    public int getMaxProducersToAudit();
+    
+    /**
+     * @param maxProducersToAudit the maxProducersToAudit to set
+     */
+    public void setMaxProducersToAudit(int maxProducersToAudit);
+    
+    /**
+     * @return the maxAuditDepth
+     */
+    public int getMaxAuditDepth();
+    
+    /**
+     * @param maxAuditDepth the maxAuditDepth to set
+     */
+    public void setMaxAuditDepth(int maxAuditDepth);
 
 }

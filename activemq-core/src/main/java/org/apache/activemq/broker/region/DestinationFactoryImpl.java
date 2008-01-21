@@ -115,6 +115,7 @@ public class DestinationFactoryImpl extends DestinationFactory {
             }
             Topic topic = new Topic(broker.getRoot(), destination, store, memoryManager, destinationStatistics, taskRunnerFactory);
             configureTopic(topic, destination);
+            topic.initialize();
             return topic;
         }
     }
