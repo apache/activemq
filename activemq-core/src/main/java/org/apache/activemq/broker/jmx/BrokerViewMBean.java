@@ -61,23 +61,23 @@ public interface BrokerViewMBean extends Service {
 
     long getTotalMessageCount();
 
-    int getMemoryPercentageUsed();
+    int getMemoryPercentUsage();
 
     long getMemoryLimit();
 
     void setMemoryLimit(long limit);
         
-    int getStorePercentageUsed();
+    int getStorePercentUsage();
 
     long getStoreLimit();
 
     void setStoreLimit(long limit);
     
-    int getTmpPercentageUsed();
+    int getTempPercentUsage();
 
-    long getTmpLimit();
+    long getTempLimit();
 
-    void setTmpLimit(long limit);
+    void setTempLimit(long limit);
     
     boolean isPersistent();
 

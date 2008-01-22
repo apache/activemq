@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.region.cursors;
 
 import org.apache.activemq.ActiveMQMessageAudit;
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.Message;
@@ -33,9 +34,9 @@ import org.apache.commons.logging.LogFactory;
 public class StoreQueueCursor extends AbstractPendingMessageCursor {
 
     private static final Log LOG = LogFactory.getLog(StoreQueueCursor.class);
+    private Broker broker;
     private int pendingCount;
     private Queue queue;
-    private Store tmpStore;
     private PendingMessageCursor nonPersistent;
     private QueueStorePrefetch persistent;
     private boolean started;
@@ -47,9 +48,9 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
      * @param queue
      * @param tmpStore
      */
-    public StoreQueueCursor(Queue queue, Store tmpStore) {
+    public StoreQueueCursor(Broker broker,Queue queue) {
+        this.broker=broker;
         this.queue = queue;
-        this.tmpStore = tmpStore;
         this.persistent = new QueueStorePrefetch(queue);
         currentCursor = persistent;
     }
@@ -58,7 +59,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         started = true;
         super.start();
         if (nonPersistent == null) {
-            nonPersistent = new FilePendingMessageCursor(queue.getDestination(), tmpStore);
+            nonPersistent = new FilePendingMessageCursor(broker,queue.getName());
             nonPersistent.setMaxBatchSize(getMaxBatchSize());
             nonPersistent.setSystemUsage(systemUsage);
             nonPersistent.setEnableAudit(isEnableAudit());

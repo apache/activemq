@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.broker.region.policy;
 
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.cursors.FilePendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
-import org.apache.activemq.kaha.Store;
 
 /**
  * Creates a FilePendingMessageCursor *
@@ -32,14 +32,14 @@ import org.apache.activemq.kaha.Store;
 public class FilePendingQueueMessageStoragePolicy implements PendingQueueMessageStoragePolicy {
 
     /**
+     * @param broker 
      * @param queue
-     * @param tmpStore
      * @return the cursor
      * @see org.apache.activemq.broker.region.policy.PendingQueueMessageStoragePolicy#getQueuePendingMessageCursor(org.apache.openjpa.lib.util.concurrent.Queue,
      *      org.apache.activemq.kaha.Store)
      */
-    public PendingMessageCursor getQueuePendingMessageCursor(Queue queue, Store tmpStore) {
-        return new FilePendingMessageCursor("PendingCursor:" + queue.getName(), tmpStore);
+    public PendingMessageCursor getQueuePendingMessageCursor(Broker broker,Queue queue) {
+        return new FilePendingMessageCursor(broker,"PendingCursor:" + queue.getName());
     }
 
 }

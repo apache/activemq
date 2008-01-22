@@ -127,7 +127,7 @@ public interface DestinationViewMBean {
     /**
      * @return the percentage of amount of memory used
      */
-    int getMemoryPercentageUsed();
+    int getMemoryPercentUsage();
 
     /**
      * @return the amount of memory allocated to this destination
@@ -143,13 +143,13 @@ public interface DestinationViewMBean {
     /**
      * @return the portion of memory from the broker memory limit for this destination
      */
-    float getMemoryLimitPortion();
+    float getMemoryUsagePortion();
     
     /**
      * set the portion of memory from the broker memory limit for this destination
      * @param value
      */
-    void setMemoryLimitPortion(float value);
+    void setMemoryUsagePortion(float value);
 
     /**
      * Browses the current destination returning a list of messages

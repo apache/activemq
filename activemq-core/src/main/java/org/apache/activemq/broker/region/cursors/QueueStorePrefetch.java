@@ -94,7 +94,7 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements Message
     }
 
     public synchronized void addMessageLast(MessageReference node) throws Exception {
-        if (cacheEnabled && !isFull()) {
+        if (cacheEnabled && hasSpace()) {
             //optimization - A persistent queue will add the message to
             //to store then retrieve it again from the store.
             recoverMessage(node.getMessage());

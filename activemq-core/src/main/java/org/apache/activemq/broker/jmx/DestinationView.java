@@ -93,7 +93,7 @@ public class DestinationView implements DestinationViewMBean {
         return destination.getDestinationStatistics().getMessagesCached().getCount();
     }
 
-    public int getMemoryPercentageUsed() {
+    public int getMemoryPercentUsage() {
         return destination.getMemoryUsage().getPercentUsage();
     }
 
@@ -294,7 +294,7 @@ public class DestinationView implements DestinationViewMBean {
      }
 
     
-    public float getMemoryLimitPortion() {
+    public float getMemoryUsagePortion() {
         return destination.getMemoryUsage().getUsagePortion();
     }
 
@@ -306,7 +306,7 @@ public class DestinationView implements DestinationViewMBean {
        return destination.isProducerFlowControl();
     }
     
-    public void setMemoryLimitPortion(float value) {
+    public void setMemoryUsagePortion(float value) {
         destination.getMemoryUsage().setUsagePortion(value);
     }
 

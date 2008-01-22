@@ -16,9 +16,9 @@
  */
 package org.apache.activemq.broker.region.policy;
 
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
-import org.apache.activemq.kaha.Store;
 
 /**
  * Creates a VMPendingMessageCursor *
@@ -31,15 +31,14 @@ import org.apache.activemq.kaha.Store;
 public class VMPendingSubscriberMessageStoragePolicy implements PendingSubscriberMessageStoragePolicy {
 
     /**
+     * @param broker
      * @param name
-     * @param tmpStorage
      * @param maxBatchSize
      * @return a Cursor
      * @see org.apache.activemq.broker.region.policy.PendingSubscriberMessageStoragePolicy#getSubscriberPendingMessageCursor(java.lang.String,
      *      org.apache.activemq.kaha.Store, int)
      */
-    public PendingMessageCursor getSubscriberPendingMessageCursor(String name, Store tmpStorage,
-                                                                  int maxBatchSize) {
+    public PendingMessageCursor getSubscriberPendingMessageCursor(Broker broker,String name,int maxBatchSize) {
         return new VMPendingMessageCursor();
     }
 }

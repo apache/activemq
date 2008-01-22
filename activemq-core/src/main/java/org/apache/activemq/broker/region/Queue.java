@@ -95,14 +95,14 @@ public class Queue extends BaseDestination implements Task {
         };
     };
     
-    public Queue(Broker broker, ActiveMQDestination destination, final SystemUsage systemUsage, MessageStore store, DestinationStatistics parentStats,
-                 TaskRunnerFactory taskFactory, Store tmpStore) throws Exception {
+    public Queue(Broker broker, ActiveMQDestination destination, final SystemUsage systemUsage,MessageStore store,DestinationStatistics parentStats,
+                 TaskRunnerFactory taskFactory) throws Exception {
         super(broker, store, destination,systemUsage, parentStats);
         
-        if (destination.isTemporary() || tmpStore==null ) {
+        if (destination.isTemporary() || broker == null || store==null ) {
             this.messages = new VMPendingMessageCursor();
         } else {
-            this.messages = new StoreQueueCursor(this, tmpStore);
+            this.messages = new StoreQueueCursor(broker,this);
         }
 
         this.taskRunner = taskFactory.createTaskRunner(this, "Queue  " + destination.getPhysicalName());
@@ -318,11 +318,11 @@ public class Queue extends BaseDestination implements Task {
         final ConnectionContext context = producerExchange.getConnectionContext();
         // There is delay between the client sending it and it arriving at the
         // destination.. it may have expired.
-
+        message.setRegionDestination(this);
         final ProducerInfo producerInfo = producerExchange.getProducerState().getInfo();
         final boolean sendProducerAck = !message.isResponseRequired() && producerInfo.getWindowSize() > 0 && !context.isInRecoveryMode();
         if (message.isExpired()) {
-            broker.messageExpired(context, message);
+            broker.getRoot().messageExpired(context, message);
             //message not added to stats yet
             //destinationStatistics.getMessages().decrement();
             if (sendProducerAck) {
@@ -402,6 +402,7 @@ public class Queue extends BaseDestination implements Task {
                     if (log.isDebugEnabled()) {
                         log.debug("Expired message: " + message);
                     }
+                    broker.getRoot().messageExpired(context, message);
                     return;
                 }
             }
@@ -416,7 +417,6 @@ public class Queue extends BaseDestination implements Task {
     void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message) throws IOException, Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
         synchronized (sendLock) {
-            message.setRegionDestination(this);
             if (store != null && message.isPersistent()) {
                 while (!systemUsage.getStoreUsage().waitForSpace(1000)) {
                     if (context.getStopping().get()) {
@@ -678,11 +678,7 @@ public class Queue extends BaseDestination implements Task {
 
                     // We should only delete messages that can be locked.
                     if (r.lock(LockOwner.HIGH_PRIORITY_LOCK_OWNER)) {
-                        MessageAck ack = new MessageAck();
-                        ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
-                        ack.setDestination(destination);
-                        ack.setMessageID(r.getMessageId());
-                        removeMessage(c, null, r, ack);
+                        removeMessage(c,(IndirectMessageReference) r);
                     }
                 } catch (IOException e) {
                 }

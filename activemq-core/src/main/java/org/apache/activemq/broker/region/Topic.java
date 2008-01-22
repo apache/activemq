@@ -184,8 +184,8 @@ public class Topic  extends BaseDestination  implements Task{
             }
 
             // Recover the durable subscription.
-            String clientId = subscription.getClientId();
-            String subscriptionName = subscription.getSubscriptionName();
+            String clientId = subscription.getSubscriptionKey().getClientId();
+            String subscriptionName = subscription.getSubscriptionKey().getSubscriptionName();
             String selector = subscription.getConsumerInfo().getSelector();
             SubscriptionInfo info = topicStore.lookupSubscription(clientId, subscriptionName);
             if (info != null) {
@@ -435,7 +435,8 @@ public class Topic  extends BaseDestination  implements Task{
     public void acknowledge(ConnectionContext context, Subscription sub, final MessageAck ack, final MessageReference node) throws IOException {
         if (topicStore != null && node.isPersistent()) {
             DurableTopicSubscription dsub = (DurableTopicSubscription)sub;
-            topicStore.acknowledge(context, dsub.getClientId(), dsub.getSubscriptionName(), node.getMessageId());
+            SubscriptionKey key = dsub.getSubscriptionKey();
+            topicStore.acknowledge(context, key.getClientId(), key.getSubscriptionName(), node.getMessageId());
         }
     }
 

@@ -52,7 +52,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     public DurableTopicSubscription(Broker broker, Destination dest,SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, boolean keepDurableSubsActive)
         throws JMSException {
         super(broker,usageManager, context, info);
-        this.pending = new StoreDurableSubscriberCursor(context.getClientId(), info.getSubscriptionName(), broker.getTempDataStore(), info.getPrefetchSize(), this);
+        this.pending = new StoreDurableSubscriberCursor(broker,context.getClientId(), info.getSubscriptionName(), info.getPrefetchSize(), this);
         this.pending.setSystemUsage(usageManager);
         this.keepDurableSubsActive = keepDurableSubsActive;
         subscriptionKey = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
@@ -218,17 +218,10 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         node.decrementReferenceCount();
     }
 
-    public String getSubscriptionName() {
-        return subscriptionKey.getSubscriptionName();
-    }
-
+    
     public synchronized String toString() {
         return "DurableTopicSubscription:" + " consumer=" + info.getConsumerId() + ", destinations=" + destinations.size() + ", total=" + enqueueCounter + ", pending="
                + getPendingQueueSize() + ", dispatched=" + dispatchCounter + ", inflight=" + dispatched.size() + ", prefetchExtension=" + this.prefetchExtension;
-    }
-
-    public String getClientId() {
-        return subscriptionKey.getClientId();
     }
 
     public SubscriptionKey getSubscriptionKey() {

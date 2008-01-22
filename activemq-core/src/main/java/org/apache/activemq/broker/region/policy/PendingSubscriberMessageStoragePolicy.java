@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.broker.region.policy;
 
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
-import org.apache.activemq.kaha.Store;
 
 /**
  * Abstraction to allow different policies for holding messages awaiting
@@ -29,11 +29,11 @@ public interface PendingSubscriberMessageStoragePolicy {
 
     /**
      * Retrieve the configured pending message storage cursor;
+     * @param broker 
      * 
      * @param name
-     * @param tmpStorage
      * @param maxBatchSize
      * @return the Pending Message cursor
      */
-    PendingMessageCursor getSubscriberPendingMessageCursor(String name, Store tmpStorage, int maxBatchSize);
+    PendingMessageCursor getSubscriberPendingMessageCursor(Broker broker,String name,int maxBatchSize);
 }

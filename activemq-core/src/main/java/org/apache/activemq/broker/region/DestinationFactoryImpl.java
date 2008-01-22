@@ -76,7 +76,7 @@ public class DestinationFactoryImpl extends DestinationFactory {
         if (destination.isQueue()) {
             if (destination.isTemporary()) {
                 final ActiveMQTempDestination tempDest = (ActiveMQTempDestination)destination;
-                return new Queue(broker.getRoot(), destination, memoryManager, null, destinationStatistics, taskRunnerFactory, broker.getTempDataStore()) {
+                return new Queue(broker.getRoot(), destination, memoryManager, null, destinationStatistics, taskRunnerFactory) {
 
                     public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
                         // Only consumers on the same connection can consume
@@ -90,7 +90,7 @@ public class DestinationFactoryImpl extends DestinationFactory {
                 };
             } else {
                 MessageStore store = persistenceAdapter.createQueueMessageStore((ActiveMQQueue)destination);
-                Queue queue = new Queue(broker.getRoot(), destination, memoryManager, store, destinationStatistics, taskRunnerFactory, broker.getTempDataStore());
+                Queue queue = new Queue(broker.getRoot(), destination, memoryManager, store, destinationStatistics, taskRunnerFactory);
                 configureQueue(queue, destination);
                 queue.initialize();
                 return queue;
@@ -127,7 +127,7 @@ public class DestinationFactoryImpl extends DestinationFactory {
         if (broker.getDestinationPolicy() != null) {
             PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
             if (entry != null) {
-                entry.configure(queue, broker.getTempDataStore());
+                entry.configure(broker,queue);
             }
         }
     }
