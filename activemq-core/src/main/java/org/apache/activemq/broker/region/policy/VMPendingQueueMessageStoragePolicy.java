@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.broker.region.policy;
 
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
-import org.apache.activemq.kaha.Store;
 
 /**
  * Creates a VMPendingMessageCursor *
@@ -32,11 +32,11 @@ import org.apache.activemq.kaha.Store;
 public class VMPendingQueueMessageStoragePolicy implements PendingQueueMessageStoragePolicy {
 
     /**
+     * @param broker 
      * @param queue
-     * @param tmpStore
      * @return the cursor
      */
-    public PendingMessageCursor getQueuePendingMessageCursor(Queue queue, Store tmpStore) {
+    public PendingMessageCursor getQueuePendingMessageCursor(Broker broker,Queue queue) {
         return new VMPendingMessageCursor();
     }
 }

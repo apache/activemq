@@ -23,13 +23,13 @@ import java.util.LinkedList;
 import java.util.Map;
 
 import org.apache.activemq.advisory.AdvisorySupport;
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.Message;
-import org.apache.activemq.kaha.Store;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -53,16 +53,19 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     private final Subscription subscription;
 
     /**
+     * @param broker 
      * @param topic
      * @param clientId
      * @param subscriberName
+     * @param maxBatchSize 
+     * @param subscription 
      * @throws IOException
      */
-    public StoreDurableSubscriberCursor(String clientId, String subscriberName, Store store, int maxBatchSize, Subscription subscription) {
+    public StoreDurableSubscriberCursor(Broker broker,String clientId, String subscriberName,int maxBatchSize, Subscription subscription) {
         this.clientId = clientId;
         this.subscriberName = subscriberName;
         this.subscription = subscription;
-        this.nonPersistent = new FilePendingMessageCursor(clientId + subscriberName, store);
+        this.nonPersistent = new FilePendingMessageCursor(broker,clientId + subscriberName);
         storePrefetches.add(nonPersistent);
     }
 

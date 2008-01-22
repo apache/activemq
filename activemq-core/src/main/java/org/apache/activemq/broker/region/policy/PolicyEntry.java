@@ -25,7 +25,6 @@ import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
 import org.apache.activemq.broker.region.group.MessageGroupHashBucketFactory;
 import org.apache.activemq.broker.region.group.MessageGroupMapFactory;
 import org.apache.activemq.filter.DestinationMapEntry;
-import org.apache.activemq.kaha.Store;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -58,7 +57,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private boolean producerFlowControl = true;
     private boolean optimizedDispatch=false;
    
-    public void configure(Queue queue, Store tmpStore) {
+    public void configure(Broker broker,Queue queue) {
         if (dispatchPolicy != null) {
             queue.setDispatchPolicy(dispatchPolicy);
         }
@@ -70,7 +69,7 @@ public class PolicyEntry extends DestinationMapEntry {
             queue.getMemoryUsage().setLimit(memoryLimit);
         }
         if (pendingQueuePolicy != null) {
-            PendingMessageCursor messages = pendingQueuePolicy.getQueuePendingMessageCursor(queue, tmpStore);
+            PendingMessageCursor messages = pendingQueuePolicy.getQueuePendingMessageCursor(broker,queue);
             queue.setMessages(messages);
         }
         queue.setProducerFlowControl(isProducerFlowControl());
@@ -121,16 +120,16 @@ public class PolicyEntry extends DestinationMapEntry {
         if (pendingSubscriberPolicy != null) {
             String name = subscription.getContext().getClientId() + "_" + subscription.getConsumerInfo().getConsumerId();
             int maxBatchSize = subscription.getConsumerInfo().getPrefetchSize();
-            subscription.setMatched(pendingSubscriberPolicy.getSubscriberPendingMessageCursor(name, broker.getTempDataStore(), maxBatchSize));
+            subscription.setMatched(pendingSubscriberPolicy.getSubscriberPendingMessageCursor(broker,name, maxBatchSize));
         }
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, DurableTopicSubscription sub) {
-        String clientId = sub.getClientId();
-        String subName = sub.getSubscriptionName();
+        String clientId = sub.getSubscriptionKey().getClientId();
+        String subName = sub.getSubscriptionKey().getSubscriptionName();
         int prefetch = sub.getPrefetchSize();
         if (pendingDurableSubscriberPolicy != null) {
-            PendingMessageCursor cursor = pendingDurableSubscriberPolicy.getSubscriberPendingMessageCursor(clientId, subName, broker.getTempDataStore(), prefetch, sub);
+            PendingMessageCursor cursor = pendingDurableSubscriberPolicy.getSubscriberPendingMessageCursor(broker,clientId, subName,prefetch,sub);
             cursor.setSystemUsage(memoryManager);
             sub.setPending(cursor);
         }

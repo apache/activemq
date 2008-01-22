@@ -705,14 +705,18 @@ public class RegionBroker implements Broker {
 							        deadLetterDestination);
 							sent=true;
 						}
+					}else {
+					  //don't want to warn about failing to send 
+					  // if there isn't a dead letter strategy 
+					   sent=true;
 					}
 				}
 			}
 			if(sent==false){
-				LOG.warn("Failed to send "+node+" to dead letter queue");
+				LOG.warn("Failed to send "+node+" to DLQ");
 			}
 		}catch(Exception e){
-			LOG.warn("Failed to pass expired message to dead letter queue",e);
+			LOG.warn("Caught an exception sending to DLQ: "+node,e);
 		}
 	}
 

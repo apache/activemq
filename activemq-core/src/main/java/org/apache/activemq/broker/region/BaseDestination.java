@@ -139,10 +139,7 @@ public abstract class BaseDestination implements Destination {
         return destination;
     }
 
-    public final String getDestination() {
-        return destination.getPhysicalName();
-    }
-    
+        
     public final String getName() {
         return getActiveMQDestination().getPhysicalName();
     }

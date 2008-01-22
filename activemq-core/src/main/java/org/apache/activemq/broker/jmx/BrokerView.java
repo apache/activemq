@@ -93,7 +93,7 @@ public class BrokerView implements BrokerViewMBean {
         return broker.getDestinationStatistics().getMessagesCached().getCount();
     }
 
-    public int getMemoryPercentageUsed() {
+    public int getMemoryPercentUsage() {
         return brokerService.getSystemUsage().getMemoryUsage().getPercentUsage();
     }
 
@@ -109,16 +109,16 @@ public class BrokerView implements BrokerViewMBean {
         return brokerService.getSystemUsage().getStoreUsage().getLimit();
     }
 
-    public int getStorePercentageUsed() {
+    public int getStorePercentUsage() {
         return brokerService.getSystemUsage().getStoreUsage().getPercentUsage();
     }
 
  
-    public long getTmpLimit() {
+    public long getTempLimit() {
        return brokerService.getSystemUsage().getTempUsage().getLimit();
     }
 
-    public int getTmpPercentageUsed() {
+    public int getTempPercentUsage() {
        return brokerService.getSystemUsage().getTempUsage().getPercentUsage();
     }
 
@@ -126,7 +126,7 @@ public class BrokerView implements BrokerViewMBean {
         brokerService.getSystemUsage().getStoreUsage().setLimit(limit);
     }
 
-    public void setTmpLimit(long limit) {
+    public void setTempLimit(long limit) {
         brokerService.getSystemUsage().getTempUsage().setLimit(limit);
     }
     
@@ -172,7 +172,7 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     public ObjectName[] getTopicSubscribers() {
-        return broker.getTemporaryTopicSubscribers();
+        return broker.getTopicSubscribers();
     }
 
     public ObjectName[] getDurableTopicSubscribers() {

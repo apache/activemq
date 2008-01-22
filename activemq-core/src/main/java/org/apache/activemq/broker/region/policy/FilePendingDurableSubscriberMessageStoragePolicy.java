@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.broker.region.policy;
 
+import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.cursors.FilePendingMessageCursor;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
-import org.apache.activemq.kaha.Store;
 
 /**
  * Creates a PendIngMessageCursor for Durable subscribers *
@@ -33,14 +33,15 @@ public class FilePendingDurableSubscriberMessageStoragePolicy implements Pending
 
     /**
      * Retrieve the configured pending message storage cursor;
+     * @param broker 
      * 
      * @param clientId
      * @param name
-     * @param tmpStorage
      * @param maxBatchSize
+     * @param sub 
      * @return the Pending Message cursor
      */
-    public PendingMessageCursor getSubscriberPendingMessageCursor(String clientId, String name, Store tmpStorage, int maxBatchSize, Subscription sub) {
-        return new FilePendingMessageCursor(name, tmpStorage);
+    public PendingMessageCursor getSubscriberPendingMessageCursor(Broker broker,String clientId, String name, int maxBatchSize, Subscription sub) {
+        return new FilePendingMessageCursor(broker,name);
     }
 }

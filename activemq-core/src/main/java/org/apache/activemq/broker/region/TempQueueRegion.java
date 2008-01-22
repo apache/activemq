@@ -41,7 +41,7 @@ public class TempQueueRegion extends AbstractRegion {
 
     protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
         final ActiveMQTempDestination tempDest = (ActiveMQTempDestination)destination;
-        return new Queue(broker.getRoot(), destination, usageManager, null, destinationStatistics, taskRunnerFactory, null) {
+        return new Queue(broker.getRoot(), destination, usageManager, null, destinationStatistics, taskRunnerFactory) {
 
             public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
 
