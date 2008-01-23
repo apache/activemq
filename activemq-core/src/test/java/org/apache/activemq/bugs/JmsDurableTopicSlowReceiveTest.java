@@ -39,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class JmsDurableTopicSlowReceiveTest extends JmsTopicSendReceiveTest {
     
-    static final int NMSG = 100;
+    static final int NMSG = 200;
     static final int MSIZE = 256000;
     private static final transient Log LOG = LogFactory.getLog(JmsDurableTopicSlowReceiveTest.class);
     private static final String COUNT_PROPERY_NAME = "count";

@@ -19,10 +19,12 @@ package org.apache.activemq.broker.region.cursors;
 import java.io.IOException;
 import java.util.LinkedList;
 
+import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.usage.SystemUsage;
 
 /**
@@ -253,6 +255,18 @@ public interface PendingMessageCursor extends Service {
      * @param message
      */
     public void dispatched(MessageReference message);
+    
+    /**
+     * set the audit
+     * @param audit
+     */
+    public void setMessageAudit(ActiveMQMessageAudit audit);
+    
+    
+    /**
+     * @return the audit - could be null
+     */
+    public ActiveMQMessageAudit getMessageAudit();
 
 
 }

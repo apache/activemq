@@ -245,9 +245,26 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
      * Mark a message as already dispatched
      * @param message
      */
-    public void dispatched(MessageReference message) {   
+    public void dispatched(MessageReference message) {
+    	//add it to the audit
+    	isDuplicate(message.getMessageId());
     }
-
+    
+    /**
+     * set the audit
+     * @param audit
+     */
+    public void setMessageAudit(ActiveMQMessageAudit audit) {
+    	this.audit=audit;
+    }
+    
+    
+    /**
+     * @return the audit
+     */
+    public ActiveMQMessageAudit getMessageAudit() {
+    	return audit;
+    }
 
     protected synchronized boolean  isDuplicate(MessageId messageId) {
         if (!this.enableAudit || this.audit==null) {
@@ -265,6 +282,4 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
     protected synchronized boolean isStarted() {
         return started;
     }
-  
-   
 }

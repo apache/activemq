@@ -127,25 +127,29 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     }
 
     public void add(MessageReference node) throws Exception {
-        boolean pendingEmpty = false;
-        synchronized(pendingLock) {
-            pendingEmpty = pending.isEmpty();
-        }
-        enqueueCounter++;
-        if (optimizedDispatch && !isFull() && pendingEmpty && !isSlave()) {
-            dispatch(node);
-        } else {
-            optimizePrefetch();
-            synchronized(pendingLock) {
-                if (pending.isEmpty() && LOG.isDebugEnabled()) {
-                    LOG.debug("Prefetch limit.");
-                }
-                pending.addMessageLast(node);
-               
-            }
-            dispatchPending();
-        }
-    }
+		boolean pendingEmpty = false;
+		boolean dispatchPending = false;
+		synchronized (pendingLock) {
+			pendingEmpty = pending.isEmpty();
+			enqueueCounter++;
+			if (optimizedDispatch && !isFull() && pendingEmpty && !isSlave()) {
+				pending.dispatched(node);
+				dispatch(node);
+			} else {
+				optimizePrefetch();
+				synchronized (pendingLock) {
+					if (pending.isEmpty() && LOG.isDebugEnabled()) {
+						LOG.debug("Prefetch limit.");
+					}
+					pending.addMessageLast(node);
+					dispatchPending = true;
+				}
+			}
+		}
+		if (dispatchPending) {
+			dispatchPending();
+		}
+	}
 
     public void processMessageDispatchNotification(MessageDispatchNotification mdn) throws Exception {
         synchronized(pendingLock) {
@@ -511,8 +515,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         final Message message = node.getMessage();
         if (message == null) {
             return false;
-        }
-                
+        }         
         // Make sure we can dispatch a message.
         if (canDispatch(node) && !isSlave()) {
             MessageDispatch md = createMessageDispatch(node, message);
@@ -520,11 +523,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             if (node != QueueMessageReference.NULL_MESSAGE) {
                 dispatchCounter++;
                 dispatched.add(node);
-                if(pending != null) {
-                   synchronized(pendingLock) {
-                        pending.dispatched(message);
-                    }
-                }
             } else {
                 prefetchExtension = Math.max(0, prefetchExtension - 1);
             }

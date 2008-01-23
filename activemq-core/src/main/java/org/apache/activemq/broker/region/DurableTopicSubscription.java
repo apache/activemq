@@ -99,6 +99,12 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             this.active = true;
             this.context = context;
             this.info = info;
+            int prefetch = info.getPrefetchSize();
+            if (prefetch>0) {
+            prefetch += prefetch/2;
+            }
+            int depth = Math.max(prefetch, this.pending.getMaxAuditDepth());
+            this.pending.setMaxAuditDepth(depth);
             if (!keepDurableSubsActive) {
                 for (Iterator<Destination> iter = destinations.values()
                         .iterator(); iter.hasNext();) {
