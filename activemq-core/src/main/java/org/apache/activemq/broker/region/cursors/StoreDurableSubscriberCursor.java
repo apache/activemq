@@ -74,6 +74,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
             started = true;
             super.start();
             for (PendingMessageCursor tsp : storePrefetches) {
+            	tsp.setMessageAudit(getMessageAudit());
                 tsp.start();
             }
         }

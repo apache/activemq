@@ -66,7 +66,9 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
             nonPersistent.setMaxAuditDepth(getMaxAuditDepth());
             nonPersistent.setMaxProducersToAudit(getMaxProducersToAudit());
         }
+        nonPersistent.setMessageAudit(getMessageAudit());
         nonPersistent.start();
+        persistent.setMessageAudit(getMessageAudit());
         persistent.start();
         pendingCount = persistent.size() + nonPersistent.size();
     }

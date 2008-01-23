@@ -30,7 +30,6 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.TopicMessageStore;
-import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.usage.Usage;
 import org.apache.activemq.usage.UsageListener;
 import org.apache.commons.logging.Log;
@@ -51,7 +50,7 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements Message
     private String subscriberName;
     private Destination regionDestination;
     private boolean batchResetNeeded = true;
-    private boolean storeMayHaveMoreMessages = true;
+    private boolean storeHasMessages = false;
     private boolean started;
     private final Subscription subscription;
    
@@ -74,8 +73,8 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements Message
         if (!started) {
             started = true;
             super.start();
+            this.storeHasMessages = getStoreSize() > 0;
             getSystemUsage().getMemoryUsage().addUsageListener(this);
-            safeFillBatch();
         }
     }
 
@@ -104,14 +103,14 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements Message
 
     public synchronized void addMessageLast(MessageReference node) throws Exception {
         if (node != null) {
-            storeMayHaveMoreMessages=true;
+        	storeHasMessages=true;
             node.decrementReferenceCount();
         }
     }
 
     public synchronized void addMessageFirst(MessageReference node) throws Exception {
         if (node != null) {
-            storeMayHaveMoreMessages=true;
+        	storeHasMessages=true;
             node.decrementReferenceCount();
             rollback(node.getMessageId());
         }
@@ -168,8 +167,6 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements Message
                    
                 }
                 batchList.put(message.getMessageId(), message);
-            }else {
-                this.storeMayHaveMoreMessages=true;
             }
         }
         return true;
@@ -208,14 +205,13 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements Message
         if (batchResetNeeded) {
             this.store.resetBatching(clientId, subscriberName);
             this.batchResetNeeded = false;
-            this.storeMayHaveMoreMessages = true;
         }
-        while (this.batchList.isEmpty() && this.storeMayHaveMoreMessages) {
-            this.storeMayHaveMoreMessages = false;
+        while (this.batchList.isEmpty() && this.storeHasMessages) {
+            this.storeHasMessages = false;
             this.store.recoverNextMessages(clientId, subscriberName,
                     maxBatchSize, this);
             if (!this.batchList.isEmpty()) {
-                this.storeMayHaveMoreMessages=true;
+                this.storeHasMessages=true;
             }
         }
     }
@@ -240,7 +236,7 @@ class TopicStorePrefetch extends AbstractPendingMessageCursor implements Message
     
     public void onUsageChanged(Usage usage, int oldPercentUsage,int newPercentUsage) {
         if (oldPercentUsage > newPercentUsage && oldPercentUsage >= 90) {
-            storeMayHaveMoreMessages = true;
+        	storeHasMessages = true;
             try {
                 fillBatch();
             } catch (Exception e) {
