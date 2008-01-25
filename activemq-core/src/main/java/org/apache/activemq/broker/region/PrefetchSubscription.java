@@ -59,7 +59,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     protected long enqueueCounter;
     protected long dispatchCounter;
     protected long dequeueCounter;
-    protected boolean optimizedDispatch=true;
+    protected boolean optimizedDispatch=false;
     private int maxProducersToAudit=32;
     private int maxAuditDepth=2048;
     protected final SystemUsage usageManager;
