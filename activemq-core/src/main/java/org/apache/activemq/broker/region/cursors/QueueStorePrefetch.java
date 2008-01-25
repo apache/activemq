@@ -44,12 +44,11 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements Message
     private int size;
     private boolean fillBatchDuplicates;
     private boolean cacheEnabled;
+    private boolean useCache =false;
 
     /**
-     * @param topic
-     * @param clientId
-     * @param subscriberName
-     * @throws IOException
+     * Construct it
+     * @param queue
      */
     public QueueStorePrefetch(Queue queue) {
         this.regionDestination = queue;
@@ -60,7 +59,7 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements Message
     public synchronized void start() throws Exception{
         if (!isStarted()) {
             this.size = getStoreSize();
-            if (this.size==0) {
+            if (this.size==0&&useCache) {
                 cacheEnabled=true;
             }
         }
