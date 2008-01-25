@@ -51,7 +51,6 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
-import org.apache.activemq.kaha.Store;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
@@ -88,10 +87,7 @@ public class Queue extends BaseDestination implements Task {
     private final LinkedList<Runnable> messagesWaitingForSpace = new LinkedList<Runnable>();
     private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
         public void run() {
-            try {
-                taskRunner.wakeup();
-            } catch (InterruptedException e) {
-            }
+            wakeup();
         };
     };
     
@@ -878,7 +874,7 @@ public class Queue extends BaseDestination implements Task {
      */
     public boolean iterate() {
 
-        while (!memoryUsage.isFull() && !messagesWaitingForSpace.isEmpty()) {
+        while (!messagesWaitingForSpace.isEmpty() &&!memoryUsage.isFull()) {
             Runnable op = messagesWaitingForSpace.removeFirst();
             op.run();
         }
@@ -930,11 +926,7 @@ public class Queue extends BaseDestination implements Task {
         synchronized(pagedInMessages) {
             pagedInMessages.remove(reference.getMessageId());
         }
-        try {
-            taskRunner.wakeup();
-        } catch (InterruptedException e) {
-            log.warn("Task Runner failed to wakeup ", e);
-        }
+        wakeup();
     }
 
     protected boolean lockMessage(IndirectMessageReference r) {
@@ -953,7 +945,15 @@ public class Queue extends BaseDestination implements Task {
         }
         destinationStatistics.getEnqueues().increment();
         destinationStatistics.getMessages().increment();
-        pageInMessages(false);
+        wakeup();
+    }
+    
+    final void wakeup() {
+        try {
+            taskRunner.wakeup();
+        } catch (InterruptedException e) {
+            log.warn("Task Runner failed to wakeup ", e);
+        }
     }
 
     
@@ -1020,5 +1020,7 @@ public class Queue extends BaseDestination implements Task {
     private void pageInMessages(boolean force) throws Exception {
             doDispatch(doPageIn(force));
     }
+    
+    
 
 }
