@@ -874,15 +874,16 @@ public class Queue extends BaseDestination implements Task {
      */
     public boolean iterate() {
 
-        while (!messagesWaitingForSpace.isEmpty() &&!memoryUsage.isFull()) {
-            Runnable op = messagesWaitingForSpace.removeFirst();
-            op.run();
-        }
         try {
             pageInMessages(false);
         } catch (Exception e) {
             log.error("Failed to page in more queue messages ", e);
         }
+        while (!messagesWaitingForSpace.isEmpty() &&!memoryUsage.isFull()) {
+            Runnable op = messagesWaitingForSpace.removeFirst();
+            op.run();
+        }
+        
         return false;
     }
 

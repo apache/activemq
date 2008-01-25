@@ -483,7 +483,7 @@ public class AMQMessageStore implements MessageStore {
     }
 
     public void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception {
-        
+        /*
           RecoveryListenerAdapter recoveryListener = new RecoveryListenerAdapter(
                 this, listener);
         if (referenceStore.supportsExternalBatchControl()) {
@@ -510,14 +510,14 @@ public class AMQMessageStore implements MessageStore {
             flush();
             referenceStore.recoverNextMessages(maxReturned, recoveryListener);
         }
-         /*
+        */
         RecoveryListenerAdapter recoveryListener = new RecoveryListenerAdapter(this, listener);
         referenceStore.recoverNextMessages(maxReturned, recoveryListener);
         if (recoveryListener.size() == 0 && recoveryListener.hasSpace()) {
             flush();
             referenceStore.recoverNextMessages(maxReturned, recoveryListener);
         }
-        */
+       
     }
 
     Message getMessage(ReferenceData data) throws IOException {

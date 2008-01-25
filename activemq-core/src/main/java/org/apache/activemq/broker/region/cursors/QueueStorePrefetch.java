@@ -109,7 +109,7 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements Message
 
     public synchronized void remove() {
         size--;
-        if (size==0 && isStarted()) {
+        if (size==0 && isStarted() && cacheEnabled) {
             cacheEnabled=true;
         }
     }
