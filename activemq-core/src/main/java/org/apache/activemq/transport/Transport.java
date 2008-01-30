@@ -132,7 +132,7 @@ public interface Transport extends Service {
     /**
      * Indicates if the transport can handle faults
      * 
-     * @return tru if fault tolerant
+     * @return true if fault tolerant
      */
     boolean isFaultTolerant();
 
