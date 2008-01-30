@@ -84,7 +84,7 @@ public class FailoverTransport implements CompositeTransport {
     //optionally always have a backup created
     private boolean backup=false;
     private List<BackupTransport> backups=new CopyOnWriteArrayList<BackupTransport>();
-    private int backupPoolSize=2;
+    private int backupPoolSize=1;
     
 
     private final TransportListener myTransportListener = createTransportListener();
