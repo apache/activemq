@@ -327,4 +327,12 @@ public class VMTransport implements Transport, Task {
     public boolean isFaultTolerant() {
         return false;
     }
+
+	public boolean isDisposed() {
+		return disposed;
+	}
+
+	public void reconnect(URI uri) throws IOException {
+		throw new IOException("Not supported");
+	}
 }

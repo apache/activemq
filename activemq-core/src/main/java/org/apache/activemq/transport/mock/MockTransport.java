@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.mock;
 
 import java.io.IOException;
+import java.net.URI;
 
 import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.FutureResponse;
@@ -138,5 +139,13 @@ public class MockTransport extends DefaultTransportListener implements Transport
     public boolean isFaultTolerant() {
         return getNext().isFaultTolerant();
     }
+
+	public boolean isDisposed() {
+		return getNext().isDisposed();
+	}
+
+	public void reconnect(URI uri) throws IOException {
+		getNext().reconnect(uri);
+	}
 
 }

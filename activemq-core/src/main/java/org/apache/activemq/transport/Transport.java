@@ -17,6 +17,7 @@
 package org.apache.activemq.transport;
 
 import java.io.IOException;
+import java.net.URI;
 
 import org.apache.activemq.Service;
 
@@ -135,5 +136,17 @@ public interface Transport extends Service {
      * @return true if fault tolerant
      */
     boolean isFaultTolerant();
+    
+    /**
+     * @return true if the transport is disposed
+     */
+    boolean isDisposed();
+    
+    /**
+     * reconnect to another location
+     * @param uri
+     * @throws IOException on failure of if not supported
+     */
+    void reconnect(URI uri) throws IOException;
 
 }
