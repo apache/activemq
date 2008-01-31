@@ -17,6 +17,7 @@
 package org.apache.activemq.transport;
 
 import java.io.IOException;
+import java.net.URI;
 
 /**
  * @version $Revision: 1.5 $
@@ -124,4 +125,12 @@ public class TransportFilter implements TransportListener, Transport {
     public boolean isFaultTolerant() {
         return next.isFaultTolerant();
     }
+
+	public boolean isDisposed() {
+		return next.isDisposed();
+	}
+
+	public void reconnect(URI uri) throws IOException {
+		next.reconnect(uri);
+	}
 }

@@ -17,6 +17,7 @@
 package org.apache.activemq.transport;
 
 import java.io.IOException;
+import java.net.URI;
 
 import org.apache.activemq.util.ServiceSupport;
 import org.apache.commons.logging.Log;
@@ -105,5 +106,14 @@ public abstract class TransportSupport extends ServiceSupport implements Transpo
     public boolean isFaultTolerant() {
         return false;
     }
+    
+   
+	public void reconnect(URI uri) throws IOException {
+		throw new IOException("Not supported");
+	}
+	
+	public boolean isDisposed() {
+		return isStopped();
+	}
 
 }

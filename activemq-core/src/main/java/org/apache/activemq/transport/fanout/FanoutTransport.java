@@ -541,6 +541,12 @@ public class FanoutTransport implements CompositeTransport {
         }
 
     }
+    
+    public void reconnect(URI uri) throws IOException {
+		add(new URI[]{uri});
+		
+	}
+
 
     public String getRemoteAddress() {
         if (primary != null) {
@@ -569,4 +575,7 @@ public class FanoutTransport implements CompositeTransport {
         this.fanOutQueues = fanOutQueues;
     }
 
+	public boolean isDisposed() {
+		return disposed;
+	}
 }

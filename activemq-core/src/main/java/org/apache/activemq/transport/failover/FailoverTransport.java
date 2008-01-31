@@ -35,7 +35,6 @@ import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.transport.CompositeTransport;
-import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
@@ -66,6 +65,7 @@ public class FailoverTransport implements CompositeTransport {
     private final ConcurrentHashMap<Integer, Command> requestMap = new ConcurrentHashMap<Integer, Command>();
 
     private URI connectedTransportURI;
+    private URI failedConnectTransportURI;
     private Transport connectedTransport;
     private final TaskRunner reconnectTask;
     private boolean started;
@@ -96,9 +96,17 @@ public class FailoverTransport implements CompositeTransport {
         // Setup a task that is used to reconnect the a connection async.
         reconnectTask = DefaultThreadPools.getDefaultTaskRunnerFactory().createTaskRunner(new Task() {
             public boolean iterate() {
-            	boolean result = doReconnect();
-            	if(!result) {
+            	boolean result=false;
+            	boolean buildBackup=true;
+            	if (connectedTransport==null && !disposed) {
+            		result=doReconnect();
+            		buildBackup=false;
+            	}
+            	if(buildBackup) {
             		buildBackups();
+            	}else {
+            		//build backups on the next iteration
+            		result=true;
             	}
             	return result;
             }
@@ -171,6 +179,7 @@ public class FailoverTransport implements CompositeTransport {
             if (connectedTransport != null) {
                 initialized = false;
                 ServiceSupport.dispose(connectedTransport);
+                failedConnectTransportURI=connectedTransportURI;
                 connectedTransport = null;
                 connectedTransportURI = null;
             }
@@ -441,8 +450,8 @@ public class FailoverTransport implements CompositeTransport {
     private List<URI> getConnectList() {
         ArrayList<URI> l = new ArrayList<URI>(uris);
         boolean removed = false;
-        if (connectedTransportURI != null) {
-            removed = l.remove(connectedTransportURI);
+        if (failedConnectTransportURI != null) {
+            removed = l.remove(failedConnectTransportURI);
         }
         if (randomize) {
             // Randomly, reorder the list by random swapping
@@ -456,7 +465,7 @@ public class FailoverTransport implements CompositeTransport {
             }
         }
         if (removed) {
-            l.add(connectedTransportURI);
+            l.add(failedConnectTransportURI);
         }
         return l;
     }
@@ -544,6 +553,7 @@ public class FailoverTransport implements CompositeTransport {
                                     restoreTransport(t);  
                             }
                             reconnectDelay = initialReconnectDelay;
+                            failedConnectTransportURI=null;
                             connectedTransportURI = uri;
                             connectedTransport = t;
                             reconnectMutex.notifyAll();
@@ -625,17 +635,26 @@ public class FailoverTransport implements CompositeTransport {
    
    final boolean buildBackups() {
 	   synchronized (reconnectMutex) {
-		   if (backup && backups.size() < backupPoolSize) {
+		   if (!disposed && backup && backups.size() < backupPoolSize) {
 			   List<URI> connectList = getConnectList();
+			   //removed disposed backups
+			   List<BackupTransport>disposedList = new ArrayList<BackupTransport>();
+			   for (BackupTransport bt:backups) {
+				   if (bt.isDisposed()) {
+					   disposedList.add(bt);
+				   }
+			   }
+			   backups.removeAll(disposedList);
+			   disposedList.clear();
 			   for (Iterator<URI>iter = connectList.iterator();iter.hasNext() && backups.size() < backupPoolSize;) {
 				   URI uri = iter.next();
 				   if (connectedTransportURI != null && !connectedTransportURI.equals(uri)) {
 					   try {
-						   BackupTransport bt = new BackupTransport();
+						   BackupTransport bt = new BackupTransport(this);
 						   bt.setUri(uri);
 						   if (!backups.contains(bt)) {
 							   Transport t = TransportFactory.compositeConnect(uri);
-		                       t.setTransportListener(new DefaultTransportListener());
+		                       t.setTransportListener(bt);
 		                       t.start();
 		                       bt.setTransport(t);
 		                       backups.add(bt);
@@ -649,6 +668,14 @@ public class FailoverTransport implements CompositeTransport {
 	   }
 	   return false;
    }
+
+public boolean isDisposed() {
+	return disposed;
+}
+
+public void reconnect(URI uri) throws IOException {
+	add(new URI[] {uri});
+}
 
 
 

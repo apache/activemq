@@ -18,13 +18,28 @@
 
 package org.apache.activemq.transport.failover;
 
+import java.io.IOException;
 import java.net.URI;
 
+import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.Transport;
 
-public class BackupTransport {
+class BackupTransport extends DefaultTransportListener{
+	private FailoverTransport failoverTransport;
 	private Transport transport;
 	private URI uri;
+	private boolean disposed;
+	
+	BackupTransport(FailoverTransport ft){
+		this.failoverTransport=ft;
+	}
+	public void onException(IOException error) {
+		this.disposed=true;
+		if (failoverTransport!=null) {
+			this.failoverTransport.reconnect();
+		}
+	}
+
 	public Transport getTransport() {
 		return transport;
 	}
@@ -36,6 +51,14 @@ public class BackupTransport {
 	}
 	public void setUri(URI uri) {
 		this.uri = uri;
+	}
+	
+	public boolean isDisposed() {
+		return disposed || transport != null && transport.isDisposed();
+	}
+	
+	public void setDisposed(boolean disposed) {
+		this.disposed = disposed;
 	}
 	
 	public int hashCode() {
