@@ -28,14 +28,14 @@ import org.apache.activemq.util.LinkedNode;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-class DataFile extends LinkedNode implements Comparable<DataFile> {
+public class DataFile extends LinkedNode implements Comparable<DataFile> {
 
-    private final File file;
-    private final Integer dataFileId;
-    private final int preferedSize;
+    protected final File file;
+    protected final Integer dataFileId;
+    protected final int preferedSize;
 
-    private int length;
-    private int referenceCount;
+    protected int length;
+    protected int referenceCount;
 
     DataFile(File file, int number, int preferedSize) {
         this.file = file;

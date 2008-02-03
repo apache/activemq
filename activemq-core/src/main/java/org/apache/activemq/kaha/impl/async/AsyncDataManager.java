@@ -50,7 +50,7 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-public final class AsyncDataManager {
+public class AsyncDataManager {
 
     public static final int CONTROL_RECORD_MAX_LENGTH = 1024;
     public static final int ITEM_HEAD_RESERVED_SPACE = 21;
@@ -75,28 +75,28 @@ public final class AsyncDataManager {
 
     protected final Map<WriteKey, WriteCommand> inflightWrites = new ConcurrentHashMap<WriteKey, WriteCommand>();
 
-    File directory = new File(DEFAULT_DIRECTORY);
-    File directoryArchive = new File (DEFAULT_ARCHIVE_DIRECTORY);
-    String filePrefix = DEFAULT_FILE_PREFIX;
-    ControlFile controlFile;
-    boolean started;
-    boolean useNio = true;
+    protected File directory = new File(DEFAULT_DIRECTORY);
+    protected File directoryArchive = new File (DEFAULT_ARCHIVE_DIRECTORY);
+    protected String filePrefix = DEFAULT_FILE_PREFIX;
+    protected ControlFile controlFile;
+    protected boolean started;
+    protected boolean useNio = true;
 
-    private int maxFileLength = DEFAULT_MAX_FILE_LENGTH;
-    private int preferedFileLength = DEFAULT_MAX_FILE_LENGTH - 1024 * 512;
+    protected int maxFileLength = DEFAULT_MAX_FILE_LENGTH;
+    protected int preferedFileLength = DEFAULT_MAX_FILE_LENGTH - 1024 * 512;
 
-    private DataFileAppender appender;
-    private DataFileAccessorPool accessorPool = new DataFileAccessorPool(this);
+    protected DataFileAppender appender;
+    protected DataFileAccessorPool accessorPool = new DataFileAccessorPool(this);
 
-    private Map<Integer, DataFile> fileMap = new HashMap<Integer, DataFile>();
-    private Map<File, DataFile> fileByFileMap = new LinkedHashMap<File, DataFile>();
-    private DataFile currentWriteFile;
+    protected Map<Integer, DataFile> fileMap = new HashMap<Integer, DataFile>();
+    protected Map<File, DataFile> fileByFileMap = new LinkedHashMap<File, DataFile>();
+    protected DataFile currentWriteFile;
 
-    private Location mark;
-    private final AtomicReference<Location> lastAppendLocation = new AtomicReference<Location>();
-    private Runnable cleanupTask;
-    private final AtomicLong storeSize;
-    private boolean archiveDataLogs;
+    protected Location mark;
+    protected final AtomicReference<Location> lastAppendLocation = new AtomicReference<Location>();
+    protected Runnable cleanupTask;
+    protected final AtomicLong storeSize;
+    protected boolean archiveDataLogs;
     
     public AsyncDataManager(AtomicLong storeSize) {
         this.storeSize=storeSize;
@@ -194,7 +194,7 @@ public final class AsyncDataManager {
         Scheduler.executePeriodically(cleanupTask, 1000 * 30);
     }
 
-    private Location recoveryCheck(DataFile dataFile, Location location) throws IOException {
+    protected Location recoveryCheck(DataFile dataFile, Location location) throws IOException {
         if (location == null) {
             location = new Location();
             location.setDataFileId(dataFile.getDataFileId());
@@ -213,7 +213,7 @@ public final class AsyncDataManager {
         return location;
     }
 
-    private void unmarshallState(ByteSequence sequence) throws IOException {
+    protected void unmarshallState(ByteSequence sequence) throws IOException {
         ByteArrayInputStream bais = new ByteArrayInputStream(sequence.getData(), sequence.getOffset(), sequence.getLength());
         DataInputStream dis = new DataInputStream(bais);
         if (dis.readBoolean()) {
@@ -596,7 +596,7 @@ public final class AsyncDataManager {
         storeState(sync);
     }
 
-    private synchronized void storeState(boolean sync) throws IOException {
+    protected synchronized void storeState(boolean sync) throws IOException {
         ByteSequence state = marshallState();
         appender.storeItem(state, Location.MARK_TYPE, sync);
         controlFile.store(state, sync);
