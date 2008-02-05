@@ -39,6 +39,7 @@ public abstract class BaseDestination implements Destination {
     private int maxProducersToAudit=1024;
     private int maxAuditDepth=1;
     private boolean enableAudit=true;
+    private int maxPageSize=1000;
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
     
     /**
@@ -152,7 +153,12 @@ public abstract class BaseDestination implements Destination {
         return destinationStatistics.getConsumers().getCount() != 0 ||
             destinationStatistics.getProducers().getCount() != 0;
     }
-
-
     
+    public int getMaxPageSize() {
+        return maxPageSize;
+    }
+
+    public void setMaxPageSize(int maxPageSize) {
+        this.maxPageSize = maxPageSize;
+    }      
 }

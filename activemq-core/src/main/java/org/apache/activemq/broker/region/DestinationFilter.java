@@ -171,4 +171,12 @@ public class DestinationFilter implements Destination {
     public boolean isActive() {
         return next.isActive();
     }
+
+    public int getMaxPageSize() {
+        return next.getMaxPageSize();
+    }
+
+    public void setMaxPageSize(int maxPageSize) {
+        next.setMaxPageSize(maxPageSize);
+    }
 }
