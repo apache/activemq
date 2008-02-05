@@ -70,7 +70,6 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.28 $
  */
 public class Queue extends BaseDestination implements Task {
-    private static int MAXIMUM_PAGE_SIZE  = 1000;
     private final Log log;
     private final List<Subscription> consumers = new ArrayList<Subscription>(50);
     private PendingMessageCursor messages;
@@ -974,7 +973,7 @@ public class Queue extends BaseDestination implements Task {
     }
 
     private List<MessageReference> buildList(boolean force) throws Exception {
-        final int toPageIn = MAXIMUM_PAGE_SIZE - pagedInMessages.size();
+        final int toPageIn = getMaxPageSize() - pagedInMessages.size();
         List<MessageReference> result = null;
         if ((force || !consumers.isEmpty()) && toPageIn > 0) {
             messages.setMaxBatchSize(toPageIn);

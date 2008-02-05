@@ -56,6 +56,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private boolean enableAudit=true;
     private boolean producerFlowControl = true;
     private boolean optimizedDispatch=false;
+    private int maxPageSize=1000;
    
     public void configure(Broker broker,Queue queue) {
         if (dispatchPolicy != null) {
@@ -76,6 +77,7 @@ public class PolicyEntry extends DestinationMapEntry {
         queue.setEnableAudit(isEnableAudit());
         queue.setMaxAuditDepth(getMaxQueueAuditDepth());
         queue.setMaxProducersToAudit(getMaxProducersToAudit());
+        queue.setMaxPageSize(getMaxPageSize());
     }
 
     public void configure(Topic topic) {
@@ -96,6 +98,7 @@ public class PolicyEntry extends DestinationMapEntry {
         topic.setEnableAudit(isEnableAudit());
         topic.setMaxAuditDepth(getMaxAuditDepth());
         topic.setMaxProducersToAudit(getMaxProducersToAudit());
+        topic.setMaxPageSize(getMaxPageSize());
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
@@ -349,5 +352,13 @@ public class PolicyEntry extends DestinationMapEntry {
     public void setOptimizedDispatch(boolean optimizedDispatch) {
         this.optimizedDispatch = optimizedDispatch;
     }
+    
+    public int getMaxPageSize() {
+        return maxPageSize;
+    }
+
+    public void setMaxPageSize(int maxPageSize) {
+        this.maxPageSize = maxPageSize;
+    }    
 
 }
