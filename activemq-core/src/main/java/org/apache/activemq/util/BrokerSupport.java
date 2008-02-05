@@ -23,6 +23,10 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.state.ProducerState;
 
+/**
+ * Utility class for re-sending messages
+ *
+ */
 public final class BrokerSupport {
 
     private BrokerSupport() {        
@@ -30,17 +34,14 @@ public final class BrokerSupport {
     
     /**
      * @param context
-     * @param message
+     * @param originalMessage 
      * @param deadLetterDestination
      * @throws Exception
      */
-    public static void resend(final ConnectionContext context, Message message, ActiveMQDestination deadLetterDestination) throws Exception {
-        if (message.getOriginalDestination() != null) {
-            message.setOriginalDestination(message.getDestination());
-        }
-        if (message.getOriginalTransactionId() != null) {
-            message.setOriginalTransactionId(message.getTransactionId());
-        }
+    public static void resend(final ConnectionContext context, Message originalMessage, ActiveMQDestination deadLetterDestination) throws Exception {
+        Message message = originalMessage.copy();
+        message.setOriginalDestination(message.getDestination());
+        message.setOriginalTransactionId(message.getTransactionId());
         message.setDestination(deadLetterDestination);
         message.setTransactionId(null);
         boolean originalFlowControl = context.isProducerFlowControl();
