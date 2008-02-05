@@ -128,10 +128,9 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     public void add(MessageReference node) throws Exception {
         synchronized (pendingLock) {
             enqueueCounter++;
-            pending.addMessageLast(node);
-            dispatchPending();
+            pending.addMessageLast(node);    
         }
-       
+        dispatchPending();
     }
 
     public void processMessageDispatchNotification(MessageDispatchNotification mdn) throws Exception {
