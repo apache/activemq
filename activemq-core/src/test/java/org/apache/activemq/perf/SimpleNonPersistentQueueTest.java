@@ -29,6 +29,7 @@ public class SimpleNonPersistentQueueTest extends SimpleQueueTest {
     protected PerfProducer createProducer(ConnectionFactory fac, Destination dest, int number, byte[] payload) throws JMSException {
         PerfProducer pp = new PerfProducer(fac, dest, payload);
         pp.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        pp.setTimeToLive(100);
         return pp;
     }
 }

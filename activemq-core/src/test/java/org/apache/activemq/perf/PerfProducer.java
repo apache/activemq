@@ -49,6 +49,10 @@ public class PerfProducer implements Runnable {
     public void setDeliveryMode(int mode) throws JMSException {
         producer.setDeliveryMode(mode);
     }
+    
+    public void setTimeToLive(int ttl) throws JMSException {
+        producer.setTimeToLive(ttl);
+    }
 
     public void shutDown() throws JMSException {
         connection.close();

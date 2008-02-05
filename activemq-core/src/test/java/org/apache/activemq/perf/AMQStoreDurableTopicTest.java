@@ -38,8 +38,8 @@ public class AMQStoreDurableTopicTest extends SimpleDurableTopicTest {
     }
     
     protected void setUp() throws Exception {
-        numberofProducers=2;
-        numberOfConsumers=10;
+        numberofProducers=1;
+        numberOfConsumers=1;
         this.consumerSleepDuration=0;
         super.setUp();
     }

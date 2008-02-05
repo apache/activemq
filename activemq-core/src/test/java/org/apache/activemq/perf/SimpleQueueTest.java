@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.perf;
 
+import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Session;
@@ -30,10 +31,18 @@ public class SimpleQueueTest extends SimpleTopicTest {
     }
     
     protected void setUp() throws Exception {
-        numberOfConsumers = 10;
-        numberofProducers = 10;
-        this.consumerSleepDuration=20;
+        numberOfConsumers = 1;
+        numberofProducers = 2;
+        this.consumerSleepDuration=0;
         super.setUp();
+    }
+    
+    protected PerfConsumer createConsumer(ConnectionFactory fac, Destination dest, int number) throws JMSException {
+        PerfConsumer consumer =  new PerfConsumer(fac, dest);
+        boolean enableAudit = numberOfConsumers <= 1;
+        System.out.println("Enable Audit = " + enableAudit);
+        consumer.setEnableAudit(enableAudit);
+        return consumer;
     }
 
 }
