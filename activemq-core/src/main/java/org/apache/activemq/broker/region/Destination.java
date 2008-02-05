@@ -83,7 +83,5 @@ public interface Destination extends Service {
     
     void setEnableAudit(boolean enableAudit);
     
-    boolean isActive();
-    
-    
+    boolean isActive();   
 }

@@ -267,6 +267,17 @@ public interface PendingMessageCursor extends Service {
      * @return the audit - could be null
      */
     public ActiveMQMessageAudit getMessageAudit();
+    
+    /**
+     * use a cache to improve performance
+     * @param useCache
+     */
+    public void setUseCache(boolean useCache);
+    
+    /**
+     * @return true if a cache is being used
+     */
+    public boolean isUseCache();
 
 
 }

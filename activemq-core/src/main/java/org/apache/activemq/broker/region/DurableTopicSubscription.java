@@ -178,7 +178,8 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         }
         prefetchExtension = 0;
     }
-
+    
+    
     protected MessageDispatch createMessageDispatch(MessageReference node, Message message) {
         MessageDispatch md = super.createMessageDispatch(node, message);
         Integer count = redeliveredMessages.get(node.getMessageId());
@@ -192,7 +193,6 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         if (!active && !keepDurableSubsActive) {
             return;
         }
-        node.incrementReferenceCount();
         super.add(node);
     }
 

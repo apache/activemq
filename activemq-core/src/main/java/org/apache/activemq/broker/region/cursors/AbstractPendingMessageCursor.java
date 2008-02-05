@@ -39,6 +39,7 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
     protected int maxAuditDepth=1;
     protected boolean enableAudit=true;
     protected ActiveMQMessageAudit audit;
+    protected boolean useCache=true;
     private boolean started=false;
   
 
@@ -264,6 +265,14 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
      */
     public ActiveMQMessageAudit getMessageAudit() {
     	return audit;
+    }
+    
+    public boolean isUseCache() {
+        return useCache;
+    }
+
+    public void setUseCache(boolean useCache) {
+        this.useCache = useCache;
     }
 
     protected synchronized boolean  isDuplicate(MessageId messageId) {

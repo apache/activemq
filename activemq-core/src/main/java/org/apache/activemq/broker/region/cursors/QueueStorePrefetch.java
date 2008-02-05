@@ -17,13 +17,10 @@
 package org.apache.activemq.broker.region.cursors;
 
 import java.io.IOException;
-import java.util.LinkedList;
-import org.apache.activemq.broker.region.Destination;
-import org.apache.activemq.broker.region.MessageReference;
+
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
-import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,136 +31,22 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 474985 $
  */
-class QueueStorePrefetch extends AbstractPendingMessageCursor implements MessageRecoveryListener {
-
+class QueueStorePrefetch extends AbstractStoreCursor {
     private static final Log LOG = LogFactory.getLog(QueueStorePrefetch.class);
-
     private MessageStore store;
-    private final LinkedList<Message> batchList = new LinkedList<Message>();
-    private Destination regionDestination;
-    private int size;
-    private boolean fillBatchDuplicates;
-    private boolean cacheEnabled;
-    private boolean useCache =false;
-
+   
     /**
      * Construct it
      * @param queue
      */
     public QueueStorePrefetch(Queue queue) {
-        this.regionDestination = queue;
+        super(queue);
         this.store = (MessageStore)queue.getMessageStore();
 
     }
 
-    public synchronized void start() throws Exception{
-        if (!isStarted()) {
-            this.size = getStoreSize();
-            if (this.size==0&&useCache) {
-                cacheEnabled=true;
-            }
-        }
-        super.start();
-        store.resetBatching();
-    }
-
-    public void stop() throws Exception {
-        store.resetBatching();
-        super.stop();
-    }
-
-    /**
-     * @return true if there are no pending messages
-     */
-    public boolean isEmpty() {
-        return size <= 0;
-    }
-
-    public boolean hasMessagesBufferedToDeliver() {
-        return !batchList.isEmpty();
-    }
-
-    public synchronized int size() {
-        if (isStarted()) {
-            return size;
-        }
-        this.size = getStoreSize();
-        return size;
-        
-    }
-
-    public synchronized void addMessageLast(MessageReference node) throws Exception {
-        if (cacheEnabled && hasSpace()) {
-            //optimization - A persistent queue will add the message to
-            //to store then retrieve it again from the store.
-            recoverMessage(node.getMessage());
-        }else {
-            cacheEnabled=false;
-        }
-        size++;
-    }
-
-    public void addMessageFirst(MessageReference node) throws Exception {
-        size++;
-    }
-
-    public synchronized void remove() {
-        size--;
-        if (size==0 && isStarted() && cacheEnabled) {
-            cacheEnabled=true;
-        }
-    }
-
-    public void remove(MessageReference node) {
-        size--;
-        cacheEnabled=false;
-    }
-
-    public synchronized boolean hasNext() {
-        if (batchList.isEmpty()) {
-            try {
-                fillBatch();
-            } catch (Exception e) {
-                LOG.error("Failed to fill batch", e);
-                throw new RuntimeException(e);
-            }
-        }
-        return !batchList.isEmpty();
-    }
-
-    public synchronized MessageReference next() {
-        Message result = batchList.removeFirst();
-        result.decrementReferenceCount();
-        result.setRegionDestination(regionDestination);
-        result.setMemoryUsage(this.getSystemUsage().getMemoryUsage());
-        return result;
-    }
-
-    public void reset() {
-    }
-
-    // MessageRecoveryListener implementation
-    public void finished() {
-    }
-
-    public synchronized boolean recoverMessage(Message message)
-            throws Exception {
-        if (!isDuplicate(message.getMessageId())) {
-            message.setRegionDestination(regionDestination);
-            message.setMemoryUsage(this.getSystemUsage().getMemoryUsage());
-            message.incrementReferenceCount();
-            batchList.addLast(message);
-        } else {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Ignoring batched duplicated from store: " + message);
-            }
-            fillBatchDuplicates=true;
-        }
-        return true;
-    }
-
     public boolean recoverMessageReference(MessageId messageReference) throws Exception {
-        Message msg = store.getMessage(messageReference);
+        Message msg = this.store.getMessage(messageReference);
         if (msg != null) {
             return recoverMessage(msg);
         } else {
@@ -173,32 +56,23 @@ class QueueStorePrefetch extends AbstractPendingMessageCursor implements Message
         }
     }
 
-    public synchronized void gc() {
-        for (Message msg : batchList) {
-            rollback(msg.getMessageId());
-            msg.decrementReferenceCount();
-        }
-        cacheEnabled=false;
-        batchList.clear();
-    }
-
-    // implementation
-    protected synchronized void fillBatch() throws Exception {
-        store.recoverNextMessages(maxBatchSize, this);
-        while (fillBatchDuplicates && batchList.isEmpty()) {
-            fillBatchDuplicates=false;
-            store.recoverNextMessages(maxBatchSize, this);
-        }
-        fillBatchDuplicates=false;
-    }
-    
+   
+        
     protected synchronized int getStoreSize() {
         try {
-            return store.getMessageCount();
+            return this.store.getMessageCount();
         } catch (IOException e) {
             LOG.error("Failed to get message count", e);
             throw new RuntimeException(e);
         }
+    }
+    
+    protected void resetBatch() {
+        this.store.resetBatching();
+    }
+    
+    protected void doFillBatch() throws Exception {
+        this.store.recoverNextMessages(this.maxBatchSize, this);
     }
 
     public String toString() {

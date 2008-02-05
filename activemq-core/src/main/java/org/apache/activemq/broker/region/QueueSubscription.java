@@ -47,7 +47,6 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
      * @throws IOException
      */
     protected void acknowledge(final ConnectionContext context, final MessageAck ack, final MessageReference n) throws IOException {
-
         final Destination q = n.getRegionDestination();
         final QueueMessageReference node = (QueueMessageReference)n;
         final Queue queue = (Queue)q;
