@@ -19,6 +19,8 @@ package org.apache.activemq.store.jpa;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -43,12 +45,17 @@ public class JPAReferenceStore implements ReferenceStore {
     protected final ActiveMQDestination destination;
     protected final String destinationName;
     protected AtomicLong lastMessageId = new AtomicLong(-1);
-
+    protected final Lock lock = new ReentrantLock();
+    
     public JPAReferenceStore(JPAPersistenceAdapter adapter, ActiveMQDestination destination) {
         this.adapter = adapter;
         this.destination = destination;
         this.destinationName = destination.getQualifiedName();
         this.wireFormat = this.adapter.getWireFormat();
+    }
+    
+    public Lock getStoreLock() {
+        return lock;
     }
 
     public ActiveMQDestination getDestination() {
