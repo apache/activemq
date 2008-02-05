@@ -115,5 +115,9 @@ public abstract class TransportSupport extends ServiceSupport implements Transpo
 	public boolean isDisposed() {
 		return isStopped();
 	}
+	
+	public  boolean isConnected() {
+	    return isStarted();
+	}
 
 }

@@ -56,6 +56,7 @@ public class FanoutTransport implements CompositeTransport {
 
     private TransportListener transportListener;
     private boolean disposed;
+    private boolean connected;
 
     private final Object reconnectMutex = new Object();
     private final ConnectionStateTracker stateTracker = new ConnectionStateTracker();
@@ -281,6 +282,7 @@ public class FanoutTransport implements CompositeTransport {
                     restoreTransport(th);
                 }
             }
+            connected=true;
         }
     }
 
@@ -293,6 +295,7 @@ public class FanoutTransport implements CompositeTransport {
             }
             started = false;
             disposed = true;
+            connected=false;
 
             for (Iterator<FanoutTransportHandler> iter = transports.iterator(); iter.hasNext();) {
                 FanoutTransportHandler th = iter.next();
@@ -578,4 +581,9 @@ public class FanoutTransport implements CompositeTransport {
 	public boolean isDisposed() {
 		return disposed;
 	}
+	
+
+    public boolean isConnected() {
+        return connected;
+    }
 }

@@ -143,9 +143,12 @@ public class MockTransport extends DefaultTransportListener implements Transport
 	public boolean isDisposed() {
 		return getNext().isDisposed();
 	}
+	
+	public boolean isConnected() {
+       return getNext().isConnected();
+    }
 
 	public void reconnect(URI uri) throws IOException {
 		getNext().reconnect(uri);
 	}
-
 }
