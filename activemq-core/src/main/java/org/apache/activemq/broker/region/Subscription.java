@@ -174,12 +174,7 @@ public interface Subscription extends SubscriptionRecovery {
      */
     void updateConsumerPrefetch(int newPrefetch);
     
-    /**
-     * optimize message consumer prefetch if the consumer supports it
-     *
-     */
-    void optimizePrefetch();
-    
+        
     /**
      * Called when the subscription is destroyed.
      */

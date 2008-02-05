@@ -65,6 +65,8 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      */
     public FilePendingMessageCursor(Broker broker,String name) {
         this.broker = broker;
+        //the store can be null if the BrokerService has persistence 
+        //turned off
         this.store= broker.getTempDataStore();
         this.name = NAME_COUNT.incrementAndGet() + "_" + name;
     }
@@ -167,7 +169,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
             try {
                 regionDestination = node.getMessage().getRegionDestination();
                 if (isDiskListEmpty()) {
-                    if (hasSpace()) {
+                    if (hasSpace() || this.store==null) {
                         memoryList.add(node);
                         node.incrementReferenceCount();
                         return;

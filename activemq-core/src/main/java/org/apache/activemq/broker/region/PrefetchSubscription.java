@@ -59,13 +59,12 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     protected long enqueueCounter;
     protected long dispatchCounter;
     protected long dequeueCounter;
-    protected boolean optimizedDispatch=false;
     private int maxProducersToAudit=32;
     private int maxAuditDepth=2048;
     protected final SystemUsage usageManager;
-    protected ActiveMQMessageAudit audit = new ActiveMQMessageAudit();
     private final Object pendingLock = new Object();
     private final Object dispatchLock = new Object();
+    protected ActiveMQMessageAudit audit = new ActiveMQMessageAudit();
 
     public PrefetchSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, PendingMessageCursor cursor) throws InvalidSelectorException {
         super(broker, context, info);
@@ -127,29 +126,13 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     }
 
     public void add(MessageReference node) throws Exception {
-		boolean pendingEmpty = false;
-		boolean dispatchPending = false;
-		synchronized (pendingLock) {
-			pendingEmpty = pending.isEmpty();
-			enqueueCounter++;
-			if (optimizedDispatch && !isFull() && pendingEmpty && !isSlave()) {
-				pending.dispatched(node);
-				dispatch(node);
-			} else {
-				optimizePrefetch();
-				synchronized (pendingLock) {
-					if (pending.isEmpty() && LOG.isDebugEnabled()) {
-						LOG.debug("Prefetch limit.");
-					}
-					pending.addMessageLast(node);
-					dispatchPending = true;
-				}
-			}
-		}
-		if (dispatchPending) {
-			dispatchPending();
-		}
-	}
+        synchronized (pendingLock) {
+            enqueueCounter++;
+            pending.addMessageLast(node);
+            dispatchPending();
+        }
+       
+    }
 
     public void processMessageDispatchNotification(MessageDispatchNotification mdn) throws Exception {
         synchronized(pendingLock) {
@@ -441,24 +424,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         }
     }
 
-    /**
-     * optimize message consumer prefetch if the consumer supports it
-     */
-    public void optimizePrefetch() {
-        /*
-         * if(info!=null&&info.isOptimizedAcknowledge()&&context!=null&&context.getConnection()!=null
-         * &&context.getConnection().isManageable()){
-         * if(info.getCurrentPrefetchSize()!=info.getPrefetchSize() &&
-         * isLowWaterMark()){
-         * info.setCurrentPrefetchSize(info.getPrefetchSize());
-         * updateConsumerPrefetch(info.getPrefetchSize()); }else
-         * if(info.getCurrentPrefetchSize()==info.getPrefetchSize() &&
-         * isHighWaterMark()){ // want to purge any outstanding acks held by the
-         * consumer info.setCurrentPrefetchSize(1); updateConsumerPrefetch(1); } }
-         */
-    }
-
-    public void add(ConnectionContext context, Destination destination) throws Exception {
+   public void add(ConnectionContext context, Destination destination) throws Exception {
         synchronized(pendingLock) {
             super.add(context, destination);
             pending.add(context, destination);
@@ -490,13 +456,13 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                             if (canDispatch(node)) {
                                 pending.remove();
                                 // Message may have been sitting in the pending
-                                // list
-                                // a while
-                                // waiting for the consumer to ak the message.
+                                // list a while waiting for the consumer to ak the message.
                                 if (node != QueueMessageReference.NULL_MESSAGE
-                                        && broker.isExpired(node)) {
+                                        && node.isExpired()) {
                                     broker.messageExpired(getContext(), node);
                                     dequeueCounter++;
+                                    //increment number to dispatch
+                                    numberToDispatch++;
                                     continue;
                                 }
                                 dispatch(node);
@@ -518,6 +484,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         }         
         // Make sure we can dispatch a message.
         if (canDispatch(node) && !isSlave()) {
+            
             MessageDispatch md = createMessageDispatch(node, message);
             // NULL messages don't count... they don't get Acked.
             if (node != QueueMessageReference.NULL_MESSAGE) {
@@ -617,14 +584,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     protected void acknowledge(ConnectionContext context, final MessageAck ack, final MessageReference node) throws IOException {
     }
 
-    public boolean isOptimizedDispatch() {
-        return optimizedDispatch;
-    }
-
-    public void setOptimizedDispatch(boolean optimizedDispatch) {
-        this.optimizedDispatch = optimizedDispatch;
-    }
-
+    
     public int getMaxProducersToAudit() {
         return maxProducersToAudit;
     }

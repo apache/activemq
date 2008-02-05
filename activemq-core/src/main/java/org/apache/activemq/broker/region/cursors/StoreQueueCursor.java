@@ -231,6 +231,16 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
             nonPersistent.setEnableAudit(enableAudit);
         }
     }
+    
+    public void setUseCache(boolean useCache) {
+        super.setUseCache(useCache);
+        if (persistent != null) {
+            persistent.setUseCache(useCache);
+        }
+        if (nonPersistent != null) {
+            nonPersistent.setUseCache(useCache);
+        }
+    }
 
 
 

@@ -82,15 +82,14 @@ public class Queue extends BaseDestination implements Task {
     private MessageGroupMapFactory messageGroupMapFactory = new MessageGroupHashBucketFactory();
     private final Object exclusiveLockMutex = new Object();
     private final Object sendLock = new Object();
-    private final TaskRunner taskRunner;
-    
+    private final TaskRunner taskRunner;    
     private final LinkedList<Runnable> messagesWaitingForSpace = new LinkedList<Runnable>();
     private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
         public void run() {
             wakeup();
-        };
+        }
     };
-    
+           
     public Queue(Broker broker, ActiveMQDestination destination, final SystemUsage systemUsage,MessageStore store,DestinationStatistics parentStats,
                  TaskRunnerFactory taskFactory) throws Exception {
         super(broker, store, destination,systemUsage, parentStats);
@@ -869,22 +868,31 @@ public class Queue extends BaseDestination implements Task {
     }
 
     /**
-     * @return
+     * @return true if we would like to iterate again
      * @see org.apache.activemq.thread.Task#iterate()
      */
     public boolean iterate() {
-
-        try {
-            pageInMessages(false);
-        } catch (Exception e) {
-            log.error("Failed to page in more queue messages ", e);
+        boolean result = false;
+        synchronized (messages) {
+            result = !messages.isEmpty();
         }
-        while (!messagesWaitingForSpace.isEmpty() &&!memoryUsage.isFull()) {
+        if (result) {
+            try {
+                pageInMessages(false);
+               
+            } catch (Throwable e) {
+                log.error("Failed to page in more queue messages ", e);
+            }
+        }
+        while (!messagesWaitingForSpace.isEmpty() && !memoryUsage.isFull()) {
             Runnable op = messagesWaitingForSpace.removeFirst();
             op.run();
         }
-        
-        return false;
+
+        synchronized (messages) {
+            result = !messages.isEmpty();
+        }
+        return result;
     }
 
     protected MessageReferenceFilter createMessageIdFilter(final String messageId) {
@@ -949,9 +957,10 @@ public class Queue extends BaseDestination implements Task {
         wakeup();
     }
     
-    final void wakeup() {
+    final synchronized void wakeup() {
         try {
             taskRunner.wakeup();
+            
         } catch (InterruptedException e) {
             log.warn("Task Runner failed to wakeup ", e);
         }
@@ -972,7 +981,6 @@ public class Queue extends BaseDestination implements Task {
             int count = 0;
             result = new ArrayList<MessageReference>(toPageIn);
             synchronized (messages) {
-
                 try {
                     messages.reset();
                     while (messages.hasNext() && count < toPageIn) {
@@ -1001,16 +1009,16 @@ public class Queue extends BaseDestination implements Task {
         return result;
     }
 
-    private synchronized void doDispatch(List<MessageReference> list) throws Exception {
+    private void doDispatch(List<MessageReference> list) throws Exception {
+       
         if (list != null && !list.isEmpty()) {
             MessageEvaluationContext msgContext = new MessageEvaluationContext();
             for (int i = 0; i < list.size(); i++) {
-                MessageReference node = list.get(i);
+                MessageReference node = list.get(i);         
                 msgContext.setDestination(destination);
                 msgContext.setMessageReference(node);
                 dispatchPolicy.dispatch(node, msgContext, consumers);
             }
-
         }
     }
 

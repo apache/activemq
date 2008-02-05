@@ -50,8 +50,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     private boolean started;
     private PendingMessageCursor nonPersistent;
     private PendingMessageCursor currentCursor;
-    private final Subscription subscription;
-
+    private Subscription subscription;
     /**
      * @param broker 
      * @param topic
@@ -62,11 +61,11 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
      * @throws IOException
      */
     public StoreDurableSubscriberCursor(Broker broker,String clientId, String subscriberName,int maxBatchSize, Subscription subscription) {
+        this.subscription=subscription;
         this.clientId = clientId;
         this.subscriberName = subscriberName;
-        this.subscription = subscription;
         this.nonPersistent = new FilePendingMessageCursor(broker,clientId + subscriberName);
-        storePrefetches.add(nonPersistent);
+        this.storePrefetches.add(this.nonPersistent);
     }
 
     public synchronized void start() throws Exception {
@@ -99,7 +98,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
      */
     public synchronized void add(ConnectionContext context, Destination destination) throws Exception {
         if (destination != null && !AdvisorySupport.isAdvisoryTopic(destination.getActiveMQDestination())) {
-            TopicStorePrefetch tsp = new TopicStorePrefetch((Topic)destination, clientId, subscriberName, subscription);
+            TopicStorePrefetch tsp = new TopicStorePrefetch(this.subscription,(Topic)destination, clientId, subscriberName);
             tsp.setMaxBatchSize(getMaxBatchSize());
             tsp.setSystemUsage(systemUsage);
             tsp.setEnableAudit(isEnableAudit());
@@ -290,6 +289,16 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         }
         if (nonPersistent != null) {
             nonPersistent.setEnableAudit(enableAudit);
+        }
+    }
+    
+    public void setUseCache(boolean useCache) {
+        super.setUseCache(useCache);
+        for (PendingMessageCursor cursor : storePrefetches) {
+            cursor.setUseCache(useCache);
+        }
+        if (nonPersistent != null) {
+            nonPersistent.setUseCache(useCache);
         }
     }
     
