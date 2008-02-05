@@ -108,7 +108,7 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         messageCount = 1000;
         messageSize = 1; // 1 byte
         prefetchCount = messageCount / consumerCount;
-
+        allMessagesList.setMaximumDuration(allMessagesList.getMaximumDuration() * 20);
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * producerCount);
@@ -120,7 +120,7 @@ public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
         messageCount = 100;
         messageSize = 1; // 1 byte
         prefetchCount = 100;
-
+        allMessagesList.setMaximumDuration(allMessagesList.getMaximumDuration() * 20);
         doMultipleClientsTest();
 
         assertTotalMessagesReceived(messageCount * producerCount);
