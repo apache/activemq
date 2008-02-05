@@ -26,7 +26,6 @@ import javax.jms.MessageListener;
 import javax.jms.Session;
 import javax.jms.Topic;
 
-import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -39,6 +38,7 @@ public class PerfConsumer implements MessageListener {
     protected Connection connection;
     protected MessageConsumer consumer;
     protected long sleepDuration;
+    protected boolean enableAudit = true;
     protected ActiveMQMessageAudit audit = new ActiveMQMessageAudit(16 * 1024,20);
 
     protected PerfRate rate = new PerfRate();
@@ -79,7 +79,7 @@ public class PerfConsumer implements MessageListener {
     public void onMessage(Message msg) {
         rate.increment();
         try {
-            if (msg.getJMSDestination() instanceof Topic && !this.audit.isInOrder(msg.getJMSMessageID())) {
+            if (enableAudit && !this.audit.isInOrder(msg.getJMSMessageID())) {
                 LOG.error("Message out of order!!" + msg);
             }
             if (this.audit.isDuplicate(msg)){
@@ -103,5 +103,13 @@ public class PerfConsumer implements MessageListener {
 
     public synchronized void setSleepDuration(long sleepDuration) {
         this.sleepDuration = sleepDuration;
+    }
+
+    public boolean isEnableAudit() {
+        return enableAudit;
+    }
+
+    public void setEnableAudit(boolean doAudit) {
+        this.enableAudit = doAudit;
     }
 }
