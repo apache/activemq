@@ -45,7 +45,13 @@ public abstract class ServiceSupport implements Service {
 
     public void start() throws Exception {
         if (started.compareAndSet(false, true)) {
-            doStart();
+            boolean success = false;
+            try {
+                doStart();
+                success = true;
+            } finally {
+                started.set(success);
+            }
         }
     }
 

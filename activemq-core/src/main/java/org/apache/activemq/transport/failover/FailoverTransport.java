@@ -57,6 +57,7 @@ public class FailoverTransport implements CompositeTransport {
 
     private TransportListener transportListener;
     private boolean disposed;
+    private boolean connected;
     private final CopyOnWriteArrayList<URI> uris = new CopyOnWriteArrayList<URI>();
 
     private final Object reconnectMutex = new Object();
@@ -182,6 +183,7 @@ public class FailoverTransport implements CompositeTransport {
                 failedConnectTransportURI=connectedTransportURI;
                 connectedTransport = null;
                 connectedTransportURI = null;
+                connected=false;
             }
             reconnectTask.wakeup();
         }
@@ -211,6 +213,7 @@ public class FailoverTransport implements CompositeTransport {
             }
             started = false;
             disposed = true;
+            connected = false;
 
             if (connectedTransport != null) {
                 transportToStop = connectedTransport;
@@ -593,6 +596,7 @@ public class FailoverTransport implements CompositeTransport {
                             }else {
                                 LOG.info("Successfully reconnected to " + uri);
                             }
+                            connected=true;
                             return false;
                         } catch (Exception e) {
                             failure = e;
@@ -669,14 +673,17 @@ public class FailoverTransport implements CompositeTransport {
 	   return false;
    }
 
-public boolean isDisposed() {
-	return disposed;
-}
-
-public void reconnect(URI uri) throws IOException {
-	add(new URI[] {uri});
-}
-
-
+    public boolean isDisposed() {
+    	return disposed;
+    }
+    
+    
+    public boolean isConnected() {
+        return connected;
+    }
+    
+    public void reconnect(URI uri) throws IOException {
+    	add(new URI[] {uri});
+    }
 
 }

@@ -17,13 +17,11 @@
 package org.apache.activemq.transport.vm;
 
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.net.URI;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.activemq.command.Command;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
@@ -330,6 +328,10 @@ public class VMTransport implements Transport, Task {
 
 	public boolean isDisposed() {
 		return disposed;
+	}
+	
+	public boolean isConnected() {
+	    return started;
 	}
 
 	public void reconnect(URI uri) throws IOException {

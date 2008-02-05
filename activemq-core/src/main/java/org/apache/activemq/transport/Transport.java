@@ -143,6 +143,11 @@ public interface Transport extends Service {
     boolean isDisposed();
     
     /**
+     * @return true if the transport is connected
+     */
+    boolean isConnected();
+    
+    /**
      * reconnect to another location
      * @param uri
      * @throws IOException on failure of if not supported
