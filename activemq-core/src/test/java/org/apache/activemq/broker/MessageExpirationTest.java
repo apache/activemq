@@ -66,7 +66,7 @@ public class MessageExpirationTest extends BrokerTestSupport {
         return policy;
     }
 
-    public void testMessagesWaitingForUssageDecreaseExpire() throws Exception {
+    public void XtestMessagesWaitingForUssageDecreaseExpire() throws Exception {
 
         // Start a producer
         final StubConnection connection = createConnection();
