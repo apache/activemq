@@ -91,7 +91,7 @@ public class AMQStackOverFlowTest extends TestCase {
             });
 
             final Message m2 = template1.receive("test2.q");
-
+            assertNotNull(m2);
             assertTrue(m2 instanceof TextMessage);
 
             final TextMessage tm2 = (TextMessage)m2;
@@ -118,14 +118,14 @@ public class AMQStackOverFlowTest extends TestCase {
         brokerService.setUseJmx(true);
 
         final SystemUsage memoryManager = new SystemUsage();
-        memoryManager.getMemoryUsage().setLimit(10);
+        //memoryManager.getMemoryUsage().setLimit(10);
         brokerService.setSystemUsage(memoryManager);
 
         final List<PolicyEntry> policyEntries = new ArrayList<PolicyEntry>();
 
         final PolicyEntry entry = new PolicyEntry();
         entry.setQueue(">");
-        entry.setMemoryLimit(1);
+        //entry.setMemoryLimit(1);
         policyEntries.add(entry);
 
         final PolicyMap policyMap = new PolicyMap();
@@ -142,7 +142,7 @@ public class AMQStackOverFlowTest extends TestCase {
             final NetworkConnector nc = new DiscoveryNetworkConnector(new URI("static:" + uri2));
             nc.setBridgeTempDestinations(true);
             nc.setBrokerName(brokerName);
-            nc.setPrefetchSize(1);
+            //nc.setPrefetchSize(1);
             brokerService.addNetworkConnector(nc);
         }
 
