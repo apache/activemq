@@ -124,7 +124,7 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
     }
 
     public void recoverNextMessages(String clientId, String subscriptionName, int maxReturned, MessageRecoveryListener listener) throws Exception {
-        MemoryTopicSub sub = topicSubMap.get(new SubscriptionKey(clientId, subscriptionName));
+        MemoryTopicSub sub = this.topicSubMap.get(new SubscriptionKey(clientId, subscriptionName));
         if (sub != null) {
             sub.recoverNextMessages(maxReturned, listener);
         }

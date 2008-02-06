@@ -277,4 +277,8 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
             }
         }
     }
+    
+    protected boolean isDropped(MessageReference node) {
+       return false;
+     }
 }

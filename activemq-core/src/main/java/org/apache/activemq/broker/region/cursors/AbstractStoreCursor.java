@@ -38,6 +38,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor implements MessageRecoveryListener, UsageListener {
     private static final Log LOG = LogFactory.getLog(AbstractStoreCursor.class);
+    protected static final int MAX_FILL_ATTEMPTS=3;
     protected final Destination regionDestination;
     protected final LinkedHashMap<MessageId,Message> batchList = new LinkedHashMap<MessageId,Message> ();
     protected boolean cacheEnabled=false;
@@ -180,7 +181,10 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             resetBatch();
             this.batchResetNeeded = false;
         }
-        while (this.batchList.isEmpty() && (this.storeHasMessages || size > 0)) {
+        //we may have to move the store cursor past messages that have 
+        //already been delivered - but we also don't want it to spin
+        int fillAttempts=0;
+        while (fillAttempts < MAX_FILL_ATTEMPTS && this.batchList.isEmpty() && (this.storeHasMessages ||this.size >0)) {
             this.storeHasMessages = false;
             try {
                 doFillBatch();
@@ -191,6 +195,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             if (!this.batchList.isEmpty()) {
                 this.storeHasMessages=true;
             }
+            fillAttempts++;
         }
     }
     

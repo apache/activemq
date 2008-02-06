@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -177,7 +178,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
         }
         return rc;
     }
-
+/*
     public void buildReferenceFileIdsInUse() throws IOException {
         recordReferences = new HashMap<Integer, AtomicInteger>();
         Set<ActiveMQDestination> destinations = getDestinations();
@@ -191,6 +192,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
             }
         }
     }
+    */
 
     protected MapContainer<MessageId, ReferenceRecord> getMapReferenceContainer(Object id,
                                                                                 String containerName)
@@ -249,6 +251,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
      * @throws IOException
      * @see org.apache.activemq.store.ReferenceStoreAdapter#recoverState()
      */
+   
     public void recoverState() throws IOException {
         for (Iterator<SubscriptionInfo> i = durableSubscribers.iterator(); i.hasNext();) {
             SubscriptionInfo info = i.next();

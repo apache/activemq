@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.Lock;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -62,33 +63,38 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         return new MessageId(((ReferenceRecord)object).getMessageId());
     }
 
-    public synchronized void addMessage(ConnectionContext context, Message message) throws IOException {
+    public void addMessage(ConnectionContext context, Message message) throws IOException {
         throw new RuntimeException("Use addMessageReference instead");
     }
 
-    public synchronized Message getMessage(MessageId identity) throws IOException {
+    public Message getMessage(MessageId identity) throws IOException {
         throw new RuntimeException("Use addMessageReference instead");
     }
 
-    public synchronized void addMessageReference(final ConnectionContext context, final MessageId messageId,
+    public  void addMessageReference(final ConnectionContext context, final MessageId messageId,
                                     final ReferenceData data) {
-        final ReferenceRecord record = new ReferenceRecord(messageId.toString(), data);
-        final int subscriberCount = subscriberMessages.size();
-        if (subscriberCount > 0) {
-            final StoreEntry messageEntry = messageContainer.place(messageId, record);
-            addInterest(record);
-            final TopicSubAck tsa = new TopicSubAck();
-            tsa.setCount(subscriberCount);
-            tsa.setMessageEntry(messageEntry);
-            final StoreEntry ackEntry = ackContainer.placeLast(tsa);
-            for (final Iterator<TopicSubContainer> i = subscriberMessages.values().iterator(); i.hasNext();) {
-                final TopicSubContainer container = i.next();
-                final ConsumerMessageRef ref = new ConsumerMessageRef();
-                ref.setAckEntry(ackEntry);
-                ref.setMessageEntry(messageEntry);
-                ref.setMessageId(messageId);
-                container.add(ref);
+        lock.lock();
+        try {
+            final ReferenceRecord record = new ReferenceRecord(messageId.toString(), data);
+            final int subscriberCount = subscriberMessages.size();
+            if (subscriberCount > 0) {
+                final StoreEntry messageEntry = messageContainer.place(messageId, record);
+                addInterest(record);
+                final TopicSubAck tsa = new TopicSubAck();
+                tsa.setCount(subscriberCount);
+                tsa.setMessageEntry(messageEntry);
+                final StoreEntry ackEntry = ackContainer.placeLast(tsa);
+                for (final Iterator<TopicSubContainer> i = subscriberMessages.values().iterator(); i.hasNext();) {
+                    final TopicSubContainer container = i.next();
+                    final ConsumerMessageRef ref = new ConsumerMessageRef();
+                    ref.setAckEntry(ackEntry);
+                    ref.setMessageEntry(messageEntry);
+                    ref.setMessageId(messageId);
+                    container.add(ref);
+                }
             }
+        }finally {
+            lock.unlock();
         }
     }
 
@@ -121,100 +127,119 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         return container;
     }
 
-    public synchronized boolean acknowledgeReference(ConnectionContext context,
+    public boolean acknowledgeReference(ConnectionContext context,
             String clientId, String subscriptionName, MessageId messageId)
             throws IOException {
         boolean removeMessage = false;
-        String key = getSubscriptionKey(clientId, subscriptionName);
-
-        TopicSubContainer container = subscriberMessages.get(key);
-        if (container != null) {
-            ConsumerMessageRef ref = null;
-            if((ref = container.remove(messageId)) != null) {
-                TopicSubAck tsa = ackContainer.get(ref.getAckEntry());
-                if (tsa != null) {
-                    if (tsa.decrementCount() <= 0) {
-                        StoreEntry entry = ref.getAckEntry();
-                        entry = ackContainer.refresh(entry);
-                        ackContainer.remove(entry);
-                        ReferenceRecord rr = messageContainer.get(messageId);
-                        if (rr != null) {
-                            entry = tsa.getMessageEntry();
-                            entry = messageContainer.refresh(entry);
-                            messageContainer.remove(entry);
-                            removeInterest(rr);
-                            removeMessage = true;
+        lock.lock();
+            try {
+            String key = getSubscriptionKey(clientId, subscriptionName);
+    
+            TopicSubContainer container = subscriberMessages.get(key);
+            if (container != null) {
+                ConsumerMessageRef ref = null;
+                if((ref = container.remove(messageId)) != null) {
+                    TopicSubAck tsa = ackContainer.get(ref.getAckEntry());
+                    if (tsa != null) {
+                        if (tsa.decrementCount() <= 0) {
+                            StoreEntry entry = ref.getAckEntry();
+                            entry = ackContainer.refresh(entry);
+                            ackContainer.remove(entry);
+                            ReferenceRecord rr = messageContainer.get(messageId);
+                            if (rr != null) {
+                                entry = tsa.getMessageEntry();
+                                entry = messageContainer.refresh(entry);
+                                messageContainer.remove(entry);
+                                removeInterest(rr);
+                                removeMessage = true;
+                            }
                         }
                     }
+                }else{
+                    //no message held
+                    removeMessage = true;
                 }
-            }else{
-                //no message held
-                removeMessage = true;
             }
+        }finally {
+            lock.unlock();
         }
         return removeMessage;
 
     }
     
-    public synchronized void acknowledge(ConnectionContext context,
+    public void acknowledge(ConnectionContext context,
 			String clientId, String subscriptionName, MessageId messageId)
 			throws IOException {
 		String key = getSubscriptionKey(clientId, subscriptionName);
-
-		TopicSubContainer container = subscriberMessages.get(key);
-		if (container != null) {
-            ConsumerMessageRef ref = container.remove(messageId);
-            if (ref != null) {
-                TopicSubAck tsa = ackContainer.get(ref.getAckEntry());
-                if (tsa != null) {
-                    if (tsa.decrementCount() <= 0) {
-                        StoreEntry entry = ref.getAckEntry();
-                        entry = ackContainer.refresh(entry);
-                        ackContainer.remove(entry);
-                        ReferenceRecord rr = messageContainer.get(messageId);
-                        if (rr != null) {
-                            entry = tsa.getMessageEntry();
-                            entry = messageContainer.refresh(entry);
-                            messageContainer.remove(entry);
-                            removeInterest(rr);
+		lock.lock();
+		try {
+    		TopicSubContainer container = subscriberMessages.get(key);
+    		if (container != null) {
+                ConsumerMessageRef ref = container.remove(messageId);
+                if (ref != null) {
+                    TopicSubAck tsa = ackContainer.get(ref.getAckEntry());
+                    if (tsa != null) {
+                        if (tsa.decrementCount() <= 0) {
+                            StoreEntry entry = ref.getAckEntry();
+                            entry = ackContainer.refresh(entry);
+                            ackContainer.remove(entry);
+                            ReferenceRecord rr = messageContainer.get(messageId);
+                            if (rr != null) {
+                                entry = tsa.getMessageEntry();
+                                entry = messageContainer.refresh(entry);
+                                messageContainer.remove(entry);
+                                removeInterest(rr);
+                            }
+                        } else {
+    
+                            ackContainer.update(ref.getAckEntry(), tsa);
                         }
-                    } else {
-
-                        ackContainer.update(ref.getAckEntry(), tsa);
                     }
                 }
             }
-        }
+		}finally {
+		    lock.unlock();
+		}
 	}
 
-    public synchronized void addSubsciption(SubscriptionInfo info, boolean retroactive) throws IOException {
+    public void addSubsciption(SubscriptionInfo info, boolean retroactive) throws IOException {
         String key = getSubscriptionKey(info.getClientId(), info.getSubscriptionName());
-        // if already exists - won't add it again as it causes data files
-        // to hang around
-        if (!subscriberContainer.containsKey(key)) {
-            subscriberContainer.put(key, info);
-            adapter.addSubscriberState(info);
-        }
-        // add the subscriber
-        addSubscriberMessageContainer(info.getClientId(), info.getSubscriptionName());
-        if (retroactive) {
-            /*
-             * for(StoreEntry
-             * entry=ackContainer.getFirst();entry!=null;entry=ackContainer.getNext(entry)){
-             * TopicSubAck tsa=(TopicSubAck)ackContainer.get(entry);
-             * ConsumerMessageRef ref=new ConsumerMessageRef();
-             * ref.setAckEntry(entry);
-             * ref.setMessageEntry(tsa.getMessageEntry()); container.add(ref); }
-             */
+        lock.lock();
+        try {
+            // if already exists - won't add it again as it causes data files
+            // to hang around
+            if (!subscriberContainer.containsKey(key)) {
+                subscriberContainer.put(key, info);
+                adapter.addSubscriberState(info);
+            }
+            // add the subscriber
+            addSubscriberMessageContainer(info.getClientId(), info.getSubscriptionName());
+            if (retroactive) {
+                /*
+                 * for(StoreEntry
+                 * entry=ackContainer.getFirst();entry!=null;entry=ackContainer.getNext(entry)){
+                 * TopicSubAck tsa=(TopicSubAck)ackContainer.get(entry);
+                 * ConsumerMessageRef ref=new ConsumerMessageRef();
+                 * ref.setAckEntry(entry);
+                 * ref.setMessageEntry(tsa.getMessageEntry()); container.add(ref); }
+                 */
+            }
+        }finally {
+            lock.unlock();
         }
     }
 
-    public synchronized void deleteSubscription(String clientId, String subscriptionName) throws IOException {
-        SubscriptionInfo info = lookupSubscription(clientId, subscriptionName);
-        if (info != null) {
-            adapter.removeSubscriberState(info);
-        }
+    public void deleteSubscription(String clientId, String subscriptionName) throws IOException {
+        lock.lock();
+        try {
+            SubscriptionInfo info = lookupSubscription(clientId, subscriptionName);
+            if (info != null) {
+                adapter.removeSubscriberState(info);
+            }
         removeSubscriberMessageContainer(clientId,subscriptionName);
+        }finally {
+            lock.unlock();
+        }
     }
 
     public SubscriptionInfo[] getAllSubscriptions() throws IOException {
@@ -233,41 +258,46 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         return subscriberContainer.get(getSubscriptionKey(clientId, subscriptionName));
     }
 
-    public synchronized void recoverNextMessages(String clientId, String subscriptionName, int maxReturned,
+    public void recoverNextMessages(String clientId, String subscriptionName, int maxReturned,
                                                  MessageRecoveryListener listener) throws Exception {
         String key = getSubscriptionKey(clientId, subscriptionName);
-        TopicSubContainer container = subscriberMessages.get(key);
-        if (container != null) {
-            int count = 0;
-            StoreEntry entry = container.getBatchEntry();
-            if (entry == null) {
-                entry = container.getEntry();
-            } else {
-                entry = container.refreshEntry(entry);
+        lock.lock();
+        try {
+            TopicSubContainer container = subscriberMessages.get(key);
+            if (container != null) {
+                int count = 0;
+                StoreEntry entry = container.getBatchEntry();
+                if (entry == null) {
+                    entry = container.getEntry();
+                } else {
+                    entry = container.refreshEntry(entry);
+                    if (entry != null) {
+                        entry = container.getNextEntry(entry);
+                    }
+                }
+               
                 if (entry != null) {
-                    entry = container.getNextEntry(entry);
+                    do {
+                        ConsumerMessageRef consumerRef = container.get(entry);
+                        ReferenceRecord msg = messageContainer.getValue(consumerRef
+                                .getMessageEntry());
+                        if (msg != null) {
+                            if (recoverReference(listener, msg)) {
+                                count++;
+                                container.setBatchEntry(msg.getMessageId(), entry);
+                            } else {
+                                break;
+                            }
+                        } else {
+                            container.reset();
+                        }
+    
+                        entry = container.getNextEntry(entry);
+                    } while (entry != null && count < maxReturned && listener.hasSpace());
                 }
             }
-           
-            if (entry != null) {
-                do {
-                    ConsumerMessageRef consumerRef = container.get(entry);
-                    ReferenceRecord msg = messageContainer.getValue(consumerRef
-                            .getMessageEntry());
-                    if (msg != null) {
-                        if (recoverReference(listener, msg)) {
-                            count++;
-                            container.setBatchEntry(msg.getMessageId(), entry);
-                        } else {
-                            break;
-                        }
-                    } else {
-                        container.reset();
-                    }
-
-                    entry = container.getNextEntry(entry);
-                } while (entry != null && count < maxReturned && listener.hasSpace());
-            }
+        }finally {
+            lock.unlock();
         }
     }
 
@@ -288,11 +318,16 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         }
     }
 
-    public synchronized void resetBatching(String clientId, String subscriptionName) {
-        String key = getSubscriptionKey(clientId, subscriptionName);
-        TopicSubContainer topicSubContainer = subscriberMessages.get(key);
-        if (topicSubContainer != null) {
-            topicSubContainer.reset();
+    public void resetBatching(String clientId, String subscriptionName) {
+        lock.lock();
+        try {
+            String key = getSubscriptionKey(clientId, subscriptionName);
+            TopicSubContainer topicSubContainer = subscriberMessages.get(key);
+            if (topicSubContainer != null) {
+                topicSubContainer.reset();
+            }
+        }finally {
+            lock.unlock();
         }
     }
 

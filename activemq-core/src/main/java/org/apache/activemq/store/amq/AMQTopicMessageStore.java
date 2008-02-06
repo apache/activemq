@@ -17,10 +17,6 @@
 package org.apache.activemq.store.amq;
 
 import java.io.IOException;
-import java.io.InterruptedIOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -33,7 +29,6 @@ import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TopicReferenceStore;
 import org.apache.activemq.transaction.Synchronization;
-import org.apache.activemq.util.Callback;
 import org.apache.activemq.util.SubscriptionKey;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -47,7 +42,7 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
 
     private static final Log LOG = LogFactory.getLog(AMQTopicMessageStore.class);
     private TopicReferenceStore topicReferenceStore;
-    public AMQTopicMessageStore(AMQPersistenceAdapter adapter, TopicReferenceStore topicReferenceStore, ActiveMQTopic destinationName) {
+    public AMQTopicMessageStore(AMQPersistenceAdapter adapter,TopicReferenceStore topicReferenceStore, ActiveMQTopic destinationName) {
         super(adapter, topicReferenceStore, destinationName);
         this.topicReferenceStore = topicReferenceStore;
     }
@@ -98,8 +93,11 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
             if (debug) {
                 LOG.debug("Journalled transacted acknowledge for: " + messageId + ", at: " + location);
             }
-            synchronized (this) {
+            lock.lock();
+            try {
                 inFlightTxLocations.add(location);
+            }finally {
+                lock.unlock();
             }
             transactionStore.acknowledge(this, ack, location);
             context.getTransaction().addSynchronization(new Synchronization() {
@@ -108,9 +106,12 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
                     if (debug) {
                         LOG.debug("Transacted acknowledge commit for: " + messageId + ", at: " + location);
                     }
-                    synchronized (AMQTopicMessageStore.this) {
+                    lock.lock();
+                    try {
                         inFlightTxLocations.remove(location);
                         acknowledge(context,messageId, location, clientId,subscriptionName);
+                    }finally {
+                        lock.unlock();
                     }
                 }
 
@@ -118,8 +119,11 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
                     if (debug) {
                         LOG.debug("Transacted acknowledge rollback for: " + messageId + ", at: " + location);
                     }
-                    synchronized (AMQTopicMessageStore.this) {
+                    lock.lock();
+                    try{
                         inFlightTxLocations.remove(location);
+                    }finally {
+                        lock.unlock();
                     }
                 }
             });
@@ -149,8 +153,12 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
             Location location, String clientId, String subscriptionName)
             throws IOException {
         MessageAck ack = null;
-        synchronized (this) {
+        lock.lock();
+        try {
             lastLocation = location;
+        }finally {
+            lock.unlock();
+        }
         
             if (topicReferenceStore.acknowledgeReference(context, clientId,
                     subscriptionName, messageId)) {
@@ -158,7 +166,7 @@ public class AMQTopicMessageStore extends AMQMessageStore implements TopicMessag
                 ack.setLastMessageId(messageId);
                
             }
-        }
+        
         if (ack != null) {
             removeMessage(context, ack);
         }

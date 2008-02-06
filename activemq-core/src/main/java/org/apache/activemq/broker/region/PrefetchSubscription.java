@@ -452,7 +452,10 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                             if (node == null) {
                                 break;
                             }
-                            if (canDispatch(node)) {
+                            if(isDropped(node)) {
+                                pending.remove();
+                            }
+                            else if (canDispatch(node)) {
                                 pending.remove();
                                 // Message may have been sitting in the pending
                                 // list a while waiting for the consumer to ak the message.
@@ -574,6 +577,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
      * @throws IOException
      */
     protected abstract boolean canDispatch(MessageReference node) throws IOException;
+    
+    protected abstract boolean isDropped(MessageReference node);
 
     /**
      * Used during acknowledgment to remove the message.
