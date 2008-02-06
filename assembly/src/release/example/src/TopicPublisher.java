@@ -50,7 +50,7 @@ public class TopicPublisher implements MessageListener {
     private int remaining;
     private int messages = 10000;
     private long delay;
-    private int batch = 40;
+    private int batch = 2000;
 
     private byte[] payload;
 
