@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -78,9 +79,11 @@ public class AMQMessageStore implements MessageStore {
     private Map<MessageId, ReferenceData> cpAddedMessageIds;
     private final boolean debug = LOG.isDebugEnabled();
     private final AtomicReference<Location> mark = new AtomicReference<Location>();
+    protected final Lock lock;
 
-    public AMQMessageStore(AMQPersistenceAdapter adapter, ReferenceStore referenceStore, ActiveMQDestination destination) {
+    public AMQMessageStore(AMQPersistenceAdapter adapter,ReferenceStore referenceStore, ActiveMQDestination destination) {
         this.peristenceAdapter = adapter;
+        this.lock=referenceStore.getStoreLock();
         this.transactionStore = adapter.getTransactionStore();
         this.referenceStore = referenceStore;
         this.destination = destination;
@@ -99,7 +102,7 @@ public class AMQMessageStore implements MessageStore {
     }
 
     /**
-     * Not synchronized since the Journal has better throughput if you increase
+     * Not synchronize since the Journal has better throughput if you increase
      * the number of concurrent writes that it is doing.
      */
     public final void addMessage(ConnectionContext context, final Message message) throws IOException {
@@ -114,8 +117,11 @@ public class AMQMessageStore implements MessageStore {
             if (debug) {
                 LOG.debug("Journalled transacted message add for: " + id + ", at: " + location);
             }
-            synchronized (this) {
+            lock.lock();
+            try {
                 inFlightTxLocations.add(location);
+            }finally {
+                lock.unlock();
             }
             transactionStore.addMessage(this, message, location);
             context.getTransaction().addSynchronization(new Synchronization() {
@@ -124,8 +130,11 @@ public class AMQMessageStore implements MessageStore {
                     if (debug) {
                         LOG.debug("Transacted message add commit for: " + id + ", at: " + location);
                     }
-                    synchronized (AMQMessageStore.this) {
+                    lock.lock();
+                    try {
                         inFlightTxLocations.remove(location);
+                    }finally {
+                        lock.unlock();
                     }
                     addMessage(message, location);
                 }
@@ -134,8 +143,11 @@ public class AMQMessageStore implements MessageStore {
                     if (debug) {
                         LOG.debug("Transacted message add rollback for: " + id + ", at: " + location);
                     }
-                    synchronized (AMQMessageStore.this) {
+                    lock.lock();
+                    try {
                         inFlightTxLocations.remove(location);
+                    }finally {
+                        lock.unlock();
                     }
                 }
             });
@@ -147,10 +159,13 @@ public class AMQMessageStore implements MessageStore {
         data.setExpiration(message.getExpiration());
         data.setFileId(location.getDataFileId());
         data.setOffset(location.getOffset());
-        synchronized (this) {
+         lock.lock();
+         try {
             lastLocation = location;
             messages.put(message.getMessageId(), data);
             this.peristenceAdapter.addInProgressDataFile(this, location.getDataFileId());
+        }finally {
+            lock.unlock();
         }
         if (messages.size() > this.peristenceAdapter
                 .getMaxCheckpointMessageAddSize()) {
@@ -199,8 +214,11 @@ public class AMQMessageStore implements MessageStore {
             if (debug) {
                 LOG.debug("Journalled transacted message remove for: " + ack.getLastMessageId() + ", at: " + location);
             }
-            synchronized (this) {
+            lock.lock();
+            try {
                 inFlightTxLocations.add(location);
+            }finally {
+                lock.unlock();
             }
             transactionStore.removeMessage(this, ack, location);
             context.getTransaction().addSynchronization(new Synchronization() {
@@ -209,9 +227,12 @@ public class AMQMessageStore implements MessageStore {
                     if (debug) {
                         LOG.debug("Transacted message remove commit for: " + ack.getLastMessageId() + ", at: " + location);
                     }
-                    synchronized (AMQMessageStore.this) {
+                    lock.lock();
+                    try {
                         inFlightTxLocations.remove(location);
                         removeMessage(ack,location);
+                    }finally {
+                        lock.unlock();
                     }
                 }
 
@@ -219,8 +240,11 @@ public class AMQMessageStore implements MessageStore {
                     if (debug) {
                         LOG.debug("Transacted message remove rollback for: " + ack.getLastMessageId() + ", at: " + location);
                     }
-                    synchronized (AMQMessageStore.this) {
+                    lock.lock();
+                    try {
                         inFlightTxLocations.remove(location);
+                    }finally {
+                        lock.unlock();
                     }
                 }
             });
@@ -229,13 +253,16 @@ public class AMQMessageStore implements MessageStore {
 
     final void removeMessage(final MessageAck ack, final Location location) throws InterruptedIOException {
         ReferenceData data;
-        synchronized (this) {
+        lock.lock();
+        try{
             lastLocation = location;
             MessageId id = ack.getLastMessageId();
             data = messages.remove(id);
             if (data == null) {
                 messageAcks.add(ack);
             }
+        }finally {
+            lock.unlock();
         }
         if (messageAcks.size() > this.peristenceAdapter.getMaxCheckpointMessageAddSize()) {
             flush();
@@ -273,7 +300,8 @@ public class AMQMessageStore implements MessageStore {
             LOG.debug("flush starting ...");
         }
         CountDownLatch countDown;
-        synchronized (this) {
+        lock.lock();
+        try {
             if (lastWrittenLocation == lastLocation) {
                 return;
             }
@@ -281,6 +309,8 @@ public class AMQMessageStore implements MessageStore {
                 flushLatch = new CountDownLatch(1);
             }
             countDown = flushLatch;
+        }finally {
+            lock.unlock();
         }
         try {
             asyncWriteTask.wakeup();
@@ -300,9 +330,12 @@ public class AMQMessageStore implements MessageStore {
     void asyncWrite() {
         try {
             CountDownLatch countDown;
-            synchronized (this) {
+            lock.lock();
+            try {
                 countDown = flushLatch;
                 flushLatch = null;
+            }finally {
+                lock.unlock();
             }
             mark.set(doAsyncWrite());
             if (countDown != null) {
@@ -323,13 +356,16 @@ public class AMQMessageStore implements MessageStore {
         final int maxCheckpointMessageAddSize = peristenceAdapter.getMaxCheckpointMessageAddSize();
         final Location lastLocation;
         // swap out the message hash maps..
-        synchronized (this) {
+        lock.lock();
+        try {
             cpAddedMessageIds = this.messages;
             cpRemovedMessageLocations = this.messageAcks;
             cpActiveJournalLocations = new ArrayList<Location>(inFlightTxLocations);
             this.messages = new LinkedHashMap<MessageId, ReferenceData>();
             this.messageAcks = new ArrayList<MessageAck>();
             lastLocation = this.lastLocation;
+        }finally {
+            lock.unlock();
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("Doing batch update... adding: " + cpAddedMessageIds.size() + " removing: " + cpRemovedMessageLocations.size() + " ");
@@ -371,9 +407,12 @@ public class AMQMessageStore implements MessageStore {
             }
         });
         LOG.debug("Batch update done.");
-        synchronized (this) {
+        lock.lock();
+        try {
             cpAddedMessageIds = null;
             lastWrittenLocation = lastLocation;
+        }finally {
+            lock.unlock();
         }
         if (cpActiveJournalLocations.size() > 0) {
             Collections.sort(cpActiveJournalLocations);
@@ -403,12 +442,15 @@ public class AMQMessageStore implements MessageStore {
     
     protected Location getLocation(MessageId messageId) throws IOException {
         ReferenceData data = null;
-        synchronized (this) {
+        lock.lock();
+        try {
             // Is it still in flight???
             data = messages.get(messageId);
             if (data == null && cpAddedMessageIds != null) {
                 data = cpAddedMessageIds.get(messageId);
             }
+        }finally {
+            lock.unlock();
         }
         if (data == null) {
             data = referenceStore.getMessageReference(messageId);
@@ -483,11 +525,11 @@ public class AMQMessageStore implements MessageStore {
     }
 
     public void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception {
-        /*
           RecoveryListenerAdapter recoveryListener = new RecoveryListenerAdapter(
                 this, listener);
         if (referenceStore.supportsExternalBatchControl()) {
-            synchronized (this) {
+            lock.lock();
+            try {
                 referenceStore.recoverNextMessages(maxReturned,
                         recoveryListener);
                 if (recoveryListener.size() == 0 && recoveryListener.hasSpace()) {
@@ -505,18 +547,21 @@ public class AMQMessageStore implements MessageStore {
                     referenceStore.setBatch(recoveryListener
                             .getLastRecoveredMessageId());
                 }
+            }finally {
+                lock.unlock();
             }
         } else {
             flush();
             referenceStore.recoverNextMessages(maxReturned, recoveryListener);
         }
-        */
+        /*
         RecoveryListenerAdapter recoveryListener = new RecoveryListenerAdapter(this, listener);
         referenceStore.recoverNextMessages(maxReturned, recoveryListener);
         if (recoveryListener.size() == 0 && recoveryListener.hasSpace()) {
             flush();
             referenceStore.recoverNextMessages(maxReturned, recoveryListener);
         }
+        */
        
     }
 

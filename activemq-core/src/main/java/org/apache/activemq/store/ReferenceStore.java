@@ -18,6 +18,7 @@
 package org.apache.activemq.store;
 
 import java.io.IOException;
+import java.util.concurrent.locks.Lock;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.MessageId;
@@ -82,5 +83,7 @@ public interface ReferenceStore extends MessageStore {
     boolean supportsExternalBatchControl();
 
     void setBatch(MessageId startAfter);
-
+    
+    Lock getStoreLock();
+    
 }

@@ -205,4 +205,14 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
     public void destroy() {
     }
 
+   
+    protected boolean isDropped(MessageReference node) {
+       boolean result = false;
+       if(node instanceof IndirectMessageReference) {
+           QueueMessageReference qmr = (QueueMessageReference) node;
+           result = qmr.isDropped();
+       }
+       return result;
+    }
+
 }
