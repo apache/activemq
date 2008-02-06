@@ -25,7 +25,7 @@
 	<property name="topic" value="false" />
 	<property name="subject" value="TEST.FOO" />
 	<property name="durable" value="false" />
-	<property name="max" value="10" />
+	<property name="max" value="2000" />
 	<property name="messageSize" value="1000" />
 	<property name="clientId" value="consumer1" />
 	<property name="producerClientId" value="null" />
