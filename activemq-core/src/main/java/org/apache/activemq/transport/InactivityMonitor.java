@@ -26,7 +26,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.command.KeepAliveInfo;
 import org.apache.activemq.command.WireFormatInfo;
-import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.thread.SchedulerTimerTask;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,8 +40,11 @@ public class InactivityMonitor extends TransportFilter {
 
     private static final Log LOG = LogFactory.getLog(InactivityMonitor.class);
     private static final ThreadPoolExecutor ASYNC_TASKS;
-    private static final Timer  READ_CHECK_TIMER = new Timer("InactivityMonitor ReadCheck");
-    private static final Timer  WRITE_CHECK_TIMER = new Timer("InactivityMonitor WriteCheck");
+    
+    private static int CHECKER_COUNTER;
+    private static Timer  READ_CHECK_TIMER;
+    private static Timer  WRITE_CHECK_TIMER;
+    
     private WireFormatInfo localWireFormatInfo;
     private WireFormatInfo remoteWireFormatInfo;
     private final AtomicBoolean monitorStarted = new AtomicBoolean(false);
@@ -55,6 +57,7 @@ public class InactivityMonitor extends TransportFilter {
     private SchedulerTimerTask writeCheckerTask;
     private SchedulerTimerTask readCheckerTask;
 
+    
     private final Runnable readChecker = new Runnable() {
         long lastRunTime;
         public void run() {
@@ -218,8 +221,15 @@ public class InactivityMonitor extends TransportFilter {
             writeCheckerTask = new SchedulerTimerTask(writeChecker);
             readCheckerTask = new  SchedulerTimerTask(readChecker);
             long writeCheckTime = checkTime/3;
-            WRITE_CHECK_TIMER.scheduleAtFixedRate(writeCheckerTask, writeCheckTime,writeCheckTime);
-            READ_CHECK_TIMER.scheduleAtFixedRate(readCheckerTask, checkTime,checkTime);
+            synchronized( InactivityMonitor.class ) {
+            	if( CHECKER_COUNTER == 0 ) {
+            	    READ_CHECK_TIMER = new Timer("InactivityMonitor ReadCheck");
+            	    WRITE_CHECK_TIMER = new Timer("InactivityMonitor WriteCheck");
+            	}
+            	CHECKER_COUNTER++;
+                WRITE_CHECK_TIMER.scheduleAtFixedRate(writeCheckerTask, writeCheckTime,writeCheckTime);
+                READ_CHECK_TIMER.scheduleAtFixedRate(readCheckerTask, checkTime,checkTime);
+            }
         }
     }
 
@@ -230,8 +240,17 @@ public class InactivityMonitor extends TransportFilter {
         if (monitorStarted.compareAndSet(true, false)) {
             readCheckerTask.cancel();
             writeCheckerTask.cancel();
-            WRITE_CHECK_TIMER.purge();
-            READ_CHECK_TIMER.purge();
+            synchronized( InactivityMonitor.class ) {
+	            WRITE_CHECK_TIMER.purge();
+	            READ_CHECK_TIMER.purge();
+	            CHECKER_COUNTER--;
+	            if(CHECKER_COUNTER==0) {
+	            	WRITE_CHECK_TIMER.cancel();
+	            	READ_CHECK_TIMER.cancel();
+	            	WRITE_CHECK_TIMER = null;
+	            	READ_CHECK_TIMER = null;
+	            }
+            }
         }
     }
     
