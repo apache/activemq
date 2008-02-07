@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.advisory.AdvisorySupport;
+import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.util.ByteArrayInputStream;
@@ -41,7 +42,10 @@ import org.apache.activemq.wireformat.WireFormat;
  */
 public abstract class Message extends BaseCommand implements MarshallAware, MessageReference {
 
-    public static final int AVERAGE_MESSAGE_SIZE_OVERHEAD = 8 * 1024;
+    /**
+     * The default minimum amount of memory a message is assumed to use
+     */
+    public static final int DEFAULT_MINIMUM_MESSAGE_SIZE = 1024;
 
     protected MessageId messageId;
     protected ActiveMQDestination originalDestination;
@@ -620,8 +624,9 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     }
 
     public int getSize() {
-        if (size <= AVERAGE_MESSAGE_SIZE_OVERHEAD) {
-            size = AVERAGE_MESSAGE_SIZE_OVERHEAD;
+        int minimumMessageSize = getMinimumMessageSize();
+        if (size < minimumMessageSize) {
+            size = minimumMessageSize;
             if (marshalledProperties != null) {
                 size += marshalledProperties.getLength();
             }
@@ -630,6 +635,16 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
             }
         }
         return size;
+    }
+    
+    protected int getMinimumMessageSize() {
+        int result = DEFAULT_MINIMUM_MESSAGE_SIZE;
+        //let destination override
+        Destination dest = regionDestination;
+        if (dest != null) {
+            result=dest.getMinimumMessageSize();
+        }
+        return result;
     }
 
     /**

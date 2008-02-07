@@ -37,9 +37,11 @@ public abstract class BaseDestination implements Destination {
     protected final MemoryUsage memoryUsage;
     private boolean producerFlowControl = true;
     private int maxProducersToAudit=1024;
-    private int maxAuditDepth=1;
+    private int maxAuditDepth=2048;
     private boolean enableAudit=true;
     private int maxPageSize=1000;
+    private boolean useCache=true;
+    private int minimumMessageSize=1024;
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
     
     /**
@@ -160,5 +162,21 @@ public abstract class BaseDestination implements Destination {
 
     public void setMaxPageSize(int maxPageSize) {
         this.maxPageSize = maxPageSize;
+    }
+
+    public boolean isUseCache() {
+        return useCache;
+    }
+
+    public void setUseCache(boolean useCache) {
+        this.useCache = useCache;
+    }
+
+    public int getMinimumMessageSize() {
+        return minimumMessageSize;
+    }
+
+    public void setMinimumMessageSize(int minimumMessageSize) {
+        this.minimumMessageSize = minimumMessageSize;
     }      
 }

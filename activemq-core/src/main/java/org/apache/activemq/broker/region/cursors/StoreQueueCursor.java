@@ -121,7 +121,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
 
     public synchronized boolean hasNext() {
 
-        boolean result = pendingCount > 0;
+        boolean result = true;//pendingCount > 0;
         if (result) {
             try {
                 currentCursor = getNextCursor();

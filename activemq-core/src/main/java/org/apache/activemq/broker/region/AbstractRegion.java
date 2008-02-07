@@ -165,7 +165,6 @@ public abstract class AbstractRegion implements Region {
             // the destination and that they should un-subscribe.. Then wait up
             // to timeout time before
             // dropping the subscription.
-
         }
 
         LOG.debug("Removing destination: " + destination);

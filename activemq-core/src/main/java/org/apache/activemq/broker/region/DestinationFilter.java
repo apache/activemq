@@ -153,7 +153,6 @@ public class DestinationFilter implements Destination {
     public boolean isEnableAudit() {
         return next.isEnableAudit();
     }
-
     
     public void setEnableAudit(boolean enableAudit) {
         next.setEnableAudit(enableAudit);
@@ -179,4 +178,20 @@ public class DestinationFilter implements Destination {
     public void setMaxPageSize(int maxPageSize) {
         next.setMaxPageSize(maxPageSize);
     }
+
+    public boolean isUseCache() {
+        return next.isUseCache();
+    }
+
+    public void setUseCache(boolean useCache) {
+        next.setUseCache(useCache);
+    }   
+    
+    public int getMinimumMessageSize() {
+        return next.getMinimumMessageSize();
+    }
+
+    public void setMinimumMessageSize(int minimumMessageSize) {
+        next.setMinimumMessageSize(minimumMessageSize);
+    }    
 }

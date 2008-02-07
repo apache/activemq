@@ -36,10 +36,10 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
     protected int maxBatchSize = 100;
     protected SystemUsage systemUsage;
     protected int maxProducersToAudit=1024;
-    protected int maxAuditDepth=1;
+    protected int maxAuditDepth=1000;
     protected boolean enableAudit=true;
     protected ActiveMQMessageAudit audit;
-    protected boolean useCache=true;
+    protected boolean useCache=false;
     private boolean started=false;
   
 

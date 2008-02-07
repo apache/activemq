@@ -111,6 +111,7 @@ public class Queue extends BaseDestination implements Task {
             messages.setEnableAudit(isEnableAudit());
             messages.setMaxAuditDepth(getMaxAuditDepth());
             messages.setMaxProducersToAudit(getMaxProducersToAudit());
+            messages.setUseCache(isUseCache());
             if (messages.isRecoveryRequired()) {
                 store.recover(new MessageRecoveryListener() {
 

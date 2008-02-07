@@ -51,12 +51,14 @@ public class PolicyEntry extends DestinationMapEntry {
     private PendingDurableSubscriberMessageStoragePolicy pendingDurableSubscriberPolicy;
     private PendingSubscriberMessageStoragePolicy pendingSubscriberPolicy;
     private int maxProducersToAudit=32;
-    private int maxAuditDepth=1024;
-    private int maxQueueAuditDepth=1;
+    private int maxAuditDepth=2048;
+    private int maxQueueAuditDepth=2048;
     private boolean enableAudit=true;
     private boolean producerFlowControl = true;
     private boolean optimizedDispatch=false;
     private int maxPageSize=1000;
+    private boolean useCache=true;
+    private long minimumMessageSize=1024;
    
     public void configure(Broker broker,Queue queue) {
         if (dispatchPolicy != null) {
@@ -78,6 +80,8 @@ public class PolicyEntry extends DestinationMapEntry {
         queue.setMaxAuditDepth(getMaxQueueAuditDepth());
         queue.setMaxProducersToAudit(getMaxProducersToAudit());
         queue.setMaxPageSize(getMaxPageSize());
+        queue.setUseCache(isUseCache());
+        queue.setMinimumMessageSize((int) getMinimumMessageSize());
     }
 
     public void configure(Topic topic) {
@@ -99,6 +103,8 @@ public class PolicyEntry extends DestinationMapEntry {
         topic.setMaxAuditDepth(getMaxAuditDepth());
         topic.setMaxProducersToAudit(getMaxProducersToAudit());
         topic.setMaxPageSize(getMaxPageSize());
+        topic.setUseCache(isUseCache());
+        topic.setMinimumMessageSize((int) getMinimumMessageSize());
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
@@ -360,5 +366,24 @@ public class PolicyEntry extends DestinationMapEntry {
     public void setMaxPageSize(int maxPageSize) {
         this.maxPageSize = maxPageSize;
     }    
+    
+    public boolean isUseCache() {
+        return useCache;
+    }
+
+    public void setUseCache(boolean useCache) {
+        this.useCache = useCache;
+    }
+
+    public long getMinimumMessageSize() {
+        return minimumMessageSize;
+    }
+
+    /**
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
+     */
+    public void setMinimumMessageSize(long minimumMessageSize) {
+        this.minimumMessageSize = minimumMessageSize;
+    }      
 
 }
