@@ -14,6 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.activemq.pool;
 
 import java.io.IOException;
@@ -73,7 +74,14 @@ public class ConnectionPool {
 
             public void transportResumed() {
             }
-        });
+        });       
+        //
+        // make sure that we set the hasFailed flag, in case the transport already failed
+        // prior to the addition of our new TransportListener
+        //
+        if(connection.isTransportFailed()) {
+            hasFailed = true;
+        }
     }
 
     public ConnectionPool(ActiveMQConnection connection, Map<SessionKey, SessionPool> cache, ObjectPoolFactory poolFactory,
@@ -218,5 +226,4 @@ public class ConnectionPool {
             }
         }
     }
-
 }
