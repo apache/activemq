@@ -20,8 +20,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
+import java.nio.channels.OverlappingFileLockException;
 
 import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.IOExceptionSupport;
 
 /**
  * Use to reliably store fixed sized state data. It stores the state in record
@@ -72,7 +74,11 @@ public final class ControlFile {
         }
 
         if (lock == null) {
-            lock = randomAccessFile.getChannel().tryLock();
+            try {
+                lock = randomAccessFile.getChannel().tryLock();
+            } catch (OverlappingFileLockException e) {
+                throw IOExceptionSupport.create("Control file '" + file + "' could not be locked.",e);
+            }
             if (lock == null) {
                 throw new IOException("Control file '" + file + "' could not be locked.");
             }
