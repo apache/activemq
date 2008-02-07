@@ -895,11 +895,8 @@ public class Queue extends BaseDestination implements Task {
             Runnable op = messagesWaitingForSpace.removeFirst();
             op.run();
         }
-
-        synchronized (messages) {
-            result = !messages.isEmpty();
-        }
-        return result;
+        //must return false  to prevent spinning
+        return false;
     }
 
     protected MessageReferenceFilter createMessageIdFilter(final String messageId) {
