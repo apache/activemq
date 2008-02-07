@@ -29,6 +29,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.ProxyMessageStore;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.usage.SystemUsage;
@@ -142,6 +143,12 @@ public class MemoryPersistenceAdapter implements PersistenceAdapter {
     protected MemoryMessageStore asMemoryMessageStore(Object value) {
         if (value instanceof MemoryMessageStore) {
             return (MemoryMessageStore)value;
+        }
+        if (value instanceof ProxyMessageStore) {
+            MessageStore delegate = ((ProxyMessageStore)value).getDelegate();
+            if (delegate instanceof MemoryMessageStore) {
+                return (MemoryMessageStore) delegate;
+            }
         }
         LOG.warn("Expected an instance of MemoryMessageStore but was: " + value);
         return null;
