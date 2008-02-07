@@ -88,4 +88,12 @@ public interface Destination extends Service {
     int getMaxPageSize();
     
     public void setMaxPageSize(int maxPageSize);
+    
+    public boolean isUseCache();
+    
+    public void setUseCache(boolean useCache);
+    
+    public int getMinimumMessageSize();
+
+    public void setMinimumMessageSize(int minimumMessageSize);
 }
