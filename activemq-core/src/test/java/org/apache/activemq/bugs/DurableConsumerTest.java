@@ -143,7 +143,7 @@ public class DurableConsumerTest extends TestCase {
     protected void configureBroker(BrokerService answer,boolean deleteStore) throws Exception {
         answer.setDeleteAllMessagesOnStartup(deleteStore);
         answer.addConnector(bindAddress);
-        answer.setUseShutdownHook(true);
+        answer.setUseShutdownHook(false);
     }
 
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
