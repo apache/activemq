@@ -318,9 +318,6 @@ public class FailoverTransport implements CompositeTransport {
 		this.backupPoolSize = backupPoolSize;
 	}
 	
-/*
-* BEGIN Patch segment for issue AMQ-1116
-*/	
     /**
      * @return Returns true if the command is one sent when a connection
      * is being closed.
@@ -328,9 +325,6 @@ public class FailoverTransport implements CompositeTransport {
     private boolean isShutdownCommand(Command command) {
 	return (command != null && (command.isShutdownInfo() || command instanceof RemoveInfo));
     }
-/*
-* END Patch segment
-*/
 	 
 
     public void oneway(Object o) throws IOException {
