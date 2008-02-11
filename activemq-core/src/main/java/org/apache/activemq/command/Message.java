@@ -625,7 +625,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
 
     public int getSize() {
         int minimumMessageSize = getMinimumMessageSize();
-        if (size < minimumMessageSize) {
+        if (size < minimumMessageSize || size == 0) {
             size = minimumMessageSize;
             if (marshalledProperties != null) {
                 size += marshalledProperties.getLength();
