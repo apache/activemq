@@ -29,7 +29,6 @@ public class BitArrayBin {
     private int maxNumberOfArrays;
     private int firstIndex = -1;
     private int firstBin = -1;
-    private long lastBitSet=-1;
     private long lastInOrderBit=-1;
 
     /**
@@ -63,9 +62,7 @@ public class BitArrayBin {
                 answer = ba.set(offset, value);
             }
             if (value) {
-                lastBitSet=index;
             }else {
-                lastBitSet=-1;
             }
         }
         return answer;
