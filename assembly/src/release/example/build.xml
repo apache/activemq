@@ -53,8 +53,39 @@
 	<target name="help">
 		<echo>
 		This script requires Ant 1.6 or higher
+NOTE: All options should be specified as system properties 
+      on the command line, e.g.:
+      ant consumer -Durl=tcp://hostname:1234 -Dtopic=true
+      
+		 Usage:
+            --------------------------------------------------------
+            
+            --------------------------------------------------------
 
-		usage:
+            Options: 
+                              url - Used to specify acustom URL for the 
+                                    broker, e.g., tcp://hostname:1234
+                            topic - A boolean to determine whether to use
+                                    topics or queues; the default is false
+                          subject - Used to specify a custom destination 
+                                    name, e.g. MyDestination
+                          durable - A boolean to specify that you want to 
+                                    create a durable topic? 
+                              max - The maximum number of messages to wait 
+                                    for before shutting down 
+                         clientId - A string to use as the client id
+                       transacted - A boolean to specify that you want to use 
+                                    transactions? 
+                        sleepTime - The time to sleep between message consumptions
+                          verbose - Used to print out more info; the default is
+                                    true 
+                         ack-mode - The type of message acknowledgement to use; 
+                                    see the Javadocs for javax.jms.Session for
+                                    more information
+                 receive-time-out - An integer to specify the time to wait for
+                                    message consumption
+ 
+            --------------------------------------------------------
 		   ant -help		     		display ant help screen
 		   ant help						display this message
 		   ant clean		     		delete the built directory
