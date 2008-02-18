@@ -231,7 +231,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         }
     }
 
-    public int size() {
+    public synchronized int size() {
         int pendingCount=0;
         for (PendingMessageCursor tsp : storePrefetches) {
             pendingCount += tsp.size();
