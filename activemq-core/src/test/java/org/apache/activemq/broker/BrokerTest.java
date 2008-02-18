@@ -44,6 +44,7 @@ public class BrokerTest extends BrokerTestSupport {
     public int prefetch;
     public byte destinationType;
     public boolean durableConsumer;
+    protected static final int MAX_NULL_WAIT=500;
 
     public void initCombosForTestQueueOnlyOnceDeliveryWith2Consumers() {
         addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT),
@@ -65,7 +66,7 @@ public class BrokerTest extends BrokerTestSupport {
 
         ConsumerInfo consumerInfo1 = createConsumerInfo(sessionInfo1, destination);
         consumerInfo1.setPrefetchSize(1);
-        connection1.send(consumerInfo1);
+        connection1.request(consumerInfo1);
 
         // Setup a second connection
         StubConnection connection2 = createConnection();
@@ -75,13 +76,13 @@ public class BrokerTest extends BrokerTestSupport {
         consumerInfo2.setPrefetchSize(1);
         connection2.send(connectionInfo2);
         connection2.send(sessionInfo2);
-        connection2.send(consumerInfo2);
+        connection2.request(consumerInfo2);
 
         // Send the messages
         connection1.send(createMessage(producerInfo, destination, deliveryMode));
         connection1.send(createMessage(producerInfo, destination, deliveryMode));
         connection1.send(createMessage(producerInfo, destination, deliveryMode));
-        connection1.send(createMessage(producerInfo, destination, deliveryMode));
+        connection1.request(createMessage(producerInfo, destination, deliveryMode));
 
         for (int i = 0; i < 2; i++) {
             Message m1 = receiveMessage(connection1);
@@ -125,7 +126,9 @@ public class BrokerTest extends BrokerTestSupport {
         connection1.send(createMessage(producerInfo, destination, deliveryMode));
         connection1.send(createMessage(producerInfo, destination, deliveryMode));
         connection1.send(createMessage(producerInfo, destination, deliveryMode));
-        connection1.send(createMessage(producerInfo, destination, deliveryMode));
+        //as the messages are sent async - need to synchronize the last
+        //one to ensure they arrive in the order we want
+        connection1.request(createMessage(producerInfo, destination, deliveryMode));
 
         // Setup a second connection with a queue browser.
         StubConnection connection2 = createConnection();
@@ -189,7 +192,7 @@ public class BrokerTest extends BrokerTestSupport {
         // Send 3 messages to the broker.
         connection.send(createMessage(producerInfo, destination, deliveryMode));
         connection.send(createMessage(producerInfo, destination, deliveryMode));
-        connection.send(createMessage(producerInfo, destination, deliveryMode));
+        connection.request(createMessage(producerInfo, destination, deliveryMode));
 
         // Make sure only 1 message was delivered.
         Message m1 = receiveMessage(connection);
@@ -244,22 +247,21 @@ public class BrokerTest extends BrokerTestSupport {
             connection1.send(message);
         }
 
-        // Begin the transaction.
-        LocalTransactionId txid = createLocalTransaction(sessionInfo1);
-        connection1.send(createBeginTransaction(connectionInfo1, txid));
+       
 
         // Now get the messages.
         for (int i = 0; i < 4; i++) {
+            // Begin the transaction.
+            LocalTransactionId txid = createLocalTransaction(sessionInfo1);
+            connection1.send(createBeginTransaction(connectionInfo1, txid));
             Message m1 = receiveMessage(connection1);
             assertNotNull(m1);
             MessageAck ack = createAck(consumerInfo1, m1, 1, MessageAck.STANDARD_ACK_TYPE);
             ack.setTransactionId(txid);
             connection1.send(ack);
+         // Commit the transaction.
+            connection1.send(createCommitTransaction1Phase(connectionInfo1, txid));
         }
-
-        // Commit the transaction.
-        connection1.send(createCommitTransaction1Phase(connectionInfo1, txid));
-
         assertNoMessagesLeft(connection1);
     }
 
@@ -298,12 +300,12 @@ public class BrokerTest extends BrokerTestSupport {
         for (int i = 0; i < 4; i++) {
             Message message = createMessage(producerInfo1, destination, deliveryMode);
             message.setTransactionId(txid);
-            connection1.send(message);
+            connection1.request(message);
         }
 
         // The point of this test is that message should not be delivered until
         // send is committed.
-        assertNull(receiveMessage(connection1));
+        assertNull(receiveMessage(connection1,MAX_NULL_WAIT));
 
         // Commit the transaction.
         connection1.send(createCommitTransaction1Phase(connectionInfo1, txid));
@@ -444,7 +446,7 @@ public class BrokerTest extends BrokerTestSupport {
         connection1.send(createMessage(producerInfo1, destination, DeliveryMode.PERSISTENT));
         connection1.send(createMessage(producerInfo1, destination, DeliveryMode.PERSISTENT));
         connection1.send(createMessage(producerInfo1, destination, DeliveryMode.PERSISTENT));
-        connection1.send(createMessage(producerInfo1, destination, DeliveryMode.PERSISTENT));
+        connection1.request(createMessage(producerInfo1, destination, DeliveryMode.PERSISTENT));
 
         // Get the messages
         Message m = null;
@@ -529,13 +531,13 @@ public class BrokerTest extends BrokerTestSupport {
         }
 
         // Close the first consumer.
-        connection1.send(closeConsumerInfo(consumerInfo1));
+        connection1.request(closeConsumerInfo(consumerInfo1));
 
         // The last messages should now go the the second consumer.
         for (int i = 0; i < 1; i++) {
             Message m1 = receiveMessage(connection2);
             assertNotNull("m1 is null for index: " + i, m1);
-            connection2.send(createAck(consumerInfo2, m1, 1, MessageAck.STANDARD_ACK_TYPE));
+            connection2.request(createAck(consumerInfo2, m1, 1, MessageAck.STANDARD_ACK_TYPE));
         }
 
         assertNoMessagesLeft(connection2);
@@ -620,7 +622,7 @@ public class BrokerTest extends BrokerTestSupport {
         connection1.send(consumerInfo1);
 
         connection1.send(createMessage(producerInfo1, destination, deliveryMode));
-        connection1.send(createMessage(producerInfo1, destination, deliveryMode));
+        connection1.request(createMessage(producerInfo1, destination, deliveryMode));
 
         // the behavior is VERY dependent on the recovery policy used.
         // But the default broker settings try to make it as consistent as
@@ -879,7 +881,7 @@ public class BrokerTest extends BrokerTestSupport {
         ActiveMQDestination d1 = ActiveMQDestination.createDestination("WILD.CARD.TEST", destinationType);
         connection1.send(createMessage(producerInfo1, d1, deliveryMode));
         ActiveMQDestination d2 = ActiveMQDestination.createDestination("WILD.FOO.TEST", destinationType);
-        connection1.send(createMessage(producerInfo1, d2, deliveryMode));
+        connection1.request(createMessage(producerInfo1, d2, deliveryMode));
 
         Message m = receiveMessage(connection1);
         assertNotNull(m);
@@ -958,7 +960,7 @@ public class BrokerTest extends BrokerTestSupport {
         ConsumerInfo consumerInfo1 = createConsumerInfo(sessionInfo1, destinationA);
         consumerInfo1.setRetroactive(true);
         consumerInfo1.setPrefetchSize(100);
-        connection1.send(consumerInfo1);
+        connection1.request(consumerInfo1);
 
         // Setup a second connection
         StubConnection connection2 = createConnection();
@@ -971,13 +973,13 @@ public class BrokerTest extends BrokerTestSupport {
         ConsumerInfo consumerInfo2 = createConsumerInfo(sessionInfo2, destinationB);
         consumerInfo2.setRetroactive(true);
         consumerInfo2.setPrefetchSize(100);
-        connection2.send(consumerInfo2);
+        connection2.request(consumerInfo2);
 
         // Send the messages to the composite destination.
         ActiveMQDestination compositeDestination = ActiveMQDestination.createDestination("A,B",
                                                                                          destinationType);
         for (int i = 0; i < 4; i++) {
-            connection1.send(createMessage(producerInfo1, compositeDestination, deliveryMode));
+            connection1.request(createMessage(producerInfo1, compositeDestination, deliveryMode));
         }
 
         // The messages should have been delivered to both the A and B
@@ -993,8 +995,8 @@ public class BrokerTest extends BrokerTestSupport {
             assertEquals(compositeDestination, m1.getOriginalDestination());
             assertEquals(compositeDestination, m2.getOriginalDestination());
 
-            connection1.send(createAck(consumerInfo1, m1, 1, MessageAck.STANDARD_ACK_TYPE));
-            connection2.send(createAck(consumerInfo2, m2, 1, MessageAck.STANDARD_ACK_TYPE));
+            connection1.request(createAck(consumerInfo1, m1, 1, MessageAck.STANDARD_ACK_TYPE));
+            connection2.request(createAck(consumerInfo2, m2, 1, MessageAck.STANDARD_ACK_TYPE));
 
         }
 
@@ -1052,9 +1054,9 @@ public class BrokerTest extends BrokerTestSupport {
         connection1.request(closeConnectionInfo(connectionInfo1));
 
         // Send another message, connection1 should not get the message.
-        connection2.send(createMessage(producerInfo2, destination, deliveryMode));
+        connection2.request(createMessage(producerInfo2, destination, deliveryMode));
 
-        assertNull(connection1.getDispatchQueue().poll(maxWait, TimeUnit.MILLISECONDS));
+        assertNull(connection1.getDispatchQueue().poll(MAX_NULL_WAIT, TimeUnit.MILLISECONDS));
     }
 
     public void initCombosForTestSessionCloseCascades() {
@@ -1104,9 +1106,9 @@ public class BrokerTest extends BrokerTestSupport {
         connection1.request(closeSessionInfo(sessionInfo1));
 
         // Send another message, connection1 should not get the message.
-        connection2.send(createMessage(producerInfo2, destination, deliveryMode));
+        connection2.request(createMessage(producerInfo2, destination, deliveryMode));
 
-        assertNull(connection1.getDispatchQueue().poll(maxWait, TimeUnit.MILLISECONDS));
+        assertNull(connection1.getDispatchQueue().poll(MAX_NULL_WAIT, TimeUnit.MILLISECONDS));
     }
 
     public void initCombosForTestConsumerClose() {
@@ -1156,9 +1158,9 @@ public class BrokerTest extends BrokerTestSupport {
         connection1.request(closeConsumerInfo(consumerInfo1));
 
         // Send another message, connection1 should not get the message.
-        connection2.send(createMessage(producerInfo2, destination, deliveryMode));
+        connection2.request(createMessage(producerInfo2, destination, deliveryMode));
 
-        assertNull(connection1.getDispatchQueue().poll(maxWait, TimeUnit.MILLISECONDS));
+        assertNull(connection1.getDispatchQueue().poll(MAX_NULL_WAIT, TimeUnit.MILLISECONDS));
     }
 
     public void initCombosForTestTopicNoLocal() {
@@ -1629,12 +1631,12 @@ public class BrokerTest extends BrokerTestSupport {
 
         ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
         consumerInfo.setPrefetchSize(1);
-        connection.send(consumerInfo);
+        connection.request(consumerInfo);
 
         // Send 3 messages to the broker.
         connection.send(createMessage(producerInfo, destination, deliveryMode));
         connection.send(createMessage(producerInfo, destination, deliveryMode));
-        connection.send(createMessage(producerInfo, destination, deliveryMode));
+        connection.request(createMessage(producerInfo, destination, deliveryMode));
 
         // Make sure only 1 message was delivered.
         Message m1 = receiveMessage(connection);
@@ -1644,15 +1646,15 @@ public class BrokerTest extends BrokerTestSupport {
 
         // Acknowledge the first message. This should cause the next message to
         // get dispatched.
-        connection.send(createAck(consumerInfo, m1, 1, MessageAck.DELIVERED_ACK_TYPE));
+        connection.request(createAck(consumerInfo, m1, 1, MessageAck.DELIVERED_ACK_TYPE));
 
         Message m2 = receiveMessage(connection);
         assertNotNull(m2);
-        connection.send(createAck(consumerInfo, m2, 1, MessageAck.DELIVERED_ACK_TYPE));
+        connection.request(createAck(consumerInfo, m2, 1, MessageAck.DELIVERED_ACK_TYPE));
 
         Message m3 = receiveMessage(connection);
         assertNotNull(m3);
-        connection.send(createAck(consumerInfo, m3, 1, MessageAck.DELIVERED_ACK_TYPE));
+        connection.request(createAck(consumerInfo, m3, 1, MessageAck.DELIVERED_ACK_TYPE));
     }
 
     public static Test suite() {
