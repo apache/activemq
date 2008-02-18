@@ -28,7 +28,6 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.usage.MemoryUsage;
-import org.apache.activemq.usage.SystemUsage;
 
 /**
  * @version $Revision: 1.12 $
@@ -44,8 +43,6 @@ public interface Destination extends Service {
     void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception;
 
     void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception;
-
-    boolean lock(MessageReference node, LockOwner lockOwner);
 
     void acknowledge(ConnectionContext context, Subscription sub, final MessageAck ack, final MessageReference node) throws IOException;
 

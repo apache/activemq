@@ -360,13 +360,17 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     protected void sendToDLQ(final ConnectionContext context, final MessageReference node) throws IOException, Exception {
         broker.sendToDeadLetterQueue(context, node);
     }
-
+    
+    public int getInFlightSize() {
+        return dispatched.size();
+    }
+    
     /**
      * Used to determine if the broker can dispatch to the consumer.
      * 
      * @return
      */
-    protected boolean isFull() {
+    public boolean isFull() {
         return isSlave() || dispatched.size() - prefetchExtension >= info.getPrefetchSize();
     }
 
@@ -603,6 +607,16 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
     public void setMaxAuditDepth(int maxAuditDepth) {
         this.maxAuditDepth = maxAuditDepth;
+    }
+    
+    
+    public List<MessageReference> getInFlightMessages(){
+        List<MessageReference> result = new ArrayList<MessageReference>();
+        synchronized(pendingLock) {
+            result.addAll(dispatched);
+            result.addAll(pending.pageInList(1000));
+        }
+        return result;
     }
 
 }

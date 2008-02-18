@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.jms.InvalidSelectorException;
 import javax.management.ObjectName;
@@ -38,6 +39,7 @@ public interface Subscription extends SubscriptionRecovery {
     /**
      * Used to add messages that match the subscription.
      * @param node
+     * @throws Exception 
      * @throws InterruptedException 
      * @throws IOException 
      */
@@ -169,6 +171,11 @@ public interface Subscription extends SubscriptionRecovery {
     boolean isHighWaterMark();
     
     /**
+     * @return true if there is no space to dispatch messages
+     */
+    boolean isFull();
+    
+    /**
      * inform the MessageConsumer on the client to change it's prefetch
      * @param newPrefetch
      */
@@ -186,11 +193,33 @@ public interface Subscription extends SubscriptionRecovery {
     int getPrefetchSize();
     
     /**
+     * @return the number of messages awaiting acknowledgement
+     */
+    int getInFlightSize();
+    
+    /**
+     * @return the in flight messages as a percentage of the prefetch size
+     */
+    int getInFlightUsage();
+    
+    /**
      * Informs the Broker if the subscription needs to intervention to recover it's state
      * e.g. DurableTopicSubscriber may do
      * @see org.apache.activemq.region.cursors.PendingMessageCursor
      * @return true if recovery required
      */
     boolean isRecoveryRequired();
+    
+    
+    /**
+     * @return true if a browser
+     */
+    boolean isBrowser();
+    
+    /**
+     * Get the list of in flight messages
+     * @return list
+     */
+    List<MessageReference> getInFlightMessages();
 
 }

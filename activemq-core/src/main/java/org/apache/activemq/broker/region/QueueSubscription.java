@@ -17,13 +17,14 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
+
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.group.MessageGroupMap;
 import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
@@ -67,54 +68,13 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
     }
 
     protected boolean canDispatch(MessageReference n) throws IOException {
+        boolean result = true;
         QueueMessageReference node = (QueueMessageReference)n;
-        if (node.isAcked()) {
-            return false;
+        if (node.isAcked() || node.isDropped()) {
+            result = false;
         }
-        // Keep message groups together.
-        String groupId = node.getGroupID();
-        int sequence = node.getGroupSequence();
-        if (groupId != null) {
-            MessageGroupMap messageGroupOwners = ((Queue)node.getRegionDestination()).getMessageGroupOwners();
-
-            // If we can own the first, then no-one else should own the rest.
-            if (sequence == 1) {
-                if (node.lock(this)) {
-                    assignGroupToMe(messageGroupOwners, n, groupId);
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-
-            // Make sure that the previous owner is still valid, we may
-            // need to become the new owner.
-            ConsumerId groupOwner;
-            synchronized (node) {
-                groupOwner = messageGroupOwners.get(groupId);
-                if (groupOwner == null) {
-                    if (node.lock(this)) {
-                        assignGroupToMe(messageGroupOwners, n, groupId);
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }
-            }
-
-            if (groupOwner.equals(info.getConsumerId())) {
-                // A group sequence < 1 is an end of group signal.
-                if (sequence < 0) {
-                    messageGroupOwners.removeGroup(groupId);
-                }
-                return true;
-            }
-
-            return false;
-
-        } else {
-            return node.lock(this);
-        }
+        result = result && (isBrowser() || node.lock(this));
+        return result;
     }
 
     /**

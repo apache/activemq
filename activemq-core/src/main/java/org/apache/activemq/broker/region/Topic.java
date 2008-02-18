@@ -33,6 +33,7 @@ import org.apache.activemq.broker.region.policy.FixedSizedSubscriptionRecoveryPo
 import org.apache.activemq.broker.region.policy.NoSubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.SimpleDispatchPolicy;
+import org.apache.activemq.broker.region.policy.SimpleDispatchSelector;
 import org.apache.activemq.broker.region.policy.SubscriptionRecoveryPolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -555,8 +556,7 @@ public class Topic  extends BaseDestination  implements Task{
     protected void dispatch(final ConnectionContext context, Message message) throws Exception {
         destinationStatistics.getMessages().increment();
         destinationStatistics.getEnqueues().increment();
-        dispatchValve.increment();
-        MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
+        dispatchValve.increment();      
         try {
             if (!subscriptionRecoveryPolicy.add(context, message)) {
                 return;
@@ -567,7 +567,7 @@ public class Topic  extends BaseDestination  implements Task{
                     return;
                 }
             }
-
+            MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
             msgContext.setDestination(destination);
             msgContext.setMessageReference(message);
 
@@ -575,7 +575,6 @@ public class Topic  extends BaseDestination  implements Task{
                 onMessageWithNoConsumers(context, message);
             }
         } finally {
-            msgContext.clear();
             dispatchValve.decrement();
         }
     }
