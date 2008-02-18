@@ -19,6 +19,7 @@ package org.apache.activemq.store.kahadaptor;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -253,8 +254,8 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
      */
    
     public void recoverState() throws IOException {
-        for (Iterator<SubscriptionInfo> i = durableSubscribers.iterator(); i.hasNext();) {
-            SubscriptionInfo info = i.next();
+        Set<SubscriptionInfo> set = new HashSet<SubscriptionInfo>(this.durableSubscribers);   
+        for (SubscriptionInfo info:set) {
             LOG.info("Recovering subscriber state for durable subscriber: " + info);
             TopicReferenceStore ts = createTopicReferenceStore((ActiveMQTopic)info.getDestination());
             ts.addSubsciption(info, false);
