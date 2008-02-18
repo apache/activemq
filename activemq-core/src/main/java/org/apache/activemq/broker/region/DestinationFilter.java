@@ -85,10 +85,6 @@ public class DestinationFilter implements Destination {
         return next.getMemoryUsage();
     }
 
-    public boolean lock(MessageReference node, LockOwner lockOwner) {
-        return next.lock(node, lockOwner);
-    }
-
     public void removeSubscription(ConnectionContext context, Subscription sub) throws Exception {
         next.removeSubscription(context, sub);
     }

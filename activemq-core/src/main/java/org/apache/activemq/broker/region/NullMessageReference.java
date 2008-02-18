@@ -44,7 +44,7 @@ final class NullMessageReference implements QueueMessageReference {
     }
 
     public boolean isDropped() {
-        throw new RuntimeException("not implemented");
+        return false;
     }
 
     public boolean lock(LockOwner subscription) {
@@ -55,7 +55,8 @@ final class NullMessageReference implements QueueMessageReference {
         throw new RuntimeException("not implemented");
     }
 
-    public void unlock() {
+    public boolean unlock() {
+        return true;
     }
 
     public int decrementReferenceCount() {

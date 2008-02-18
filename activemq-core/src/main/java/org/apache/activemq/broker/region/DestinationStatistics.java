@@ -36,6 +36,7 @@ public class DestinationStatistics extends StatsImpl {
     protected CountStatisticImpl messages;
     protected PollCountStatisticImpl messagesCached;
     protected CountStatisticImpl dispatched;
+    protected CountStatisticImpl inflight;
     protected TimeStatisticImpl processTime;
 
     public DestinationStatistics() {

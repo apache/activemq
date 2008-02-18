@@ -18,6 +18,8 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.jms.JMSException;
@@ -37,7 +39,6 @@ import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageDispatchNotification;
 import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.Response;
-import org.apache.activemq.kaha.Store;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
@@ -51,8 +52,7 @@ public class TopicSubscription extends AbstractSubscription {
     protected PendingMessageCursor matched;
     protected final SystemUsage usageManager;
     protected AtomicLong dispatchedCounter = new AtomicLong();
-    protected AtomicLong prefetchExtension = new AtomicLong();
-    
+       
     boolean singleDestination = true;
     Destination destination;
 
@@ -83,8 +83,7 @@ public class TopicSubscription extends AbstractSubscription {
     public void add(MessageReference node) throws Exception {
         enqueueCounter.incrementAndGet();
         node.incrementReferenceCount();
-        if (!isFull() && !isSlave()) {
-            optimizePrefetch();
+        if (!isFull() && matched.isEmpty()  && !isSlave()) {
             // if maximumPendingMessages is set we will only discard messages
             // which
             // have not been dispatched (i.e. we allow the prefetch buffer to be
@@ -128,6 +127,7 @@ public class TopicSubscription extends AbstractSubscription {
                         }
                     }
                 }
+                dispatchMatched();
             }
         }
     }
@@ -177,20 +177,18 @@ public class TopicSubscription extends AbstractSubscription {
 
     public synchronized void acknowledge(final ConnectionContext context, final MessageAck ack) throws Exception {
         // Handle the standard acknowledgment case.
-        boolean wasFull = isFull();
         if (ack.isStandardAck() || ack.isPoisonAck()) {
             if (context.isInTransaction()) {
-                prefetchExtension.addAndGet(ack.getMessageCount());
                 context.getTransaction().addSynchronization(new Synchronization() {
 
                     public void afterCommit() throws Exception {
-                        synchronized (TopicSubscription.this) {
+                       synchronized (TopicSubscription.this) {
                             if (singleDestination && destination != null) {
                                 destination.getDestinationStatistics().getDequeues().add(ack.getMessageCount());
                             }
                         }
                         dequeueCounter.addAndGet(ack.getMessageCount());
-                        prefetchExtension.addAndGet(ack.getMessageCount());
+                        dispatchMatched();
                     }
                 });
             } else {
@@ -198,19 +196,14 @@ public class TopicSubscription extends AbstractSubscription {
                     destination.getDestinationStatistics().getDequeues().add(ack.getMessageCount());
                 }
                 dequeueCounter.addAndGet(ack.getMessageCount());
-                prefetchExtension.addAndGet(ack.getMessageCount());
             }
-            if (wasFull && !isFull()) {
-                dispatchMatched();
-            }
+            dispatchMatched();
             return;
         } else if (ack.isDeliveredAck()) {
             // Message was delivered but not acknowledged: update pre-fetch
             // counters.
-            prefetchExtension.addAndGet(ack.getMessageCount());
-            if (wasFull && !isFull()) {
-                dispatchMatched();
-            }
+            dequeueCounter.addAndGet(ack.getMessageCount());
+            dispatchMatched();
             return;
         }
         throw new JMSException("Invalid acknowledgment: " + ack);
@@ -287,22 +280,27 @@ public class TopicSubscription extends AbstractSubscription {
 
     // Implementation methods
     // -------------------------------------------------------------------------
-    private boolean isFull() {
-        return getDispatchedQueueSize() - prefetchExtension.get() >= info.getPrefetchSize();
+    public boolean isFull() {
+        return getDispatchedQueueSize()  >= info.getPrefetchSize();
     }
-
+    
+    public int getInFlightSize() {
+        return getDispatchedQueueSize();
+    }
+    
+    
     /**
      * @return true when 60% or more room is left for dispatching messages
      */
     public boolean isLowWaterMark() {
-        return (getDispatchedQueueSize() - prefetchExtension.get()) <= (info.getPrefetchSize() * .4);
+        return getDispatchedQueueSize() <= (info.getPrefetchSize() * .4);
     }
 
     /**
      * @return true when 10% or less room is left for dispatching messages
      */
     public boolean isHighWaterMark() {
-        return (getDispatchedQueueSize() - prefetchExtension.get()) >= (info.getPrefetchSize() * .9);
+        return getDispatchedQueueSize() >= (info.getPrefetchSize() * .9);
     }
 
     /**
@@ -354,42 +352,30 @@ public class TopicSubscription extends AbstractSubscription {
         }
     }
 
-    /**
-     * optimize message consumer prefetch if the consumer supports it
-     */
-    public void optimizePrefetch() {
-        /*
-         * if(info!=null&&info.isOptimizedAcknowledge()&&context!=null&&context.getConnection()!=null
-         * &&context.getConnection().isManageable()){
-         * if(info.getCurrentPrefetchSize()!=info.getPrefetchSize() &&
-         * isLowWaterMark()){
-         * info.setCurrentPrefetchSize(info.getPrefetchSize());
-         * updateConsumerPrefetch(info.getPrefetchSize()); }else
-         * if(info.getCurrentPrefetchSize()==info.getPrefetchSize() &&
-         * isHighWaterMark()){ // want to purge any outstanding acks held by the
-         * consumer info.setCurrentPrefetchSize(1); updateConsumerPrefetch(1); } }
-         */
-    }
-
-    private void dispatchMatched() throws IOException {
+    private void dispatchMatched() throws IOException {       
         synchronized (matchedListMutex) {
-            try {
-                matched.reset();
-                while (matched.hasNext() && !isFull()) {
-                    MessageReference message = (MessageReference)matched.next();
-                    matched.remove();
-                    // Message may have been sitting in the matched list a while
-                    // waiting for the consumer to ak the message.
-                    if (broker.isExpired(message)) {
-                        message.decrementReferenceCount();
-                        broker.messageExpired(getContext(), message);
-                        dequeueCounter.incrementAndGet();
-                        continue; // just drop it.
+            if (!matched.isEmpty() && !isFull()) {
+                try {
+                    matched.reset();
+                   
+                    while (matched.hasNext() && !isFull()) {
+                        MessageReference message = (MessageReference) matched
+                                .next();
+                        matched.remove();
+                        // Message may have been sitting in the matched list a
+                        // while
+                        // waiting for the consumer to ak the message.
+                        if (broker.isExpired(message)) {
+                            message.decrementReferenceCount();
+                            broker.messageExpired(getContext(), message);
+                            dequeueCounter.incrementAndGet();
+                            continue; // just drop it.
+                        }
+                        dispatch(message);
                     }
-                    dispatch(message);
+                } finally {
+                    matched.release();
                 }
-            } finally {
-                matched.release();
             }
         }
     }
@@ -456,7 +442,15 @@ public class TopicSubscription extends AbstractSubscription {
     }
 
     public int getPrefetchSize() {
-        return (int)(info.getPrefetchSize() + prefetchExtension.get());
+        return (int)info.getPrefetchSize();
+    }
+    
+    /**
+     * Get the list of inflight messages
+     * @return the list
+     */
+    public synchronized List<MessageReference> getInFlightMessages(){
+        return matched.pageInList(1000);
     }
 
 }

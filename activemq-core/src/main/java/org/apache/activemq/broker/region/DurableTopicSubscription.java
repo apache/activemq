@@ -72,7 +72,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         return active;
     }
 
-    protected boolean isFull() {
+    public boolean isFull() {
         return !active || super.isFull();
     }
 

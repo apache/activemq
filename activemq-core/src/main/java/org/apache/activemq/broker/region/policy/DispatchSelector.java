@@ -14,29 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.broker.region;
+package org.apache.activemq.broker.region.policy;
+
+import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.Subscription;
 
 /**
- * Queue specific MessageReference.
- * 
- * @author fateev@amazon.com
- * @version $Revision$
+ * Determines if a subscription can dispatch a message reference
+ *
  */
-public interface QueueMessageReference extends MessageReference {
-
-    QueueMessageReference NULL_MESSAGE = new NullMessageReference();
-
-    boolean isAcked();
+public interface DispatchSelector {
+   
+   
+    /**
+     * return true if a subscription can dispatch a message reference
+     * @param subscription
+     * @param node
+     * @return true if can dispatch
+     * @throws Exception 
+     */
     
-    void setAcked(boolean b);
-    
-    void drop();
- 
-    boolean isDropped();
-        
-    boolean lock(LockOwner subscription);
-    
-    boolean unlock();
-    
-    LockOwner getLockOwner();
+    boolean canDispatch(Subscription subscription, MessageReference node) throws Exception;
 }

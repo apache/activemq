@@ -179,6 +179,17 @@ public abstract class AbstractSubscription implements Subscription {
     public ActiveMQDestination getActiveMQDestination() {
         return info != null ? info.getDestination() : null;
     }
+    
+    public boolean isBrowser() {
+        return info != null && info.isBrowser();
+    }
+    
+    public int getInFlightUsage() {
+        if (info.getPrefetchSize() > 0) {
+        return (getInFlightSize() * 100)/info.getPrefetchSize();
+        }
+        return Integer.MAX_VALUE;
+    }
 
     protected void doAddRecoveredMessage(MessageReference message) throws Exception {
         add(message);

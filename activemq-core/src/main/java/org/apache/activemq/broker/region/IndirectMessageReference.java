@@ -140,9 +140,6 @@ public class IndirectMessageReference implements QueueMessageReference {
     }
 
     public boolean lock(LockOwner subscription) {
-        if (!regionDestination.lock(this, subscription)) {
-            return false;
-        }
         synchronized (this) {
             if (dropped || (lockOwner != null && lockOwner != subscription)) {
                 return false;
@@ -152,8 +149,10 @@ public class IndirectMessageReference implements QueueMessageReference {
         }
     }
 
-    public synchronized void unlock() {
+    public synchronized boolean unlock() {
+        boolean result = lockOwner != null;
         lockOwner = null;
+        return result;
     }
 
     public synchronized LockOwner getLockOwner() {
