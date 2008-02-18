@@ -235,7 +235,7 @@ public class ExclusiveConsumerTest extends TestCase {
             producer.send(msg);
             producer.send(msg);
 
-            Assert.assertNotNull(exclusiveConsumer2.receive(100));
+            Assert.assertNotNull(exclusiveConsumer2.receive(1000));
             Assert.assertNull(fallbackConsumer.receive(100));
 
         } finally {
