@@ -964,6 +964,11 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
         </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-antrun-plugin</artifactId>
+          <version>1.1</version>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
@@ -988,22 +993,22 @@
           </archive>
         </configuration>
       </plugin>
-	  <plugin>
+      <plugin>
         <groupId>org.apache.felix</groupId>
-	    <artifactId>maven-bundle-plugin</artifactId>
-	    <version>${felix-version}</version>
-	    <extensions>true</extensions>
-	    <configuration>
-	      <instructions>
-	        <Bundle-Name>${artifactId}</Bundle-Name>
-	        <Bundle-SymbolicName>${activemq.osgi.symbolic.name}</Bundle-SymbolicName>
-	        <Export-Package>${activemq.osgi.export}</Export-Package>
-	        <Import-Package>${activemq.osgi.import}</Import-Package>
-	        <Private-Package>${activemq.osgi.private.pkg}</Private-Package>
-	        <Implementation-Title>Apache ActiveMQ</Implementation-Title>
-	        <Implementation-Version>${project.version}</Implementation-Version>
-	      </instructions>
-	    </configuration>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>${felix-version}</version>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Bundle-Name>${artifactId}</Bundle-Name>
+            <Bundle-SymbolicName>${activemq.osgi.symbolic.name}</Bundle-SymbolicName>
+            <Export-Package>${activemq.osgi.export}</Export-Package>
+            <Import-Package>${activemq.osgi.import}</Import-Package>
+            <Private-Package>${activemq.osgi.private.pkg}</Private-Package>
+            <Implementation-Title>Apache ActiveMQ</Implementation-Title>
+            <Implementation-Version>${project.version}</Implementation-Version>
+          </instructions>
+        </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-one-plugin</artifactId>

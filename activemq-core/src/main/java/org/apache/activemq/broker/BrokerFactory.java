@@ -40,7 +40,7 @@ public final class BrokerFactory {
         try {
             return (BrokerFactoryHandler)BROKER_FACTORY_HANDLER_FINDER.newInstance(type);
         } catch (Throwable e) {
-            throw IOExceptionSupport.create("Could load " + type + " factory:" + e, e);
+            throw IOExceptionSupport.create("Could not load " + type + " factory:" + e, e);
         }
     }
 
