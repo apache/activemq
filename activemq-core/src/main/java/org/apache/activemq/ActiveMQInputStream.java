@@ -174,15 +174,16 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
 
     public int read() throws IOException {
         fillBuffer();
-        if (eosReached) {
+        if (eosReached || buffer.length == 0) {
             return -1;
         }
+
         return buffer[pos++] & 0xff;
     }
 
     public int read(byte[] b, int off, int len) throws IOException {
         fillBuffer();
-        if (eosReached) {
+        if (eosReached || buffer.length == 0) {
             return -1;
         }
 
