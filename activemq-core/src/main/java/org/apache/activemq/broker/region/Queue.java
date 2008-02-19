@@ -978,9 +978,8 @@ public class Queue extends BaseDestination implements Task {
     }
     
     private void doDispatch(List<MessageReference> list) throws Exception {
-        
         if (list != null) {
-            synchronized (consumers) {      
+            synchronized (consumers) {
                 for (MessageReference node : list) {
                     Subscription target = null;
                     List<Subscription> targets = null;
@@ -998,9 +997,9 @@ public class Queue extends BaseDestination implements Task {
                             }
                         }
                     }
-                    if (targets != null) {
-                        // pick the least loaded to add the messag too
-    
+                    if (target == null && targets != null) {
+                        // pick the least loaded to add the message too
+
                         for (Subscription s : targets) {
                             if (target == null
                                     || target.getInFlightUsage() > s
@@ -1012,11 +1011,12 @@ public class Queue extends BaseDestination implements Task {
                             target.add(node);
                         }
                     }
-                    if (target != null && !dispatchSelector.isExclusiveConsumer(target)) {
+                    if (target != null
+                            && !dispatchSelector.isExclusiveConsumer(target)) {
                         consumers.remove(target);
                         consumers.add(target);
                     }
-    
+
                 }
             }
         }
