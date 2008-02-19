@@ -94,7 +94,7 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
     }
 
     public synchronized void write(int b) throws IOException {
-        buffer[count++] = (byte)b;
+        buffer[count++] = (byte) b;
         if (count == buffer.length) {
             flushBuffer();
         }
@@ -120,14 +120,16 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
     }
 
     private void flushBuffer() throws IOException {
-        try {
-            ActiveMQBytesMessage msg = new ActiveMQBytesMessage();
-            msg.writeBytes(buffer, 0, count);
-            send(msg, false);
-        } catch (JMSException e) {
-            throw IOExceptionSupport.create(e);
+        if (count != 0) {
+            try {
+                ActiveMQBytesMessage msg = new ActiveMQBytesMessage();
+                msg.writeBytes(buffer, 0, count);
+                send(msg, false);
+            } catch (JMSException e) {
+                throw IOExceptionSupport.create(e);
+            }
+            count = 0;
         }
-        count = 0;
     }
 
     /**
@@ -137,7 +139,7 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
     private void send(ActiveMQMessage msg, boolean eosMessage) throws JMSException {
         if (properties != null) {
             for (Iterator iter = properties.keySet().iterator(); iter.hasNext();) {
-                String key = (String)iter.next();
+                String key = (String) iter.next();
                 Object value = properties.get(key);
                 msg.setObjectProperty(key, value);
             }
@@ -147,7 +149,7 @@ public class ActiveMQOutputStream extends OutputStream implements Disposable {
         if (eosMessage) {
             msg.setGroupSequence(-1);
         } else {
-            msg.setGroupSequence((int)messageSequence);
+            msg.setGroupSequence((int) messageSequence);
         }
         MessageId id = new MessageId(info.getProducerId(), messageSequence++);
         connection.send(info.getDestination(), msg, id, deliveryMode, priority, timeToLive, !eosMessage);
