@@ -181,27 +181,27 @@ public final class ActiveMQMessageTransformation {
      * message to the specified message
      * 
      * @param fromMessage the message to take the properties from
-     * @param toMesage the message to add the properties to
+     * @param toMessage the message to add the properties to
      * @throws JMSException
      */
-    public static void copyProperties(Message fromMessage, Message toMesage) throws JMSException {
-        toMesage.setJMSMessageID(fromMessage.getJMSMessageID());
-        toMesage.setJMSCorrelationID(fromMessage.getJMSCorrelationID());
-        toMesage.setJMSReplyTo(transformDestination(fromMessage.getJMSReplyTo()));
-        toMesage.setJMSDestination(transformDestination(fromMessage.getJMSDestination()));
-        toMesage.setJMSDeliveryMode(fromMessage.getJMSDeliveryMode());
-        toMesage.setJMSRedelivered(fromMessage.getJMSRedelivered());
-        toMesage.setJMSType(fromMessage.getJMSType());
-        toMesage.setJMSExpiration(fromMessage.getJMSExpiration());
-        toMesage.setJMSPriority(fromMessage.getJMSPriority());
-        toMesage.setJMSTimestamp(fromMessage.getJMSTimestamp());
+    public static void copyProperties(Message fromMessage, Message toMessage) throws JMSException {
+        toMessage.setJMSMessageID(fromMessage.getJMSMessageID());
+        toMessage.setJMSCorrelationID(fromMessage.getJMSCorrelationID());
+        toMessage.setJMSReplyTo(transformDestination(fromMessage.getJMSReplyTo()));
+        toMessage.setJMSDestination(transformDestination(fromMessage.getJMSDestination()));
+        toMessage.setJMSDeliveryMode(fromMessage.getJMSDeliveryMode());
+        toMessage.setJMSRedelivered(fromMessage.getJMSRedelivered());
+        toMessage.setJMSType(fromMessage.getJMSType());
+        toMessage.setJMSExpiration(fromMessage.getJMSExpiration());
+        toMessage.setJMSPriority(fromMessage.getJMSPriority());
+        toMessage.setJMSTimestamp(fromMessage.getJMSTimestamp());
 
         Enumeration propertyNames = fromMessage.getPropertyNames();
 
         while (propertyNames.hasMoreElements()) {
             String name = propertyNames.nextElement().toString();
             Object obj = fromMessage.getObjectProperty(name);
-            toMesage.setObjectProperty(name, obj);
+            toMessage.setObjectProperty(name, obj);
         }
     }
 }
