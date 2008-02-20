@@ -77,7 +77,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     private int cleanupPeriod = 1000 * 60 * 5;
     private boolean useExternalMessageReferences;
     private boolean useDatabaseLock = true;
-    private int lockKeepAlivePeriod;
+    private long lockKeepAlivePeriod = 1000*30;
     private DatabaseLocker databaseLocker;
     private boolean createTablesOnStartup = true;
 
@@ -496,5 +496,13 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
 
     public long size(){
         return 0;
+    }
+
+    public int getLockKeepAlivePeriod() {
+        return lockKeepAlivePeriod;
+    }
+
+    public void setLockKeepAlivePeriod(int lockKeepAlivePeriod) {
+        this.lockKeepAlivePeriod = lockKeepAlivePeriod;
     }
 }
