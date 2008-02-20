@@ -17,7 +17,6 @@
 
 package org.apache.activemq.transport.tcp;
 
-import java.io.EOFException;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
