@@ -155,4 +155,10 @@ public class JPAReferenceStoreAdapter extends JPAPersistenceAdapter implements R
     public void savePreparedState(Map<TransactionId, AMQTx> map) throws IOException {
     }
 
+    public long getMaxDataFileLength() {
+        return 0;
+    }
+   
+    public void setMaxDataFileLength(long maxDataFileLength) {        
+    }
 }
