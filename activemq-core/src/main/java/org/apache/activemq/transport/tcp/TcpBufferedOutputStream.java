@@ -82,14 +82,16 @@ public class TcpBufferedOutputStream extends FilterOutputStream {
      * @throws IOException
      */
     public void write(byte b[], int off, int len) throws IOException {
-        if ((bufferlen - count) < len) {
-            flush();
-        }
-        if (buffer.length >= len) {
-            System.arraycopy(b, off, buffer, count, len);
-            count += len;
-        } else {
-            out.write(b, off, len);
+        if (b != null) {
+            if ((bufferlen - count) < len) {
+                flush();
+            }
+            if (buffer.length >= len) {
+                System.arraycopy(b, off, buffer, count, len);
+                count += len;
+            } else {
+                out.write(b, off, len);
+            }
         }
     }
 
