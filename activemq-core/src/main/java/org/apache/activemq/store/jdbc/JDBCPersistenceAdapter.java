@@ -498,11 +498,11 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         return 0;
     }
 
-    public int getLockKeepAlivePeriod() {
+    public long getLockKeepAlivePeriod() {
         return lockKeepAlivePeriod;
     }
 
-    public void setLockKeepAlivePeriod(int lockKeepAlivePeriod) {
+    public void setLockKeepAlivePeriod(long lockKeepAlivePeriod) {
         this.lockKeepAlivePeriod = lockKeepAlivePeriod;
     }
 }
