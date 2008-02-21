@@ -57,16 +57,30 @@ public class InactivityMonitor extends TransportFilter {
     private SchedulerTimerTask writeCheckerTask;
     private SchedulerTimerTask readCheckerTask;
 
+    private long readCheckTime;
+    private long writeCheckTime;
     
     private final Runnable readChecker = new Runnable() {
         long lastRunTime;
         public void run() {
             long now = System.currentTimeMillis();
+            long elapsed = (now-lastRunTime);
+
             if( lastRunTime != 0 && LOG.isDebugEnabled() ) {
-                LOG.debug(""+(now-lastRunTime)+" ms elapsed since last read check.");
-              
+                LOG.debug(""+elapsed+" ms elapsed since last read check.");
             }
-            lastRunTime = now; 
+            
+            // Perhaps the timer executed a read check late.. and then executes
+            // the next read check on time which causes the time elapsed between
+            // read checks to be small..
+            
+            // If less than 90% of the read check Time elapsed then abort this readcheck. 
+            if( elapsed < (readCheckTime * 9 / 10) ) {
+                LOG.debug("Aborting read check.. Not enough time elapsed since last read check.");
+                return;
+            }
+            
+            lastRunTime = now;
             readCheck();
         }
     };
@@ -215,12 +229,12 @@ public class InactivityMonitor extends TransportFilter {
             return;
         }
 
-        long checkTime = Math.min(localWireFormatInfo.getMaxInactivityDuration(), remoteWireFormatInfo.getMaxInactivityDuration());
-        if (checkTime > 0) {
+        readCheckTime = Math.min(localWireFormatInfo.getMaxInactivityDuration(), remoteWireFormatInfo.getMaxInactivityDuration());
+        if (readCheckTime > 0) {
             monitorStarted.set(true);
             writeCheckerTask = new SchedulerTimerTask(writeChecker);
             readCheckerTask = new  SchedulerTimerTask(readChecker);
-            long writeCheckTime = checkTime/3;
+            writeCheckTime = readCheckTime/3;
             synchronized( InactivityMonitor.class ) {
             	if( CHECKER_COUNTER == 0 ) {
             	    READ_CHECK_TIMER = new Timer("InactivityMonitor ReadCheck");
@@ -228,7 +242,7 @@ public class InactivityMonitor extends TransportFilter {
             	}
             	CHECKER_COUNTER++;
                 WRITE_CHECK_TIMER.scheduleAtFixedRate(writeCheckerTask, writeCheckTime,writeCheckTime);
-                READ_CHECK_TIMER.scheduleAtFixedRate(readCheckerTask, checkTime,checkTime);
+                READ_CHECK_TIMER.scheduleAtFixedRate(readCheckerTask, readCheckTime,readCheckTime);
             }
         }
     }
