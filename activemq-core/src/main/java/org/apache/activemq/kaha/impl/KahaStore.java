@@ -82,10 +82,11 @@ public class KahaStore implements Store {
     private boolean persistentIndex = true;
     private RandomAccessFile lockFile;
     private final AtomicLong storeSize;
+    private String defaultContainerName = DEFAULT_CONTAINER_NAME;
 
     
     public KahaStore(String name, String mode) throws IOException {
-    	this(new File(IOHelper.toFileSystemSafeName(name)), mode, new AtomicLong());
+    	this(new File(IOHelper.toFileSystemDirectorySafeName(name)), mode, new AtomicLong());
     }
 
     public KahaStore(File directory, String mode) throws IOException {
@@ -93,7 +94,7 @@ public class KahaStore implements Store {
     }
 
     public KahaStore(String name, String mode,AtomicLong storeSize) throws IOException {
-    	this(new File(IOHelper.toFileSystemSafeName(name)), mode, storeSize);
+    	this(new File(IOHelper.toFileSystemDirectorySafeName(name)), mode, storeSize);
     }
     
     public KahaStore(File directory, String mode, AtomicLong storeSize) throws IOException {
@@ -191,7 +192,7 @@ public class KahaStore implements Store {
     }
 
     public boolean doesMapContainerExist(Object id) throws IOException {
-        return doesMapContainerExist(id, DEFAULT_CONTAINER_NAME);
+        return doesMapContainerExist(id, defaultContainerName);
     }
 
     public synchronized boolean doesMapContainerExist(Object id, String containerName) throws IOException {
@@ -203,7 +204,7 @@ public class KahaStore implements Store {
     }
 
     public MapContainer getMapContainer(Object id) throws IOException {
-        return getMapContainer(id, DEFAULT_CONTAINER_NAME);
+        return getMapContainer(id, defaultContainerName);
     }
 
     public MapContainer getMapContainer(Object id, String containerName) throws IOException {
@@ -232,7 +233,7 @@ public class KahaStore implements Store {
     }
 
     public void deleteMapContainer(Object id) throws IOException {
-        deleteMapContainer(id, DEFAULT_CONTAINER_NAME);
+        deleteMapContainer(id, defaultContainerName);
     }
 
     public void deleteMapContainer(Object id, String containerName) throws IOException {
@@ -261,7 +262,7 @@ public class KahaStore implements Store {
     }
 
     public boolean doesListContainerExist(Object id) throws IOException {
-        return doesListContainerExist(id, DEFAULT_CONTAINER_NAME);
+        return doesListContainerExist(id, defaultContainerName);
     }
 
     public synchronized boolean doesListContainerExist(Object id, String containerName) throws IOException {
@@ -273,7 +274,7 @@ public class KahaStore implements Store {
     }
 
     public ListContainer getListContainer(Object id) throws IOException {
-        return getListContainer(id, DEFAULT_CONTAINER_NAME);
+        return getListContainer(id, defaultContainerName);
     }
 
     public ListContainer getListContainer(Object id, String containerName) throws IOException {
@@ -303,7 +304,7 @@ public class KahaStore implements Store {
     }
 
     public void deleteListContainer(Object id) throws IOException {
-        deleteListContainer(id, DEFAULT_CONTAINER_NAME);
+        deleteListContainer(id, defaultContainerName);
     }
 
     public synchronized void deleteListContainer(Object id, String containerName) throws IOException {
@@ -439,6 +440,31 @@ public class KahaStore implements Store {
 	public void setPersistentIndex(boolean persistentIndex) {
 		this.persistentIndex = persistentIndex;
 	}
+	
+
+    public synchronized boolean isUseAsyncDataManager() {
+        return useAsyncDataManager;
+    }
+
+    public synchronized void setUseAsyncDataManager(boolean useAsyncWriter) {
+        this.useAsyncDataManager = useAsyncWriter;
+    }
+
+    /**
+     * @return
+     * @see org.apache.activemq.kaha.Store#size()
+     */
+    public long size(){
+        return storeSize.get();
+    }
+
+    public String getDefaultContainerName() {
+        return defaultContainerName;
+    }
+
+    public void setDefaultContainerName(String defaultContainerName) {
+        this.defaultContainerName = defaultContainerName;
+    }
 
     public synchronized void initialize() throws IOException {
         if (closed) {
@@ -450,8 +476,8 @@ public class KahaStore implements Store {
             lockFile = new RandomAccessFile(new File(directory, "lock"), "rw");
             lock();
             LOG.info("Kaha Store using data directory " + directory);
-            DataManager defaultDM = getDataManager(DEFAULT_CONTAINER_NAME);
-            rootIndexManager = getIndexManager(defaultDM, DEFAULT_CONTAINER_NAME);
+            DataManager defaultDM = getDataManager(defaultContainerName);
+            rootIndexManager = getIndexManager(defaultDM, defaultContainerName);
             IndexItem mapRoot = new IndexItem();
             IndexItem listRoot = new IndexItem();
             if (rootIndexManager.isEmpty()) {
@@ -562,21 +588,4 @@ public class KahaStore implements Store {
 
         }
     }
-
-    public synchronized boolean isUseAsyncDataManager() {
-        return useAsyncDataManager;
-    }
-
-    public synchronized void setUseAsyncDataManager(boolean useAsyncWriter) {
-        this.useAsyncDataManager = useAsyncWriter;
-    }
-
-    /**
-     * @return
-     * @see org.apache.activemq.kaha.Store#size()
-     */
-    public long size(){
-        return storeSize.get();
-    }
-
 }

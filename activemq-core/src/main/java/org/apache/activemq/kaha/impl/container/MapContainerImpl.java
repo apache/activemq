@@ -22,7 +22,10 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
+
 import org.apache.activemq.kaha.ContainerId;
+import org.apache.activemq.kaha.IndexMBean;
 import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.RuntimeStoreException;
@@ -560,5 +563,33 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
         this.indexPageSize = indexPageSize;
     }
 
+  
+    public IndexMBean getIndexMBean() {
+      return (IndexMBean) index;
+    }
+
+   
+    public String toString() {
+        load();
+        StringBuffer buf = new StringBuffer();
+        buf.append("{");
+        Iterator i = entrySet().iterator();
+        boolean hasNext = i.hasNext();
+        while (hasNext) {
+            Map.Entry e = (Entry) i.next();
+            Object key = e.getKey();
+            Object value = e.getValue();
+            buf.append(key);
+            buf.append("=");
+
+            buf.append(value);
+            hasNext = i.hasNext();
+            if (hasNext)
+                buf.append(", ");
+        }
+        buf.append("}");
+        return buf.toString();
+    }
+   
     
 }

@@ -284,6 +284,18 @@ public interface Store {
 	public void setPersistentIndex(boolean persistentIndex);
 	
 	/**
+	 * @return the default container name
+	 */
+	public String getDefaultContainerName();
+
+	/**
+	 * set the default container name
+	 * @param defaultContainerName
+	 */
+    public void setDefaultContainerName(String defaultContainerName);
+
+	
+	/**
 	 * An explict call to initialize - this will also be called
 	 * implicitly for any other operation on the store.
 	 * @throws IOException

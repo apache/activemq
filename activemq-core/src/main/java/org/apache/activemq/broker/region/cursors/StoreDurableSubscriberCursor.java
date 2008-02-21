@@ -137,7 +137,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         return true;
     }
 
-    public boolean isEmpty(Destination destination) {
+    public synchronized boolean isEmpty(Destination destination) {
         boolean result = true;
         TopicStorePrefetch tsp = topics.get(destination);
         if (tsp != null) {
@@ -175,7 +175,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         }
     }
 
-    public void addRecoveredMessage(MessageReference node) throws Exception {
+    public synchronized void addRecoveredMessage(MessageReference node) throws Exception {
         nonPersistent.addMessageLast(node);
     }
 
@@ -262,7 +262,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         }
     }
     
-    public void setMaxProducersToAudit(int maxProducersToAudit) {
+    public synchronized void setMaxProducersToAudit(int maxProducersToAudit) {
         super.setMaxProducersToAudit(maxProducersToAudit);
         for (PendingMessageCursor cursor : storePrefetches) {
             cursor.setMaxAuditDepth(maxAuditDepth);
@@ -272,7 +272,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         }
     }
 
-    public void setMaxAuditDepth(int maxAuditDepth) {
+    public synchronized void setMaxAuditDepth(int maxAuditDepth) {
         super.setMaxAuditDepth(maxAuditDepth);
         for (PendingMessageCursor cursor : storePrefetches) {
             cursor.setMaxAuditDepth(maxAuditDepth);
@@ -292,7 +292,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         }
     }
     
-    public void setUseCache(boolean useCache) {
+    public synchronized void setUseCache(boolean useCache) {
         super.setUseCache(useCache);
         for (PendingMessageCursor cursor : storePrefetches) {
             cursor.setUseCache(useCache);
@@ -306,7 +306,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
      * Mark a message as already dispatched
      * @param message
      */
-    public void dispatched(MessageReference message) {
+    public synchronized void dispatched(MessageReference message) {
         super.dispatched(message);
         for (PendingMessageCursor cursor : storePrefetches) {
             cursor.dispatched(message);

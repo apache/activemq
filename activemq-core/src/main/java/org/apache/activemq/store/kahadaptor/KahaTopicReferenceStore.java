@@ -118,7 +118,8 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
 
     
     protected MapContainer addSubscriberMessageContainer(String clientId, String subscriptionName) throws IOException {
-        MapContainer container = store.getMapContainer(getSubscriptionContainerName(getSubscriptionKey(clientId, subscriptionName)));
+        String containerName = getSubscriptionContainerName(getSubscriptionKey(clientId, subscriptionName));
+        MapContainer container = store.getMapContainer(containerName,containerName);
         container.setKeyMarshaller(Store.MESSAGEID_MARSHALLER);
         Marshaller marshaller = new ConsumerMessageRefMarshaller();
         container.setValueMarshaller(marshaller);
@@ -164,42 +165,11 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
             lock.unlock();
         }
         return removeMessage;
-
     }
     
     public void acknowledge(ConnectionContext context,
-			String clientId, String subscriptionName, MessageId messageId)
-			throws IOException {
-		String key = getSubscriptionKey(clientId, subscriptionName);
-		lock.lock();
-		try {
-    		TopicSubContainer container = subscriberMessages.get(key);
-    		if (container != null) {
-                ConsumerMessageRef ref = container.remove(messageId);
-                if (ref != null) {
-                    TopicSubAck tsa = ackContainer.get(ref.getAckEntry());
-                    if (tsa != null) {
-                        if (tsa.decrementCount() <= 0) {
-                            StoreEntry entry = ref.getAckEntry();
-                            entry = ackContainer.refresh(entry);
-                            ackContainer.remove(entry);
-                            ReferenceRecord rr = messageContainer.get(messageId);
-                            if (rr != null) {
-                                entry = tsa.getMessageEntry();
-                                entry = messageContainer.refresh(entry);
-                                messageContainer.remove(entry);
-                                removeInterest(rr);
-                            }
-                        } else {
-    
-                            ackContainer.update(ref.getAckEntry(), tsa);
-                        }
-                    }
-                }
-            }
-		}finally {
-		    lock.unlock();
-		}
+			String clientId, String subscriptionName, MessageId messageId) throws IOException {
+	    acknowledgeReference(context, clientId, subscriptionName, messageId);
 	}
 
     public void addSubsciption(SubscriptionInfo info, boolean retroactive) throws IOException {
@@ -352,7 +322,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
                 }
             }
         }
-        store.deleteMapContainer(containerName);
+        store.deleteMapContainer(containerName,containerName);
     }
 
     protected String getSubscriptionKey(String clientId, String subscriberName) {

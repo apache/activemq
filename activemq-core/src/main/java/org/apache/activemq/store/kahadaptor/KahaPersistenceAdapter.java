@@ -265,13 +265,19 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
         this.maxDataFileLength = maxDataFileLength;
     }
 
-    protected synchronized Store getStore() throws IOException {
+    protected final synchronized Store getStore() throws IOException {
         if (theStore == null) {
-            theStore = StoreFactory.open(getStoreDirectory(), "rw",storeSize);
-            theStore.setMaxDataFileLength(maxDataFileLength);
-            theStore.setPersistentIndex(isPersistentIndex());
+            theStore = createStore();
         }
         return theStore;
+    }
+    
+    protected final Store createStore() throws IOException {
+        Store result = StoreFactory.open(getStoreDirectory(), "rw",storeSize);
+        result.setMaxDataFileLength(maxDataFileLength);
+        result.setPersistentIndex(isPersistentIndex());
+        result.setDefaultContainerName("container-roots");
+        return result;
     }
 
     private String getStoreName() {

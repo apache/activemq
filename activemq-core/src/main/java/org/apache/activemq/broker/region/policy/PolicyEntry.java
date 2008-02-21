@@ -59,6 +59,8 @@ public class PolicyEntry extends DestinationMapEntry {
     private int maxPageSize=1000;
     private boolean useCache=true;
     private long minimumMessageSize=1024;
+    private boolean useConsumerPriority=true;
+    private boolean strictOrderDispatch=false;
    
     public void configure(Broker broker,Queue queue) {
         if (dispatchPolicy != null) {
@@ -82,6 +84,8 @@ public class PolicyEntry extends DestinationMapEntry {
         queue.setMaxPageSize(getMaxPageSize());
         queue.setUseCache(isUseCache());
         queue.setMinimumMessageSize((int) getMinimumMessageSize());
+        queue.setUseConsumerPriority(isUseConsumerPriority());
+        queue.setStrictOrderDispatch(isStrictOrderDispatch());
     }
 
     public void configure(Topic topic) {
@@ -379,11 +383,24 @@ public class PolicyEntry extends DestinationMapEntry {
         return minimumMessageSize;
     }
 
-    /**
-     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
-     */
     public void setMinimumMessageSize(long minimumMessageSize) {
         this.minimumMessageSize = minimumMessageSize;
-    }      
+    }   
+    
+    public boolean isUseConsumerPriority() {
+        return useConsumerPriority;
+    }
+
+    public void setUseConsumerPriority(boolean useConsumerPriority) {
+        this.useConsumerPriority = useConsumerPriority;
+    }
+
+    public boolean isStrictOrderDispatch() {
+        return strictOrderDispatch;
+    }
+
+    public void setStrictOrderDispatch(boolean strictOrderDispatch) {
+        this.strictOrderDispatch = strictOrderDispatch;
+    }
 
 }

@@ -232,7 +232,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         }
     }
     
-    public void setUseCache(boolean useCache) {
+    public synchronized void setUseCache(boolean useCache) {
         super.setUseCache(useCache);
         if (persistent != null) {
             persistent.setUseCache(useCache);

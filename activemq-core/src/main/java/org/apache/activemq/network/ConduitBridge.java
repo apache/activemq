@@ -55,7 +55,6 @@ public class ConduitBridge extends DemandForwardingBridge {
     }
 
     protected boolean addToAlreadyInterestedConsumers(ConsumerInfo info) {
-
         if (info.getSelector() != null) {
             return false;
         }

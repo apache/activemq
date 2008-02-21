@@ -74,7 +74,7 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
         }
     }
 
-    public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {
+    public synchronized SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {
         return subscriberDatabase.get(new SubscriptionKey(clientId, subscriptionName));
     }
 
@@ -91,20 +91,20 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
         subscriberDatabase.put(key, info);
     }
 
-    public void deleteSubscription(String clientId, String subscriptionName) {
+    public synchronized void deleteSubscription(String clientId, String subscriptionName) {
         org.apache.activemq.util.SubscriptionKey key = new SubscriptionKey(clientId, subscriptionName);
         subscriberDatabase.remove(key);
         topicSubMap.remove(key);
     }
 
-    public void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener) throws Exception {
+    public synchronized void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener) throws Exception {
         MemoryTopicSub sub = topicSubMap.get(new SubscriptionKey(clientId, subscriptionName));
         if (sub != null) {
             sub.recoverSubscription(listener);
         }
     }
 
-    public void delete() {
+    public synchronized void delete() {
         super.delete();
         subscriberDatabase.clear();
         topicSubMap.clear();
@@ -123,7 +123,7 @@ public class MemoryTopicMessageStore extends MemoryMessageStore implements Topic
         return result;
     }
 
-    public void recoverNextMessages(String clientId, String subscriptionName, int maxReturned, MessageRecoveryListener listener) throws Exception {
+    public synchronized void recoverNextMessages(String clientId, String subscriptionName, int maxReturned, MessageRecoveryListener listener) throws Exception {
         MemoryTopicSub sub = this.topicSubMap.get(new SubscriptionKey(clientId, subscriptionName));
         if (sub != null) {
             sub.recoverNextMessages(maxReturned, listener);

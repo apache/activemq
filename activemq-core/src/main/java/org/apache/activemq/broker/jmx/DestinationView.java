@@ -80,6 +80,10 @@ public class DestinationView implements DestinationViewMBean {
     public long getDispatchCount() {
         return destination.getDestinationStatistics().getDispatched().getCount();
     }
+    
+    public long getInFlightCount() {
+        return destination.getDestinationStatistics().getInflight().getCount();
+    }
 
     public long getConsumerCount() {
         return destination.getDestinationStatistics().getConsumers().getCount();

@@ -848,15 +848,23 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
         return result;
     }
 
-    protected DemandSubscription createDemandSubscription(ActiveMQDestination destination) {
+    final protected DemandSubscription createDemandSubscription(ActiveMQDestination destination){
         ConsumerInfo info = new ConsumerInfo();
         info.setDestination(destination);
         // the remote info held by the DemandSubscription holds the original
         // consumerId,
         // the local info get's overwritten
+       
         info.setConsumerId(new ConsumerId(localSessionInfo.getSessionId(), consumerIdGenerator.getNextSequenceId()));
-        DemandSubscription result = new DemandSubscription(info);
-        result.getLocalInfo().setPriority(ConsumerInfo.NETWORK_CONSUMER_PRIORITY);
+        DemandSubscription result = null;
+        try {
+            result = createDemandSubscription(info);
+        } catch (IOException e) {
+           LOG.error("Failed to create DemandSubscription ",e);
+        }
+        if (result != null) {
+            result.getLocalInfo().setPriority(ConsumerInfo.NETWORK_CONSUMER_PRIORITY);
+        }
         return result;
     }
 

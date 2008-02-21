@@ -59,7 +59,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     private static final Log LOG = LogFactory.getLog(KahaReferenceStoreAdapter.class);
     private static final String STORE_STATE = "store-state";
     private static final String INDEX_VERSION_NAME = "INDEX_VERSION";
-    private static final Integer INDEX_VERSION = new Integer(3);
+    private static final Integer INDEX_VERSION = new Integer(4);
     private static final String RECORD_REFERENCES = "record-references";
     private static final String TRANSACTIONS = "transactions-state";
     private MapContainer stateMap;
@@ -165,9 +165,9 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
         TopicReferenceStore rc = (TopicReferenceStore)topics.get(destination);
         if (rc == null) {
             Store store = getStore();
-            MapContainer messageContainer = getMapReferenceContainer(destination, "topic-data");
-            MapContainer subsContainer = getSubsMapContainer(destination.toString() + "-Subscriptions", "blob");
-            ListContainer<TopicSubAck> ackContainer = store.getListContainer(destination.toString(), "topic-acks");
+            MapContainer messageContainer = getMapReferenceContainer(destination.getPhysicalName(), "topic-data");
+            MapContainer subsContainer = getSubsMapContainer(destination.getPhysicalName() + "-Subscriptions", "blob");
+            ListContainer<TopicSubAck> ackContainer = store.getListContainer(destination.getPhysicalName(), "topic-acks");
             ackContainer.setMarshaller(new TopicSubAckMarshaller());
             rc = new KahaTopicReferenceStore(store, this, messageContainer, ackContainer, subsContainer,
                                              destination);
@@ -361,6 +361,4 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     public void setIndexPageSize(int indexPageSize) {
         this.indexPageSize = indexPageSize;
     }
-
-	
 }

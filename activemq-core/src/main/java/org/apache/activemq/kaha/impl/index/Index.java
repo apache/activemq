@@ -90,4 +90,10 @@ public interface Index {
      * @param marshaller
      */
     void setKeyMarshaller(Marshaller marshaller);
+    
+    /**
+     * return the size of the index
+     * @return
+     */
+    int getSize();
 }

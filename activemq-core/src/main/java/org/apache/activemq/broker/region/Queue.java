@@ -18,6 +18,8 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -88,11 +90,20 @@ public class Queue extends BaseDestination implements Task {
     private final TaskRunner taskRunner;    
     private final LinkedList<Runnable> messagesWaitingForSpace = new LinkedList<Runnable>();
     private final ReentrantLock dispatchLock = new ReentrantLock();
+    private boolean useConsumerPriority=true;
+    private boolean strictOrderDispatch=false;
     private QueueDispatchSelector  dispatchSelector;
     private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
         public void run() {
             wakeup();
         }
+    };
+    private static final Comparator<Subscription>orderedCompare = new Comparator<Subscription>() {
+
+        public int compare(Subscription s1, Subscription s2) {
+            //We want the list sorted in descending order
+            return s2.getConsumerInfo().getPriority() - s1.getConsumerInfo().getPriority();
+        }        
     };
                
     public Queue(Broker broker, final ActiveMQDestination destination, final SystemUsage systemUsage,MessageStore store,DestinationStatistics parentStats,
@@ -118,17 +129,6 @@ public class Queue extends BaseDestination implements Task {
         this.log = LogFactory.getLog(getClass().getName() + "." + destination.getPhysicalName());
         this.dispatchSelector=new QueueDispatchSelector(destination);
        
-    }
-
-    /**
-     * @param queue
-     * @param string
-     * @param b
-     * @return
-     */
-    private TaskRunner DedicatedTaskRunner(Queue queue, String string, boolean b) {
-        // TODO Auto-generated method stub
-        return null;
     }
 
     public void initialize() throws Exception {
@@ -191,7 +191,7 @@ public class Queue extends BaseDestination implements Task {
 
             // needs to be synchronized - so no contention with dispatching
             synchronized (consumers) {
-                consumers.add(sub);
+                addToConsumerList(sub);
                 if (sub.getConsumerInfo().isExclusive()) {
                     Subscription exclusiveConsumer = dispatchSelector.getExclusiveConsumer();
                     if(exclusiveConsumer==null) {
@@ -241,7 +241,7 @@ public class Queue extends BaseDestination implements Task {
             // while
             // removing up a subscription.
             synchronized (consumers) {
-                consumers.remove(sub);
+                removeFromConsumerList(sub);
                 if (sub.getConsumerInfo().isExclusive()) {
                     Subscription exclusiveConsumer = dispatchSelector
                             .getExclusiveConsumer();
@@ -554,6 +554,22 @@ public class Queue extends BaseDestination implements Task {
 
     public void setMessages(PendingMessageCursor messages) {
         this.messages = messages;
+    }
+    
+    public boolean isUseConsumerPriority() {
+        return useConsumerPriority;
+    }
+
+    public void setUseConsumerPriority(boolean useConsumerPriority) {
+        this.useConsumerPriority = useConsumerPriority;
+    }
+
+    public boolean isStrictOrderDispatch() {
+        return strictOrderDispatch;
+    }
+
+    public void setStrictOrderDispatch(boolean strictOrderDispatch) {
+        this.strictOrderDispatch = strictOrderDispatch;
     }
 
     // Implementation methods
@@ -999,7 +1015,6 @@ public class Queue extends BaseDestination implements Task {
                     }
                     if (target == null && targets != null) {
                         // pick the least loaded to add the message too
-
                         for (Subscription s : targets) {
                             if (target == null
                                     || target.getInFlightUsage() > s
@@ -1011,10 +1026,10 @@ public class Queue extends BaseDestination implements Task {
                             target.add(node);
                         }
                     }
-                    if (target != null
-                            && !dispatchSelector.isExclusiveConsumer(target)) {
-                        consumers.remove(target);
-                        consumers.add(target);
+                    if (target != null && !strictOrderDispatch && consumers.size() > 1 &&
+                             !dispatchSelector.isExclusiveConsumer(target)) {
+                        removeFromConsumerList(target);
+                        addToConsumerList(target);
                     }
 
                 }
@@ -1028,5 +1043,24 @@ public class Queue extends BaseDestination implements Task {
 
     private void pageInMessages(boolean force) throws Exception {
             doDispatch(doPageIn(force));
+    }
+    
+    private void addToConsumerList(Subscription sub) {
+        if (useConsumerPriority) {
+            int index = Collections
+                    .binarySearch(consumers, sub, orderedCompare);
+            // insert into the ordered list
+            if (index < 0) {
+                consumers.add(-index - 1, sub);
+            } else {
+                consumers.add(sub);
+            }
+        } else {
+            consumers.add(sub);
+        }
+    }
+    
+    private void removeFromConsumerList(Subscription sub) {
+        consumers.remove(sub);
     }
 }
