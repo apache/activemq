@@ -75,7 +75,7 @@ public class InactivityMonitor extends TransportFilter {
             // read checks to be small..
             
             // If less than 90% of the read check Time elapsed then abort this readcheck. 
-            if( elapsed < (readCheckTime * 9 / 10) ) {
+            if( !allowReadCheck(elapsed) ) { // FUNKY qdox bug does not allow me to inline this expression.
                 LOG.debug("Aborting read check.. Not enough time elapsed since last read check.");
                 return;
             }
@@ -84,6 +84,10 @@ public class InactivityMonitor extends TransportFilter {
             readCheck();
         }
     };
+    
+    private boolean allowReadCheck(long elapsed) {
+        return elapsed > (readCheckTime * 9 / 10);
+    }
 
     private final Runnable writeChecker = new Runnable() {
         long lastRunTime;
