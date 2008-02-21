@@ -90,7 +90,7 @@ public class FailoverTransport implements CompositeTransport {
     private Exception connectionFailure;
     private boolean firstConnection = true;
     //optionally always have a backup created
-    private boolean backup=true;
+    private boolean backup=false;
     private List<BackupTransport> backups=new CopyOnWriteArrayList<BackupTransport>();
     private int backupPoolSize=1;
     
