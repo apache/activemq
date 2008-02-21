@@ -36,7 +36,7 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-public class HashIndex implements Index {
+public class HashIndex implements Index, HashIndexMBean {
     public static final int DEFAULT_PAGE_SIZE;
     public static final int DEFAULT_KEY_SIZE;
     public static final int DEFAULT_BIN_SIZE;
@@ -63,6 +63,8 @@ public class HashIndex implements Index {
     private LRUCache<Long, HashPage> pageCache;
     private boolean enablePageCaching=true;
     private int pageCacheSize = 10;
+    private int size;
+    private int activeBins;
 
     
     /**
@@ -174,6 +176,14 @@ public class HashIndex implements Index {
     public synchronized boolean isTransient() {
         return false;
     }
+    
+    public synchronized int getSize() {
+        return size;
+    }
+    
+    public synchronized int getActiveBins(){
+        return activeBins;
+    }
 
     public synchronized void load() {
         if (loaded.compareAndSet(false, true)) {
@@ -210,6 +220,7 @@ public class HashIndex implements Index {
                         }
                     } else {
                         addToBin(page);
+                        size+=page.size();
                     }
                     offset += pageSize;
                 }
@@ -238,7 +249,9 @@ public class HashIndex implements Index {
         HashEntry entry = new HashEntry();
         entry.setKey((Comparable)key);
         entry.setIndexOffset(value.getOffset());
-        getBin(key).put(entry);
+        if (getBin(key).put(entry)) {
+            size++;
+        }
     }
 
     public synchronized StoreEntry get(Object key) throws IOException {
@@ -254,7 +267,11 @@ public class HashIndex implements Index {
         HashEntry entry = new HashEntry();
         entry.setKey((Comparable)key);
         HashEntry result = getBin(key).remove(entry);
-        return result != null ? indexManager.getIndex(result.getIndexOffset()) : null;
+        if (result != null) {
+            size--;
+            return indexManager.getIndex(result.getIndexOffset());
+        }
+        return null;
     }
 
     public synchronized boolean containsKey(Object key) throws IOException {
@@ -392,6 +409,7 @@ public class HashIndex implements Index {
         if (result == null) {
             result = new HashBin(this, index, pageSize / keySize);
             bins[index] = result;
+            activeBins++;
         }
         return result;
     }

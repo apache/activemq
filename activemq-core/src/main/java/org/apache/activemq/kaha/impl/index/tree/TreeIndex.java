@@ -413,4 +413,8 @@ public class TreeIndex implements Index {
         DEFAULT_PAGE_SIZE = Integer.parseInt(System.getProperty("defaultPageSize", "16384"));
         DEFAULT_KEY_SIZE = Integer.parseInt(System.getProperty("defaultKeySize", "96"));
     }
+
+    public int getSize() {
+        return 0;
+    }
 }

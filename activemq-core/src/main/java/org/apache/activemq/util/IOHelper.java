@@ -23,6 +23,7 @@ import java.io.IOException;
  * @version $Revision$
  */
 public final class IOHelper {
+    protected static final int MAX_DIR_NAME_LENGTH;
     protected static final int MAX_FILE_NAME_LENGTH;
     private IOHelper() {
     }
@@ -55,7 +56,24 @@ public final class IOHelper {
      * @param name
      * @return
      */
+    public static String toFileSystemDirectorySafeName(String name) {
+        return toFileSystemSafeName(name, true, MAX_DIR_NAME_LENGTH);
+    }
+    
     public static String toFileSystemSafeName(String name) {
+        return toFileSystemSafeName(name, false, MAX_FILE_NAME_LENGTH);
+    }
+    
+    /**
+     * Converts any string into a string that is safe to use as a file name.
+     * The result will only include ascii characters and numbers, and the "-","_", and "." characters.
+     *
+     * @param name
+     * @param dirSeparators 
+     * @param maxFileLength 
+     * @return
+     */
+    public static String toFileSystemSafeName(String name,boolean dirSeparators,int maxFileLength) {
         int size = name.length();
         StringBuffer rc = new StringBuffer(size * 2);
         for (int i = 0; i < size; i++) {
@@ -63,8 +81,8 @@ public final class IOHelper {
             boolean valid = c >= 'a' && c <= 'z';
             valid = valid || (c >= 'A' && c <= 'Z');
             valid = valid || (c >= '0' && c <= '9');
-            valid = valid || (c == '_') || (c == '-') || (c == '.')
-                    || (c == '/') || (c == '\\');
+            valid = valid || (c == '_') || (c == '-') || (c == '.') || (c=='#')
+                    ||(dirSeparators && ( (c == '/') || (c == '\\')));
 
             if (valid) {
                 rc.append(c);
@@ -75,12 +93,12 @@ public final class IOHelper {
             }
         }
         String result = rc.toString();
-        if (result.length() > MAX_FILE_NAME_LENGTH) {
-            result = result.substring(0,MAX_FILE_NAME_LENGTH);
+        if (result.length() > maxFileLength) {
+            result = result.substring(result.length()-maxFileLength,result.length());
         }
-        return rc.toString();
+        return result;
     }
-
+    
     public static boolean deleteFile(File fileToDelete) {
         if (fileToDelete == null || !fileToDelete.exists()) {
             return true;
@@ -126,7 +144,8 @@ public final class IOHelper {
     }
     
     static {
-        MAX_FILE_NAME_LENGTH = Integer.valueOf(System.getProperty("MaximumFileNameLength","200")).intValue();             
+        MAX_DIR_NAME_LENGTH = Integer.valueOf(System.getProperty("MaximumDirNameLength","200")).intValue();  
+        MAX_FILE_NAME_LENGTH = Integer.valueOf(System.getProperty("MaximumFileNameLength","64")).intValue();             
     }
 
    

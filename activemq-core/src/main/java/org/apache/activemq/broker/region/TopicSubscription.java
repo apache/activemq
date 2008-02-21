@@ -194,6 +194,7 @@ public class TopicSubscription extends AbstractSubscription {
             } else {
                 if (singleDestination && destination != null) {
                     destination.getDestinationStatistics().getDequeues().add(ack.getMessageCount());
+                    destination.getDestinationStatistics().getInflight().subtract(ack.getMessageCount());
                 }
                 dequeueCounter.addAndGet(ack.getMessageCount());
             }
@@ -203,6 +204,7 @@ public class TopicSubscription extends AbstractSubscription {
             // Message was delivered but not acknowledged: update pre-fetch
             // counters.
             dequeueCounter.addAndGet(ack.getMessageCount());
+            destination.getDestinationStatistics().getInflight().subtract(ack.getMessageCount());
             dispatchMatched();
             return;
         }
@@ -365,10 +367,8 @@ public class TopicSubscription extends AbstractSubscription {
                         // Message may have been sitting in the matched list a
                         // while
                         // waiting for the consumer to ak the message.
-                        if (broker.isExpired(message)) {
-                            message.decrementReferenceCount();
-                            broker.messageExpired(getContext(), message);
-                            dequeueCounter.incrementAndGet();
+                        if (message.isExpired()) {
+                            discard(message);
                             continue; // just drop it.
                         }
                         dispatch(message);
@@ -404,6 +404,7 @@ public class TopicSubscription extends AbstractSubscription {
 
                 public void run() {
                     node.getRegionDestination().getDestinationStatistics().getDispatched().increment();
+                    node.getRegionDestination().getDestinationStatistics().getInflight().increment();
                     node.decrementReferenceCount();
                 }
             });
@@ -411,6 +412,7 @@ public class TopicSubscription extends AbstractSubscription {
         } else {
             context.getConnection().dispatchSync(md);
             node.getRegionDestination().getDestinationStatistics().getDispatched().increment();
+            node.getRegionDestination().getDestinationStatistics().getInflight().increment();
             node.decrementReferenceCount();
         }
     }
@@ -420,6 +422,8 @@ public class TopicSubscription extends AbstractSubscription {
         matched.remove(message);
         discarded++;
         dequeueCounter.incrementAndGet();
+        destination.getDestinationStatistics().getDequeues().increment();
+        destination.getDestinationStatistics().getInflight().decrement();
         if (LOG.isDebugEnabled()) {
             LOG.debug("Discarding message " + message);
         }

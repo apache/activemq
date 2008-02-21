@@ -92,5 +92,17 @@ public interface ReferenceStoreAdapter extends PersistenceAdapter {
      * @throws IOException
      */
     Map<TransactionId, AMQTx> retrievePreparedState() throws IOException;
+    
+    /**
+     * @return the maxDataFileLength
+     */
+    long getMaxDataFileLength();
+    
+    /**
+     * set the max data length of a reference data log - if used
+     * @param maxDataFileLength
+     */
+    void setMaxDataFileLength(long maxDataFileLength);
+
 
 }

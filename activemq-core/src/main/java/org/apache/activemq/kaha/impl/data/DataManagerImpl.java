@@ -300,6 +300,7 @@ public final class DataManagerImpl implements DataManager {
 
     synchronized void removeInterestInFile(DataFile dataFile) throws IOException {
         if (dataFile != null) {
+           
             if (dataFile.decrement() <= 0) {
                 if (dataFile != currentWriteFile) {
                     removeDataFile(dataFile);

@@ -60,6 +60,15 @@ public interface DestinationViewMBean {
      *         destination.
      */
     long getDequeueCount();
+    
+    /**
+     * Returns the number of messages that have been dispatched but not
+     * acknowledged
+     * 
+     * @return The number of messages that have been dispatched but not
+     * acknowledged
+     */
+    long getInFlightCount();
 
     /**
      * Returns the number of consumers subscribed this destination.

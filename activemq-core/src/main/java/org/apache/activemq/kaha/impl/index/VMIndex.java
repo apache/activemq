@@ -19,9 +19,10 @@ package org.apache.activemq.kaha.impl.index;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.activemq.kaha.IndexMBean;
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.StoreEntry;
-import org.apache.activemq.kaha.impl.container.MapContainerImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -30,7 +31,7 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.2 $
  */
-public class VMIndex implements Index {
+public class VMIndex implements Index, IndexMBean {
     private static final Log LOG = LogFactory.getLog(VMIndex.class);
     private IndexManager indexManager;
     private Map<Object, StoreEntry> map = new HashMap<Object, StoreEntry>();
@@ -122,5 +123,9 @@ public class VMIndex implements Index {
     }
 
     public void setKeyMarshaller(Marshaller marshaller) {
+    }
+    
+    public int getSize() {
+        return map.size();
     }
 }

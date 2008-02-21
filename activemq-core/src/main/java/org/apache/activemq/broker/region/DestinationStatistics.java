@@ -44,6 +44,7 @@ public class DestinationStatistics extends StatsImpl {
         enqueues = new CountStatisticImpl("enqueues", "The number of messages that have been sent to the destination");
         dispatched = new CountStatisticImpl("dispatched", "The number of messages that have been dispatched from the destination");
         dequeues = new CountStatisticImpl("dequeues", "The number of messages that have been acknowledged from the destination");
+        inflight = new CountStatisticImpl("inflight", "The number of messages dispatched but awaiting acknowledgement");
         consumers = new CountStatisticImpl("consumers", "The number of consumers that that are subscribing to messages from the destination");
         producers = new CountStatisticImpl("producers", "The number of producers that that are publishing messages to the destination");
         messages = new CountStatisticImpl("messages", "The number of messages that that are being held by the destination");
@@ -52,6 +53,7 @@ public class DestinationStatistics extends StatsImpl {
         addStatistic("enqueues", enqueues);
         addStatistic("dispatched", dispatched);
         addStatistic("dequeues", dequeues);
+        addStatistic("inflight", inflight);
         addStatistic("consumers", consumers);
         addStatistic("prodcuers", producers);
         addStatistic("messages", messages);
@@ -65,6 +67,10 @@ public class DestinationStatistics extends StatsImpl {
 
     public CountStatisticImpl getDequeues() {
         return dequeues;
+    }
+    
+    public CountStatisticImpl getInflight() {
+        return inflight;
     }
 
     public CountStatisticImpl getConsumers() {
@@ -100,6 +106,7 @@ public class DestinationStatistics extends StatsImpl {
         enqueues.reset();
         dequeues.reset();
         dispatched.reset();
+        inflight.reset();
     }
 
     public void setEnabled(boolean enabled) {
@@ -107,6 +114,7 @@ public class DestinationStatistics extends StatsImpl {
         enqueues.setEnabled(enabled);
         dispatched.setEnabled(enabled);
         dequeues.setEnabled(enabled);
+        inflight.setEnabled(enabled);
         consumers.setEnabled(enabled);
         producers.setEnabled(enabled);
         messages.setEnabled(enabled);
@@ -120,6 +128,7 @@ public class DestinationStatistics extends StatsImpl {
             enqueues.setParent(parent.enqueues);
             dispatched.setParent(parent.dispatched);
             dequeues.setParent(parent.dequeues);
+            inflight.setParent(parent.inflight);
             consumers.setParent(parent.consumers);
             producers.setParent(parent.producers);
             messagesCached.setParent(parent.messagesCached);
@@ -129,6 +138,7 @@ public class DestinationStatistics extends StatsImpl {
             enqueues.setParent(null);
             dispatched.setParent(null);
             dequeues.setParent(null);
+            inflight.setParent(null);
             consumers.setParent(null);
             producers.setParent(null);
             messagesCached.setParent(null);

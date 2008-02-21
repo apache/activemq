@@ -26,6 +26,9 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
@@ -34,6 +37,7 @@ import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.state.ConnectionStateTracker;
 import org.apache.activemq.state.Tracked;
 import org.apache.activemq.thread.DefaultThreadPools;
+import org.apache.activemq.thread.DeterministicTaskRunner;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.transport.CompositeTransport;
@@ -71,6 +75,7 @@ public class FailoverTransport implements CompositeTransport {
     private URI failedConnectTransportURI;
     private Transport connectedTransport;
     private final TaskRunner reconnectTask;
+    private final ExecutorService executor;
     private boolean started;
 
     private long initialReconnectDelay = 10;
@@ -81,11 +86,11 @@ public class FailoverTransport implements CompositeTransport {
     private boolean initialized;
     private int maxReconnectAttempts;
     private int connectFailures;
-    private long reconnectDelay = initialReconnectDelay;
+    private long reconnectDelay = this.initialReconnectDelay;
     private Exception connectionFailure;
     private boolean firstConnection = true;
     //optionally always have a backup created
-    private boolean backup=false;
+    private boolean backup=true;
     private List<BackupTransport> backups=new CopyOnWriteArrayList<BackupTransport>();
     private int backupPoolSize=1;
     
@@ -95,9 +100,16 @@ public class FailoverTransport implements CompositeTransport {
     public FailoverTransport() throws InterruptedIOException {
 
         stateTracker.setTrackTransactions(true);
-
+        this.executor =  Executors.newSingleThreadExecutor(new ThreadFactory() {
+            public Thread newThread(Runnable runnable) {
+                Thread thread = new Thread(runnable, "FailoverTransport:"+toString()+"."+System.identityHashCode(this));
+                thread.setDaemon(true);
+                thread.setPriority(Thread.NORM_PRIORITY);
+                return thread;
+            }
+        });
         // Setup a task that is used to reconnect the a connection async.
-        reconnectTask = DefaultThreadPools.getDefaultTaskRunnerFactory().createTaskRunner(new Task() {
+        reconnectTask = new DeterministicTaskRunner(this.executor,new Task() {
             public boolean iterate() {
             	boolean result=false;
             	boolean buildBackup=true;
@@ -110,11 +122,17 @@ public class FailoverTransport implements CompositeTransport {
             	}else {
             		//build backups on the next iteration
             		result=true;
+            		try {
+                        reconnectTask.wakeup();
+                    } catch (InterruptedException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
             	}
             	return result;
             }
 
-        }, "ActiveMQ Failover Worker: " + System.identityHashCode(this));
+        });
     }
 
     TransportListener createTransportListener() {
@@ -235,6 +253,7 @@ public class FailoverTransport implements CompositeTransport {
             sleepMutex.notifyAll();
         }
         reconnectTask.shutdown();
+        executor.shutdown();
         if( transportToStop!=null ) {
             transportToStop.stop();
         }

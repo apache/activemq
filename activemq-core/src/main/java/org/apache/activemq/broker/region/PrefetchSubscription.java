@@ -178,9 +178,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         // Don't remove the nodes until we are committed.
                         if (!context.isInTransaction()) {
                             dequeueCounter++;
-                            node.getRegionDestination()
-                                    .getDestinationStatistics().getDequeues()
-                                    .increment();
+                            node.getRegionDestination().getDestinationStatistics().getDequeues().increment();
+                            node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
                             removeList.add(node);
                         } else {
                             // setup a Synchronization to remove nodes from the
@@ -525,6 +524,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         if (node.getRegionDestination() != null) {
             if (node != QueueMessageReference.NULL_MESSAGE) {
                 node.getRegionDestination().getDestinationStatistics().getDispatched().increment();
+                node.getRegionDestination().getDestinationStatistics().getInflight().increment();
             }
         }
         if (info.isDispatchAsync()) {
@@ -589,8 +589,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
      * 
      * @throws IOException
      */
-    protected void acknowledge(ConnectionContext context, final MessageAck ack, final MessageReference node) throws IOException {
-    }
+    protected abstract void acknowledge(ConnectionContext context, final MessageAck ack, final MessageReference node) throws IOException;
 
     
     public int getMaxProducersToAudit() {

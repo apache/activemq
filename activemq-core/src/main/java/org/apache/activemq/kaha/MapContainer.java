@@ -258,4 +258,9 @@ public interface MapContainer<K, V> extends Map<K, V> {
      * @return the index page size
      */
     int getIndexPageSize();
+    
+    /**
+     * @return the Index MBean
+     */
+    IndexMBean getIndexMBean();
 }

@@ -123,9 +123,9 @@ class HashBin {
         return result;
     }
 
-    void put(HashEntry newEntry) throws IOException {
+    boolean put(HashEntry newEntry) throws IOException {
+        boolean replace = false;
         try {
-            boolean replace = false;
             int low = 0;
             int high = size() - 1;
             while (low <= high) {
@@ -149,6 +149,7 @@ class HashBin {
         } finally {
             end();
         }
+        return replace;
     }
 
     HashEntry remove(HashEntry entry) throws IOException {

@@ -40,12 +40,12 @@ class MemoryTopicSub {
 
     synchronized void removeMessage(MessageId id) {
         map.remove(id);
-        if (map.isEmpty()) {
-            lastBatch = null;
+        if ((lastBatch != null && lastBatch.equals(id)) || map.isEmpty()) {
+            resetBatching();
         }
     }
 
-    int size() {
+    synchronized int size() {
         return map.size();
     }
 

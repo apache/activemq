@@ -118,6 +118,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private int indexBinSize = HashIndex.DEFAULT_BIN_SIZE;
     private int indexKeySize = HashIndex.DEFAULT_KEY_SIZE;
     private int indexPageSize = HashIndex.DEFAULT_PAGE_SIZE;
+    private int maxReferenceFileLength=AsyncDataManager.DEFAULT_MAX_FILE_LENGTH;
     private Map<AMQMessageStore,Set<Integer>> dataFilesInProgress = new ConcurrentHashMap<AMQMessageStore,Set<Integer>> ();
     private String directoryPath = "";
     private RandomAccessFile lockFile;
@@ -180,6 +181,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         referenceStoreAdapter.setDirectory(new File(directory, "kr-store"));
         referenceStoreAdapter.setBrokerName(getBrokerName());
         referenceStoreAdapter.setUsageManager(usageManager);
+        referenceStoreAdapter.setMaxDataFileLength(getMaxReferenceFileLength());
         if (taskRunnerFactory == null) {
             taskRunnerFactory = createTaskRunnerFactory();
         }
@@ -428,7 +430,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     }
 
     public TopicMessageStore createTopicMessageStore(ActiveMQTopic destinationName) throws IOException {
-        AMQTopicMessageStore store = (AMQTopicMessageStore)topics.get(destinationName);
+        AMQTopicMessageStore store = (AMQTopicMessageStore)topics.get(destinationName.getPhysicalName());
         if (store == null) {
             TopicReferenceStore checkpointStore = referenceStoreAdapter.createTopicReferenceStore(destinationName);
             store = new AMQTopicMessageStore(this,checkpointStore, destinationName);
@@ -823,6 +825,20 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         this.indexPageSize = indexPageSize;
     }
     
+    public int getMaxReferenceFileLength() {
+        return maxReferenceFileLength;
+    }
+
+    /**
+     * When set using XBean, you can use values such as: "20
+     * mb", "1024 kb", or "1 gb"
+     * 
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.MemoryPropertyEditor"
+     */
+    public void setMaxReferenceFileLength(int maxReferenceFileLength) {
+        this.maxReferenceFileLength = maxReferenceFileLength;
+    }
+    
     public File getDirectoryArchive() {
         return directoryArchive;
     }
@@ -936,4 +952,5 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 	           + ".DisableLocking",
 	           "false"));
 	}
+
 }
