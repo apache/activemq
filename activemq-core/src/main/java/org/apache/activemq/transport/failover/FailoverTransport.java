@@ -32,11 +32,10 @@ import java.util.concurrent.ThreadFactory;
 
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
-import org.apache.activemq.command.Response;
 import org.apache.activemq.command.RemoveInfo;
+import org.apache.activemq.command.Response;
 import org.apache.activemq.state.ConnectionStateTracker;
 import org.apache.activemq.state.Tracked;
-import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.DeterministicTaskRunner;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
@@ -191,7 +190,7 @@ public class FailoverTransport implements CompositeTransport {
     }
 
 
-    final void handleTransportFailure(IOException e) throws InterruptedException {
+    public final void handleTransportFailure(IOException e) throws InterruptedException {
         if (transportListener != null) {
             transportListener.transportInterupted();
         }
