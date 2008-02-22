@@ -1517,7 +1517,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     // Package protected so that it can be used in unit tests
-    Transport getTransport() {
+    public Transport getTransport() {
         return transport;
     }
 
