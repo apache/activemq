@@ -146,6 +146,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     private CountDownLatch dispatchStoppedLatch = new CountDownLatch(1);
     private ConnectionContext context;
     private boolean networkConnection;
+    private boolean faultTolerantConnection;
     private AtomicInteger protocolVersion = new AtomicInteger(CommandTypes.PROTOCOL_VERSION);
     private DemandForwardingBridge duplexBridge;
     private final TaskRunnerFactory taskRunnerFactory;
@@ -647,6 +648,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
         context.setConnector(connector);
         context.setMessageAuthorizationPolicy(getMessageAuthorizationPolicy());
         context.setNetworkConnection(networkConnection);
+        context.setFaultTolerant(faultTolerantConnection);
         context.setTransactions(new ConcurrentHashMap<TransactionId, Transaction>());
         context.setUserName(info.getUserName());
         context.setWireFormatInfo(wireFormatInfo);
@@ -1076,6 +1078,10 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     public synchronized boolean isStarting() {
         return starting;
     }
+    
+    public synchronized boolean isNetworkConnection() {
+        return networkConnection;
+    }
 
     protected synchronized void setStarting(boolean starting) {
         this.starting = starting;
@@ -1255,6 +1261,9 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     }
 
     public Response processConnectionControl(ConnectionControl control) throws Exception {
+        if(control != null) {
+            faultTolerantConnection=control.isFaultTolerant();
+        }
         return null;
     }
 
