@@ -373,7 +373,10 @@ public class ManagementContext implements Service {
             // set the naming port
             Attribute attr = new Attribute("Port", Integer.valueOf(connectorPort));
             mbeanServer.setAttribute(namingServiceObjectName, attr);
-        } catch (Throwable e) {
+        } catch(ClassNotFoundException e) {
+            LOG.debug("Probably not using JRE 1.4: " + e.getLocalizedMessage());
+        }
+        catch (Throwable e) {
             LOG.debug("Failed to create local registry", e);
         }
         // Create the JMXConnectorServer
