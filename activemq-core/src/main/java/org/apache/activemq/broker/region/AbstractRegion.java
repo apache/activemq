@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.region;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -83,7 +84,7 @@ public abstract class AbstractRegion implements Region {
         this.destinationFactory = destinationFactory;
     }
 
-    public final void start() throws Exception {
+    public final  void start() throws Exception {
         started = true;
 
         Set<ActiveMQDestination> inactiveDests = getInactiveDestinations();
@@ -182,8 +183,7 @@ public abstract class AbstractRegion implements Region {
                 }
 
                 destinationMap.removeAll(destination);
-                dest.dispose(context);
-                dest.stop();
+                dispose(context,dest);
 
             } else {
                 LOG.debug("Destination doesn't exist: " + dest);
@@ -334,8 +334,15 @@ public abstract class AbstractRegion implements Region {
         Subscription sub = consumerExchange.getSubscription();
         if (sub == null) {
             sub = subscriptions.get(ack.getConsumerId());
+            
             if (sub == null) {
-                throw new IllegalArgumentException("The subscription does not exist: " + ack.getConsumerId());
+                //networked subscriptions are going to acknowledge in flight messages 
+                //on behalf a subscription that is no more ...
+                if (!consumerExchange.getConnectionContext().isNetworkConnection()) {
+                    throw new IllegalArgumentException("The subscription does not exist: " + ack.getConsumerId());
+                }else {
+                    return;
+                }
             }
             consumerExchange.setSubscription(sub);
         }
@@ -427,7 +434,9 @@ public abstract class AbstractRegion implements Region {
             dest.removeProducer(context, info);
         }
     }
-
-
-
+    
+    protected void dispose(ConnectionContext context,Destination dest) throws Exception {
+        dest.dispose(context);
+        dest.stop();
+    }
 }

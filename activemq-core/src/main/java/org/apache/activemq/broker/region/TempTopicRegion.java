@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
 /**
  * @version $Revision: 1.7 $
  */
-public class TempTopicRegion extends AbstractRegion {
+public class TempTopicRegion extends AbstractTempRegion {
 
     private static final Log LOG = LogFactory.getLog(TempTopicRegion.class);
 
@@ -80,5 +80,11 @@ public class TempTopicRegion extends AbstractRegion {
         }
 
         super.removeDestination(context, destination, timeout);
+    }
+
+    
+    protected Destination doCreateDestination(ConnectionContext context,
+            ActiveMQDestination destination) throws Exception {
+        return destinationFactory.createDestination(context, destination, destinationStatistics);
     }
 }
