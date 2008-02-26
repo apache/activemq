@@ -32,6 +32,7 @@ import java.util.concurrent.ThreadFactory;
 
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.state.ConnectionStateTracker;
@@ -92,6 +93,8 @@ public class FailoverTransport implements CompositeTransport {
     private boolean backup=false;
     private List<BackupTransport> backups=new CopyOnWriteArrayList<BackupTransport>();
     private int backupPoolSize=1;
+    private boolean trackMessages = true;
+    private int maxCacheSize = 128 * 1024;
     
 
     private final TransportListener myTransportListener = createTransportListener();
@@ -223,6 +226,8 @@ public class FailoverTransport implements CompositeTransport {
                 return;
             }
             started = true;
+            stateTracker.setMaxCacheSize(getMaxCacheSize());
+            stateTracker.setTrackMessages(isTrackMessages());
             if (connectedTransport != null) {
                 stateTracker.restore(connectedTransport);
             } else {
@@ -336,6 +341,22 @@ public class FailoverTransport implements CompositeTransport {
 		this.backupPoolSize = backupPoolSize;
 	}
 	
+	public boolean isTrackMessages() {
+        return trackMessages;
+    }
+
+    public void setTrackMessages(boolean trackMessages) {
+        this.trackMessages = trackMessages;
+    }
+
+    public int getMaxCacheSize() {
+        return maxCacheSize;
+    }
+
+    public void setMaxCacheSize(int maxCacheSize) {
+        this.maxCacheSize = maxCacheSize;
+    }
+	
     /**
      * @return Returns true if the command is one sent when a connection
      * is being closed.
@@ -407,6 +428,7 @@ public class FailoverTransport implements CompositeTransport {
                         // Send the message.
                         try {
                             connectedTransport.oneway(command);
+                            stateTracker.trackBack(command);
                         } catch (IOException e) {
 
                             // If the command was not tracked.. we will retry in
@@ -548,6 +570,10 @@ public class FailoverTransport implements CompositeTransport {
 
     protected void restoreTransport(Transport t) throws Exception, IOException {
         t.start();
+        //send information to the broker - informing it we are an ft client
+        ConnectionControl cc = new ConnectionControl();
+        cc.setFaultTolerant(true);
+        t.oneway(cc);
         stateTracker.restore(t);
         for (Iterator<Command> iter2 = requestMap.values().iterator(); iter2.hasNext();) {
             Command command = iter2.next();
@@ -753,5 +779,4 @@ public class FailoverTransport implements CompositeTransport {
     public void reconnect(URI uri) throws IOException {
     	add(new URI[] {uri});
     }
-
 }
