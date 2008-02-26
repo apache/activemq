@@ -737,48 +737,7 @@ public class BrokerTest extends BrokerTestSupport {
     //        
     // }
 
-    public void initCombosForTestTempDestinationsOnlyAllowsLocalConsumers() {
-        addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT),
-                                                           Integer.valueOf(DeliveryMode.PERSISTENT)});
-        addCombinationValues("destinationType",
-                             new Object[] {Byte.valueOf(ActiveMQDestination.TEMP_QUEUE_TYPE),
-                                           Byte.valueOf(ActiveMQDestination.TEMP_TOPIC_TYPE)});
-    }
-
-    public void testTempDestinationsOnlyAllowsLocalConsumers() throws Exception {
-
-        // Setup a first connection
-        StubConnection connection1 = createConnection();
-        ConnectionInfo connectionInfo1 = createConnectionInfo();
-        SessionInfo sessionInfo1 = createSessionInfo(connectionInfo1);
-        connection1.send(connectionInfo1);
-        connection1.send(sessionInfo1);
-
-        DestinationInfo destinationInfo = createTempDestinationInfo(connectionInfo1, destinationType);
-        connection1.request(destinationInfo);
-        destination = destinationInfo.getDestination();
-
-        // Setup a second connection
-        StubConnection connection2 = createConnection();
-        ConnectionInfo connectionInfo2 = createConnectionInfo();
-        SessionInfo sessionInfo2 = createSessionInfo(connectionInfo2);
-        connection2.send(connectionInfo2);
-        connection2.send(sessionInfo2);
-
-        // Only consumers local to the temp destination should be allowed to
-        // subscribe.
-        try {
-            ConsumerInfo consumerInfo2 = createConsumerInfo(sessionInfo2, destination);
-            connection2.request(consumerInfo2);
-            fail("Expected JMSException.");
-        } catch (JMSException success) {
-        }
-
-        // This should succeed since it's local.
-        ConsumerInfo consumerInfo1 = createConsumerInfo(sessionInfo1, destination);
-        connection1.send(consumerInfo1);
-    }
-
+    
     public void initCombosForTestExclusiveQueueDeliversToOnlyOneConsumer() {
         addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT),
                                                            Integer.valueOf(DeliveryMode.PERSISTENT)});
