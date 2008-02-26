@@ -53,6 +53,7 @@ public class ConnectionContext {
     private boolean producerFlowControl = true;
     private MessageAuthorizationPolicy messageAuthorizationPolicy;
     private boolean networkConnection;
+    private boolean faultTolerant;
     private final AtomicBoolean stopping = new AtomicBoolean();
     private final MessageEvaluationContext messageEvaluationContext = new MessageEvaluationContext();
     private boolean dontSendReponse;
@@ -277,5 +278,13 @@ public class ConnectionContext {
      */
     public void setClientMaster(boolean clientMaster) {
         this.clientMaster = clientMaster;
+    }
+
+    public boolean isFaultTolerant() {
+        return faultTolerant;
+    }
+
+    public void setFaultTolerant(boolean faultTolerant) {
+        this.faultTolerant = faultTolerant;
     }
 }

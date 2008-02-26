@@ -104,5 +104,11 @@ public interface Connection extends Service {
     void serviceExceptionAsync(IOException e);
 
     String getConnectionId();
+    
+    /**
+     * return true if a network connection
+     * @return
+     */
+    boolean isNetworkConnection();
 
 }
