@@ -18,6 +18,8 @@ package org.apache.activemq.state;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.command.Command;
@@ -28,6 +30,7 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.Response;
@@ -48,14 +51,24 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     private static final Tracked TRACKED_RESPONSE_MARKER = new Tracked(null);
 
     protected final ConcurrentHashMap<ConnectionId, ConnectionState> connectionStates = new ConcurrentHashMap<ConnectionId, ConnectionState>();
-
+     
     private boolean trackTransactions;
     private boolean restoreSessions = true;
     private boolean restoreConsumers = true;
     private boolean restoreProducers = true;
     private boolean restoreTransaction = true;
-
-
+    private boolean trackMessages = true;
+    private int maxCacheSize = 128 * 1024;
+    private int currentCacheSize;
+    private Map<MessageId,Message> messageCache = new LinkedHashMap<MessageId,Message>(){
+        protected boolean removeEldestEntry(Map.Entry<MessageId,Message> eldest) {
+            boolean result = currentCacheSize > maxCacheSize;
+            currentCacheSize -= eldest.getValue().getSize();
+            return result;
+        }
+    };
+    
+    
     private class RemoveTransactionAction implements Runnable {
         private final TransactionInfo info;
 
@@ -86,6 +99,15 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
             throw IOExceptionSupport.create(e);
         }
     }
+    
+    public void trackBack(Command command) {
+        if (trackMessages && command != null && command.isMessage()) {
+            Message message = (Message) command;
+            if (message.getTransactionId()==null) {
+                currentCacheSize+=message.getSize();
+            }
+        }
+    }
 
     public void restore(Transport transport) throws IOException {
         // Restore the connections.
@@ -101,6 +123,10 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
             if (restoreTransaction) {
                 restoreTransactions(transport, connectionState);
             }
+        }
+        //now flush messages
+        for (Message msg:messageCache.values()) {
+            transport.oneway(msg);
         }
     }
 
@@ -311,18 +337,22 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     }
 
     public Response processMessage(Message send) throws Exception {
-        if (trackTransactions && send != null && send.getTransactionId() != null) {
-            ConnectionId connectionId = send.getProducerId().getParentId().getParentId();
-            if (connectionId != null) {
-                ConnectionState cs = connectionStates.get(connectionId);
-                if (cs != null) {
-                    TransactionState transactionState = cs.getTransactionState(send.getTransactionId());
-                    if (transactionState != null) {
-                        transactionState.addCommand(send);
+        if (send != null) {
+            if (trackTransactions && send.getTransactionId() != null) {
+                ConnectionId connectionId = send.getProducerId().getParentId().getParentId();
+                if (connectionId != null) {
+                    ConnectionState cs = connectionStates.get(connectionId);
+                    if (cs != null) {
+                        TransactionState transactionState = cs.getTransactionState(send.getTransactionId());
+                        if (transactionState != null) {
+                            transactionState.addCommand(send);
+                        }
                     }
                 }
+                return TRACKED_RESPONSE_MARKER;
+            }else if (trackMessages) {
+                messageCache.put(send.getMessageId(), send.copy());
             }
-            return TRACKED_RESPONSE_MARKER;
         }
         return null;
     }
@@ -481,6 +511,22 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
 
     public void setRestoreTransaction(boolean restoreTransaction) {
         this.restoreTransaction = restoreTransaction;
+    }
+
+    public boolean isTrackMessages() {
+        return trackMessages;
+    }
+
+    public void setTrackMessages(boolean trackMessages) {
+        this.trackMessages = trackMessages;
+    }
+
+    public int getMaxCacheSize() {
+        return maxCacheSize;
+    }
+
+    public void setMaxCacheSize(int maxCacheSize) {
+        this.maxCacheSize = maxCacheSize;
     }
 
 }

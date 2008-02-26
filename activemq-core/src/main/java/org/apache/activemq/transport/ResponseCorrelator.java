@@ -93,7 +93,7 @@ public class ResponseCorrelator extends TransportFilter {
                 future.set(response);
             } else {
                 if (debug) {
-                    LOG.debug("Received unexpected response for command id: " + response.getCorrelationId());
+                    LOG.debug("Received unexpected response: {" + command + "}for command id: " + response.getCorrelationId());
                 }
             }
         } else {
