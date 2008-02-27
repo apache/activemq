@@ -18,12 +18,14 @@ package org.apache.activemq.network;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.jms.Connection;
+import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -68,6 +70,7 @@ public class NetworkLoadTest extends TestCase {
     // Slower machines might need to make this bigger.
     private static final long SAMPLE_DURATION = Integer.parseInt(System.getProperty("SAMPLES_DURATION", "" + 1000 * 1));
 	protected static final int BROKER_COUNT = 10;
+	protected static final int MESSAGE_SIZE = 2000;
 
 	class ForwardingClient {
 
@@ -79,21 +82,22 @@ public class NetworkLoadTest extends TestCase {
 			toConnection = createConnection(to);
 			Session toSession = toConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 			final MessageProducer producer = toSession.createProducer(new ActiveMQQueue("Q"+to));
-			
+			producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+			producer.setDisableMessageID(true);
+
 			fromConnection = createConnection(from);
 			Session fromSession = fromConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 			MessageConsumer consumer = fromSession.createConsumer(new ActiveMQQueue("Q"+from));
 			
-			
 			consumer.setMessageListener(new MessageListener() {
-				public void onMessage(Message msg) {
-					try {
-						producer.send(msg);
-						forwardCounter.incrementAndGet();
-					} catch (JMSException e) {
-						// this is caused by the connection getting closed. 
+					public void onMessage(Message msg) {
+						try {
+							producer.send(msg);
+							forwardCounter.incrementAndGet();
+						} catch (JMSException e) {
+							// this is caused by the connection getting closed. 
+						}
 					}
-				}
 			});
 		}
 
@@ -115,6 +119,7 @@ public class NetworkLoadTest extends TestCase {
 
 	private BrokerService[] brokers;
 	private ForwardingClient[] forwardingClients;
+
 	
 	protected void setUp() throws Exception {
 		brokers = new BrokerService[BROKER_COUNT];
@@ -249,9 +254,11 @@ public class NetworkLoadTest extends TestCase {
 					toConnection.start();
 					Session toSession = toConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 					final MessageProducer producer = toSession.createProducer(new ActiveMQQueue("Q"+to));
+					producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+					producer.setDisableMessageID(true);
 
 					for (int i = 0; !done.get(); i++) {
-						TextMessage msg = toSession.createTextMessage("test msg: " + i);
+						TextMessage msg = toSession.createTextMessage(createMessageText(i));
 						producer.send(msg);
 						producedMessages.incrementAndGet();
 					}
@@ -259,11 +266,25 @@ public class NetworkLoadTest extends TestCase {
 					e.printStackTrace();
 				}
 			}
+			
+		    private String createMessageText(int index) {
+				StringBuffer buffer = new StringBuffer(MESSAGE_SIZE);
+				buffer.append(index + " on " + new Date() + " ...");
+				if (buffer.length() > MESSAGE_SIZE) {
+					return buffer.substring(0, MESSAGE_SIZE);
+				}
+				for (int i = buffer.length(); i < MESSAGE_SIZE; i++) {
+					buffer.append(' ');
+				}
+
+				return buffer.toString();
+			}
 		};
 		producer.start();
 	
 		
-		// Give the forwarding clients a chance to get going and fill the down stream broker queues..
+		// Give the forwarding clients a chance to get going and fill the down
+		// stream broker queues..
 		Thread.sleep(BROKER_COUNT*200);
 		
         for (int i = 0; i < SAMPLES; i++) {
