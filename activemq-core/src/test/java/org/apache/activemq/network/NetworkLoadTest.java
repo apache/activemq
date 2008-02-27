@@ -123,8 +123,11 @@ public class NetworkLoadTest extends TestCase {
 			brokers[i] = createBroker(i);
 			brokers[i].start();
 		}
-		// Wait for the brokers to finish starting up and establish thier network connections.
-		Thread.sleep(BROKER_COUNT*400);
+		
+		// Wait for the network connection to get setup.
+		// The wait is exponential since every broker has to connect to every other broker.
+		Thread.sleep(BROKER_COUNT*BROKER_COUNT*50);
+		
 		forwardingClients = new ForwardingClient[BROKER_COUNT-1];		
 		for (int i = 0; i < forwardingClients.length; i++) {
 		    LOG.info("Starting fowarding client "+i);
@@ -258,6 +261,10 @@ public class NetworkLoadTest extends TestCase {
 			}
 		};
 		producer.start();
+	
+		
+		// Give the forwarding clients a chance to get going and fill the down stream broker queues..
+		Thread.sleep(BROKER_COUNT*200);
 		
         for (int i = 0; i < SAMPLES; i++) {
 
