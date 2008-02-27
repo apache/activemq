@@ -55,6 +55,10 @@ class HashPageInfo {
     int size() {
         return this.size;
     }
+    
+    boolean isEmpty() {
+        return size <= 0;
+    }
 
     /**
      * @param size the size to set

@@ -23,6 +23,8 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import sun.security.action.GetBooleanAction;
+
 /**
  * Bin in a HashIndex
  * 
@@ -219,6 +221,11 @@ class HashBin {
         HashPageInfo page = getRetrievePage(index);
         int offset = getRetrieveOffset(index);
         HashEntry result = page.removeHashEntry(offset);
+       
+        if (page.isEmpty()) {
+            hashPages.remove(page);
+            hashIndex.releasePage(page.getPage());
+        }
         doUnderFlow(index);
         return result;
     }
@@ -295,9 +302,7 @@ class HashBin {
         }
     }
 
-    private void doUnderFlow(@SuppressWarnings("unused")
-    int index) {
-        // does little
+    private void doUnderFlow(int index) {
     }
 
     private void end() throws IOException {
