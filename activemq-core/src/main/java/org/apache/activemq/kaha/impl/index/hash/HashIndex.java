@@ -462,8 +462,8 @@ public class HashIndex implements Index, HashIndexMBean {
     }
 
     static {
-        DEFAULT_PAGE_SIZE = Integer.parseInt(System.getProperty("defaultPageSize", "16384"));
-        DEFAULT_KEY_SIZE = Integer.parseInt(System.getProperty("defaultKeySize", "96"));
-        DEFAULT_BIN_SIZE= Integer.parseInt(System.getProperty("defaultBinSize", "1024"));
+        DEFAULT_PAGE_SIZE = Integer.parseInt(System.getProperty("defaultPageSize", "8000"));
+        DEFAULT_KEY_SIZE = Integer.parseInt(System.getProperty("defaultKeySize", "80"));
+        DEFAULT_BIN_SIZE= Integer.parseInt(System.getProperty("defaultBinSize", "128"));
     }
 }
