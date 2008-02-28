@@ -113,4 +113,8 @@ class HashPageInfo {
     void setPage(HashPage page) {
         this.page = page;
     }
+    
+    public String toString() {
+        return "Page["+id+"] size=" + size;
+    }
 }
