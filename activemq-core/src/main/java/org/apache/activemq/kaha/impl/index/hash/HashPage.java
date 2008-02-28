@@ -71,7 +71,7 @@ class HashPage {
     }
 
     public String toString() {
-        return "HashPage[" + getId() + ":" + binId + "]";
+        return "HashPage[" + getId() + ":" + binId + ":" + id+"] size = " + hashIndexEntries.size();
     }
 
     public boolean equals(Object o) {
