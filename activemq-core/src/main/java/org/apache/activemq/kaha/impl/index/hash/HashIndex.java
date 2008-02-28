@@ -19,6 +19,7 @@ package org.apache.activemq.kaha.impl.index.hash;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.StoreEntry;
@@ -57,8 +58,7 @@ public class HashIndex implements Index, HashIndexMBean {
     private HashBin[] bins;
     private Marshaller keyMarshaller;
     private long length;
-    private HashPage firstFree;
-    private HashPage lastFree;
+    private LinkedList<HashPage> freeList = new LinkedList<HashPage>();
     private AtomicBoolean loaded = new AtomicBoolean();
     private LRUCache<Long, HashPage> pageCache;
     private boolean enablePageCaching=true;
@@ -207,23 +207,14 @@ public class HashIndex implements Index, HashIndexMBean {
                     page.setId(offset);
                     page.readHeader(dataIn);
                     if (!page.isActive()) {
-                        if (lastFree != null) {
-                            lastFree.setNextFreePageId(offset);
-                            indexFile.seek(lastFree.getId());
-                            dataOut.reset();
-                            lastFree.writeHeader(dataOut);
-                            indexFile.write(dataOut.getData(), 0, HashPage.PAGE_HEADER_SIZE);
-                            lastFree = page;
-                        } else {
-                            lastFree = page;
-                            firstFree = page;
-                        }
+                        freeList.add(page);
                     } else {
                         addToBin(page);
                         size+=page.size();
                     }
                     offset += pageSize;
                 }
+                System.err.println("AFTER LOAD SIZE = " + size);
                 length = offset;
             } catch (IOException e) {
                 LOG.error("Failed to load index ", e);
@@ -237,8 +228,7 @@ public class HashIndex implements Index, HashIndexMBean {
             if (indexFile != null) {
                 indexFile.close();
                 indexFile = null;
-                firstFree = null;
-                lastFree = null;
+                freeList.clear();
                 bins = new HashBin[bins.length];
             }
         }
@@ -249,7 +239,7 @@ public class HashIndex implements Index, HashIndexMBean {
         HashEntry entry = new HashEntry();
         entry.setKey((Comparable)key);
         entry.setIndexOffset(value.getOffset());
-        if (getBin(key).put(entry)) {
+        if (!getBin(key).put(entry)) {
             size++;
         }
     }
@@ -313,7 +303,7 @@ public class HashIndex implements Index, HashIndexMBean {
 
     HashPage createPage(int binId) throws IOException {
         HashPage result = getNextFreePage();
-        if (result == null) {
+        if (result == null) {  
             // allocate one
             result = new HashPage(keysPerPage);
             result.setId(length);
@@ -322,6 +312,7 @@ public class HashIndex implements Index, HashIndexMBean {
             length += pageSize;
             indexFile.seek(length);
             indexFile.write(HashEntry.NOT_SET);
+            System.err.println("ALLOCATED NEW PAGE  size = " + size);
         }
         addToCache(result);
         return result;
@@ -331,33 +322,16 @@ public class HashIndex implements Index, HashIndexMBean {
         removeFromCache(page);
         page.reset();
         page.setActive(false);
-        if (lastFree == null) {
-            firstFree = page;
-            lastFree = page;
-        } else {
-            lastFree.setNextFreePageId(page.getId());
-            writePageHeader(lastFree);
-        }
         writePageHeader(page);
+        freeList.add(page);
     }
 
     private HashPage getNextFreePage() throws IOException {
         HashPage result = null;
-        if (firstFree != null) {
-            if (firstFree.equals(lastFree)) {
-                result = firstFree;
-                firstFree = null;
-                lastFree = null;
-            } else {
-                result = firstFree;
-                firstFree = getPageHeader(firstFree.getNextFreePageId());
-                if (firstFree == null) {
-                    lastFree = null;
-                }
-            }
+        if(!freeList.isEmpty()) {
+            result = freeList.removeFirst();
             result.setActive(true);
             result.reset();
-            writePageHeader(result);
         }
         return result;
     }
