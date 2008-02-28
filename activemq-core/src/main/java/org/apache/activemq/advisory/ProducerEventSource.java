@@ -112,7 +112,6 @@ public class ProducerEventSource implements Service, MessageListener {
                 return n.intValue();
             }
             LOG.warn("No producerCount header available on the message: " + message);
-            Thread.dumpStack();
         } catch (Exception e) {
             LOG.warn("Failed to extract producerCount from message: " + message + ".Reason: " + e, e);
         }
