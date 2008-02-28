@@ -199,11 +199,8 @@ public class FailoverTransport implements CompositeTransport {
         synchronized (reconnectMutex) {
             boolean reconnectOk = false;
             if(started) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Transport failed, attempting to automatically reconnect due to: " + e, e);
-                } else {
-                    LOG.warn("Transport failed, attempting to automatically reconnect due to: " + e);
-                }
+                LOG.warn("Transport failed, attempting to automatically reconnect due to: " + e);
+                LOG.debug("Transport failed with the following exception:", e);
                 reconnectOk = true;
             }
             
