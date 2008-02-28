@@ -214,7 +214,6 @@ public class HashIndex implements Index, HashIndexMBean {
                     }
                     offset += pageSize;
                 }
-                System.err.println("AFTER LOAD SIZE = " + size);
                 length = offset;
             } catch (IOException e) {
                 LOG.error("Failed to load index ", e);
@@ -312,7 +311,6 @@ public class HashIndex implements Index, HashIndexMBean {
             length += pageSize;
             indexFile.seek(length);
             indexFile.write(HashEntry.NOT_SET);
-            System.err.println("ALLOCATED NEW PAGE  size = " + size);
         }
         addToCache(result);
         return result;
