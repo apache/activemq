@@ -127,8 +127,7 @@ public class FailoverTransport implements CompositeTransport {
             		try {
                         reconnectTask.wakeup();
                     } catch (InterruptedException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
+                        LOG.debug("Reconnect task has been interrupted.", e);
                     }
             	}
             	return result;
@@ -200,7 +199,11 @@ public class FailoverTransport implements CompositeTransport {
         synchronized (reconnectMutex) {
             boolean reconnectOk = false;
             if(started) {
-                LOG.warn("Transport failed, attempting to automatically reconnect due to: " + e, e);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Transport failed, attempting to automatically reconnect due to: " + e, e);
+                } else {
+                    LOG.warn("Transport failed, attempting to automatically reconnect due to: " + e);
+                }
                 reconnectOk = true;
             }
             
