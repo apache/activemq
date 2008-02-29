@@ -37,7 +37,7 @@ import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.state.ConnectionStateTracker;
 import org.apache.activemq.state.Tracked;
-import org.apache.activemq.thread.DeterministicTaskRunner;
+import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.transport.CompositeTransport;
@@ -111,7 +111,7 @@ public class FailoverTransport implements CompositeTransport {
             }
         });
         // Setup a task that is used to reconnect the a connection async.
-        reconnectTask = new DeterministicTaskRunner(this.executor,new Task() {
+        reconnectTask = DefaultThreadPools.getDefaultTaskRunnerFactory().createTaskRunner(new Task() {
             public boolean iterate() {
             	boolean result=false;
             	boolean buildBackup=true;
@@ -133,7 +133,7 @@ public class FailoverTransport implements CompositeTransport {
             	return result;
             }
 
-        });
+        }, "ActiveMQ Failover Worker: " + System.identityHashCode(this));
     }
 
     TransportListener createTransportListener() {
