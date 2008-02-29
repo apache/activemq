@@ -93,7 +93,7 @@ public class FailoverTransport implements CompositeTransport {
     private boolean backup=false;
     private List<BackupTransport> backups=new CopyOnWriteArrayList<BackupTransport>();
     private int backupPoolSize=1;
-    private boolean trackMessages = true;
+    private boolean trackMessages = false;
     private int maxCacheSize = 128 * 1024;
     
 
