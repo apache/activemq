@@ -16,7 +16,10 @@
  */
 package org.apache.activemq.broker.region;
 
+import java.io.IOException;
+
 import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ProducerInfo;
@@ -33,8 +36,8 @@ public abstract class BaseDestination implements Destination {
     protected final ActiveMQDestination destination;
     protected final Broker broker;
     protected final MessageStore store;
-    protected final SystemUsage systemUsage;
-    protected final MemoryUsage memoryUsage;
+    protected SystemUsage systemUsage;
+    protected MemoryUsage memoryUsage;
     private boolean producerFlowControl = true;
     private int maxProducersToAudit=1024;
     private int maxAuditDepth=2048;
@@ -43,36 +46,41 @@ public abstract class BaseDestination implements Destination {
     private boolean useCache=true;
     private int minimumMessageSize=1024;
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
+    protected final BrokerService brokerService;
     
     /**
      * @param broker 
      * @param store 
      * @param destination
-     * @param systemUsage 
      * @param parentStats
+     * @throws Exception 
      */
-    public BaseDestination(Broker broker,MessageStore store,ActiveMQDestination destination, SystemUsage systemUsage,DestinationStatistics parentStats) {
-        this.broker=broker;
+    public BaseDestination(BrokerService brokerService,MessageStore store, ActiveMQDestination destination, DestinationStatistics parentStats) throws Exception {
+        this.brokerService = brokerService;
+        this.broker=brokerService.getBroker();
         this.store=store;
         this.destination=destination;
-        this.systemUsage=systemUsage;
-        this.memoryUsage = new MemoryUsage(systemUsage.getMemoryUsage(), destination.toString());
-        this.memoryUsage.setUsagePortion(1.0f);
-        // Let the store know what usage manager we are using so that he can
-        // flush messages to disk when usage gets high.
-        if (store != null) {
-            store.setMemoryUsage(this.memoryUsage);
-        } 
         // let's copy the enabled property from the parent DestinationStatistics
         this.destinationStatistics.setEnabled(parentStats.isEnabled());
         this.destinationStatistics.setParent(parentStats);        
+
+        this.systemUsage = brokerService.getProducerSystemUsage();
+        this.memoryUsage = new MemoryUsage(systemUsage.getMemoryUsage(), destination.toString());
+        this.memoryUsage.setUsagePortion(1.0f);
     }
     
     /**
      * initialize the destination
      * @throws Exception
      */
-    public abstract void initialize() throws Exception;
+    public void initialize() throws Exception {
+        // Let the store know what usage manager we are using so that he can
+        // flush messages to disk when usage gets high.
+        if (store != null) {
+            store.setMemoryUsage(this.memoryUsage);
+        } 
+    }
+    
     /**
      * @return the producerFlowControl
      */

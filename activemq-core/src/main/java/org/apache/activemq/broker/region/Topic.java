@@ -25,6 +25,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
@@ -87,9 +88,9 @@ public class Topic  extends BaseDestination  implements Task{
     };
    
 
-    public Topic(Broker broker, ActiveMQDestination destination, TopicMessageStore store, SystemUsage systemUsage, DestinationStatistics parentStats,
+    public Topic(BrokerService brokerService, ActiveMQDestination destination, TopicMessageStore store, DestinationStatistics parentStats,
                  TaskRunnerFactory taskFactory) throws Exception {
-        super(broker, store, destination,systemUsage, parentStats);
+        super(brokerService, store, destination, parentStats);
         this.topicStore=store;
         //set default subscription recovery policy
         if (destination.isTemporary() || AdvisorySupport.isAdvisoryTopic(destination) ){
@@ -102,6 +103,7 @@ public class Topic  extends BaseDestination  implements Task{
     }
     
     public void initialize() throws Exception{
+        super.initialize();
         if (store != null) {
             int messageCount = store.getMessageCount();
             destinationStatistics.getMessages().setCount(messageCount);

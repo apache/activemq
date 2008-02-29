@@ -82,7 +82,7 @@ public class RegionBroker implements Broker {
     private final Region topicRegion;
     private final Region tempQueueRegion;
     private final Region tempTopicRegion;
-    private BrokerService brokerService;
+    protected BrokerService brokerService;
     private boolean started;
     private boolean keepDurableSubsActive;
 
@@ -161,7 +161,7 @@ public class RegionBroker implements Broker {
     }
 
     protected Region createTempQueueRegion(SystemUsage memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
-        return new TempQueueRegion(this, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
+        return new TempQueueRegion(this, brokerService, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
     }
 
     protected Region createTopicRegion(SystemUsage memoryManager, TaskRunnerFactory taskRunnerFactory, DestinationFactory destinationFactory) {
