@@ -160,6 +160,7 @@ public class BrokerService implements Service {
     private CountDownLatch stoppedLatch = new CountDownLatch(1);
     private boolean supportFailOver;
     private boolean clustered;
+    private Broker regionBroker;
    
 
     static {
@@ -1430,7 +1431,7 @@ public class BrokerService implements Service {
      * @throws
      */
     protected Broker createBroker() throws Exception {
-        Broker regionBroker = createRegionBroker();
+        regionBroker = createRegionBroker();
         Broker broker = addInterceptors(regionBroker);
 
         // Add a filter that will stop access to the broker once stopped
@@ -1488,7 +1489,7 @@ public class BrokerService implements Service {
         DestinationInterceptor destinationInterceptor = new CompositeDestinationInterceptor(destinationInterceptors);
         RegionBroker regionBroker = null;
         if (destinationFactory == null) {
-            destinationFactory = new DestinationFactoryImpl(getProducerSystemUsage(), getTaskRunnerFactory(), getPersistenceAdapter());
+            destinationFactory = new DestinationFactoryImpl(this, getTaskRunnerFactory(), getPersistenceAdapter());
         }
         if (isUseJmx()) {
             MBeanServer mbeanServer = getManagementContext().getMBeanServer();
@@ -1796,5 +1797,13 @@ public class BrokerService implements Service {
                 broker.addDestination(adminConnectionContext, destination);
             }
         }
+    }
+
+    public Broker getRegionBroker() {
+        return regionBroker;
+    }
+
+    public void setRegionBroker(Broker regionBroker) {
+        this.regionBroker = regionBroker;
     }
 }

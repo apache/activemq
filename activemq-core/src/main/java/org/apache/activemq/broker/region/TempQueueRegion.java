@@ -17,9 +17,8 @@
 package org.apache.activemq.broker.region;
 
 import javax.jms.InvalidSelectorException;
-import javax.jms.JMSException;
 
-import org.apache.activemq.broker.Connection;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTempDestination;
@@ -34,18 +33,20 @@ import org.apache.commons.logging.LogFactory;
  */
 public class TempQueueRegion extends AbstractTempRegion {
     private static final Log LOG = LogFactory.getLog(TempQueueRegion.class);
+    private final BrokerService brokerService;
     
-    public TempQueueRegion(RegionBroker broker, DestinationStatistics destinationStatistics, SystemUsage memoryManager, TaskRunnerFactory taskRunnerFactory,
+    public TempQueueRegion(RegionBroker broker, BrokerService brokerService, DestinationStatistics destinationStatistics, SystemUsage memoryManager, TaskRunnerFactory taskRunnerFactory,
                            DestinationFactory destinationFactory) {
         super(broker, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
         // We should allow the following to be configurable via a Destination
         // Policy
         // setAutoCreateDestinations(false);
+        this.brokerService = brokerService;
     }
 
     protected Destination doCreateDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
         final ActiveMQTempDestination tempDest = (ActiveMQTempDestination)destination;
-        return new Queue(broker.getRoot(), destination, usageManager, null, destinationStatistics, taskRunnerFactory) {
+        return new Queue(brokerService, destination, null, destinationStatistics, taskRunnerFactory) {
 
             public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
                 // Only consumers on the same connection can consume from

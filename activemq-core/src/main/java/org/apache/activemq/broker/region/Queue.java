@@ -32,7 +32,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
 
-import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.cursors.PendingMessageCursor;
@@ -65,7 +65,6 @@ import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transaction.Synchronization;
-import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.BrokerSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -106,9 +105,9 @@ public class Queue extends BaseDestination implements Task {
         }        
     };
                
-    public Queue(Broker broker, final ActiveMQDestination destination, final SystemUsage systemUsage,MessageStore store,DestinationStatistics parentStats,
+    public Queue(BrokerService brokerService, final ActiveMQDestination destination, MessageStore store,DestinationStatistics parentStats,
                  TaskRunnerFactory taskFactory) throws Exception {
-        super(broker, store, destination,systemUsage, parentStats);
+        super(brokerService, store, destination, parentStats);
         
         if (destination.isTemporary() || broker == null || store==null ) {
             this.messages = new VMPendingMessageCursor();
@@ -130,8 +129,17 @@ public class Queue extends BaseDestination implements Task {
         this.dispatchSelector=new QueueDispatchSelector(destination);
        
     }
-
+        
     public void initialize() throws Exception {
+        // If a VMPendingMessageCursor don't use the default Producer System Usage
+        // since it turns into a shared blocking queue which can lead to a network deadlock.  
+        // If we are ccursoring to disk..it's not and issue because it does not block due 
+        // to large disk sizes.
+        if( messages instanceof VMPendingMessageCursor ) {
+            this.systemUsage = brokerService.getSystemUsage();
+            memoryUsage.setParent(systemUsage.getMemoryUsage());
+        }
+        super.initialize();
         if (store != null) {
             // Restore the persistent messages.
             messages.setSystemUsage(systemUsage);

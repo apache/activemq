@@ -22,6 +22,7 @@ import java.util.Set;
 import javax.jms.JMSException;
 
 import org.apache.activemq.advisory.AdvisorySupport;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -44,13 +45,13 @@ import org.apache.activemq.usage.SystemUsage;
  */
 public class DestinationFactoryImpl extends DestinationFactory {
 
-    protected final SystemUsage memoryManager;
     protected final TaskRunnerFactory taskRunnerFactory;
     protected final PersistenceAdapter persistenceAdapter;
     protected RegionBroker broker;
+    private final BrokerService brokerService;
 
-    public DestinationFactoryImpl(SystemUsage memoryManager, TaskRunnerFactory taskRunnerFactory, PersistenceAdapter persistenceAdapter) {
-        this.memoryManager = memoryManager;
+    public DestinationFactoryImpl(BrokerService brokerService, TaskRunnerFactory taskRunnerFactory, PersistenceAdapter persistenceAdapter) {
+        this.brokerService = brokerService;
         this.taskRunnerFactory = taskRunnerFactory;
         if (persistenceAdapter == null) {
             throw new IllegalArgumentException("null persistenceAdapter");
@@ -76,7 +77,7 @@ public class DestinationFactoryImpl extends DestinationFactory {
         if (destination.isQueue()) {
             if (destination.isTemporary()) {
                 final ActiveMQTempDestination tempDest = (ActiveMQTempDestination)destination;
-                return new Queue(broker.getRoot(), destination, memoryManager, null, destinationStatistics, taskRunnerFactory) {
+                return new Queue(brokerService, destination, null, destinationStatistics, taskRunnerFactory) {
 
                     public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
                         // Only consumers on the same connection can consume
@@ -90,14 +91,14 @@ public class DestinationFactoryImpl extends DestinationFactory {
                 };
             } else {
                 MessageStore store = persistenceAdapter.createQueueMessageStore((ActiveMQQueue)destination);
-                Queue queue = new Queue(broker.getRoot(), destination, memoryManager, store, destinationStatistics, taskRunnerFactory);
+                Queue queue = new Queue(brokerService, destination, store, destinationStatistics, taskRunnerFactory);
                 configureQueue(queue, destination);
                 queue.initialize();
                 return queue;
             }
         } else if (destination.isTemporary()) {
             final ActiveMQTempDestination tempDest = (ActiveMQTempDestination)destination;
-            return new Topic(broker.getRoot(), destination, null, memoryManager, destinationStatistics, taskRunnerFactory) {
+            return new Topic(brokerService, destination, null, destinationStatistics, taskRunnerFactory) {
 
                 public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
                     // Only consumers on the same connection can consume from
@@ -113,7 +114,7 @@ public class DestinationFactoryImpl extends DestinationFactory {
             if (!AdvisorySupport.isAdvisoryTopic(destination)) {
                 store = persistenceAdapter.createTopicMessageStore((ActiveMQTopic)destination);
             }
-            Topic topic = new Topic(broker.getRoot(), destination, store, memoryManager, destinationStatistics, taskRunnerFactory);
+            Topic topic = new Topic(brokerService, destination, store, destinationStatistics, taskRunnerFactory);
             configureTopic(topic, destination);
             topic.initialize();
             return topic;

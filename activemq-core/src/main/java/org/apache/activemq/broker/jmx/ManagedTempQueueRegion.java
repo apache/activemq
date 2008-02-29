@@ -19,6 +19,7 @@ package org.apache.activemq.broker.jmx;
 import javax.jms.InvalidSelectorException;
 import javax.management.ObjectName;
 
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFactory;
@@ -34,10 +35,10 @@ public class ManagedTempQueueRegion extends TempQueueRegion {
 
     private final ManagedRegionBroker regionBroker;
 
-    public ManagedTempQueueRegion(ManagedRegionBroker regionBroker, DestinationStatistics destinationStatistics, SystemUsage memoryManager, TaskRunnerFactory taskRunnerFactory,
+    public ManagedTempQueueRegion(ManagedRegionBroker broker, BrokerService brokerService, DestinationStatistics destinationStatistics, SystemUsage memoryManager, TaskRunnerFactory taskRunnerFactory,
                                   DestinationFactory destinationFactory) {
-        super(regionBroker, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
-        this.regionBroker = regionBroker;
+        super(broker, brokerService, destinationStatistics, memoryManager, taskRunnerFactory, destinationFactory);
+        this.regionBroker = broker;
     }
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
