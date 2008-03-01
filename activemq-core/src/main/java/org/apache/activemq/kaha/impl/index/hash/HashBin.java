@@ -183,10 +183,12 @@ class HashBin {
     private void addHashEntry(int index, HashEntry entry) throws IOException {
         HashPageInfo pageToUse = null;
         int offset = 0;
-        if (index >= maximumBinSize()) {
-            HashPage hp = hashIndex.createPage(id);
-            pageToUse = addHashPageInfo(hp.getId(), 0);
-            pageToUse.setPage(hp);
+        if (index >= getMaximumBinSize()) {
+            while(index >= getMaximumBinSize()) {
+                HashPage hp = hashIndex.createPage(id);
+                pageToUse = addHashPageInfo(hp.getId(), 0);
+                pageToUse.setPage(hp);
+            }
             offset = 0;
         } else {
             int count = 0;
@@ -239,7 +241,7 @@ class HashBin {
     }
     
 
-    private int maximumBinSize() {
+    private int getMaximumBinSize() {
         return maximumEntries * hashPages.size();
     }
 
@@ -264,7 +266,6 @@ class HashBin {
         int count = 0;
         for (HashPageInfo page : hashPages) {
             if ((index + 1) <= (count + page.size())) {
-                // count=count==0?count:count+1;
                 result = index - count;
                 break;
             }
@@ -274,13 +275,12 @@ class HashBin {
     }
 
     private void doOverFlow(int index) throws IOException {
-        int pageNo = index / maximumEntries;
-        HashPageInfo info = hashPages.get(pageNo);
+        HashPageInfo info = getRetrievePage(index);
         if (info.size() > maximumEntries) {
             // overflowed
             info.begin();
             HashEntry entry = info.removeHashEntry(info.size() - 1);
-            doOverFlow(pageNo + 1, entry);
+            doOverFlow(hashPages.indexOf(info) + 1, entry);
         }
     }
 
