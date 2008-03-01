@@ -161,6 +161,9 @@ public class BrokerService implements Service {
     private boolean supportFailOver;
     private boolean clustered;
     private Broker regionBroker;
+    private int producerSystemUsagePortion = 60;
+    private int consumerSystemUsagePortion = 40;
+    private boolean splitSystemUsageForProducersConsumers;
    
 
     static {
@@ -680,9 +683,14 @@ public class BrokerService implements Service {
      */
     public SystemUsage getConsumerSystemUsage() throws IOException {
         if (this.consumerSystemUsaage == null) {
-            this.consumerSystemUsaage = new SystemUsage(getSystemUsage(), "Consumer");
-            this.consumerSystemUsaage.getMemoryUsage().setUsagePortion(0.5f);
-            addService(this.consumerSystemUsaage);
+            if(splitSystemUsageForProducersConsumers) {
+                this.consumerSystemUsaage = new SystemUsage(getSystemUsage(), "Consumer");
+                float portion = consumerSystemUsagePortion/100f;
+                this.consumerSystemUsaage.getMemoryUsage().setUsagePortion(portion);
+                addService(this.consumerSystemUsaage);
+            }else {
+                consumerSystemUsaage=getSystemUsage();
+            }
         }
         return this.consumerSystemUsaage;
     }
@@ -703,10 +711,15 @@ public class BrokerService implements Service {
      * @throws IOException 
      */
     public SystemUsage getProducerSystemUsage() throws IOException {
-        if (producerSystemUsage == null) {
-            producerSystemUsage = new SystemUsage(getSystemUsage(), "Producer");
-            producerSystemUsage.getMemoryUsage().setUsagePortion(0.45f);
-            addService(producerSystemUsage);
+        if (producerSystemUsage == null ) {
+            if (splitSystemUsageForProducersConsumers) {
+                producerSystemUsage = new SystemUsage(getSystemUsage(), "Producer");
+                float portion = producerSystemUsagePortion/100f;
+                producerSystemUsage.getMemoryUsage().setUsagePortion(portion);
+                addService(producerSystemUsage);
+            }else {
+                producerSystemUsage=getSystemUsage();
+            }
         }
         return producerSystemUsage;
     }
@@ -1222,6 +1235,31 @@ public class BrokerService implements Service {
      */
     public Destination getDestination(ActiveMQDestination destination) throws Exception {
         return getBroker().addDestination(getAdminConnectionContext(), destination);
+    }
+    
+    public int getProducerSystemUsagePortion() {
+        return producerSystemUsagePortion;
+    }
+
+    public void setProducerSystemUsagePortion(int producerSystemUsagePortion) {
+        this.producerSystemUsagePortion = producerSystemUsagePortion;
+    }
+
+    public int getConsumerSystemUsagePortion() {
+        return consumerSystemUsagePortion;
+    }
+
+    public void setConsumerSystemUsagePortion(int consumerSystemUsagePortion) {
+        this.consumerSystemUsagePortion = consumerSystemUsagePortion;
+    }
+
+    public boolean isSplitSystemUsageForProducersConsumers() {
+        return splitSystemUsageForProducersConsumers;
+    }
+
+    public void setSplitSystemUsageForProducersConsumers(
+            boolean splitSystemUsageForProducersConsumers) {
+        this.splitSystemUsageForProducersConsumers = splitSystemUsageForProducersConsumers;
     }
 
     // Implementation methods
