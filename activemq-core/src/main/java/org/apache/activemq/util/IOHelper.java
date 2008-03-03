@@ -17,7 +17,12 @@
 package org.apache.activemq.util;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * @version $Revision$
@@ -25,6 +30,7 @@ import java.io.IOException;
 public final class IOHelper {
     protected static final int MAX_DIR_NAME_LENGTH;
     protected static final int MAX_FILE_NAME_LENGTH;
+    private static final int DEFAULT_BUFFER_SIZE = 4096;
     private IOHelper() {
     }
 
@@ -141,6 +147,23 @@ public final class IOHelper {
         if (!src.renameTo(new File(targetDirectory, src.getName()))) {
             throw new IOException("Failed to move " + src + " to " + targetDirectory);
         }
+    }
+    
+    public static void copyFile(File src, File dest) throws IOException {
+        FileInputStream fileSrc = new FileInputStream(src);
+        FileOutputStream fileDest = new FileOutputStream(dest);
+        copyInputStream(fileSrc, fileDest);
+    }
+    
+    public static void copyInputStream(InputStream in, OutputStream out) throws IOException {
+        byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+        int len = in.read(buffer);
+        while (len >= 0) {
+            out.write(buffer, 0, len);
+            len = in.read(buffer);
+        }
+        in.close();
+        out.close();
     }
     
     static {
