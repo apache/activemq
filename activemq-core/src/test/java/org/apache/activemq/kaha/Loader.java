@@ -52,7 +52,7 @@ class Loader extends Thread {
             start.await();
             Marshaller<String> keyMarshaller = new StringMarshaller();
             Marshaller<Object> valueMarshaller = new BytesMarshaller();
-            MapContainer<String, Object> container = store.getMapContainer(name, Store.DEFAULT_CONTAINER_NAME, true);
+            MapContainer<String, Object> container = store.getMapContainer(name, store.getDefaultContainerName(), true);
 
             container.setKeyMarshaller(keyMarshaller);
             container.setValueMarshaller(valueMarshaller);
