@@ -885,9 +885,12 @@ public class Queue extends BaseDestination implements Task {
                 log.error("Failed to page in more queue messages ", e);
             }
         }
-        while (!messagesWaitingForSpace.isEmpty() && !memoryUsage.isFull()) {
-            Runnable op = messagesWaitingForSpace.removeFirst();
-            op.run();
+        
+        synchronized(messagesWaitingForSpace) {
+               while (!messagesWaitingForSpace.isEmpty() && !memoryUsage.isFull()) {
+                   Runnable op = messagesWaitingForSpace.removeFirst();
+                   op.run();
+               }
         }
         return false;
     }
