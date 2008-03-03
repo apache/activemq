@@ -70,13 +70,19 @@ public class HashTest extends TestCase {
         hashIndex.setPageSize(pageSize);
         this.hashIndex.load();
         doInsert(keyRoot);
+        this.hashIndex.unload();
+        this.hashIndex.load();
         checkRetrieve(keyRoot);
         doRemove(keyRoot);
-
+        this.hashIndex.unload();
+        this.hashIndex.load();
         doInsert(keyRoot);
         doRemoveHalf(keyRoot);
         doInsertHalf(keyRoot);
+        this.hashIndex.unload();
+        this.hashIndex.load();
         checkRetrieve(keyRoot);
+        this.hashIndex.unload();
     }
 
     void doInsert(String keyRoot) throws Exception {
