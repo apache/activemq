@@ -38,8 +38,8 @@ class HashPage {
     private int maximumEntries;
     private long id;
     private int binId;
-    private int persistedSize;
     private List<HashEntry> hashIndexEntries;
+    private int persistedSize;
     /*
      * for persistence only
      */
@@ -71,7 +71,7 @@ class HashPage {
     }
 
     public String toString() {
-        return "HashPage[" + getId() + ":" + binId + ":" + id+"] size = " + hashIndexEntries.size();
+        return "HashPage[" + getId() + ":" + binId + ":" + id+"] size = " + persistedSize;
     }
 
     public boolean equals(Object o) {
@@ -95,14 +95,7 @@ class HashPage {
         this.active = active;
     }
 
-    long getNextFreePageId() {
-        return this.nextFreePageId;
-    }
-
-    void setNextFreePageId(long nextPageId) {
-        this.nextFreePageId = nextPageId;
-    }
-
+    
     long getId() {
         return id;
     }
@@ -116,8 +109,9 @@ class HashPage {
     }
 
     void write(Marshaller keyMarshaller, DataOutput dataOut) throws IOException {
+        persistedSize=hashIndexEntries.size();
         writeHeader(dataOut);
-        dataOut.writeInt(hashIndexEntries.size());
+        dataOut.writeInt(persistedSize);
         for (HashEntry entry : hashIndexEntries) {
             entry.write(keyMarshaller, dataOut);
         }
@@ -125,7 +119,8 @@ class HashPage {
 
     void read(Marshaller keyMarshaller, DataInput dataIn) throws IOException {
         readHeader(dataIn);
-        int size = dataIn.readInt();
+        dataIn.readInt();
+        int size = persistedSize;
         hashIndexEntries.clear();
         for (int i = 0; i < size; i++) {
             HashEntry entry = new HashEntry();
@@ -145,8 +140,10 @@ class HashPage {
         dataOut.writeBoolean(isActive());
         dataOut.writeLong(nextFreePageId);
         dataOut.writeInt(binId);
-        dataOut.writeInt(size());
+        persistedSize=hashIndexEntries.size();
+        dataOut.writeInt(persistedSize);
     }
+    
 
     boolean isEmpty() {
         return hashIndexEntries.isEmpty();
@@ -186,12 +183,10 @@ class HashPage {
 
     void reset() throws IOException {
         hashIndexEntries.clear();
-        setNextFreePageId(HashEntry.NOT_SET);
+        persistedSize=0;
     }
 
     void addHashEntry(int index, HashEntry entry) throws IOException {
-        // index = index >= 0 ? index : 0;
-        // index = (index == 0 || index< size()) ? index : size()-1;
         hashIndexEntries.add(index, entry);
     }
 
@@ -227,7 +222,7 @@ class HashPage {
         this.binId = binId;
     }
 
-    void dump() {
+    String dump() {
 
         StringBuffer str = new StringBuffer(32);
         str.append(toString());
@@ -236,6 +231,6 @@ class HashPage {
             str.append(entry);
             str.append(",");
         }
-        LOG.info(str);
+        return str.toString();
     }
 }

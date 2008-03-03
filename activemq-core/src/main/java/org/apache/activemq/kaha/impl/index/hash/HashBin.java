@@ -92,7 +92,7 @@ class HashBin {
         return size;
     }
 
-    HashPageInfo addHashPageInfo(long id, int size) {
+    HashPageInfo addHashPageInfo(long id, int size) throws IOException {
         HashPageInfo info = new HashPageInfo(hashIndex);
         info.setId(id);
         info.setSize(size);
@@ -105,7 +105,7 @@ class HashBin {
         HashEntry result = null;
         try {
             int low = 0;
-            int high = size() - 1;
+            int high = size()-1;
             while (low <= high) {
                 int mid = (low + high) >> 1;
                 HashEntry te = getHashEntry(mid);
@@ -129,7 +129,7 @@ class HashBin {
         boolean replace = false;
         try {
             int low = 0;
-            int high = size() - 1;
+            int high = size()-1;
             while (low <= high) {
                 int mid = (low + high) >> 1;
                 HashEntry midVal = getHashEntry(mid);
@@ -223,7 +223,7 @@ class HashBin {
         HashPageInfo page = getRetrievePage(index);
         int offset = getRetrieveOffset(index);
         HashEntry result = page.removeHashEntry(offset);
-       
+        
         if (page.isEmpty()) {
             hashPages.remove(page);
             hashIndex.releasePage(page.getPage());
@@ -280,7 +280,7 @@ class HashBin {
             // overflowed
             info.begin();
             HashEntry entry = info.removeHashEntry(info.size() - 1);
-            doOverFlow(hashPages.indexOf(info) + 1, entry);
+            doOverFlow(hashPages.indexOf(info)+1, entry);
         }
     }
 
@@ -298,13 +298,22 @@ class HashBin {
         if (info.size() > maximumEntries) {
             // overflowed
             HashEntry overflowed = info.removeHashEntry(info.size() - 1);
-            doOverFlow(pageNo + 1, overflowed);
+            doOverFlow(pageNo+1, overflowed);
         }
     }
 
     private void doUnderFlow(int index) {
     }
 
+    String dump() throws IOException {
+        String str = "[" + hashPages.size()+"]";
+        for (HashPageInfo page : hashPages) {
+            page.begin();
+            str +=page.dump();
+            page.end();
+        }
+        return str;
+    }
     private void end() throws IOException {
         for (HashPageInfo info : hashPages) {
             info.end();

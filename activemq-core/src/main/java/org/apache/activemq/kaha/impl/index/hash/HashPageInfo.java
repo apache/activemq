@@ -86,8 +86,8 @@ class HashPageInfo {
         return result;
     }
 
-    void dump() {
-        page.dump();
+    String dump() {
+        return page.dump();
     }
 
     void begin() throws IOException {

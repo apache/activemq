@@ -17,8 +17,10 @@
 package org.apache.activemq.kaha.impl.index.hash;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.activemq.kaha.Marshaller;
@@ -65,7 +67,7 @@ public class HashIndex implements Index, HashIndexMBean {
     private int pageCacheSize = 10;
     private int size;
     private int activeBins;
-
+    
     
     /**
      * Constructor
@@ -198,29 +200,17 @@ public class HashIndex implements Index, HashIndexMBean {
             readBuffer = new byte[pageSize];
             try {
                 openIndexFile();
-                long offset = 0;
-                while ((offset + pageSize) <= indexFile.length()) {
-                    indexFile.seek(offset);
-                    indexFile.readFully(readBuffer, 0, HashPage.PAGE_HEADER_SIZE);
-                    dataIn.restart(readBuffer);
-                    HashPage page = new HashPage(keysPerPage);
-                    page.setId(offset);
-                    page.readHeader(dataIn);
-                    if (!page.isActive()) {
-                        freeList.add(page);
-                    } else {
-                        addToBin(page);
-                        size+=page.size();
-                    }
-                    offset += pageSize;
+                if (indexFile.length() > 0) {
+                    doCompress();
                 }
-                length = offset;
             } catch (IOException e) {
                 LOG.error("Failed to load index ", e);
                 throw new RuntimeException(e);
             }
         }
     }
+    
+    
 
     public synchronized void unload() throws IOException {
         if (loaded.compareAndSet(true, false)) {
@@ -228,6 +218,7 @@ public class HashIndex implements Index, HashIndexMBean {
                 indexFile.close();
                 indexFile = null;
                 freeList.clear();
+                pageCache.clear();
                 bins = new HashBin[bins.length];
             }
         }
@@ -330,6 +321,7 @@ public class HashIndex implements Index, HashIndexMBean {
             result = freeList.removeFirst();
             result.setActive(true);
             result.reset();
+            writePageHeader(result);
         }
         return result;
     }
@@ -371,7 +363,7 @@ public class HashIndex implements Index, HashIndexMBean {
         return page;
     }
 
-    void addToBin(HashPage page) {
+    void addToBin(HashPage page) throws IOException {
         HashBin bin = getBin(page.getBinId());
         bin.addHashPageInfo(page.getId(), page.getPersistedSize());
     }
@@ -393,7 +385,7 @@ public class HashIndex implements Index, HashIndexMBean {
             indexFile = new RandomAccessFile(file, "rw");
         }
     }
-
+    
     private HashBin getBin(Object key) {
         int hash = hash(key);
         int i = indexFor(hash, bins.length);
@@ -419,6 +411,61 @@ public class HashIndex implements Index, HashIndexMBean {
             pageCache.remove(page.getId());
         }
     }
+    
+    private void doLoad() throws IOException {
+        long offset = 0;
+        if (loaded.compareAndSet(false, true)) {
+            while ((offset + pageSize) <= indexFile.length()) {
+                indexFile.seek(offset);
+                indexFile.readFully(readBuffer, 0, HashPage.PAGE_HEADER_SIZE);
+                dataIn.restart(readBuffer);
+                HashPage page = new HashPage(keysPerPage);
+                page.setId(offset);
+                page.readHeader(dataIn);
+                if (!page.isActive()) {
+                    page.reset();
+                    freeList.add(page);
+                } else {
+                    addToBin(page);
+                    size+=page.size();
+                }
+                offset += pageSize;
+            }
+            length=offset;
+        }
+    }
+    
+    private void doCompress() throws IOException {
+        String backFileName = name + "-COMPRESS";
+        HashIndex backIndex = new HashIndex(directory,backFileName,indexManager);
+        backIndex.setKeyMarshaller(keyMarshaller);
+        backIndex.setKeySize(getKeySize());
+        backIndex.setNumberOfBins(getNumberOfBins());
+        backIndex.setPageSize(getPageSize());
+        backIndex.load();
+        File backFile = backIndex.file;
+        long offset = 0;
+        while ((offset + pageSize) <= indexFile.length()) {
+            indexFile.seek(offset);
+            HashPage page = getFullPage(offset);
+            if (page.isActive()) {
+                for (HashEntry entry : page.getEntries()) {
+                    backIndex.getBin(entry.getKey()).put(entry);
+                    backIndex.size++;
+                }
+            }
+            offset += pageSize;
+        }
+        backIndex.unload();
+      
+        unload();
+        IOHelper.deleteFile(file);
+        IOHelper.copyFile(backFile, file);
+        IOHelper.deleteFile(backFile);
+        openIndexFile();
+        doLoad();
+    }
+      
 
     static int hash(Object x) {
         int h = x.hashCode();
