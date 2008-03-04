@@ -839,14 +839,15 @@ public class BrokerTest extends BrokerTestSupport {
         // These two message should match the wild card.
         ActiveMQDestination d1 = ActiveMQDestination.createDestination("WILD.CARD.TEST", destinationType);
         connection1.send(createMessage(producerInfo1, d1, deliveryMode));
-        ActiveMQDestination d2 = ActiveMQDestination.createDestination("WILD.FOO.TEST", destinationType);
-        connection1.request(createMessage(producerInfo1, d2, deliveryMode));
-
+        
         Message m = receiveMessage(connection1);
         assertNotNull(m);
-        //assertEquals(d1, m.getDestination());
+        assertEquals(d1, m.getDestination());
+
+        ActiveMQDestination d2 = ActiveMQDestination.createDestination("WILD.FOO.TEST", destinationType);
+        connection1.request(createMessage(producerInfo1, d2, deliveryMode));
         m = receiveMessage(connection1);
-        //assertNotNull(m);
+        assertNotNull(m);
         assertEquals(d2, m.getDestination());
 
         assertNoMessagesLeft(connection1);
