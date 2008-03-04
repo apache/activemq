@@ -27,19 +27,20 @@
   <camelContext xmlns="http://activemq.apache.org/camel/schema/spring">
 
     <route>
-      <from uri="dataset:foo"/>
+      <from uri="dataset:myDataSet"/>
       <to uri="activemq:test.queue"/>
     </route>
 
     <route>
       <from uri="activemq:test.queue"/>
-      <to uri="dataset:foo"/>
+      <to uri="dataset:myDataSet"/>
     </route>
 
   </camelContext>
 
-  <bean id="foo" class="org.apache.camel.component.dataset.SimpleDataSet">
-    <property name="size" value="10"/>
+  <bean id="myDataSet" class="org.apache.camel.component.dataset.SimpleDataSet">
+    <property name="size" value="10000"/>
+    <property name="reportCount" value="100"/>
   </bean>
 
   <!-- lets create an embedded broker for this test -->
