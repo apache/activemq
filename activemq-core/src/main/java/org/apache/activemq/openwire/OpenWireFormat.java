@@ -256,7 +256,9 @@ public final class OpenWireFormat implements WireFormat {
             }
 
         } else {
-            dataOut.writeInt(size);
+            if (!sizePrefixDisabled) {
+            	dataOut.writeInt(size);
+            }
             dataOut.writeByte(NULL_TYPE);
         }
     }
