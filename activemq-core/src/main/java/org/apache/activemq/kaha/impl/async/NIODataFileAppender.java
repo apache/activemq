@@ -166,6 +166,13 @@ class NIODataFileAppender extends DataFileAppender {
                     if (!write.sync) {
                         inflightWrites.remove(new WriteKey(write.location));
                     }
+                    if (write.onComplete != null) {
+						try {
+							write.onComplete.run();
+						} catch (Throwable e) {
+							e.printStackTrace();
+						}
+					}
                     write = (WriteCommand)write.getNext();
                 }
             }

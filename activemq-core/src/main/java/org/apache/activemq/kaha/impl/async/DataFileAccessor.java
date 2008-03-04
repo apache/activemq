@@ -19,7 +19,6 @@ package org.apache.activemq.kaha.impl.async;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.kaha.impl.async.DataFileAppender.WriteCommand;
 import org.apache.activemq.kaha.impl.async.DataFileAppender.WriteKey;

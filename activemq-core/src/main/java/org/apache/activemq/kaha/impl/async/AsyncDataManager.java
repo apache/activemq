@@ -408,6 +408,23 @@ public class AsyncDataManager {
         }
     }
 
+    public void consolidateDataFilesNotIn(Set<Integer> inUse, Integer lastFile) throws IOException {
+        Set<Integer> unUsed = new HashSet<Integer>(fileMap.keySet());
+        unUsed.removeAll(inUse);
+                
+        List<DataFile> purgeList = new ArrayList<DataFile>();
+        for (Integer key : unUsed) {
+        	// Only add files less than the lastFile..
+        	if( key.intValue() < lastFile.intValue() ) {
+                DataFile dataFile = (DataFile)fileMap.get(key);
+                purgeList.add(dataFile);
+        	}
+        }
+        for (DataFile dataFile : purgeList) {
+            forceRemoveDataFile(dataFile);
+        }
+	}
+
     public synchronized void consolidateDataFiles() throws IOException {
         List<DataFile> purgeList = new ArrayList<DataFile>();
         for (DataFile dataFile : fileMap.values()) {
@@ -482,8 +499,12 @@ public class AsyncDataManager {
                     cur.setOffset(0);
                 } else {
                     // Set to the next offset..
-                    cur = new Location(location);
-                    cur.setOffset(cur.getOffset() + cur.getSize());
+                	if( location.getSize() == -1 ) {
+                		cur = new Location(location);
+                	}  else {
+	            		cur = new Location(location);
+	            		cur.setOffset(location.getOffset()+location.getSize());
+                	}
                 }
             } else {
                 cur.setOffset(cur.getOffset() + cur.getSize());
@@ -606,6 +627,11 @@ public class AsyncDataManager {
         Location loc = appender.storeItem(data, Location.USER_TYPE, sync);
         return loc;
     }
+    
+    public synchronized Location write(ByteSequence data, Runnable onComplete) throws IOException, IllegalStateException {
+        Location loc = appender.storeItem(data, Location.USER_TYPE, onComplete);
+        return loc;
+    }
 
     public synchronized Location write(ByteSequence data, byte type, boolean sync) throws IOException, IllegalStateException {
         return appender.storeItem(data, type, sync);
@@ -686,4 +712,28 @@ public class AsyncDataManager {
     public Set<File> getFiles(){
         return fileByFileMap.keySet();
     }
+
+	synchronized public long getDiskSize() {
+		long rc=0;
+        DataFile cur = (DataFile)currentWriteFile.getHeadNode();
+        while( cur !=null ) {
+        	rc += cur.getLength();
+        	cur = (DataFile) cur.getNext();
+        }
+		return rc;
+	}
+
+	synchronized public long getDiskSizeUntil(Location startPosition) {
+		long rc=0;
+        DataFile cur = (DataFile)currentWriteFile.getHeadNode();
+        while( cur !=null ) {
+        	if( cur.getDataFileId().intValue() >= startPosition.getDataFileId() ) {
+        		return rc + startPosition.getOffset();
+        	}
+        	rc += cur.getLength();
+        	cur = (DataFile) cur.getNext();
+        }
+		return rc;
+	}
+
 }
