@@ -105,5 +105,11 @@ public final class JournalFacade implements Journal {
         ByteSequence sequence = new ByteSequence(data.getData(), data.getOffset(), data.getLength());
         return convertToRecordLocation(dataManager.write(sequence, sync));
     }
+    
+    public RecordLocation write(Packet packet, Runnable onComplete) throws IOException, IllegalStateException {
+        org.apache.activeio.packet.ByteSequence data = packet.asByteSequence();
+        ByteSequence sequence = new ByteSequence(data.getData(), data.getOffset(), data.getLength());
+        return convertToRecordLocation(dataManager.write(sequence, onComplete));
+    }
 
 }

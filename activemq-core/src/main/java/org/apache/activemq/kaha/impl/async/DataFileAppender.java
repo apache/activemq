@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.io.RandomAccessFile;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.activemq.util.ByteSequence;
@@ -41,7 +40,7 @@ class DataFileAppender {
 
     protected final AsyncDataManager dataManager;
     protected final Map<WriteKey, WriteCommand> inflightWrites;
-    protected final Object enqueueMutex = new Object();
+    protected final Object enqueueMutex = new Object(){};
     protected WriteBatch nextWriteBatch;
 
     protected boolean shutdown;
@@ -110,12 +109,21 @@ class DataFileAppender {
         public final Location location;
         public final ByteSequence data;
         final boolean sync;
+        public final Runnable onComplete;
 
         public WriteCommand(Location location, ByteSequence data, boolean sync) {
             this.location = location;
             this.data = data;
             this.sync = sync;
+            this.onComplete=null;
         }
+
+        public WriteCommand(Location location, ByteSequence data, Runnable onComplete) {
+            this.location = location;
+            this.data = data;
+			this.onComplete = onComplete;
+            this.sync = false;
+		}
     }
 
 
@@ -176,6 +184,34 @@ class DataFileAppender {
 
         return location;
     }
+    
+	public Location storeItem(ByteSequence data, byte type, Runnable onComplete) throws IOException {
+        // Write the packet our internal buffer.
+        int size = data.getLength() + AsyncDataManager.ITEM_HEAD_FOOT_SPACE;
+
+        final Location location = new Location();
+        location.setSize(size);
+        location.setType(type);
+
+        WriteBatch batch;
+        WriteCommand write = new WriteCommand(location, data, onComplete);
+
+        // Locate datafile and enqueue into the executor in sychronized block so
+        // that
+        // writes get equeued onto the executor in order that they were assigned
+        // by
+        // the data manager (which is basically just appending)
+
+        synchronized (this) {
+            // Find the position where this item will land at.
+            DataFile dataFile = dataManager.allocateLocation(location);
+            batch = enqueue(dataFile, write);
+        }
+        location.setLatch(batch.latch);
+        inflightWrites.put(new WriteKey(location), write);
+
+        return location;
+	}
 
     private WriteBatch enqueue(DataFile dataFile, WriteCommand write) throws IOException {
         synchronized (enqueueMutex) {
@@ -342,8 +378,8 @@ class DataFileAppender {
                     buff.reset();
                 }
 
-                file.getFD().sync();
-
+                file.getFD().sync();                
+                
                 WriteCommand lastWrite = (WriteCommand)wb.first.getTailNode();
                 dataManager.setLastAppendLocation(lastWrite.location);
 
@@ -357,6 +393,13 @@ class DataFileAppender {
                 while (write != null) {
                     if (!write.sync) {
                         inflightWrites.remove(new WriteKey(write.location));
+                    }
+                    if( write.onComplete !=null ) {
+                    	 try {
+							write.onComplete.run();
+						} catch (Throwable e) {
+							e.printStackTrace();
+						}
                     }
                     write = (WriteCommand)write.getNext();
                 }
@@ -377,5 +420,6 @@ class DataFileAppender {
             shutdownDone.countDown();
         }
     }
+
 
 }
