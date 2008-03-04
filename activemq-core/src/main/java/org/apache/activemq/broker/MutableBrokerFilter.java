@@ -19,6 +19,8 @@ package org.apache.activemq.broker;
 import java.net.URI;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
@@ -49,30 +51,25 @@ import org.apache.activemq.kaha.Store;
  */
 public class MutableBrokerFilter implements Broker {
 
-    private Broker next;
-    private final Object mutext = new Object();
+    private AtomicReference<Broker> next = new AtomicReference<Broker>();
 
     public MutableBrokerFilter(Broker next) {
-        this.next = next;
+        this.next.set(next);
     }
 
     public Broker getAdaptor(Class type) {
         if (type.isInstance(this)) {
             return this;
         }
-        return next.getAdaptor(type);
+        return next.get().getAdaptor(type);
     }
 
     public Broker getNext() {
-        synchronized (mutext) {
-            return next;
-        }
+        return next.get();
     }
 
     public void setNext(Broker next) {
-        synchronized (mutext) {
-            this.next = next;
-        }
+    	this.next.set(next);
     }
 
     public Map<ActiveMQDestination, Destination> getDestinationMap() {
