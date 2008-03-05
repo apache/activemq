@@ -77,4 +77,8 @@ public class ProducerConsumer extends Producer {
     protected boolean useTimerLoop() {
         return false;
     }
+
+    public Consumer getConsumer() {
+        return consumer;
+    }
 }

@@ -177,4 +177,12 @@ public class Producer extends BenchmarkSupport {
         in.close();
         return buffer.toString();
     }
+
+    public int getLoops() {
+        return loops;
+    }
+
+    public void setLoops(int loops) {
+        this.loops = loops;
+    }
 }

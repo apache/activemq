@@ -51,6 +51,7 @@ public class BenchmarkSupport {
     private NumberFormat formatter = NumberFormat.getInstance();
     private AtomicInteger connectionCounter = new AtomicInteger(0);
     private IdGenerator idGenerator = new IdGenerator();
+    private boolean timerLoop;
 
     public BenchmarkSupport() {
     }
@@ -194,7 +195,7 @@ public class BenchmarkSupport {
     }
 
     protected boolean useTimerLoop() {
-        return true;
+        return timerLoop;
     }
 
     protected Destination createDestination(Session session, String subject) throws JMSException {
@@ -207,6 +208,14 @@ public class BenchmarkSupport {
 
     protected void addResource(Object resource) {
         resources.add(resource);
+    }
+
+    public int getCounter() {
+        return counter;
+    }
+
+    public void setTimerLoop(boolean timerLoop) {
+        this.timerLoop = timerLoop;
     }
 
     protected static boolean parseBoolean(String text) {
