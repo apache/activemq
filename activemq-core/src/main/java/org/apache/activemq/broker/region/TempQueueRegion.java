@@ -44,27 +44,10 @@ public class TempQueueRegion extends AbstractTempRegion {
         this.brokerService = brokerService;
     }
 
-    protected Destination doCreateDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
-        final ActiveMQTempDestination tempDest = (ActiveMQTempDestination)destination;
-        return new Queue(brokerService, destination, null, destinationStatistics, taskRunnerFactory) {
-
-            public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
-                // Only consumers on the same connection can consume from
-                // the temporary destination
-                // However, we could have failed over - and we do this
-                // check client side anyways ....
-                if (!context.isFaultTolerant()
-                        && (!context.isNetworkConnection() && !tempDest
-                                .getConnectionId().equals(
-                                        sub.getConsumerInfo().getConsumerId()
-                                                .getConnectionId()))) {
-
-                    tempDest.setConnectionId(sub.getConsumerInfo().getConsumerId().getConnectionId());
-                    LOG.debug(" changed ownership of " + this + " to "+ tempDest.getConnectionId());
-                }
-                super.addSubscription(context, sub);
-            };
-        };
+    protected Destination doCreateDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {  
+        TempQueue result = new TempQueue(brokerService, destination, null, destinationStatistics, taskRunnerFactory);
+        result.initialize();
+        return result;
     }
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {

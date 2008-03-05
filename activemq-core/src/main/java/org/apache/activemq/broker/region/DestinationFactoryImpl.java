@@ -77,18 +77,9 @@ public class DestinationFactoryImpl extends DestinationFactory {
         if (destination.isQueue()) {
             if (destination.isTemporary()) {
                 final ActiveMQTempDestination tempDest = (ActiveMQTempDestination)destination;
-                return new Queue(brokerService, destination, null, destinationStatistics, taskRunnerFactory) {
-
-                    public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
-                        // Only consumers on the same connection can consume
-                        // from
-                        // the temporary destination
-                        if (!tempDest.getConnectionId().equals(sub.getConsumerInfo().getConsumerId().getConnectionId())) {
-                            throw new JMSException("Cannot subscribe to remote temporary destination: " + tempDest);
-                        }
-                        super.addSubscription(context, sub);
-                    };
-                };
+                Queue queue = new TempQueue(brokerService, destination, null, destinationStatistics, taskRunnerFactory);
+                queue.initialize();
+                return queue;
             } else {
                 MessageStore store = persistenceAdapter.createQueueMessageStore((ActiveMQQueue)destination);
                 Queue queue = new Queue(brokerService, destination, store, destinationStatistics, taskRunnerFactory);
@@ -97,18 +88,10 @@ public class DestinationFactoryImpl extends DestinationFactory {
                 return queue;
             }
         } else if (destination.isTemporary()) {
-            final ActiveMQTempDestination tempDest = (ActiveMQTempDestination)destination;
-            return new Topic(brokerService, destination, null, destinationStatistics, taskRunnerFactory) {
-
-                public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
-                    // Only consumers on the same connection can consume from
-                    // the temporary destination
-                    if (!tempDest.getConnectionId().equals(sub.getConsumerInfo().getConsumerId().getConnectionId())) {
-                        throw new JMSException("Cannot subscribe to remote temporary destination: " + tempDest);
-                    }
-                    super.addSubscription(context, sub);
-                };
-            };
+            
+            Topic topic = new Topic(brokerService, destination, null, destinationStatistics, taskRunnerFactory);
+            topic.initialize();
+            return topic;
         } else {
             TopicMessageStore store = null;
             if (!AdvisorySupport.isAdvisoryTopic(destination)) {
