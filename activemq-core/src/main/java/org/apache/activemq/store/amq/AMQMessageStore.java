@@ -38,6 +38,7 @@ import org.apache.activemq.command.JournalQueueAck;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.kaha.impl.async.Location;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
@@ -87,7 +88,7 @@ public class AMQMessageStore implements MessageStore {
         this.transactionStore = adapter.getTransactionStore();
         this.referenceStore = referenceStore;
         this.destination = destination;
-        this.transactionTemplate = new TransactionTemplate(adapter, new ConnectionContext());
+        this.transactionTemplate = new TransactionTemplate(adapter, new ConnectionContext(new NonCachedMessageEvaluationContext()));
         asyncWriteTask = adapter.getTaskRunnerFactory().createTaskRunner(new Task() {
 
             public boolean iterate() {

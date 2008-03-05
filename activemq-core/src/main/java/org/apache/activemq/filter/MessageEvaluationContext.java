@@ -33,11 +33,11 @@ import org.apache.activemq.command.Message;
  */
 public class MessageEvaluationContext {
 
-    private MessageReference messageReference;
-    private boolean loaded;
-    private boolean dropped;
-    private Message message;
-    private ActiveMQDestination destination;
+	protected MessageReference messageReference;
+    protected boolean loaded;
+    protected boolean dropped;
+    protected Message message;
+    protected ActiveMQDestination destination;
 
     public MessageEvaluationContext() {
     }

@@ -55,14 +55,20 @@ public class ConnectionContext {
     private boolean networkConnection;
     private boolean faultTolerant;
     private final AtomicBoolean stopping = new AtomicBoolean();
-    private final MessageEvaluationContext messageEvaluationContext = new MessageEvaluationContext();
+    private final MessageEvaluationContext messageEvaluationContext;
     private boolean dontSendReponse;
     private boolean clientMaster = true;
 
     public ConnectionContext() {
+    	this.messageEvaluationContext = new MessageEvaluationContext();
     }
-
+    
+    public ConnectionContext(MessageEvaluationContext messageEvaluationContext) {
+    	this.messageEvaluationContext=messageEvaluationContext;
+    }
+    
     public ConnectionContext(ConnectionInfo info) {
+    	this();
         setClientId(info.getClientId());
         setUserName(info.getUserName());
         setConnectionId(info.getConnectionId());

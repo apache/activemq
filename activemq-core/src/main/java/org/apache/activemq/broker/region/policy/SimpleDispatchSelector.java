@@ -7,6 +7,7 @@ import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.filter.MessageEvaluationContext;
+import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 
 /**
  * Simple dispatch policy that determines if a message can be sent to a subscription
@@ -26,7 +27,7 @@ public class SimpleDispatchSelector implements DispatchSelector {
     }
 
     public boolean canDispatch(Subscription subscription, MessageReference node) throws Exception {
-        MessageEvaluationContext msgContext = new MessageEvaluationContext();
+        MessageEvaluationContext msgContext = new NonCachedMessageEvaluationContext();
         msgContext.setDestination(this.destination);
         msgContext.setMessageReference(node);
         return subscription.matches(node, msgContext);

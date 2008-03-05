@@ -33,6 +33,7 @@ import org.apache.activemq.command.JournalQueueAck;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -75,7 +76,7 @@ public class JournalMessageStore implements MessageStore {
         this.transactionStore = adapter.getTransactionStore();
         this.longTermStore = checkpointStore;
         this.destination = destination;
-        this.transactionTemplate = new TransactionTemplate(adapter, new ConnectionContext());
+        this.transactionTemplate = new TransactionTemplate(adapter, new ConnectionContext(new NonCachedMessageEvaluationContext()));
     }
 
     

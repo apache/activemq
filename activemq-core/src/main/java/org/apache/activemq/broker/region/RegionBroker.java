@@ -200,8 +200,17 @@ public class RegionBroker implements Broker {
         synchronized (clientIdSet) {
             ConnectionContext oldContext = clientIdSet.get(clientId);
             if (oldContext != null) {
+            	if (context.isFaultTolerant() || context.isNetworkConnection()){
+            		//remove the old connection
+            		try{
+            			removeConnection(oldContext, info, new Exception("remove stale client"));
+            		}catch(Exception e){
+            			LOG.warn("Failed to remove stale connection ",e);
+            		}
+            	}else{
                 throw new InvalidClientIDException("Broker: " + getBrokerName() + " - Client: " + clientId + " already connected from "
                                                    + oldContext.getConnection().getRemoteAddress());
+            	}
             } else {
                 clientIdSet.put(clientId, context);
             }
@@ -673,7 +682,6 @@ public class RegionBroker implements Broker {
     public void sendToDeadLetterQueue(ConnectionContext context,
 	        MessageReference node){
 		try{
-			boolean sent=false;
 			if(node!=null){
 				Message message=node.getMessage();
 				if(message!=null&&node.getRegionDestination()!=null){
@@ -703,17 +711,9 @@ public class RegionBroker implements Broker {
 							}
 							BrokerSupport.resend(context,message,
 							        deadLetterDestination);
-							sent=true;
 						}
-					}else {
-					  //don't want to warn about failing to send 
-					  // if there isn't a dead letter strategy 
-					   sent=true;
 					}
 				}
-			}
-			if(sent==false){
-				LOG.warn("Failed to send "+node+" to DLQ");
 			}
 		}catch(Exception e){
 			LOG.warn("Caught an exception sending to DLQ: "+node,e);

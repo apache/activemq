@@ -25,6 +25,7 @@ import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.filter.MessageEvaluationContext;
+import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -78,7 +79,7 @@ class TopicStorePrefetch extends AbstractStoreCursor {
     }
     
     public synchronized boolean recoverMessage(Message message, boolean cached) throws Exception {
-        MessageEvaluationContext messageEvaluationContext = new MessageEvaluationContext();
+        MessageEvaluationContext messageEvaluationContext = new NonCachedMessageEvaluationContext();
         messageEvaluationContext.setMessageReference(message);
         if (this.subscription.matches(message, messageEvaluationContext)) {
             return super.recoverMessage(message, cached);
