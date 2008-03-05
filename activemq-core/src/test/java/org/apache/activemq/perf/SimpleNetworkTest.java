@@ -25,8 +25,6 @@ import org.apache.activemq.network.NetworkConnector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import junit.framework.TestCase;
-
 
 public class SimpleNetworkTest extends SimpleTopicTest {
 
@@ -114,6 +112,7 @@ public class SimpleNetworkTest extends SimpleTopicTest {
     
     protected void configureProducerBroker(BrokerService answer,String uri) throws Exception {
         answer.setBrokerName(PRODUCER_BROKER_NAME);
+        answer.setPersistent(false);
         answer.setDeleteAllMessagesOnStartup(true);
         NetworkConnector connector = answer.addNetworkConnector("static://"+consumerBindAddress);
         connector.setDuplex(true);
