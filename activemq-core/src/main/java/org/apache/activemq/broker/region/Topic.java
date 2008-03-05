@@ -505,9 +505,11 @@ public class Topic  extends BaseDestination  implements Task{
     }
     
     public boolean iterate() {
-        while (!memoryUsage.isFull() && !messagesWaitingForSpace.isEmpty()) {
-            Runnable op = messagesWaitingForSpace.removeFirst();
-            op.run();
+        synchronized(messagesWaitingForSpace) {
+            while (!memoryUsage.isFull() && !messagesWaitingForSpace.isEmpty()) {
+                Runnable op = messagesWaitingForSpace.removeFirst();
+                op.run();
+            }
         }
         return false;
     }
