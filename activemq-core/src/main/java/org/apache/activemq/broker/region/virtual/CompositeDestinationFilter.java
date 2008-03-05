@@ -25,6 +25,7 @@ import org.apache.activemq.broker.region.DestinationFilter;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.filter.MessageEvaluationContext;
+import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 
 /**
  * Represents a composite {@link Destination} where send()s are replicated to
@@ -55,7 +56,7 @@ public class CompositeDestinationFilter extends DestinationFilter {
             if (value instanceof FilteredDestination) {
                 FilteredDestination filteredDestination = (FilteredDestination)value;
                 if (messageContext == null) {
-                    messageContext = new MessageEvaluationContext();
+                    messageContext = new NonCachedMessageEvaluationContext();
                     messageContext.setMessageReference(message);
                 }
                 messageContext.setDestination(filteredDestination.getDestination());

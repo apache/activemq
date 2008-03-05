@@ -28,6 +28,7 @@ import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.QueueMessageReference;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.kaha.CommandMarshaller;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.Store;
@@ -393,6 +394,6 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         if (LOG.isDebugEnabled()) {
             LOG.debug("Discarding message " + message);
         }
-        broker.getRoot().sendToDeadLetterQueue(new ConnectionContext(), message);
+        broker.getRoot().sendToDeadLetterQueue(new ConnectionContext(new NonCachedMessageEvaluationContext()), message);
     }
 }

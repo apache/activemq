@@ -57,6 +57,7 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
+import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
@@ -195,7 +196,7 @@ public class Queue extends BaseDestination implements Task {
         try {
             sub.add(context, this);
             destinationStatistics.getConsumers().increment();
-            MessageEvaluationContext msgContext = new MessageEvaluationContext();
+            MessageEvaluationContext msgContext = new NonCachedMessageEvaluationContext();
 
             // needs to be synchronized - so no contention with dispatching
             synchronized (consumers) {
@@ -940,7 +941,7 @@ public class Queue extends BaseDestination implements Task {
 
     
     protected ConnectionContext createConnectionContext() {
-        ConnectionContext answer = new ConnectionContext();
+        ConnectionContext answer = new ConnectionContext(new NonCachedMessageEvaluationContext());
         answer.getMessageEvaluationContext().setDestination(getActiveMQDestination());
         return answer;
     }

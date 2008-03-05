@@ -45,6 +45,7 @@ import org.apache.activemq.command.JournalTopicAck;
 import org.apache.activemq.command.JournalTrace;
 import org.apache.activemq.command.JournalTransaction;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.kaha.impl.async.AsyncDataManager;
 import org.apache.activemq.kaha.impl.async.Location;
 import org.apache.activemq.kaha.impl.index.hash.HashIndex;
@@ -502,7 +503,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         int redoCounter = 0;
         LOG.info("Journal Recovery Started from: " + asyncDataManager);
         long start = System.currentTimeMillis();
-        ConnectionContext context = new ConnectionContext();
+        ConnectionContext context = new ConnectionContext(new NonCachedMessageEvaluationContext());
         // While we have records in the journal.
         while ((pos = asyncDataManager.getNextLocation(pos)) != null) {
             ByteSequence data = asyncDataManager.read(pos);

@@ -49,6 +49,7 @@ import org.apache.activemq.command.JournalTrace;
 import org.apache.activemq.command.JournalTransaction;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -469,7 +470,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         int transactionCounter = 0;
 
         LOG.info("Journal Recovery Started from: " + journal);
-        ConnectionContext context = new ConnectionContext();
+        ConnectionContext context = new ConnectionContext(new NonCachedMessageEvaluationContext());
 
         // While we have records in the journal.
         while ((pos = journal.getNextRecordLocation(pos)) != null) {

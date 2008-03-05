@@ -47,6 +47,7 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.filter.MessageEvaluationContext;
+import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.TopicMessageStore;
@@ -213,7 +214,7 @@ public class Topic  extends BaseDestination  implements Task{
                 topicStore.addSubsciption(info,subscription.getConsumerInfo().isRetroactive());
             }
 
-            final MessageEvaluationContext msgContext = new MessageEvaluationContext();
+            final MessageEvaluationContext msgContext = new NonCachedMessageEvaluationContext();
             msgContext.setDestination(destination);
             if (subscription.isRecoveryRequired()) {
                 topicStore.recoverSubscription(clientId, subscriptionName, new MessageRecoveryListener() {
