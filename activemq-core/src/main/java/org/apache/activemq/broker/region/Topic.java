@@ -65,7 +65,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.21 $
  */
 public class Topic  extends BaseDestination  implements Task{
-    private static final Log LOG = LogFactory.getLog(Topic.class);
+    protected final Log log;
     private final TopicMessageStore topicStore;
     protected final CopyOnWriteArrayList<Subscription> consumers = new CopyOnWriteArrayList<Subscription>();
     protected final Valve dispatchValve = new Valve(true);   
@@ -90,6 +90,7 @@ public class Topic  extends BaseDestination  implements Task{
                  TaskRunnerFactory taskFactory) throws Exception {
         super(brokerService, store, destination, parentStats);
         this.topicStore=store;
+        this.log = LogFactory.getLog(getClass().getName() + "." + destination.getPhysicalName());
         //set default subscription recovery policy
         if (destination.isTemporary() || AdvisorySupport.isAdvisoryTopic(destination) ){
         	 subscriptionRecoveryPolicy= new NoSubscriptionRecoveryPolicy();
@@ -345,15 +346,15 @@ public class Topic  extends BaseDestination  implements Task{
                     if (count > 2 && context.isInTransaction()) {
                         count =0;
                         int size = context.getTransaction().size();
-                        LOG.warn("Waiting for space to send  transacted message - transaction elements = " + size + " need more space to commit. Message = " + message);
+                        log.warn("Waiting for space to send  transacted message - transaction elements = " + size + " need more space to commit. Message = " + message);
                     }
                 }
 
                 // The usage manager could have delayed us by the time
                 // we unblock the message could have expired..
                 if (message.isExpired()) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Expired message: " + message);
+                    if (log.isDebugEnabled()) {
+                        log.debug("Expired message: " + message);
                     }
                     return;
                 }
@@ -499,7 +500,7 @@ public class Topic  extends BaseDestination  implements Task{
                 }
             }
         } catch (Throwable e) {
-            LOG.warn("Failed to browse Topic: " + getActiveMQDestination().getPhysicalName(), e);
+            log.warn("Failed to browse Topic: " + getActiveMQDestination().getPhysicalName(), e);
         }
         return result.toArray(new Message[result.size()]);
     }

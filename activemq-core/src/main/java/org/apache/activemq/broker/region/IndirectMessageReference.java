@@ -16,12 +16,9 @@
  */
 package org.apache.activemq.broker.region;
 
-import java.io.IOException;
-
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
-import org.apache.activemq.store.MessageStore;
 
 /**
  * Keeps track of a message that is flowing through the Broker. This object may
@@ -32,21 +29,6 @@ import org.apache.activemq.store.MessageStore;
  */
 public class IndirectMessageReference implements QueueMessageReference {
 
-    /** The destination that is managing the message */
-    private final Destination regionDestination;
-
-    private final MessageStore destinationStore;
-
-    /** The id of the message is always valid */
-    private final MessageId messageId;
-    /** Is the message persistent? */
-    private final boolean persistent;
-    private final String groupID;
-    private final int groupSequence;
-    private final ConsumerId targetConsumerId;
-
-    /** The number of times the message has been delivered. */
-    private short redeliveryCounter;
     /** The subscription that has locked the message */
     private LockOwner lockOwner;
     /** Has the message been dropped? */
@@ -54,76 +36,44 @@ public class IndirectMessageReference implements QueueMessageReference {
     /** Has the message been acked? */
     private boolean acked;
     /** Direct reference to the message */
-    private Message message;
-    /** The number of times the message has requested being hardened */
-    private int referenceCount;
-    /** the size of the message * */
-    private int cachedSize;
-    /** the expiration time of the message */
-    private long expiration;
-
-    public IndirectMessageReference(Queue destination, MessageStore destinationStore, Message message) {
-        this.regionDestination = destination;
-        this.destinationStore = destinationStore;
+    private final Message message;
+    
+    /**
+     * @param message
+     */
+    public IndirectMessageReference(final Message message) {
         this.message = message;
-        this.messageId = message.getMessageId();
-        this.persistent = message.isPersistent() && destination.getMessageStore() != null;
-        this.groupID = message.getGroupID();
-        this.groupSequence = message.getGroupSequence();
-        this.targetConsumerId = message.getTargetConsumerId();
-        this.expiration = message.getExpiration();
-
-        this.referenceCount = 1;
-        message.incrementReferenceCount();
-        this.cachedSize = message.getSize();
+        message.getMessageId();
+        message.getGroupID();
+        message.getGroupSequence();
     }
 
-    public synchronized Message getMessageHardRef() {
+    public Message getMessageHardRef() {
         return message;
     }
 
-    public synchronized int getReferenceCount() {
-        return referenceCount;
+    public int getReferenceCount() {
+        return message.getReferenceCount();
     }
 
-    public synchronized int incrementReferenceCount() {
-        int rc = ++referenceCount;
-        if (persistent && rc == 1 && message == null) {
-
-            try {
-                message = destinationStore.getMessage(messageId);
-                if (message == null) {
-                    dropped = true;
-                } else {
-                    message.setRegionDestination(regionDestination);
-                    message.incrementReferenceCount();
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return rc;
+    public int incrementReferenceCount() {
+        return message.incrementReferenceCount();
     }
 
-    public synchronized int decrementReferenceCount() {
-        int rc = --referenceCount;
-        if (persistent && rc == 0 && message != null) {
-            message.decrementReferenceCount();
-            // message=null;
-        }
-        return rc;
+    public int decrementReferenceCount() {
+        return message.decrementReferenceCount();
     }
 
-    public synchronized Message getMessage() {
+    public Message getMessage() {
         return message;
     }
 
     public String toString() {
-        return "Message " + messageId + " dropped=" + dropped + " locked=" + (lockOwner != null);
+        return "Message " + message.getMessageId() + " dropped=" + dropped + " locked=" + (lockOwner != null);
     }
 
-    public synchronized void incrementRedeliveryCounter() {
-        this.redeliveryCounter++;
+    public void incrementRedeliveryCounter() {
+        message.incrementRedeliveryCounter();
     }
 
     public synchronized boolean isDropped() {
@@ -133,10 +83,7 @@ public class IndirectMessageReference implements QueueMessageReference {
     public synchronized void drop() {
         dropped = true;
         lockOwner = null;
-        if (!persistent && message != null) {
-            message.decrementReferenceCount();
-            message = null;
-        }
+        message.decrementReferenceCount();
     }
 
     public boolean lock(LockOwner subscription) {
@@ -159,20 +106,20 @@ public class IndirectMessageReference implements QueueMessageReference {
         return lockOwner;
     }
 
-    public synchronized int getRedeliveryCounter() {
-        return redeliveryCounter;
+    public int getRedeliveryCounter() {
+        return message.getRedeliveryCounter();
     }
 
     public MessageId getMessageId() {
-        return messageId;
+        return message.getMessageId();
     }
 
     public Destination getRegionDestination() {
-        return regionDestination;
+        return message.getRegionDestination();
     }
 
     public boolean isPersistent() {
-        return persistent;
+        return message.isPersistent();
     }
 
     public synchronized boolean isLocked() {
@@ -188,34 +135,26 @@ public class IndirectMessageReference implements QueueMessageReference {
     }
 
     public String getGroupID() {
-        return groupID;
+        return message.getGroupID();
     }
 
     public int getGroupSequence() {
-        return groupSequence;
+        return message.getGroupSequence();
     }
 
     public ConsumerId getTargetConsumerId() {
-        return targetConsumerId;
+        return message.getTargetConsumerId();
     }
 
     public long getExpiration() {
-        return expiration;
+        return message.getExpiration();
     }
 
     public boolean isExpired() {
-        long expireTime = getExpiration();
-        if (expireTime > 0 && System.currentTimeMillis() > expireTime) {
-            return true;
-        }
-        return false;
+        return message.isExpired();
     }
 
     public synchronized int getSize() {
-        Message msg = message;
-        if (msg != null) {
-            return msg.getSize();
-        }
-        return cachedSize;
+       return message.getSize();
     }
 }

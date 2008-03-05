@@ -77,18 +77,18 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.28 $
  */
 public class Queue extends BaseDestination implements Task {
-    private final Log log;
-    private final List<Subscription> consumers = new ArrayList<Subscription>(50);
-    private PendingMessageCursor messages;
-    private final LinkedHashMap<MessageId,MessageReference> pagedInMessages = new LinkedHashMap<MessageId,MessageReference>();
+    protected final Log log;
+    protected TaskRunner taskRunner;    
+    protected final List<Subscription> consumers = new ArrayList<Subscription>(50);
+    protected PendingMessageCursor messages;
+    private final LinkedHashMap<MessageId,QueueMessageReference> pagedInMessages = new LinkedHashMap<MessageId,QueueMessageReference>();
     private MessageGroupMap messageGroupOwners;
     private DispatchPolicy dispatchPolicy = new RoundRobinDispatchPolicy();
     private DeadLetterStrategy deadLetterStrategy = new SharedDeadLetterStrategy();
     private MessageGroupMapFactory messageGroupMapFactory = new MessageGroupHashBucketFactory();
     private final Object sendLock = new Object();
-    private final ExecutorService executor;
-    private final TaskRunner taskRunner;    
-    private final LinkedList<Runnable> messagesWaitingForSpace = new LinkedList<Runnable>();
+    private ExecutorService executor;
+    protected final LinkedList<Runnable> messagesWaitingForSpace = new LinkedList<Runnable>();
     private final ReentrantLock dispatchLock = new ReentrantLock();
     private boolean useConsumerPriority=true;
     private boolean strictOrderDispatch=false;
@@ -110,11 +110,29 @@ public class Queue extends BaseDestination implements Task {
                  TaskRunnerFactory taskFactory) throws Exception {
         super(brokerService, store, destination, parentStats);
         
-        if (destination.isTemporary() || broker == null || store==null ) {
-            this.messages = new VMPendingMessageCursor();
-        } else {
-            this.messages = new StoreQueueCursor(broker,this);
+        
+        this.log = LogFactory.getLog(getClass().getName() + "." + destination.getPhysicalName());
+        this.dispatchSelector=new QueueDispatchSelector(destination);
+       
+    }
+        
+    public void initialize() throws Exception {
+        if (this.messages == null) {
+            if (destination.isTemporary() || broker == null || store == null) {
+                this.messages = new VMPendingMessageCursor();
+            } else {
+                this.messages = new StoreQueueCursor(broker, this);
+            }
         }
+        // If a VMPendingMessageCursor don't use the default Producer System Usage
+        // since it turns into a shared blocking queue which can lead to a network deadlock.  
+        // If we are ccursoring to disk..it's not and issue because it does not block due 
+        // to large disk sizes.
+        if( messages instanceof VMPendingMessageCursor ) {
+            this.systemUsage = brokerService.getSystemUsage();
+            memoryUsage.setParent(systemUsage.getMemoryUsage());
+        }
+        
        
         this.executor =  Executors.newSingleThreadExecutor(new ThreadFactory() {
             public Thread newThread(Runnable runnable) {
@@ -126,20 +144,6 @@ public class Queue extends BaseDestination implements Task {
         });
            
         this.taskRunner = new DeterministicTaskRunner(this.executor,this);
-        this.log = LogFactory.getLog(getClass().getName() + "." + destination.getPhysicalName());
-        this.dispatchSelector=new QueueDispatchSelector(destination);
-       
-    }
-        
-    public void initialize() throws Exception {
-        // If a VMPendingMessageCursor don't use the default Producer System Usage
-        // since it turns into a shared blocking queue which can lead to a network deadlock.  
-        // If we are ccursoring to disk..it's not and issue because it does not block due 
-        // to large disk sizes.
-        if( messages instanceof VMPendingMessageCursor ) {
-            this.systemUsage = brokerService.getSystemUsage();
-            memoryUsage.setParent(systemUsage.getMemoryUsage());
-        }
         super.initialize();
         if (store != null) {
             // Restore the persistent messages.
@@ -222,10 +226,7 @@ public class Queue extends BaseDestination implements Task {
                 // Add all the matching messages in the queue to the
                 // subscription.
                 
-                for (Iterator<MessageReference> i = pagedInMessages.values()
-                        .iterator(); i.hasNext();) {
-                    QueueMessageReference node = (QueueMessageReference) i
-                            .next();
+                for (QueueMessageReference node:pagedInMessages.values()){
                     if (!node.isDropped() && !node.isAcked() && (!node.isDropped() ||sub.getConsumerInfo().isBrowser())) {
                         msgContext.setMessageReference(node);
                         if (sub.matches(node, msgContext)) {
@@ -274,11 +275,8 @@ public class Queue extends BaseDestination implements Task {
                 // redeliver inflight messages
                 sub.remove(context, this);
 
-                List<MessageReference> list = new ArrayList<MessageReference>();
-                for (Iterator<MessageReference> i = pagedInMessages.values()
-                        .iterator(); i.hasNext();) {
-                    QueueMessageReference node = (QueueMessageReference) i
-                            .next();
+                List<QueueMessageReference> list = new ArrayList<QueueMessageReference>();
+                for (QueueMessageReference node:pagedInMessages.values()){
                     if (!node.isDropped() && !node.isAcked()
                             && node.getLockOwner() == sub) {
                         if (node.unlock()) {
@@ -583,9 +581,8 @@ public class Queue extends BaseDestination implements Task {
 
     // Implementation methods
     // -------------------------------------------------------------------------
-    private MessageReference createMessageReference(Message message) {
-        MessageReference result = new IndirectMessageReference(this, store, message);
-        result.decrementReferenceCount();
+    private QueueMessageReference createMessageReference(Message message) {
+        QueueMessageReference result = new IndirectMessageReference(message);
         return result;
     }
 
@@ -597,18 +594,17 @@ public class Queue extends BaseDestination implements Task {
             log.error("caught an exception browsing " + this, e);
         }
         synchronized (pagedInMessages) {
-            for (Iterator<MessageReference> i = pagedInMessages.values().iterator(); i.hasNext();) {
-                MessageReference r = i.next();
-                r.incrementReferenceCount();
+            for (QueueMessageReference node:pagedInMessages.values()){
+                node.incrementReferenceCount();
                 try {
-                    Message m = r.getMessage();
+                    Message m = node.getMessage();
                     if (m != null) {
                         l.add(m);
                     }
                 } catch (IOException e) {
                     log.error("caught an exception browsing " + this, e);
                 } finally {
-                    r.decrementReferenceCount();
+                    node.decrementReferenceCount();
                 }
             }
         }
@@ -886,7 +882,6 @@ public class Queue extends BaseDestination implements Task {
                 log.error("Failed to page in more queue messages ", e);
             }
         }
-        
         synchronized(messagesWaitingForSpace) {
                while (!messagesWaitingForSpace.isEmpty() && !memoryUsage.isFull()) {
                    Runnable op = messagesWaitingForSpace.removeFirst();
@@ -921,7 +916,7 @@ public class Queue extends BaseDestination implements Task {
         };
     }
 
-    protected void removeMessage(ConnectionContext c, IndirectMessageReference r) throws IOException {
+    protected void removeMessage(ConnectionContext c, QueueMessageReference r) throws IOException {
         MessageAck ack = new MessageAck();
         ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
         ack.setDestination(destination);
@@ -955,7 +950,7 @@ public class Queue extends BaseDestination implements Task {
         wakeup();
     }
     
-    final void wakeup() {
+    protected void wakeup() {
         try {
             taskRunner.wakeup();
         } catch (InterruptedException e) {
@@ -963,8 +958,8 @@ public class Queue extends BaseDestination implements Task {
         }
     }
 
-    private List<MessageReference> doPageIn(boolean force) throws Exception {
-        List<MessageReference> result = null;
+    private List<QueueMessageReference> doPageIn(boolean force) throws Exception {
+        List<QueueMessageReference> result = null;
         dispatchLock.lock();
         try{
         
@@ -972,7 +967,7 @@ public class Queue extends BaseDestination implements Task {
             if ((force || !consumers.isEmpty()) && toPageIn > 0) {
                 messages.setMaxBatchSize(toPageIn);
                 int count = 0;
-                result = new ArrayList<MessageReference>(toPageIn);
+                result = new ArrayList<QueueMessageReference>(toPageIn);
                 synchronized (messages) {
                     try {
                         messages.reset();
@@ -980,8 +975,8 @@ public class Queue extends BaseDestination implements Task {
                             MessageReference node = messages.next();
                             messages.remove();
                             if (!broker.isExpired(node)) {
-                                node = createMessageReference(node.getMessage());
-                                result.add(node);
+                                QueueMessageReference ref = createMessageReference(node.getMessage());
+                                result.add(ref);
                                 count++;
                             } else {
                                 broker.messageExpired(createConnectionContext(),
@@ -994,7 +989,7 @@ public class Queue extends BaseDestination implements Task {
                     }
                 }
                 synchronized (pagedInMessages) {
-                    for(MessageReference ref:result) {
+                    for(QueueMessageReference ref:result) {
                         pagedInMessages.put(ref.getMessageId(), ref);
                     }
                 }
@@ -1005,7 +1000,7 @@ public class Queue extends BaseDestination implements Task {
         return result;
     }
     
-    private void doDispatch(List<MessageReference> list) throws Exception {
+    private void doDispatch(List<QueueMessageReference> list) throws Exception {
         if (list != null) {
             synchronized (consumers) {
                 for (MessageReference node : list) {
@@ -1053,7 +1048,7 @@ public class Queue extends BaseDestination implements Task {
         pageInMessages(true);
     }
 
-    private void pageInMessages(boolean force) throws Exception {
+    protected void pageInMessages(boolean force) throws Exception {
             doDispatch(doPageIn(force));
     }
     
