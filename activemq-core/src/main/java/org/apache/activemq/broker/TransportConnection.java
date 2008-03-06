@@ -726,7 +726,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
     }
 
     public void dispatchSync(Command message) {
-        getStatistics().getEnqueues().increment();
+        //getStatistics().getEnqueues().increment();
         try {
             processDispatch(message);
         } catch (IOException e) {
@@ -736,7 +736,7 @@ public class TransportConnection implements Service, Connection, Task, CommandVi
 
     public void dispatchAsync(Command message) {
         if (!stopped.get()) {
-            getStatistics().getEnqueues().increment();
+            //getStatistics().getEnqueues().increment();
             if (taskRunner == null) {
                 dispatchSync(message);
             } else {
