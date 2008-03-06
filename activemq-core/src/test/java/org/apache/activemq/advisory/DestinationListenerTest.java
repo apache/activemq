@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.advisory;
 
+import java.util.Set;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
@@ -29,23 +31,36 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision$
  */
 public class DestinationListenerTest extends EmbeddedBrokerTestSupport implements DestinationListener {
-    private static final Log LOG = LogFactory.getLog(DestinationListenerTest.class);
+    private static final transient Log LOG = LogFactory.getLog(DestinationListenerTest.class);
+
     protected ActiveMQConnection connection;
-    protected DestinationSource destinationSource;
+    protected ActiveMQQueue sampleQueue = new ActiveMQQueue("foo.bar");
+    protected ActiveMQTopic sampleTopic = new ActiveMQTopic("cheese");
 
     public void testDestiationSource() throws Exception {
         Thread.sleep(1000);
-        System.out.println("Queues: " + destinationSource.getQueues());
-        System.out.println("Topics: " + destinationSource.getTopics());
+
+        DestinationSource destinationSource = connection.getDestinationSource();
+        Set<ActiveMQQueue> queues = destinationSource.getQueues();
+        Set<ActiveMQTopic> topics = destinationSource.getTopics();
+
+        LOG.info("Queues: " + queues);
+        LOG.info("Topics: " + topics);
+
+        assertTrue("The queues should not be empty!", !queues.isEmpty());
+        assertTrue("The topics should not be empty!", !topics.isEmpty());
+
+        assertTrue("queues contains initial queue: " + queues, queues.contains(sampleQueue));
+        assertTrue("topics contains initial topic: " + queues, topics.contains(sampleTopic));
     }
 
     public void onDestinationEvent(DestinationEvent event) {
         ActiveMQDestination destination = event.getDestination();
         if (event.isAddOperation()) {
-            System.out.println("Added:   " + destination);
+            LOG.info("Added:   " + destination);
         }
         else {
-            System.out.println("Removed: " + destination);
+            LOG.info("Removed: " + destination);
         }
     }
 
@@ -54,16 +69,15 @@ public class DestinationListenerTest extends EmbeddedBrokerTestSupport implement
 
         connection = (ActiveMQConnection) createConnection();
         connection.start();
-
-        destinationSource = connection.getDestinationSource();
+        connection.getDestinationSource().setDestinationListener(this);
     }
 
     @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = super.createBroker();
         broker.setDestinations(new ActiveMQDestination[]{
-                new ActiveMQQueue("foo.bar"),
-                new ActiveMQTopic("cheese")
+                sampleQueue,
+                sampleTopic
         });
         return broker;
     }
