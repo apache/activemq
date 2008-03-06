@@ -211,7 +211,7 @@ public interface PendingMessageCursor extends Service {
      * @param maxItems
      * @return a list of paged in messages
      */
-    LinkedList pageInList(int maxItems);
+    LinkedList<MessageReference> pageInList(int maxItems);
     
     /**
      * set the maximum number of producers to track at one time
