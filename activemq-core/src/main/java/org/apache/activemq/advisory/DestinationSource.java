@@ -67,7 +67,7 @@ public class DestinationSource implements MessageListener {
         return listener;
     }
 
-    public void setConsumerListener(DestinationListener listener) {
+    public void setDestinationListener(DestinationListener listener) {
         this.listener = listener;
     }
 
