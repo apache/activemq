@@ -94,6 +94,7 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.activemq.util.ServiceSupport;
+import org.apache.activemq.advisory.DestinationSource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -178,6 +179,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private AtomicInteger protocolVersion = new AtomicInteger(CommandTypes.PROTOCOL_VERSION);
     private long timeCreated;
     private ConnectionAudit connectionAudit = new ConnectionAudit();
+    private DestinationSource destinationSource;
 
     /**
      * Construct an <code>ActiveMQConnection</code>
@@ -554,6 +556,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 if (!closed.get()) {
                     closing.set(true);
 
+                    if (destinationSource != null) {
+                        destinationSource.stop();
+                        destinationSource = null;
+                    }
                     if (advisoryConsumer != null) {
                         advisoryConsumer.dispose();
                         advisoryConsumer = null;
@@ -906,6 +912,21 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     public void setStatsEnabled(boolean statsEnabled) {
         this.stats.setEnabled(statsEnabled);
+    }
+
+    /**
+     * Returns the {@link DestinationSource} object which can be used to listen to destinations
+     * being created or destroyed or to enquire about the current destinations available on the broker
+     *
+     * @return a lazily created destination source
+     * @throws JMSException
+     */
+    public DestinationSource getDestinationSource() throws JMSException {
+        if (destinationSource == null) {
+            destinationSource = new DestinationSource(this);
+            destinationSource.start();
+        }
+        return destinationSource;
     }
 
     // Implementation methods
@@ -2079,4 +2100,5 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     protected void rollbackDuplicate(ActiveMQDispatcher dispatcher, Message message) {
         connectionAudit.rollbackDuplicate(dispatcher, message);
     }
+
 }
