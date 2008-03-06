@@ -42,8 +42,13 @@ public class TaskRunnerFactory {
     public TaskRunnerFactory() {
         this("ActiveMQ Task", Thread.NORM_PRIORITY, true, 1000);
     }
-
+    
     public TaskRunnerFactory(String name, int priority, boolean daemon, int maxIterationsPerRun) {
+    	this(name,priority,daemon,maxIterationsPerRun,false);
+    }
+
+
+    public TaskRunnerFactory(String name, int priority, boolean daemon, int maxIterationsPerRun, boolean dedicatedTaskRunner) {
 
         this.name = name;
         this.priority = priority;
@@ -54,7 +59,7 @@ public class TaskRunnerFactory {
         // avoid
         // using a thread pool to run tasks and use a DedicatedTaskRunner
         // instead.
-        if ("true".equals(System.getProperty("org.apache.activemq.UseDedicatedTaskRunner"))) {
+        if (dedicatedTaskRunner || "true".equals(System.getProperty("org.apache.activemq.UseDedicatedTaskRunner"))) {
             executor = null;
         } else {
             executor = createDefaultExecutor();
