@@ -79,7 +79,7 @@ public class AdvisoryBroker extends BrokerFilter {
 
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         Subscription answer = next.addConsumer(context, info);
-
+        
         // Don't advise advisory topics.
         if (!AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
             ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination());
