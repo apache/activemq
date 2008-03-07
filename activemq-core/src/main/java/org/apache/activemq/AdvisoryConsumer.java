@@ -80,9 +80,10 @@ public class AdvisoryConsumer implements ActiveMQDispatcher {
         if (o != null && o.getClass() == DestinationInfo.class) {
             processDestinationInfo((DestinationInfo)o);
         } else {
-            connection.onAsyncException(new JMSException(
-                                                         "Unexpected message was dispatched to the AdvisoryConsumer: "
-                                                             + md));
+            //This can happen across networks
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Unexpected message was dispatched to the AdvisoryConsumer: "+md);
+            }
         }
 
     }
