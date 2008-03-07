@@ -276,7 +276,12 @@ public class Queue extends BaseDestination implements Task {
                 sub.remove(context, this);
 
                 List<QueueMessageReference> list = new ArrayList<QueueMessageReference>();
-                for (QueueMessageReference node:pagedInMessages.values()){
+                List<QueueMessageReference> inFlight = null;
+                synchronized(pagedInMessages) {
+                    inFlight = new ArrayList<QueueMessageReference>(pagedInMessages.values());
+                }
+                
+                for (QueueMessageReference node:inFlight){
                     if (!node.isDropped() && !node.isAcked()
                             && node.getLockOwner() == sub) {
                         if (node.unlock()) {
