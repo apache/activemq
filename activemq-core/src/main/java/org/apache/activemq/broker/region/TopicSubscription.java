@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -110,12 +111,19 @@ public class TopicSubscription extends AbstractSubscription {
                             // only page in a 1000 at a time - else we could
                             // blow da memory
                             pageInSize = Math.max(1000, pageInSize);
-                            LinkedList list = matched.pageInList(pageInSize);
-                            MessageReference[] oldMessages = messageEvictionStrategy.evictMessages(list);
-                            int messagesToEvict = oldMessages.length;
-                            for (int i = 0; i < messagesToEvict; i++) {
-                                MessageReference oldMessage = oldMessages[i];
-                                discard(oldMessage);
+                            LinkedList list = null;
+                            MessageReference[] oldMessages=null;
+                            synchronized(matched){
+                            list = matched.pageInList(pageInSize);
+                            	oldMessages = messageEvictionStrategy.evictMessages(list);
+                            }
+                            int messagesToEvict = 0;
+                            if (oldMessages != null){
+	                            messagesToEvict = oldMessages.length;
+	                            for (int i = 0; i < messagesToEvict; i++) {
+	                                MessageReference oldMessage = oldMessages[i];
+	                                discard(oldMessage);
+	                            }
                             }
                             // lets avoid an infinite loop if we are given a bad
                             // eviction strategy
@@ -454,7 +462,11 @@ public class TopicSubscription extends AbstractSubscription {
      * @return the list
      */
     public synchronized List<MessageReference> getInFlightMessages(){
-        return matched.pageInList(1000);
+    	List<MessageReference> result = new ArrayList<MessageReference>();
+        synchronized(matched) {
+            result.addAll(matched.pageInList(1000));
+        }
+        return result;
     }
 
 }
