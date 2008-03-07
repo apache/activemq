@@ -83,10 +83,9 @@ public class AdvisoryBroker extends BrokerFilter {
         // Don't advise advisory topics.
         if (!AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
             ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination());
-            consumers.put(info.getConsumerId(), info);
+            //consumers.put(info.getConsumerId(), info);
             fireConsumerAdvisory(context,info.getDestination(), topic, info);
         } else {
-
             // We need to replay all the previously collected state objects
             // for this newly added consumer.
             if (AdvisorySupport.isConnectionAdvisoryTopic(info.getDestination())) {
@@ -128,6 +127,7 @@ public class AdvisoryBroker extends BrokerFilter {
                 }
             }
         }
+        consumers.put(info.getConsumerId(), info);
         return answer;
     }
 
@@ -251,6 +251,9 @@ public class AdvisoryBroker extends BrokerFilter {
 
     protected void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId) throws Exception {
         ActiveMQMessage advisoryMessage = new ActiveMQMessage();
+        advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_NAME, getBrokerName());
+        String id = getBrokerId() != null ? getBrokerId().getValue() : "NOT_SET";
+        advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_ID, id);
         fireAdvisory(context, topic, command, targetConsumerId, advisoryMessage);
     }
 
@@ -268,6 +271,7 @@ public class AdvisoryBroker extends BrokerFilter {
             }
         }
         advisoryMessage.setIntProperty("consumerCount", count);
+        
         fireAdvisory(context, topic, command, targetConsumerId, advisoryMessage);
     }
 
