@@ -112,9 +112,12 @@ public class ConnectionSplitBroker extends BrokerFilter implements MessageListen
 	        		     String str = "connectionId=" + old.getConnectionId() +",clientId="+old.getClientId();
 	        		     LOG.warn("Removing stale connection: " + str);
 	        		     try {
-                            old.getConnection().stop();
+	        		         //remove connection states
+	        		         TransportConnection connection = (TransportConnection) old.getConnection();
+                             connection.processRemoveConnection(old.getConnectionId());
+                             connection.stopAsync();
                         } catch (Exception e) {
-                            LOG.error("Failed to remove stale connection: " + str);
+                            LOG.error("Failed to remove stale connection: " + str,e);
                         }
 	        		 }
 	        	 }

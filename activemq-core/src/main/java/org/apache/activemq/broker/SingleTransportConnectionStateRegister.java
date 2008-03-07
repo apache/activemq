@@ -109,10 +109,6 @@ public class SingleTransportConnectionStateRegister  implements TransportConnect
 
     public synchronized TransportConnectionState lookupConnectionState(ConnectionId connectionId) {
         TransportConnectionState cs = connectionState;
-        if (cs == null) {
-            throw new IllegalStateException("Cannot lookup a connection that had not been registered: "
-                                            + connectionId);
-        }
         return cs;
     }
 

@@ -673,44 +673,46 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
-    public Response processRemoveConnection(ConnectionId id) throws InterruptedException {
+    public synchronized Response processRemoveConnection(ConnectionId id) throws InterruptedException {
         TransportConnectionState cs = lookupConnectionState(id);
-        // Don't allow things to be added to the connection state while we are
-        // shutting down.
-        cs.shutdown();
-        
-        // Cascade the connection stop to the sessions.
-        for (Iterator iter = cs.getSessionIds().iterator(); iter.hasNext();) {
-            SessionId sessionId = (SessionId)iter.next();
-            try {
-                processRemoveSession(sessionId);
-            } catch (Throwable e) {
-                SERVICELOG.warn("Failed to remove session " + sessionId, e);
+        if (cs != null) {
+            // Don't allow things to be added to the connection state while we are
+            // shutting down.
+            cs.shutdown();
+            
+            // Cascade the connection stop to the sessions.
+            for (Iterator iter = cs.getSessionIds().iterator(); iter.hasNext();) {
+                SessionId sessionId = (SessionId)iter.next();
+                try {
+                    processRemoveSession(sessionId);
+                } catch (Throwable e) {
+                    SERVICELOG.warn("Failed to remove session " + sessionId, e);
+                }
             }
-        }
-        // Cascade the connection stop to temp destinations.
-        for (Iterator iter = cs.getTempDesinations().iterator(); iter.hasNext();) {
-            DestinationInfo di = (DestinationInfo)iter.next();
-            try {
-                broker.removeDestination(cs.getContext(), di.getDestination(), 0);
-            } catch (Throwable e) {
-                SERVICELOG.warn("Failed to remove tmp destination " + di.getDestination(), e);
+            // Cascade the connection stop to temp destinations.
+            for (Iterator iter = cs.getTempDesinations().iterator(); iter.hasNext();) {
+                DestinationInfo di = (DestinationInfo)iter.next();
+                try {
+                    broker.removeDestination(cs.getContext(), di.getDestination(), 0);
+                } catch (Throwable e) {
+                    SERVICELOG.warn("Failed to remove tmp destination " + di.getDestination(), e);
+                }
+                iter.remove();
             }
-            iter.remove();
-        }
-        try {
-            broker.removeConnection(cs.getContext(), cs.getInfo(), null);
-        } catch (Throwable e) {
-            SERVICELOG.warn("Failed to remove connection " + cs.getInfo(), e);
-        }
-
-        TransportConnectionState state = unregisterConnectionState(id);
-        if (state != null) {
-            synchronized (brokerConnectionStates) {
-                // If we are the last reference, we should remove the state
-                // from the broker.
-                if (state.decrementReference() == 0) {
-                    brokerConnectionStates.remove(id);
+            try {
+                broker.removeConnection(cs.getContext(), cs.getInfo(), null);
+            } catch (Throwable e) {
+                SERVICELOG.warn("Failed to remove connection " + cs.getInfo(), e);
+            }
+    
+            TransportConnectionState state = unregisterConnectionState(id);
+            if (state != null) {
+                synchronized (brokerConnectionStates) {
+                    // If we are the last reference, we should remove the state
+                    // from the broker.
+                    if (state.decrementReference() == 0) {
+                        brokerConnectionStates.remove(id);
+                    }
                 }
             }
         }
