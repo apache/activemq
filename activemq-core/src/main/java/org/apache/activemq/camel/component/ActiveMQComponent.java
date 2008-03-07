@@ -26,6 +26,9 @@ import org.apache.camel.component.jms.JmsConfiguration;
  * @version $Revision$
  */
 public class ActiveMQComponent extends JmsComponent {
+    private boolean exposeAllQueues;
+    private CamelEndpointLoader endpointLoader;
+
     /**
      * Creates an <a href="http://activemq.apache.org/camel/activemq.html">ActiveMQ Component</a>
      *
@@ -68,6 +71,38 @@ public class ActiveMQComponent extends JmsComponent {
         getConfiguration().setBrokerURL(brokerURL);
     }
 
+    public boolean isExposeAllQueues() {
+        return exposeAllQueues;
+    }
+
+    /**
+     * If enabled this will cause all Queues in the ActiveMQ broker to be eagerly populated into the CamelContext
+     * so that they can be easily browsed by any Camel tooling. This option is disabled by default.
+     *
+     * @param exposeAllQueues
+     */
+    public void setExposeAllQueues(boolean exposeAllQueues) {
+        this.exposeAllQueues = exposeAllQueues;
+    }
+
+    @Override
+    protected void doStart() throws Exception {
+        super.doStart();
+        if (isExposeAllQueues()) {
+            endpointLoader = new CamelEndpointLoader(getCamelContext());
+            endpointLoader.afterPropertiesSet();
+        }
+    }
+
+
+    @Override
+    protected void doStop() throws Exception {
+        if (endpointLoader != null) {
+            endpointLoader.destroy();
+            endpointLoader = null;
+        }
+        super.doStop();
+    }
 
     @Override
     protected JmsConfiguration createConfiguration() {

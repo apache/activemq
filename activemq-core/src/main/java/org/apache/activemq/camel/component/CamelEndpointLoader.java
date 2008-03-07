@@ -31,18 +31,19 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
 import org.apache.camel.Endpoint;
-import org.apache.camel.component.jms.JmsEndpoint;
+import org.apache.camel.component.jms.JmsQueueEndpoint;
 import org.apache.camel.util.ObjectHelper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 
 /**
  * A helper bean which populates a {@link CamelContext} with ActiveMQ Queue endpoints
- * 
+ *
  * @version $Revision: 1.1 $
  */
-public class CamelEndpointLoader implements InitializingBean, CamelContextAware {
+public class CamelEndpointLoader implements InitializingBean, DisposableBean, CamelContextAware {
     private static final transient Log LOG = LogFactory.getLog(CamelEndpointLoader.class);
     private CamelContext camelContext;
     private ActiveMQConnection connection;
@@ -56,6 +57,54 @@ public class CamelEndpointLoader implements InitializingBean, CamelContextAware 
         this.camelContext = camelContext;
     }
 
+    public void afterPropertiesSet() throws Exception {
+        ObjectHelper.notNull(camelContext, "camelContext");
+        if (connection == null) {
+            Connection value = getConnectionFactory().createConnection();
+            if (value instanceof ActiveMQConnection) {
+                connection = (ActiveMQConnection) value;
+            }
+            else {
+                throw new IllegalArgumentException("Created JMS Connection is not an ActiveMQConnection: " + value);
+            }
+        }
+        connection.start();
+        DestinationSource source = connection.getDestinationSource();
+        source.setDestinationListener(new DestinationListener() {
+            public void onDestinationEvent(DestinationEvent event) {
+                try {
+                    ActiveMQDestination destination = event.getDestination();
+                    if (destination instanceof ActiveMQQueue) {
+                        ActiveMQQueue queue = (ActiveMQQueue) destination;
+                        if (event.isAddOperation()) {
+                            addQueue(queue);
+                        }
+                        else {
+                            removeQueue(queue);
+                        }
+                    }
+                }
+                catch (Exception e) {
+                    LOG.warn("Caught: " + e, e);
+                }
+            }
+        });
+
+        Set<ActiveMQQueue> queues = source.getQueues();
+        for (ActiveMQQueue queue : queues) {
+            addQueue(queue);
+        }
+    }
+
+    public void destroy() throws Exception {
+        if (connection != null) {
+            connection.close();
+            connection = null;
+        }
+    }
+
+    // Properties
+    //-------------------------------------------------------------------------
     public CamelContext getCamelContext() {
         return camelContext;
     }
@@ -90,48 +139,13 @@ public class CamelEndpointLoader implements InitializingBean, CamelContextAware 
         this.component = component;
     }
 
-    public void afterPropertiesSet() throws Exception {
-        ObjectHelper.notNull(camelContext, "camelContext");
-        if (connection == null) {
-            Connection value = getConnectionFactory().createConnection();
-            if (value instanceof ActiveMQConnection) {
-                connection = (ActiveMQConnection) value;
-            }
-            else {
-                throw new IllegalArgumentException("Created JMS Connection is not an ActiveMQConnection: " + value);
-            }
-        }
-        DestinationSource source = connection.getDestinationSource();
-        source.setDestinationListener(new DestinationListener() {
-            public void onDestinationEvent(DestinationEvent event) {
-                try {
-                    ActiveMQDestination destination = event.getDestination();
-                    if (destination instanceof ActiveMQQueue) {
-                        ActiveMQQueue queue = (ActiveMQQueue) destination;
-                        if (event.isAddOperation()) {
-                            addQueue(queue);
-                        }
-                        else {
-                            removeQueue(queue);
-                        }
-                    }
-                }
-                catch (Exception e) {
-                    LOG.warn("Caught: " + e, e);
-                }
-            }
-        });
-
-        Set<ActiveMQQueue> queues = source.getQueues();
-        for (ActiveMQQueue queue : queues) {
-            addQueue(queue);
-        }
-    }
+    // Implementation methods
+    //-------------------------------------------------------------------------
 
     protected void addQueue(ActiveMQQueue queue) throws Exception {
         String queueUri = getQueueUri(queue);
         ActiveMQComponent jmsComponent = getComponent();
-        Endpoint endpoint = new JmsEndpoint(queueUri, jmsComponent, queue.getPhysicalName(), false, jmsComponent.getConfiguration());
+        Endpoint endpoint = new JmsQueueEndpoint(queueUri, jmsComponent, queue.getPhysicalName(), jmsComponent.getConfiguration());
         camelContext.addSingletonEndpoint(queueUri, endpoint);
     }
 
