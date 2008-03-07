@@ -86,6 +86,7 @@ public class PolicyEntry extends DestinationMapEntry {
         queue.setMinimumMessageSize((int) getMinimumMessageSize());
         queue.setUseConsumerPriority(isUseConsumerPriority());
         queue.setStrictOrderDispatch(isStrictOrderDispatch());
+        queue.setOptimizedDispatch(isOptimizedDispatch());
     }
 
     public void configure(Topic topic) {

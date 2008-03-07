@@ -32,7 +32,7 @@ import org.apache.activemq.thread.TaskRunnerFactory;
  */
 public class TempQueue extends Queue{
     private final ActiveMQTempDestination tempDest;
-    private TaskRunnerFactory taskFactory;
+   
     
     /**
      * @param brokerService
@@ -48,7 +48,6 @@ public class TempQueue extends Queue{
             throws Exception {
         super(brokerService, destination, store, parentStats, taskFactory);
         this.tempDest = (ActiveMQTempDestination) destination;
-        this.taskFactory=taskFactory;
     }
     
     public void initialize() throws Exception {
