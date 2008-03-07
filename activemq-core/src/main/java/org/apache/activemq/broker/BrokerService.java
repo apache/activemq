@@ -38,6 +38,7 @@ import javax.management.ObjectName;
 import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisoryBroker;
+import org.apache.activemq.broker.cluster.ConnectionSplitBroker;
 import org.apache.activemq.broker.ft.MasterConnector;
 import org.apache.activemq.broker.jmx.BrokerView;
 import org.apache.activemq.broker.jmx.ConnectorView;
@@ -159,11 +160,13 @@ public class BrokerService implements Service {
     private boolean useLocalHostBrokerName;
     private CountDownLatch stoppedLatch = new CountDownLatch(1);
     private boolean supportFailOver;
-    private boolean clustered;
     private Broker regionBroker;
     private int producerSystemUsagePortion = 60;
     private int consumerSystemUsagePortion = 40;
     private boolean splitSystemUsageForProducersConsumers;
+    private boolean monitorConnectionSplits;
+    private int taskRunnerPriority = Thread.NORM_PRIORITY;
+    private boolean dedicatedTaskRunner;
    
 
     static {
@@ -757,7 +760,7 @@ public class BrokerService implements Service {
 
     public TaskRunnerFactory getTaskRunnerFactory() {
         if (taskRunnerFactory == null) {
-            taskRunnerFactory = new TaskRunnerFactory();
+            taskRunnerFactory = new TaskRunnerFactory("BrokerService",getTaskRunnerPriority(),true,1000,isDedicatedTaskRunner());
         }
         return taskRunnerFactory;
     }
@@ -1217,20 +1220,6 @@ public class BrokerService implements Service {
     }
 
     /**
-     * @return the clustered
-     */
-    public boolean isClustered() {
-        return this.clustered;
-    }
-
-    /**
-     * @param clustered the clustered to set
-     */
-    public void setClustered(boolean clustered) {
-        this.clustered = clustered;
-    }
-
-    /**
      * Looks up and lazily creates if necessary the destination for the given JMS name
      */
     public Destination getDestination(ActiveMQDestination destination) throws Exception {
@@ -1261,7 +1250,30 @@ public class BrokerService implements Service {
             boolean splitSystemUsageForProducersConsumers) {
         this.splitSystemUsageForProducersConsumers = splitSystemUsageForProducersConsumers;
     }
+    
+    public boolean isMonitorConnectionSplits() {
+		return monitorConnectionSplits;
+	}
 
+	public void setMonitorConnectionSplits(boolean monitorConnectionSplits) {
+		this.monitorConnectionSplits = monitorConnectionSplits;
+	}
+	public int getTaskRunnerPriority() {
+		return taskRunnerPriority;
+	}
+
+	public void setTaskRunnerPriority(int taskRunnerPriority) {
+		this.taskRunnerPriority = taskRunnerPriority;
+	}
+
+	public boolean isDedicatedTaskRunner() {
+		return dedicatedTaskRunner;
+	}
+
+	public void setDedicatedTaskRunner(boolean dedicatedTaskRunner) {
+		this.dedicatedTaskRunner = dedicatedTaskRunner;
+	}
+	//
     // Implementation methods
     // -------------------------------------------------------------------------
     /**
@@ -1578,6 +1590,9 @@ public class BrokerService implements Service {
         broker = new CompositeDestinationBroker(broker);
         if (isPopulateJMSXUserID()) {
             broker = new UserIDBroker(broker);
+        }
+        if (isMonitorConnectionSplits()){
+        	broker = new ConnectionSplitBroker(broker);
         }
         if (plugins != null) {
             for (int i = 0; i < plugins.length; i++) {
