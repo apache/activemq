@@ -17,12 +17,11 @@
 package org.apache.activemq.kaha.impl.index.hash;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.apache.activemq.kaha.Marshaller;
 import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.kaha.impl.index.Index;
@@ -207,6 +206,26 @@ public class HashIndex implements Index, HashIndexMBean {
                 LOG.error("Failed to load index ", e);
                 throw new RuntimeException(e);
             }
+        }
+    }
+    
+    public void dump() throws IOException {   
+        long offset = 0;
+        readBuffer = new byte[pageSize];
+        dataIn = new DataByteArrayInputStream();
+        dataOut = new DataByteArrayOutputStream(pageSize);
+        int count = 0;
+        while ((offset + pageSize) <= indexFile.length()) {
+            indexFile.seek(offset);
+            HashPage page = getFullPage(offset);
+            if (page.isActive()) {
+               
+                for (HashEntry entry : page.getEntries()) {
+                    count++;
+                    System.out.println("PAGE( " + count + ") " + page.getId() + ": " + entry);
+                }
+            }
+            offset += pageSize;
         }
     }
     
@@ -454,6 +473,7 @@ public class HashIndex implements Index, HashIndexMBean {
                     backIndex.size++;
                 }
             }
+            page=null;
             offset += pageSize;
         }
         backIndex.unload();
