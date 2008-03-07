@@ -78,6 +78,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class Queue extends BaseDestination implements Task {
     protected final Log log;
+    protected TaskRunnerFactory taskFactory;
     protected TaskRunner taskRunner;    
     protected final List<Subscription> consumers = new ArrayList<Subscription>(50);
     protected PendingMessageCursor messages;
@@ -93,6 +94,7 @@ public class Queue extends BaseDestination implements Task {
     private boolean useConsumerPriority=true;
     private boolean strictOrderDispatch=false;
     private QueueDispatchSelector  dispatchSelector;
+    private boolean optimizedDispatch=false;
     private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
         public void run() {
             wakeup();
@@ -109,11 +111,9 @@ public class Queue extends BaseDestination implements Task {
     public Queue(BrokerService brokerService, final ActiveMQDestination destination, MessageStore store,DestinationStatistics parentStats,
                  TaskRunnerFactory taskFactory) throws Exception {
         super(brokerService, store, destination, parentStats);
-        
-        
+        this.taskFactory=taskFactory;       
         this.log = LogFactory.getLog(getClass().getName() + "." + destination.getPhysicalName());
         this.dispatchSelector=new QueueDispatchSelector(destination);
-       
     }
         
     public void initialize() throws Exception {
@@ -133,17 +133,20 @@ public class Queue extends BaseDestination implements Task {
             memoryUsage.setParent(systemUsage.getMemoryUsage());
         }
         
-       
-        this.executor =  Executors.newSingleThreadExecutor(new ThreadFactory() {
-            public Thread newThread(Runnable runnable) {
-                Thread thread = new Thread(runnable, "QueueThread:"+destination);
-                thread.setDaemon(true);
-                thread.setPriority(Thread.NORM_PRIORITY);
-                return thread;
-            }
-        });
-           
-        this.taskRunner = new DeterministicTaskRunner(this.executor,this);
+        if (isOptimizedDispatch()) {
+            this.taskRunner = taskFactory.createTaskRunner(this, "TempQueue:  " + destination.getPhysicalName());
+        }else {
+            this.executor =  Executors.newSingleThreadExecutor(new ThreadFactory() {
+                public Thread newThread(Runnable runnable) {
+                    Thread thread = new Thread(runnable, "QueueThread:"+destination);
+                    thread.setDaemon(true);
+                    thread.setPriority(Thread.NORM_PRIORITY);
+                    return thread;
+                }
+            });
+               
+            this.taskRunner = new DeterministicTaskRunner(this.executor,this);
+        }
         super.initialize();
         if (store != null) {
             // Restore the persistent messages.
@@ -583,6 +586,15 @@ public class Queue extends BaseDestination implements Task {
     public void setStrictOrderDispatch(boolean strictOrderDispatch) {
         this.strictOrderDispatch = strictOrderDispatch;
     }
+    
+
+    public boolean isOptimizedDispatch() {
+        return optimizedDispatch;
+    }
+
+    public void setOptimizedDispatch(boolean optimizedDispatch) {
+        this.optimizedDispatch = optimizedDispatch;
+    }
 
     // Implementation methods
     // -------------------------------------------------------------------------
@@ -956,10 +968,14 @@ public class Queue extends BaseDestination implements Task {
     }
     
     protected void wakeup() {
-        try {
-            taskRunner.wakeup();
-        } catch (InterruptedException e) {
-            log.warn("Task Runner failed to wakeup ", e);
+        if (optimizedDispatch) {
+            iterate();
+        }else {
+            try {
+                taskRunner.wakeup();
+            } catch (InterruptedException e) {
+                log.warn("Task Runner failed to wakeup ", e);
+            }
         }
     }
 
@@ -1075,4 +1091,5 @@ public class Queue extends BaseDestination implements Task {
     private void removeFromConsumerList(Subscription sub) {
         consumers.remove(sub);
     }
+
 }
