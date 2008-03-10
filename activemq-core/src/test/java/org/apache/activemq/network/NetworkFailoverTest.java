@@ -72,13 +72,11 @@ public class NetworkFailoverTest extends TestCase {
                 try {
                     TextMessage textMsg = (TextMessage)msg;
                     String payload = "REPLY: " + textMsg.getText();
-                    System.err.println("REMOTE CONSUMER GOT MSG "+ textMsg.getText());
                     Destination replyTo;
                     replyTo = msg.getJMSReplyTo();
                     textMsg.clearBody();
                     textMsg.setText(payload);
                     remoteProducer.send(replyTo, textMsg);  
-                    System.err.println("REMOTE CONSUMER SENT BACK MSG "+ textMsg.getText());
                     
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -92,15 +90,13 @@ public class NetworkFailoverTest extends TestCase {
         MessageConsumer requestConsumer = localSession.createConsumer(tempQueue);
        
         // allow for consumer infos to perculate arround
-        System.err.println("SLEEPING ...");
         Thread.sleep(2000);
         for (int i = 0; i < MESSAGE_COUNT; i++) {
             String payload = "test msg " + i;
             TextMessage msg = localSession.createTextMessage(payload);
             msg.setJMSReplyTo(tempQueue);
-            System.err.println("SENDING REQUEST " + payload);
             requestProducer.send(msg);
-            System.err.println("FAILOVER");
+            LOG.info("Failing over");
             ((FailoverTransport) ((TransportFilter) ((TransportFilter) 
                     ((ActiveMQConnection) localConnection)
                     .getTransport()).getNext()).getNext())
