@@ -63,7 +63,9 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
     private Map<MessageId,Message> messageCache = new LinkedHashMap<MessageId,Message>(){
         protected boolean removeEldestEntry(Map.Entry<MessageId,Message> eldest) {
             boolean result = currentCacheSize > maxCacheSize;
-            currentCacheSize -= eldest.getValue().getSize();
+            if (result) {
+                currentCacheSize -= eldest.getValue().getSize();
+            }
             return result;
         }
     };
@@ -104,7 +106,7 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
         if (trackMessages && command != null && command.isMessage()) {
             Message message = (Message) command;
             if (message.getTransactionId()==null) {
-                currentCacheSize+=message.getSize();
+                currentCacheSize = currentCacheSize +  message.getSize();
             }
         }
     }
