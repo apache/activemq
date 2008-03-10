@@ -189,5 +189,17 @@ public class DestinationFilter implements Destination {
 
     public void setMinimumMessageSize(int minimumMessageSize) {
         next.setMinimumMessageSize(minimumMessageSize);
-    }    
+    }   
+    
+    public void wakeup() {
+        next.wakeup();
+    }
+
+    public boolean isLazyDispatch() {
+       return next.isLazyDispatch();
+    }
+
+    public void setLazyDispatch(boolean value) {
+      next.setLazyDispatch(value);        
+    }
 }

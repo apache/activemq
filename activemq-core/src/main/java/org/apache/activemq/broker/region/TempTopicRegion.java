@@ -47,7 +47,9 @@ public class TempTopicRegion extends AbstractTempRegion {
             throw new JMSException("A durable subscription cannot be created for a temporary topic.");
         }
         try {
-            TopicSubscription answer = new TopicSubscription(broker, context, info, usageManager);
+           
+            Destination dest = lookup(context, info.getDestination());
+            TopicSubscription answer = new TopicSubscription(broker, dest,context, info, usageManager);
             // lets configure the subscription depending on the destination
             ActiveMQDestination destination = info.getDestination();
             if (destination != null && broker.getDestinationPolicy() != null) {

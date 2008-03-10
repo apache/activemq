@@ -66,14 +66,14 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     private final Object dispatchLock = new Object();
     protected ActiveMQMessageAudit audit = new ActiveMQMessageAudit();
 
-    public PrefetchSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, PendingMessageCursor cursor) throws InvalidSelectorException {
-        super(broker, context, info);
+    public PrefetchSubscription(Broker broker,Destination destination, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, PendingMessageCursor cursor) throws InvalidSelectorException {
+        super(broker,destination, context, info);
         this.usageManager=usageManager;
         pending = cursor;
     }
 
-    public PrefetchSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
-        this(broker,usageManager,context, info, new VMPendingMessageCursor());
+    public PrefetchSubscription(Broker broker,Destination destination, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
+        this(broker,destination,usageManager,context, info, new VMPendingMessageCursor());
     }
 
     /**
@@ -335,6 +335,9 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             }
         }
         if (callDispatchMatched) {
+            if (destination.isLazyDispatch()) {
+                destination.wakeup();
+            }
             dispatchPending();
         } else {
             if (isSlave()) {

@@ -967,7 +967,7 @@ public class Queue extends BaseDestination implements Task {
         wakeup();
     }
     
-    protected void wakeup() {
+    public void wakeup() {
         if (optimizedDispatch) {
             iterate();
         }else {
@@ -984,7 +984,11 @@ public class Queue extends BaseDestination implements Task {
         dispatchLock.lock();
         try{
         
-            final int toPageIn = getMaxPageSize() - pagedInMessages.size();
+            int toPageIn = getMaxPageSize() - pagedInMessages.size();
+            if (isLazyDispatch()) {
+             // Only page in the minimum number of messages which can be dispatched immediately.
+             toPageIn = Math.min(getConsumerMessageCountBeforeFull(), toPageIn);
+            }
             if ((force || !consumers.isEmpty()) && toPageIn > 0) {
                 messages.setMaxBatchSize(toPageIn);
                 int count = 0;
@@ -1090,6 +1094,17 @@ public class Queue extends BaseDestination implements Task {
     
     private void removeFromConsumerList(Subscription sub) {
         consumers.remove(sub);
+    }
+    
+    private int getConsumerMessageCountBeforeFull() throws Exception {
+        int total = 0;
+        synchronized (consumers) {
+            for (Subscription s : consumers) {
+                total += ((PrefetchSubscription) s).countBeforeFull();
+            }
+        }
+
+        return total;
     }
 
 }

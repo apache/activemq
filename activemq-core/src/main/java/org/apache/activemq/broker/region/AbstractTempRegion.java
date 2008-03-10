@@ -16,12 +16,12 @@
  */
 package org.apache.activemq.broker.region;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -36,7 +36,7 @@ import org.apache.commons.logging.LogFactory;
 public abstract class AbstractTempRegion extends AbstractRegion {
     private static int TIME_BEFORE_PURGE = 60000;
     private static final Log LOG = LogFactory.getLog(TempQueueRegion.class);
-    private Map<CachedDestination,Destination> cachedDestinations = new ConcurrentHashMap<CachedDestination,Destination>();
+    private Map<CachedDestination,Destination> cachedDestinations = new HashMap<CachedDestination,Destination>();
     private final Timer purgeTimer;
     private final TimerTask purgeTask;
     /**
@@ -72,7 +72,7 @@ public abstract class AbstractTempRegion extends AbstractRegion {
     
     protected abstract Destination doCreateDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception;
 
-    protected Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
+    protected synchronized Destination createDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
         Destination result = cachedDestinations.remove(new CachedDestination(destination));
         if (result==null) {
             result = doCreateDestination(context, destination);
@@ -80,7 +80,7 @@ public abstract class AbstractTempRegion extends AbstractRegion {
         return result;
     }
     
-    protected final void dispose(ConnectionContext context,Destination dest) throws Exception {
+    protected final synchronized void dispose(ConnectionContext context,Destination dest) throws Exception {
         //add to cache
         cachedDestinations.put(new CachedDestination(dest.getActiveMQDestination()), dest);
     }
@@ -96,7 +96,7 @@ public abstract class AbstractTempRegion extends AbstractRegion {
       
     }
     
-    private void doPurge() {
+    private synchronized void doPurge() {
         long currentTime = System.currentTimeMillis();
         if (cachedDestinations.size() > 0) {
             Set<CachedDestination> tmp = new HashSet<CachedDestination>(cachedDestinations.keySet());
@@ -125,7 +125,7 @@ public abstract class AbstractTempRegion extends AbstractRegion {
         }
         
         public boolean equals(Object o) {
-            if (o instanceof ActiveMQDestination) {
+            if (o instanceof CachedDestination) {
                 CachedDestination other = (CachedDestination) o;
                 return other.destination.equals(this.destination);
             }

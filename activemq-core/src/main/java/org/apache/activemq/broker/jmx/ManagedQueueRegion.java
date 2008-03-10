@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import javax.jms.InvalidSelectorException;
+import javax.jms.JMSException;
 import javax.management.ObjectName;
 
 import org.apache.activemq.broker.ConnectionContext;
@@ -40,7 +40,7 @@ public class ManagedQueueRegion extends QueueRegion {
         regionBroker = broker;
     }
 
-    protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
+    protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws JMSException {
         Subscription sub = super.createSubscription(context, info);
         ObjectName name = regionBroker.registerSubscription(context, sub);
         sub.setObjectName(name);

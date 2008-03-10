@@ -61,6 +61,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private long minimumMessageSize=1024;
     private boolean useConsumerPriority=true;
     private boolean strictOrderDispatch=false;
+    private boolean lazyDispatch;
    
     public void configure(Broker broker,Queue queue) {
         if (dispatchPolicy != null) {
@@ -87,6 +88,7 @@ public class PolicyEntry extends DestinationMapEntry {
         queue.setUseConsumerPriority(isUseConsumerPriority());
         queue.setStrictOrderDispatch(isStrictOrderDispatch());
         queue.setOptimizedDispatch(isOptimizedDispatch());
+        queue.setLazyDispatch(isLazyDispatch());
     }
 
     public void configure(Topic topic) {
@@ -110,6 +112,7 @@ public class PolicyEntry extends DestinationMapEntry {
         topic.setMaxPageSize(getMaxPageSize());
         topic.setUseCache(isUseCache());
         topic.setMinimumMessageSize((int) getMinimumMessageSize());
+        topic.setLazyDispatch(isLazyDispatch());
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
@@ -402,6 +405,14 @@ public class PolicyEntry extends DestinationMapEntry {
 
     public void setStrictOrderDispatch(boolean strictOrderDispatch) {
         this.strictOrderDispatch = strictOrderDispatch;
+    }
+
+    public boolean isLazyDispatch() {
+        return lazyDispatch;
+    }
+
+    public void setLazyDispatch(boolean lazyDispatch) {
+        this.lazyDispatch = lazyDispatch;
     }
 
 }
