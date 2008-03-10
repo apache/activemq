@@ -556,6 +556,10 @@ public class Topic  extends BaseDestination  implements Task{
     
     // Implementation methods
     // -------------------------------------------------------------------------
+    
+    public final void wakeup() {
+    }
+    
     protected void dispatch(final ConnectionContext context, Message message) throws Exception {
         destinationStatistics.getMessages().increment();
         destinationStatistics.getEnqueues().increment();

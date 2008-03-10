@@ -93,4 +93,22 @@ public interface Destination extends Service {
     public int getMinimumMessageSize();
 
     public void setMinimumMessageSize(int minimumMessageSize);
+    
+    /**
+     * optionally called by a Subscriber - to inform the Destination its
+     * ready for more messages
+     */
+    public void wakeup();
+    
+    /**
+     * @return true if lazyDispatch is enabled
+     */
+    public boolean isLazyDispatch();
+    
+    
+    /**
+     * set the lazy dispatch - default is false
+     * @param value
+     */
+    public void setLazyDispatch(boolean value);
 }

@@ -40,8 +40,8 @@ import org.apache.commons.logging.LogFactory;
 public abstract class AbstractSubscription implements Subscription {
 
     private static final Log LOG = LogFactory.getLog(AbstractSubscription.class);
-
     protected Broker broker;
+    protected Destination destination;
     protected ConnectionContext context;
     protected ConsumerInfo info;
     protected final DestinationFilter destinationFilter;
@@ -50,8 +50,9 @@ public abstract class AbstractSubscription implements Subscription {
     private ObjectName objectName;
 
 
-    public AbstractSubscription(Broker broker, ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
+    public AbstractSubscription(Broker broker, Destination destination,ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
         this.broker = broker;
+        this.destination=destination;
         this.context = context;
         this.info = info;
         this.destinationFilter = DestinationFilter.parseFilter(info.getDestination());

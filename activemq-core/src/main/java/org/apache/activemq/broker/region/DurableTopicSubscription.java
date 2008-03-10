@@ -51,7 +51,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     public DurableTopicSubscription(Broker broker, Destination dest,SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, boolean keepDurableSubsActive)
         throws JMSException {
-        super(broker,usageManager, context, info);
+        super(broker,dest,usageManager, context, info);
         this.pending = new StoreDurableSubscriberCursor(broker,context.getClientId(), info.getSubscriptionName(), info.getPrefetchSize(), this);
         this.pending.setSystemUsage(usageManager);
         this.keepDurableSubsActive = keepDurableSubsActive;
