@@ -435,6 +435,7 @@
              
              <exclude>**/amq1490/*</exclude>
              <exclude>**/archive/*</exclude>
+             <exclude>**/NetworkFailoverTest.*/**</exclude>
 
             <exclude>**/AMQDeadlockTest3.*</exclude>
             <!-- This test will pass with an xbean 3.3 or > version but as of now xbean 3.3 
