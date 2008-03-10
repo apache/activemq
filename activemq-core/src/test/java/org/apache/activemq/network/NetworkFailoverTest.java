@@ -17,22 +17,17 @@
 package org.apache.activemq.network;
 
 import java.io.IOException;
-import java.net.URI;
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
-import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
-import javax.jms.QueueRequestor;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-import javax.jms.QueueRequestor;
-import javax.jms.QueueSession;
 
 import junit.framework.TestCase;
 
