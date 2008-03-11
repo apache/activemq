@@ -271,7 +271,7 @@ public class DiskIndexLinkedList implements IndexLinkedList {
 		}
 		// essential last get's updated consistently
 		if (result != null && last != null && last.equals(result)) {
-			result = last;
+			last=result;
 		}
 		return result;
 	}
