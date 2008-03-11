@@ -16,8 +16,6 @@
  */
 package org.apache.activemq.broker.region;
 
-import java.io.IOException;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
@@ -45,7 +43,7 @@ public abstract class BaseDestination implements Destination {
     private int maxPageSize=1000;
     private boolean useCache=true;
     private int minimumMessageSize=1024;
-    private boolean lazyDispatch;
+    private boolean lazyDispatch=true;
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
     protected final BrokerService brokerService;
     
