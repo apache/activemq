@@ -30,9 +30,9 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.activeio.journal.Journal;
+import org.apache.activeio.journal.active.JournalLockedException;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
@@ -90,6 +90,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private static final String PROPERTY_PREFIX = "org.apache.activemq.store.amq";
     private static final boolean BROKEN_FILE_LOCK;
     private static final boolean DISABLE_LOCKING;
+    private static final int JOURNAL_LOCKED_WAIT_DELAY = 10 * 1000;
 
     private AsyncDataManager asyncDataManager;
     private ReferenceStoreAdapter referenceStoreAdapter;
@@ -125,6 +126,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private RandomAccessFile lockFile;
     private FileLock lock;
     private boolean disableLocking = DISABLE_LOCKING;
+	private boolean failIfJournalIsLocked;
 
     public String getBrokerName() {
         return this.brokerName;
@@ -186,6 +188,24 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         if (taskRunnerFactory == null) {
             taskRunnerFactory = createTaskRunnerFactory();
         }
+        
+        if (failIfJournalIsLocked) {
+            asyncDataManager.lock();
+        } else {
+            while (true) {
+                try {
+                    asyncDataManager.lock();
+                    break;
+                } catch (IOException e) {
+                    LOG.info("Journal is locked... waiting " + (JOURNAL_LOCKED_WAIT_DELAY / 1000) + " seconds for the journal to be unlocked.");
+                    try {
+                        Thread.sleep(JOURNAL_LOCKED_WAIT_DELAY);
+                    } catch (InterruptedException e1) {
+                    }
+                }
+            }
+        }
+        
         asyncDataManager.start();
         if (deleteAllMessages) {
             asyncDataManager.delete();
