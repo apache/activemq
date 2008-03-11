@@ -16,10 +16,6 @@
  */
 package org.apache.activemq.broker.ft;
 
-import org.apache.activemq.xbean.BrokerFactoryBean;
-import org.springframework.core.io.ClassPathResource;
-
-
 public class QueueMasterSlaveTestUsingSharedFileTest extends
         QueueMasterSlaveTest {
     
@@ -31,17 +27,15 @@ public class QueueMasterSlaveTestUsingSharedFileTest extends
         return "org/apache/activemq/broker/ft/sharedFileMaster.xml";
     }
     
-    protected void createSlave() throws Exception {
+    protected void createSlave() throws Exception {    	
+    	// Start the Brokers async since starting them up could be a blocking operation..
         new Thread(new Runnable() {
-
             public void run() {
                 try {
                     QueueMasterSlaveTestUsingSharedFileTest.super.createSlave();
                 } catch (Exception e) {
-
                     e.printStackTrace();
                 }
-
             }
 
         }).start();

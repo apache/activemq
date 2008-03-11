@@ -17,6 +17,10 @@
 package org.apache.activemq.broker.ft;
 
 import java.io.File;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.JmsTopicSendReceiveWithTwoConnectionsTest;
 import org.apache.activemq.broker.BrokerService;
@@ -32,7 +36,8 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
     private static final transient Log LOG = LogFactory.getLog(QueueMasterSlaveTest.class);
 
     protected BrokerService master;
-    protected BrokerService slave;
+    protected AtomicReference<BrokerService> slave = new AtomicReference<BrokerService>();
+    protected CountDownLatch slaveStarted = new CountDownLatch(1);
     protected int inflightMessageCount;
     protected int failureCount = 50;
     protected String uriString = "failover://(tcp://localhost:62001,tcp://localhost:62002)?randomize=false";
@@ -62,7 +67,12 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
 
     protected void tearDown() throws Exception {
         super.tearDown();
-        slave.stop();
+        
+    	slaveStarted.await(5, TimeUnit.SECONDS);
+        BrokerService brokerService = slave.get();
+        if( brokerService!=null ) {
+        	brokerService.stop();
+        }
         master.stop();
     }
 
@@ -84,16 +94,18 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
     }
     
     protected void createMaster() throws Exception {
-        BrokerFactoryBean brokerFactory = new BrokerFactoryBean(new ClassPathResource(getMasterXml()));
-        brokerFactory.afterPropertiesSet();
-        master = brokerFactory.getBroker();
-        master.start();
+		BrokerFactoryBean brokerFactory = new BrokerFactoryBean(new ClassPathResource(getMasterXml()));
+		brokerFactory.afterPropertiesSet();
+		master = brokerFactory.getBroker();
+		master.start();
     }
     
     protected void createSlave() throws Exception {
-        BrokerFactoryBean brokerFactory = new BrokerFactoryBean(new ClassPathResource(getSlaveXml()));
+    	BrokerFactoryBean brokerFactory = new BrokerFactoryBean(new ClassPathResource(getSlaveXml()));
         brokerFactory.afterPropertiesSet();
-        slave = brokerFactory.getBroker();
-        slave.start();
+        BrokerService broker = brokerFactory.getBroker();
+        broker.start();
+        slave.set(broker);
+        slaveStarted.countDown();
     }
 }

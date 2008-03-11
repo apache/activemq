@@ -113,11 +113,7 @@ public class AsyncDataManager {
         }
 
         started = true;
-        directory.mkdirs();
-        synchronized (this) {
-            controlFile = new ControlFile(new File(directory, filePrefix + "control"), CONTROL_RECORD_MAX_LENGTH);
-            controlFile.lock();
-        }
+        lock();
 
         ByteSequence sequence = controlFile.load();
         if (sequence != null && sequence.getLength() > 0) {
@@ -193,6 +189,16 @@ public class AsyncDataManager {
         };
         Scheduler.executePeriodically(cleanupTask, 1000 * 30);
     }
+
+	public void lock() throws IOException {
+		synchronized (this) {
+			if( controlFile == null ) {
+		        directory.mkdirs();
+				controlFile = new ControlFile(new File(directory, filePrefix + "control"), CONTROL_RECORD_MAX_LENGTH);
+			}
+            controlFile.lock();
+        }
+	}
 
     protected Location recoveryCheck(DataFile dataFile, Location location) throws IOException {
         if (location == null) {
