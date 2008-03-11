@@ -64,7 +64,16 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         this.subscription=subscription;
         this.clientId = clientId;
         this.subscriberName = subscriberName;
-        this.nonPersistent = new FilePendingMessageCursor(broker,clientId + subscriberName);
+        if (broker.getBrokerService().isPersistent()) {
+            this.nonPersistent = new FilePendingMessageCursor(broker,clientId + subscriberName);
+        }else {
+            this.nonPersistent = new VMPendingMessageCursor();
+        }
+        this.nonPersistent.setMaxBatchSize(getMaxBatchSize());
+        this.nonPersistent.setSystemUsage(systemUsage);
+        this.nonPersistent.setEnableAudit(isEnableAudit());
+        this.nonPersistent.setMaxAuditDepth(getMaxAuditDepth());
+        this.nonPersistent.setMaxProducersToAudit(getMaxProducersToAudit());
         this.storePrefetches.add(this.nonPersistent);
     }
 
@@ -180,7 +189,6 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     }
 
     public synchronized void clear() {
-        nonPersistent.clear();
         for (PendingMessageCursor tsp : storePrefetches) {
             tsp.clear();
         }
@@ -267,18 +275,12 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         for (PendingMessageCursor cursor : storePrefetches) {
             cursor.setMaxAuditDepth(maxAuditDepth);
         }
-        if (nonPersistent != null) {
-            nonPersistent.setMaxProducersToAudit(maxProducersToAudit);
-        }
     }
 
     public synchronized void setMaxAuditDepth(int maxAuditDepth) {
         super.setMaxAuditDepth(maxAuditDepth);
         for (PendingMessageCursor cursor : storePrefetches) {
             cursor.setMaxAuditDepth(maxAuditDepth);
-        }
-        if (nonPersistent != null) {
-            nonPersistent.setMaxAuditDepth(maxAuditDepth);
         }
     }
     
@@ -287,18 +289,12 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         for (PendingMessageCursor cursor : storePrefetches) {
             cursor.setEnableAudit(enableAudit);
         }
-        if (nonPersistent != null) {
-            nonPersistent.setEnableAudit(enableAudit);
-        }
     }
     
     public synchronized void setUseCache(boolean useCache) {
         super.setUseCache(useCache);
         for (PendingMessageCursor cursor : storePrefetches) {
             cursor.setUseCache(useCache);
-        }
-        if (nonPersistent != null) {
-            nonPersistent.setUseCache(useCache);
         }
     }
     
@@ -310,9 +306,6 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         super.dispatched(message);
         for (PendingMessageCursor cursor : storePrefetches) {
             cursor.dispatched(message);
-        }
-        if (nonPersistent != null) {
-            nonPersistent.dispatched(message);
         }
     }
 

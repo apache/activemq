@@ -59,7 +59,11 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         started = true;
         super.start();
         if (nonPersistent == null) {
-            nonPersistent = new FilePendingMessageCursor(broker,queue.getName());
+            if (broker.getBrokerService().isPersistent()) {
+                nonPersistent = new FilePendingMessageCursor(broker,queue.getName());
+            }else {
+                nonPersistent = new VMPendingMessageCursor();
+            }
             nonPersistent.setMaxBatchSize(getMaxBatchSize());
             nonPersistent.setSystemUsage(systemUsage);
             nonPersistent.setEnableAudit(isEnableAudit());
