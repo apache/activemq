@@ -194,15 +194,13 @@ public class FailoverTransport implements CompositeTransport {
 
 
     public final void handleTransportFailure(IOException e) throws InterruptedException {
-        if (transportListener != null) {
-            transportListener.transportInterupted();
-        }
         
         Transport transport = connectedTransport.get();
         if( transport!=null ) {
             ServiceSupport.dispose(transport);
         }
         
+        boolean wasConnected=false;            
         synchronized (reconnectMutex) {
             boolean reconnectOk = false;
             if(started) {
@@ -212,6 +210,7 @@ public class FailoverTransport implements CompositeTransport {
             }
             
             if (connectedTransport.get() != null) {
+                wasConnected=true;
                 initialized = false;
                 failedConnectTransportURI=connectedTransportURI;
                 connectedTransport.set(null);
@@ -223,6 +222,12 @@ public class FailoverTransport implements CompositeTransport {
             	reconnectTask.wakeup();
             }
         }
+
+        // Avoid double firing a transportInterupted() event due to an extra IOException
+        if (transportListener != null && wasConnected) {
+            transportListener.transportInterupted();
+        }
+
     }
 
     public void start() throws Exception {

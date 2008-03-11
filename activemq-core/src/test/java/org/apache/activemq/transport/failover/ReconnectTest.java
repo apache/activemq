@@ -25,13 +25,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jms.DeliveryMode;
-import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 
 import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -55,10 +55,11 @@ public class ReconnectTest extends TestCase {
 
     private BrokerService bs;
     private URI tcpUri;
+    private AtomicInteger resumedCount = new AtomicInteger();
     private AtomicInteger interruptedCount = new AtomicInteger();
     private Worker[] workers;
 
-    class Worker implements Runnable, ExceptionListener {
+    class Worker implements Runnable {
 
         public AtomicInteger iterations = new AtomicInteger();
         public CountDownLatch stopped = new CountDownLatch(1);
@@ -68,12 +69,11 @@ public class ReconnectTest extends TestCase {
         private Throwable error;
         private String name;
 
-        public Worker(String name) throws URISyntaxException, JMSException {
+        public Worker(final String name) throws URISyntaxException, JMSException {
             this.name=name;
             URI uri = new URI("failover://(mock://(" + tcpUri + "))");
             ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(uri);
             connection = (ActiveMQConnection)factory.createConnection();
-            connection.setExceptionListener(this);
             connection.addTransportListener(new TransportListener() {
                 public void onCommand(Object command) {
                 }
@@ -83,10 +83,13 @@ public class ReconnectTest extends TestCase {
                 }
 
                 public void transportInterupted() {
+                    LOG.info("Worker "+name+" was interrupted...");
                     interruptedCount.incrementAndGet();
                 }
 
                 public void transportResumed() {
+                    LOG.info("Worker "+name+" was resummed...");
+                    resumedCount.incrementAndGet();
                 }
             });
             connection.start();
@@ -139,11 +142,6 @@ public class ReconnectTest extends TestCase {
             }
         }
 
-        public void onException(JMSException error) {
-            setError(error);
-            stop();
-        }
-
         public synchronized Throwable getError() {
             return error;
         }
@@ -155,7 +153,7 @@ public class ReconnectTest extends TestCase {
         public synchronized void assertNoErrors() {
             if (error != null) {
                 error.printStackTrace();
-                fail("Got Exception: " + error);
+                fail("Worker "+name+" got Exception: " + error);
             }
         }
 
@@ -163,18 +161,23 @@ public class ReconnectTest extends TestCase {
 
     public void testReconnects() throws Exception {
 
-        for (int k = 1; k < 5; k++) {
+        for (int k = 1; k < 10; k++) {
 
             LOG.info("Test run: " + k);
 
             // Wait for at least one iteration to occur...
             for (int i = 0; i < WORKER_COUNT; i++) {
-                for (int j = 0; workers[i].iterations.get() == 0 && j < 5; j++) {
+               int c=0;
+                for (int j = 0; j < 30; j++) {
+                       c = workers[i].iterations.getAndSet(0);
+                       if( c != 0 ) {
+                               break;
+                       }
                     workers[i].assertNoErrors();
-                    LOG.info("Waiting for worker " + i + " to finish an iteration.");
+                    LOG.info("Test run "+k+": Waiting for worker " + i + " to finish an iteration.");
                     Thread.sleep(1000);
                 }
-                assertTrue("Worker " + i + " never completed an interation.", workers[i].iterations.get() != 0);
+                assertTrue("Test run "+k+": Worker " + i + " never completed an interation.", c != 0);
                 workers[i].assertNoErrors();
             }
 
@@ -185,21 +188,35 @@ public class ReconnectTest extends TestCase {
                 workers[i].failConnection();
             }
 
+            long start;
             // Wait for the connections to get interrupted...
+            start = System.currentTimeMillis();
             while (interruptedCount.get() < WORKER_COUNT) {
-                LOG.info("Waiting for connections to get interrupted.. at: " + interruptedCount.get());
+               if( System.currentTimeMillis()-start > 1000*60 ) {
+                      fail("Timed out waiting for all connections to be interrupted.");
+               }
+                LOG.info("Test run "+k+": Waiting for connections to get interrupted.. at: " + interruptedCount.get());
                 Thread.sleep(1000);
             }
 
-            // let things stablize..
-            LOG.info("Pausing before starting next iterations...");
-            Thread.sleep(1000);
+            // Wait for the connections to re-establish...
+            start = System.currentTimeMillis();
+            while (resumedCount.get() < WORKER_COUNT) {
+               if( System.currentTimeMillis()-start > 1000*60 ) {
+                       fail("Timed out waiting for all connections to be resumed.");
+               }
+                LOG.info("Test run "+k+": Waiting for connections to get resumed.. at: " + resumedCount.get());
+                Thread.sleep(1000);
+            }
 
             // Reset the counters..
             interruptedCount.set(0);
+            resumedCount.set(0);
             for (int i = 0; i < WORKER_COUNT; i++) {
                 workers[i].iterations.set(0);
             }
+            
+            Thread.sleep(1000);
 
         }
 
