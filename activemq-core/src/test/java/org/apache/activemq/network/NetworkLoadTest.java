@@ -79,7 +79,7 @@ public class NetworkLoadTest extends TestCase {
 		private final Connection fromConnection;
 
 		public ForwardingClient(int from, int to) throws JMSException {
-			toConnection = createConnection(to);
+			toConnection = createConnection(from);
 			Session toSession = toConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 			final MessageProducer producer = toSession.createProducer(new ActiveMQQueue("Q"+to));
 			producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
