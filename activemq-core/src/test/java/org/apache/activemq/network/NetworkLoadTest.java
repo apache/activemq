@@ -53,7 +53,7 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * This test case is used to load test store and forwarding between brokers.  It sets up
- * 10 brokers to which have a chain of queues which this test consumes and produces to. 
+ * n brokers to which have a chain of queues which this test consumes and produces to. 
  * 
  * If the network bridges gets stuck at any point subsequent queues will not get messages.  This test 
  * samples the production and consumption stats every second and if the flow of messages
@@ -66,10 +66,10 @@ public class NetworkLoadTest extends TestCase {
 	private static final transient Log LOG = LogFactory.getLog(NetworkLoadTest.class);
 
 	// How many times do we sample?
-    private static final long SAMPLES = Integer.parseInt(System.getProperty("SAMPLES", ""+60*1)); // 1 min since each sample is 1 sec long.
+    private static final long SAMPLES = Integer.parseInt(System.getProperty("SAMPLES", ""+60*1/5)); 
     // Slower machines might need to make this bigger.
-    private static final long SAMPLE_DURATION = Integer.parseInt(System.getProperty("SAMPLES_DURATION", "" + 1000 * 1));
-	protected static final int BROKER_COUNT = 10;
+    private static final long SAMPLE_DURATION = Integer.parseInt(System.getProperty("SAMPLES_DURATION", "" + 1000 * 5));
+	protected static final int BROKER_COUNT = 4;
 	protected static final int MESSAGE_SIZE = 2000;
 
 	class ForwardingClient {
