@@ -198,6 +198,8 @@
       <unpack>false</unpack>
       <scope>runtime</scope>
       <includes>
+        <include>org.springframework:spring-web</include>
+        <include>org.springframework:spring-webmvc</include>
         <include>org.mortbay.jetty:jetty</include>
         <include>org.mortbay.jetty:jetty-util</include>
         <include>org.mortbay.jetty:jetty-xbean</include>
