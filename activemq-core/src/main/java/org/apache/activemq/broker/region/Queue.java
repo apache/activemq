@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -985,7 +984,7 @@ public class Queue extends BaseDestination implements Task {
         try{
         
             int toPageIn = getMaxPageSize() - pagedInMessages.size();
-            if (isLazyDispatch()) {
+            if (isLazyDispatch()&& !force) {
              // Only page in the minimum number of messages which can be dispatched immediately.
              toPageIn = Math.min(getConsumerMessageCountBeforeFull(), toPageIn);
             }
