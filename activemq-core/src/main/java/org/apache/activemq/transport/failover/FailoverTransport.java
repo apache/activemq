@@ -68,6 +68,7 @@ public class FailoverTransport implements CompositeTransport {
     private final CopyOnWriteArrayList<URI> uris = new CopyOnWriteArrayList<URI>();
 
     private final Object reconnectMutex = new Object();
+    private final Object backupMutex = new Object();
     private final Object sleepMutex = new Object();
     private final ConnectionStateTracker stateTracker = new ConnectionStateTracker();
     private final ConcurrentHashMap<Integer, Command> requestMap = new ConcurrentHashMap<Integer, Command>();
@@ -633,26 +634,28 @@ public class FailoverTransport implements CompositeTransport {
                     if (!useExponentialBackOff) {
                         reconnectDelay = initialReconnectDelay;
                     }
-                    if (backup && !backups.isEmpty()) {
-                    	BackupTransport bt = backups.remove(0);
-                        Transport t = bt.getTransport();
-                        URI uri = bt.getUri();
-                        t.setTransportListener(myTransportListener);
-                        try {
-                            if (started) { 
-                                    restoreTransport(t);  
-                            }
-                            reconnectDelay = initialReconnectDelay;
-                            failedConnectTransportURI=null;
-                            connectedTransportURI = uri;
-                            connectedTransport.set(t);
-                            reconnectMutex.notifyAll();
-                            connectFailures = 0;
-                            LOG.info("Successfully reconnected to backup " + uri);
-                            return false;
-                        }catch (Exception e) {
-                            LOG.debug("Backup transport failed",e);
-                         }
+                    synchronized(backupMutex) {
+                        if (backup && !backups.isEmpty()) {
+                        	BackupTransport bt = backups.remove(0);
+                            Transport t = bt.getTransport();
+                            URI uri = bt.getUri();
+                            t.setTransportListener(myTransportListener);
+                            try {
+                                if (started) { 
+                                        restoreTransport(t);  
+                                }
+                                reconnectDelay = initialReconnectDelay;
+                                failedConnectTransportURI=null;
+                                connectedTransportURI = uri;
+                                connectedTransport.set(t);
+                                reconnectMutex.notifyAll();
+                                connectFailures = 0;
+                                LOG.info("Successfully reconnected to backup " + uri);
+                                return false;
+                            }catch (Exception e) {
+                                LOG.debug("Backup transport failed",e);
+                             }
+                        }
                     }
                     
                     Iterator<URI> iter = connectList.iterator();
@@ -742,7 +745,7 @@ public class FailoverTransport implements CompositeTransport {
 
    
    final boolean buildBackups() {
-	   synchronized (reconnectMutex) {
+	   synchronized (backupMutex) {
 		   if (!disposed && backup && backups.size() < backupPoolSize) {
 			   List<URI> connectList = getConnectList();
 			   //removed disposed backups
