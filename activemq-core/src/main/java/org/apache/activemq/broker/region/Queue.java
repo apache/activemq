@@ -1097,12 +1097,18 @@ public class Queue extends BaseDestination implements Task {
     
     private int getConsumerMessageCountBeforeFull() throws Exception {
         int total = 0;
+        boolean zeroPrefetch = false;
         synchronized (consumers) {
             for (Subscription s : consumers) {
-                total += ((PrefetchSubscription) s).countBeforeFull();
+            	PrefetchSubscription ps = (PrefetchSubscription) s;
+            	zeroPrefetch |= ps.getPrefetchSize() == 0;
+            	int countBeforeFull = ps.countBeforeFull();
+                total += countBeforeFull;
             }
         }
-
+        if (total==0 && zeroPrefetch){
+        	total=1;
+        }
         return total;
     }
 
