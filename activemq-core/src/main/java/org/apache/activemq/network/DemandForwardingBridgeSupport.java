@@ -564,7 +564,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                     //localStartedLatch.await();
                     final MessageDispatch md = (MessageDispatch)command;
                     DemandSubscription sub = subscriptionMapByLocalId.get(md.getConsumerId());
-                    if (sub != null) {
+                    if (sub != null && md.getMessage()!=null) {
                         Message message = configureMessage(md);
                         if (trace) {
                             LOG.trace("bridging " + configuration.getBrokerName() + " -> " + remoteBrokerName + ": " + message);
