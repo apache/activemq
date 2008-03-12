@@ -294,18 +294,18 @@ public abstract class AbstractRegion implements Region {
         LOG.debug("Removing consumer: " + info.getConsumerId());
 
         Subscription sub = subscriptions.remove(info.getConsumerId());
-        if (sub == null) {
-            throw new IllegalArgumentException("The subscription does not exist: " + info.getConsumerId());
+        //The sub could be removed elsewhere - see ConnectionSplitBroker
+        if (sub != null) {
+
+            // remove the subscription from all the matching queues.
+            for (Iterator iter = destinationMap.get(info.getDestination())
+                    .iterator(); iter.hasNext();) {
+                Destination dest = (Destination) iter.next();
+                dest.removeSubscription(context, sub);
+            }
+
+            destroySubscription(sub);
         }
-
-        // remove the subscription from all the matching queues.
-        for (Iterator iter = destinationMap.get(info.getDestination()).iterator(); iter.hasNext();) {
-            Destination dest = (Destination)iter.next();
-            dest.removeSubscription(context, sub);
-        }
-
-        destroySubscription(sub);
-
         synchronized (consumerChangeMutexMap) {
             consumerChangeMutexMap.remove(info.getConsumerId());
         }
