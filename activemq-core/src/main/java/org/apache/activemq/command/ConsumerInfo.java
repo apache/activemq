@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.command;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.state.CommandVisitor;
 
@@ -54,6 +57,7 @@ public class ConsumerInfo extends BaseCommand {
 
     protected BooleanExpression additionalPredicate;
     protected transient boolean networkSubscription; // this subscription
+    protected transient List<ConsumerId> networkConsumerIds; // the original consumerId
 
     // originated from a
     // network connection
@@ -90,6 +94,13 @@ public class ConsumerInfo extends BaseCommand {
         info.retroactive = retroactive;
         info.priority = priority;
         info.brokerPath = brokerPath;
+        info.networkSubscription = networkSubscription;
+        if (networkConsumerIds != null) {
+            if (info.networkConsumerIds==null){
+                info.networkConsumerIds=new ArrayList<ConsumerId>();
+            }
+            info.networkConsumerIds.addAll(networkConsumerIds);
+        }
     }
 
     public boolean isDurable() {
@@ -391,6 +402,34 @@ public class ConsumerInfo extends BaseCommand {
 
     public void setNoRangeAcks(boolean noRangeAcks) {
         this.noRangeAcks = noRangeAcks;
+    }
+
+    public synchronized void addNetworkConsumerId(ConsumerId networkConsumerId) {
+        if (networkConsumerIds == null) {
+            networkConsumerIds = new ArrayList<ConsumerId>();
+        }
+        networkConsumerIds.add(networkConsumerId);
+    }
+
+    public synchronized void removeNetworkConsumerId(ConsumerId networkConsumerId) {
+        if (networkConsumerIds != null) {
+            networkConsumerIds.remove(networkConsumerId);
+            if (networkConsumerIds.isEmpty()) {
+                networkConsumerIds=null;
+            }
+        }
+    }
+    
+    public synchronized boolean isNetworkConsumersEmpty() {
+        return networkConsumerIds == null || networkConsumerIds.isEmpty();
+    }
+    
+    public synchronized List<ConsumerId> getNetworkConsumerIds(){
+        List<ConsumerId> result = new ArrayList<ConsumerId>();
+        if (networkConsumerIds != null) {
+            result.addAll(networkConsumerIds);
+        }
+        return result;
     }
 
 }
