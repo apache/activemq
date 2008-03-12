@@ -29,6 +29,33 @@ Welcome to the ActiveMQ Console
 <p>
 You can find more information about ActiveMQ on the <a href="http://activemq.apache.org/">Apache ActiveMQ Site</a>
 </p>
+
+<h2>Broker</h2>
+
+
+<table>
+    <tr>
+        <td>Name</td>
+        <td><b>${requestContext.brokerQuery.brokerAdmin.brokerName}</b></td>
+    </tr>
+    <tr>
+        <td>ID</td>
+        <td><b>${requestContext.brokerQuery.brokerAdmin.brokerId}</b></td>
+    </tr>
+    <tr>
+        <td>Store percent used</td>
+        <td><b>${requestContext.brokerQuery.brokerAdmin.storePercentUsage}</b></td>
+    </tr>
+    <tr>
+        <td>Memory percent used</td>
+        <td><b>${requestContext.brokerQuery.brokerAdmin.memoryPercentUsage}</b></td>
+    </tr>
+    <tr>
+        <td>Temp percent used</td>
+        <td><b>${requestContext.brokerQuery.brokerAdmin.tempPercentUsage}</b></td>
+    </tr>
+</table>
+
 </body>
 </html>
 	

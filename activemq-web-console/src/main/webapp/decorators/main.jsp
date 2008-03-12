@@ -19,7 +19,7 @@
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-	<title><decorator:title default="ActiveMQ Console" /></title>
+	<title>${requestContext.brokerQuery.brokerAdmin.brokerName} : <decorator:title default="ActiveMQ Console" /></title>
     <style type="text/css" media="screen">
         @import url(<c:url value="/styles/sorttable.css"/>);
         @import url(<c:url value="/styles/type-settings.css"/>);
