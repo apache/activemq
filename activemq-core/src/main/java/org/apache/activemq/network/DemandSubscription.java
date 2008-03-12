@@ -38,8 +38,9 @@ public class DemandSubscription {
         remoteInfo = info;
         localInfo = info.copy();
         localInfo.setBrokerPath(info.getBrokerPath());
-        remoteSubsIds.add(info.getConsumerId());
-    }
+        localInfo.setNetworkSubscription(true);
+        remoteSubsIds.add(info.getConsumerId());    
+     }
 
     /**
      * Increment the consumers associated with this subscription
@@ -47,7 +48,10 @@ public class DemandSubscription {
      * @param id
      * @return true if added
      */
-    public boolean add(ConsumerId id) {
+    public boolean add(ConsumerId id) {   
+        if (localInfo != null) {
+            localInfo.addNetworkConsumerId(id);
+        }
         return remoteSubsIds.add(id);
     }
 
@@ -55,9 +59,12 @@ public class DemandSubscription {
      * Increment the consumers associated with this subscription
      * 
      * @param id
-     * @return true if added
+     * @return true if removed
      */
     public boolean remove(ConsumerId id) {
+        if (localInfo != null) {
+            localInfo.removeNetworkConsumerId(id);
+        }
         return remoteSubsIds.remove(id);
     }
 
