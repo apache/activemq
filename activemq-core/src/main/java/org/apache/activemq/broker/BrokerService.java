@@ -296,7 +296,7 @@ public class BrokerService implements Service {
         URI uri = getVmConnectorURI();
         Map<String, String> map = new HashMap<String, String>(URISupport.parseParamters(uri));
         map.put("network", "true");
-        map.put("async", "false");
+        map.put("async", "true");
         uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
         connector.setLocalUri(uri);
 
