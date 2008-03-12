@@ -607,7 +607,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         if( wireFormatInfo!=null && wireFormatInfo.getVersion() <= 2 ) {
             info.setClientMaster(true);
         }
-
+        
         TransportConnectionState state;
 
         // Make sure 2 concurrent connections by the same ID only generate 1
@@ -890,7 +890,12 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 @Override
                 public void run() {
                     // make sure we are not servicing client requests while we are shutting down.
-                    serviceLock.writeLock().lock();
+                    try {
+                        //we could be waiting a long time if the network has gone - so only wait 1 second
+                        serviceLock.writeLock().tryLock(1,TimeUnit.SECONDS);
+                    } catch (InterruptedException e) {
+                       LOG.debug("Try get writeLock interrupted ",e);
+                    }
                     try {
                         doStop();
                     } catch (Throwable e) {
