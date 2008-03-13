@@ -84,7 +84,7 @@ public class AdvisoryBroker extends BrokerFilter {
         // Don't advise advisory topics.
         if (!AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
             ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination());
-            //consumers.put(info.getConsumerId(), info);
+            consumers.put(info.getConsumerId(), info);
             fireConsumerAdvisory(context,info.getDestination(), topic, info);
         } else {
             // We need to replay all the previously collected state objects
@@ -128,7 +128,6 @@ public class AdvisoryBroker extends BrokerFilter {
                 }
             }
         }
-        consumers.put(info.getConsumerId(), info);
         return answer;
     }
 
