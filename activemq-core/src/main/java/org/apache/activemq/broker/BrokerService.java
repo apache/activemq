@@ -167,6 +167,8 @@ public class BrokerService implements Service {
     private boolean monitorConnectionSplits;
     private int taskRunnerPriority = Thread.NORM_PRIORITY;
     private boolean dedicatedTaskRunner;
+    private boolean cacheTempDestinations=true;//useful for failover
+    private int timeBeforePurgeTempDestinations = 5000;
    
 
     static {
@@ -1273,6 +1275,23 @@ public class BrokerService implements Service {
 	public void setDedicatedTaskRunner(boolean dedicatedTaskRunner) {
 		this.dedicatedTaskRunner = dedicatedTaskRunner;
 	}
+	
+	public boolean isCacheTempDestinations() {
+        return cacheTempDestinations;
+    }
+
+    public void setCacheTempDestinations(boolean cacheTempDestinations) {
+        this.cacheTempDestinations = cacheTempDestinations;
+    }
+
+    public int getTimeBeforePurgeTempDestinations() {
+        return timeBeforePurgeTempDestinations;
+    }
+
+    public void setTimeBeforePurgeTempDestinations(
+            int timeBeforePurgeTempDestinations) {
+        this.timeBeforePurgeTempDestinations = timeBeforePurgeTempDestinations;
+    }
 	//
     // Implementation methods
     // -------------------------------------------------------------------------
