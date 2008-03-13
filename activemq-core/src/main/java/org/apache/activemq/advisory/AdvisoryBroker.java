@@ -17,6 +17,7 @@
 package org.apache.activemq.advisory;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -318,4 +319,19 @@ public class AdvisoryBroker extends BrokerFilter {
         }
     }
 
+    public Map<ConnectionId, ConnectionInfo> getAdvisoryConnections() {
+        return connections;
+    }
+
+    public Map<ConsumerId, ConsumerInfo> getAdvisoryConsumers() {
+        return consumers;
+    }
+
+    public Map<ProducerId, ProducerInfo> getAdvisoryProducers() {
+        return producers;
+    }
+
+    public Map<ActiveMQDestination, DestinationInfo> getAdvisoryDestinations() {
+        return destinations;
+    }
 }
