@@ -207,29 +207,7 @@ public class HashIndex implements Index, HashIndexMBean {
                 throw new RuntimeException(e);
             }
         }
-    }
-    
-    public void dump() throws IOException {   
-        long offset = 0;
-        readBuffer = new byte[pageSize];
-        dataIn = new DataByteArrayInputStream();
-        dataOut = new DataByteArrayOutputStream(pageSize);
-        int count = 0;
-        while ((offset + pageSize) <= indexFile.length()) {
-            indexFile.seek(offset);
-            HashPage page = getFullPage(offset);
-            if (page.isActive()) {
-               
-                for (HashEntry entry : page.getEntries()) {
-                    count++;
-                    System.out.println("PAGE( " + count + ") " + page.getId() + ": " + entry);
-                }
-            }
-            offset += pageSize;
-        }
-    }
-    
-    
+    }    
 
     public synchronized void unload() throws IOException {
         if (loaded.compareAndSet(true, false)) {
