@@ -51,7 +51,7 @@ import org.apache.activemq.kaha.Store;
  */
 public class MutableBrokerFilter implements Broker {
 
-    private AtomicReference<Broker> next = new AtomicReference<Broker>();
+    protected AtomicReference<Broker> next = new AtomicReference<Broker>();
 
     public MutableBrokerFilter(Broker next) {
         this.next.set(next);
