@@ -126,7 +126,7 @@ public class BrokerService implements Service {
     private SystemUsage consumerSystemUsaage;
     private PersistenceAdapter persistenceAdapter;
     private PersistenceAdapterFactory persistenceFactory;
-    private DestinationFactory destinationFactory;
+    protected DestinationFactory destinationFactory;
     private MessageAuthorizationPolicy messageAuthorizationPolicy;
     private List<TransportConnector> transportConnectors = new CopyOnWriteArrayList<TransportConnector>();
     private List<NetworkConnector> networkConnectors = new CopyOnWriteArrayList<NetworkConnector>();
@@ -1370,11 +1370,11 @@ public class BrokerService implements Service {
     }
     
     protected PersistenceAdapter registerPersistenceAdapterMBean(PersistenceAdapter adaptor) throws IOException {
-        MBeanServer mbeanServer = getManagementContext().getMBeanServer();
-        if (mbeanServer != null) {
-
-          
-        }
+//        MBeanServer mbeanServer = getManagementContext().getMBeanServer();
+//        if (mbeanServer != null) {
+//
+//          
+//        }
         return adaptor;
     }
 
@@ -1487,17 +1487,16 @@ public class BrokerService implements Service {
         // Add a filter that will stop access to the broker once stopped
         broker = new MutableBrokerFilter(broker) {
             public void stop() throws Exception {
-                setNext(new ErrorBroker("Broker has been stopped: " + this) {
+                Broker old = this.next.getAndSet(new ErrorBroker("Broker has been stopped: " + this) {
                     // Just ignore additional stop actions.
                     public void stop() throws Exception {
                     }
                 });
-                super.stop();
+                old.stop();
             }
         };
 
-        RegionBroker rBroker = (RegionBroker)regionBroker;
-        rBroker.getDestinationStatistics().setEnabled(enableStatistics);
+//        RegionBroker rBroker = (RegionBroker)regionBroker;
 
         if (isUseJmx()) {
             ManagedRegionBroker managedBroker = (ManagedRegionBroker)regionBroker;
@@ -1537,10 +1536,14 @@ public class BrokerService implements Service {
         configureServices(destinationInterceptors);
 
         DestinationInterceptor destinationInterceptor = new CompositeDestinationInterceptor(destinationInterceptors);
-        RegionBroker regionBroker = null;
         if (destinationFactory == null) {
             destinationFactory = new DestinationFactoryImpl(this, getTaskRunnerFactory(), getPersistenceAdapter());
         }
+        return createRegionBroker(destinationInterceptor);
+    }
+    
+    protected Broker createRegionBroker(DestinationInterceptor destinationInterceptor) throws IOException {
+ 		    RegionBroker regionBroker;
         if (isUseJmx()) {
             MBeanServer mbeanServer = getManagementContext().getMBeanServer();
             regionBroker = new ManagedRegionBroker(this, mbeanServer, getBrokerObjectName(), getTaskRunnerFactory(), getConsumerSystemUsage(), destinationFactory,
@@ -1552,8 +1555,10 @@ public class BrokerService implements Service {
 
         regionBroker.setKeepDurableSubsActive(keepDurableSubsActive);
         regionBroker.setBrokerName(getBrokerName());
-        return regionBroker;
-    }
+        regionBroker.getDestinationStatistics().setEnabled(enableStatistics);
+
+		    return regionBroker;
+	}
 
     /**
      * Create the default destination interceptor

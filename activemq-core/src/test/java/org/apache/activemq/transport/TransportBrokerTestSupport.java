@@ -28,7 +28,7 @@ import org.apache.activemq.broker.TransportConnector;
 
 public abstract class TransportBrokerTestSupport extends BrokerTest {
 
-    private TransportConnector connector;
+    protected TransportConnector connector;
     private ArrayList<StubConnection> connections = new ArrayList<StubConnection>();
 
     protected void setUp() throws Exception {
@@ -49,7 +49,9 @@ public abstract class TransportBrokerTestSupport extends BrokerTest {
             connection.stop();
             iter.remove();
         }
-        connector.stop();
+        if( connector!=null ) {
+            connector.stop();
+        }
         super.tearDown();
     }
 
