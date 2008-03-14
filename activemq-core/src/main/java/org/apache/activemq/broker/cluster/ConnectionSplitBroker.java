@@ -23,6 +23,7 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.commons.logging.Log;
@@ -44,31 +45,34 @@ public class ConnectionSplitBroker extends BrokerFilter{
 
         
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception{
-       
-        synchronized (networkConsumerList) {
-            if (info.isNetworkSubscription()) {
-                networkConsumerList.add(info);
-            } else {
-                if(!networkConsumerList.isEmpty()) {
-                    List<ConsumerInfo> gcList = new ArrayList<ConsumerInfo>();
-                    for (ConsumerInfo nc : networkConsumerList) {
-                        if (!nc.isNetworkConsumersEmpty()) {
-                            for (ConsumerId id : nc.getNetworkConsumerIds()) {
-                                if (id.equals(info.getConsumerId())) {
-                                    nc.removeNetworkConsumerId(id);
-                                    if (nc.isNetworkConsumersEmpty()) {
-                                        gcList.add(nc);
+        ActiveMQDestination dest = info.getDestination();
+        boolean validDestination = dest != null && !dest.isTemporary();
+        if (validDestination) {
+            synchronized (networkConsumerList) {
+                if (info.isNetworkSubscription()) {
+                    networkConsumerList.add(info);
+                } else {
+                    if(!networkConsumerList.isEmpty()) {
+                        List<ConsumerInfo> gcList = new ArrayList<ConsumerInfo>();
+                        for (ConsumerInfo nc : networkConsumerList) {
+                            if (!nc.isNetworkConsumersEmpty()) {
+                                for (ConsumerId id : nc.getNetworkConsumerIds()) {
+                                    if (id.equals(info.getConsumerId())) {
+                                        nc.removeNetworkConsumerId(id);
+                                        if (nc.isNetworkConsumersEmpty()) {
+                                            gcList.add(nc);
+                                        }
                                     }
                                 }
+                            } else {
+                                gcList.add(nc);
                             }
-                        } else {
-                            gcList.add(nc);
                         }
-                    }
-                    for (ConsumerInfo nc : gcList) {
-                        networkConsumerList.remove(nc);
-                        super.removeConsumer(context, nc);
-                        LOG.warn("Removed stale network consumer " + nc);
+                        for (ConsumerInfo nc : gcList) {
+                            networkConsumerList.remove(nc);
+                            super.removeConsumer(context, nc);
+                            LOG.warn("Removed stale network consumer " + nc);
+                        }
                     }
                 }
             }
