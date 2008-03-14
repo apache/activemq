@@ -49,25 +49,27 @@ public class ConnectionSplitBroker extends BrokerFilter{
             if (info.isNetworkSubscription()) {
                 networkConsumerList.add(info);
             } else {
-                List<ConsumerInfo> gcList = new ArrayList<ConsumerInfo>();
-                for (ConsumerInfo nc : networkConsumerList) {
-                    if (!nc.isNetworkConsumersEmpty()) {
-                        for (ConsumerId id : nc.getNetworkConsumerIds()) {
-                            if (id.equals(info.getConsumerId())) {
-                                nc.removeNetworkConsumerId(id);
-                                if (nc.isNetworkConsumersEmpty()) {
-                                    gcList.add(nc);
+                if(!networkConsumerList.isEmpty()) {
+                    List<ConsumerInfo> gcList = new ArrayList<ConsumerInfo>();
+                    for (ConsumerInfo nc : networkConsumerList) {
+                        if (!nc.isNetworkConsumersEmpty()) {
+                            for (ConsumerId id : nc.getNetworkConsumerIds()) {
+                                if (id.equals(info.getConsumerId())) {
+                                    nc.removeNetworkConsumerId(id);
+                                    if (nc.isNetworkConsumersEmpty()) {
+                                        gcList.add(nc);
+                                    }
                                 }
                             }
+                        } else {
+                            gcList.add(nc);
                         }
-                    } else {
-                        gcList.add(nc);
                     }
-                }
-                for (ConsumerInfo nc : gcList) {
-                    networkConsumerList.remove(nc);
-                    super.removeConsumer(context, nc);
-                    LOG.warn("Removed stale network consumer" + nc);
+                    for (ConsumerInfo nc : gcList) {
+                        networkConsumerList.remove(nc);
+                        super.removeConsumer(context, nc);
+                        LOG.warn("Removed stale network consumer " + nc);
+                    }
                 }
             }
         }
