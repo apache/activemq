@@ -17,9 +17,7 @@
  */
 package org.apache.activemq.ra;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.jms.JMSException;
@@ -29,14 +27,14 @@ import javax.jms.Session;
 import javax.resource.spi.UnavailableException;
 import javax.resource.spi.endpoint.MessageEndpoint;
 
+import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
+import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.activemq.ActiveMQQueueSession;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.ActiveMQTopicSession;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import edu.emory.mathcs.backport.java.util.concurrent.CopyOnWriteArrayList;
-import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @version $Revision$ $Date$
@@ -70,7 +68,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
             if( activationSpec.isUseRAManagedTransactionEnabled() ) {
                 // The RA will manage the transaction commit.
                 endpoint = createEndpoint(null);   
-                return new ServerSessionImpl(this, (ActiveMQSession)session, activeMQAsfEndpointWorker.workManager, endpoint, true, batchSize);
+                return new ServerSessionImpl(this, session, activeMQAsfEndpointWorker.workManager, endpoint, true, batchSize);
             } else {
                 // Give the container an object to manage to transaction with.
                 endpoint = createEndpoint(new LocalAndXATransaction(session.getTransactionContext()));                
@@ -117,8 +115,9 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
             // We may not be able to create a session due to the container
             // restricting us.
             if (ss == null) {
-                if (idleSessions.size() == 0) {
-                    throw new JMSException("Endpoint factory did not allows to any endpoints.");
+                if (activeSessions.size() == 0) {
+                    //no idle sessions, no active sessions, and we can't create a new session....
+                    throw new JMSException("Endpoint factory did not allow creation of any endpoints.");
                 }
 
                 return getExistingServerSession();
@@ -130,7 +129,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
     }
 
     /**
-     * @param message
+     * @param messageDispatch
      * @throws JMSException
      */
     private void dispatchToSession(MessageDispatch messageDispatch) throws JMSException {
