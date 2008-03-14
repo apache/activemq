@@ -114,8 +114,9 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
             // We may not be able to create a session due to the container
             // restricting us.
             if (ss == null) {
-                if (idleSessions.size() == 0) {
-                    throw new JMSException("Endpoint factory did not allows to any endpoints.");
+                if (activeSessions.size() == 0) {
+                    //no idle sessions, no active sessions, and we can't create a new session....
+                    throw new JMSException("Endpoint factory did not allow creation of any endpoints.");
                 }
 
                 return getExistingServerSession();
