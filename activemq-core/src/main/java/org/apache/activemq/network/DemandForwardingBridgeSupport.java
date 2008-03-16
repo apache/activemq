@@ -820,11 +820,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
         }
         return result;
     }
-
+    
     protected DemandSubscription createDemandSubscription(ConsumerInfo info) throws IOException {
+        //add our original id to ourselves
+        info.addNetworkConsumerId(info.getConsumerId());
         return doCreateDemandSubscription(info);
     }
 
+    
     protected DemandSubscription doCreateDemandSubscription(ConsumerInfo info) throws IOException {
         DemandSubscription result = new DemandSubscription(info);
         result.getLocalInfo().setConsumerId(new ConsumerId(localSessionInfo.getSessionId(), consumerIdGenerator.getNextSequenceId()));
@@ -905,6 +908,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
     protected abstract void addRemoteBrokerToBrokerPath(ConsumerInfo info) throws IOException;
 
     protected abstract void serviceRemoteBrokerInfo(Command command) throws IOException;
+    
 
     protected abstract BrokerId[] getRemoteBrokerPath();
 

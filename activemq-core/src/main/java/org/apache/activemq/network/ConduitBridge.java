@@ -51,6 +51,8 @@ public class ConduitBridge extends DemandForwardingBridge {
         if (addToAlreadyInterestedConsumers(info)) {
             return null; // don't want this subscription added
         }
+        //add our original id to ourselves
+        info.addNetworkConsumerId(info.getConsumerId());
         return doCreateDemandSubscription(info);
     }
 
