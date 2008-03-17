@@ -56,7 +56,7 @@ public class InactivityMonitor extends TransportFilter {
     private final AtomicBoolean inReceive = new AtomicBoolean(false);
     private SchedulerTimerTask writeCheckerTask;
     private SchedulerTimerTask readCheckerTask;
-
+    private Thread writeThread;
     private long readCheckTime;
     private long writeCheckTime;
     
@@ -154,13 +154,16 @@ public class InactivityMonitor extends TransportFilter {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("No message received since last read check for " + toString() + "! Throwing InactivityIOException.");
             }
-           
-
-            // TODO: use a thread pool for this..
-            ASYNC_TASKS.execute(new Runnable() {
+            ASYNC_TASKS.execute(new Runnable() {  
                 public void run() {
-                        onException(new InactivityIOException("Channel was inactive for too long: "+next.getRemoteAddress()));
+                    Thread t = writeThread;
+                    if (t != null) {
+                        t.interrupt();
+                    }
+                    onException(new InactivityIOException("Channel was inactive for too long: "+next.getRemoteAddress()));
+                        
                 };
+                
             });
 
         } else {
@@ -221,9 +224,11 @@ public class InactivityMonitor extends TransportFilter {
                 }
             }
             synchronized (writeChecker) {
+                writeThread=Thread.currentThread();
                 next.oneway(o);
             }
         } finally {
+            writeThread=null;
             commandSent.set(true);
             inSend.set(false);
         }
