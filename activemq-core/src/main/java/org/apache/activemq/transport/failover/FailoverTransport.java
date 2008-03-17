@@ -42,6 +42,7 @@ import org.apache.activemq.thread.DefaultThreadPools;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.transport.CompositeTransport;
+import org.apache.activemq.transport.DefaultTransportListener;
 import org.apache.activemq.transport.FutureResponse;
 import org.apache.activemq.transport.ResponseCallback;
 import org.apache.activemq.transport.Transport;
@@ -97,6 +98,7 @@ public class FailoverTransport implements CompositeTransport {
     private int backupPoolSize=1;
     private boolean trackMessages = false;
     private int maxCacheSize = 128 * 1024;
+    private TransportListener disposedListener = new DefaultTransportListener();
     
 
     private final TransportListener myTransportListener = createTransportListener();
@@ -214,6 +216,11 @@ public class FailoverTransport implements CompositeTransport {
                 wasConnected=true;
                 initialized = false;
                 failedConnectTransportURI=connectedTransportURI;
+                Transport old = connectedTransport.get();
+                if(old != null) {
+                    //don't want errors from old transport
+                    old.setTransportListener(disposedListener);
+                }
                 connectedTransport.set(null);
                 connectedTransportURI = null;
                 connected=false;
