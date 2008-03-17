@@ -895,24 +895,14 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             new Thread("ActiveMQ Transport Stopper: "+ transport.getRemoteAddress()) {
                 @Override
                 public void run() {
-                    boolean locked = false;
-                    // make sure we are not servicing client requests while we are shutting down.
-                    try {
-                        //we could be waiting a long time if the network has gone - so only wait 1 second
-                        locked =  serviceLock.writeLock().tryLock(1,TimeUnit.SECONDS);
-                    } catch (InterruptedException e) {
-                       LOG.debug("Try get writeLock interrupted ",e);
-                    }
+                    serviceLock.writeLock().lock();
                     try {
                         doStop();
                     } catch (Throwable e) {
-                        LOG.info("Error occured while shutting down a connection to '" + transport.getRemoteAddress()+ "': "+e);
                         LOG.debug("Error occured while shutting down a connection to '" + transport.getRemoteAddress()+ "': ", e);
                     } finally {
                         stopped.countDown();
-                        if (locked) {
-                            serviceLock.writeLock().unlock();
-                        }
+                        serviceLock.writeLock().unlock();
                     }
                 }
             }.start();
