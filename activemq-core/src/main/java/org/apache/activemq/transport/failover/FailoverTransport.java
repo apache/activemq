@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionControl;
+import org.apache.activemq.command.Message;
 import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.state.ConnectionStateTracker;
@@ -385,6 +386,7 @@ public class FailoverTransport implements CompositeTransport {
 	 
 
     public void oneway(Object o) throws IOException {
+        
         Command command = (Command)o;
         Exception error = null;
         try {
@@ -409,7 +411,8 @@ public class FailoverTransport implements CompositeTransport {
                     try {
 
                         // Wait for transport to be connected.
-                        while (connectedTransport.get() == null && !disposed && connectionFailure == null) {
+                        Transport transport = connectedTransport.get();
+                        while (transport == null && !disposed && connectionFailure == null) {
                             LOG.trace("Waiting for transport to reconnect.");
                             try {
                                 reconnectMutex.wait(1000);
@@ -417,9 +420,10 @@ public class FailoverTransport implements CompositeTransport {
                                 Thread.currentThread().interrupt();
                                 LOG.debug("Interupted: " + e, e);
                             }
+                            transport = connectedTransport.get();
                         }
 
-                        if (connectedTransport.get() == null) {
+                        if (transport == null) {
                             // Previous loop may have exited due to use being
                             // disposed.
                             if (disposed) {
@@ -445,7 +449,7 @@ public class FailoverTransport implements CompositeTransport {
 
                         // Send the message.
                         try {
-                            connectedTransport.get().oneway(command);
+                            transport.oneway(command);
                             stateTracker.trackBack(command);
                         } catch (IOException e) {
 
