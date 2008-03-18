@@ -26,15 +26,11 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionControl;
-import org.apache.activemq.command.Message;
 import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.state.ConnectionStateTracker;
@@ -79,7 +75,6 @@ public class FailoverTransport implements CompositeTransport {
     private URI failedConnectTransportURI;
     private final AtomicReference<Transport> connectedTransport = new AtomicReference<Transport>();
     private final TaskRunner reconnectTask;
-    private final ExecutorService executor;
     private boolean started;
 
     private long initialReconnectDelay = 10;
@@ -107,14 +102,6 @@ public class FailoverTransport implements CompositeTransport {
     public FailoverTransport() throws InterruptedIOException {
 
         stateTracker.setTrackTransactions(true);
-        this.executor =  Executors.newSingleThreadExecutor(new ThreadFactory() {
-            public Thread newThread(Runnable runnable) {
-                Thread thread = new Thread(runnable, "FailoverTransport:"+toString()+"."+System.identityHashCode(this));
-                thread.setDaemon(true);
-                thread.setPriority(Thread.NORM_PRIORITY);
-                return thread;
-            }
-        });
         // Setup a task that is used to reconnect the a connection async.
         reconnectTask = DefaultThreadPools.getDefaultTaskRunnerFactory().createTaskRunner(new Task() {
             public boolean iterate() {
@@ -276,7 +263,6 @@ public class FailoverTransport implements CompositeTransport {
             sleepMutex.notifyAll();
         }
         reconnectTask.shutdown();
-        executor.shutdown();
         if( transportToStop!=null ) {
             transportToStop.stop();
         }
