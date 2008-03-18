@@ -79,7 +79,7 @@ import org.apache.commons.logging.LogFactory;
 public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
     
     private static final Log LOG = LogFactory.getLog(DemandForwardingBridge.class);
-    private static final ThreadPoolExecutor STOP_TASKS;
+    private static final ThreadPoolExecutor ASYNC_TASKS;
     protected final Transport localBroker;
     protected final Transport remoteBroker;
     protected final IdGenerator idGenerator = new IdGenerator();
@@ -236,7 +236,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
     }
 
     protected void triggerRemoteStartBridge() throws IOException {
-        Thread thead = new Thread() {
+        ASYNC_TASKS.execute(new Runnable() {
             public void run() {
                 try {
                     startRemoteBridge();
@@ -244,8 +244,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                     serviceRemoteException(e);
                 }
             }
-        };
-        thead.start();
+        });
     }
 
     protected void startLocalBridge() throws Exception {
@@ -337,7 +336,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                     disposed = true;
                     remoteBridgeStarted.set(false);
                     final CountDownLatch sendShutdown = new CountDownLatch(1);
-                    STOP_TASKS.execute(new Runnable() {
+                    ASYNC_TASKS.execute(new Runnable() {
                         public void run() {
                             try {
                                 localBroker.oneway(new ShutdownInfo());
@@ -970,7 +969,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
     }
     
     static {
-        STOP_TASKS =   new ThreadPoolExecutor(0, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
+        ASYNC_TASKS =   new ThreadPoolExecutor(0, Integer.MAX_VALUE, 30, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
             public Thread newThread(Runnable runnable) {
                 Thread thread = new Thread(runnable, "NetworkBridge: "+runnable);
                 thread.setDaemon(true);
