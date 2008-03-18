@@ -64,7 +64,7 @@ public class TransportConnector implements Connector {
     private URI connectUri;
     private String name;
     private boolean disableAsyncDispatch;
-    private boolean enableStatusMonitor = true;
+    private boolean enableStatusMonitor = false;
 
     public TransportConnector() {
     }
