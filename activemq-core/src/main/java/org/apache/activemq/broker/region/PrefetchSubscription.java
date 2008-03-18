@@ -610,15 +610,4 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     public void setMaxAuditDepth(int maxAuditDepth) {
         this.maxAuditDepth = maxAuditDepth;
     }
-    
-    
-    public List<MessageReference> getInFlightMessages(){
-        List<MessageReference> result = new ArrayList<MessageReference>();
-        synchronized(pendingLock) {
-            result.addAll(dispatched);
-            result.addAll(pending.pageInList(1000));
-        }
-        return result;
-    }
-
 }

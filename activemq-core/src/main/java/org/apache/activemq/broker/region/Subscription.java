@@ -215,11 +215,4 @@ public interface Subscription extends SubscriptionRecovery {
      * @return true if a browser
      */
     boolean isBrowser();
-    
-    /**
-     * Get the list of in flight messages
-     * @return list
-     */
-    List<MessageReference> getInFlightMessages();
-
 }
