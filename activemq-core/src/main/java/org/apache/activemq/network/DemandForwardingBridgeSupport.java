@@ -223,7 +223,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
     }
 
     protected void triggerLocalStartBridge() throws IOException {
-        Thread thead = new Thread() {
+        ASYNC_TASKS.execute(new Runnable() {
             public void run() {
                 try {
                     startLocalBridge();
@@ -231,8 +231,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                     serviceLocalException(e);
                 }
             }
-        };
-        thead.start();
+        });
     }
 
     protected void triggerRemoteStartBridge() throws IOException {
