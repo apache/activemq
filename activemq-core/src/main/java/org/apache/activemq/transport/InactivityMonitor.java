@@ -153,7 +153,7 @@ public class InactivityMonitor extends TransportFilter {
             return;
         }
         if (!commandReceived.get()) {
-            if( inactive.getAndSet(false) ) {
+            if( !inactive.getAndSet(true) ) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("No message received since last read check for " + toString() + "! Throwing InactivityIOException.");
                 }
