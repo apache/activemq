@@ -379,12 +379,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                 LOG.warn("Network connection between " + localBroker + " and " + remoteBroker + " shutdown due to a remote error: " + error);
             }
             LOG.debug("The remote Exception was: " + error, error);
-            new Thread() {
-
+            ASYNC_TASKS.execute(new Runnable() {
                 public void run() {
                     ServiceSupport.dispose(DemandForwardingBridgeSupport.this);
                 }
-            }.start();
+            });
             fireBridgeFailed();
         }
     }
@@ -532,11 +531,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
         if (!disposed) {
             LOG.info("Network connection between " + localBroker + " and " + remoteBroker + " shutdown due to a local error: " + error);
             LOG.debug("The local Exception was:" + error, error);
-            new Thread() {
+            ASYNC_TASKS.execute(new Runnable() {
                 public void run() {
                     ServiceSupport.dispose(DemandForwardingBridgeSupport.this);
                 }
-            }.start();
+            });
             fireBridgeFailed();
         }
     }
