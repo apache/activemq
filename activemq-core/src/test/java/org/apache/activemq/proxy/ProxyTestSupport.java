@@ -89,19 +89,19 @@ public class ProxyTestSupport extends BrokerTestSupport {
     }
 
     protected String getRemoteURI() {
-        return "tcp://localhost:7001";
+        return "tcp://localhost:6171";
     }
 
     protected String getLocalURI() {
-        return "tcp://localhost:6001";
+        return "tcp://localhost:6161";
     }
 
     protected String getRemoteProxyURI() {
-        return "tcp://localhost:7002";
+        return "tcp://localhost:6162";
     }
 
     protected String getLocalProxyURI() {
-        return "tcp://localhost:6002";
+        return "tcp://localhost:6172";
     }
 
     protected StubConnection createConnection() throws Exception {
