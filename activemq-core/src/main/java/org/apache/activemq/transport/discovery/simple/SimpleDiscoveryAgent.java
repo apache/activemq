@@ -18,6 +18,10 @@ package org.apache.activemq.transport.discovery.simple;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.command.DiscoveryEvent;
@@ -35,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
 public class SimpleDiscoveryAgent implements DiscoveryAgent {
 
     private final static Log LOG = LogFactory.getLog(SimpleDiscoveryAgent.class); 
-    
+    private static final ThreadPoolExecutor ASYNC_TASKS;
     private long initialReconnectDelay = 1000;
     private long maxReconnectDelay = 1000 * 30;
     private long backOffMultiplier = 2;
@@ -106,7 +110,7 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
         if (event.failed.compareAndSet(false, true)) {
 
             listener.onServiceRemove(event);
-            Thread thread = new Thread() {
+            ASYNC_TASKS.execute(new Runnable() {
                 public void run() {
 
                     // We detect a failed connection attempt because the service
@@ -160,9 +164,7 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
 
                     listener.onServiceAdd(event);
                 }
-            };
-            thread.setDaemon(true);
-            thread.start();
+            });
         }
     }
 
@@ -213,5 +215,16 @@ public class SimpleDiscoveryAgent implements DiscoveryAgent {
     public void setUseExponentialBackOff(boolean useExponentialBackOff) {
         this.useExponentialBackOff = useExponentialBackOff;
     }
+    
+    static {
+        ASYNC_TASKS =   new ThreadPoolExecutor(0, Integer.MAX_VALUE, 30, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
+            public Thread newThread(Runnable runnable) {
+                Thread thread = new Thread(runnable, "Simple Discovery Agent: "+runnable);
+                thread.setDaemon(true);
+                return thread;
+            }
+        });
+    }
+
 
 }
