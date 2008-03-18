@@ -19,6 +19,7 @@ package org.apache.activemq.broker;
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.command.Command;
@@ -40,6 +41,7 @@ public class StubConnection implements Service {
     private Transport transport;
     private boolean shuttingDown;
     private TransportListener listener;
+    public AtomicReference<Throwable> error = new AtomicReference<Throwable>();
 
     public StubConnection(BrokerService broker) throws Exception {
         this(TransportFactory.connect(broker.getVmConnectorURI()));
@@ -63,13 +65,11 @@ public class StubConnection implements Service {
                 }
             }
 
-            public void onException(IOException error) {
+            public void onException(IOException e) {
                 if (listener != null) {
-                    listener.onException(error);
+                    listener.onException(e);
                 }
-                if (!shuttingDown) {
-                    error.printStackTrace();
-                }
+                error.set(e);
             }
         });
         transport.start();

@@ -925,11 +925,6 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 if (duplexBridge != null) {
                     duplexBridge.stop();
                 }
-                // If the transport has not failed yet,
-                // notify the peer that we are doing a normal shutdown.
-                if (transportException == null) {
-                    transport.oneway(new ShutdownInfo());
-                }
             }
 
         } catch (Exception ignore) {
@@ -943,12 +938,6 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             cs.getContext().getStopping().set(true);
         }
 
-        if (taskRunner != null) {
-            taskRunner.wakeup();
-            // Give it a change to stop gracefully.
-            dispatchStoppedLatch.await(5, TimeUnit.SECONDS);
-        }
-        
         try {
             transport.stop();
             LOG.debug("Stopped connection: " + transport.getRemoteAddress());
@@ -957,9 +946,12 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         }
 
         if (taskRunner != null) {
+            taskRunner.wakeup();
+            // Give it a change to stop gracefully.
+            dispatchStoppedLatch.await(5, TimeUnit.SECONDS);
             taskRunner.shutdown();
         }
-
+        
         active = false;
 
         // Run the MessageDispatch callbacks so that message references get
