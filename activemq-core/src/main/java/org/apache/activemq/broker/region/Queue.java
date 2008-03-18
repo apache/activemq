@@ -944,6 +944,7 @@ public class Queue extends BaseDestination implements Task {
         reference.drop();
         acknowledge(context, sub, ack, reference);
         destinationStatistics.getMessages().decrement();
+        reference.decrementReferenceCount();
         synchronized(pagedInMessages) {
             pagedInMessages.remove(reference.getMessageId());
         }
@@ -1034,6 +1035,7 @@ public class Queue extends BaseDestination implements Task {
                         if (dispatchSelector.canSelect(s, node)) {
                             if (!s.isFull()) {
                                 s.add(node);
+                                node.incrementReferenceCount();
                                 target = s;
                                 break;
                             } else {
@@ -1055,6 +1057,7 @@ public class Queue extends BaseDestination implements Task {
                         }
                         if (target != null) {
                             target.add(node);
+                            node.incrementReferenceCount();
                         }
                     }
                     if (target != null && !strictOrderDispatch && consumers.size() > 1 &&
