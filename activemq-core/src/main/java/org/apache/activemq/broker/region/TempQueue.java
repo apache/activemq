@@ -87,7 +87,7 @@ public class TempQueue extends Queue{
                 log.error("Failed to page in more queue messages ", e);
             }
         }
-        if (!messagesWaitingForSpace.isEmpty()) {
+        if (!messagesWaitingForSpace.isEmpty() || !isRecoveryDispatchEmpty()) {
             try {
                 taskRunner.wakeup();
             } catch (InterruptedException e) {

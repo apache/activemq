@@ -29,7 +29,9 @@ import org.apache.activemq.usage.SystemUsage;
 
 public class QueueBrowserSubscription extends QueueSubscription {
 
+    int queueRefs;
     boolean browseDone;
+    boolean destinationsAdded;
 
     public QueueBrowserSubscription(Broker broker,Destination destination, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info)
         throws InvalidSelectorException {
@@ -46,9 +48,16 @@ public class QueueBrowserSubscription extends QueueSubscription {
                + this.prefetchExtension + ", pending=" + getPendingQueueSize();
     }
 
-    public void browseDone() throws Exception {
-        browseDone = true;
-        add(QueueMessageReference.NULL_MESSAGE);
+    synchronized public void destinationsAdded() throws Exception {
+        destinationsAdded = true;
+        checkDone();
+    }
+
+    private void checkDone() throws Exception {
+        if( !browseDone && queueRefs == 0 && destinationsAdded) {
+            browseDone=true;
+            add(QueueMessageReference.NULL_MESSAGE);
+        }
     }
 
     public boolean matches(MessageReference node, MessageEvaluationContext context) throws IOException {
@@ -60,6 +69,15 @@ public class QueueBrowserSubscription extends QueueSubscription {
      */
     protected void acknowledge(ConnectionContext context, final MessageAck ack, final MessageReference n)
         throws IOException {
+    }
+
+    synchronized public void incrementQueueRef() {
+        queueRefs++;        
+    }
+
+    synchronized public void decrementQueueRef() throws Exception {
+        queueRefs--;
+        checkDone();
     }
 
 }

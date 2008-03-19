@@ -265,7 +265,7 @@ public abstract class AbstractRegion implements Region {
             }
 
             if (info.isBrowser()) {
-                ((QueueBrowserSubscription)sub).browseDone();
+                ((QueueBrowserSubscription)sub).destinationsAdded();
             }
 
             return sub;
