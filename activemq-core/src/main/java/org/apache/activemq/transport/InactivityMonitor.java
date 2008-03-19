@@ -246,7 +246,7 @@ public class InactivityMonitor extends TransportFilter {
 
     public void onException(IOException error) {
         closeDown();
-        if (!failed.getAndSet(true)) {
+        if (!failed.compareAndSet(false,true)) {
             transportListener.onException(error);
         }
     }
