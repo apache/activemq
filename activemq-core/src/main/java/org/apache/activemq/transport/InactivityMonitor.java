@@ -23,6 +23,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.apache.activemq.command.KeepAliveInfo;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.thread.SchedulerTimerTask;
@@ -51,6 +52,7 @@ public class InactivityMonitor extends TransportFilter {
     private final AtomicBoolean commandSent = new AtomicBoolean(false);
     private final AtomicBoolean inSend = new AtomicBoolean(false);
     private final AtomicBoolean failed = new AtomicBoolean(false);
+    private final AtomicBoolean stopped = new AtomicBoolean(false);
 
     private final AtomicBoolean commandReceived = new AtomicBoolean(true);
     private final AtomicBoolean inReceive = new AtomicBoolean(false);
@@ -59,6 +61,7 @@ public class InactivityMonitor extends TransportFilter {
     
     private long readCheckTime;
     private long writeCheckTime;
+    private long initialDelayTime;
     
     private final Runnable readChecker = new Runnable() {
         long lastRunTime;
@@ -107,7 +110,7 @@ public class InactivityMonitor extends TransportFilter {
     }
 
     public void stop() throws Exception {
-        stopMonitorThreads();
+        closeDown();
         next.stop();
     }
 
@@ -125,12 +128,15 @@ public class InactivityMonitor extends TransportFilter {
             }
             ASYNC_TASKS.execute(new Runnable() {
                 public void run() {
-                    try {
-                        KeepAliveInfo info = new KeepAliveInfo();
-                        info.setResponseRequired(true);
-                        oneway(info);
-                    } catch (IOException e) {
-                        onException(e);
+                    if (stopped.get() == false) {
+                        try {
+
+                            KeepAliveInfo info = new KeepAliveInfo();
+                            info.setResponseRequired(true);
+                            oneway(info);
+                        } catch (IOException e) {
+                            onException(e);
+                        }
                     }
                 };
             });
@@ -155,9 +161,10 @@ public class InactivityMonitor extends TransportFilter {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("No message received since last read check for " + toString() + "! Throwing InactivityIOException.");
                 }
+                closeDown();
                 ASYNC_TASKS.execute(new Runnable() {  
                     public void run() {
-                    	handleException(new InactivityIOException("Channel was inactive for too long: "+next.getRemoteAddress()));
+                        onException(new InactivityIOException("Channel was inactive for too long: "+next.getRemoteAddress()));
                     };
                     
                 });
@@ -218,14 +225,16 @@ public class InactivityMonitor extends TransportFilter {
         synchronized(inSend) {
             inSend.set(true);
             try {
+                
+                if( failed.get() ) {
+                    closeDown();
+                    throw new InactivityIOException("Channel was inactive for too long: "+next.getRemoteAddress());
+                }
                 if (o.getClass() == WireFormatInfo.class) {
                     synchronized (this) {
                         localWireFormatInfo = (WireFormatInfo)o;
                         startMonitorThreads();
                     }
-                }
-                if( failed.get() ) {
-                    throw new InactivityIOException("Channel was inactive for too long: "+next.getRemoteAddress());
                 }
                 next.oneway(o);
             } finally {
@@ -236,17 +245,18 @@ public class InactivityMonitor extends TransportFilter {
     }
 
     public void onException(IOException error) {
-    	if( !failed.getAndSet(true) ) {
-	        handleException(error);
-    	}
+        closeDown();
+        if (!failed.getAndSet(true)) {
+            transportListener.onException(error);
+        }
     }
-
-	private void handleException(IOException error) {
-		if (monitorStarted.get()) {
-		    stopMonitorThreads();
-		}
-		transportListener.onException(error);
-	}
+    	
+	private void closeDown() {
+        stopped.set(true);
+        if (monitorStarted.get()) {
+            stopMonitorThreads();
+        }
+    }
 
     private synchronized void startMonitorThreads() throws IOException {
         if (monitorStarted.get()) {
@@ -260,6 +270,7 @@ public class InactivityMonitor extends TransportFilter {
         }
 
         readCheckTime = Math.min(localWireFormatInfo.getMaxInactivityDuration(), remoteWireFormatInfo.getMaxInactivityDuration());
+        initialDelayTime =  Math.min(localWireFormatInfo.getMaxInactivityDurationInitalDelay(), remoteWireFormatInfo.getMaxInactivityDurationInitalDelay());
         if (readCheckTime > 0) {
             monitorStarted.set(true);
             writeCheckerTask = new SchedulerTimerTask(writeChecker);
@@ -271,8 +282,8 @@ public class InactivityMonitor extends TransportFilter {
             	    WRITE_CHECK_TIMER = new Timer("InactivityMonitor WriteCheck");
             	}
             	CHECKER_COUNTER++;
-                WRITE_CHECK_TIMER.scheduleAtFixedRate(writeCheckerTask, writeCheckTime,writeCheckTime);
-                READ_CHECK_TIMER.scheduleAtFixedRate(readCheckerTask, readCheckTime,readCheckTime);
+                WRITE_CHECK_TIMER.scheduleAtFixedRate(writeCheckerTask, initialDelayTime,writeCheckTime);
+                READ_CHECK_TIMER.scheduleAtFixedRate(readCheckerTask, initialDelayTime,readCheckTime);
             }
         }
     }

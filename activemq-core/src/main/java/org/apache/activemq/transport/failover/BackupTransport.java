@@ -45,6 +45,7 @@ class BackupTransport extends DefaultTransportListener{
 	}
 	public void setTransport(Transport transport) {
 		this.transport = transport;
+		this.transport.setTransportListener(this);
 	}
 	public URI getUri() {
 		return uri;

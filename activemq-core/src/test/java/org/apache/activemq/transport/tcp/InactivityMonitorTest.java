@@ -186,7 +186,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
         });
         clientTransport.start();
         WireFormatInfo info = new WireFormatInfo();
-        info.seMaxInactivityDuration(1000);
+        info.setMaxInactivityDuration(1000);
         clientTransport.oneway(info);
 
         assertEquals(0, serverErrorCount.get());

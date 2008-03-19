@@ -259,9 +259,20 @@ public class WireFormatInfo implements Command, MarshallAware {
         return l == null ? 0 : l.longValue();
     }
 
-    public void seMaxInactivityDuration(long maxInactivityDuration) throws IOException {
+    public void setMaxInactivityDuration(long maxInactivityDuration) throws IOException {
         setProperty("MaxInactivityDuration", new Long(maxInactivityDuration));
     }
+    
+    public long getMaxInactivityDurationInitalDelay() throws IOException {
+        Long l = (Long)getProperty("MaxInactivityDurationInitalDelay");
+        return l == null ? 0 : l.longValue();
+    }
+
+    public void setMaxInactivityDurationInitalDelay(long maxInactivityDurationInitalDelay) throws IOException {
+        setProperty("MaxInactivityDurationInitalDelay", new Long(maxInactivityDurationInitalDelay));
+    }
+    
+   
 
     /**
      * @throws IOException
