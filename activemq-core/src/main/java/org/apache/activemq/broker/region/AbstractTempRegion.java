@@ -66,9 +66,9 @@ public abstract class AbstractTempRegion extends AbstractRegion {
                 }
     
             };
+            this.purgeTimer.schedule(purgeTask, purgeTime, purgeTime);
         }
        
-        this.purgeTimer.schedule(purgeTask, purgeTime, purgeTime);
     }
 
     public void stop() throws Exception {
