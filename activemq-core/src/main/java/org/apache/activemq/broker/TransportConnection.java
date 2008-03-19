@@ -876,8 +876,8 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     }
     public void stop() throws Exception {
         stopAsync();
-        if( !stopped.await(10, TimeUnit.SECONDS) ) {
-            LOG.info("Could not shutdown the connection to '" + transport.getRemoteAddress()+ "' in a timely manner.");
+        while( !stopped.await(5, TimeUnit.SECONDS) ) {
+            LOG.info("The connection to '" + transport.getRemoteAddress()+ "' is taking a long time to shutdown.");
         }
     }
     
