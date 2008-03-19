@@ -164,10 +164,10 @@ public class BrokerService implements Service {
     private int producerSystemUsagePortion = 60;
     private int consumerSystemUsagePortion = 40;
     private boolean splitSystemUsageForProducersConsumers;
-    private boolean monitorConnectionSplits=true;
+    private boolean monitorConnectionSplits=false;
     private int taskRunnerPriority = Thread.NORM_PRIORITY;
     private boolean dedicatedTaskRunner;
-    private boolean cacheTempDestinations=true;//useful for failover
+    private boolean cacheTempDestinations=false;//useful for failover
     private int timeBeforePurgeTempDestinations = 5000;
    
 
