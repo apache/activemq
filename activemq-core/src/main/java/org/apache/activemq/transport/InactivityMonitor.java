@@ -50,7 +50,7 @@ public class InactivityMonitor extends TransportFilter {
 
     private final AtomicBoolean commandSent = new AtomicBoolean(false);
     private final AtomicBoolean inSend = new AtomicBoolean(false);
-    private final AtomicBoolean inactive = new AtomicBoolean(false);
+    private final AtomicBoolean failed = new AtomicBoolean(false);
 
     private final AtomicBoolean commandReceived = new AtomicBoolean(true);
     private final AtomicBoolean inReceive = new AtomicBoolean(false);
@@ -151,13 +151,13 @@ public class InactivityMonitor extends TransportFilter {
             return;
         }
         if (!commandReceived.get()) {
-            if( !inactive.getAndSet(true) ) {
+            if( !failed.getAndSet(true) ) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("No message received since last read check for " + toString() + "! Throwing InactivityIOException.");
                 }
                 ASYNC_TASKS.execute(new Runnable() {  
                     public void run() {
-                        onException(new InactivityIOException("Channel was inactive for too long: "+next.getRemoteAddress()));
+                    	handleException(new InactivityIOException("Channel was inactive for too long: "+next.getRemoteAddress()));
                     };
                     
                 });
@@ -224,7 +224,7 @@ public class InactivityMonitor extends TransportFilter {
                         startMonitorThreads();
                     }
                 }
-                if( inactive.get() ) {
+                if( failed.get() ) {
                     throw new InactivityIOException("Channel was inactive for too long: "+next.getRemoteAddress());
                 }
                 next.oneway(o);
@@ -236,11 +236,17 @@ public class InactivityMonitor extends TransportFilter {
     }
 
     public void onException(IOException error) {
-        if (monitorStarted.get()) {
-            stopMonitorThreads();
-        }
-        transportListener.onException(error);
+    	if( !failed.getAndSet(true) ) {
+	        handleException(error);
+    	}
     }
+
+	private void handleException(IOException error) {
+		if (monitorStarted.get()) {
+		    stopMonitorThreads();
+		}
+		transportListener.onException(error);
+	}
 
     private synchronized void startMonitorThreads() throws IOException {
         if (monitorStarted.get()) {
