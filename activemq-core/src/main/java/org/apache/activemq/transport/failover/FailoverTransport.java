@@ -107,9 +107,12 @@ public class FailoverTransport implements CompositeTransport {
             public boolean iterate() {
             	boolean result=false;
             	boolean buildBackup=true;
-            	if (connectedTransport.get()==null && !disposed) {
-            		result=doReconnect();
-            		buildBackup=false;
+            	boolean doReconnect = !disposed;
+            	synchronized(backupMutex) {
+                	if (connectedTransport.get()==null && !disposed) {
+                		result=doReconnect();
+                		buildBackup=false;
+                	}
             	}
             	if(buildBackup) {
             		buildBackups();
@@ -253,6 +256,10 @@ public class FailoverTransport implements CompositeTransport {
             started = false;
             disposed = true;
             connected = false;
+            for (BackupTransport t:backups) {
+                t.setDisposed(true);
+            }
+            backups.clear();
 
             if (connectedTransport.get() != null) {
                 transportToStop = connectedTransport.getAndSet(null);
