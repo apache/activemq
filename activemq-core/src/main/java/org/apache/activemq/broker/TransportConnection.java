@@ -892,6 +892,14 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             }
         }
         if (stopping.compareAndSet(false, true)) {
+            
+            // Let all the connection contexts know we are shutting down
+            // so that in progress operations can notice and unblock.
+            List<TransportConnectionState> connectionStates = listConnectionStates();
+            for (TransportConnectionState cs : connectionStates) {
+                cs.getContext().getStopping().set(true);
+            }
+
             new Thread("ActiveMQ Transport Stopper: "+ transport.getRemoteAddress()) {
                 @Override
                 public void run() {
@@ -931,13 +939,6 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             LOG.trace("Exception caught stopping", ignore);
         }
 
-        // Let all the connection contexts know we are shutting down
-        // so that in progress operations can notice and unblock.
-        List<TransportConnectionState> connectionStates = listConnectionStates();
-        for (TransportConnectionState cs : connectionStates) {
-            cs.getContext().getStopping().set(true);
-        }
-
         try {
             transport.stop();
             LOG.debug("Stopped connection: " + transport.getRemoteAddress());
@@ -975,6 +976,8 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         // from the broker.
 
         if (!broker.isStopped()) {
+            
+            List<TransportConnectionState> connectionStates = listConnectionStates();
             connectionStates = listConnectionStates();
             for (TransportConnectionState cs : connectionStates) {
                 cs.getContext().getStopping().set(true);
