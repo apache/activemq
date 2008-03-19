@@ -40,7 +40,7 @@ public abstract class BaseDestination implements Destination {
     private int maxProducersToAudit=1024;
     private int maxAuditDepth=2048;
     private boolean enableAudit=true;
-    private int maxPageSize=1000;
+    private int maxPageSize=100;
     private boolean useCache=true;
     private int minimumMessageSize=1024;
     private boolean lazyDispatch=true;
