@@ -23,8 +23,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-
 import org.apache.activemq.command.KeepAliveInfo;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.thread.SchedulerTimerTask;
@@ -214,21 +212,26 @@ public class InactivityMonitor extends TransportFilter {
 
     public void oneway(Object o) throws IOException {
         // Disable inactivity monitoring while processing a command.
-        inSend.set(true);
-        try {
-            if (o.getClass() == WireFormatInfo.class) {
-                synchronized (this) {
-                    localWireFormatInfo = (WireFormatInfo)o;
-                    startMonitorThreads();
+        //synchronize this method - its not synchronized
+        //further down the transport stack and gets called by more 
+        //than one thread  by this class
+        synchronized(inSend) {
+            inSend.set(true);
+            try {
+                if (o.getClass() == WireFormatInfo.class) {
+                    synchronized (this) {
+                        localWireFormatInfo = (WireFormatInfo)o;
+                        startMonitorThreads();
+                    }
                 }
+                if( inactive.get() ) {
+                    throw new InactivityIOException("Channel was inactive for too long: "+next.getRemoteAddress());
+                }
+                next.oneway(o);
+            } finally {
+                commandSent.set(true);
+                inSend.set(false);
             }
-            if( inactive.get() ) {
-                throw new InactivityIOException("Channel was inactive for too long: "+next.getRemoteAddress());
-            }
-            next.oneway(o);
-        } finally {
-            commandSent.set(true);
-            inSend.set(false);
         }
     }
 
