@@ -114,6 +114,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         if (!this.batchList.isEmpty()) {
             Iterator<Entry<MessageId, Message>> i = this.batchList.entrySet().iterator();
             result = i.next().getValue();
+            result.decrementReferenceCount();
             i.remove();
         }
         return result;
