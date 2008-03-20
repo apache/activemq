@@ -107,8 +107,8 @@ public class NetworkLoadTest extends TestCase {
 		}
 		
 		public void stop() throws JMSException {
+		        toConnection.stop();
 			fromConnection.stop();
-			toConnection.stop();
 		}
 		
 		public void close() throws JMSException {
