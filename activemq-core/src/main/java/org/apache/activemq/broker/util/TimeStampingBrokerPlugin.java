@@ -39,7 +39,15 @@ public class TimeStampingBrokerPlugin extends BrokerPluginSupport {
         if (message.getTimestamp() > 0
             && (message.getBrokerPath() == null || message.getBrokerPath().length == 0)) {
             // timestamp not been disabled and has not passed through a network
-            message.setTimestamp(System.currentTimeMillis());
+            long oldExpiration = message.getExpiration();
+            long newTimeStamp = System.currentTimeMillis();
+            if (oldExpiration > 0) {
+                long oldTimestamp = message.getTimestamp();
+                long timeToLive = oldExpiration-oldTimestamp;
+                long expiration = timeToLive+newTimeStamp;
+                message.setExpiration(expiration);
+            }
+            message.setTimestamp(newTimeStamp);
         }
         super.send(producerExchange, message);
     }
