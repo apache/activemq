@@ -145,8 +145,8 @@
             <include>**/*Test.*</include>
           </includes>
           <excludes>
-
-
+            <!-- lets by default exclude tests requiring local broker -->
+            <exclude>**/localBroker/**.*</exclude>
           </excludes>
         </configuration>
       </plugin>
