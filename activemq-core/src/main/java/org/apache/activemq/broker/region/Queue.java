@@ -1145,14 +1145,8 @@ public class Queue extends BaseDestination implements Task {
     
     private void addToConsumerList(Subscription sub) {
         if (useConsumerPriority) {
-            int index = Collections
-                    .binarySearch(consumers, sub, orderedCompare);
-            // insert into the ordered list
-            if (index < 0) {
-                consumers.add(-index - 1, sub);
-            } else {
-                consumers.add(sub);
-            }
+            consumers.add(sub);
+            Collections.sort(consumers, orderedCompare);
         } else {
             consumers.add(sub);
         }
