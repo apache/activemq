@@ -1002,7 +1002,6 @@ public class Queue extends BaseDestination implements Task {
         reference.drop();
         acknowledge(context, sub, ack, reference);
         destinationStatistics.getMessages().decrement();
-        reference.decrementReferenceCount();
         synchronized(pagedInMessages) {
             pagedInMessages.remove(reference.getMessageId());
         }
@@ -1056,6 +1055,7 @@ public class Queue extends BaseDestination implements Task {
                         messages.reset();
                         while (messages.hasNext() && count < toPageIn) {
                             MessageReference node = messages.next();
+                            node.incrementReferenceCount();
                             messages.remove();
                             if (!broker.isExpired(node)) {
                                 QueueMessageReference ref = createMessageReference(node.getMessage());
@@ -1097,7 +1097,6 @@ public class Queue extends BaseDestination implements Task {
                     if (dispatchSelector.canSelect(s, node)) {
                         if (!s.isFull()) {
                             s.add(node);
-                            node.incrementReferenceCount();
                             target = s;
                             break;
                         } else {

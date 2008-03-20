@@ -458,11 +458,10 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                             if (node == null) {
                                 break;
                             }
-                            if(isDropped(node)) {
-                                pending.remove();
-                            }
-                            else if (canDispatch(node)) {
-                                pending.remove();
+                            
+                            pending.remove();
+                            if( !isDropped(node) && canDispatch(node)) {
+
                                 // Message may have been sitting in the pending
                                 // list a while waiting for the consumer to ak the message.
                                 if (node != QueueMessageReference.NULL_MESSAGE
