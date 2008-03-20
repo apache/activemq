@@ -189,7 +189,6 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
                     }
                 }
                 systemUsage.getTempUsage().waitForSpace();
-                node.decrementReferenceCount();
                 getDiskList().add(node);
 
             } catch (Exception e) {
