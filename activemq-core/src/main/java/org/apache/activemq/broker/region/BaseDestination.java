@@ -43,7 +43,7 @@ public abstract class BaseDestination implements Destination {
     private int maxPageSize=100;
     private boolean useCache=true;
     private int minimumMessageSize=1024;
-    private boolean lazyDispatch=true;
+    private boolean lazyDispatch=false;
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
     protected final BrokerService brokerService;
     
