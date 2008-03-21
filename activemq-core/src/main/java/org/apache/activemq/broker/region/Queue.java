@@ -1118,7 +1118,6 @@ public class Queue extends BaseDestination implements Task {
                     }
                     if (target != null) {
                         target.add(node);
-                        node.incrementReferenceCount();
                     }
                 }
                 if (target != null && !strictOrderDispatch && consumers.size() > 1 &&
