@@ -19,6 +19,7 @@ package org.apache.activemq.network;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -173,8 +174,16 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
         dests = destsList.toArray(new ActiveMQDestination[destsList.size()]);
         result.setStaticallyIncludedDestinations(dests);
         if (durableDestinations != null) {
-            ActiveMQDestination[] dest = new ActiveMQDestination[durableDestinations.size()];
-            dest = (ActiveMQDestination[])durableDestinations.toArray(dest);
+            
+            HashSet<ActiveMQDestination> topics = new HashSet<ActiveMQDestination>();
+            for (ActiveMQDestination d : durableDestinations) {
+                if( d.isTopic() ) {
+                    topics.add(d);
+                }
+            }
+            
+            ActiveMQDestination[] dest = new ActiveMQDestination[topics.size()];
+            dest = (ActiveMQDestination[])topics.toArray(dest);
             result.setDurableDestinations(dest);
         }
         return result;
