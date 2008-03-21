@@ -35,6 +35,7 @@
 
   <properties>
     <activemq.osgi.import.pkg>
+      com.thoughtworks.xstream*;resolution:=optional,
       javax.jmdns*;resolution:=optional,
       org.apache.activeio*;resolution:=optional,
       org.apache.camel*;resolution:=optional,
@@ -42,12 +43,17 @@
       org.apache.derby*;resolution:=optional,
       org.apache.tools.ant*;resolution:=optional,
       org.apache.xbean*;resolution:=optional,
+      '=org.apache.xbean.spring.context.v2;resolution:=optional',
       org.apache.xpath*;resolution:=optional,
       org.codehaus.jam*;resolution:=optional,
       org.springframework*;resolution:=optional,
       org.w3c.dom.traversal*;resolution:=optional,
       *
     </activemq.osgi.import.pkg>
+    <activemq.osgi.export>
+      org.apache.activemq*;version=${project.version},
+      '=META-INF.services.org.apache.xbean.spring.http.activemq.org.config'
+    </activemq.osgi.export>
   </properties>
 
   <dependencies>
