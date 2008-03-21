@@ -61,7 +61,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private long minimumMessageSize=1024;
     private boolean useConsumerPriority=true;
     private boolean strictOrderDispatch=false;
-    private boolean lazyDispatch=true;
+    private boolean lazyDispatch=false;
    
     public void configure(Broker broker,Queue queue) {
         if (dispatchPolicy != null) {
