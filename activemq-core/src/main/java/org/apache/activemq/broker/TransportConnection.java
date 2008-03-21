@@ -844,21 +844,23 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return manageable;
     }
 
-    public synchronized void start() throws Exception {
+    public void start() throws Exception {
         starting = true;
         try {
-            transport.start();
+               synchronized(this) {
+                   transport.start();
 
-            if (taskRunnerFactory != null) {
-                taskRunner = taskRunnerFactory.createTaskRunner(this, "ActiveMQ Connection Dispatcher: "
-                                                                      + getRemoteAddress());
-            } else {
-                taskRunner = null;
-            }
+                   if (taskRunnerFactory != null) {
+                       taskRunner = taskRunnerFactory.createTaskRunner(this, "ActiveMQ Connection Dispatcher: "
+                                                                             + getRemoteAddress());
+                   } else {
+                       taskRunner = null;
+                   }
 
-            active = true;
-            this.processDispatch(connector.getBrokerInfo());
-            connector.onStarted(this);
+                   active = true;
+                   this.processDispatch(connector.getBrokerInfo());
+                   connector.onStarted(this);
+               }
         } catch (Exception e) {
             // Force clean up on an error starting up.
             stop();
@@ -875,6 +877,13 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         }
     }
     public void stop() throws Exception {
+        synchronized (this) {
+            pendingStop = true;
+            if (starting) {
+                LOG.debug("stop() called in the middle of start(). Delaying...");
+                return;
+            }
+        }
         stopAsync();
         while( !stopped.await(5, TimeUnit.SECONDS) ) {
             LOG.info("The connection to '" + transport.getRemoteAddress()+ "' is taking a long time to shutdown.");
@@ -884,13 +893,6 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     public void stopAsync() {
         // If we're in the middle of starting
         // then go no further... for now.
-        synchronized (this) {
-            pendingStop = true;
-            if (starting) {
-                LOG.debug("stop() called in the middle of start(). Delaying...");
-                return;
-            }
-        }
         if (stopping.compareAndSet(false, true)) {
             
             // Let all the connection contexts know we are shutting down
@@ -947,10 +949,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         }
 
         if (taskRunner != null) {
-            taskRunner.wakeup();
-            // Give it a change to stop gracefully.
-            dispatchStoppedLatch.await(5, TimeUnit.SECONDS);
-            taskRunner.shutdown();
+            taskRunner.shutdown(1);
         }
         
         active = false;
