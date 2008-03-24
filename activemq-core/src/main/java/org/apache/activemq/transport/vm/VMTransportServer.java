@@ -20,6 +20,8 @@ package org.apache.activemq.transport.vm;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.Map;
+import java.util.HashMap;
 
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.transport.MutexTransport;
@@ -27,6 +29,7 @@ import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
 import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.util.IntrospectionSupport;
 
 import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicInteger;
 
@@ -62,8 +65,9 @@ public class VMTransportServer implements TransportServer {
     /**
      * @return new VMTransport
      * @throws IOException
+     * @param options
      */
-    public VMTransport connect() throws IOException {
+    public VMTransport connect(Map options) throws IOException {
         TransportAcceptListener al;
         synchronized (this) {
             if( disposed )
@@ -88,6 +92,8 @@ public class VMTransportServer implements TransportServer {
         VMTransport server = new VMTransport(location);
         client.setPeer(server);
         server.setPeer(client);
+        IntrospectionSupport.setProperties(server,new HashMap(options));
+        IntrospectionSupport.setProperties(client,options);
         al.onAccept(configure(server));
         return client;
     }

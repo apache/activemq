@@ -130,8 +130,7 @@ public class VMTransportFactory extends TransportFactory{
             }
         }
         
-        VMTransport vmtransport=server.connect();
-        IntrospectionSupport.setProperties(vmtransport,options);
+        VMTransport vmtransport=server.connect(options);
         Transport transport=vmtransport;
         if(vmtransport.isMarshal()){
             HashMap optionsCopy=new HashMap(options);
