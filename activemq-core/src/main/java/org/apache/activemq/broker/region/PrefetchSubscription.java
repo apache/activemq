@@ -181,7 +181,6 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                                     dispatched.remove(node);
                                     node.getRegionDestination().getDestinationStatistics().getDequeues().increment();
                                     prefetchExtension=Math.max(0,prefetchExtension-1);
-                                    dispatchMatched();
                                 }
                             }
 
