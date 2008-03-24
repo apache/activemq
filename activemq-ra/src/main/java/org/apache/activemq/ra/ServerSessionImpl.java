@@ -68,7 +68,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
     private MessageProducer messageProducer;
     private final ServerSessionPoolImpl pool;
 
-    private Object runControlMutex = new Object();
+    private final Object runControlMutex = new Object();
     private boolean runningFlag = false;
     /** 
      * True if an error was detected that cause this session to be stale.  When a session 
