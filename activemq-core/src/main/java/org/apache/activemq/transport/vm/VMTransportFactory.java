@@ -72,6 +72,9 @@ public class VMTransportFactory extends TransportFactory{
             // If using the less complex vm://localhost?broker.persistent=true form
             try{
                 host=location.getHost();
+                if (host == null) {
+                    host = "localhost";
+                }
                 options=URISupport.parseParamters(location);
                 String config=(String) options.remove("brokerConfig");
                 if(config!=null){
@@ -88,13 +91,10 @@ public class VMTransportFactory extends TransportFactory{
             }
             location=new URI("vm://"+host);
         }
-        if (host == null) {
-            host = "localhost";
-        }
         VMTransportServer server=(VMTransportServer) servers.get(host);
         // validate the broker is still active
         if(!validateBroker(host)||server==null){
-            BrokerService broker=null;
+            BrokerService broker;
             // Synchronize on the registry so that multiple concurrent threads 
             // doing this do not think that the broker has not been created and cause multiple
             // brokers to be started.
