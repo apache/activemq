@@ -71,7 +71,6 @@ public class ActiveMQConnectionConsumer implements ConnectionConsumer, ActiveMQD
      * @param theConnection
      * @param theSessionPool
      * @param theConsumerInfo
-     * @param theMaximumMessages
      * @throws JMSException
      */
     protected ActiveMQConnectionConsumer(ActiveMQConnection theConnection,
