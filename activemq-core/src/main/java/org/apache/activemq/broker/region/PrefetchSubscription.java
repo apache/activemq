@@ -177,10 +177,11 @@ abstract public class PrefetchSubscription extends AbstractSubscription{
                         context.getTransaction().addSynchronization(new Synchronization(){
                             public void afterCommit() throws Exception{
                                 synchronized(PrefetchSubscription.this){
-                                	dequeueCounter++;
+                                    dequeueCounter++;
                                     dispatched.remove(node);
                                     node.getRegionDestination().getDestinationStatistics().getDequeues().increment();
-                                    prefetchExtension--;
+                                    prefetchExtension=Math.max(0,prefetchExtension-1);
+                                    dispatchMatched();
                                 }
                             }
 

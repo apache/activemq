@@ -60,7 +60,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
     private ServerSessionImpl createServerSessionImpl() throws JMSException {
         ActiveMQActivationSpec activationSpec = activeMQAsfEndpointWorker.endpointActivationKey.getActivationSpec();
         int acknowledge = (activeMQAsfEndpointWorker.transacted) ? Session.SESSION_TRANSACTED : activationSpec.getAcknowledgeModeForSession();
-        final ActiveMQSession session = (ActiveMQSession)activeMQAsfEndpointWorker.connection.createSession(activeMQAsfEndpointWorker.transacted, acknowledge);
+        final ActiveMQSession session = (ActiveMQSession)activeMQAsfEndpointWorker.getConnection().createSession(activeMQAsfEndpointWorker.transacted, acknowledge);
         MessageEndpoint endpoint;
         try {
             int batchSize = 0;
@@ -227,7 +227,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
         } else if (s instanceof ActiveMQTopicSession) {
             session = (ActiveMQSession) s;
         } else {
-            activeMQAsfEndpointWorker.connection
+            activeMQAsfEndpointWorker.getConnection()
                     .onAsyncException(new JMSException(
                             "Session pool provided an invalid session type: "
                                     + s.getClass()));

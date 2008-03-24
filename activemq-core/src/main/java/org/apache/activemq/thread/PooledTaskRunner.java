@@ -29,10 +29,13 @@ class PooledTaskRunner implements TaskRunner {
     private final Executor executor;
     private final Task task;
     private final Runnable runable;
+    //guarded by runable
     private boolean queued;
     private boolean shutdown;
     private boolean iterating;
-    private Thread runningThread;
+
+    //setting is not guarded by runable; 
+    private volatile Thread runningThread;
     
     public PooledTaskRunner(Executor executor, Task task, int maxIterationsPerRun) {
         this.executor = executor;
