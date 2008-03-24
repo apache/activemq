@@ -239,7 +239,7 @@ abstract public class ActiveMQDestination extends JNDIBaseStorable implements Da
             // If this is a pattern destination.
             if( !isTemporary() && (
                     physicalName.indexOf("*")>=0 ||
-                    physicalName.indexOf("<")>=0 ) ) {
+                    physicalName.indexOf(">")>=0 ) ) {
                 isPattern = true;
             }
         }
