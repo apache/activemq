@@ -34,6 +34,7 @@ public class MulticastDiscoveryAgentFactory extends DiscoveryAgentFactory {
             
             Map options = URISupport.parseParamters(uri);
             MulticastDiscoveryAgent rc = new MulticastDiscoveryAgent();
+            rc.setDiscoveryURI(uri);
             rc.setGroup(uri.getHost());
             IntrospectionSupport.setProperties(rc, options);
             return rc;
