@@ -153,20 +153,21 @@ public class ActiveMQEndpointWorker {
                         }
                     });
 
+                    int prefetchSize = activationSpec.getMaxMessagesPerSessionsIntValue() * activationSpec.getMaxSessionsIntValue();
                     if (activationSpec.isDurableSubscription()) {
                         consumer = connection.createDurableConnectionConsumer(
                                 (Topic) dest,
                                 activationSpec.getSubscriptionName(), 
                                 emptyToNull(activationSpec.getMessageSelector()),
                                 serverSessionPool, 
-                                activationSpec.getMaxMessagesPerSessionsIntValue(),
+                                prefetchSize,
                                 activationSpec.getNoLocalBooleanValue());
                     } else {
                         consumer = connection.createConnectionConsumer(
                                 dest, 
                                 emptyToNull(activationSpec.getMessageSelector()), 
                                 serverSessionPool, 
-                                activationSpec.getMaxMessagesPerSessionsIntValue(),
+                                prefetchSize,
                                 activationSpec.getNoLocalBooleanValue());
                     }
 
