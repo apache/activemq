@@ -61,25 +61,24 @@ public class ActiveMQEndpointWorker {
         }
     }
 
-    protected ActiveMQResourceAdapter adapter;
-    protected ActiveMQEndpointActivationKey endpointActivationKey;
-    protected MessageEndpointFactory endpointFactory;
-    protected WorkManager workManager;
-    protected boolean transacted;
-    
-    
+    protected final ActiveMQEndpointActivationKey endpointActivationKey;
+    protected final MessageEndpointFactory endpointFactory;
+    protected final WorkManager workManager;
+    protected final boolean transacted;
+
+    private final ActiveMQDestination dest;
+    private final Work connectWork;
+
+    //access to all non-final variables guarded by connectWork
     private ConnectionConsumer consumer;
     private ServerSessionPoolImpl serverSessionPool;
-    private ActiveMQDestination dest;
     private boolean running;
-    private Work connectWork;
-    protected ActiveMQConnection connection;
-    
+    private ActiveMQConnection connection;
     private long reconnectDelay=INITIAL_RECONNECT_DELAY;
 
 
     /**
-     * @param s
+     * @param s session to close
      */
     public static void safeClose(Session s) {
         try {
@@ -88,38 +87,40 @@ public class ActiveMQEndpointWorker {
             }
         }
         catch (JMSException e) {
+            //ignore
         }
     }
 
     /**
-     * @param c
+     * @param c connection to close
      */
-    public static void safeClose(Connection c) {
+    private static void safeClose(Connection c) {
         try {
             if (c != null) {
                 c.close();
             }
         }
         catch (JMSException e) {
+            //ignore
         }
     }
 
     /**
-     * @param cc
+     * @param cc ConnectionConsumer to close
      */
-    public static void safeClose(ConnectionConsumer cc) {
+    private static void safeClose(ConnectionConsumer cc) {
         try {
             if (cc != null) {
                 cc.close();
             }
         }
         catch (JMSException e) {
+            //ignore
         }
     }
 
     public ActiveMQEndpointWorker(final ActiveMQResourceAdapter adapter, ActiveMQEndpointActivationKey key) throws ResourceException {
         this.endpointActivationKey = key;
-        this.adapter = adapter;
         this.endpointFactory = endpointActivationKey.getMessageEndpointFactory();
         this.workManager = adapter.getBootstrapContext().getWorkManager();
         try {
@@ -135,7 +136,7 @@ public class ActiveMQEndpointWorker {
             }
 
             synchronized public void run() {
-                if( !isRunning() )
+                if( !running)
                     return;
                 if( connection!=null )
                     return;
@@ -187,33 +188,37 @@ public class ActiveMQEndpointWorker {
 
     }
 
-    synchronized public void start() throws WorkException, ResourceException {
-        if (running)
-            return;
-        running = true;
+    public void start() throws ResourceException {
+        synchronized (connectWork) {
+            if (running)
+                return;
+            running = true;
 
-        log.debug("Starting");
-        serverSessionPool = new ServerSessionPoolImpl(this, endpointActivationKey.getActivationSpec().getMaxSessionsIntValue());
-        connect();
+            log.debug("Starting");
+            serverSessionPool = new ServerSessionPoolImpl(this, endpointActivationKey.getActivationSpec().getMaxSessionsIntValue());
+            connect();
+        }
         log.debug("Started");
     }
 
     /**
-     * 
+     *
+     * @throws InterruptedException
      */
-    synchronized public void stop() throws InterruptedException {
-        if (!running)
-            return;
-        running = false;
-        serverSessionPool.close();
-        disconnect();        
+    public void stop() throws InterruptedException {
+        synchronized (connectWork) {
+            if (!running)
+                return;
+            running = false;
+            serverSessionPool.close();
+            disconnect();
+        }
     }
 
-    private boolean isRunning() {
-        return running;
-    }    
-
-    synchronized private void connect() {
+    /**
+     * Calls must be synchronized on connectWork
+     */
+    private void connect() {
         if (!running)
             return;
 
@@ -226,38 +231,40 @@ public class ActiveMQEndpointWorker {
     }
 
     /**
-     * 
+     *  Calls must be synchronized on connectWork
      */
-    synchronized private void disconnect() {
+    private void disconnect() {
         safeClose(consumer);
         consumer=null;
         safeClose(connection);
         connection=null;
     }
 
-    private void reconnect(JMSException error){
-        log.debug("Reconnect cause: ",error);
+    private void reconnect(JMSException error) {
+        log.debug("Reconnect cause: ", error);
         long reconnectDelay;
-        synchronized(this) {
-            reconnectDelay = this.reconnectDelay;
-            // Only log errors if the server is really down.. And not a temp failure.
-            if (reconnectDelay == MAX_RECONNECT_DELAY) {
-                log.error("Endpoint connection to JMS broker failed: " + error.getMessage());
-                log.error("Endpoint will try to reconnect to the JMS broker in "+(MAX_RECONNECT_DELAY/1000)+" seconds");
-            }
-        }
         try {
-            disconnect();
-            Thread.sleep(reconnectDelay);
-            
-            synchronized(this) {
-                // Use exponential rollback.
-                this.reconnectDelay*=2;
-                if (this.reconnectDelay > MAX_RECONNECT_DELAY)
-                    this.reconnectDelay=MAX_RECONNECT_DELAY;
+            synchronized (connectWork) {
+                reconnectDelay = this.reconnectDelay;
+                // Only log errors if the server is really down.. And not a temp failure.
+                if (reconnectDelay == MAX_RECONNECT_DELAY) {
+                    log.error("Endpoint connection to JMS broker failed: " + error.getMessage());
+                    log.error("Endpoint will try to reconnect to the JMS broker in " + (MAX_RECONNECT_DELAY / 1000) + " seconds");
+                }
+                disconnect();
             }
-            connect();
-        } catch(InterruptedException e) {}
+            Thread.sleep(reconnectDelay);
+
+            synchronized (connectWork) {
+                // Use exponential rollback.
+                this.reconnectDelay *= 2;
+                if (this.reconnectDelay > MAX_RECONNECT_DELAY)
+                    this.reconnectDelay = MAX_RECONNECT_DELAY;
+                connect();
+            }
+        } catch (InterruptedException e) {
+            Thread.interrupted();
+        }
     }
 
     protected void registerThreadSession(Session session) {
@@ -266,6 +273,12 @@ public class ActiveMQEndpointWorker {
 
     protected void unregisterThreadSession(Session session) {
         threadLocal.set(null);
+    }
+
+    ActiveMQConnection getConnection() {
+        synchronized (connectWork) {
+            return connection;
+        }
     }
 
     private String emptyToNull(String value) {

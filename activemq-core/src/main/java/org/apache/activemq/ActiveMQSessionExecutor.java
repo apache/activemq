@@ -36,11 +36,12 @@ import org.apache.activemq.util.JMSExceptionSupport;
  * @see javax.jms.Session
  */
 public class ActiveMQSessionExecutor implements Task {
-    
-    private ActiveMQSession session;
-    private MessageDispatchChannel messageQueue = new MessageDispatchChannel();
-    private boolean dispatchedBySessionPool;
-    private TaskRunner taskRunner;
+
+    private final ActiveMQSession session;
+    private final MessageDispatchChannel messageQueue = new MessageDispatchChannel();
+    private volatile boolean dispatchedBySessionPool;
+    //volatile required to avoid double-checked locking problem.
+    private volatile TaskRunner taskRunner;
 
     ActiveMQSessionExecutor(ActiveMQSession session) {
         this.session = session;
@@ -50,30 +51,34 @@ public class ActiveMQSessionExecutor implements Task {
         dispatchedBySessionPool = value;
         wakeup();
     }
-    
+
 
     void execute(MessageDispatch message) throws InterruptedException {
-        if (!session.isSessionAsyncDispatch() && !dispatchedBySessionPool){
+        if (!session.isSessionAsyncDispatch() && !dispatchedBySessionPool) {
             dispatch(message);
-        }else {
+        } else {
             messageQueue.enqueue(message);
             wakeup();
         }
     }
 
     public void wakeup() {
-        if( !dispatchedBySessionPool ) {
-            if( session.isSessionAsyncDispatch() ) {
+        if (!dispatchedBySessionPool) {
+            if (session.isSessionAsyncDispatch()) {
                 try {
-                	if( taskRunner == null ) {
-                		taskRunner = session.connection.getSessionTaskRunner().createTaskRunner(this, "ActiveMQ Session: "+session.getSessionId());
-                	}
+                    if (taskRunner == null) {
+                        synchronized (this) {
+                            if (taskRunner == null) {
+                                taskRunner = session.connection.getSessionTaskRunner().createTaskRunner(this, "ActiveMQ Session: " + session.getSessionId());
+                            }
+                        }
+                    }
                     taskRunner.wakeup();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
             } else {
-                while( iterate() )
+                while (iterate())
                     ;
             }
         }
@@ -88,34 +93,34 @@ public class ActiveMQSessionExecutor implements Task {
         return !messageQueue.isClosed() && messageQueue.isRunning() && !messageQueue.isEmpty();
     }
 
-    void dispatch(MessageDispatch message){
+    void dispatch(MessageDispatch message) {
 
         // TODO  - we should use a Map for this indexed by consumerId
-        
+
         for (Iterator i = this.session.consumers.iterator(); i.hasNext();) {
             ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) i.next();
             ConsumerId consumerId = message.getConsumerId();
-            if( consumerId.equals(consumer.getConsumerId()) ) {
+            if (consumerId.equals(consumer.getConsumerId())) {
                 consumer.dispatch(message);
             }
         }
     }
-    
+
     synchronized void start() {
-        if( !messageQueue.isRunning() ) {
+        if (!messageQueue.isRunning()) {
             messageQueue.start();
-            if( hasUncomsumedMessages() )
-            	wakeup();
+            if (hasUncomsumedMessages())
+                wakeup();
         }
     }
 
     void stop() throws JMSException {
         try {
-            if( messageQueue.isRunning() ) {
+            if (messageQueue.isRunning()) {
                 messageQueue.stop();
-                if( taskRunner!=null ) {
+                if (taskRunner != null) {
                     taskRunner.shutdown();
-                    taskRunner=null;
+                    taskRunner = null;
                 }
             }
         } catch (InterruptedException e) {
@@ -123,7 +128,7 @@ public class ActiveMQSessionExecutor implements Task {
             throw JMSExceptionSupport.create(e);
         }
     }
-    
+
     boolean isRunning() {
         return messageQueue.isRunning();
     }
@@ -139,8 +144,8 @@ public class ActiveMQSessionExecutor implements Task {
     MessageDispatch dequeueNoWait() {
         return (MessageDispatch) messageQueue.dequeueNoWait();
     }
-    
-    protected void clearMessagesInProgress(){
+
+    protected void clearMessagesInProgress() {
         messageQueue.clear();
     }
 
@@ -150,17 +155,17 @@ public class ActiveMQSessionExecutor implements Task {
 
     public boolean iterate() {
 
-    	// Deliver any messages queued on the consumer to their listeners.
-    	for (Iterator i = this.session.consumers.iterator(); i.hasNext();) {
+        // Deliver any messages queued on the consumer to their listeners.
+        for (Iterator i = this.session.consumers.iterator(); i.hasNext();) {
             ActiveMQMessageConsumer consumer = (ActiveMQMessageConsumer) i.next();
-        	if( consumer.iterate() ) {
-        		return true;
-        	}
+            if (consumer.iterate()) {
+                return true;
+            }
         }
-    	
-    	// No messages left queued on the listeners.. so now dispatch messages queued on the session
+
+        // No messages left queued on the listeners.. so now dispatch messages queued on the session
         MessageDispatch message = messageQueue.dequeueNoWait();
-        if( message==null ) {
+        if (message == null) {
             return false;
         } else {
             dispatch(message);
@@ -168,8 +173,8 @@ public class ActiveMQSessionExecutor implements Task {
         }
     }
 
-	List getUnconsumedMessages() {
-		return messageQueue.removeAll();
-	}
-    
+    List getUnconsumedMessages() {
+        return messageQueue.removeAll();
+    }
+
 }
