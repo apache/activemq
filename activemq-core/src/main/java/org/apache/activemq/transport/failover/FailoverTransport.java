@@ -94,7 +94,7 @@ public class FailoverTransport implements CompositeTransport {
     private int backupPoolSize=1;
     private boolean trackMessages = false;
     private int maxCacheSize = 128 * 1024;
-    private TransportListener disposedListener = new DefaultTransportListener();
+    private TransportListener disposedListener = new DefaultTransportListener() {};
     
 
     private final TransportListener myTransportListener = createTransportListener();
@@ -189,42 +189,33 @@ public class FailoverTransport implements CompositeTransport {
 
     public final void handleTransportFailure(IOException e) throws InterruptedException {
         
-        Transport transport = connectedTransport.get();
+        Transport transport = connectedTransport.getAndSet(null);
         if( transport!=null ) {
-            ServiceSupport.dispose(transport);
-        }
-        
-        boolean wasConnected=false;            
-        synchronized (reconnectMutex) {
-            boolean reconnectOk = false;
-            if(started) {
-                LOG.warn("Transport failed, attempting to automatically reconnect due to: " + e);
-                LOG.debug("Transport failed with the following exception:", e);
-                reconnectOk = true;
-            }
             
-            if (connectedTransport.get() != null) {
-                wasConnected=true;
+            transport.setTransportListener(disposedListener);
+            ServiceSupport.dispose(transport);
+            
+            synchronized (reconnectMutex) {
+                boolean reconnectOk = false;
+                if(started) {
+                    LOG.warn("Transport failed, attempting to automatically reconnect due to: " + e);
+                    LOG.debug("Transport failed with the following exception:", e);
+                    reconnectOk = true;
+                }
+                
                 initialized = false;
                 failedConnectTransportURI=connectedTransportURI;
-                Transport old = connectedTransport.get();
-                if(old != null) {
-                    //don't want errors from old transport
-                    old.setTransportListener(disposedListener);
-                }
-                connectedTransport.set(null);
                 connectedTransportURI = null;
                 connected=false;
+                    
+                if(reconnectOk) {
+                    reconnectTask.wakeup();
+                }
             }
-            	
-            if(reconnectOk) {
-            	reconnectTask.wakeup();
-            }
-        }
 
-        // Avoid double firing a transportInterupted() event due to an extra IOException
-        if (transportListener != null && wasConnected) {
-            transportListener.transportInterupted();
+            if (transportListener != null) {
+                transportListener.transportInterupted();
+            }
         }
 
     }
