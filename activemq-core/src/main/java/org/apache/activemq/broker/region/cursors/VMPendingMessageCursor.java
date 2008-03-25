@@ -41,9 +41,12 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
     @Override
     public List<MessageReference> remove(ConnectionContext context, Destination destination) throws Exception {
         List<MessageReference> rc = new ArrayList<MessageReference>();
-        for (MessageReference r : list) {
+        for (Iterator<MessageReference> iterator = list.iterator(); iterator.hasNext();) {
+            MessageReference r = iterator.next();
             if( r.getRegionDestination()==destination ) {
+                r.decrementReferenceCount();
                 rc.add(r);
+                iterator.remove();
             }
         }
         return rc ;        
