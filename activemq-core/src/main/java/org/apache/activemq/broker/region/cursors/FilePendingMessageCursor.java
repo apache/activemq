@@ -110,6 +110,8 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
         }
         return isDiskListEmpty();
     }
+    
+    
 
     /**
      * reset the cursor

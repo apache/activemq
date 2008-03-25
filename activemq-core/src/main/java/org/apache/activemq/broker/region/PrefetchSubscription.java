@@ -436,11 +436,18 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         }
     }
 
-    public void remove(ConnectionContext context, Destination destination) throws Exception {
+    public List<MessageReference> remove(ConnectionContext context, Destination destination) throws Exception {
+        List<MessageReference> rc = new ArrayList<MessageReference>();
         synchronized(pendingLock) {
             super.remove(context, destination);
-            pending.remove(context, destination);
+            for (MessageReference r : dispatched) {
+                if( r.getRegionDestination() == destination ) {
+                    rc.add((QueueMessageReference)r);
+                }
+            }
+            rc.addAll(pending.remove(context, destination));
         }
+        return rc;
     }
 
     protected void dispatchPending() throws IOException {

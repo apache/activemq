@@ -87,8 +87,9 @@ public interface Subscription extends SubscriptionRecovery {
      * The subscription will be no longer be receiving messages from the destination.
      * @param context 
      * @param destination
+     * @return a list of un-acked messages that were added to the subscription.
      */
-    void remove(ConnectionContext context, Destination destination) throws Exception;
+    List<MessageReference> remove(ConnectionContext context, Destination destination) throws Exception;
     
     /**
      * The ConsumerInfo object that created the subscription.

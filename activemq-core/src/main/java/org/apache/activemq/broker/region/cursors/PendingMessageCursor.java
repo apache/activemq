@@ -18,12 +18,14 @@ package org.apache.activemq.broker.region.cursors;
 
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.QueueMessageReference;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.usage.SystemUsage;
 
@@ -51,7 +53,7 @@ public interface PendingMessageCursor extends Service {
      * @param destination
      * @throws Exception
      */
-    void remove(ConnectionContext context, Destination destination) throws Exception;
+    List<MessageReference> remove(ConnectionContext context, Destination destination) throws Exception;
 
     /**
      * @return true if there are no pending messages
