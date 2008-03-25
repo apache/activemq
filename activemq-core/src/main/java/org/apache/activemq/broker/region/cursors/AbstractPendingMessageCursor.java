@@ -16,12 +16,15 @@
  */
 package org.apache.activemq.broker.region.cursors;
 
+import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.QueueMessageReference;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.usage.SystemUsage;
 
@@ -59,7 +62,9 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
     public void add(ConnectionContext context, Destination destination) throws Exception {
     }
 
-    public void remove(ConnectionContext context, Destination destination) throws Exception {
+    @SuppressWarnings("unchecked")
+    public List<MessageReference> remove(ConnectionContext context, Destination destination) throws Exception {
+        return Collections.EMPTY_LIST;
     }
 
     public boolean isRecoveryRequired() {

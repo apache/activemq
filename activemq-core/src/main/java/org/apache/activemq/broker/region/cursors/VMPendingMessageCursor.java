@@ -16,8 +16,13 @@
  */
 package org.apache.activemq.broker.region.cursors;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
+
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.QueueMessageReference;
 
@@ -32,6 +37,18 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
     private Iterator<MessageReference> iter;
     private MessageReference last;
 
+    
+    @Override
+    public List<MessageReference> remove(ConnectionContext context, Destination destination) throws Exception {
+        List<MessageReference> rc = new ArrayList<MessageReference>();
+        for (MessageReference r : list) {
+            if( r.getRegionDestination()==destination ) {
+                rc.add(r);
+            }
+        }
+        return rc ;        
+    }
+    
     /**
      * @return true if there are no pending messages
      */

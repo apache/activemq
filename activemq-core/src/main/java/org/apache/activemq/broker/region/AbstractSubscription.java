@@ -17,6 +17,9 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.jms.InvalidSelectorException;
@@ -104,8 +107,9 @@ public abstract class AbstractSubscription implements Subscription {
         destinations.add(destination);
     }
 
-    public void remove(ConnectionContext context, Destination destination) throws Exception {
+    public List<MessageReference> remove(ConnectionContext context, Destination destination) throws Exception {
         destinations.remove(destination);
+        return Collections.EMPTY_LIST;
     }
 
     public ConsumerInfo getConsumerInfo() {

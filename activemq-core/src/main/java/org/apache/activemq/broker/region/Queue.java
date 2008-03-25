@@ -292,25 +292,20 @@ public class Queue extends BaseDestination implements Task {
                 ConsumerId consumerId = sub.getConsumerInfo().getConsumerId();
                 MessageGroupSet ownedGroups = getMessageGroupOwners()
                         .removeConsumer(consumerId);
+                
                 // redeliver inflight messages
-                sub.remove(context, this);
-
                 List<QueueMessageReference> list = new ArrayList<QueueMessageReference>();
-                List<QueueMessageReference> inFlight = null;
-                synchronized(pagedInMessages) {
-                    inFlight = new ArrayList<QueueMessageReference>(pagedInMessages.values());
+                for (MessageReference ref : sub.remove(context, this)) {
+                    QueueMessageReference qmr = (QueueMessageReference)ref;
+                    qmr.incrementRedeliveryCounter();
+                    if( qmr.getLockOwner()==sub ) {
+                        qmr.unlock();
+                        qmr.incrementRedeliveryCounter();
+                    }
+                    list.add(qmr);
                 }
                 
-                for (QueueMessageReference node:inFlight){
-                    if (!node.isDropped() && !node.isAcked()
-                            && node.getLockOwner() == sub) {
-                        if (node.unlock()) {
-                            node.incrementRedeliveryCounter();
-                            list.add(node);
-                        }
-                    }
-                }
-                if (list != null && !consumers.isEmpty()) {
+                if (!list.isEmpty() && !consumers.isEmpty()) {
                     doDispatch(list);
                 }
             }
@@ -938,6 +933,7 @@ public class Queue extends BaseDestination implements Task {
                 if( rd.subscription instanceof QueueBrowserSubscription ) {
                     ((QueueBrowserSubscription)rd.subscription).decrementQueueRef();
                 }
+                
             } catch (Exception e) {
                 e.printStackTrace();
             }

@@ -17,9 +17,11 @@
 package org.apache.activemq.broker.region.cursors;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.activemq.advisory.AdvisorySupport;
@@ -27,6 +29,7 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.QueueMessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.Message;
@@ -128,11 +131,12 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
      * @param destination
      * @throws Exception
      */
-    public synchronized void remove(ConnectionContext context, Destination destination) throws Exception {
+    public synchronized List<MessageReference> remove(ConnectionContext context, Destination destination) throws Exception {
         Object tsp = topics.remove(destination);
         if (tsp != null) {
             storePrefetches.remove(tsp);
         }
+        return Collections.EMPTY_LIST;
     }
 
     /**
