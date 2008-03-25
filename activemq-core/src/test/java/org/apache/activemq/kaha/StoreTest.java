@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.activemq.kaha.impl.StoreLockedExcpetion;
 
 import junit.framework.TestCase;
 
@@ -199,6 +200,17 @@ public class StoreTest extends TestCase{
         for (Iterator i = testList.iterator(), j = listContainer.iterator(); i.hasNext();){
             assertEquals(i.next(),j.next());
         }
+    }
+    
+    public void testLock() throws Exception{
+        try {
+        store.doesListContainerExist("fred");
+        Store s = getStore();
+        s.doesListContainerExist("fred");
+        }catch(StoreLockedExcpetion e) {
+            return;
+        }
+        fail("Expected to catch an exception");
     }
     
     
