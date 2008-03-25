@@ -61,7 +61,9 @@ public class WireFormatNegotiator extends TransportFilter {
         // Setup the initial negociation timeout to be the same as the inital max inactivity delay specified on the wireformat
         // Does not make sense for us to take longer.
         try {
-            setNegotiateTimeout(wireFormat.getPreferedWireFormatInfo().getMaxInactivityDurationInitalDelay());
+            if( wireFormat.getPreferedWireFormatInfo() !=null ) {
+                setNegotiateTimeout(wireFormat.getPreferedWireFormatInfo().getMaxInactivityDurationInitalDelay());
+            }
         } catch (IOException e) {
         }
     }
