@@ -111,4 +111,6 @@ public interface Destination extends Service {
      * @param value
      */
     public void setLazyDispatch(boolean value);
+
+    void messageExpired(ConnectionContext context, PrefetchSubscription prefetchSubscription, MessageReference node);
 }

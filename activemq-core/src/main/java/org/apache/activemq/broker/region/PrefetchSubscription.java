@@ -246,12 +246,17 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 // the
                 // acknowledgment.
                 int index = 0;
-                for (Iterator<MessageReference> iter = dispatched.iterator(); iter
-                        .hasNext(); index++) {
+                for (Iterator<MessageReference> iter = dispatched.iterator(); iter.hasNext(); index++) {
                     final MessageReference node = iter.next();
+                    if( node.isExpired() ) {
+                        broker.messageExpired(getContext(), node);
+                        node.getRegionDestination().messageExpired(context, this, node);
+                        node.getRegionDestination().getDestinationStatistics().getDequeues().increment();
+                        node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
+                        dispatched.remove(node);
+                    }
                     if (ack.getLastMessageId().equals(node.getMessageId())) {
-                        prefetchExtension = Math.max(prefetchExtension,
-                                index + 1);
+                        prefetchExtension = Math.max(prefetchExtension, index + 1);
                         callDispatchMatched = true;
                         break;
                     }
@@ -471,12 +476,11 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
                                 // Message may have been sitting in the pending
                                 // list a while waiting for the consumer to ak the message.
-                                if (node != QueueMessageReference.NULL_MESSAGE
-                                        && node.isExpired()) {
+                                if (node!=QueueMessageReference.NULL_MESSAGE && node.isExpired()) {
                                     broker.messageExpired(getContext(), node);
-                                    dequeueCounter++;
                                     //increment number to dispatch
                                     numberToDispatch++;
+                                    node.getRegionDestination().messageExpired(context, this, node);
                                     continue;
                                 }
                                 dispatch(node);

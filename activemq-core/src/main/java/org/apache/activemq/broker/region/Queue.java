@@ -1003,7 +1003,17 @@ public class Queue extends BaseDestination implements Task {
         }
         wakeup();
     }
-
+    
+    public void messageExpired(ConnectionContext context, PrefetchSubscription prefetchSubscription, MessageReference reference) {
+        ((QueueMessageReference)reference).drop();
+        // Not sure.. perhaps we should forge an ack to remove the message from the store.
+        // acknowledge(context, sub, ack, reference);
+        destinationStatistics.getMessages().decrement();
+        synchronized(pagedInMessages) {
+            pagedInMessages.remove(reference.getMessageId());
+        }
+        wakeup();
+    }
     
     protected ConnectionContext createConnectionContext() {
         ConnectionContext answer = new ConnectionContext(new NonCachedMessageEvaluationContext());
@@ -1037,7 +1047,7 @@ public class Queue extends BaseDestination implements Task {
         dispatchLock.lock();
         try{
         
-            int toPageIn = getMaxPageSize() - pagedInMessages.size();
+            int toPageIn = (getMaxPageSize()+(int)destinationStatistics.getInflight().getCount()) - pagedInMessages.size();
             if (isLazyDispatch()&& !force) {
              // Only page in the minimum number of messages which can be dispatched immediately.
              toPageIn = Math.min(getConsumerMessageCountBeforeFull(), toPageIn);
