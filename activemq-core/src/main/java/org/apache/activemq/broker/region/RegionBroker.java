@@ -333,7 +333,9 @@ public class RegionBroker implements Broker {
             throws Exception {
         ActiveMQDestination destination = info.getDestination();
         if (destination != null) {
-            addDestination(context, destination);
+
+            // This seems to cause the destination to be added but without advisories firing...
+            context.getBroker().addDestination(context, destination);
             switch (destination.getDestinationType()) {
             case ActiveMQDestination.QUEUE_TYPE:
                 queueRegion.addProducer(context, info);
@@ -422,7 +424,7 @@ public class RegionBroker implements Broker {
         if (producerExchange.isMutable() || producerExchange.getRegion() == null) {
             ActiveMQDestination destination = message.getDestination();
             // ensure the destination is registered with the RegionBroker
-            addDestination(producerExchange.getConnectionContext(), destination);
+            producerExchange.getConnectionContext().getBroker().addDestination(producerExchange.getConnectionContext(), destination);
             Region region = null;
             switch (destination.getDestinationType()) {
             case ActiveMQDestination.QUEUE_TYPE:
