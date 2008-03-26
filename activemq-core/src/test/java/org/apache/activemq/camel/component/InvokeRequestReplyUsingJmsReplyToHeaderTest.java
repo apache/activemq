@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.camel.component;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,51 +23,49 @@ import java.util.Map;
 import javax.jms.Destination;
 
 import static org.apache.activemq.camel.component.ActiveMQComponent.activeMQComponent;
-import org.apache.activemq.camel.converter.ActiveMQConverter;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ContextTestSupport;
 import org.apache.camel.Exchange;
+import org.apache.camel.Headers;
 import org.apache.camel.Message;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.AssertionClause;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
 /**
  * @version $Revision$
  */
-public class ActiveMQReplyToHeaderUsingConverterTest extends ContextTestSupport {
+public class InvokeRequestReplyUsingJmsReplyToHeaderTest extends ContextTestSupport {
     private static final transient Log LOG = LogFactory.getLog(ActiveMQReplyToHeaderUsingConverterTest.class);
-    protected Object expectedBody = "<time>" + new Date() + "</time>";
-    protected String replyQueueName = "queue://test.my.reply.queue";
-    protected String correlationID = "ABC-123";
-    protected String groupID = "GROUP-XYZ";
-    protected String messageType = getClass().getName();
-    protected boolean useReplyToHeader = false;
+    protected String replyQueueName = "queue://test.reply";
+    protected Object correlationID = "ABC-123";
+    protected Object groupID = "GROUP-XYZ";
+    private MyServer myBean = new MyServer();
 
-    public void testSendingAMessageFromCamelSetsCustomJmsHeaders() throws Exception {
-        MockEndpoint resultEndpoint = resolveMandatoryEndpoint("mock:result", MockEndpoint.class);
+    public void testPerformRequestReplyOverJms() throws Exception {
+        MockEndpoint resultEndpoint = getMockEndpoint("mock:result");
 
-        resultEndpoint.expectedBodiesReceived(expectedBody);
+        resultEndpoint.expectedBodiesReceived("Hello James");
         AssertionClause firstMessage = resultEndpoint.message(0);
-        firstMessage.header("cheese").isEqualTo(123);
         firstMessage.header("JMSCorrelationID").isEqualTo(correlationID);
-        if (useReplyToHeader) {
-            firstMessage.header("JMSReplyTo").isEqualTo(ActiveMQConverter.toDestination(replyQueueName));
-        }
-        firstMessage.header("JMSType").isEqualTo(messageType);
+/*
+        TODO - allow JMS headers to be copied?
+
+        firstMessage.header("cheese").isEqualTo(123);
         firstMessage.header("JMSXGroupID").isEqualTo(groupID);
+        firstMessage.header("JMSReplyTo").isEqualTo(ActiveMQConverter.toDestination(replyQueueName));
+*/
 
         Map<String, Object> headers = new HashMap<String, Object>();
         headers.put("cheese", 123);
-        if (useReplyToHeader) {
-            headers.put("JMSReplyTo", replyQueueName);
-        }
+        headers.put("JMSReplyTo", replyQueueName);
         headers.put("JMSCorrelationID", correlationID);
-        headers.put("JMSType", messageType);
         headers.put("JMSXGroupID", groupID);
-        template.sendBodyAndHeaders("activemq:test.a", expectedBody, headers);
+        template.sendBodyAndHeaders("activemq:test.server", "James", headers);
 
         resultEndpoint.assertIsSatisfied();
 
@@ -77,15 +74,32 @@ public class ActiveMQReplyToHeaderUsingConverterTest extends ContextTestSupport 
         Message in = exchange.getIn();
         Object replyTo = in.getHeader("JMSReplyTo");
         LOG.info("Reply to is: " + replyTo);
-        if (useReplyToHeader) {
-            Destination destination = assertIsInstanceOf(Destination.class, replyTo);
-            assertEquals("ReplyTo", replyQueueName, destination.toString());
-        }
 
-        assertMessageHeader(in, "cheese", 123);
+        LOG.info("Received headers: " + in.getHeaders());
+        LOG.info("Received body: " + in.getBody());
+
         assertMessageHeader(in, "JMSCorrelationID", correlationID);
-        assertMessageHeader(in, "JMSType", messageType);
+
+        /*
+        TODO
+        Destination destination = assertIsInstanceOf(Destination.class, replyTo);
+        assertEquals("ReplyTo", replyQueueName, destination.toString());
+        assertMessageHeader(in, "cheese", 123);
         assertMessageHeader(in, "JMSXGroupID", groupID);
+        */
+
+        Map<String,Object> receivedHeaders = myBean.getHeaders();
+
+        assertThat(receivedHeaders, hasKey("JMSReplyTo"));
+        assertThat(receivedHeaders, hasEntry("JMSXGroupID", groupID));
+        assertThat(receivedHeaders, hasEntry("JMSCorrelationID", correlationID));
+
+        replyTo = receivedHeaders.get("JMSReplyTo");
+        LOG.info("Reply to is: " + replyTo);
+        Destination destination = assertIsInstanceOf(Destination.class, replyTo);
+        assertEquals("ReplyTo", replyQueueName, destination.toString());
+
+        
     }
 
     protected CamelContext createCamelContext() throws Exception {
@@ -101,10 +115,24 @@ public class ActiveMQReplyToHeaderUsingConverterTest extends ContextTestSupport 
     protected RouteBuilder createRouteBuilder() throws Exception {
         return new RouteBuilder() {
             public void configure() throws Exception {
-                from("activemq:test.a").to("activemq:test.b");
+                from("activemq:test.server").bean(myBean);
 
-                from("activemq:test.b").to("mock:result");
+                from("activemq:test.reply").to("mock:result");
             }
         };
+    }
+
+    protected static class MyServer {
+        private Map<String,Object> headers;
+
+        public String process(@Headers Map<String,Object> headers, String body) {
+            this.headers = headers;
+            LOG.info("process() invoked with headers: " + headers);
+            return "Hello " + body;
+        }
+
+        public Map<String,Object> getHeaders() {
+            return headers;
+        }
     }
 }
