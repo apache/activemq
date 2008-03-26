@@ -202,7 +202,7 @@ public class JmsTempDestinationTest extends TestCase {
         // Closing the connection should destroy the temp queue that was
         // created.
         tempConnection.close();
-        Thread.sleep(1000); // Wait a little bit to let the delete take effect.
+        Thread.sleep(2000); // Wait a little bit to let the delete take effect.
 
         // This message delivery NOT should work since the temp connection is
         // now closed.
