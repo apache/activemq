@@ -202,4 +202,8 @@ public class DestinationFilter implements Destination {
     public void setLazyDispatch(boolean value) {
       next.setLazyDispatch(value);        
     }
+
+    public void messageExpired(ConnectionContext context, PrefetchSubscription prefetchSubscription, MessageReference node) {
+        next.messageExpired(context, prefetchSubscription, node);        
+    }
 }

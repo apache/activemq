@@ -631,4 +631,9 @@ public class Topic  extends BaseDestination  implements Task{
         }
     }
 
+    public void messageExpired(ConnectionContext context, PrefetchSubscription prefetchSubscription, MessageReference node) {
+        // TODO Auto-generated method stub
+        
+    }
+
 }
