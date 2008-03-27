@@ -50,7 +50,7 @@ public class JmsTempDestinationTest extends TestCase {
 
     protected void setUp() throws Exception {
         factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
-        factory.setUseAsyncSend(false);
+        factory.setAlwaysSyncSend(true);
         connection = factory.createConnection();
         connections.add(connection);
     }
@@ -68,7 +68,7 @@ public class JmsTempDestinationTest extends TestCase {
             iter.remove();
         }
     }
-    
+
     /**
      * Make sure Temp destination can only be consumed by local connection
      * 
