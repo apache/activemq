@@ -16,7 +16,13 @@
  */
 package org.apache.activemq;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
@@ -40,23 +46,29 @@ public class JmsTempDestinationTest extends TestCase {
 
     private Connection connection;
     private ActiveMQConnectionFactory factory;
+    protected List<Connection> connections = Collections.synchronizedList(new ArrayList<Connection>());
 
     protected void setUp() throws Exception {
         factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
         factory.setUseAsyncSend(false);
         connection = factory.createConnection();
+        connections.add(connection);
     }
 
     /**
      * @see junit.framework.TestCase#tearDown()
      */
     protected void tearDown() throws Exception {
-        if (connection != null) {
-            connection.close();
-            connection = null;
+        for (Iterator iter = connections.iterator(); iter.hasNext();) {
+            Connection conn = (Connection)iter.next();
+            try {
+                conn.close();
+            } catch (Throwable e) {
+            }
+            iter.remove();
         }
     }
-
+    
     /**
      * Make sure Temp destination can only be consumed by local connection
      * 
@@ -74,6 +86,7 @@ public class JmsTempDestinationTest extends TestCase {
 
         // temp destination should not be consume when using another connection
         Connection otherConnection = factory.createConnection();
+        connections.add(otherConnection);
         Session otherSession = otherConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         TemporaryQueue otherQueue = otherSession.createTemporaryQueue();
         MessageConsumer consumer = otherSession.createConsumer(otherQueue);
@@ -162,6 +175,7 @@ public class JmsTempDestinationTest extends TestCase {
         for (int i = 0; i < count; i++) {
             BytesMessage message = session.createBytesMessage();
             message.writeBytes(data);
+            message.setIntProperty("c", i);
             producer.send(message);
             list.add(message);
         }
@@ -170,8 +184,8 @@ public class JmsTempDestinationTest extends TestCase {
         MessageConsumer consumer = session.createConsumer(queue);
         for (int i = 0; i < count; i++) {
             Message message2 = consumer.receive(2000);
-
             assertTrue(message2 != null);
+            assertEquals(i, message2.getIntProperty("c"));
             assertTrue(message2.equals(list.get(i)));
         }
     }
@@ -182,10 +196,12 @@ public class JmsTempDestinationTest extends TestCase {
      * 
      * @throws JMSException
      * @throws InterruptedException
+     * @throws URISyntaxException 
      */
-    public void testPublishFailsForClosedConnection() throws JMSException, InterruptedException {
-
+    public void testPublishFailsForClosedConnection() throws JMSException, InterruptedException, URISyntaxException {
+        
         Connection tempConnection = factory.createConnection();
+        connections.add(tempConnection);
         Session tempSession = tempConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         TemporaryQueue queue = tempSession.createTemporaryQueue();
 
@@ -211,7 +227,6 @@ public class JmsTempDestinationTest extends TestCase {
             producer.send(message);
             fail("Send should fail since temp destination should not exist anymore.");
         } catch (JMSException e) {
-            assertTrue("failed to throw an exception", true);
         }
     }
 
@@ -225,6 +240,7 @@ public class JmsTempDestinationTest extends TestCase {
     public void testPublishFailsForDestoryedTempDestination() throws JMSException, InterruptedException {
 
         Connection tempConnection = factory.createConnection();
+        connections.add(tempConnection);
         Session tempSession = tempConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         TemporaryQueue queue = tempSession.createTemporaryQueue();
 
@@ -260,6 +276,7 @@ public class JmsTempDestinationTest extends TestCase {
      */
     public void testDeleteDestinationWithSubscribersFails() throws JMSException {
         Connection connection = factory.createConnection();
+        connections.add(connection);
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         TemporaryQueue queue = session.createTemporaryQueue();
 
