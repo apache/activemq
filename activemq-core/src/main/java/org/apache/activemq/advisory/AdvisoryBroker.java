@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.advisory;
 
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -64,7 +65,7 @@ public class AdvisoryBroker extends BrokerFilter {
     protected final ProducerId advisoryProducerId = new ProducerId();
     
     private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
-
+    
     public AdvisoryBroker(Broker next) {
         super(next);
         advisoryProducerId.setConnectionId(ID_GENERATOR.generateId());
@@ -145,10 +146,12 @@ public class AdvisoryBroker extends BrokerFilter {
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
         Destination answer = next.addDestination(context, destination);
         if (!AdvisorySupport.isAdvisoryTopic(destination)) {
-            ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destination);
             DestinationInfo info = new DestinationInfo(context.getConnectionId(), DestinationInfo.ADD_OPERATION_TYPE, destination);
-            fireAdvisory(context, topic, info);
-            destinations.put(destination, info);
+            DestinationInfo previous = destinations.putIfAbsent(destination, info);
+            if( previous==null ) {
+                ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destination);
+                fireAdvisory(context, topic, info);
+            }
         }
         return answer;
     }
@@ -158,9 +161,11 @@ public class AdvisoryBroker extends BrokerFilter {
         next.addDestinationInfo(context, info);
 
         if (!AdvisorySupport.isAdvisoryTopic(destination)) {
-            ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destination);
-            fireAdvisory(context, topic, info);
-            destinations.put(destination, info);
+            DestinationInfo previous = destinations.putIfAbsent(destination, info);
+            if( previous==null ) {
+                ActiveMQTopic topic = AdvisorySupport.getDestinationAdvisoryTopic(destination);
+                fireAdvisory(context, topic, info);
+            }
         }
     }
 
@@ -187,7 +192,6 @@ public class AdvisoryBroker extends BrokerFilter {
     public void removeDestinationInfo(ConnectionContext context, DestinationInfo destInfo) throws Exception {
         next.removeDestinationInfo(context, destInfo);
         DestinationInfo info = destinations.remove(destInfo.getDestination());
-
         if (info != null) {
             info.setDestination(destInfo.getDestination());
             info.setOperationType(DestinationInfo.REMOVE_OPERATION_TYPE);
