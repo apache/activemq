@@ -218,6 +218,14 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- Camel UI testing -->
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-swing</artifactId>
+      <version>${camel-version}</version>
+      <scope>test</scope>
+    </dependency>
+
     <!-- database testing -->
     <dependency>
       <groupId>commons-collections</groupId>
