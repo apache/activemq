@@ -20,6 +20,11 @@
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
 
+  <parent>
+    <groupId>org.apache</groupId>
+    <artifactId>apache</artifactId>
+    <version>3</version>
+  </parent>
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.apache.activemq</groupId>
@@ -55,6 +60,7 @@
     </mailingList>
   </mailingLists>
 
+<!--
   <ciManagement>
     <system>continuum</system>
     <url>http://goopen.org:8080/continuum</url>
@@ -75,7 +81,9 @@
       </notifier>
     </notifiers>
   </ciManagement>
+-->
 
+<!--
   <repositories>
     <repository>
       <id>apache.incubating.releases</id>
@@ -91,7 +99,9 @@
       </releases>
     </repository>
   </repositories>
+-->
 
+<!--
   <pluginRepositories>
     <pluginRepository>
       <id>apache.incubating.releases</id>
@@ -107,8 +117,10 @@
       </releases>
     </pluginRepository>
   </pluginRepositories>
+-->
 
   <distributionManagement>
+<!--
     <repository>
       <id>apache.releases</id>
       <name>Apache Release Distribution Repository</name>
@@ -119,6 +131,7 @@
       <name>Apache Development Snapshot Repository</name>
       <url>scp://people.apache.org/www/people.apache.org/repo/m2-snapshot-repository</url>
     </snapshotRepository>
+-->
     <site>
       <id>apache.website</id>
       <url>${site-repo-url}</url>
@@ -144,9 +157,9 @@
   </modules>
 
   <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/incubator/activemq/trunk</developerConnection>
-    <url>http://svn.apache.org/viewcvs.cgi/incubator/activemq/trunk/</url>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/activemq/branches/activemq-4.1</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/activemq/branches/activemq-4.1</developerConnection>
+    <url>http://svn.apache.org/viewcvs.cgi/activemq/branches/activemq-4.1</url>
   </scm>
 
   <dependencyManagement>
@@ -242,43 +255,43 @@
       <dependency>
         <groupId>org.apache.geronimo.specs</groupId>
         <artifactId>geronimo-jms_1.1_spec</artifactId>
-        <version>${org-apache-geronimo-specs-version}</version>
+        <version>1.1.1</version>
       </dependency>
 
       <dependency>
         <groupId>org.apache.geronimo.specs</groupId>
         <artifactId>geronimo-jta_1.0.1B_spec</artifactId>
-        <version>${org-apache-geronimo-specs-version}</version>
+        <version>1.0.1</version>
       </dependency>
 
       <dependency>
         <groupId>org.apache.geronimo.specs</groupId>
         <artifactId>geronimo-j2ee-management_1.0_spec</artifactId>
-        <version>${org-apache-geronimo-specs-version}</version>
+        <version>1.0</version>
       </dependency>
 
       <dependency>
         <groupId>org.apache.geronimo.specs</groupId>
-        <artifactId>geronimo-j2ee-jacc_1.0_spec</artifactId>
-        <version>${org-apache-geronimo-specs-version}</version>
+        <artifactId>geronimo-jacc_1.1_spec</artifactId>
+        <version>1.0.1</version>
       </dependency>
 
       <dependency>
         <groupId>org.apache.geronimo.specs</groupId>
         <artifactId>geronimo-j2ee-connector_1.5_spec</artifactId>
-        <version>${org-apache-geronimo-specs-version}</version>
+        <version>2.0.0</version>
       </dependency>
 
       <dependency>
         <groupId>org.apache.geronimo.specs</groupId>
-        <artifactId>geronimo-jsp_2.0_spec</artifactId>
-        <version>${org-apache-geronimo-specs-version}</version>
+        <artifactId>geronimo-jsp_2.1_spec</artifactId>
+        <version>1.0.1</version>
       </dependency>
 
       <dependency>
         <groupId>org.apache.geronimo.specs</groupId>
-        <artifactId>geronimo-servlet_2.4_spec</artifactId>
-        <version>${org-apache-geronimo-specs-version}</version>
+        <artifactId>geronimo-servlet_2.5_spec</artifactId>
+        <version>1.2</version>
       </dependency>
 
 
@@ -572,11 +585,13 @@
         <version>${xmlpull-version}</version>
       </dependency>
 
+<!--
       <dependency>
         <groupId>org.mortbay.jetty</groupId>
         <artifactId>servlet-api-2.5</artifactId>
         <version>${jetty-version}</version>
       </dependency>
+-->
 
       <dependency>
         <groupId>org.mortbay.jetty</groupId>
@@ -720,6 +735,8 @@
         <artifactId>ldap-protocol</artifactId>
         <version>${directory-version}</version>
       </dependency>
+
+<!--
       <dependency>
         <groupId>geronimo</groupId>
         <artifactId>geronimo-kernel</artifactId>
@@ -735,6 +752,7 @@
         <artifactId>howl-logger</artifactId>
         <version>${howl-version}</version>
       </dependency>
+-->
       <dependency>
         <groupId>p2psockets</groupId>
         <artifactId>p2psockets-core</artifactId>
@@ -778,13 +796,8 @@
       <plugins>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <version>${org-apache-maven-surefire-plugin-version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>javacc-maven-plugin</artifactId>
-          <version>2.0</version>
+          <artifactId>maven-antrun-plugin</artifactId>
+          <version>1.1</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -792,17 +805,44 @@
           <version>2.1</version>
         </plugin>
         <plugin>
-          <groupId>org.mortbay.jetty</groupId>
-          <artifactId>maven-jetty-plugin</artifactId>
-          <version>${jetty-version}</version>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>2.0.2</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
+          <artifactId>maven-eclipse-plugin</artifactId>
+          <version>2.3</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
+          <version>2.2</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>2.3</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>${org-apache-maven-surefire-plugin-version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>maven-bundle-plugin</artifactId>
+          <version>${felix-version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>javacc-maven-plugin</artifactId>
+          <version>2.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.mortbay.jetty</groupId>
+          <artifactId>maven-jetty-plugin</artifactId>
+          <version>${jetty-version}</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -827,20 +867,20 @@
         </configuration>
       </plugin>
       <plugin>
-        <artifactId>maven-one-plugin</artifactId>
-        <version>1.0</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>install-maven-one-repository</goal>
-              <goal>deploy-maven-one-repository</goal>
-            </goals>
-            <configuration>
-              <remoteRepositoryId>apache.m1.releases</remoteRepositoryId>
-              <remoteRepositoryUrl>${m1-dist-repo-url}</remoteRepositoryUrl>
-            </configuration>
-          </execution>
-        </executions>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Bundle-Name>${artifactId}</Bundle-Name>
+            <Bundle-SymbolicName>${activemq.osgi.symbolic.name}</Bundle-SymbolicName>
+            <Export-Package>${activemq.osgi.export}</Export-Package>
+            <Import-Package>${activemq.osgi.import}</Import-Package>
+            <Private-Package>${activemq.osgi.private.pkg}</Private-Package>
+            <Implementation-Title>Apache ActiveMQ</Implementation-Title>
+            <Implementation-Version>${project.version}</Implementation-Version>
+          </instructions>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -853,7 +893,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>${org-apache-maven-surefire-plugin-version}</version>
         <configuration>
           <forkMode>once</forkMode>
           <redirectTestOutputToFile>true</redirectTestOutputToFile>
@@ -939,13 +978,14 @@
     <commons-collections-version>2.1</commons-collections-version>
     <commons-dbcp-version>1.2</commons-dbcp-version>
     <commons-httpclient-version>2.0.1</commons-httpclient-version>
-    <commons-logging-version>1.1</commons-logging-version>
+    <commons-logging-version>1.1.1</commons-logging-version>
     <commons-pool-version>1.2</commons-pool-version>
     <commons-primitives-version>1.0</commons-primitives-version>
     <directory-asn1-version>0.3.2</directory-asn1-version>
     <directory-kerboros-version>0.5</directory-kerboros-version>
     <directory-mina-version>0.7.3</directory-mina-version>
     <directory-version>0.9.2</directory-version>
+    <felix-version>1.0.0</felix-version>
     <geronimo-version>1.0</geronimo-version>
     <howl-version>0.1.8</howl-version>
     <hsqldb-version>1.7.2.2</hsqldb-version>
@@ -969,7 +1009,15 @@
     <xstream-version>1.1.2</xstream-version>
     <xbean-version>3.0</xbean-version>
     <dist-repo-url>scpexe://minotaur.apache.org/www/people.apache.org/repo/m2-ibiblio-rsync-repository</dist-repo-url>
-    <m1-dist-repo-url>scpexe://minotaur.apache.org/www/people.apache.org/repo/m1-snapshot-repository</m1-dist-repo-url>
+    <!--<m1-dist-repo-url>scpexe://minotaur.apache.org/www/people.apache.org/repo/m1-snapshot-repository</m1-dist-repo-url>-->
     <site-repo-url>scpexe://people.apache.org/www/activemq.apache.org/maven/</site-repo-url>
+    <!-- OSGi bundles properties -->
+    <activemq.osgi.import.pkg>*</activemq.osgi.import.pkg>
+    <activemq.osgi.export.pkg>org.apache.activemq*</activemq.osgi.export.pkg>
+    <activemq.osgi.private.pkg>!*</activemq.osgi.private.pkg>
+    <activemq.osgi.export>${activemq.osgi.export.pkg}*;version=${activemq.osgi.export.version}</activemq.osgi.export>
+    <activemq.osgi.export.version>${project.version}</activemq.osgi.export.version>
+    <activemq.osgi.import>${activemq.osgi.import.pkg}</activemq.osgi.import>
+    <activemq.osgi.symbolic.name>${groupId}.${artifactId}</activemq.osgi.symbolic.name>
   </properties>
 </project>
