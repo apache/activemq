@@ -2050,13 +2050,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         if (firstFailureError == null) {
             firstFailureError = error;
         }
-        if (!closed.get() && !closing.get()) {
-            try {
-                cleanup();
-            } catch (JMSException e) {
-                LOG.warn("Cleanup failed", e);
-            }
-        }
     }
 
     /**
