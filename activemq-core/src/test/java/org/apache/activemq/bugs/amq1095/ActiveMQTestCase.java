@@ -142,14 +142,17 @@ public class ActiveMQTestCase extends TestCase
      */
     protected void tearDown() throws Exception {
         TextMessage msg;
-        for (final Iterator i = consumersToEmpty.iterator(); i.hasNext();)
-        {
-            final MessageConsumer consumer = (MessageConsumer) i.next();
-            if (consumer != null)
-                do
-                    msg = (TextMessage) consumer.receive(RECEIVE_TIMEOUT);
-                while (msg != null);
-        }
+        try {
+			for (final Iterator i = consumersToEmpty.iterator(); i.hasNext();)
+			{
+			    final MessageConsumer consumer = (MessageConsumer) i.next();
+			    if (consumer != null)
+			        do
+			            msg = (TextMessage) consumer.receive(RECEIVE_TIMEOUT);
+			        while (msg != null);
+			}
+		} catch (Exception e) {
+		}
         if (connection != null) {
             connection.stop();
         }
