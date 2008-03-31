@@ -74,7 +74,7 @@ public class TempQueue extends Queue{
         super.addSubscription(context, sub);
     } 
     
-    public void wakeup() {
+    public void xwakeup() {
         boolean result = false;
         synchronized (messages) {
             result = !messages.isEmpty();
