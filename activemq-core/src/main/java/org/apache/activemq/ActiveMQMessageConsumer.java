@@ -930,7 +930,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 deliveredMessages.clear();
             }
         }
-        if (messageListener != null) {
+        if (messageListener.get() != null) {
             session.redispatch(this, unconsumedMessages);
         }
     }
