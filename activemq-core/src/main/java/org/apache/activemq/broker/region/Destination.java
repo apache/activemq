@@ -27,12 +27,13 @@ import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.thread.Task;
 import org.apache.activemq.usage.MemoryUsage;
 
 /**
  * @version $Revision: 1.12 $
  */
-public interface Destination extends Service {
+public interface Destination extends Service, Task {
 
     void addSubscription(ConnectionContext context, Subscription sub) throws Exception;
 

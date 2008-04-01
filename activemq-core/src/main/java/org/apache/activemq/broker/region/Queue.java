@@ -99,6 +99,7 @@ public class Queue extends BaseDestination implements Task {
             wakeup();
         }
     };
+    private final Object iteratingMutex = new Object() {};
     
     private static final Comparator<Subscription>orderedCompare = new Comparator<Subscription>() {
 
@@ -914,51 +915,52 @@ public class Queue extends BaseDestination implements Task {
      * @see org.apache.activemq.thread.Task#iterate()
      */
     public boolean iterate() {
-        
-        RecoveryDispatch rd;
-        while ((rd = getNextRecoveryDispatch()) != null) {
-            try {
-                MessageEvaluationContext msgContext = new NonCachedMessageEvaluationContext();
-                msgContext.setDestination(destination);
-    
-                for (QueueMessageReference node : rd.messages) {
-                    if (!node.isDropped() && !node.isAcked() && (!node.isDropped() || rd.subscription.getConsumerInfo().isBrowser())) {
-                        msgContext.setMessageReference(node);
-                            if (rd.subscription.matches(node, msgContext)) {
-                                rd.subscription.add(node);
-                            }
-                    }
-                }
-                
-                if( rd.subscription instanceof QueueBrowserSubscription ) {
-                    ((QueueBrowserSubscription)rd.subscription).decrementQueueRef();
-                }
-                
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        synchronized(iteratingMutex) {
+	        RecoveryDispatch rd;
+	        while ((rd = getNextRecoveryDispatch()) != null) {
+	            try {
+	                MessageEvaluationContext msgContext = new NonCachedMessageEvaluationContext();
+	                msgContext.setDestination(destination);
+	    
+	                for (QueueMessageReference node : rd.messages) {
+	                    if (!node.isDropped() && !node.isAcked() && (!node.isDropped() || rd.subscription.getConsumerInfo().isBrowser())) {
+	                        msgContext.setMessageReference(node);
+	                            if (rd.subscription.matches(node, msgContext)) {
+	                                rd.subscription.add(node);
+	                            }
+	                    }
+	                }
+	                
+	                if( rd.subscription instanceof QueueBrowserSubscription ) {
+	                    ((QueueBrowserSubscription)rd.subscription).decrementQueueRef();
+	                }
+	                
+	            } catch (Exception e) {
+	                e.printStackTrace();
+	            }
+	        }
+	
+	        boolean result = false;
+	        synchronized (messages) {
+	            result = !messages.isEmpty();
+	        }               
+	        
+	        if (result) {
+	            try {
+	               pageInMessages(false);
+	               
+	            } catch (Throwable e) {
+	                log.error("Failed to page in more queue messages ", e);
+	            }
+	        }
+	        synchronized(messagesWaitingForSpace) {
+	               while (!messagesWaitingForSpace.isEmpty() && !memoryUsage.isFull()) {
+	                   Runnable op = messagesWaitingForSpace.removeFirst();
+	                   op.run();
+	               }
+	        }
+	        return false;
         }
-
-        boolean result = false;
-        synchronized (messages) {
-            result = !messages.isEmpty();
-        }               
-        
-        if (result) {
-            try {
-               pageInMessages(false);
-               
-            } catch (Throwable e) {
-                log.error("Failed to page in more queue messages ", e);
-            }
-        }
-        synchronized(messagesWaitingForSpace) {
-               while (!messagesWaitingForSpace.isEmpty() && !memoryUsage.isFull()) {
-                   Runnable op = messagesWaitingForSpace.removeFirst();
-                   op.run();
-               }
-        }
-        return false;
     }
 
     protected MessageReferenceFilter createMessageIdFilter(final String messageId) {
