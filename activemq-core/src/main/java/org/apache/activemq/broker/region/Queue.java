@@ -996,14 +996,36 @@ public class Queue extends BaseDestination implements Task {
         removeMessage(c, null, r, ack);
     }
     
-    protected void removeMessage(ConnectionContext context,Subscription sub,QueueMessageReference reference,MessageAck ack) throws IOException {
-        reference.drop();
+    protected void removeMessage(ConnectionContext context,Subscription sub,final QueueMessageReference reference,MessageAck ack) throws IOException {
+        reference.setAcked(true);
+        // This sends the ack the the journal..
         acknowledge(context, sub, ack, reference);
-        destinationStatistics.getMessages().decrement();
-        synchronized(pagedInMessages) {
-            pagedInMessages.remove(reference.getMessageId());
+
+        if (!ack.isInTransaction()) {
+            reference.drop();
+            destinationStatistics.getMessages().decrement();
+            synchronized(pagedInMessages) {
+                pagedInMessages.remove(reference.getMessageId());
+            }
+            wakeup();
+        } else {
+            context.getTransaction().addSynchronization(new Synchronization() {
+                
+                public void afterCommit() throws Exception {
+                    reference.drop();
+                    destinationStatistics.getMessages().decrement();
+                    synchronized(pagedInMessages) {
+                        pagedInMessages.remove(reference.getMessageId());
+                    }
+                    wakeup();
+                }
+                
+                public void afterRollback() throws Exception {
+                    reference.setAcked(false);
+                }
+            });
         }
-        wakeup();
+
     }
     
     public void messageExpired(ConnectionContext context, PrefetchSubscription prefetchSubscription, MessageReference reference) {

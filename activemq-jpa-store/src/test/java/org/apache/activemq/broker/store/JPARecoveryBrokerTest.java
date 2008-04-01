@@ -39,7 +39,7 @@ public class JPARecoveryBrokerTest extends RecoveryBrokerTest {
         props.setProperty("openjpa.ConnectionDriverName", "org.apache.derby.jdbc.EmbeddedDriver");
         props.setProperty("openjpa.ConnectionURL", "jdbc:derby:activemq-data/derby;create=true");
         props.setProperty("openjpa.jdbc.SynchronizeMappings", "buildSchema");
-        props.setProperty("openjpa.Log", "DefaultLevel=WARN,SQL=TRACE");
+//        props.setProperty("openjpa.Log", "DefaultLevel=WARN,SQL=TRACE");
         pa.setEntityManagerProperties(props);
         service.setPersistenceAdapter(pa);
         return service;
@@ -53,7 +53,7 @@ public class JPARecoveryBrokerTest extends RecoveryBrokerTest {
         props.setProperty("openjpa.ConnectionDriverName", "org.apache.derby.jdbc.EmbeddedDriver");
         props.setProperty("openjpa.ConnectionURL", "jdbc:derby:activemq-data/derby;create=true");
         props.setProperty("openjpa.jdbc.SynchronizeMappings", "buildSchema");
-        props.setProperty("openjpa.Log", "DefaultLevel=WARN,SQL=TRACE");
+//        props.setProperty("openjpa.Log", "DefaultLevel=WARN,SQL=TRACE");
         pa.setEntityManagerProperties(props);
         service.setPersistenceAdapter(pa);
         return service;

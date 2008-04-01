@@ -48,7 +48,7 @@ public class QuickJPAStoreXARecoveryBrokerTest extends XARecoveryBrokerTest {
         props.setProperty("openjpa.ConnectionDriverName", "org.apache.derby.jdbc.EmbeddedDriver");
         props.setProperty("openjpa.ConnectionURL", "jdbc:derby:activemq-data/derby;create=true");
         props.setProperty("openjpa.jdbc.SynchronizeMappings", "buildSchema");
-        props.setProperty("openjpa.Log", "DefaultLevel=WARN,SQL=TRACE");
+//        props.setProperty("openjpa.Log", "DefaultLevel=WARN,SQL=TRACE");
         rfa.setEntityManagerProperties(props);
         pa.setReferenceStoreAdapter(rfa);        
         
@@ -65,7 +65,7 @@ public class QuickJPAStoreXARecoveryBrokerTest extends XARecoveryBrokerTest {
         props.setProperty("openjpa.ConnectionDriverName", "org.apache.derby.jdbc.EmbeddedDriver");
         props.setProperty("openjpa.ConnectionURL", "jdbc:derby:activemq-data/derby;create=true");
         props.setProperty("openjpa.jdbc.SynchronizeMappings", "buildSchema");
-        props.setProperty("openjpa.Log", "DefaultLevel=WARN,SQL=TRACE");
+//        props.setProperty("openjpa.Log", "DefaultLevel=WARN,SQL=TRACE");
         rfa.setEntityManagerProperties(props);
         pa.setReferenceStoreAdapter(rfa);        
         

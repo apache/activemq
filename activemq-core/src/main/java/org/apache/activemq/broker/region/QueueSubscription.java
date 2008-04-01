@@ -51,20 +51,7 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
         final Destination q = n.getRegionDestination();
         final QueueMessageReference node = (QueueMessageReference)n;
         final Queue queue = (Queue)q;
-        if (!ack.isInTransaction()) {
-            queue.removeMessage(context, this, node, ack);
-        } else {
-            node.setAcked(true);
-            context.getTransaction().addSynchronization(new Synchronization() {
-                public void afterCommit() throws Exception {
-                    queue.removeMessage(context, QueueSubscription.this, node, ack);
-                }
-
-                public void afterRollback() throws Exception {
-                    node.setAcked(false);
-                }
-            });
-        }
+        queue.removeMessage(context, this, node, ack);
     }
 
     protected boolean canDispatch(MessageReference n) throws IOException {
