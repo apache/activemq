@@ -97,7 +97,6 @@ public class ActiveMQConfiguration extends JmsConfiguration {
         }
         else if (isUseSingleConnection()) {
             return new SingleConnectionFactory(answer);
-            //return new PooledConnectionFactory(answer);
         }
         else {
             return answer;
@@ -109,7 +108,7 @@ public class ActiveMQConfiguration extends JmsConfiguration {
         // for folks not using this option
         try {
             Class type = loadClass("org.apache.activemq.pool.PooledConnectionFactory", getClass().getClassLoader());
-            Constructor constructor = type.getConstructor(ActiveMQConnectionFactory.class);
+            Constructor constructor = type.getConstructor(org.apache.activemq.ActiveMQConnectionFactory.class);
             return (ConnectionFactory) constructor.newInstance(connectionFactory);
         }
         catch (Exception e) {

@@ -85,6 +85,14 @@ public class ActiveMQComponent extends JmsComponent {
         this.exposeAllQueues = exposeAllQueues;
     }
 
+    public void setUsePooledConnection(boolean usePooledConnection) {
+        getConfiguration().setUsePooledConnection(usePooledConnection);
+    }
+
+    public void setUseSingleConnection(boolean useSingleConnection) {
+        getConfiguration().setUseSingleConnection(useSingleConnection);
+    }
+
     @Override
     protected void doStart() throws Exception {
         super.doStart();
