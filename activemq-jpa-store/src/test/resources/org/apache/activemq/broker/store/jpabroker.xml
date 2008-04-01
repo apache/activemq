@@ -36,7 +36,7 @@
 			<prop key="openjpa.ConnectionDriverName">org.apache.derby.jdbc.EmbeddedDriver</prop>
 	        <prop key="openjpa.ConnectionURL">jdbc:derby:activemq-data/derby;create=true</prop>
 	        <prop key="openjpa.jdbc.SynchronizeMappings">buildSchema</prop>
-		 	<prop key="openjpa.Log=DefaultLevel">WARN,SQL=TRACE</prop>
+		 	<!--  <prop key="openjpa.Log=DefaultLevel">WARN,SQL=TRACE</prop>  --> 
      	</props>
 	</property>  	
   </bean>
