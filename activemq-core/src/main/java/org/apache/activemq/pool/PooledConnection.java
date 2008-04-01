@@ -34,6 +34,8 @@ import javax.jms.TopicSession;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.AlreadyClosedException;
+import org.apache.activemq.EnhancedConnection;
+import org.apache.activemq.advisory.DestinationSource;
 
 /**
  * Represents a proxy {@link Connection} which is-a {@link TopicConnection} and
@@ -47,7 +49,7 @@ import org.apache.activemq.AlreadyClosedException;
  * 
  * @version $Revision: 1.1.1.1 $
  */
-public class PooledConnection implements TopicConnection, QueueConnection {
+public class PooledConnection implements TopicConnection, QueueConnection, EnhancedConnection {
 
     private ConnectionPool pool;
     private boolean stopped;
@@ -137,6 +139,13 @@ public class PooledConnection implements TopicConnection, QueueConnection {
 
     public Session createSession(boolean transacted, int ackMode) throws JMSException {
         return pool.createSession(transacted, ackMode);
+    }
+
+    // EnhancedCollection API
+    // -------------------------------------------------------------------------
+    
+    public DestinationSource getDestinationSource() throws JMSException {
+        return getConnection().getDestinationSource();
     }
 
     // Implementation methods

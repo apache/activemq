@@ -34,7 +34,7 @@ import org.springframework.jms.connection.SingleConnectionFactory;
 public class ActiveMQConfigureTest extends ContextTestSupport {
     
     public void testJmsTemplateUsesPoolingConnectionFactory() throws Exception {
-        JmsEndpoint endpoint = resolveMandatoryEndpoint("activemq:test.foo?usePooledConnection=true");
+        JmsEndpoint endpoint = resolveMandatoryEndpoint("activemq:test.foo");
         JmsProducer producer = endpoint.createProducer();
 
         JmsTemplate template = assertIsInstanceOf(JmsTemplate.class, producer.getTemplate());
@@ -43,7 +43,7 @@ public class ActiveMQConfigureTest extends ContextTestSupport {
     }
 
     public void testJmsTemplateUsesSingleConnectionFactory() throws Exception {
-        JmsEndpoint endpoint = resolveMandatoryEndpoint("activemq:test.foo");
+        JmsEndpoint endpoint = resolveMandatoryEndpoint("activemq:test.foo?useSingleConnection=true");
         JmsProducer producer = endpoint.createProducer();
 
         JmsTemplate template = assertIsInstanceOf(JmsTemplate.class, producer.getTemplate());
@@ -53,7 +53,7 @@ public class ActiveMQConfigureTest extends ContextTestSupport {
     }
 
     public void testJmsTemplateDoesNotUsePoolingConnectionFactory() throws Exception {
-        JmsEndpoint endpoint = resolveMandatoryEndpoint("activemq:test.foo?useSingleConnection=false");
+        JmsEndpoint endpoint = resolveMandatoryEndpoint("activemq:test.foo?usePooledConnection=false");
         JmsProducer producer = endpoint.createProducer();
 
         JmsTemplate template = assertIsInstanceOf(JmsTemplate.class, producer.getTemplate());
@@ -67,8 +67,7 @@ public class ActiveMQConfigureTest extends ContextTestSupport {
 
         AbstractMessageListenerContainer listenerContainer = consumer.getListenerContainer();
         assertEquals("pubSubDomain", true, listenerContainer.isPubSubDomain());
-        SingleConnectionFactory connectionFactory = assertIsInstanceOf(SingleConnectionFactory.class, listenerContainer.getConnectionFactory());
-        assertIsInstanceOf(ActiveMQConnectionFactory.class, connectionFactory.getTargetConnectionFactory());
+        assertIsInstanceOf(PooledConnectionFactory.class, listenerContainer.getConnectionFactory());
     }
 
     @Override

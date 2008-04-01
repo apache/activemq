@@ -23,6 +23,7 @@ import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 
 import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.EnhancedConnection;
 import org.apache.activemq.advisory.DestinationEvent;
 import org.apache.activemq.advisory.DestinationListener;
 import org.apache.activemq.advisory.DestinationSource;
@@ -46,7 +47,7 @@ import org.springframework.beans.factory.InitializingBean;
 public class CamelEndpointLoader implements InitializingBean, DisposableBean, CamelContextAware {
     private static final transient Log LOG = LogFactory.getLog(CamelEndpointLoader.class);
     private CamelContext camelContext;
-    private ActiveMQConnection connection;
+    private EnhancedConnection connection;
     private ConnectionFactory connectionFactory;
     private ActiveMQComponent component;
 
@@ -61,11 +62,11 @@ public class CamelEndpointLoader implements InitializingBean, DisposableBean, Ca
         ObjectHelper.notNull(camelContext, "camelContext");
         if (connection == null) {
             Connection value = getConnectionFactory().createConnection();
-            if (value instanceof ActiveMQConnection) {
-                connection = (ActiveMQConnection) value;
+            if (value instanceof EnhancedConnection) {
+                connection = (EnhancedConnection) value;
             }
             else {
-                throw new IllegalArgumentException("Created JMS Connection is not an ActiveMQConnection: " + value);
+                throw new IllegalArgumentException("Created JMS Connection is not an EnhancedConnection: " + value);
             }
         }
         connection.start();
@@ -113,7 +114,7 @@ public class CamelEndpointLoader implements InitializingBean, DisposableBean, Ca
         this.camelContext = camelContext;
     }
 
-    public ActiveMQConnection getConnection() {
+    public EnhancedConnection getConnection() {
         return connection;
     }
 
