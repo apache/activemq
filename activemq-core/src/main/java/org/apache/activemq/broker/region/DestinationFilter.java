@@ -206,4 +206,8 @@ public class DestinationFilter implements Destination {
     public void messageExpired(ConnectionContext context, PrefetchSubscription prefetchSubscription, MessageReference node) {
         next.messageExpired(context, prefetchSubscription, node);        
     }
+
+	public boolean iterate() {
+		return next.iterate();
+	}
 }

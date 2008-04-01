@@ -79,32 +79,43 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     /**
      * Allows a message to be pulled on demand by a client
      */
-    public synchronized Response pullMessage(ConnectionContext context, MessagePull pull) throws Exception {
+    public Response pullMessage(ConnectionContext context, MessagePull pull) throws Exception {
         // The slave should not deliver pull messages. TODO: when the slave
         // becomes a master,
         // He should send a NULL message to all the consumers to 'wake them up'
         // in case
         // they were waiting for a message.
         if (getPrefetchSize() == 0 && !isSlave()) {
-            prefetchExtension++;
-            final long dispatchCounterBeforePull = dispatchCounter;
-            dispatchPending();
-            // If there was nothing dispatched.. we may need to setup a timeout.
-            if (dispatchCounterBeforePull == dispatchCounter) {
-                // imediate timeout used by receiveNoWait()
-                if (pull.getTimeout() == -1) {
-                    // Send a NULL message.
-                    add(QueueMessageReference.NULL_MESSAGE);
-                    dispatchPending();
-                }
-                if (pull.getTimeout() > 0) {
-                    Scheduler.executeAfterDelay(new Runnable() {
-
-                        public void run() {
-                            pullTimeout(dispatchCounterBeforePull);
-                        }
-                    }, pull.getTimeout());
-                }
+            final long dispatchCounterBeforePull;
+        	synchronized(this) {
+        		prefetchExtension++;
+        		dispatchCounterBeforePull = dispatchCounter;
+        	}
+            
+        	// Have the destination push us some messages.
+        	for (Destination dest : destinations) {
+				dest.iterate();
+			}
+        	dispatchPending();
+            
+            synchronized(this) {
+	            // If there was nothing dispatched.. we may need to setup a timeout.
+	            if (dispatchCounterBeforePull == dispatchCounter) {
+	                // imediate timeout used by receiveNoWait()
+	                if (pull.getTimeout() == -1) {
+	                    // Send a NULL message.
+	                    add(QueueMessageReference.NULL_MESSAGE);
+	                    dispatchPending();
+	                }
+	                if (pull.getTimeout() > 0) {
+	                    Scheduler.executeAfterDelay(new Runnable() {
+	
+	                        public void run() {
+	                            pullTimeout(dispatchCounterBeforePull);
+	                        }
+	                    }, pull.getTimeout());
+	                }
+	            }
             }
         }
         return null;
