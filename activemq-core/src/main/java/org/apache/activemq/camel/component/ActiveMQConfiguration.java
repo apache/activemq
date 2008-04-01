@@ -17,7 +17,6 @@
 package org.apache.activemq.camel.component;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 
 import javax.jms.ConnectionFactory;
 
@@ -31,8 +30,8 @@ import org.springframework.jms.core.JmsTemplate;
  */
 public class ActiveMQConfiguration extends JmsConfiguration {
     private String brokerURL = ActiveMQConnectionFactory.DEFAULT_BROKER_URL;
-    private boolean useSingleConnection = true;
-    private boolean usePooledConnection = false;
+    private boolean useSingleConnection = false;
+    private boolean usePooledConnection = true;
 
     public ActiveMQConfiguration() {
     }
@@ -92,11 +91,11 @@ public class ActiveMQConfiguration extends JmsConfiguration {
             answer.setBeanName("Camel");
         }
         answer.setBrokerURL(getBrokerURL());
-        if (isUsePooledConnection()) {
-            return createPooledConnectionFactory(answer);
-        }
-        else if (isUseSingleConnection()) {
+        if (isUseSingleConnection()) {
             return new SingleConnectionFactory(answer);
+        }
+        else if (isUsePooledConnection()) {
+            return createPooledConnectionFactory(answer);
         }
         else {
             return answer;
