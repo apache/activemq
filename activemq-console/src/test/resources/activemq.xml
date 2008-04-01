@@ -21,85 +21,35 @@
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
   
   <!-- Default configuration -->
-  <broker brokerName="broker1" useJmx="true" persistent="false" xmlns="http://activemq.org/config/1.0" useShutdownHook="false" monitorConnectionSplits="true">
+  <broker useJmx="false" xmlns="http://activemq.org/config/1.0">
 	  
-        <managementContext>
-            <managementContext createConnector="false"/>
-        </managementContext>
-
-        <networkConnectors>
-            <networkConnector uri="static:(tcp://localhost:61626?socketBufferSize=256000)" userName="foo" password="bar" dynamicOnly="false" decreaseNetworkConsumerPriority="true">
-				<excludedDestinations>
-					<topic physicalName="bbm.batch.1"/>
-					<topic physicalName="intl.service.status"/>
-				</excludedDestinations>
-			</networkConnector>
-		</networkConnectors>
-
-		<transportConnectors>
-			<transportConnector uri="tcp://localhost:61616?socketBufferSize=256000"/>
-			<transportConnector uri="tcp://localhost:61618?socketBufferSize=256000"/>
-		</transportConnectors>
-
-		<destinationPolicy>
-			<policyMap>
-				<policyEntries>
-					<policyEntry queue=">" minimumMessageSize="1" optimizedDispatch="true" lazyDispatch="false" producerFlowControl="false">
-						<deadLetterStrategy>
-							<sharedDeadLetterStrategy processExpired="false" processNonPersistent="false"/>
-						</deadLetterStrategy>
-					</policyEntry>
-					<policyEntry topic=">" minimumMessageSize="1" optimizedDispatch="true" lazyDispatch="false" producerFlowControl="false">
-						<deadLetterStrategy>
-							<sharedDeadLetterStrategy processExpired="false" processNonPersistent="false"/>
-						</deadLetterStrategy>
-					</policyEntry>
-					
-					<policyEntry topic="intl.bbm.batch.>" minimumMessageSize="1" optimizedDispatch="true" lazyDispatch="false" producerFlowControl="false">
-						<deadLetterStrategy>
-							<sharedDeadLetterStrategy processExpired="false" processNonPersistent="false"/>
-						</deadLetterStrategy>
-						<!-- 
-						<pendingMessageLimitStrategy>
-							<constantPendingMessageLimitStrategy limit="${activemq.pending.message.limit}"/>
-						</pendingMessageLimitStrategy>
-						 -->
-						<subscriptionRecoveryPolicy>
-							<fixedCountSubscriptionRecoveryPolicy maximumSize="10"/>
-						</subscriptionRecoveryPolicy>
-					</policyEntry>
-					<policyEntry topic="bbm.batch.>" minimumMessageSize="1" optimizedDispatch="true" lazyDispatch="false" producerFlowControl="false">
-						<deadLetterStrategy>
-							<sharedDeadLetterStrategy processExpired="false" processNonPersistent="false"/>
-						</deadLetterStrategy>
-						<!-- 
-						<pendingMessageLimitStrategy>
-							<constantPendingMessageLimitStrategy limit="${activemq.pending.message.limit}"/>
-						</pendingMessageLimitStrategy>
-						 -->
-						<subscriptionRecoveryPolicy>
-							<fixedCountSubscriptionRecoveryPolicy maximumSize="10"/>
-						</subscriptionRecoveryPolicy>
-					</policyEntry>
-					<policyEntry topic="intl.service.status" minimumMessageSize="1" optimizedDispatch="true" lazyDispatch="false" producerFlowControl="false"> 
-						<subscriptionRecoveryPolicy>
-							<lastImageSubscriptionRecoveryPolicy/>
-						</subscriptionRecoveryPolicy>
-					</policyEntry>
-				</policyEntries>
-			</policyMap>
-		</destinationPolicy>
-		
-		<systemUsage>
-			<systemUsage>
-				<memoryUsage>
-					<memoryUsage limit="1gb"/>
-				</memoryUsage>
-			</systemUsage>  
-		</systemUsage>
-	
+	<transportConnectors>
+      <transportConnector uri="tcp://localhost:61616"/>
+    </transportConnectors>
+	  
+	<persistenceAdapter>
+	  <journaledJDBC journalLogFiles="2" dataDirectory="target/foo"/>
+	</persistenceAdapter>
 	  
   </broker>
+
+  <!-- Example of broker configuration that uses new logging options and dynamic management of logging
+  <broker useJmx="true" xmlns="http://activemq.org/config/1.0" persistent="false" deleteAllMessagesOnStartup="true">
+  
+    <transportConnectors>
+      <transportConnector uri="tcp://localhost:61616?trace=true&amp;logWriterName=custom&amp;dynamicManagement=true&amp;startLogging=true"/>
+    </transportConnectors>
+    
+    <persistenceAdapter>
+      <memoryPersistenceAdapter/>
+    </persistenceAdapter>
+    
+  </broker>
+  End of example-->
+  
+<!-- Note: the jmxPort=portnumber option on transportConnectors should only be used on clients.
+On brokers, there is a default port (usually 1099) -->
+  
   
 </beans>
 <!-- END SNIPPET: xbean -->
