@@ -56,7 +56,10 @@ public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport 
         }
 
         // wait for consumers to get propagated
-        Thread.sleep(5000);
+        for (int i = 1; i <= BROKER_COUNT; i++) {
+        	// all consumers on the remote brokers look like 1 consumer to the local broker.
+        	assertConsumersConnect("Broker" + i, dest, (BROKER_COUNT-1)+CONSUMER_COUNT, 30000);
+        }
 
         // Send messages
         for (int i = 1; i <= BROKER_COUNT; i++) {
