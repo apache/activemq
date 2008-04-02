@@ -62,6 +62,11 @@
               <maxIdleTime>60000</maxIdleTime>
             </connector>
           </connectors>
+          
+          <webAppConfig>
+            <contextPath>/</contextPath>
+          </webAppConfig>
+          
           <systemProperties>
             <!-- enable easy connection to JConsole -->
             <systemProperty>
