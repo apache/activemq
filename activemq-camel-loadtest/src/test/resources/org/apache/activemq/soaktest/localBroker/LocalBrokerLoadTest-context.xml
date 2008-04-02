@@ -28,12 +28,24 @@
 
     <route>
       <from uri="dataset:myDataSet"/>
-      <to uri="activemq:example.A"/>
+
+      <!-- lets use concurrency -->
+      <to uri="activemq:foo.example.A"/>
+<!--
+      <thread coreSize="1" daemon="true" keepAliveTime="1000" maxSize="1" priority="1" stackSize="1000">
+      </thread>
+-->
     </route>
 
     <route>
-      <from uri="activemq:example.B"/>
-      <to uri="dataset:myDataSet"/>
+      <from uri="activemq:foo.example.A"/>
+      <to uri="mock:results?expectedCount=10000&amp;reportGroup=100&amp;resultWaitTime=400000"/>
+      <!--
+      <resequencer>
+        <simple>header.camelDataSetIndex</simple>
+        <to uri="dataset:myDataSet"/>
+      </resequencer>
+-->
     </route>
 
   </camelContext>
@@ -43,5 +55,11 @@
     <property name="reportCount" value="100"/>
   </bean>
 
+  <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">
+<!--
+    <property name="useSingleConnection" value="true"/>
+    <property name="usePooledConnection" value="false"/>
+-->
+  </bean>
 </beans>
 <!-- END SNIPPET: example -->
