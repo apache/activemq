@@ -107,6 +107,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 try {
                     discoveryAgent.serviceFailed(event);
                 } catch (IOException e1) {
+                    LOG.debug("Discovery agent failure while handling failure event: " + e1.getMessage(), e1);
                 }
                 return;
             }
