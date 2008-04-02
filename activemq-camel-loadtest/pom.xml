@@ -88,7 +88,10 @@
       <artifactId>camel-jms</artifactId>
       <version>${camel-test-version}</version>
     </dependency>
-
+    <dependency>
+      <groupId>commons-pool</groupId>
+      <artifactId>commons-pool</artifactId>
+    </dependency>
 
 
     <!-- for XML parsing -->
@@ -131,7 +134,7 @@
         <configuration>
           <forkMode>pertest</forkMode>
           <childDelegation>false</childDelegation>
-          <useFile>true</useFile>
+          <!-- <useFile>true</useFile> -->
           <argLine>-Xmx512M</argLine>
 
           <systemProperties>
