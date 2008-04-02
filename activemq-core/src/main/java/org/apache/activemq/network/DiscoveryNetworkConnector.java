@@ -73,7 +73,11 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 return;
             }
             // Should we try to connect to that URI?
-            if (bridges.containsKey(uri) || localURI.equals(uri) || (connectionFilter != null && !connectionFilter.connectTo(uri))) {
+            if( bridges.containsKey(uri) ) {
+                LOG.debug("Discovery agent generated a duplicate onServiceAdd event for: "+uri );
+                return;
+            }
+            if ( localURI.equals(uri) || (connectionFilter != null && !connectionFilter.connectTo(uri))) {
                 return;
             }
             URI connectUri = uri;
