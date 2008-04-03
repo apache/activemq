@@ -77,7 +77,9 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         if (!isDuplicate(message.getMessageId())) {
             if (!cached) {
                 message.setRegionDestination(regionDestination);
-                message.setMemoryUsage(this.getSystemUsage().getMemoryUsage());
+                if( message.getMemoryUsage()==null ) {
+                    message.setMemoryUsage(this.getSystemUsage().getMemoryUsage());
+                }
             }
             message.incrementReferenceCount();
             batchList.put(message.getMessageId(), message);

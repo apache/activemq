@@ -58,6 +58,7 @@ public class MemoryMessageStore implements MessageStore {
         synchronized (messageTable) {
             messageTable.put(message.getMessageId(), message);
         }
+        message.incrementReferenceCount();
     }
 
     // public void addMessageReference(ConnectionContext context,MessageId
@@ -82,7 +83,10 @@ public class MemoryMessageStore implements MessageStore {
 
     public void removeMessage(MessageId msgId) throws IOException {
         synchronized (messageTable) {
-            messageTable.remove(msgId);
+            Message removed = messageTable.remove(msgId);
+            if( removed !=null ) {
+                removed.decrementReferenceCount();
+            }
             if ((lastBatchId != null && lastBatchId.equals(msgId)) || messageTable.isEmpty()) {
                 lastBatchId = null;
             }

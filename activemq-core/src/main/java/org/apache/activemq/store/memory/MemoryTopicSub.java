@@ -34,14 +34,23 @@ class MemoryTopicSub {
     private Map<MessageId, Message> map = new LinkedHashMap<MessageId, Message>();
     private MessageId lastBatch;
 
-    synchronized void addMessage(MessageId id, Message message) {
-        map.put(id, message);
+    void addMessage(MessageId id, Message message) {
+        synchronized(this) {
+            map.put(id, message);
+        }
+        message.incrementReferenceCount();
     }
 
-    synchronized void removeMessage(MessageId id) {
-        map.remove(id);
-        if ((lastBatch != null && lastBatch.equals(id)) || map.isEmpty()) {
-            resetBatching();
+    void removeMessage(MessageId id) {
+        Message removed;
+        synchronized(this) {
+            removed = map.remove(id);
+            if ((lastBatch != null && lastBatch.equals(id)) || map.isEmpty()) {
+                resetBatching();
+            }
+        }
+        if( removed!=null ) {
+            removed.decrementReferenceCount();
         }
     }
 
