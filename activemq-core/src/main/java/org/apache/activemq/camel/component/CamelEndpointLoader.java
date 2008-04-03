@@ -22,7 +22,6 @@ import java.util.Set;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 
-import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.EnhancedConnection;
 import org.apache.activemq.advisory.DestinationEvent;
 import org.apache.activemq.advisory.DestinationListener;
