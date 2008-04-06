@@ -48,10 +48,12 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring</artifactId>
     </dependency>
+<!--
     <dependency>
-      <groupId>activemq</groupId>
-      <artifactId>jmdns</artifactId>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-jmdns_1.0</artifactId>
     </dependency>
+-->
     <dependency>
       <groupId>jmock</groupId>
       <artifactId>jmock</artifactId>

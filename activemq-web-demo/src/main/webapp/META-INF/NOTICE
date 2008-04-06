@@ -1,6 +1,6 @@
 
 Apache ActiveMQ
-Copyright 2005-2008 The Apache Software Foundation
+Copyright 2005-2006 The Apache Software Foundation
 
 This product includes software developed by
 The Apache Software Foundation (http://www.apache.org/).
@@ -46,13 +46,12 @@ endorse or promote products derived from this software without
 prior written permission. For written permission, please contact
 rod.johnson@interface21.com or juergen.hoeller@interface21.com.
 
-
 =========================================================================
-==  MX4J Notice                                                        ==
+==  Rome Notice (not from Rome site)                                   ==
 =========================================================================
-
-This product includes software developed by the MX4J project
-(http://sourceforge.net/projects/mx4j).
+Rome 0.8 Copyright 2004 Sun Microsystems, Inc.
+This product includes software developed by the Sun Microsystems, Inc.
+(http://wiki.java.net/bin/view/Javawsxml/Rome).
 
 ==============================================================
  Jetty Web Container
@@ -81,21 +80,3 @@ Some portions of the code are Copyright:
   1999 Jason Gilbert.
 
 The jboss integration module contains some LGPL code.
-
-===============================================================
-==     NOTICE File for JmDNS                                 ==
-===============================================================
-
-Java Multicast Domain Name Server (JmDNS)
-
-This project was originally developed by Arthur van Hoff under the GNU
-Lesser General Public License as jRendevous.  It was moved to Sourceforge
-by Rick Blair and renamed to JmDNS with the Arthur's kind permission.
-
-Currently it has  been re-released under the Apache License, Version 2.0.
-
-Details of the Apache License, Version 2.0 can be found at:
-http://www.apache.org/licenses/
-
-
-For other details please see the README.txt file.

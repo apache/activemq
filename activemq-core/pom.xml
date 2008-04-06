@@ -123,8 +123,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>activemq</groupId>
-      <artifactId>jmdns</artifactId>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-jmdns_1.0</artifactId>
       <optional>true</optional>
     </dependency>
     <dependency>
