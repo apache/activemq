@@ -24,10 +24,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.jmdns.JmDNS;
-import javax.jmdns.ServiceEvent;
-import javax.jmdns.ServiceInfo;
-import javax.jmdns.ServiceListener;
+import org.apache.activemq.jmdns.JmDNS;
+import org.apache.activemq.jmdns.ServiceEvent;
+import org.apache.activemq.jmdns.ServiceInfo;
+import org.apache.activemq.jmdns.ServiceListener;
 
 import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
