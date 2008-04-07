@@ -88,7 +88,7 @@
 <div id="wrapper-footer">
     <div id="footer">
         <p>
-            Copyright 2005-2006 The Apache Software Foundation
+            Copyright 2005-2008 The Apache Software Foundation
         </p>
 
         <p>

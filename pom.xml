@@ -29,6 +29,8 @@
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
 
+  <description>ActiveMQ is a fast and powerful Message Broker which supports many Cross Language Clients and Protocols and many advanced features while fully supporting JMS 1.1 and J2EE 1.4.</description>
+ 
   <prerequisites>
     <maven>2.0.8</maven>
   </prerequisites>
@@ -913,16 +915,16 @@
       <plugin>
         <artifactId>maven-javadoc-plugin</artifactId>
       </plugin>
-<!--
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jxr-plugin</artifactId>
       </plugin>
--->
+<!--
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-report-plugin</artifactId>
       </plugin>
+-->
 <!--
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
