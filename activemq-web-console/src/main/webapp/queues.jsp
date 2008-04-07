@@ -68,7 +68,7 @@
 </td>
 <td>
     <a href="send.jsp?JMSDestination=${row.name}&JMSDestinationType=queue">Send To</a>
-    <a href="purgeDestination.action?JMSDestination=${row.name}&JMSDestinationType=queue">Purge</a>
+    <%--<a href="purgeDestination.action?JMSDestination=${row.name}&JMSDestinationType=queue">Purge</a>--%>
     <a href="deleteDestination.action?JMSDestination=${row.name}&JMSDestinationType=queue">Delete</a>
 </td>
 </tr>

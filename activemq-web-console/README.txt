@@ -8,5 +8,5 @@ such as version 2.0.4 or later
 
 You can then run the ActiveMQ Web Console via the following command.
 
-	mvn jetty6:run
+	mvn jetty:run
 
