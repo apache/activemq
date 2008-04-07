@@ -80,7 +80,7 @@ public class SslTransport extends TcpTransport {
      * 
      * @param command The Command coming in.
      */
-    public void doConsume(Command command) {
+    public void doConsume(Object command) {
         // The instanceof can be avoided, but that would require modifying the
         // Command clas tree and that would require too much effort right
         // now.
