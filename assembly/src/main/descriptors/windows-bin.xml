@@ -133,7 +133,14 @@
       <directory>../activemq-fileserver/src/main/webapp</directory>
       <outputDirectory>/webapps/fileserver</outputDirectory>
     </fileSet>
-  </fileSets>
+  <fileSet>
+      <directory>../activemq-fileserver/target/classes</directory>
+      <outputDirectory>/webapps/fileserver/WEB-INF/classes</outputDirectory>
+      <includes>
+        <include>**/*.class</include>
+      </includes>
+    </fileSet>
+   </fileSets>
 
   <dependencySets>
     <dependencySet>
