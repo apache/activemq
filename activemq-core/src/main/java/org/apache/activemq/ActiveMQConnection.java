@@ -546,8 +546,6 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      *                 cause this exception to be thrown.
      */
     public void close() throws JMSException {
-        checkClosed();
-
         try {
             // If we were running, lets stop first.
             stop();
