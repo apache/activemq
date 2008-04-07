@@ -70,11 +70,18 @@ public class StompSubscription {
             MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
             protocolConverter.getTransportFilter().sendToActiveMQ(ack);
         }
+
+        boolean ignoreTransformation = false;
+        
         if (transformation != null) {
        		message.setReadOnlyProperties(false);
         	message.setStringProperty(Stomp.Headers.TRANSFORMATION, transformation);
+        } else {
+        	if (message.getStringProperty(Stomp.Headers.TRANSFORMATION) != null) {
+        		ignoreTransformation = true;
+        	}
         }
-        StompFrame command = protocolConverter.convertMessage(message);
+        StompFrame command = protocolConverter.convertMessage(message, ignoreTransformation);
 
         command.setAction(Stomp.Responses.MESSAGE);
         if (subscriptionId != null) {

@@ -18,8 +18,13 @@ package org.apache.activemq.transport.stomp;
 
 import java.io.Serializable;
 
+import com.thoughtworks.xstream.annotations.XStreamAlias;
+
+@XStreamAlias("pojo")
 public class SamplePojo implements Serializable {
+	@XStreamAlias("name")
     private String name;
+	@XStreamAlias("city")
     private String city;
 
     public SamplePojo() {

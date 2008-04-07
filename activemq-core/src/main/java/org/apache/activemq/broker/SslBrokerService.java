@@ -95,7 +95,7 @@ public class SslBrokerService extends BrokerService {
             return transportFactory.doBind(getBrokerName(), brokerURI);
         } else {
             // Else, business as usual.
-            return TransportFactory.bind(getBrokerName(), brokerURI);
+            return TransportFactory.bind(this, brokerURI);
         }
     }
 }

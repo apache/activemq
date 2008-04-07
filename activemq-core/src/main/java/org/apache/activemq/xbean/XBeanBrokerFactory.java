@@ -29,6 +29,7 @@ import org.apache.xbean.spring.context.ResourceXmlApplicationContext;
 import org.apache.xbean.spring.context.impl.URIEditor;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -70,7 +71,11 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
         if (broker == null) {
             throw new IllegalArgumentException("The configuration has no BrokerService instance for resource: " + config);
         }
-
+        
+        if (broker instanceof ApplicationContextAware) {
+        	((ApplicationContextAware)broker).setApplicationContext(context);
+        }
+        
         // TODO warning resources from the context may not be closed down!
 
         return broker;
