@@ -17,8 +17,11 @@
 package org.apache.activemq.xbean;
 
 import org.apache.activemq.broker.BrokerService;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 
 /**
  * An ActiveMQ Message Broker. It consists of a number of transport
@@ -34,9 +37,10 @@ import org.springframework.beans.factory.InitializingBean;
  * {code}
  * @version $Revision: 1.1 $
  */
-public class XBeanBrokerService extends BrokerService implements InitializingBean, DisposableBean {
+public class XBeanBrokerService extends BrokerService implements InitializingBean, DisposableBean, ApplicationContextAware {
 
     private boolean start = true;
+    private ApplicationContext applicationContext = null;
 
     public XBeanBrokerService() {
     }
@@ -63,4 +67,15 @@ public class XBeanBrokerService extends BrokerService implements InitializingBea
     public void setStart(boolean start) {
         this.start = start;
     }
+
+	public void setApplicationContext(ApplicationContext applicationContext)
+			throws BeansException {
+		this.applicationContext = applicationContext;
+	}
+
+	public ApplicationContext getApplicationContext() {
+		return applicationContext;
+	}
+    
+    
 }

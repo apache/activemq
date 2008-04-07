@@ -45,7 +45,7 @@ import org.apache.commons.logging.LogFactory;
  * @org.apache.xbean.XBean
  * @version $Revision: 1.6 $
  */
-public class TransportConnector implements Connector {
+public class TransportConnector implements Connector, BrokerServiceAware {
 
     private static final Log LOG = LogFactory.getLog(TransportConnector.class);
 
@@ -53,6 +53,7 @@ public class TransportConnector implements Connector {
     protected TransportStatusDetector statusDector;
 
     private Broker broker;
+    private BrokerService brokerService;
     private TransportServer server;
     private URI uri;
     private BrokerInfo brokerInfo = new BrokerInfo();
@@ -282,7 +283,11 @@ public class TransportConnector implements Connector {
         if (broker == null) {
             throw new IllegalArgumentException("You must specify the broker property. Maybe this connector should be added to a broker?");
         }
-        return TransportFactory.bind(broker.getBrokerId().getValue(), uri);
+        if (brokerService != null) {
+        	return TransportFactory.bind(brokerService, uri);
+        } else {
+        	return TransportFactory.bind(broker.getBrokerId().getValue(), uri);
+        }
     }
 
     public DiscoveryAgent getDiscoveryAgent() throws IOException {
@@ -375,4 +380,8 @@ public class TransportConnector implements Connector {
     public void setEnableStatusMonitor(boolean enableStatusMonitor) {
         this.enableStatusMonitor = enableStatusMonitor;
     }
+
+	public void setBrokerService(BrokerService brokerService) {
+		this.brokerService = brokerService;
+	}
 }

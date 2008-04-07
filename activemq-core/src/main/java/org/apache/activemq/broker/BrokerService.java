@@ -1651,7 +1651,7 @@ public class BrokerService implements Service {
     }
 
     protected TransportConnector createTransportConnector(Broker broker, URI brokerURI) throws Exception {
-        TransportServer transport = TransportFactory.bind(getBrokerName(), brokerURI);
+    	TransportServer transport = TransportFactory.bind(this, brokerURI);
         return new TransportConnector(broker, transport);
     }
 
@@ -1769,6 +1769,7 @@ public class BrokerService implements Service {
 
             for (Iterator<TransportConnector> iter = getTransportConnectors().iterator(); iter.hasNext();) {
                 TransportConnector connector = iter.next();
+                connector.setBrokerService(this);
                 al.add(startTransportConnector(connector));
             }
 

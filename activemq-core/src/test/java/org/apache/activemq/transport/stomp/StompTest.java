@@ -28,6 +28,8 @@ import java.util.regex.Pattern;
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.JMSException;
+import javax.jms.MapMessage;
+import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
@@ -54,16 +56,34 @@ public class StompTest extends CombinationTestSupport {
     private Connection connection;
     private Session session;
     private ActiveMQQueue queue;
-    private String xmlText = "<org.apache.activemq.transport.stomp.SamplePojo>\n" 
-        	+ "  <name>Dejan</name>\n" 
-        	+ "  <city>Belgrade</city>\n" 
-        	+ "</org.apache.activemq.transport.stomp.SamplePojo>";
-    
-    private String jsonText = "{\"org.apache.activemq.transport.stomp.SamplePojo\":{" 
-        + "\"name\":\"Dejan\"," 
+    private String xmlObject = "<pojo>\n" 
+            + "  <name>Dejan</name>\n"
+            + "  <city>Belgrade</city>\n" 
+            + "</pojo>";
+
+    private String xmlMap = "<map>\n" 
+        + "  <entry>\n"
+        + "    <string>name</string>\n" 
+        + "    <string>Dejan</string>\n"
+        + "  </entry>\n" 
+        + "  <entry>\n" 
+        + "    <string>city</string>\n"
+        + "    <string>Belgrade</string>\n" 
+        + "  </entry>\n" 
+        + "</map>\n";
+
+    private String jsonObject = "{\"pojo\":{" 
+        + "\"name\":\"Dejan\","
         + "\"city\":\"Belgrade\"" 
-        + "}}";    
-    
+        + "}}";
+
+    private String jsonMap = "{\"map\":{" 
+        + "\"entry\":["
+        + "{\"string\":[\"name\",\"Dejan\"]},"
+        + "{\"string\":[\"city\",\"Belgrade\"]}" 
+        + "]" 
+        + "}}";
+
     protected void setUp() throws Exception {
         broker = BrokerFactory.createBroker(new URI(confUri));
         broker.start();
@@ -301,7 +321,6 @@ public class StompTest extends CombinationTestSupport {
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("MESSAGE"));
 
-        // System.out.println("out: "+frame);
 
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
@@ -590,16 +609,17 @@ public class StompTest extends CombinationTestSupport {
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
 
-        frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" + "transformation:jms-xml" + "\n\n" + "Hello World" + Stomp.NULL;
+        frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" + "transformation:" + Stomp.Transformations.JMS_OBJECT_XML + "\n\n" + "Hello World" + Stomp.NULL;
 
         stompConnection.sendFrame(frame);
 
         TextMessage message = (TextMessage)consumer.receive(1000);
         assertNotNull(message);
+        assertNotNull(message.getStringProperty(Stomp.Headers.TRANSFORMATION_ERROR));
         assertEquals("Hello World", message.getText());  	
     }
     
-    public void testTransformationSendXML() throws Exception {
+    public void testTransformationSendXMLObject() throws Exception {
         MessageConsumer consumer = session.createConsumer(queue);
 
         String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
@@ -608,7 +628,7 @@ public class StompTest extends CombinationTestSupport {
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
         
-        frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" + "transformation:jms-xml" + "\n\n" + xmlText + Stomp.NULL;
+        frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" + "transformation:" + Stomp.Transformations.JMS_OBJECT_XML + "\n\n" + xmlObject + Stomp.NULL;
 
         stompConnection.sendFrame(frame);
 
@@ -618,7 +638,7 @@ public class StompTest extends CombinationTestSupport {
         assertEquals("Dejan", object.getName());
     }       
     
-    public void testTransformationSendJSON() throws Exception {
+    public void testTransformationSendJSONObject() throws Exception {
         MessageConsumer consumer = session.createConsumer(queue);
 
         String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
@@ -627,7 +647,7 @@ public class StompTest extends CombinationTestSupport {
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
         
-        frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" + "transformation:jms-json" + "\n\n" + jsonText + Stomp.NULL;
+        frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" + "transformation:" + Stomp.Transformations.JMS_OBJECT_JSON + "\n\n" + jsonObject + Stomp.NULL;
 
         stompConnection.sendFrame(frame);
 
@@ -649,18 +669,18 @@ public class StompTest extends CombinationTestSupport {
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
 
-        frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto" + "\n" + "transformation:jms-xml" + "\n\n" + Stomp.NULL;
+        frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto" + "\n" + "transformation:"	+ Stomp.Transformations.JMS_OBJECT_XML + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
         
         frame = stompConnection.receiveFrame();
 
-        assertTrue(frame.trim().endsWith(xmlText));
-        
+        assertTrue(frame.trim().endsWith(xmlObject));
+
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
     }
     
-    public void testTransformationReceiveJSON() throws Exception {
+    public void testTransformationReceiveJSONObject() throws Exception {
         MessageProducer producer = session.createProducer(new ActiveMQQueue("USERS." + getQueueName()));
         ObjectMessage message = session.createObjectMessage(new SamplePojo("Dejan", "Belgrade"));
         producer.send(message);
@@ -671,22 +691,21 @@ public class StompTest extends CombinationTestSupport {
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
 
-        frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto" + "\n" + "transformation:jms-json" + "\n\n" + Stomp.NULL;
+        frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto" + "\n" + "transformation:"	+ Stomp.Transformations.JMS_OBJECT_JSON + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
         
         frame = stompConnection.receiveFrame();
 
-        assertTrue(frame.trim().endsWith(jsonText));
+        assertTrue(frame.trim().endsWith(jsonObject));
         
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);    	
     }
     
-    public void testTransformationReceiveXML() throws Exception {
+    public void testTransformationReceiveXMLObject() throws Exception {
     	
         MessageProducer producer = session.createProducer(new ActiveMQQueue("USERS." + getQueueName()));
         ObjectMessage message = session.createObjectMessage(new SamplePojo("Dejan", "Belgrade"));
-        message.setStringProperty("transformation", "jms-xml");
         producer.send(message);
     	
         String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
@@ -695,12 +714,12 @@ public class StompTest extends CombinationTestSupport {
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
 
-        frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto" + "\n\n" + Stomp.NULL;
+        frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto" + "\n" + "transformation:"	+ Stomp.Transformations.JMS_OBJECT_XML + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
         
         frame = stompConnection.receiveFrame();
 
-        assertTrue(frame.trim().endsWith(xmlText));
+        assertTrue(frame.trim().endsWith(xmlObject));
         
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
@@ -709,7 +728,116 @@ public class StompTest extends CombinationTestSupport {
     public void testTransformationNotOverrideSubscription() throws Exception {
         MessageProducer producer = session.createProducer(new ActiveMQQueue("USERS." + getQueueName()));
         ObjectMessage message = session.createObjectMessage(new SamplePojo("Dejan", "Belgrade"));
-        message.setStringProperty("transformation", "jms-xml");
+        message.setStringProperty("transformation",	Stomp.Transformations.JMS_OBJECT_XML.toString());
+        producer.send(message);
+
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto" + "\n" + "transformation:"	+ Stomp.Transformations.JMS_OBJECT_JSON + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+
+        assertTrue(frame.trim().endsWith(jsonObject));
+
+        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+    }
+
+    public void testTransformationIgnoreTransformation() throws Exception {
+        MessageProducer producer = session.createProducer(new ActiveMQQueue("USERS." + getQueueName()));
+        ObjectMessage message = session.createObjectMessage(new SamplePojo("Dejan", "Belgrade"));
+        message.setStringProperty("transformation", Stomp.Transformations.JMS_OBJECT_XML.toString());
+        producer.send(message);
+
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+
+        assertTrue(frame.endsWith("\n\n"));
+
+        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+    }
+
+    public void testTransformationSendXMLMap() throws Exception {
+        MessageConsumer consumer = session.createConsumer(queue);
+
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" + "transformation:" + Stomp.Transformations.JMS_MAP_XML + "\n\n" + xmlMap + Stomp.NULL;
+
+        stompConnection.sendFrame(frame);
+
+        MapMessage message = (MapMessage) consumer.receive(1000);
+        assertNotNull(message);
+        assertEquals(message.getString("name"), "Dejan");
+    }
+
+    public void testTransformationSendJSONMap() throws Exception {
+        MessageConsumer consumer = session.createConsumer(queue);
+
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" + "transformation:" + Stomp.Transformations.JMS_MAP_JSON + "\n\n" + jsonMap + Stomp.NULL;
+
+        stompConnection.sendFrame(frame);
+
+        MapMessage message = (MapMessage) consumer.receive(1000);
+        assertNotNull(message);
+        assertEquals(message.getString("name"), "Dejan");
+    }
+
+    public void testTransformationReceiveXMLMap() throws Exception {
+
+        MessageProducer producer = session.createProducer(new ActiveMQQueue("USERS." + getQueueName()));
+        MapMessage message = session.createMapMessage();
+        message.setString("name", "Dejan");
+        message.setString("city", "Belgrade");
+        producer.send(message);
+
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto\n" + "transformation:" + Stomp.Transformations.JMS_MAP_XML + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+
+        assertTrue(frame.trim().endsWith(xmlMap.trim()));
+
+        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+    }
+
+    public void testTransformationReceiveJSONMap() throws Exception {
+
+        MessageProducer producer = session.createProducer(new ActiveMQQueue("USERS." + getQueueName()));
+        MapMessage message = session.createMapMessage();
+        message.setString("name", "Dejan");
+        message.setString("city", "Belgrade");
         producer.send(message);
     	
         String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\n\n" + Stomp.NULL;
@@ -718,12 +846,12 @@ public class StompTest extends CombinationTestSupport {
         frame = stompConnection.receiveFrame();
         assertTrue(frame.startsWith("CONNECTED"));
 
-        frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto" + "\n" + "transformation:jms-json" + "\n\n" + Stomp.NULL;
+        frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto\n" + "transformation:" + Stomp.Transformations.JMS_MAP_JSON + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);
         
         frame = stompConnection.receiveFrame();
 
-        assertTrue(frame.trim().endsWith(jsonText));
+        assertTrue(frame.trim().endsWith(jsonMap.trim()));
         
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);    	

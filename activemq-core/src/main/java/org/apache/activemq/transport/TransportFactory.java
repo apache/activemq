@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
@@ -105,6 +107,14 @@ public abstract class TransportFactory {
         TransportFactory tf = findTransportFactory(location);
         return tf.doBind(brokerId, location);
     }
+    
+    public static TransportServer bind(BrokerService brokerService, URI location) throws IOException {
+        TransportFactory tf = findTransportFactory(location);
+        if (tf instanceof BrokerServiceAware) {
+        	((BrokerServiceAware)tf).setBrokerService(brokerService);
+        }
+        return tf.doBind(brokerService.getBrokerName(), location);
+    }    
 
     public Transport doConnect(URI location) throws Exception {
         try {

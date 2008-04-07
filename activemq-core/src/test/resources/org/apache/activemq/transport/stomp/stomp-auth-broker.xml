@@ -20,6 +20,10 @@
 <!-- START SNIPPET: example -->
 <beans>
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
+  
+  <bean class="org.apache.activemq.util.XStreamFactoryBean" name="xstream">
+  		<property name="annotatedClass"><value>org.apache.activemq.transport.stomp.SamplePojo</value></property>
+  </bean>
 
   <broker useJmx="false" persistent="false" xmlns="http://activemq.org/config/1.0" populateJMSXUserID="true">
 

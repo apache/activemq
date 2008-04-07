@@ -57,6 +57,8 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 
 /**
  * @author <a href="http://hiramchirino.com">chirino</a>
@@ -86,10 +88,12 @@ public class ProtocolConverter {
     private final AtomicBoolean connected = new AtomicBoolean(false);
     private final FrameTranslator frameTranslator;
     private final FactoryFinder FRAME_TRANSLATOR_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/frametranslator/");
+    private final ApplicationContext applicationContext;
 
-    public ProtocolConverter(StompTransportFilter stompTransportFilter, FrameTranslator translator) {
+    public ProtocolConverter(StompTransportFilter stompTransportFilter, FrameTranslator translator, ApplicationContext applicationContext) {
         this.transportFilter = stompTransportFilter;
         this.frameTranslator = translator;
+        this.applicationContext = applicationContext;
     }
 
     protected int generateCommandId() {
@@ -140,6 +144,9 @@ public class ProtocolConverter {
 			if (header != null) {
 				translator = (FrameTranslator) FRAME_TRANSLATOR_FINDER
 						.newInstance(header);
+				if (translator instanceof ApplicationContextAware) {
+					((ApplicationContextAware)translator).setApplicationContext(applicationContext);
+				}
 			}
 		} catch (Exception ignore) {
 			// if anything goes wrong use the default translator
@@ -554,8 +561,12 @@ public class ProtocolConverter {
         return msg;
     }
 
-    public StompFrame convertMessage(ActiveMQMessage message) throws IOException, JMSException {
-        return findTranslator(message.getStringProperty(Stomp.Headers.TRANSFORMATION)).convertMessage(this, message);
+    public StompFrame convertMessage(ActiveMQMessage message, boolean ignoreTransformation) throws IOException, JMSException {
+    	if (ignoreTransformation == true) {
+    		return frameTranslator.convertMessage(this, message);
+    	} else {
+    		return findTranslator(message.getStringProperty(Stomp.Headers.TRANSFORMATION)).convertMessage(this, message);
+    	}
     }
 
     public StompTransportFilter getTransportFilter() {

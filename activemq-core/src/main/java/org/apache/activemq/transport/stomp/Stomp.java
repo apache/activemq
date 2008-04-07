@@ -49,6 +49,7 @@ public interface Stomp {
         String TRANSACTION = "transaction";
         String CONTENT_LENGTH = "content-length";
         String TRANSFORMATION = "transformation";
+        String TRANSFORMATION_ERROR = "transformation-error";
 
         public interface Response {
             String RECEIPT_ID = "receipt-id";
@@ -114,4 +115,16 @@ public interface Stomp {
             String MESSAGE_ID = "message-id";
         }
     }
+    
+	public enum Transformations {
+		JMS_BYTE, JMS_OBJECT_XML, JMS_OBJECT_JSON, JMS_MAP_XML, JMS_MAP_JSON;
+		
+		public String toString() {
+			return name().replaceAll("_", "-").toLowerCase();
+		}
+		
+		public static Transformations getValue(String value) {
+			return valueOf(value.replaceAll("-", "_").toUpperCase());
+		}
+	}    
 }

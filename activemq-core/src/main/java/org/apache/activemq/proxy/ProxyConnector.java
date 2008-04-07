@@ -126,7 +126,7 @@ public class ProxyConnector implements Service {
         if (bind == null) {
             throw new IllegalArgumentException("You must specify either a server or the bind property");
         }
-        return TransportFactory.bind(null, bind);
+        return TransportFactory.bind((String)null, bind);
     }
 
     private Transport createRemoteTransport() throws Exception {
