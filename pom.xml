@@ -980,6 +980,7 @@
               <useReleaseProfile>false</useReleaseProfile>
               <goals>deploy</goals>
               <arguments>-Prelease</arguments>
+              <autoVersionSubmodules>true</autoVersionSubmodules>
             </configuration>
           </plugin>
 
