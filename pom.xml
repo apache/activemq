@@ -20,6 +20,11 @@
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
 
+  <parent>
+    <groupId>org.apache</groupId>
+    <artifactId>apache</artifactId>
+    <version>3</version>
+  </parent>
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.apache.activemq</groupId>
@@ -65,7 +70,6 @@
     <jxta-version>2.0</jxta-version>
     <log4j-version>1.2.14</log4j-version>
     <org-apache-derby-version>10.1.3.1</org-apache-derby-version>
-    <org-apache-geronimo-specs-version>1.0</org-apache-geronimo-specs-version>
     <org-apache-maven-surefire-plugin-version>2.2</org-apache-maven-surefire-plugin-version>
     <p2psockets-version>1.1.2</p2psockets-version>
     <regexp-version>1.3</regexp-version>
@@ -113,81 +117,13 @@
   <mailingLists>
     <mailingList>
       <name>Development List</name>
-      <subscribe>activemq-dev@geronimo.apache.org</subscribe>
-      <unsubscribe>activemq-dev@geronimo.apache.org</unsubscribe>
-      <post>activemq-dev@geronimo.apache.org</post>
+      <subscribe>dev-subscribe@activemq.apache.org</subscribe>
+      <unsubscribe>dev-unsubscribe@activemq.apache.org</unsubscribe>
+      <post>dev@activemq.apache.org</post>
     </mailingList>
   </mailingLists>
 
-  <ciManagement>
-    <system>continuum</system>
-    <url>http://goopen.org:8080/continuum</url>
-    <notifiers>
-      <notifier>
-        <configuration>
-          <address>scm@lingo.codehaus.org</address>
-        </configuration>
-      </notifier>
-
-      <notifier>
-        <type>irc</type>
-        <configuration>
-          <host>irc.codehaus.org</host>
-          <port>6667</port>
-          <channel>#activemq-ci</channel>
-        </configuration>
-      </notifier>
-    </notifiers>
-  </ciManagement>
-
-  <repositories>
-    <repository>
-      <id>repo1.maven</id>
-      <name>Maven Central Repo</name>
-      <url>http://repo1.maven.org/maven2/</url>
-    </repository>
-    <repository>
-      <id>apache.incubating.releases</id>
-      <name>Apache Incubating Release Distribution Repository</name>
-      <url>http://people.apache.org/repo/m2-incubating-repository</url>
-    </repository>
-    <repository>
-      <id>apache.snapshots</id>
-      <name>Apache Development Snapshot Repository</name>
-      <url>http://people.apache.org/repo/m2-snapshot-repository</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-    </repository>
-  </repositories>
-
-  <pluginRepositories>
-    <pluginRepository>
-      <id>apache.incubating.releases</id>
-      <name>Apache Incubating Release Distribution Repository</name>
-      <url>http://people.apache.org/repo/m2-incubating-repository</url>
-    </pluginRepository>
-    <pluginRepository>
-      <id>apache.snapshots</id>
-      <name>Apache Development Snapshot Repository</name>
-      <url>http://people.apache.org/repo/m2-snapshot-repository</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-    </pluginRepository>
-  </pluginRepositories>
-
   <distributionManagement>
-    <repository>
-      <id>apache.incubating.releases</id>
-      <name>Apache Incubating Release Distribution Repository</name>
-      <url>${dist-repo-url}</url>
-    </repository>
-    <snapshotRepository>
-      <id>apache.snapshots</id>
-      <name>Apache Development Snapshot Repository</name>
-      <url>scp://people.apache.org/www/people.apache.org/repo/m2-snapshot-repository</url>
-    </snapshotRepository>
     <site>
       <id>apache.website</id>
       <url>${site-repo-url}</url>
@@ -359,43 +295,43 @@
       <dependency>
         <groupId>org.apache.geronimo.specs</groupId>
         <artifactId>geronimo-jms_1.1_spec</artifactId>
-        <version>${org-apache-geronimo-specs-version}</version>
+        <version>1.1.1</version>
       </dependency>
 
       <dependency>
         <groupId>org.apache.geronimo.specs</groupId>
         <artifactId>geronimo-jta_1.0.1B_spec</artifactId>
-        <version>${org-apache-geronimo-specs-version}</version>
+        <version>1.0.1</version>
       </dependency>
 
       <dependency>
         <groupId>org.apache.geronimo.specs</groupId>
         <artifactId>geronimo-j2ee-management_1.0_spec</artifactId>
-        <version>${org-apache-geronimo-specs-version}</version>
+        <version>1.0</version>
       </dependency>
 
       <dependency>
         <groupId>org.apache.geronimo.specs</groupId>
-        <artifactId>geronimo-j2ee-jacc_1.0_spec</artifactId>
-        <version>${org-apache-geronimo-specs-version}</version>
+        <artifactId>geronimo-jacc_1.1_spec</artifactId>
+        <version>1.0.1</version>
       </dependency>
 
       <dependency>
         <groupId>org.apache.geronimo.specs</groupId>
         <artifactId>geronimo-j2ee-connector_1.5_spec</artifactId>
-        <version>${org-apache-geronimo-specs-version}</version>
+        <version>2.0.0</version>
       </dependency>
 
       <dependency>
         <groupId>org.apache.geronimo.specs</groupId>
-        <artifactId>geronimo-jsp_2.0_spec</artifactId>
-        <version>${org-apache-geronimo-specs-version}</version>
+        <artifactId>geronimo-jsp_2.1_spec</artifactId>
+        <version>1.0.1</version>
       </dependency>
 
       <dependency>
         <groupId>org.apache.geronimo.specs</groupId>
-        <artifactId>geronimo-servlet_2.4_spec</artifactId>
-        <version>${org-apache-geronimo-specs-version}</version>
+        <artifactId>geronimo-servlet_2.5_spec</artifactId>
+        <version>1.2</version>
       </dependency>
 
 
@@ -721,12 +657,6 @@
 
       <dependency>
         <groupId>org.mortbay.jetty</groupId>
-        <artifactId>servlet-api-2.5</artifactId>
-        <version>${jetty-version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.mortbay.jetty</groupId>
         <artifactId>jsp-2.1</artifactId>
         <version>${jetty-version}</version>
       </dependency>
@@ -886,21 +816,7 @@
         <artifactId>ldap-protocol</artifactId>
         <version>${directory-version}</version>
       </dependency>
-      <dependency>
-        <groupId>geronimo</groupId>
-        <artifactId>geronimo-kernel</artifactId>
-        <version>${geronimo-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>geronimo</groupId>
-        <artifactId>geronimo-j2ee</artifactId>
-        <version>${geronimo-version}</version>
-      </dependency>
-      <dependency>
-        <groupId>howl</groupId>
-        <artifactId>howl-logger</artifactId>
-        <version>${howl-version}</version>
-      </dependency>
+
       <dependency>
         <groupId>p2psockets</groupId>
         <artifactId>p2psockets-core</artifactId>
@@ -940,43 +856,13 @@
 
     </dependencies>
   </dependencyManagement>
-  <!--
-    <dependencies>
-    <dependency>
-    <groupId>junit</groupId>
-    <artifactId>junit</artifactId>
-    <scope>test</scope>
-    </dependency>
-    <dependency>
-    <groupId>jmock</groupId>
-    <artifactId>jmock</artifactId>
-    <scope>test</scope>
-    </dependency>
-    <dependency>
-    <groupId>jmock</groupId>
-    <artifactId>jmock-cglib</artifactId>
-    <scope>test</scope>
-    </dependency>
-    <dependency>
-    <groupId>cglib</groupId>
-    <artifactId>cglib-full</artifactId>
-    <scope>test</scope>
-    </dependency>
-    </dependencies>
-  -->
-
   <build>
     <pluginManagement>
       <plugins>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <version>${org-apache-maven-surefire-plugin-version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>javacc-maven-plugin</artifactId>
-          <version>2.0</version>
+          <artifactId>maven-antrun-plugin</artifactId>
+          <version>1.1</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -984,22 +870,44 @@
           <version>2.1</version>
         </plugin>
         <plugin>
-          <groupId>org.mortbay.jetty</groupId>
-          <artifactId>maven-jetty-plugin</artifactId>
-          <version>${jetty-version}</version>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>2.0.2</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
+          <artifactId>maven-eclipse-plugin</artifactId>
+          <version>2.3</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
+          <version>2.2</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-antrun-plugin</artifactId>
-          <version>1.1</version>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>2.3</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>${org-apache-maven-surefire-plugin-version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>maven-bundle-plugin</artifactId>
+          <version>${felix-version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>javacc-maven-plugin</artifactId>
+          <version>2.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.mortbay.jetty</groupId>
+          <artifactId>maven-jetty-plugin</artifactId>
+          <version>${jetty-version}</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -1011,17 +919,6 @@
           <archive>
             <index>true</index>
             <compress>true</compress>
-            <!--
-            <manifestEntries>
-              <Implementation-Vendor>Apache Software Foundation</Implementation-Vendor>
-              <Implementation-Vendor-Id>org.apache</Implementation-Vendor-Id>
-
-              <Package>${project.groupId}</Package>
-              <Extension-Name>${project.artifactId}</Extension-Name>
-              <Implementation-Version>${project.version}</Implementation-Version>
-
-            </manifestEntries>
-            -->
           </archive>
         </configuration>
       </plugin>
@@ -1043,22 +940,6 @@
         </configuration>
       </plugin>
       <plugin>
-        <artifactId>maven-one-plugin</artifactId>
-        <version>1.0</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>install-maven-one-repository</goal>
-              <goal>deploy-maven-one-repository</goal>
-            </goals>
-            <configuration>
-              <remoteRepositoryId>apache.m1.releases</remoteRepositoryId>
-              <remoteRepositoryUrl>${m1-dist-repo-url}</remoteRepositoryUrl>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
@@ -1069,7 +950,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>${org-apache-maven-surefire-plugin-version}</version>
         <configuration>
           <forkMode>once</forkMode>
           <redirectTestOutputToFile>true</redirectTestOutputToFile>
