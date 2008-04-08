@@ -190,6 +190,11 @@
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-jpa-store</artifactId>
+        <version>${version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-jmdns_1.0</artifactId>
         <version>${version}</version>
       </dependency>
