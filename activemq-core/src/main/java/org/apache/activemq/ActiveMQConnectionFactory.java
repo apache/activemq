@@ -76,8 +76,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     protected String userName;
     protected String password;
     protected String clientID;
-    protected boolean dispatchAsync;
-    protected boolean alwaysSessionAsync = true;
+    protected boolean dispatchAsync=true;
+    protected boolean alwaysSessionAsync=true;
 
     JMSStatsImpl factoryStats = new JMSStatsImpl();
 

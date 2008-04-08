@@ -1002,7 +1002,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         }
         ActiveMQDestination activemqDestination = ActiveMQMessageTransformation.transformDestination(destination);
         return new ActiveMQMessageConsumer(this, getNextConsumerId(), activemqDestination, null, messageSelector,
-                prefetch, prefetchPolicy.getMaximumPendingMessageLimit(), noLocal, false, asyncDispatch, messageListener);
+                prefetch, prefetchPolicy.getMaximumPendingMessageLimit(), noLocal, false, isAsyncDispatch(), messageListener);
     }
 
     /**
