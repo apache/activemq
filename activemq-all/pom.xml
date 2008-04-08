@@ -40,10 +40,6 @@
     <!-- activemq -->
     <dependency>
       <groupId>${pom.groupId}</groupId>
-      <artifactId>activemq-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-console</artifactId>
     </dependency>
     <dependency>
@@ -52,43 +48,56 @@
     </dependency>
     <dependency>
       <groupId>${pom.groupId}</groupId>
-      <artifactId>activemq-jaas</artifactId>
+      <artifactId>activemq-jpa-store</artifactId>
     </dependency>
-    <dependency>
-      <groupId>${pom.groupId}</groupId>
-      <artifactId>activemq-xmpp</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-jms_1.1_spec</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-j2ee-management_1.0_spec</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging-api</artifactId>
-    </dependency>
-
   </dependencies>
 
   <build>
     
     <plugins>
+      
       <plugin>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <version>4.1-incubator</version>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>1.0.1</version>
         <executions>
           <execution>
-            <phase>compile</phase>
+            <phase>package</phase>
             <goals>
-              <goal>createbundle</goal>
+              <goal>shade</goal>
             </goals>
             <configuration>
-              <includes>activemq-core,activemq-console,activemq-jaas,activemq-optional,geronimo-jms_1.1_spec,geronimo-j2ee-management_1.0_spec,commons-logging-api</includes>
+
+              <artifactSet>
+                <includes>
+                  <include>${project.groupId}:activemq-core</include>
+                  <include>${project.groupId}:activemq-console</include>
+                  <include>${project.groupId}:activemq-jaas</include>
+                  <include>${project.groupId}:activemq-optional</include>
+                  <include>${project.groupId}:activemq-jpa-store</include>
+                  <include>org.apache.geronimo.specs:geronimo-jms_1.1_spec</include>
+                  <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.0_spec</include>
+                  <include>commons-logging:commons-logging-api</include>
+                </includes>
+              </artifactSet>
+
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
+                    <projectName>Apache ActiveMQ</projectName>
+                </transformer>
+                
+                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                    <resource>META-INF/spring.handlers</resource>
+                </transformer>
+                
+                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                    <resource>META-INF/services/com.sun.tools.xjc.Plugin</resource>
+                </transformer>
+                
+                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                    <resource>META-INF/spring.schemas</resource>
+                </transformer>
+              </transformers>
             </configuration>
           </execution>
         </executions>
