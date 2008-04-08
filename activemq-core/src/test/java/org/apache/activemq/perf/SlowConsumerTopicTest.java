@@ -33,20 +33,15 @@ import org.springframework.core.io.Resource;
 public class SlowConsumerTopicTest extends SimpleTopicTest {
 
     protected PerfConsumer[] slowConsumers;
-    protected int numberOfSlowConsumers = 1;
-
+    
     protected void setUp() throws Exception {
-        numberOfConsumers = 0;
+        
         playloadSize = 10 * 1024;
         super.setUp();
-        slowConsumers = new SlowConsumer[numberOfSlowConsumers];
-        for (int i = 0; i < numberOfSlowConsumers; i++) {
-            slowConsumers[i] = createSlowConsumer(factory, destination, i);
-            slowConsumers[i].start();
-        }
     }
+   
 
-    protected PerfConsumer createSlowConsumer(ConnectionFactory fac, Destination dest, int number) throws JMSException {
+    protected PerfConsumer createConsumer(ConnectionFactory fac, Destination dest, int number) throws JMSException {
         return new SlowConsumer(fac, dest);
     }
 

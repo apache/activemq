@@ -28,8 +28,8 @@ import org.apache.activemq.network.NetworkConnector;
 public class SimpleDurableTopicNetworkTest extends SimpleNetworkTest {
     
     protected void setUp() throws Exception {
-        numberofProducers=6;
-        numberOfConsumers=6;
+        numberofProducers=60;
+        numberOfConsumers=60;
         samepleCount=1000;
         playloadSize = 1024;
         super.setUp();

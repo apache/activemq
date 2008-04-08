@@ -38,7 +38,7 @@ public class PerfConsumer implements MessageListener {
     protected Connection connection;
     protected MessageConsumer consumer;
     protected long sleepDuration;
-    protected boolean enableAudit = true;
+    protected boolean enableAudit = false;
     protected ActiveMQMessageAudit audit = new ActiveMQMessageAudit(16 * 1024,20);
 
     protected PerfRate rate = new PerfRate();
@@ -82,7 +82,7 @@ public class PerfConsumer implements MessageListener {
             if (enableAudit && !this.audit.isInOrder(msg.getJMSMessageID())) {
                 LOG.error("Message out of order!!" + msg);
             }
-            if (this.audit.isDuplicate(msg)){
+            if (enableAudit && this.audit.isDuplicate(msg)){
                 LOG.error("Duplicate Message!" + msg);
             }
         } catch (JMSException e1) {

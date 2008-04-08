@@ -31,9 +31,7 @@ public class SimpleQueueTest extends SimpleTopicTest {
     }
     
     protected void setUp() throws Exception {
-        numberOfConsumers = 1;
-        numberofProducers = 2;
-        this.consumerSleepDuration=0;
+      
         super.setUp();
     }
     

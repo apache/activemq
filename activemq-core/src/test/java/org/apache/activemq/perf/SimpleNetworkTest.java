@@ -17,9 +17,11 @@
 package org.apache.activemq.perf;
 
 import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
+import javax.jms.Destination;
 import javax.jms.Session;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.commons.logging.Log;
@@ -29,45 +31,58 @@ import org.apache.commons.logging.LogFactory;
 public class SimpleNetworkTest extends SimpleTopicTest {
 
     private static final Log LOG = LogFactory.getLog(SimpleNetworkTest.class);
-    protected String consumerBindAddress = "tcp://localhost:61616";
+    //protected String consumerBindAddress = "tcp://rexmac.home:61616?wireFormat.maxInactivityDuration=1000,tcp://localhost:61617?wireFormat.maxInactivityDuration=1000";
+    protected String consumerBindAddress = "tcp://rexmac.home:61616?wireFormat.maxInactivityDuration=1000&wireFormat.maxInactivityDurationInitalDelay=2000&socket.tcpNoDelayEnabled=false";
     protected String producerBindAddress = "tcp://localhost:61617";
     protected static final String CONSUMER_BROKER_NAME = "Consumer";
     protected static final String PRODUCER_BROKER_NAME = "Producer";
     protected BrokerService consumerBroker;
     protected BrokerService producerBroker;
-    protected ConnectionFactory consumerFactory;
-    protected ConnectionFactory producerFactory;
+    protected ActiveMQConnectionFactory consumerFactory;
+    protected ActiveMQConnectionFactory producerFactory;
+    
     
     protected void setUp() throws Exception {
         if (consumerBroker == null) {
-            consumerBroker = createConsumerBroker(consumerBindAddress);
+           // consumerBroker = createConsumerBroker(consumerBindAddress);
         }
         if (producerBroker == null) {
             producerBroker = createProducerBroker(producerBindAddress);
         }
-        consumerFactory = createConnectionFactory("vm://"+CONSUMER_BROKER_NAME);
-        producerFactory = createConnectionFactory("vm://"+ PRODUCER_BROKER_NAME);
-        //consumerFactory = createConnectionFactory(consumerBindAddress);
-        //producerFactory = createConnectionFactory(producerBindAddress);
+        //consumerFactory = createConnectionFactory("vm://"+CONSUMER_BROKER_NAME);
+        //producerFactory = createConnectionFactory("vm://"+ PRODUCER_BROKER_NAME);
+        consumerFactory = createConnectionFactory("failover://("+consumerBindAddress + "," + producerBindAddress +")?randomize=false&backup=false");
+        //consumerFactory = createConnectionFactory("failover://("+consumerBindAddress+")?backup=true");
+        consumerFactory.setDispatchAsync(true);
+        ActiveMQPrefetchPolicy policy = new ActiveMQPrefetchPolicy();
+        policy.setQueuePrefetch(100);
+        consumerFactory.setPrefetchPolicy(policy);
+        producerFactory = createConnectionFactory(producerBindAddress);
         Connection con = consumerFactory.createConnection();
         Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        destination = createDestination(session, destinationName);
-        LOG.info("Testing against destination: " + destination);
-        LOG.info("Running " + numberofProducers + " producer(s) and " + numberOfConsumers + " consumer(s)");
-        con.close();
-        producers = new PerfProducer[numberofProducers];
-        consumers = new PerfConsumer[numberOfConsumers];
-        for (int i = 0; i < numberOfConsumers; i++) {
-            consumers[i] = createConsumer(consumerFactory, destination, i);
-            consumers[i].setSleepDuration(consumerSleepDuration);
-        }
-        for (int i = 0; i < numberofProducers; i++) {
-            array = new byte[playloadSize];
-            for (int j = i; j < array.length; j++) {
-                array[j] = (byte)j;
+        
+        producers = new PerfProducer[numberofProducers*numberOfDestinations];
+        consumers = new PerfConsumer[numberOfConsumers*numberOfDestinations];
+        int consumerCount = 0;
+        int producerCount = 0;
+        for (int k =0; k < numberOfDestinations;k++) {
+            Destination destination = createDestination(session, destinationName+":"+k);
+            LOG.info("Testing against destination: " + destination);
+            for (int i = 0; i < numberOfConsumers; i++) {
+                consumers[consumerCount] = createConsumer(factory, destination, consumerCount);
+                consumers[consumerCount].setSleepDuration(consumerSleepDuration);
+                consumerCount++;
             }
-            producers[i] = createProducer(producerFactory, destination, i, array);
+            for (int i = 0; i < numberofProducers; i++) {
+                array = new byte[playloadSize];
+                for (int j = i; j < array.length; j++) {
+                    array[j] = (byte)j;
+                }
+                producers[producerCount] = createProducer(factory, destination, i, array);
+                producerCount++;
+            }
         }
+        con.close();
     }
 
     protected void tearDown() throws Exception {
@@ -96,6 +111,7 @@ public class SimpleNetworkTest extends SimpleTopicTest {
     }
     
     protected void configureConsumerBroker(BrokerService answer,String uri) throws Exception {
+        configureBroker(answer);
         answer.setPersistent(false);
         answer.setBrokerName(CONSUMER_BROKER_NAME);
         answer.setDeleteAllMessagesOnStartup(true);
@@ -111,13 +127,22 @@ public class SimpleNetworkTest extends SimpleTopicTest {
     }
     
     protected void configureProducerBroker(BrokerService answer,String uri) throws Exception {
+        configureBroker(answer);
         answer.setBrokerName(PRODUCER_BROKER_NAME);
+        answer.setMonitorConnectionSplits(false);
+        //answer.setSplitSystemUsageForProducersConsumers(true);
         answer.setPersistent(false);
         answer.setDeleteAllMessagesOnStartup(true);
-        NetworkConnector connector = answer.addNetworkConnector("static://"+consumerBindAddress);
-        connector.setDuplex(true);
+        NetworkConnector connector = answer.addNetworkConnector("static://tcp://rexmac.home:61616?wireFormat.maxInactivityDuration=2000");
+        //connector.setNetworkTTL(3);
+        //connector.setDynamicOnly(true);
+        //connector.setDuplex(true);
         answer.addConnector(uri);
         answer.setUseShutdownHook(false);
+    }
+    
+    protected void configureBroker(BrokerService service) throws Exception{
+        
     }
 
 
