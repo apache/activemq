@@ -36,7 +36,6 @@
   <properties>
     <activemq.osgi.import.pkg>
       com.thoughtworks.xstream*;resolution:=optional,
-      javax.jmdns*;resolution:=optional,
       org.apache.activeio*;resolution:=optional,
       org.apache.camel*;resolution:=optional,
       org.apache.commons.pool*;resolution:=optional,
@@ -139,11 +138,6 @@
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>activemq</groupId>
-      <artifactId>jmdns</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
       <groupId>xalan</groupId>
       <artifactId>xalan</artifactId>
       <optional>true</optional>
@@ -216,6 +210,11 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-test</artifactId>
       <scope>test</scope>
+    </dependency>    
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-jmdns_1.0</artifactId>
+      <optional>true</optional>
     </dependency>
 
     <!-- Camel UI testing -->

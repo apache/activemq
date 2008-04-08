@@ -135,8 +135,8 @@
            <artifactId>regexp</artifactId>
         </exclusion>
         <exclusion>
-           <groupId>activemq</groupId>
-           <artifactId>jmdns</artifactId>
+           <groupId>org.apache.activemq</groupId>
+           <artifactId>activemq-jmdns_1.0</artifactId>
         </exclusion>
         <exclusion>
            <groupId>xalan</groupId>
@@ -215,5 +215,15 @@
       <artifactId>log4j</artifactId>
     </dependency>
   </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
   
 </project>
