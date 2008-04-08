@@ -109,7 +109,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     public final ConcurrentHashMap<ActiveMQTempDestination, ActiveMQTempDestination> activeTempDestinations = new ConcurrentHashMap<ActiveMQTempDestination, ActiveMQTempDestination>();
 
-    protected boolean dispatchAsync;
+    protected boolean dispatchAsync=true;
     protected boolean alwaysSessionAsync = true;
 
     private TaskRunnerFactory sessionTaskRunner = new TaskRunnerFactory("ActiveMQ Session Task", ThreadPriorities.INBOUND_CLIENT_SESSION, false, 1000);
@@ -293,7 +293,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         checkClosedOrFailed();
         ensureConnectionInfoSent();
         return new ActiveMQSession(this, getNextSessionId(), transacted ? Session.SESSION_TRANSACTED : (acknowledgeMode == Session.SESSION_TRANSACTED
-            ? Session.AUTO_ACKNOWLEDGE : acknowledgeMode), dispatchAsync, alwaysSessionAsync);
+            ? Session.AUTO_ACKNOWLEDGE : acknowledgeMode), isDispatchAsync(), isAlwaysSessionAsync());
     }
 
     /**
@@ -694,7 +694,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         info.setSubscriptionName(subscriptionName);
         info.setSelector(messageSelector);
         info.setPrefetchSize(maxMessages);
-        info.setDispatchAsync(dispatchAsync);
+        info.setDispatchAsync(isDispatchAsync());
 
         // Allows the options on the destination to configure the consumerInfo
         if (info.getDestination().getOptions() != null) {
@@ -1094,7 +1094,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         info.setSelector(messageSelector);
         info.setPrefetchSize(maxMessages);
         info.setNoLocal(noLocal);
-        info.setDispatchAsync(dispatchAsync);
+        info.setDispatchAsync(isDispatchAsync());
 
         // Allows the options on the destination to configure the consumerInfo
         if (info.getDestination().getOptions() != null) {
