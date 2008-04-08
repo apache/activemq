@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <!--
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
@@ -16,10 +15,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
-
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
@@ -157,6 +153,7 @@
     <module>activemq-web-console</module>
     <module>activemq-xmpp</module>
     <module>assembly</module>
+    <module>activemq-jmdns_1.0</module>
   </modules>
 
   <scm>
@@ -189,6 +186,11 @@
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-jaas</artifactId>
+        <version>${version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-jmdns_1.0</artifactId>
         <version>${version}</version>
       </dependency>
       <dependency>
@@ -643,12 +645,6 @@
         <groupId>xalan</groupId>
         <artifactId>xalan</artifactId>
         <version>2.6.0</version>
-      </dependency>
-
-      <dependency>
-        <groupId>activemq</groupId>
-        <artifactId>jmdns</artifactId>
-        <version>1.0-RC2</version>
       </dependency>
 
       <dependency>
@@ -1147,11 +1143,19 @@
 
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <test>false</test>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-release-plugin</artifactId>
             <configuration>
               <useReleaseProfile>false</useReleaseProfile>
               <goals>deploy</goals>
               <arguments>-Prelease</arguments>
+              <autoVersionSubmodules>true</autoVersionSubmodules>
             </configuration>
           </plugin>
 

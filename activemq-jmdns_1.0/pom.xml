@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<project>
+  <parent>
+    <artifactId>activemq-parent</artifactId>
+    <groupId>org.apache.activemq</groupId>
+    <version>5.1-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>activemq-jmdns_1.0</artifactId>
+  <name>ActiveMQ :: jmdns 1.0</name>
+
+  <description>
+    The activemq-jmdns_1.0 source is derived from http://repo1.maven.org/maven2/jmdns/jmdns/1.0/jmdns-1.0-sources.jar
+
+    Changes to apache activemq version:
+    - renamed package javax.jmdns to org.apache.activemq.jmdns
+    - removed classes with lgpl source headers, leaving only the org.apache.activemq.jmdns package.
+  </description>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

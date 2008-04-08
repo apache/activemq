@@ -182,6 +182,7 @@
         <include>${pom.groupId}:activemq-xmpp</include>
         <include>${pom.groupId}:activecluster</include>
         <include>${pom.groupId}:activeio-core</include>
+        <include>${pom.groupId}:activemq-jmdns_1.0</include>
         <include>commons-beanutils:commons-beanutils</include>
         <include>commons-collections:commons-collections</include>
         <include>commons-httpclient:commons-httpclient</include>
@@ -197,7 +198,6 @@
         <include>org.springframework:spring</include>
         <include>xstream:xstream</include>
         <include>xmlpull:xmlpull</include>
-        <include>activemq:jmdns</include>
       </includes>
     </dependencySet>
     <dependencySet>
