@@ -88,23 +88,23 @@
       <lineEnding>unix</lineEnding>
     </fileSet>
 
-    <!-- Copy over jar files -->
-    <fileSet>
-      <directory>target</directory>
-      <outputDirectory>/</outputDirectory>
-      <includes>
-        <include>${pom.artifactId}-${pom.version}.jar</include>
-      </includes>
-    </fileSet>
-    <fileSet>
-      <directory>target</directory>
-      <outputDirectory>/bin</outputDirectory>
-      <includes>
-        <include>run.jar</include>
-      </includes>
-    </fileSet>
   </fileSets>
   <dependencySets>
+    <dependencySet>
+      <outputDirectory>/</outputDirectory>
+      <unpack>false</unpack>
+      <includes>
+        <include>${pom.groupId}:activemq-all</include>
+      </includes>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>/bin</outputDirectory>
+      <unpack>false</unpack>
+      <outputFileNameMapping>run.jar</outputFileNameMapping>
+      <includes>
+        <include>${pom.groupId}:activemq-all:*:run</include>
+      </includes>
+    </dependencySet>
     <dependencySet>
       <outputDirectory>/lib</outputDirectory>
       <unpack>false</unpack>
@@ -112,7 +112,6 @@
       <includes>
          <include>backport-util-concurrent:backport-util-concurrent</include>
          <include>commons-logging:commons-logging</include>
-         <include>geronimo-jms_1.1_spec:geronimo-jms_1.1_spec</include>
          <include>${pom.groupId}:activemq-core</include>
          <include>${pom.groupId}:activeio-core</include>
          <include>${pom.groupId}:activemq-console</include>         
@@ -147,6 +146,7 @@
          <include>org.apache.geronimo.specs:geronimo-j2ee-connector_1.5_spec</include>
          <include>org.apache.xbean:xbean-spring</include>
          <include>org.springframework:spring</include>
+         <include>org.springframework:beans</include>
          <include>xstream:xstream</include>
          <include>xmlpull:xmlpull</include>
          <include>org.apache.activemq:activemq-jmdns_1.0</include>

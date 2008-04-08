@@ -56,7 +56,15 @@
       <type>rar</type>
       <optional>true</optional>
     </dependency>
-    
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-all</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-run</artifactId>
+    </dependency>
+
     <!-- commons -->
     <dependency>
       <groupId>commons-httpclient</groupId>
@@ -126,7 +134,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-jacc_1.1_spec</artifactId>
+      <artifactId>geronimo-j2ee-jacc_1.0_spec</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
@@ -207,29 +215,6 @@
         </executions>
       </plugin>
       <!-- Configure which tests are included/excuded -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>run-jar</id>
-            <phase>package</phase>
-            <configuration>
-              <tasks>
-                <jar destfile="target/run.jar" basedir="target/classes">
-                      <include name="org/apache/activemq/console/Main*.class" />
-                      <manifest>
-                        <attribute name="Main-Class" value="org.apache.activemq.console.Main" />
-                      </manifest>
-                </jar>
-              </tasks>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
