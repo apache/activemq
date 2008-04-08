@@ -72,7 +72,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-jacc_1.1_spec</artifactId>
+      <artifactId>geronimo-j2ee-jacc_1.0_spec</artifactId>
     </dependency>
 
     <!-- activemq -->
