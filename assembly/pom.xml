@@ -60,10 +60,6 @@
       <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-all</artifactId>
     </dependency>
-    <dependency>
-      <groupId>${pom.groupId}</groupId>
-      <artifactId>activemq-run</artifactId>
-    </dependency>
 
     <!-- commons -->
     <dependency>
