@@ -56,7 +56,7 @@
         </exclusion>
         <exclusion>
           <groupId>org.apache.geronimo.specs</groupId>
-          <artifactId>geronimo-j2ee-jacc_1.0_spec</artifactId>
+          <artifactId>geronimo-jacc_1.1_spec</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.apache.geronimo.specs</groupId>
@@ -64,7 +64,7 @@
         </exclusion>
         <exclusion>
           <groupId>org.apache.geronimo.specs</groupId>
-          <artifactId>geronimo-servlet_2.4_spec</artifactId>
+          <artifactId>geronimo-servlet_2.5_spec</artifactId>
         </exclusion>
         <exclusion>
            <groupId>mx4j</groupId>
