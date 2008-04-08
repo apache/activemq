@@ -35,8 +35,8 @@ public class SimpleTopicTest extends TestCase {
     private static final Log LOG = LogFactory.getLog(SimpleTopicTest.class);
     
     protected BrokerService broker;
-    // protected String
-    // bindAddress="tcp://localhost:61616?wireFormat.cacheEnabled=true&wireFormat.tightEncodingEnabled=true&jms.useAsyncSend=false";
+    protected String clientURI="tcp://localhost:61616?wireFormat.cacheEnabled=true&wireFormat.tightEncodingEnabled=true&jms.useAsyncSend=false&wireFormat.maxInactivityDuration=50000";
+    //protected String clientURI="tcp://localhost:61616";
     protected String bindAddress="tcp://localhost:61616";
     //protected String bindAddress = "tcp://localhost:61616";
     //protected String bindAddress="vm://localhost?marshal=true";
@@ -46,12 +46,15 @@ public class SimpleTopicTest extends TestCase {
     protected String destinationName = getClass().getName();
     protected int samepleCount = 20;
     protected long sampleInternal = 10000;
-    protected int numberOfConsumers = 1;
-    protected int numberofProducers = 0;
+    protected int numberOfDestinations=1;
+    protected int numberOfConsumers = 10;
+    protected int numberofProducers = 10;
+    protected int totalNumberOfProducers;
+    protected int totalNumberOfConsumers;
     protected int playloadSize = 1024;
     protected byte[] array;
     protected ConnectionFactory factory;
-    protected Destination destination;
+    
     protected long consumerSleepDuration=0;
 
     /**
@@ -63,26 +66,37 @@ public class SimpleTopicTest extends TestCase {
         if (broker == null) {
             broker = createBroker(bindAddress);
         }
-        factory = createConnectionFactory(bindAddress);
+        factory = createConnectionFactory(clientURI);
         Connection con = factory.createConnection();
         Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        destination = createDestination(session, destinationName);
-        LOG.info("Testing against destination: " + destination);
-        LOG.info("Running " + numberofProducers + " producer(s) and " + numberOfConsumers + " consumer(s)");
-        con.close();
-        producers = new PerfProducer[numberofProducers];
-        consumers = new PerfConsumer[numberOfConsumers];
-        for (int i = 0; i < numberOfConsumers; i++) {
-            consumers[i] = createConsumer(factory, destination, i);
-            consumers[i].setSleepDuration(consumerSleepDuration);
-        }
-        for (int i = 0; i < numberofProducers; i++) {
-            array = new byte[playloadSize];
-            for (int j = i; j < array.length; j++) {
-                array[j] = (byte)j;
+       
+        
+        LOG.info("Running " + numberofProducers + " producer(s) and " + numberOfConsumers + " consumer(s) per " + numberOfDestinations + " Destination(s)");
+       
+        totalNumberOfConsumers=numberOfConsumers*numberOfDestinations;
+        totalNumberOfProducers=numberofProducers*numberOfDestinations;
+        producers = new PerfProducer[totalNumberOfProducers];
+        consumers = new PerfConsumer[totalNumberOfConsumers];
+        int consumerCount = 0;
+        int producerCount = 0;
+        for (int k =0; k < numberOfDestinations;k++) {
+            Destination destination = createDestination(session, destinationName+":"+k);
+            LOG.info("Testing against destination: " + destination);
+            for (int i = 0; i < numberOfConsumers; i++) {
+                consumers[consumerCount] = createConsumer(factory, destination, consumerCount);
+                consumers[consumerCount].setSleepDuration(consumerSleepDuration);
+                consumerCount++;
             }
-            producers[i] = createProducer(factory, destination, i, array);
+            for (int i = 0; i < numberofProducers; i++) {
+                array = new byte[playloadSize];
+                for (int j = i; j < array.length; j++) {
+                    array[j] = (byte)j;
+                }
+                producers[producerCount] = createProducer(factory, destination, i, array);
+                producerCount++;
+            }
         }
+        con.close();
         super.setUp();
     }
 
@@ -136,10 +150,10 @@ public class SimpleTopicTest extends TestCase {
     }
 
     public void testPerformance() throws JMSException, InterruptedException {
-        for (int i = 0; i < numberOfConsumers; i++) {
+        for (int i = 0; i < totalNumberOfConsumers; i++) {
             consumers[i].start();
         }
-        for (int i = 0; i < numberofProducers; i++) {
+        for (int i = 0; i < totalNumberOfProducers; i++) {
             producers[i].start();
         }
         LOG.info("Sampling performance " + samepleCount + " times at a " + sampleInternal + " ms interval.");
@@ -148,10 +162,10 @@ public class SimpleTopicTest extends TestCase {
             dumpProducerRate();
             dumpConsumerRate();
         }
-        for (int i = 0; i < numberofProducers; i++) {
+        for (int i = 0; i < totalNumberOfProducers; i++) {
             producers[i].stop();
         }
-        for (int i = 0; i < numberOfConsumers; i++) {
+        for (int i = 0; i < totalNumberOfConsumers; i++) {
             consumers[i].stop();
         }
     }
@@ -159,30 +173,36 @@ public class SimpleTopicTest extends TestCase {
     protected void dumpProducerRate() {
         int totalRate = 0;
         int totalCount = 0;
+        String producerString="Producers:";
         for (int i = 0; i < producers.length; i++) {
             PerfRate rate = producers[i].getRate().cloneAndReset();
             totalRate += rate.getRate();
             totalCount += rate.getTotalCount();
+            producerString+="["+i+":"+rate.getRate() + ","+rate.getTotalCount()+"];";
         }
         if (producers != null && producers.length > 0) {
             int avgRate = totalRate / producers.length;
             System.out.println("Avg producer rate = " + avgRate
                     + " msg/sec | Total rate = " + totalRate + ", sent = "
                     + totalCount);
+           // System.out.println(producerString);
         }
     }
 
     protected void dumpConsumerRate() {
         int totalRate = 0;
         int totalCount = 0;
+        String consumerString="Consumers:";
         for (int i = 0; i < consumers.length; i++) {
             PerfRate rate = consumers[i].getRate().cloneAndReset();
             totalRate += rate.getRate();
             totalCount += rate.getTotalCount();
+            consumerString+="["+i+":"+rate.getRate() + ","+rate.getTotalCount()+"];";
         }
         if (consumers != null && consumers.length > 0) {
             int avgRate = totalRate / consumers.length;
             System.out.println("Avg consumer rate = " + avgRate + " msg/sec | Total rate = " + totalRate + ", received = " + totalCount);
+            System.out.println(consumerString);
         }
     }
 }

@@ -38,6 +38,7 @@ public class PerfProducer implements Runnable {
     private Session session;
     private final CountDownLatch stopped = new CountDownLatch(1);
     private boolean running;
+    private int sleep = 0;
 
     public PerfProducer(ConnectionFactory fac, Destination dest, byte[] palyload) throws JMSException {
         connection = fac.createConnection();
@@ -93,12 +94,23 @@ public class PerfProducer implements Runnable {
                 msg.writeBytes(payload);
                 producer.send(msg);
                 rate.increment();
+                if (sleep > 0) {
+                    Thread.sleep(sleep);
+                }
             }
         } catch (Throwable e) {
             e.printStackTrace();
         } finally {
             stopped.countDown();
         }
+    }
+
+    public int getSleep() {
+        return sleep;
+    }
+
+    public void setSleep(int sleep) {
+        this.sleep = sleep;
     }
 
 }

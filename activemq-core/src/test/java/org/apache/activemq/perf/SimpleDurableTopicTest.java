@@ -25,6 +25,15 @@ import javax.jms.JMSException;
  * @version $Revision: 1.3 $
  */
 public class SimpleDurableTopicTest extends SimpleTopicTest {
+    
+    protected void setUp() throws Exception {
+        numberOfDestinations=6;
+        numberOfConsumers = 1;
+        numberofProducers = 1;
+        samepleCount=1000;
+        playloadSize = 1024;
+        super.setUp();
+    }
     protected PerfProducer createProducer(ConnectionFactory fac, Destination dest, int number, byte payload[]) throws JMSException {
         PerfProducer pp = new PerfProducer(fac, dest, payload);
         pp.setDeliveryMode(DeliveryMode.PERSISTENT);

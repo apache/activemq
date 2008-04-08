@@ -61,7 +61,7 @@ public class QueueConnectionMemoryTest extends SimpleQueueTest {
         factory = createConnectionFactory(bindAddress);
         Connection con = factory.createConnection();
         Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        destination = createDestination(session, destinationName);
+        Destination destination = createDestination(session, destinationName);
         con.close();
         for (int i = 0; i < 3; i++) {
             Connection connection = factory.createConnection();
