@@ -439,12 +439,17 @@ public class BrokerService implements Service {
 
             getBroker().start();
 
-            /*
-             * if(isUseJmx()){ // yes - this is order dependent! // register all
-             * destination in persistence store including inactive destinations
-             * as mbeans this.startDestinationsInPersistenceStore(broker); }
-             */
-            startAllConnectors();
+           // see if there is a MasterBroker service and if so, configure
+            // it and start it.
+            for (Service service : services) {
+                if (service instanceof MasterConnector) {
+                    configureService(service);
+                    service.start();
+                }
+            } 
+            if (!isSlave()) {
+                startAllConnectors();
+            }
 
             if (isUseJmx() && masterConnector != null) {
                 registerFTConnectorMBean(masterConnector);
@@ -1301,6 +1306,7 @@ public class BrokerService implements Service {
      * @throws Exception
      */
     protected void processHelperProperties() throws Exception {
+        boolean masterServiceExists = false;
         if (transportConnectorURIs != null) {
             for (int i = 0; i < transportConnectorURIs.length; i++) {
                 String uri = transportConnectorURIs[i];
@@ -1319,8 +1325,14 @@ public class BrokerService implements Service {
                 addJmsConnector(jmsBridgeConnectors[i]);
             }
         }
+        for (Service service : services) {
+            if (service instanceof MasterConnector) {
+                masterServiceExists = true;
+                break;
+            }
+        }
         if (masterConnectorURI != null) {
-            if (masterConnector != null) {
+            if (masterServiceExists) {
                 throw new IllegalStateException("Cannot specify masterConnectorURI when a masterConnector is already registered via the services property");
             } else {
                 addService(new MasterConnector(masterConnectorURI));
@@ -1843,12 +1855,14 @@ public class BrokerService implements Service {
      */
     protected void configureService(Object service) {
         if (service instanceof BrokerServiceAware) {
-            BrokerServiceAware serviceAware = (BrokerServiceAware)service;
+            BrokerServiceAware serviceAware = (BrokerServiceAware) service;
             serviceAware.setBrokerService(this);
         }
-        if (service instanceof MasterConnector) {
-            masterConnector = (MasterConnector)service;
-            supportFailOver = true;
+        if (masterConnector == null) {
+            if (service instanceof MasterConnector) {
+                masterConnector = (MasterConnector) service;
+                supportFailOver = true;
+            }
         }
     }
 
