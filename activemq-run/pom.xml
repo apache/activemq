@@ -1,0 +1,82 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.apache.activemq</groupId>
+    <artifactId>activemq-parent</artifactId>
+    <version>5.1-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>activemq-run</artifactId>
+  <name>ActiveMQ :: Run Jar</name>
+  <description>run.jar for starting a standalone ActiveMQ broker</description>
+
+  <dependencies>
+
+    <!-- activemq -->
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-console</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+
+    <plugins>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>org.apache.activemq.console.Main</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>1.0.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <id>main-class</id>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <!--<shadedArtifactAttached>true</shadedArtifactAttached>-->
+              <!--<shadedClassifierName>run</shadedClassifierName>-->
+              <artifactSet>
+                <includes>
+                  <include>${project.groupId}:activemq-console</include>
+                </includes>
+              </artifactSet>
+              <filters>
+                <filter>
+                  <artifact>${project.groupId}:activemq-console</artifact>
+                  <includes>
+                    <include>org/apache/activemq/console/Main*.class</include>
+                  </includes>
+                </filter>
+              </filters>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+
+    </plugins>
+  </build>
+
+</project>
