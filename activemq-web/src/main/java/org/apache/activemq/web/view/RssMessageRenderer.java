@@ -115,7 +115,7 @@ public class RssMessageRenderer extends SimpleMessageRenderer {
         SyndEntry entry = new SyndEntryImpl();
         String title = message.getJMSMessageID();
         entry.setTitle(title);
-        String link = request.getRequestURI() + "/" + title;
+        String link = request.getRequestURI() + "?msgId=" + title;
         entry.setLink(link);
         entry.setPublishedDate(new Date());
         return entry;
