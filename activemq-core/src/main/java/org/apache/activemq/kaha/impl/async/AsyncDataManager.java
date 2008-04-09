@@ -604,7 +604,7 @@ public class AsyncDataManager {
         }
     }
 
-    public ByteSequence read(Location location) throws IOException, IllegalStateException {
+    public synchronized ByteSequence read(Location location) throws IOException, IllegalStateException {
         DataFile dataFile = getDataFile(location);
         DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
         ByteSequence rc = null;
