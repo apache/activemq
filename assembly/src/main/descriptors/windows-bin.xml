@@ -34,6 +34,7 @@
       </excludes>
       <lineEnding>dos</lineEnding>
     </fileSet>
+    
     <fileSet>
       <directory>src/release</directory>
       <outputDirectory>/</outputDirectory>
@@ -41,206 +42,24 @@
         <include>bin/*.bat</include>
         <include>bin/win32/*.bat</include>
         <include>bin/win32/*.conf</include>
-        <include>bin/core/boot/*.jar</include>
       </includes>
       <lineEnding>dos</lineEnding>
     </fileSet>
-
-    <!-- Copy over the files that should not get the line endings converted but need to be chmod to 755 -->
-    <!-- Do not copy unix files
-    <fileSet>
-      <directory>src/release</directory>
-      <outputDirectory></outputDirectory>
-      <includes>
-        <include>bin/linux/wrapper</include>
-        <include>bin/linux/libwrapper.so</include>
-        <include>bin/macosx/wrapper</include>
-        <include>bin/macosx/libwrapper.jnilib</include>
-      </includes>
-      <fileMode>0755</fileMode>
-    </fileSet>
-    -->
-
-    <!-- Copy over the files that need unix line endings and also chmod to 755 -->
-    <!-- Do not copy unix files
-    <fileSet>
-      <directory>src/release</directory>
-      <outputDirectory></outputDirectory>
-      <includes>
-        <include>bin/activemq</include>
-        <include>bin/activemq-admin</include>
-        <include>bin/macosx/activemq</include>
-        <include>bin/linux/activemq</include>
-      </includes>
-      <fileMode>0755</fileMode>
-      <lineEnding>unix</lineEnding>
-    </fileSet>
-    -->
-
+    
     <!-- Copy over files that should not get the line endings converted -->
     <fileSet>
       <directory>src/release</directory>
       <outputDirectory></outputDirectory>
       <includes>
-        <include>conf/*.ts</include>
-        <include>conf/*.ks</include>
-        <include>conf/*.cert</include>
-        <include>bin/*.jar</include>
         <include>bin/win32/*.exe</include>
         <include>bin/win32/*.dll</include>
       </includes>
     </fileSet>
 
-    <!-- Copy over jar files -->
-    <fileSet>
-      <directory>target</directory>
-      <outputDirectory>/bin</outputDirectory>
-      <includes>
-        <include>run.jar</include>
-      </includes>
-    </fileSet>
-
-    <!-- lets copy the portions of the web app we need - as we can't exclude stuff from the WAR -->
-    <fileSet>
-      <directory>../activemq-web-console/src/main/webapp</directory>
-      <outputDirectory>/webapps/admin</outputDirectory>
-      <excludes>
-        <exclude>**/activemq.xml</exclude>
-        <exclude>**/webconsole-embedded.xml</exclude>
-      </excludes>
-    </fileSet>
-    <fileSet>
-      <directory>../activemq-web-console/target/classes</directory>
-      <outputDirectory>/webapps/admin/WEB-INF/classes</outputDirectory>
-      <includes>
-        <include>**/*.class</include>
-      </includes>
-    </fileSet>
-
-
-    <!-- the web demo -->
-    <fileSet>
-      <directory>../activemq-web-demo/src/main/webapp</directory>
-      <outputDirectory>/webapps/demo</outputDirectory>
-      <excludes>
-        <exclude>**/activemq.xml</exclude>
-        <exclude>**/webconsole-embedded.xml</exclude>
-      </excludes>
-    </fileSet>
-
-    <!-- the file server -->
-    <fileSet>
-      <directory>../activemq-fileserver/src/main/webapp</directory>
-      <outputDirectory>/webapps/fileserver</outputDirectory>
-    </fileSet>
-  <fileSet>
-      <directory>../activemq-fileserver/target/classes</directory>
-      <outputDirectory>/webapps/fileserver/WEB-INF/classes</outputDirectory>
-      <includes>
-        <include>**/*.class</include>
-      </includes>
-    </fileSet>
    </fileSets>
-
-  <dependencySets>
-    <dependencySet>
-      <outputDirectory>/</outputDirectory>
-      <unpack>false</unpack>
-      <scope>runtime</scope>
-      <includes>
-        <include>${pom.groupId}:activemq-all</include>
-      </includes>
-    </dependencySet>
-    <dependencySet>
-      <outputDirectory>/lib</outputDirectory>
-      <unpack>false</unpack>
-      <scope>runtime</scope>
-      <includes>
-        <include>commons-logging:commons-logging</include>
-        <include>geronimo-jms_1.1_spec:geronimo-jms_1.1_spec</include>
-        <include>${pom.groupId}:activemq-core</include>
-        <include>${pom.groupId}:activemq-console</include>
-        <include>${pom.groupId}:activemq-jaas</include>
-        <include>mx4j:mx4j</include>
-        <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.0_spec</include>
-        <include>org.apache.geronimo.specs:geronimo-jms_1.1_spec</include>
-        <include>org.apache.geronimo.specs:geronimo-jta_1.0.1B_spec</include>
-        <include>${pom.groupId}:activemq-web</include>
-
-        <!-- camel -->
-        <include>org.apache.camel:camel-core</include>
-        <include>org.apache.camel:camel-spring</include>
-        <include>org.apache.camel:camel-jms</include>
-        <include>org.apache.camel:camel-activemq</include>
-				<!-- Java 5 only -->
-        <include>javax.xml:jaxb-api</include>
-        <include>javax.activation:activation</include>
-        <include>com.sun.xml.bind:jaxb-impl</include>
-        <include>stax:stax-api</include>
-        <include>stax:stax</include>
-      </includes>
-    </dependencySet>
-    <dependencySet>
-      <outputDirectory>/lib/optional</outputDirectory>
-      <unpack>false</unpack>
-      <scope>runtime</scope>
-      <includes>
-        <include>${pom.groupId}:activemq-rar</include>
-        <include>${pom.groupId}:activemq-optional</include>
-        <include>${pom.groupId}:activemq-xmpp</include>
-        <include>${pom.groupId}:activecluster</include>
-        <include>${pom.groupId}:activeio-core</include>
-        <include>${pom.groupId}:activemq-jmdns_1.0</include>
-        <include>commons-beanutils:commons-beanutils</include>
-        <include>commons-collections:commons-collections</include>
-        <include>commons-httpclient:commons-httpclient</include>
-        <include>commons-dbcp:commons-dbcp</include>
-        <include>commons-pool:commons-pool</include>
-        <include>org.mortbay.jetty:jetty</include>
-        <include>org.mortbay.jetty:jetty-util</include>
-        <include>org.mortbay.jetty:servlet-api-2.5</include>
-        <include>log4j:log4j</include>
-        <include>mx4j:mx4j-remote</include>
-        <include>mx4j:mx4j-tools</include>
-        <include>org.apache.derby:derby</include>
-        <include>org.apache.geronimo.specs:geronimo-j2ee-jacc_1.0_spec</include>
-        <include>org.apache.geronimo.specs:geronimo-j2ee-connector_1.5_spec</include>
-        <include>org.apache.xbean:xbean-spring</include>
-        <include>org.springframework:spring</include>
-        <include>xstream:xstream</include>
-        <include>xmlpull:xmlpull</include>
-      </includes>
-    </dependencySet>
-    <dependencySet>
-      <outputDirectory>/lib/web</outputDirectory>
-      <unpack>false</unpack>
-      <scope>runtime</scope>
-      <includes>
-        <include>org.springframework:spring-web</include>
-        <include>org.springframework:spring-webmvc</include>
-        <include>org.mortbay.jetty:jetty</include>
-        <include>org.mortbay.jetty:jetty-util</include>
-        <include>org.mortbay.jetty:jetty-xbean</include>
-        <include>org.mortbay.jetty:servlet-api-2.5</include>
-        <include>org.slf4j:slf4j-api</include>
-        <include>org.slf4j:slf4j-jcl</include>
-
-        <!-- JSP support -->
-        <include>org.mortbay.jetty:jsp-2.1</include>
-        <include>org.mortbay.jetty:jsp-api-2.1</include>
-        <include>org.eclipse.jdt:core</include>
-        <include>ant:ant</include>
-
-        <!-- JSTL and other web stuff -->
-        <include>opensymphony:sitemesh</include>
-        <include>javax.servlet:jstl</include>
-        <include>taglibs:standard</include>
-
-        <!-- Atom/RSS support -->
-        <include>rome:rome</include>
-        <include>jdom:jdom</include>
-      </includes>
-    </dependencySet>
-    
-  </dependencySets>
+  
+  <componentDescriptors>
+    <componentDescriptor>src/main/descriptors/common-bin.xml</componentDescriptor>
+  </componentDescriptors>
+  
 </assembly>

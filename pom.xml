@@ -145,6 +145,7 @@
     <module>activemq-optional</module>
     <module>activemq-ra</module>
     <module>activemq-rar</module>
+    <module>activemq-run</module>
     <module>activemq-test-atomikos</module>
     <module>activemq-tooling</module>
     <module>activemq-web</module>
@@ -250,6 +251,11 @@
         <artifactId>activemq-rar</artifactId>
         <version>${version}</version>
         <type>rar</type>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-run</artifactId>
+        <version>${version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
@@ -881,7 +887,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-assembly-plugin</artifactId>
-          <version>2.1</version>
+          <version>2.2-beta-2</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
