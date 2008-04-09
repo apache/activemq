@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>apache-activemq</artifactId>
-  <packaging>jar</packaging>
+  <packaging>pom</packaging>
   <name>ActiveMQ :: Assembly</name>
   <description>Puts together the ActiveMQ distribution</description>
 
@@ -59,6 +59,10 @@
     <dependency>
       <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-all</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-run</artifactId>
     </dependency>
 
     <!-- commons -->
