@@ -165,6 +165,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 throw new InvalidDestinationException(
                                                       "Cannot use a Temporary destination that has been deleted");
             }
+            if (prefetch < 0) {
+                throw new JMSException("Cannot have a prefetch size less than zero");
+            }
         }
 
         this.session = session;
