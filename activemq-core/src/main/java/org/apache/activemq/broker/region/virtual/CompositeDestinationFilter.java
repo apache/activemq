@@ -70,12 +70,16 @@ public class CompositeDestinationFilter extends DestinationFilter {
                 continue;
             }
 
+            Message forwarded_message;
             if (copyMessage) {
-                message = message.copy();
-                message.setDestination(destination);
+                forwarded_message = message.copy();
+                forwarded_message.setDestination(destination);
+            }
+            else {
+                forwarded_message = message;
             }
 
-            send(context, message, destination);
+            send(context, forwarded_message, destination);
         }
         if (!forwardOnly) {
             super.send(context, message);
