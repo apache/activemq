@@ -23,7 +23,7 @@
   <fileSets>
     <!-- Binary Files -->
     <fileSet>
-      <directory>..</directory>
+      <directory>${project.basedir}/..</directory>
       <outputDirectory>src</outputDirectory>
       <includes>
         <include>**/*.jpeg</include>
@@ -50,7 +50,7 @@
 
     <!-- Text Files -->
     <fileSet>
-      <directory>..</directory>
+      <directory>${project.basedir}/..</directory>
       <outputDirectory>src</outputDirectory>
       <includes>
         <include>**/*</include>
