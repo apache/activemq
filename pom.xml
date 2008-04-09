@@ -84,6 +84,7 @@
     <module>activemq-web-console</module>
     <module>activemq-xmpp</module>
     <module>activemq-all</module>
+    <module>activemq-run</module>
     <module>assembly</module>
     <module>activemq-jmdns_1.0</module>
   </modules>
@@ -175,9 +176,9 @@
       </dependency>
 	  <dependency>
         <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-all</artifactId>
+        <artifactId>activemq-run</artifactId>
         <version>${activemq-version}</version>
-        <classifier>run</classifier>
+        <!--<classifier>run</classifier>-->
       </dependency>
 	  <dependency>
         <groupId>org.apache.activemq</groupId>
