@@ -146,6 +146,15 @@ public abstract class TransportFactory {
             throw IOExceptionSupport.create(e);
         }
     }
+    
+     /**
+      * Allow registration of a transport factory without wiring via META-INF classes
+     * @param scheme
+     * @param tf
+     */
+    public static void registerTransportFactory(String scheme, TransportFactory tf) {
+        TRANSPORT_FACTORYS.put(scheme, tf);
+      }
 
     /**
      * Factory method to create a new transport
