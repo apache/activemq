@@ -52,6 +52,7 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
     private int maximumActive = 500;
     private int maxConnections = 1;
     private TransactionManager transactionManager;
+    private int idleTimeout = 30 * 1000;
 
     public PooledConnectionFactory() {
         this(new ActiveMQConnectionFactory());
@@ -114,7 +115,9 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
     }
 
     protected ConnectionPool createConnectionPool(ActiveMQConnection connection) {
-        return new ConnectionPool(connection, getPoolFactory(), transactionManager);
+        ConnectionPool result =  new ConnectionPool(connection, getPoolFactory(), transactionManager);
+        result.setIdleTimeout(getIdleTimeout());
+        return result;
     }
 
     protected ActiveMQConnection createConnection(ConnectionKey key) throws JMSException {
@@ -190,5 +193,13 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
 
     protected ObjectPoolFactory createPoolFactory() {
         return new GenericObjectPoolFactory(null, maximumActive);
+    }
+
+    public int getIdleTimeout() {
+        return idleTimeout;
+    }
+
+    public void setIdleTimeout(int idleTimeout) {
+        this.idleTimeout = idleTimeout;
     }
 }
