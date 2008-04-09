@@ -1580,7 +1580,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
         checkClosed();
         if (destination.isTemporary() && connection.isDeleted(destination)) {
-            throw new JMSException("Cannot publish to a deleted Destination: " + destination);
+            throw new InvalidDestinationException("Cannot publish to a deleted Destination: " + destination);
         }
         synchronized (sendMutex) {
             // tell the Broker we are about to start a new transaction
