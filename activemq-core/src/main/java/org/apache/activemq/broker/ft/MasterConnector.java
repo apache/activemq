@@ -104,7 +104,7 @@ public class MasterConnector implements Service, BrokerServiceAware {
         }
         localBroker = TransportFactory.connect(localURI);
         remoteBroker = TransportFactory.connect(remoteURI);
-        LOG.info("Starting a network connection between " + localBroker + " and " + remoteBroker + " has been established.");
+        LOG.info("Starting a slave connection between " + localBroker + " and " + remoteBroker + " has been established.");
         localBroker.setTransportListener(new DefaultTransportListener() {
 
             public void onCommand(Object command) {
@@ -131,21 +131,15 @@ public class MasterConnector implements Service, BrokerServiceAware {
                 }
             }
         });
-        masterActive.set(true);
-        Thread thead = new Thread() {
-
-            public void run() {
-                try {
-                    localBroker.start();
-                    remoteBroker.start();
-                    startBridge();
-                } catch (Exception e) {
-                    masterActive.set(false);
-                    LOG.error("Failed to start network bridge: " + e, e);
-                }
-            }
-        };
-        thead.start();
+        try {
+            localBroker.start();
+            remoteBroker.start();
+            startBridge();
+            masterActive.set(true);
+        } catch (Exception e) {
+            masterActive.set(false);
+            LOG.error("Failed to start network bridge: " + e, e);
+        }    
     }
 
     protected void startBridge() throws Exception {
