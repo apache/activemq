@@ -21,6 +21,7 @@
     <dependencySet>
       <outputDirectory>/</outputDirectory>
       <unpack>false</unpack>
+      <outputFileNameMapping>apache-activemq-${pom.version}.jar</outputFileNameMapping>
       <includes>
         <include>${pom.groupId}:activemq-all</include>
       </includes>
