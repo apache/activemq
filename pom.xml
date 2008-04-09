@@ -25,7 +25,7 @@
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>4.1-SNAPSHOT</version>
+  <version>4.1.2</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
 
@@ -90,9 +90,9 @@
   </modules>
 
   <scm>
-    <connection>scm:svn:https://svn.apache.org/repos/asf/activemq/branches/activemq-4.1</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/activemq/branches/activemq-4.1</developerConnection>
-    <url>http://svn.apache.org/viewcvs.cgi/activemq/branches/activemq-4.1</url>
+    <connection>scm:svn:https://svn.apache.org/repos/asf/activemq/tags/activemq-4.1.2</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/activemq/tags/activemq-4.1.2</developerConnection>
+    <url>http://svn.apache.org/viewcvs.cgi/activemq/tags/activemq-4.1.2</url>
   </scm>
 
   <dependencyManagement>
@@ -1127,7 +1127,7 @@
     <!-- base url for site deployment.  See distribution management for full url.  Override this in settings.xml for staging -->
     <staging.siteURL>scp://people.apache.org/x1/www/activemq.apache.org</staging.siteURL>
 
-    <activemq-version>4.1-SNAPSHOT</activemq-version>
+    <activemq-version>4.1.2</activemq-version>
     <activesoap-version>1.3</activesoap-version>
     <annogen-version>0.1.0</annogen-version>
     <ant-version>1.6.2</ant-version>
