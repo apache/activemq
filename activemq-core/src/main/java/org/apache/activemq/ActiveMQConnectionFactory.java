@@ -59,7 +59,8 @@ import org.apache.activemq.util.URISupport.CompositeData;
  */
 public class ActiveMQConnectionFactory extends JNDIBaseStorable implements ConnectionFactory, QueueConnectionFactory, TopicConnectionFactory, StatsCapable, Cloneable {
 
-    public static final String DEFAULT_BROKER_URL = "tcp://localhost:61616";
+    public static final String DEFAULT_BROKER_BIND_URL = "tcp://localhost:61616";
+    public static final String DEFAULT_BROKER_URL = "failover://"+DEFAULT_BROKER_BIND_URL;
     public static final String DEFAULT_USER = null;
     public static final String DEFAULT_PASSWORD = null;
     public static final int DEFAULT_PRODUCER_WINDOW_SIZE = 0;

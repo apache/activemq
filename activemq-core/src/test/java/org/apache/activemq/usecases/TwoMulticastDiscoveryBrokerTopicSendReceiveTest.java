@@ -32,4 +32,9 @@ public class TwoMulticastDiscoveryBrokerTopicSendReceiveTest extends TwoBrokerTo
     protected ActiveMQConnectionFactory createSenderConnectionFactory() throws JMSException {
         return createConnectionFactory("org/apache/activemq/usecases/sender-discovery.xml", "sender", "vm://sender");
     }
+    
+    protected void setUp() throws Exception{
+        messageCount = 100000;
+        super.setUp();
+    }
 }

@@ -45,7 +45,7 @@ import org.apache.activemq.util.IdGenerator;
 public class ReliableReconnectTest extends TestSupport {
     
     protected static final int MESSAGE_COUNT = 100;
-    protected static final String DEFAULT_BROKER_URL = ActiveMQConnectionFactory.DEFAULT_BROKER_URL;
+    protected static final String DEFAULT_BROKER_URL = ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL;
     private static final int RECEIVE_TIMEOUT = 10000;
     
     protected int deliveryMode = DeliveryMode.PERSISTENT;
@@ -78,8 +78,7 @@ public class ReliableReconnectTest extends TestSupport {
     }
 
     public ActiveMQConnectionFactory getConnectionFactory() throws Exception {
-        String url = "failover://" + DEFAULT_BROKER_URL;
-        return new ActiveMQConnectionFactory(url);
+        return new ActiveMQConnectionFactory();
     }
 
     protected void startBroker(boolean deleteOnStart) throws JMSException {
