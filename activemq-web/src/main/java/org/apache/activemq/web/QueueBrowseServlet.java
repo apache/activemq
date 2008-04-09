@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -17,14 +17,13 @@
 package org.apache.activemq.web;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
 
-import javax.jms.Connection;
-import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
+import javax.jms.Message;
 import javax.jms.Queue;
 import javax.jms.QueueBrowser;
 import javax.jms.Session;
@@ -33,79 +32,61 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.web.view.MessageRenderer;
+import org.apache.activemq.web.view.XmlMessageRenderer;
 
 /**
  * Renders the contents of a queue using some kind of view. The URI is assumed
  * to be the queue. The following parameters can be used
+ * <p/>
  * <ul>
  * <li>view - specifies the type of the view such as simple, xml, rss</li>
  * <li>selector - specifies the SQL 92 selector to apply to the queue</li>
  * </ul>
- * 
+ *
  * @version $Revision: $
  */
-// TODO Why do we implement our own session pool?
-// TODO This doesn't work, since nobody will be setting the connection factory
-// (because nobody is able to). Just use the WebClient?
 public class QueueBrowseServlet extends HttpServlet {
-
     private static FactoryFinder factoryFinder = new FactoryFinder("META-INF/services/org/apache/activemq/web/view/");
-
-    private ConnectionFactory connectionFactory;
-    private Connection connection;
-    private LinkedList<Session> sessions = new LinkedList<Session>();
-
-    public Connection getConnection() throws JMSException {
-        if (connection == null) {
-            connection = getConnectionFactory().createConnection();
-            connection.start();
-        }
-        return connection;
-    }
-
-    public void setConnection(Connection connection) {
-        this.connection = connection;
-    }
-
-    public ConnectionFactory getConnectionFactory() {
-        if (connectionFactory == null) {
-            String uri = getServletContext().getInitParameter("org.apache.activemq.brokerURL");
-            if (uri != null) {
-                connectionFactory = new ActiveMQConnectionFactory(uri);
-            } else {
-                throw new IllegalStateException("missing ConnectionFactory in QueueBrowserServlet");
-            }
-        }
-        return connectionFactory;
-    }
-
-    public void setConnectionFactory(ConnectionFactory connectionFactory) {
-        this.connectionFactory = connectionFactory;
-    }
 
     // Implementation methods
     // -------------------------------------------------------------------------
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Session session = null;
         try {
-            session = borrowSession();
+            WebClient client = WebClient.getWebClient(request);
+            Session session = client.getSession();
             Queue queue = getQueue(request, session);
             if (queue == null) {
                 throw new ServletException("No queue URI specified");
             }
-            String selector = getSelector(request);
-            QueueBrowser browser = session.createBrowser(queue, selector);
-            MessageRenderer renderer = getMessageRenderer(request);
-            configureRenderer(request, renderer);
-            renderer.renderMessages(request, response, browser);
-        } catch (JMSException e) {
+
+            String msgId = request.getParameter("msgId");
+            if (msgId == null) {
+                MessageRenderer renderer = getMessageRenderer(request);
+                configureRenderer(request, renderer);
+
+                String selector = getSelector(request);
+                QueueBrowser browser = session.createBrowser(queue, selector);
+                renderer.renderMessages(request, response, browser);
+            }
+            else {
+                XmlMessageRenderer renderer = new XmlMessageRenderer();
+                QueueBrowser browser = session.createBrowser(queue, "JMSMessageID='" + msgId + "'");
+                if (!browser.getEnumeration().hasMoreElements()) {
+                    response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                    return;
+                }
+                Message message = (Message) browser.getEnumeration().nextElement();
+
+                PrintWriter writer = response.getWriter();
+                renderer.renderMessage(writer, request, response, browser, message);
+                writer.flush();
+            }
+        }
+        catch (JMSException e) {
             throw new ServletException(e);
-        } finally {
-            returnSession(session);
         }
     }
 
@@ -115,47 +96,27 @@ public class QueueBrowseServlet extends HttpServlet {
             style = "simple";
         }
         try {
-            return (MessageRenderer)factoryFinder.newInstance(style);
-        } catch (IllegalAccessException e) {
+            return (MessageRenderer) factoryFinder.newInstance(style);
+        }
+        catch (IllegalAccessException e) {
             throw new NoSuchViewStyleException(style, e);
-        } catch (InstantiationException e) {
+        }
+        catch (InstantiationException e) {
             throw new NoSuchViewStyleException(style, e);
-        } catch (ClassNotFoundException e) {
+        }
+        catch (ClassNotFoundException e) {
             throw new NoSuchViewStyleException(style, e);
         }
     }
 
+    @SuppressWarnings("unchecked")
     protected void configureRenderer(HttpServletRequest request, MessageRenderer renderer) {
         Map<String, String> properties = new HashMap<String, String>();
-        for (Enumeration iter = request.getParameterNames(); iter.hasMoreElements();) {
-            String name = (String)iter.nextElement();
+        for (Enumeration<String> iter = request.getParameterNames(); iter.hasMoreElements();) {
+            String name = (String) iter.nextElement();
             properties.put(name, request.getParameter(name));
         }
         IntrospectionSupport.setProperties(renderer, properties);
-    }
-
-    protected Session borrowSession() throws JMSException {
-        Session answer = null;
-        synchronized (sessions) {
-            if (sessions.isEmpty()) {
-                answer = createSession();
-            } else {
-                answer = sessions.removeLast();
-            }
-        }
-        return answer;
-    }
-
-    protected void returnSession(Session session) {
-        if (session != null) {
-            synchronized (sessions) {
-                sessions.add(session);
-            }
-        }
-    }
-
-    protected Session createSession() throws JMSException {
-        return getConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
 
     protected String getSelector(HttpServletRequest request) {
@@ -177,9 +138,6 @@ public class QueueBrowseServlet extends HttpServlet {
         }
         uri = uri.replace('/', '.');
 
-        System.out.println("destination uri = " + uri);
-
         return session.createQueue(uri);
     }
-
 }
