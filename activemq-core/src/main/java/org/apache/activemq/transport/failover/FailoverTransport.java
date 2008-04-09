@@ -198,7 +198,7 @@ public class FailoverTransport implements CompositeTransport {
             synchronized (reconnectMutex) {
                 boolean reconnectOk = false;
                 if(started) {
-                    LOG.warn("Transport failed, attempting to automatically reconnect due to: " + e);
+                    LOG.warn("Transport failed to " + connectedTransportURI+ " , attempting to automatically reconnect due to: " + e);
                     LOG.debug("Transport failed with the following exception:", e);
                     reconnectOk = true;
                 }
@@ -207,7 +207,6 @@ public class FailoverTransport implements CompositeTransport {
                 failedConnectTransportURI=connectedTransportURI;
                 connectedTransportURI = null;
                 connected=false;
-                    
                 if(reconnectOk) {
                     reconnectTask.wakeup();
                 }
@@ -396,7 +395,9 @@ public class FailoverTransport implements CompositeTransport {
 
                         // Wait for transport to be connected.
                         Transport transport = connectedTransport.get();
-                        while (transport == null && !disposed && connectionFailure == null) {
+                        while (transport == null && !disposed
+                                && connectionFailure == null
+                                && !Thread.currentThread().isInterrupted()) {
                             LOG.trace("Waiting for transport to reconnect.");
                             try {
                                 reconnectMutex.wait(1000);
