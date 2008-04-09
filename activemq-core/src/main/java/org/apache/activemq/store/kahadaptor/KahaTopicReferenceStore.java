@@ -17,8 +17,10 @@
 package org.apache.activemq.store.kahadaptor;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 
@@ -299,6 +301,23 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
         }finally {
             lock.unlock();
         }
+    }
+    
+    public void removeAllMessages(ConnectionContext context) throws IOException {
+        lock.lock();
+        try {
+            Set<String> tmpSet = new HashSet<String>(subscriberContainer.keySet());
+            for (String key:tmpSet) {
+                TopicSubContainer container = subscriberMessages.get(key);
+                if (container != null) {
+                    container.clear();
+                }
+            }
+            ackContainer.clear();
+        }finally {
+            lock.unlock();
+        }
+        super.removeAllMessages(context);
     }
 
     protected void removeSubscriberMessageContainer(String clientId, String subscriptionName) throws IOException {

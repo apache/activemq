@@ -54,6 +54,9 @@ public class ContainerKeySetIterator implements Iterator {
     public void remove() {
         if (currentItem != null) {
             container.remove(currentItem);
+            if (nextItem != null) {
+                list.refreshEntry(nextItem);
+            }
         }
     }
 }

@@ -17,6 +17,8 @@
 package org.apache.activemq.store.kahadaptor;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -192,11 +194,15 @@ public class KahaReferenceStore implements ReferenceStore {
     public void removeAllMessages(ConnectionContext context) throws IOException {
         lock.lock();
         try {
+            Set<MessageId> tmpSet = new HashSet(messageContainer.keySet());
+            for (MessageId id:tmpSet) {
+                removeMessage(id);
+            }
+            resetBatching();
             messageContainer.clear();
         }finally {
             lock.unlock();
         }
-        
     }
 
     public ActiveMQDestination getDestination() {
