@@ -35,6 +35,7 @@ public abstract class ActiveMQMessageProducerSupport implements MessageProducer,
     protected int defaultDeliveryMode;
     protected int defaultPriority;
     protected long defaultTimeToLive;
+    protected int sendTimeout=0;
 
     public ActiveMQMessageProducerSupport(ActiveMQSession session) {
         this.session = session;
@@ -305,4 +306,18 @@ public abstract class ActiveMQMessageProducerSupport implements MessageProducer,
 
 
     protected abstract void checkClosed() throws IllegalStateException;
+
+    /**
+     * @return the sendTimeout
+     */
+    public int getSendTimeout() {
+        return sendTimeout;
+    }
+
+    /**
+     * @param sendTimeout the sendTimeout to set
+     */
+    public void setSendTimeout(int sendTimeout) {
+        this.sendTimeout = sendTimeout;
+    }
 }

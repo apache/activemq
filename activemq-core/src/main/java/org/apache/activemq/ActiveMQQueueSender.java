@@ -72,9 +72,9 @@ import org.apache.activemq.command.ActiveMQDestination;
 
 public class ActiveMQQueueSender extends ActiveMQMessageProducer implements QueueSender {
 
-    protected ActiveMQQueueSender(ActiveMQSession session, ActiveMQDestination destination)
+    protected ActiveMQQueueSender(ActiveMQSession session, ActiveMQDestination destination,int sendTimeout)
         throws JMSException {
-        super(session, session.getNextProducerId(), destination);
+        super(session, session.getNextProducerId(), destination,sendTimeout);
     }
 
     /**

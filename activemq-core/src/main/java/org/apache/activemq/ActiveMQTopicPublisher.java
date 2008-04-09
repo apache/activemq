@@ -85,8 +85,8 @@ public class ActiveMQTopicPublisher extends ActiveMQMessageProducer implements
         TopicPublisher {
 
     protected ActiveMQTopicPublisher(ActiveMQSession session,
-                                     ActiveMQDestination destination) throws JMSException {
-        super(session, session.getNextProducerId(), destination);
+                                     ActiveMQDestination destination, int sendTimeout) throws JMSException {
+        super(session, session.getNextProducerId(), destination,sendTimeout);
     }
 
     /**
