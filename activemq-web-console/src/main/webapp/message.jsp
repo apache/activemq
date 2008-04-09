@@ -130,7 +130,7 @@ No message could be found for ID ${requestContext.messageQuery.JMSMessageID}
 				</thead>
 				<tbody>
 					<tr>
-						<td>${requestContext.messageQuery.body}</td>
+						<td><c:out value="${requestContext.messageQuery.body}" escapeXml="true" /></td>
 					</tr>
 				</tbody>
 			</table>
