@@ -19,6 +19,7 @@ package org.apache.activemq.kaha.impl.index;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.channels.FileLock;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.kaha.impl.DataManager;
@@ -170,6 +171,11 @@ public final class IndexManager {
         this.length = value;
         storeSize.addAndGet(length);
     }
+    
+    public synchronized FileLock getLock() throws IOException {
+        return indexFile.getChannel().tryLock();
+    }
+
 
     public String toString() {
         return "IndexManager:(" + NAME_PREFIX + name + ")";
