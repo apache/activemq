@@ -147,7 +147,6 @@
       <unpack>false</unpack>
       <scope>runtime</scope>
       <includes>
-        <include>backport-util-concurrent:backport-util-concurrent</include>
         <include>commons-logging:commons-logging</include>
         <include>geronimo-jms_1.1_spec:geronimo-jms_1.1_spec</include>
         <include>${pom.groupId}:activemq-core</include>
