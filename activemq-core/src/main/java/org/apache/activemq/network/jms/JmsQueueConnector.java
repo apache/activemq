@@ -210,6 +210,9 @@ public class JmsQueueConnector extends JmsConnector {
                 }
             }
         }
+        if (localClientId != null && localClientId.length() > 0) {
+            outboundQueueConnection.setClientID(getOutboundClientId());
+        }
         outboundQueueConnection.start();
     }
 
@@ -242,6 +245,9 @@ public class JmsQueueConnector extends JmsConnector {
                     localQueueConnection = localQueueConnectionFactory.createQueueConnection();
                 }
             }
+        }
+        if (localClientId != null && localClientId.length() > 0) {
+            localQueueConnection.setClientID(getLocalClientId());
         }
         localQueueConnection.start();
     }

@@ -210,6 +210,9 @@ public class JmsTopicConnector extends JmsConnector {
                 }
             }
         }
+        if (localClientId != null && localClientId.length() > 0) {
+            outboundTopicConnection.setClientID(getOutboundClientId());
+        }
         outboundTopicConnection.start();
     }
 
@@ -242,6 +245,9 @@ public class JmsTopicConnector extends JmsConnector {
                     localTopicConnection = localTopicConnectionFactory.createTopicConnection();
                 }
             }
+        }
+        if (localClientId != null && localClientId.length() > 0) {
+            localTopicConnection.setClientID(getLocalClientId());
         }
         localTopicConnection.start();
     }
