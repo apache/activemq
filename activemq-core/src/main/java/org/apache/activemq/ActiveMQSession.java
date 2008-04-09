@@ -1623,7 +1623,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             if (this.debug) {
                 LOG.debug(getSessionId() + " sending message: " + msg);
             }
-            if (!connection.isAlwaysSyncSend() && (!msg.isPersistent() || connection.isUseAsyncSend() || txid != null)) {
+            if (!msg.isResponseRequired() && !connection.isAlwaysSyncSend() && (!msg.isPersistent() || connection.isUseAsyncSend() || txid != null)) {
                 this.connection.asyncSendPacket(msg);
                 if (producerWindow != null) {
                     // Since we defer lots of the marshaling till we hit the
