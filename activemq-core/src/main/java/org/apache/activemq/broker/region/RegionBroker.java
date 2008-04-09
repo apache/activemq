@@ -314,9 +314,9 @@ public class RegionBroker implements Broker {
     }
 
     public ActiveMQDestination[] getDestinations() throws Exception {
-        ArrayList<Destination> l;
+        ArrayList<ActiveMQDestination> l;
 
-        l = new ArrayList<Destination>(destinations.values());
+        l = new ArrayList<ActiveMQDestination>(getDestinationMap().keySet());
 
         ActiveMQDestination rc[] = new ActiveMQDestination[l.size()];
         l.toArray(rc);
