@@ -79,7 +79,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     private MessageTransformer transformer;
     private MemoryUsage producerWindow;
 
-    protected ActiveMQMessageProducer(ActiveMQSession session, ProducerId producerId, ActiveMQDestination destination) throws JMSException {
+    protected ActiveMQMessageProducer(ActiveMQSession session, ProducerId producerId, ActiveMQDestination destination, int sendTimeout) throws JMSException {
         super(session);
         this.info = new ProducerInfo(producerId);
         this.info.setWindowSize(session.connection.getProducerWindowSize());
@@ -104,6 +104,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         this.stats = new JMSProducerStatsImpl(session.getSessionStats(), destination);
         this.session.addProducer(this);
         this.session.asyncSendPacket(info);
+        this.setSendTimeout(sendTimeout);
         setTransformer(session.getTransformer());
     }
 
@@ -223,7 +224,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
             }
         }
 
-        this.session.send(this, dest, message, deliveryMode, priority, timeToLive, producerWindow);
+        this.session.send(this, dest, message, deliveryMode, priority, timeToLive, producerWindow,sendTimeout);
 
         stats.onMessage();
     }

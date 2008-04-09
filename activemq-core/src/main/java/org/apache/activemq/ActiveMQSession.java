@@ -812,8 +812,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             CustomDestination customDestination = (CustomDestination)destination;
             return customDestination.createProducer(this);
         }
-
-        return new ActiveMQMessageProducer(this, getNextProducerId(), ActiveMQMessageTransformation.transformDestination(destination));
+        int timeSendOut = connection.getSendTimeout();
+        return new ActiveMQMessageProducer(this, getNextProducerId(), ActiveMQMessageTransformation.transformDestination(destination),timeSendOut);
     }
 
     /**
@@ -1293,8 +1293,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             CustomDestination customDestination = (CustomDestination)queue;
             return customDestination.createSender(this);
         }
-
-        return new ActiveMQQueueSender(this, ActiveMQMessageTransformation.transformDestination(queue));
+        int timeSendOut = connection.getSendTimeout();
+        return new ActiveMQQueueSender(this, ActiveMQMessageTransformation.transformDestination(queue),timeSendOut);
     }
 
     /**
@@ -1390,7 +1390,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             CustomDestination customDestination = (CustomDestination)topic;
             return customDestination.createPublisher(this);
         }
-        return new ActiveMQTopicPublisher(this, ActiveMQMessageTransformation.transformDestination(topic));
+        int timeSendOut = connection.getSendTimeout();
+        return new ActiveMQTopicPublisher(this, ActiveMQMessageTransformation.transformDestination(topic),timeSendOut);
     }
 
     /**
@@ -1576,7 +1577,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * @throws JMSException
      */
     protected void send(ActiveMQMessageProducer producer, ActiveMQDestination destination, Message message, int deliveryMode, int priority, long timeToLive,
-                        MemoryUsage producerWindow) throws JMSException {
+                        MemoryUsage producerWindow, int sendTimeout) throws JMSException {
 
         checkClosed();
         if (destination.isTemporary() && connection.isDeleted(destination)) {
@@ -1623,7 +1624,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             if (this.debug) {
                 LOG.debug(getSessionId() + " sending message: " + msg);
             }
-            if (!msg.isResponseRequired() && !connection.isAlwaysSyncSend() && (!msg.isPersistent() || connection.isUseAsyncSend() || txid != null)) {
+            if (sendTimeout <= 0 && !msg.isResponseRequired() && !connection.isAlwaysSyncSend() && (!msg.isPersistent() || connection.isUseAsyncSend() || txid != null)) {
                 this.connection.asyncSendPacket(msg);
                 if (producerWindow != null) {
                     // Since we defer lots of the marshaling till we hit the
@@ -1637,7 +1638,11 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                     producerWindow.increaseUsage(size);
                 }
             } else {
-                this.connection.syncSendPacket(msg);
+                if (sendTimeout > 0) {
+                    this.connection.syncSendPacket(msg,sendTimeout);
+                }else {
+                    this.connection.syncSendPacket(msg);
+                }
             }
 
         }

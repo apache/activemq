@@ -106,6 +106,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private boolean watchTopicAdvisories = true;
     private int producerWindowSize = DEFAULT_PRODUCER_WINDOW_SIZE;
     private long warnAboutUnstartedConnectionTimeout = 500L;
+    private int sendTimeout =0;
     private TransportListener transportListener;
 
     // /////////////////////////////////////////////
@@ -302,6 +303,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setWatchTopicAdvisories(isWatchTopicAdvisories());
         connection.setProducerWindowSize(getProducerWindowSize());
         connection.setWarnAboutUnstartedConnectionTimeout(getWarnAboutUnstartedConnectionTimeout());
+        connection.setSendTimeout(getSendTimeout());
         if (transportListener != null) {
             connection.addTransportListener(transportListener);
         }
@@ -533,6 +535,21 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public MessageTransformer getTransformer() {
         return transformer;
     }
+    
+    /**
+     * @return the sendTimeout
+     */
+    public int getSendTimeout() {
+        return sendTimeout;
+    }
+
+    /**
+     * @param sendTimeout the sendTimeout to set
+     */
+    public void setSendTimeout(int sendTimeout) {
+        this.sendTimeout = sendTimeout;
+    }
+
 
     /**
      * Sets the transformer used to transform messages before they are sent on
@@ -627,6 +644,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("statsEnabled", Boolean.toString(isStatsEnabled()));
         props.setProperty("alwaysSyncSend", Boolean.toString(isAlwaysSyncSend()));
         props.setProperty("producerWindowSize", Integer.toString(getProducerWindowSize()));
+        props.setProperty("sendTimeout", Integer.toString(getSendTimeout()));
     }
 
     public boolean isUseCompression() {

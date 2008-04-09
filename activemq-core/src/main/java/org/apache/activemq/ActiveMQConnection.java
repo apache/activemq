@@ -142,6 +142,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private int closeTimeout = 15000;
     private boolean watchTopicAdvisories = true;
     private long warnAboutUnstartedConnectionTimeout = 500L;
+    private int sendTimeout =0;
 
     private final Transport transport;
     private final IdGenerator clientIdGenerator;
@@ -1518,6 +1519,21 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public void setWarnAboutUnstartedConnectionTimeout(long warnAboutUnstartedConnectionTimeout) {
         this.warnAboutUnstartedConnectionTimeout = warnAboutUnstartedConnectionTimeout;
     }
+    
+    /**
+     * @return the sendTimeout
+     */
+    public int getSendTimeout() {
+        return sendTimeout;
+    }
+
+    /**
+     * @param sendTimeout the sendTimeout to set
+     */
+    public void setSendTimeout(int sendTimeout) {
+        this.sendTimeout = sendTimeout;
+    }
+
 
     /**
      * Returns the time this connection was created
@@ -2091,5 +2107,4 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     protected void rollbackDuplicate(ActiveMQDispatcher dispatcher, Message message) {
         connectionAudit.rollbackDuplicate(dispatcher, message);
     }
-
 }
