@@ -30,7 +30,7 @@ class PooledTaskRunner implements TaskRunner {
     private boolean queued;
     private boolean shutdown;
     private boolean iterating;
-    private Thread runningThread;
+    private volatile Thread runningThread;
 
     public PooledTaskRunner(Executor executor, Task task, int maxIterationsPerRun) {
         this.executor = executor;
@@ -39,8 +39,11 @@ class PooledTaskRunner implements TaskRunner {
         runable = new Runnable() {
             public void run() {
                 runningThread = Thread.currentThread();
-                runTask();
-                runningThread = null;
+                try {
+                    runTask();
+                } finally {
+                    runningThread = null;
+                }
             }
         };
     }
@@ -77,7 +80,7 @@ class PooledTaskRunner implements TaskRunner {
 
     /**
      * shut down the task
-     * 
+     *
      * @throws InterruptedException
      */
     public void shutdown(long timeout) throws InterruptedException {
@@ -114,15 +117,20 @@ class PooledTaskRunner implements TaskRunner {
         // Don't synchronize while we are iterating so that
         // multiple wakeup() calls can be executed concurrently.
         boolean done = false;
-        for (int i = 0; i < maxIterationsPerRun; i++) {
-            if (!task.iterate()) {
-                done = true;
-                break;
+        try {
+            for (int i = 0; i < maxIterationsPerRun; i++) {
+                if (!task.iterate()) {
+                    done = true;
+                    break;
+                }
+            }
+        } finally {
+            synchronized( runable ) {
+                iterating = false;
             }
         }
 
         synchronized (runable) {
-            iterating = false;
             if (shutdown) {
                 queued = false;
                 runable.notifyAll();
