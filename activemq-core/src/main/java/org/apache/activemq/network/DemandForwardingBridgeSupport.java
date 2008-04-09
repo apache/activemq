@@ -785,6 +785,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
         if (dests != null && dests.length > 0) {
             for (int i = 0; i < dests.length; i++) {
                 ActiveMQDestination match = dests[i];
+                if (filter instanceof org.apache.activemq.filter.SimpleDestinationFilter) {
+                    DestinationFilter newFilter = DestinationFilter.parseFilter(match);
+                    if (!(newFilter instanceof org.apache.activemq.filter.SimpleDestinationFilter)) {
+                        filter = newFilter;
+                        match = destination;
+                    }
+                }
                 if (match != null && filter.matches(match)) {
                     return false;
                 }
@@ -794,6 +801,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
         if (dests != null && dests.length > 0) {
             for (int i = 0; i < dests.length; i++) {
                 ActiveMQDestination match = dests[i];
+                if (filter instanceof org.apache.activemq.filter.SimpleDestinationFilter) {
+                    DestinationFilter newFilter = DestinationFilter.parseFilter(match);
+                    if (!(newFilter instanceof org.apache.activemq.filter.SimpleDestinationFilter)) {
+                        filter = newFilter;
+                        match = destination;
+                    }
+                }
                 if (match != null && filter.matches(match)) {
                     return true;
                 }
