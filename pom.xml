@@ -83,6 +83,8 @@
     <module>activemq-web-demo</module>
     <module>activemq-web-console</module>
     <module>activemq-xmpp</module>
+    <module>activemq-all</module>
+    <module>activemq-run</module>
     <module>assembly</module>
     <module>activemq-jmdns_1.0</module>
   </modules>
@@ -172,6 +174,28 @@
         <artifactId>activemq-openwire-generator</artifactId>
         <version>${activemq-version}</version>
       </dependency>
+	  <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-run</artifactId>
+        <version>${activemq-version}</version>
+        <!--<classifier>run</classifier>-->
+      </dependency>
+	  <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-all</artifactId>
+        <version>${activemq-version}</version>
+      </dependency>
+	  <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-all</artifactId>
+        <version>${activemq-version}</version>
+        <classifier>run</classifier>
+      </dependency>
+	  <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-run</artifactId>
+        <version>${activemq-version}</version>
+      </dependency>
 
       <!-- =============================== -->
       <!-- Required dependencies -->
@@ -208,7 +232,7 @@
 
       <dependency>
         <groupId>org.apache.geronimo.specs</groupId>
-        <artifactId>geronimo-jacc_1.1_spec</artifactId>
+        <artifactId>geronimo-j2ee-jacc_1.0_spec</artifactId>
         <version>1.0.1</version>
       </dependency>
 
@@ -699,7 +723,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-assembly-plugin</artifactId>
-          <version>2.1</version>
+          <version>2.2-beta-2</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
