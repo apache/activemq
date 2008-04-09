@@ -61,7 +61,9 @@ public class KahaStore implements Store {
     private static final boolean DISABLE_LOCKING = "true".equals(System.getProperty(PROPERTY_PREFIX
                                                                                     + ".DisableLocking",
                                                                                     "false"));
-
+    //according to the String javadoc, all constant strings are interned so this will be the same object throughout the vm
+    //and we can use it as a monitor for the lockset.
+    private final static String LOCKSET_MONITOR = PROPERTY_PREFIX + ".Lock.Monitor";
     private static final Log LOG = LogFactory.getLog(KahaStore.class);
 
     private final File directory;
@@ -80,7 +82,6 @@ public class KahaStore implements Store {
     private long maxDataFileLength = 1024 * 1024 * 32;
     private FileLock lock;
     private boolean persistentIndex = true;
-    private RandomAccessFile lockFile;
     private final AtomicLong storeSize;
     private String defaultContainerName = DEFAULT_CONTAINER_NAME;
 
@@ -109,8 +110,6 @@ public class KahaStore implements Store {
             closed = true;
             if (initialized) {
                 unlock();
-                lockFile.close();
-
                 for (ListContainerImpl container : lists.values()) {
                     container.close();
                 }
@@ -129,9 +128,6 @@ public class KahaStore implements Store {
                     dm.close();
                     iter.remove();
                 }
-            }
-            if (lockFile != null) {
-                lockFile.close();
             }
         }
     }
@@ -470,14 +466,11 @@ public class KahaStore implements Store {
         if (closed) {
             throw new IOException("Store has been closed.");
         }
-        if (!initialized) {
-
-            
-            lockFile = new RandomAccessFile(new File(directory, "lock"), "rw");
-            lock();
+        if (!initialized) {       
             LOG.info("Kaha Store using data directory " + directory);
             DataManager defaultDM = getDataManager(defaultContainerName);
             rootIndexManager = getIndexManager(defaultDM, defaultContainerName);
+            lock();
             IndexItem mapRoot = new IndexItem();
             IndexItem listRoot = new IndexItem();
             if (rootIndexManager.isEmpty()) {
@@ -505,40 +498,38 @@ public class KahaStore implements Store {
         }
     }
 
-    private synchronized void lock() throws IOException {
-        if (!DISABLE_LOCKING && directory != null && lock == null) {
-            String key = getPropertyKey();
-            String property = System.getProperty(key);
-            if (null == property) {
-                if (!BROKEN_FILE_LOCK) {
-                    lock = lockFile.getChannel().tryLock();
-                    if (lock == null) {
-                        initialized=false;
-                        throw new StoreLockedExcpetion("Kaha Store " + directory.getName()
-                                                       + "  is already opened by another application");
-                    } else {
-                        System.setProperty(key, new Date().toString());
+    private void lock() throws IOException {
+        synchronized (LOCKSET_MONITOR) {
+            if (!DISABLE_LOCKING && directory != null && lock == null) {
+                String key = getPropertyKey();
+                String property = System.getProperty(key);
+                if (null == property) {
+                    if (!BROKEN_FILE_LOCK) {
+                        lock = rootIndexManager.getLock();
+                        if (lock == null) {
+                            throw new StoreLockedExcpetion("Kaha Store " + directory.getName() + "  is already opened by another application");
+                        } else
+                            System.setProperty(key, new Date().toString());
                     }
+                } else { //already locked
+                    throw new StoreLockedExcpetion("Kaha Store " + directory.getName() + " is already opened by this application.");
                 }
-            } else { // already locked
-                initialized=false;
-                throw new StoreLockedExcpetion("Kaha Store " + directory.getName()
-                                               + " is already opened by this application.");
             }
         }
     }
 
-    private synchronized void unlock() throws IOException {
-        if (!DISABLE_LOCKING && (null != directory) && (null != lock)) {
-            //clear property doesn't work on some platforms
-            System.getProperties().remove(getPropertyKey());
-            if (lock.isValid()) {
-                lock.release();
-                lock.channel().close();
+    private void unlock() throws IOException {
+        synchronized (LOCKSET_MONITOR) {
+            if (!DISABLE_LOCKING && (null != directory) && (null != lock)) {
+                System.getProperties().remove(getPropertyKey());
+                if (lock.isValid()) {
+                    lock.release();
+                }
+                lock = null;
             }
-            lock = null;
         }
     }
+
 
     private String getPropertyKey() throws IOException {
         return getClass().getName() + ".lock." + directory.getCanonicalPath();
