@@ -59,6 +59,8 @@ public abstract class JmsConnector implements Service {
     protected String outboundPassword;
     protected String localUsername;
     protected String localPassword;
+    protected String outboundClientId;
+    protected String localClientId;
     protected LRUCache replyToBridges = createLRUCache();
 
     private List<DestinationBridge> inboundBridges = new CopyOnWriteArrayList<DestinationBridge>();
@@ -277,7 +279,36 @@ public abstract class JmsConnector implements Service {
     public void setOutboundUsername(String outboundUsername) {
         this.outboundUsername = outboundUsername;
     }
+    
+    /**
+     * @return the outboundClientId
+     */
+    public String getOutboundClientId() {
+        return outboundClientId;
+    }
 
+    /**
+     * @param outboundClientId the outboundClientId to set
+     */
+    public void setOutboundClientId(String outboundClientId) {
+        this.outboundClientId = outboundClientId;
+    }
+
+    /**
+     * @return the localClientId
+     */
+    public String getLocalClientId() {
+        return localClientId;
+    }
+
+    /**
+     * @param localClientId the localClientId to set
+     */
+    public void setLocalClientId(String localClientId) {
+        this.localClientId = localClientId;
+    }
+    
+    
     protected void addInboundBridge(DestinationBridge bridge) {
         inboundBridges.add(bridge);
     }
