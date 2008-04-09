@@ -1,0 +1,106 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.apache.activemq</groupId>
+    <artifactId>activemq-parent</artifactId>
+    <version>4.1.2</version>
+  </parent>
+
+  <artifactId>activemq-all</artifactId>
+  <packaging>jar</packaging>
+  <name>ActiveMQ :: Jar Bundle</name>
+  <description>Puts together an ActiveMQ jar bundle</description>
+
+  <dependencies>
+
+    <!-- activemq -->
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-console</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-optional</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derby</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+
+    <plugins>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>1.0.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <id>all</id>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+
+              <artifactSet>
+                <includes>
+                  <include>${project.groupId}:activemq-core</include>
+                  <include>${project.groupId}:activemq-console</include>
+                  <include>${project.groupId}:activemq-jaas</include>
+                  <include>${project.groupId}:activemq-optional</include>
+                  <include>${project.groupId}:activeio-core</include>
+                  <include>org.apache.geronimo.specs:geronimo-jms_1.1_spec</include>
+                  <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.0_spec</include>
+                  <include>commons-logging:commons-logging</include>
+                  <include>backport-util-concurrent:backport-util-concurrent</include>
+                  <include>org.apache.derby:derby</include>
+                </includes>
+              </artifactSet>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">
+                  <projectName>Apache ActiveMQ</projectName>
+                </transformer>
+
+                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                  <resource>META-INF/spring.handlers</resource>
+                </transformer>
+
+                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                  <resource>META-INF/services/com.sun.tools.xjc.Plugin</resource>
+                </transformer>
+
+                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                  <resource>META-INF/spring.schemas</resource>
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.geronimo.genesis.plugins</groupId>
+        <artifactId>tools-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>verify-legal-files</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>verify-legal-files</goal>
+            </goals>
+            <configuration>
+              <strict>false</strict>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+  </build>
+
+</project>
