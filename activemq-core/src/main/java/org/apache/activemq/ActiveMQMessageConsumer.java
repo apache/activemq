@@ -662,7 +662,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     }
                 }
             }
-            deliveredMessages.clear();
+            synchronized(deliveredMessages) {
+                deliveredMessages.clear();
+            }
             List<MessageDispatch> list = unconsumedMessages.removeAll();
             if (!this.info.isBrowser()) {
                 for (MessageDispatch old : list) {
