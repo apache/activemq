@@ -61,7 +61,14 @@ public class DestinationFacade {
     // Properties
     // -------------------------------------------------------------------------
     public BrokerViewMBean getBrokerAdmin() throws Exception {
-        return brokerFacade.getBrokerAdmin();
+        if (brokerFacade == null) {
+            throw new IllegalArgumentException("No brokerFacade injected!");
+        }
+        BrokerViewMBean answer = brokerFacade.getBrokerAdmin();
+        if (answer == null) {
+            throw new IllegalArgumentException("No brokerAdmin on the injected brokerFacade: " + brokerFacade);
+        }
+        return answer;
     }
 
     public BrokerFacade getBrokerFacade() {

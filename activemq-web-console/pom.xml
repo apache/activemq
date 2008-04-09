@@ -18,7 +18,7 @@
 -->
 
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
 
   <modelVersion>4.0.0</modelVersion>
 
@@ -39,16 +39,16 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
         <configuration>
-           <warSourceExcludes>
-           	WEB-INF/lib/activation*.jar,
-           	WEB-INF/lib/activeio*.jar,
-           	WEB-INF/lib/activemq-console*.jar,
-           	WEB-INF/lib/activemq-core*.jar,
-           	WEB-INF/lib/activemq-xmpp*.jar,
-           	WEB-INF/lib/geronimo*.jar,
-           	WEB-INF/lib/xml-apis*.jar,
-           	WEB-INF/lib/xerces*.jar
-           </warSourceExcludes>
+          <warSourceExcludes>
+            WEB-INF/lib/activation*.jar,
+            WEB-INF/lib/activeio*.jar,
+            WEB-INF/lib/activemq-console*.jar,
+            WEB-INF/lib/activemq-core*.jar,
+            WEB-INF/lib/activemq-xmpp*.jar,
+            WEB-INF/lib/geronimo*.jar,
+            WEB-INF/lib/xml-apis*.jar,
+            WEB-INF/lib/xerces*.jar
+          </warSourceExcludes>
         </configuration>
       </plugin>
       <plugin>
@@ -62,39 +62,39 @@
               <maxIdleTime>60000</maxIdleTime>
             </connector>
           </connectors>
-          
+
           <webAppConfig>
             <contextPath>/</contextPath>
           </webAppConfig>
-          
+
           <systemProperties>
             <!-- enable easy connection to JConsole -->
             <systemProperty>
               <name>com.sun.management.jmxremote</name>
               <value></value>
             </systemProperty>
-             
-             <!-- Start an own broker -->
+
+            <!-- Start an own broker -->
             <systemProperty>
               <name>webconsole.type</name>
               <value>embedded</value>
             </systemProperty>
 
-<!--
-   Use the following configuration to connect to a remote broker using JMX
-            <systemProperty>
-              <name>webconsole.type</name>
-              <value>properties</value>
-            </systemProperty>
-            <systemProperty>
-              <name>webconsole.jms.url</name>
-              <value>tcp://localhost:61616</value>
-            </systemProperty>
-            <systemProperty>
-              <name>webconsole.jmx.url</name>
-              <value>service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi</value>
-            </systemProperty>
--->
+            <!--
+               Use the following configuration to connect to a remote broker using JMX
+                        <systemProperty>
+                          <name>webconsole.type</name>
+                          <value>properties</value>
+                        </systemProperty>
+                        <systemProperty>
+                          <name>webconsole.jms.url</name>
+                          <value>tcp://localhost:61616</value>
+                        </systemProperty>
+                        <systemProperty>
+                          <name>webconsole.jmx.url</name>
+                          <value>service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi</value>
+                        </systemProperty>
+            -->
           </systemProperties>
           <scanIntervalSeconds>10</scanIntervalSeconds>
         </configuration>
@@ -191,10 +191,28 @@
     </dependency>
 
     <!-- enable commons-logging when inside jetty6:run -->
+    <!--
+    <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>jcl104-over-slf4j</artifactId>
+        <version>1.5.0</version>
+    </dependency>
+    -->
+    <!--
+        <dependency>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-jcl</artifactId>
+        </dependency>
+    -->
     <dependency>
       <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-jcl</artifactId>
+      <artifactId>slf4j-api</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
