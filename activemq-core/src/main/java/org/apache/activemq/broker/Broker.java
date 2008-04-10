@@ -312,5 +312,10 @@ public interface Broker extends Region, Service {
      * @param messageReference
      */
     void sendToDeadLetterQueue(ConnectionContext context, MessageReference messageReference);
+    
+    /**
+     * @return the broker sequence id
+     */
+    long getBrokerSequenceId();
 
 }

@@ -382,6 +382,7 @@ public class Topic  extends BaseDestination  implements Task{
         final ConnectionContext context = producerExchange
                 .getConnectionContext();
         message.setRegionDestination(this);
+        message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
 
         if (topicStore != null && message.isPersistent()
                 && !canOptimizeOutPersistence()) {

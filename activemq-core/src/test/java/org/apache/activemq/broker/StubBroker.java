@@ -258,4 +258,8 @@ public class StubBroker implements Broker {
     public Broker getRoot() {
         return this;
     }
+    
+    public long getBrokerSequenceId() {
+        return -1l;
+    }
 }

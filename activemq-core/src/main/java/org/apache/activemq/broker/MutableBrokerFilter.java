@@ -273,5 +273,9 @@ public class MutableBrokerFilter implements Broker {
     public Broker getRoot() {
         return getNext().getRoot();
     }
+    
+    public long getBrokerSequenceId() {
+        return getNext().getBrokerSequenceId();
+    }
 
 }
