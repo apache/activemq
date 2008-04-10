@@ -17,10 +17,14 @@
 package org.apache.activemq.advisory;
 
 import javax.jms.Connection;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.jms.TemporaryQueue;
+import javax.jms.TemporaryTopic;
 
 import org.apache.activemq.EmbeddedBrokerTestSupport;
-import org.apache.activemq.command.ActiveMQTempQueue;
+import org.apache.activemq.broker.region.RegionBroker;
 
 /**
  * @version $Revision: 397249 $
@@ -31,15 +35,43 @@ public class TempDestLoadTest extends EmbeddedBrokerTestSupport implements
     protected int consumerCounter;
     private Connection connection;
     private Session session;
-    private ActiveMQTempQueue tempQueue;
+    private static final int MESSAGE_COUNT = 2000;
+    
     
     
     public void testLoadTempAdvisoryQueues() throws Exception {
 
-        int count = 100;
-        for (int i = 0; i < count; i++) {
-            tempQueue = (ActiveMQTempQueue) session.createTemporaryQueue();
+        for (int i = 0; i < MESSAGE_COUNT; i++) {
+            TemporaryQueue tempQueue = session.createTemporaryQueue();
+            MessageConsumer consumer = session.createConsumer(tempQueue);
+            MessageProducer producer = session.createProducer(tempQueue);
+            consumer.close();
+            producer.close();
             tempQueue.delete();
+        }
+
+        AdvisoryBroker ab = (AdvisoryBroker) broker.getBroker().getAdaptor(
+                AdvisoryBroker.class);
+               
+        assertTrue(ab.getAdvisoryDestinations().size() == 0);
+        assertTrue(ab.getAdvisoryConsumers().size() == 0);
+        assertTrue(ab.getAdvisoryProducers().size() == 0);
+               
+        RegionBroker rb = (RegionBroker) broker.getBroker().getAdaptor(
+                RegionBroker.class);
+        //there should be 3 destinations - advisories - 
+        //1 for the connection + 2 generic ones
+        assertTrue(rb.getDestinationMap().size()==3);            
+    }
+    
+    public void testLoadTempAdvisoryTopics() throws Exception {
+        for (int i = 0; i < MESSAGE_COUNT; i++) {
+            TemporaryTopic tempTopic =  session.createTemporaryTopic();
+            MessageConsumer consumer = session.createConsumer(tempTopic);
+            MessageProducer producer = session.createProducer(tempTopic);
+            consumer.close();
+            producer.close();
+            tempTopic.delete();
         }
 
         AdvisoryBroker ab = (AdvisoryBroker) broker.getBroker().getAdaptor(
@@ -47,7 +79,12 @@ public class TempDestLoadTest extends EmbeddedBrokerTestSupport implements
         assertTrue(ab.getAdvisoryDestinations().size() == 0);
         assertTrue(ab.getAdvisoryConsumers().size() == 0);
         assertTrue(ab.getAdvisoryProducers().size() == 0);
-
+        RegionBroker rb = (RegionBroker) broker.getBroker().getAdaptor(
+                RegionBroker.class);
+        //there should be 3 destinations - advisories - 
+        //1 for the connection + 2 generic ones
+        assertTrue(rb.getDestinationMap().size()==3);        
+        
     }
 
     protected void setUp() throws Exception {
