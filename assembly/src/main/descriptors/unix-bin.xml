@@ -16,7 +16,7 @@
     limitations under the License.
 -->
 <assembly>
-  <id>unix-bin</id>
+  <id>bin</id>
   <formats>
     <format>tar.gz</format>
     <format>tar.bz2</format>
