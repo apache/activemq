@@ -16,7 +16,7 @@
     limitations under the License.
 -->
 <assembly>
-  <id>windows-bin</id>
+  <id>bin</id>
   <formats>
     <format>zip</format>
   </formats>
