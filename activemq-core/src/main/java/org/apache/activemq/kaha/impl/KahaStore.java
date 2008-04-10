@@ -82,6 +82,7 @@ public class KahaStore implements Store {
     private long maxDataFileLength = 1024 * 1024 * 32;
     private FileLock lock;
     private boolean persistentIndex = true;
+    private RandomAccessFile lockFile;
     private final AtomicLong storeSize;
     private String defaultContainerName = DEFAULT_CONTAINER_NAME;
 
@@ -110,6 +111,9 @@ public class KahaStore implements Store {
             closed = true;
             if (initialized) {
                 unlock();
+                if (lockFile!=null) {
+                    lockFile.close();
+                }
                 for (ListContainerImpl container : lists.values()) {
                     container.close();
                 }
@@ -468,9 +472,10 @@ public class KahaStore implements Store {
         }
         if (!initialized) {       
             LOG.info("Kaha Store using data directory " + directory);
+            lockFile = new RandomAccessFile(new File(directory, "lock"), "rw");
+            lock();
             DataManager defaultDM = getDataManager(defaultContainerName);
             rootIndexManager = getIndexManager(defaultDM, defaultContainerName);
-            lock();
             IndexItem mapRoot = new IndexItem();
             IndexItem listRoot = new IndexItem();
             if (rootIndexManager.isEmpty()) {
@@ -505,7 +510,7 @@ public class KahaStore implements Store {
                 String property = System.getProperty(key);
                 if (null == property) {
                     if (!BROKEN_FILE_LOCK) {
-                        lock = rootIndexManager.getLock();
+                        lock = lockFile.getChannel().tryLock();
                         if (lock == null) {
                             throw new StoreLockedExcpetion("Kaha Store " + directory.getName() + "  is already opened by another application");
                         } else
