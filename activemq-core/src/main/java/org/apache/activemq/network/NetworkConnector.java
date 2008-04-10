@@ -201,8 +201,6 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
         serviceSupport.stop();
     }
 
-    public abstract String getName();
-
     protected void handleStart() throws Exception {
         if (localURI == null) {
             throw new IllegalStateException("You must configure the 'localURI' property");
@@ -262,6 +260,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
             }
         }
     }
+    
 
     @SuppressWarnings("unchecked")
     protected ObjectName createNetworkBridgeObjectName(NetworkBridge bridge) throws MalformedObjectNameException {

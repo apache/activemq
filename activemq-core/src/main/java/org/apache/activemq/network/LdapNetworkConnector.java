@@ -88,6 +88,8 @@ public class      LdapNetworkConnector
 
    // local context
    private DirContext context = null;
+   //currently in use URI
+   private URI ldapURI = null;
 
    /**
     * returns the next URI from the configured list
@@ -195,9 +197,9 @@ public class      LdapNetworkConnector
       LOG.info("connecting...");
       Hashtable<String, String> env = new Hashtable();
       env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-      URI uri = getUri();
-      LOG.debug("    URI [" + uri + "]");
-      env.put(Context.PROVIDER_URL, uri.toString());
+      this.ldapURI = getUri();
+      LOG.debug("    URI [" + this.ldapURI + "]");
+      env.put(Context.PROVIDER_URL, this.ldapURI.toString());
       if(anonymousAuthentication)
       {
          LOG.debug("    login credentials [anonymous]");
@@ -221,9 +223,9 @@ public class      LdapNetworkConnector
          {
             if(failover)
             {
-               uri = getUri();
-               LOG.error("connection error [" + env.get(Context.PROVIDER_URL) + "], failover connection to [" + uri.toString() + "]");
-               env.put(Context.PROVIDER_URL, uri.toString());
+                this.ldapURI = getUri();
+               LOG.error("connection error [" + env.get(Context.PROVIDER_URL) + "], failover connection to [" + this.ldapURI.toString() + "]");
+               env.put(Context.PROVIDER_URL, this.ldapURI.toString());
                Thread.sleep(curReconnectDelay);
                curReconnectDelay = Math.min(curReconnectDelay * 2, maxReconnectDelay);
             }
@@ -272,14 +274,22 @@ public class      LdapNetworkConnector
     *
     * @return connector name
     */
-   public String getName()
-      { return toString(); }
+   public String getName() {
+
+        String name = super.getName();
+        if (name == null) {
+            name = this.getClass().getName() + " [" + ldapURI.toString() + "]";
+            super.setName(name);
+        }
+        return name;
+    }
 
    /**
-    * add connector of the given URI
-    *
-    * @param result search result of connector to add
-    */
+     * add connector of the given URI
+     * 
+     * @param result
+     *            search result of connector to add
+     */
    protected synchronized void addConnector(SearchResult result)
       throws Exception
    {

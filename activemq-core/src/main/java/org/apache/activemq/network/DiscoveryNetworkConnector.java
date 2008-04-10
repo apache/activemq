@@ -202,7 +202,13 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
     }
 
     public String getName() {
-        return discoveryAgent.toString();
+        String name = super.getName();
+        if (name == null) {
+            name = discoveryAgent.toString();
+            ;
+            super.setName(name);
+        }
+        return name;
     }
 
 }

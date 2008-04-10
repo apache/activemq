@@ -142,7 +142,12 @@ public class MulticastNetworkConnector extends NetworkConnector {
     }
 
     public String getName() {
-        return remoteTransport.toString();
+        String name = super.getName();
+        if(name == null) {
+            name = remoteTransport.toString();
+            super.setName(name);
+        }
+        return name;
     }
 
     protected DemandForwardingBridgeSupport createBridge(Transport local, Transport remote) {
