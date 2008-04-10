@@ -106,8 +106,11 @@ public class SslTransportServer extends TcpTransportServer {
      */
     public void bind() throws IOException {
         super.bind();
-        ((SSLServerSocket)this.serverSocket).setWantClientAuth(wantClientAuth);
-        ((SSLServerSocket)this.serverSocket).setNeedClientAuth(needClientAuth);
+        if (needClientAuth) {
+            ((SSLServerSocket)this.serverSocket).setNeedClientAuth(true);
+        } else if (wantClientAuth) {
+            ((SSLServerSocket)this.serverSocket).setWantClientAuth(true);
+        }
     }
     
     /**
