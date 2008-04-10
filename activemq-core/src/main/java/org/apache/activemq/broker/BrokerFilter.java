@@ -260,4 +260,8 @@ public class BrokerFilter implements Broker {
     public Broker getRoot() {
         return next.getRoot();
     }
+
+    public long getBrokerSequenceId() {
+        return next.getBrokerSequenceId();
+    }
 }

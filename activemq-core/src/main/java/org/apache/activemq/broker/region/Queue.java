@@ -430,7 +430,7 @@ public class Queue extends BaseDestination implements Task {
                                 "Connection closed, send aborted.");
                     }
                 }
-
+                message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
                 store.addMessage(context, message);
 
             }

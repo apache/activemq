@@ -46,6 +46,7 @@ public abstract class BaseDestination implements Destination {
     private boolean lazyDispatch=false;
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
     protected final BrokerService brokerService;
+    protected final Broker regionBroker;
     
     /**
      * @param broker 
@@ -66,6 +67,7 @@ public abstract class BaseDestination implements Destination {
         this.systemUsage = brokerService.getProducerSystemUsage();
         this.memoryUsage = new MemoryUsage(systemUsage.getMemoryUsage(), destination.toString());
         this.memoryUsage.setUsagePortion(1.0f);
+        this.regionBroker = brokerService.getRegionBroker();
     }
     
     /**
@@ -193,5 +195,9 @@ public abstract class BaseDestination implements Destination {
 
     public void setLazyDispatch(boolean lazyDispatch) {
         this.lazyDispatch = lazyDispatch;
-    }      
+    } 
+    
+    protected long getDestinationSequenceId() {
+        return regionBroker.getBrokerSequenceId();
+    }
 }

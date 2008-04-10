@@ -263,4 +263,8 @@ public class ErrorBroker implements Broker {
     public Broker getRoot() {
         throw new BrokerStoppedException(this.message);
     }
+    
+    public long getBrokerSequenceId() {
+        throw new BrokerStoppedException(this.message);
+    }
 }

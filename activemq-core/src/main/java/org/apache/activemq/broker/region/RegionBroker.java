@@ -418,8 +418,6 @@ public class RegionBroker implements Broker {
     }
 
     public void send(ProducerBrokerExchange producerExchange, Message message) throws Exception {
-        long si = sequenceGenerator.getNextSequenceId();
-        message.getMessageId().setBrokerSequenceId(si);
         message.setBrokerInTime(System.currentTimeMillis());
         if (producerExchange.isMutable() || producerExchange.getRegion() == null) {
             ActiveMQDestination destination = message.getDestination();
@@ -728,6 +726,15 @@ public class RegionBroker implements Broker {
         } catch (Exception e) {
             LOG.fatal("Trying to get Root Broker " + e);
             throw new RuntimeException("The broker from the BrokerService should not throw an exception");
+        }
+    }
+    
+    /**
+     * @return the broker sequence id
+     */
+    public long getBrokerSequenceId() {
+        synchronized(sequenceGenerator) {
+            return sequenceGenerator.getNextSequenceId();
         }
     }
 }

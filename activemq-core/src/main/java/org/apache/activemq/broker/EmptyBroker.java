@@ -252,4 +252,8 @@ public class EmptyBroker implements Broker {
     public Broker getRoot() {
         return null;
     }
+    
+    public long getBrokerSequenceId() {
+        return -1l;
+    }
 }
