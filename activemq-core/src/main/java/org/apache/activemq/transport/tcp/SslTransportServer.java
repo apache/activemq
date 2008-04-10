@@ -41,10 +41,10 @@ import javax.net.ssl.SSLSocket;
 public class SslTransportServer extends TcpTransportServer {
     
     // Specifies if sockets created from this server should needClientAuth.
-    private boolean needClientAuth = false;
+    private boolean needClientAuth;
     
     // Specifies if sockets created from this server should wantClientAuth.
-    private boolean wantClientAuth = false;
+    private boolean wantClientAuth;
     
     
     /**
@@ -107,8 +107,11 @@ public class SslTransportServer extends TcpTransportServer {
      */
     public void bind() throws IOException {
         super.bind();
-        ((SSLServerSocket)this.serverSocket).setWantClientAuth(wantClientAuth);
-        ((SSLServerSocket)this.serverSocket).setNeedClientAuth(needClientAuth);
+        if (needClientAuth) {
+            ((SSLServerSocket)this.serverSocket).setNeedClientAuth(true);
+        } else if (wantClientAuth) {
+            ((SSLServerSocket)this.serverSocket).setWantClientAuth(true);
+        }
     }
     
     /**
