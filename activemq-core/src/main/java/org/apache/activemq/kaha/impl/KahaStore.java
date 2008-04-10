@@ -111,9 +111,6 @@ public class KahaStore implements Store {
             closed = true;
             if (initialized) {
                 unlock();
-                if (lockFile!=null) {
-                    lockFile.close();
-                }
                 for (ListContainerImpl container : lists.values()) {
                     container.close();
                 }
@@ -132,6 +129,10 @@ public class KahaStore implements Store {
                     dm.close();
                     iter.remove();
                 }
+            }
+            if (lockFile!=null) {
+                lockFile.close();
+                lockFile=null;
             }
         }
     }
