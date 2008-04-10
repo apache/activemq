@@ -28,6 +28,11 @@ import org.apache.activemq.util.URISupport;
 
 public class MulticastDiscoveryAgentFactory extends DiscoveryAgentFactory {
 
+    //See AMQ-1489. There's something wrong here but it is difficult to tell what.
+    //It looks like to actually set the discovery URI you have to use something like
+    //<transportConnector uri="..." discoveryUri="multicast://239.3.7.0:37000?discoveryURI=multicast://239.3.7.0:37000" />
+    // or
+    //<networkConnector name="..." uri="multicast://239.3.7.0:37000?discoveryURI=multicast://239.3.7.0:37000">
     protected DiscoveryAgent doCreateDiscoveryAgent(URI uri) throws IOException {
         try {
             
