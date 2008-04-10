@@ -35,7 +35,7 @@ public class NetworkBridgeConfiguration {
     private String userName;
     private String password;
     private String destinationFilter = ">";
-    private String name = "localhost";
+    private String name = null;
 
     /**
      * @return the conduitSubscriptions
@@ -210,6 +210,9 @@ public class NetworkBridgeConfiguration {
      * @return the name
      */
     public String getName() {
+        if(this.name == null) {
+            this.name = "localhost";
+        }
         return this.name;
     }
 
