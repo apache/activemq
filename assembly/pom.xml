@@ -355,35 +355,35 @@
             <id>unix-bin</id>
             <phase>package</phase>
             <goals>
-              <goal>single</goal>
+              <goal>attached</goal>
             </goals>
             <configuration>
               <descriptors>
                  <descriptor>src/main/descriptors/unix-bin.xml</descriptor>  
               </descriptors>
-              <finalName>${pom.artifactId}-${pom.version}</finalName>
-              <appendAssemblyId>false</appendAssemblyId>
+              <!--<finalName>${pom.artifactId}-${pom.version}</finalName>-->
+              <!--<appendAssemblyId>false</appendAssemblyId>-->
             </configuration>
           </execution>
           <execution>
             <id>windows-bin</id>
             <phase>package</phase>
             <goals>
-              <goal>single</goal>
+              <goal>attached</goal>
             </goals>
             <configuration>
               <descriptors>
                  <descriptor>src/main/descriptors/windows-bin.xml</descriptor>  
               </descriptors>
-              <finalName>${pom.artifactId}-${pom.version}</finalName>
-              <appendAssemblyId>false</appendAssemblyId>
+              <!--<finalName>${pom.artifactId}-${pom.version}</finalName>-->
+              <!--<appendAssemblyId>false</appendAssemblyId>-->
             </configuration>
           </execution>
           <execution>
             <id>unix-src</id>
             <phase>package</phase>
             <goals>
-              <goal>single</goal>
+              <goal>attached</goal>
             </goals>
             <configuration>
               <descriptors>
@@ -395,7 +395,7 @@
             <id>windows-src</id>
             <phase>package</phase>
             <goals>
-              <goal>single</goal>
+              <goal>attached</goal>
             </goals>
             <configuration>
               <descriptors>
