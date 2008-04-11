@@ -1221,7 +1221,7 @@
             <artifactId>maven-javadoc-plugin</artifactId>
             <inherited>true</inherited>
             <configuration>
-              <source>1.4</source>
+              <source>1.5</source>
             </configuration>
             <executions>
               <execution>
