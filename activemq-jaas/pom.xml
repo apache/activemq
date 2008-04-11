@@ -105,27 +105,11 @@
       <artifactId>mina</artifactId>
       <scope>test</scope>
     </dependency>
-    <!--
-      <dependency>
-      <groupId>org.apache.directory.server</groupId>
-      <artifactId>apacheds-protocol-kerberos</artifactId>
-      <version>0.7-SNAPSHOT</version>
-      <scope>test</scope>
-    </dependency>
-    -->
     <dependency>
       <groupId>directory-protocols</groupId>
       <artifactId>kerberos-protocol</artifactId>
       <scope>test</scope>
     </dependency>
-    <!--
-    <dependency>
-      <groupId>org.apache.directory.server</groupId>
-      <artifactId>apacheds-protocol-ldap</artifactId>
-      <version>1.0-RC1-SNAPSHOT</version>
-      <scope>test</scope>
-    </dependency>
-    -->
     <dependency>
       <groupId>directory-protocols</groupId>
       <artifactId>ldap-protocol</artifactId>
