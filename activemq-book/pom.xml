@@ -82,7 +82,7 @@
           <entities>
             <entity>
               <name>version</name>
-              <value>${version}</value>
+              <value>${activemq-version}</value>
             </entity>
           </entities>
 
