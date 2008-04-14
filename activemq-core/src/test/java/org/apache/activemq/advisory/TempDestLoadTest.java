@@ -29,16 +29,13 @@ import org.apache.activemq.broker.region.RegionBroker;
 /**
  * @version $Revision: 397249 $
  */
-public class TempDestLoadTest extends EmbeddedBrokerTestSupport implements
-        ConsumerListener {
+public class TempDestLoadTest extends EmbeddedBrokerTestSupport {
   
     protected int consumerCounter;
     private Connection connection;
     private Session session;
     private static final int MESSAGE_COUNT = 2000;
-    
-    
-    
+        
     public void testLoadTempAdvisoryQueues() throws Exception {
 
         for (int i = 0; i < MESSAGE_COUNT; i++) {
@@ -102,8 +99,5 @@ public class TempDestLoadTest extends EmbeddedBrokerTestSupport implements
         super.tearDown();
     }
 
-    
-    public void onConsumerEvent(ConsumerEvent event) {        
-    }
 
 }
