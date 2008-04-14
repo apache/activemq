@@ -78,9 +78,11 @@ public class TopicRegion extends AbstractRegion {
                 if (hasDurableSubChanged(info, sub.getConsumerInfo())) {
                     // Remove the consumer first then add it.
                     durableSubscriptions.remove(key);
-                    for (Iterator<Destination> iter = destinations.values().iterator(); iter.hasNext();) {
-                        Topic topic = (Topic)iter.next();
-                        topic.deleteSubscription(context, key);
+                    synchronized (destinationsMutex) {
+                        for (Iterator<Destination> iter = destinations.values().iterator(); iter.hasNext();) {
+                            Topic topic = (Topic)iter.next();
+                            topic.deleteSubscription(context, key);
+                        }
                     }
                     super.removeConsumer(context, sub.getConsumerInfo());
                     super.addConsumer(context, info);
@@ -132,9 +134,11 @@ public class TopicRegion extends AbstractRegion {
         }
 
         durableSubscriptions.remove(key);
-        for (Iterator<Destination> iter = destinations.values().iterator(); iter.hasNext();) {
-            Topic topic = (Topic)iter.next();
-            topic.deleteSubscription(context, key);
+        synchronized (destinationsMutex) {
+            for (Iterator<Destination> iter = destinations.values().iterator(); iter.hasNext();) {
+                Topic topic = (Topic)iter.next();
+                topic.deleteSubscription(context, key);
+            }
         }
         super.removeConsumer(context, sub.getConsumerInfo());
     }
