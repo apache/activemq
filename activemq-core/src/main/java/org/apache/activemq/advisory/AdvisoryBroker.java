@@ -86,7 +86,7 @@ public class AdvisoryBroker extends BrokerFilter {
         if (!AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
             ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination());
             consumers.put(info.getConsumerId(), info);
-            fireConsumerAdvisory(context,info.getDestination(), topic, info);
+            fireConsumerAdvisory(context, info.getDestination(), topic, info);
         } else {
             // We need to replay all the previously collected state objects
             // for this newly added consumer.
@@ -179,7 +179,7 @@ public class AdvisoryBroker extends BrokerFilter {
             fireAdvisory(context, topic, info);
             try {
                 next.removeDestination(context, AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination()), -1);
-            } catch (Exception expectedIfDestinationDidNotExistYet) {
+            } catch (Exception expectedIfDestinationDidNotExistYet) {                
             }
             try {
                 next.removeDestination(context, AdvisorySupport.getProducerAdvisoryTopic(info.getDestination()), -1);
@@ -190,7 +190,7 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     public void removeDestinationInfo(ConnectionContext context, DestinationInfo destInfo) throws Exception {
-        next.removeDestinationInfo(context, destInfo);
+        next.removeDestinationInfo(context, destInfo);   
         DestinationInfo info = destinations.remove(destInfo.getDestination());
         if (info != null) {
             info.setDestination(destInfo.getDestination());
@@ -203,6 +203,7 @@ public class AdvisoryBroker extends BrokerFilter {
             }
             try {
                 next.removeDestination(context, AdvisorySupport.getProducerAdvisoryTopic(info.getDestination()), -1);
+            
             } catch (Exception expectedIfDestinationDidNotExistYet) {
             }
         }
@@ -221,10 +222,13 @@ public class AdvisoryBroker extends BrokerFilter {
         next.removeConsumer(context, info);
 
         // Don't advise advisory topics.
-        if (!AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
-            ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(info.getDestination());
+        ActiveMQDestination dest = info.getDestination();
+        if (!AdvisorySupport.isAdvisoryTopic(dest)) {
+            ActiveMQTopic topic = AdvisorySupport.getConsumerAdvisoryTopic(dest);
             consumers.remove(info.getConsumerId());
-            fireConsumerAdvisory(context,info.getDestination(), topic, info.createRemoveCommand());
+            if (!dest.isTemporary() || destinations.contains(dest)) {
+            	fireConsumerAdvisory(context,dest, topic, info.createRemoveCommand());
+            }
         }
     }
 
@@ -232,10 +236,13 @@ public class AdvisoryBroker extends BrokerFilter {
         next.removeProducer(context, info);
 
         // Don't advise advisory topics.
-        if (info.getDestination() != null && !AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
-            ActiveMQTopic topic = AdvisorySupport.getProducerAdvisoryTopic(info.getDestination());
+        ActiveMQDestination dest = info.getDestination();
+        if (info.getDestination() != null && !AdvisorySupport.isAdvisoryTopic(dest)) {
+            ActiveMQTopic topic = AdvisorySupport.getProducerAdvisoryTopic(dest);
             producers.remove(info.getProducerId());
-            fireProducerAdvisory(context, info.getDestination(),topic, info.createRemoveCommand());
+            if (!dest.isTemporary() || destinations.contains(dest)) {
+                fireProducerAdvisory(context, dest,topic, info.createRemoveCommand());
+            }
         }
     }
 
