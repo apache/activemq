@@ -23,7 +23,10 @@ import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.XAConnection;
 import javax.jms.XAQueueConnection;
+import javax.jms.XASession;
 import javax.jms.XATopicConnection;
+import javax.transaction.xa.XAException;
+import javax.transaction.xa.XAResource;
 
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
@@ -94,6 +97,24 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
 
     public void testCreateTcpConnectionUsingKnownPort() throws Exception {
         assertCreateConnection("tcp://localhost:61610?wireFormat.tcpNoDelayEnabled=true");
+    }
+    
+    public void testIsSameRM() throws URISyntaxException, JMSException, XAException {
+        
+        ActiveMQXAConnectionFactory cf1 = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false");
+        XAConnection connection1 = (XAConnection)cf1.createConnection();
+        XASession session1 = connection1.createXASession();
+        XAResource resource1 = session1.getXAResource();
+        
+        ActiveMQXAConnectionFactory cf2 = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false");
+        XAConnection connection2 = (XAConnection)cf2.createConnection();
+        XASession session2 = connection2.createXASession();
+        XAResource resource2 = session2.getXAResource();
+
+        assertTrue(resource1.isSameRM(resource2));
+        
+        connection1.close();
+        connection2.close();
     }
 
     protected void assertCreateConnection(String uri) throws Exception {
