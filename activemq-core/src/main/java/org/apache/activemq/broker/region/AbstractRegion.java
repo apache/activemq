@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.broker.region;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -24,9 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.jms.JMSException;
-
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
 import org.apache.activemq.broker.DestinationAlreadyExistsException;
@@ -96,18 +93,21 @@ public abstract class AbstractRegion implements Region {
             context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
             context.getBroker().addDestination(context, dest);
         }
-
-        for (Iterator<Destination> i = destinations.values().iterator(); i.hasNext();) {
-            Destination dest = i.next();
-            dest.start();
+        synchronized (destinationsMutex) {
+            for (Iterator<Destination> i = destinations.values().iterator(); i.hasNext();) {
+                Destination dest = i.next();
+                dest.start();
+            }
         }
     }
 
     public void stop() throws Exception {
         started = false;
-        for (Iterator<Destination> i = destinations.values().iterator(); i.hasNext();) {
-            Destination dest = i.next();
-            dest.stop();
+        synchronized (destinationsMutex) {
+            for (Iterator<Destination> i = destinations.values().iterator(); i.hasNext();) {
+                Destination dest = i.next();
+                dest.stop();
+            }
         }
         destinations.clear();
     }
@@ -169,10 +169,10 @@ public abstract class AbstractRegion implements Region {
         }
 
         LOG.debug("Removing destination: " + destination);
+        
         synchronized (destinationsMutex) {
             Destination dest = destinations.remove(destination);
             if (dest != null) {
-
                 // timeout<0 or we timed out, we now force any remaining
                 // subscriptions to un-subscribe.
                 for (Iterator<Subscription> iter = subscriptions.values().iterator(); iter.hasNext();) {
@@ -181,11 +181,10 @@ public abstract class AbstractRegion implements Region {
                         dest.removeSubscription(context, sub);
                     }
                 }
-
                 destinationMap.removeAll(destination);
                 dispose(context,dest);
 
-            } else {
+            } else {   
                 LOG.debug("Destination doesn't exist: " + dest);
             }
         }
@@ -259,9 +258,12 @@ public abstract class AbstractRegion implements Region {
             // so everything after this point would be leaked.
 
             // Add the subscription to all the matching queues.
-            for (Iterator iter = destinationMap.get(info.getDestination()).iterator(); iter.hasNext();) {
-                Destination dest = (Destination)iter.next();
-                dest.addSubscription(context, sub);
+            
+            synchronized(destinationsMutex) {
+                for (Iterator iter = destinationMap.get(info.getDestination()).iterator(); iter.hasNext();) {
+                    Destination dest = (Destination)iter.next();
+                    dest.addSubscription(context, sub);
+                }
             }
 
             if (info.isBrowser()) {
@@ -286,7 +288,9 @@ public abstract class AbstractRegion implements Region {
      */
     protected Set<ActiveMQDestination> getInactiveDestinations() {
         Set<ActiveMQDestination> inactiveDests = destinationFactory.getDestinations();
-        inactiveDests.removeAll(destinations.keySet());
+        synchronized (destinationsMutex) {
+            inactiveDests.removeAll(destinations.keySet());
+        }
         return inactiveDests;
     }
 
@@ -298,10 +302,12 @@ public abstract class AbstractRegion implements Region {
         if (sub != null) {
 
             // remove the subscription from all the matching queues.
-            for (Iterator iter = destinationMap.get(info.getDestination())
-                    .iterator(); iter.hasNext();) {
-                Destination dest = (Destination) iter.next();
-                dest.removeSubscription(context, sub);
+            synchronized (destinationsMutex) {
+                for (Iterator iter = destinationMap.get(info.getDestination())
+                        .iterator(); iter.hasNext();) {
+                    Destination dest = (Destination) iter.next();
+                    dest.removeSubscription(context, sub);
+                }
             }
 
             destroySubscription(sub);
@@ -396,9 +402,11 @@ public abstract class AbstractRegion implements Region {
             Subscription sub = iter.next();
             sub.gc();
         }
-        for (Iterator<Destination> iter = destinations.values().iterator(); iter.hasNext();) {
-            Destination dest = iter.next();
-            dest.gc();
+        synchronized (destinationsMutex) {
+            for (Iterator<Destination> iter = destinations.values().iterator(); iter.hasNext();) {
+                Destination dest = iter.next();
+                dest.gc();
+            }
         }
     }
 
@@ -417,9 +425,11 @@ public abstract class AbstractRegion implements Region {
     }
     
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception{
-        for (Iterator iter = destinationMap.get(info.getDestination()).iterator(); iter.hasNext();) {
-            Destination dest = (Destination)iter.next();
-            dest.addProducer(context, info);
+        synchronized (destinationsMutex) {
+            for (Iterator iter = destinationMap.get(info.getDestination()).iterator(); iter.hasNext();) {
+                Destination dest = (Destination) iter.next();
+                dest.addProducer(context, info);
+            }
         }
     }
 
@@ -429,9 +439,11 @@ public abstract class AbstractRegion implements Region {
      * @throws Exception TODO
      */
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception{
-        for (Iterator iter = destinationMap.get(info.getDestination()).iterator(); iter.hasNext();) {
-            Destination dest = (Destination)iter.next();
-            dest.removeProducer(context, info);
+        synchronized (destinationsMutex) {
+            for (Iterator iter = destinationMap.get(info.getDestination()).iterator(); iter.hasNext();) {
+                Destination dest = (Destination)iter.next();
+                dest.removeProducer(context, info);
+            }
         }
     }
     
