@@ -30,7 +30,7 @@
   <name>ActiveMQ</name>
 
   <properties>
-    <siteId>activemq</siteId>
+    <siteId>activemq-${version}</siteId>
     <projectName>Apache ActiveMQ</projectName>
     <!-- base url for site deployment.  See distribution management for full url.  Override this in settings.xml for staging -->
     <staging.siteURL>scp://people.apache.org/x1/www/activemq.apache.org</staging.siteURL>
@@ -1210,7 +1210,7 @@
             <artifactId>maven-deploy-plugin</artifactId>
             <inherited>true</inherited>
             <configuration>
-              <altDeploymentRepository>${deploy.altRepository}</altDeploymentRepository>
+                <altDeploymentRepository>${staging.altRepository}/${siteId}</altDeploymentRepository>
               <updateReleaseInfo>true</updateReleaseInfo>
             </configuration>
           </plugin>
