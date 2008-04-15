@@ -498,7 +498,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
      * @return
      * @throws IOException
      */
-    public synchronized DataStructure readCommand(Location location) throws IOException {
+    public DataStructure readCommand(Location location) throws IOException {
         try {
             ByteSequence packet = asyncDataManager.read(location);
             return (DataStructure)wireFormat.unmarshal(packet);

@@ -19,6 +19,7 @@ package org.apache.activemq.broker.util;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.Destination;
+import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
@@ -39,7 +40,7 @@ import org.springframework.beans.factory.InitializingBean;
  * @version $Revision$
  * @org.apache.xbean.XBean
  */
-public class CommandAgent implements Service, InitializingBean, DisposableBean, FactoryBean {
+public class CommandAgent implements Service, InitializingBean, DisposableBean, FactoryBean, ExceptionListener {
     private static final Log LOG = LogFactory.getLog(CommandAgent.class);
 
     private String brokerUrl = "vm://localhost";
@@ -137,6 +138,7 @@ public class CommandAgent implements Service, InitializingBean, DisposableBean, 
     public Connection getConnection() throws JMSException {
         if (connection == null) {
             connection = createConnection();
+            connection.setExceptionListener(this);
             connection.start();
         }
         return connection;
@@ -163,5 +165,12 @@ public class CommandAgent implements Service, InitializingBean, DisposableBean, 
 
     protected Destination createCommandDestination() {
         return AdvisorySupport.getAgentDestination();
+    }
+
+    public void onException(JMSException exception) {
+        try {
+            stop();
+        } catch (Exception e) {
+        }
     }
 }

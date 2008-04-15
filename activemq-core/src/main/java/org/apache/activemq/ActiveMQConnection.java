@@ -1692,7 +1692,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 });
 
             } else {
-                LOG.warn("Async exception with no exception listener: " + error, error);
+                LOG.debug("Async exception with no exception listener: " + error, error);
             }
         }
     }
