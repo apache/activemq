@@ -84,6 +84,9 @@
   <build>
     <plugins>
 
+      <!-- The QDox module in xbean 3.3 fails to parse the @Entity annotations in this module.. enable
+             again once it's working again. -->
+      <!--
       <plugin>
         <groupId>org.apache.xbean</groupId>
         <artifactId>maven-xbean-plugin</artifactId>
@@ -100,6 +103,7 @@
           </execution>
         </executions>
       </plugin>
+      -->
     
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
