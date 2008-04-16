@@ -175,9 +175,14 @@ public class ActiveMQConnectionRequestInfo implements ConnectionRequestInfo, Ser
         this.clientid = clientid;
     }
 
+    @Override
     public String toString() {
-        return "ActiveMQConnectionRequestInfo{ " + "userName = '" + userName + "' " + ", serverUrl = '" + serverUrl + "' " + ", clientid = '" + clientid + "' " + ", userName = '" + userName + "' "
-               + ", useInboundSession = '" + useInboundSession + "' " + " }";
+        return new StringBuffer("ActiveMQConnectionRequestInfo{ userName = '").append(userName).append("' ")
+                .append(", serverUrl = '").append(serverUrl).append("' ")
+                .append(", clientid = '").append(clientid).append("' ")
+                .append(", userName = '").append(userName).append("' ")
+                .append(", useInboundSession = '").append(useInboundSession).append("'  }")
+                .toString();
     }
 
     public Boolean getUseInboundSession() {

@@ -16,9 +16,13 @@
  */
 package org.apache.activemq.ra;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.HashSet;
-import java.util.Timer;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -27,13 +31,9 @@ import javax.jms.QueueConnectionFactory;
 import javax.jms.TopicConnectionFactory;
 import javax.resource.Referenceable;
 import javax.resource.ResourceException;
-import javax.resource.spi.BootstrapContext;
 import javax.resource.spi.ConnectionRequestInfo;
 import javax.resource.spi.ManagedConnection;
 import javax.resource.spi.ManagedConnectionFactory;
-import javax.resource.spi.UnavailableException;
-import javax.resource.spi.XATerminator;
-import javax.resource.spi.work.WorkManager;
 
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -52,27 +52,10 @@ public class ManagedConnectionFactoryTest extends TestCase {
      */
     protected void setUp() throws Exception {
 
-        ActiveMQResourceAdapter adapter = new ActiveMQResourceAdapter();
-        adapter.setServerUrl(DEFAULT_HOST);
-        adapter.setUserName(ActiveMQConnectionFactory.DEFAULT_USER);
-        adapter.setPassword(ActiveMQConnectionFactory.DEFAULT_PASSWORD);
-        adapter.start(new BootstrapContext() {
-            public WorkManager getWorkManager() {
-                return null;
-            }
-
-            public XATerminator getXATerminator() {
-                return null;
-            }
-
-            public Timer createTimer() throws UnavailableException {
-                return null;
-            }
-        });
-
         managedConnectionFactory = new ActiveMQManagedConnectionFactory();
-        managedConnectionFactory.setResourceAdapter(adapter);
-
+        managedConnectionFactory.setServerUrl(DEFAULT_HOST);
+        managedConnectionFactory.setUserName(ActiveMQConnectionFactory.DEFAULT_USER);
+        managedConnectionFactory.setPassword(ActiveMQConnectionFactory.DEFAULT_PASSWORD);
     }
 
     public void testConnectionFactoryAllocation() throws ResourceException, JMSException {
@@ -154,5 +137,34 @@ public class ManagedConnectionFactoryTest extends TestCase {
         assertTrue(cf instanceof QueueConnectionFactory);
         assertTrue(cf instanceof TopicConnectionFactory);
     }
+
+    public void testSerializability() throws Exception {
+        
+        managedConnectionFactory.setLogWriter(new PrintWriter(new ByteArrayOutputStream()));
+        
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(bos);
+        oos.writeObject(managedConnectionFactory);
+        oos.close();
+        byte[] byteArray = bos.toByteArray();
+        
+        ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(byteArray));
+        ActiveMQManagedConnectionFactory deserializedFactory = (ActiveMQManagedConnectionFactory) ois.readObject();
+        ois.close();
+        
+        assertNull(
+                "[logWriter] property of deserialized ActiveMQManagedConnectionFactory is not null", 
+                deserializedFactory.getLogWriter());
+        assertNotNull(
+                "ConnectionRequestInfo of deserialized ActiveMQManagedConnectionFactory is null", 
+                deserializedFactory.getInfo());
+        assertEquals(
+                "[serverUrl] property of deserialized ConnectionRequestInfo object is not [" + DEFAULT_HOST + "]", 
+                DEFAULT_HOST,
+                deserializedFactory.getInfo().getServerUrl());
+        assertNotNull(
+                "Log instance of deserialized ActiveMQManagedConnectionFactory is null",
+                deserializedFactory.log);
+}
 
 }

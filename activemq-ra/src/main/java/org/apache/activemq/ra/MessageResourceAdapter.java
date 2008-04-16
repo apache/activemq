@@ -22,7 +22,6 @@ import javax.resource.spi.BootstrapContext;
 import javax.resource.spi.ResourceAdapter;
 
 import org.apache.activemq.ActiveMQConnection;
-import org.apache.activemq.ActiveMQConnectionFactory;
 
 /**
  * Knows how to connect to one ActiveMQ server. It can then activate endpoints
@@ -35,15 +34,7 @@ interface MessageResourceAdapter extends ResourceAdapter {
 
     /**
      */
-    ActiveMQConnection makeConnection() throws JMSException;
-
-    /**
-     */
     ActiveMQConnection makeConnection(ActiveMQConnectionRequestInfo info) throws JMSException;
-
-    /**
-     */
-    ActiveMQConnection makeConnection(ActiveMQConnectionRequestInfo info, ActiveMQConnectionFactory connectionFactory) throws JMSException;
 
     /**
      * @param activationSpec
@@ -63,9 +54,5 @@ interface MessageResourceAdapter extends ResourceAdapter {
      * @return Returns the info.
      */
     ActiveMQConnectionRequestInfo getInfo();
-
-    /**
-     */
-    ActiveMQConnectionFactory getConnectionFactory();
 
 }
