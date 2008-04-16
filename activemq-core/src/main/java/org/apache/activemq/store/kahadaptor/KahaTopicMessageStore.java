@@ -105,7 +105,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
         }
     }
 
-    public SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {
+    public synchronized SubscriptionInfo lookupSubscription(String clientId, String subscriptionName) throws IOException {
         return subscriberContainer.get(getSubscriptionKey(clientId, subscriptionName));
     }
 
@@ -133,7 +133,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
         removeSubscriberMessageContainer(key);
     }
 
-    public void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener)
+    public synchronized void recoverSubscription(String clientId, String subscriptionName, MessageRecoveryListener listener)
         throws Exception {
         String key = getSubscriptionKey(clientId, subscriptionName);
         TopicSubContainer container = subscriberMessages.get(key);
@@ -150,7 +150,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
         }
     }
 
-    public void recoverNextMessages(String clientId, String subscriptionName, int maxReturned,
+    public synchronized void recoverNextMessages(String clientId, String subscriptionName, int maxReturned,
                                     MessageRecoveryListener listener) throws Exception {
         String key = getSubscriptionKey(clientId, subscriptionName);
         TopicSubContainer container = subscriberMessages.get(key);
@@ -183,7 +183,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
         }
     }
 
-    public void delete() {
+    public synchronized void delete() {
         super.delete();
         ackContainer.clear();
         subscriberContainer.clear();
@@ -210,7 +210,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
         return container;
     }
 
-    protected void removeSubscriberMessageContainer(Object key)
+    protected synchronized void removeSubscriberMessageContainer(Object key)
             throws IOException {
         subscriberContainer.remove(key);
         TopicSubContainer container = subscriberMessages.remove(key);
@@ -235,7 +235,7 @@ public class KahaTopicMessageStore extends KahaMessageStore implements TopicMess
 
     }
 
-    public int getMessageCount(String clientId, String subscriberName) throws IOException {
+    public synchronized int getMessageCount(String clientId, String subscriberName) throws IOException {
         String key = getSubscriptionKey(clientId, subscriberName);
         TopicSubContainer container = subscriberMessages.get(key);
         return container != null ? container.size() : 0;
