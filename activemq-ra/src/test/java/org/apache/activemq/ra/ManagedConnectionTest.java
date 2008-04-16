@@ -16,8 +16,6 @@
  */
 package org.apache.activemq.ra;
 
-import java.util.Timer;
-
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
@@ -28,11 +26,7 @@ import javax.jms.Session;
 import javax.jms.TopicConnection;
 import javax.jms.TopicConnectionFactory;
 import javax.resource.ResourceException;
-import javax.resource.spi.BootstrapContext;
 import javax.resource.spi.ConnectionEvent;
-import javax.resource.spi.UnavailableException;
-import javax.resource.spi.XATerminator;
-import javax.resource.spi.work.WorkManager;
 
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -55,26 +49,10 @@ public class ManagedConnectionTest extends TestCase {
      */
     protected void setUp() throws Exception {
 
-        ActiveMQResourceAdapter adapter = new ActiveMQResourceAdapter();
-        adapter.setServerUrl(DEFAULT_HOST);
-        adapter.setUserName(ActiveMQConnectionFactory.DEFAULT_USER);
-        adapter.setPassword(ActiveMQConnectionFactory.DEFAULT_PASSWORD);
-        adapter.start(new BootstrapContext() {
-            public WorkManager getWorkManager() {
-                return null;
-            }
-
-            public XATerminator getXATerminator() {
-                return null;
-            }
-
-            public Timer createTimer() throws UnavailableException {
-                return null;
-            }
-        });
-
         managedConnectionFactory = new ActiveMQManagedConnectionFactory();
-        managedConnectionFactory.setResourceAdapter(adapter);
+        managedConnectionFactory.setServerUrl(DEFAULT_HOST);
+        managedConnectionFactory.setUserName(ActiveMQConnectionFactory.DEFAULT_USER);
+        managedConnectionFactory.setPassword(ActiveMQConnectionFactory.DEFAULT_PASSWORD);
 
         connectionFactory = (ConnectionFactory)managedConnectionFactory.createConnectionFactory(connectionManager);
         connection = (ManagedConnectionProxy)connectionFactory.createConnection();
