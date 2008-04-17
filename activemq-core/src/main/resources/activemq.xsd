@@ -64,9 +64,9 @@ other long term persistent storage.
       <xs:attribute name='directory' type='xs:string'/>
       <xs:attribute name='directoryArchive' type='xs:string'/>
       <xs:attribute name='disableLocking' type='xs:boolean'/>
-      <xs:attribute name='indexBinSize' type='xs:integer'/>
-      <xs:attribute name='indexKeySize' type='xs:integer'/>
-      <xs:attribute name='indexPageSize' type='xs:integer'>
+      <xs:attribute name='indexBinSize' type='xs:string'/>
+      <xs:attribute name='indexKeySize' type='xs:string'/>
+      <xs:attribute name='indexPageSize' type='xs:string'>
         <xs:annotation>
           <xs:documentation><![CDATA[
             When set using XBean, you can use values such as: "20
@@ -74,7 +74,7 @@ mb", "1024 kb", or "1 gb"
           ]]></xs:documentation>
         </xs:annotation>
       </xs:attribute>
-      <xs:attribute name='maxCheckpointMessageAddSize' type='xs:integer'>
+      <xs:attribute name='maxCheckpointMessageAddSize' type='xs:string'>
         <xs:annotation>
           <xs:documentation><![CDATA[
             When set using XBean, you can use values such as: "20
@@ -82,7 +82,7 @@ mb", "1024 kb", or "1 gb"
           ]]></xs:documentation>
         </xs:annotation>
       </xs:attribute>
-      <xs:attribute name='maxFileLength' type='xs:integer'>
+      <xs:attribute name='maxFileLength' type='xs:string'>
         <xs:annotation>
           <xs:documentation><![CDATA[
             When set using XBean, you can use values such as: "20
@@ -90,7 +90,7 @@ mb", "1024 kb", or "1 gb"
           ]]></xs:documentation>
         </xs:annotation>
       </xs:attribute>
-      <xs:attribute name='maxReferenceFileLength' type='xs:integer'>
+      <xs:attribute name='maxReferenceFileLength' type='xs:string'>
         <xs:annotation>
           <xs:documentation><![CDATA[
             When set using XBean, you can use values such as: "20
@@ -1558,7 +1558,7 @@ use this adapter are:
       ]]></xs:documentation>
     </xs:annotation>
     <xs:complexType>
-      <xs:attribute name='limit' type='xs:long'/>
+      <xs:attribute name='limit' type='xs:string'/>
       <xs:attribute name='id' type='xs:ID'/>
       <xs:anyAttribute namespace='##other' processContents='lax'/>
     </xs:complexType>
@@ -3234,7 +3234,7 @@ memory usage.
         </xs:element>
         <xs:any namespace='##other' minOccurs='0' maxOccurs='unbounded'/>
       </xs:sequence>
-      <xs:attribute name='limit' type='xs:long'>
+      <xs:attribute name='limit' type='xs:string'>
         <xs:annotation>
           <xs:documentation><![CDATA[
             Sets the memory limit in bytes. Setting the limit in bytes will set the
@@ -4014,7 +4014,7 @@ should be used
       <xs:attribute name='maxPageSize' type='xs:integer'/>
       <xs:attribute name='maxProducersToAudit' type='xs:integer'/>
       <xs:attribute name='maxQueueAuditDepth' type='xs:integer'/>
-      <xs:attribute name='memoryLimit' type='xs:long'/>
+      <xs:attribute name='memoryLimit' type='xs:string'/>
       <xs:attribute name='messageEvictionStrategy' type='xs:string'>
         <xs:annotation>
           <xs:documentation><![CDATA[
@@ -4712,7 +4712,7 @@ memory usage.
         </xs:element>
         <xs:any namespace='##other' minOccurs='0' maxOccurs='unbounded'/>
       </xs:sequence>
-      <xs:attribute name='limit' type='xs:long'>
+      <xs:attribute name='limit' type='xs:string'>
         <xs:annotation>
           <xs:documentation><![CDATA[
             Sets the memory limit in bytes. Setting the limit in bytes will set the
@@ -4970,7 +4970,7 @@ memory usage.
         </xs:element>
         <xs:any namespace='##other' minOccurs='0' maxOccurs='unbounded'/>
       </xs:sequence>
-      <xs:attribute name='limit' type='xs:long'>
+      <xs:attribute name='limit' type='xs:string'>
         <xs:annotation>
           <xs:documentation><![CDATA[
             Sets the memory limit in bytes. Setting the limit in bytes will set the
@@ -5249,7 +5249,7 @@ socket.
       ]]></xs:documentation>
     </xs:annotation>
     <xs:complexType>
-      <xs:attribute name='limit' type='xs:long'/>
+      <xs:attribute name='limit' type='xs:string'/>
       <xs:attribute name='id' type='xs:ID'/>
       <xs:anyAttribute namespace='##other' processContents='lax'/>
     </xs:complexType>
