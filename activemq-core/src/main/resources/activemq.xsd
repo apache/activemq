@@ -177,7 +177,7 @@ destination or a hierarchical wildcard area of destinations.
       <xs:sequence>
         <xs:element name='adminACLs' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other' minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name='destination' minOccurs='0' maxOccurs='1'>
@@ -191,12 +191,12 @@ destination or a hierarchical wildcard area of destinations.
         </xs:element>
         <xs:element name='readACLs' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name='writeACLs' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:any namespace='##other' minOccurs='0' maxOccurs='unbounded'/>
@@ -245,7 +245,7 @@ for each operation.
             ]]></xs:documentation>
           </xs:annotation>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name='defaultEntry' minOccurs='0' maxOccurs='1'>
@@ -265,7 +265,7 @@ dependency injection framework such as Spring
             ]]></xs:documentation>
           </xs:annotation>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name='tempDestinationAuthorizationEntry' minOccurs='0' maxOccurs='1'>
@@ -498,7 +498,7 @@ consume a given message
         </xs:element>
         <xs:element name='networkConnectorURIs' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name='networkConnectors' minOccurs='0' maxOccurs='1'>
@@ -530,6 +530,7 @@ other brokers in a federated network
               <xs:element ref='tns:journalPersistenceAdapter'/>
               <xs:element ref='tns:kahaPersistenceAdapter'/>
               <xs:element ref='tns:memoryPersistenceAdapter'/>
+              <xs:element ref='tns:journaledJDBC'/>
               <xs:any namespace='##other'/>
             </xs:choice>
           </xs:complexType>
@@ -587,7 +588,7 @@ other brokers in a federated network
             ]]></xs:documentation>
           </xs:annotation>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name='regionBroker' minOccurs='0' maxOccurs='1'>
@@ -653,7 +654,7 @@ other brokers in a federated network
         </xs:element>
         <xs:element name='transportConnectorURIs' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name='transportConnectors' minOccurs='0' maxOccurs='1'>
@@ -1032,7 +1033,7 @@ a single Transport could be communicating with multiple remote brokers
             ]]></xs:documentation>
           </xs:annotation>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:any namespace='##other' minOccurs='0' maxOccurs='unbounded'/>
@@ -1084,7 +1085,7 @@ queue with the same name).
             ]]></xs:documentation>
           </xs:annotation>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:any namespace='##other' minOccurs='0' maxOccurs='unbounded'/>
@@ -2863,7 +2864,7 @@ false so that messages actually reside long term in the JDBC database.
         </xs:element>
         <xs:element name='options' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name='queueSearchMatchingFormat' minOccurs='0' maxOccurs='1'>
@@ -2944,22 +2945,22 @@ and ipService objectClasses as defined in RFC 2307.
         </xs:element>
         <xs:element name='durableDestinations' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name='dynamicallyIncludedDestinations' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name='excludedDestinations' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name='staticallyIncludedDestinations' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:any namespace='##other' minOccurs='0' maxOccurs='unbounded'/>
@@ -3383,17 +3384,17 @@ based transport could be used.
         </xs:element>
         <xs:element name='durableDestinations' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name='dynamicallyIncludedDestinations' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name='excludedDestinations' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name='localTransport' minOccurs='0' maxOccurs='1'>
@@ -3413,7 +3414,7 @@ based transport could be used.
         </xs:element>
         <xs:element name='staticallyIncludedDestinations' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:any namespace='##other' minOccurs='0' maxOccurs='unbounded'/>
@@ -3546,22 +3547,22 @@ available and setup a connection to each available remote broker
         </xs:element>
         <xs:element name='durableDestinations' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name='dynamicallyIncludedDestinations' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name='excludedDestinations' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name='staticallyIncludedDestinations' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:any namespace='##other' minOccurs='0' maxOccurs='unbounded'/>
@@ -4110,7 +4111,7 @@ dependency injection framework such as Spring
             ]]></xs:documentation>
           </xs:annotation>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name='policyEntries' minOccurs='0' maxOccurs='1'>
@@ -4120,7 +4121,7 @@ dependency injection framework such as Spring
             ]]></xs:documentation>
           </xs:annotation>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:any namespace='##other' minOccurs='0' maxOccurs='unbounded'/>
@@ -4402,7 +4403,7 @@ Set of groups
             ]]></xs:documentation>
           </xs:annotation>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name='userPasswords' minOccurs='0' maxOccurs='1'>
@@ -4412,7 +4413,7 @@ Set of groups
             ]]></xs:documentation>
           </xs:annotation>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name='users' minOccurs='0' maxOccurs='1'>
@@ -4422,7 +4423,7 @@ Set of groups
             ]]></xs:documentation>
           </xs:annotation>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:any namespace='##other' minOccurs='0' maxOccurs='unbounded'/>
@@ -4591,12 +4592,12 @@ matches the message.
       <xs:sequence>
         <xs:element name='createSchemaStatements' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name='dropSchemaStatements' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:any namespace='##other' minOccurs='0' maxOccurs='unbounded'/>
@@ -4889,7 +4890,7 @@ destination
       <xs:sequence>
         <xs:element name='adminACLs' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name='destination' minOccurs='0' maxOccurs='1'>
@@ -4903,12 +4904,12 @@ destination
         </xs:element>
         <xs:element name='readACLs' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name='writeACLs' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
-            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any minOccurs='0' maxOccurs='unbounded'/></xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:any namespace='##other' minOccurs='0' maxOccurs='unbounded'/>
