@@ -46,19 +46,24 @@ public class NetworkTestSupport extends BrokerTestSupport {
     protected TransportConnector remoteConnector;
 
     protected void setUp() throws Exception {
-
         super.setUp();
-        connector = createConnector();
-        connector.start();
 
-        remotePersistenceAdapter = createRemotePersistenceAdapter(true);
-        remotePersistenceAdapter.start();
+        remotePersistenceAdapter = createRemotePersistenceAdapter(true);        
         remoteBroker = createRemoteBroker(remotePersistenceAdapter);
-        remoteBroker.start();
-        BrokerRegistry.getInstance().bind("remotehost", remoteBroker);
         remoteConnector = createRemoteConnector();
-        remoteConnector.start();
+        remoteBroker.addConnector( remoteConnector );
+        BrokerRegistry.getInstance().bind("remotehost", remoteBroker);
+        remoteBroker.start();
     }
+    
+    
+    protected BrokerService createBroker() throws Exception {
+        BrokerService broker = BrokerFactory.createBroker(new URI("broker:()/localhost?persistent=false&useJmx=false&"));
+        connector = createConnector();
+        broker.addConnector(connector);
+        return broker;
+    }
+
 
     /**
      * @return
@@ -67,7 +72,7 @@ public class NetworkTestSupport extends BrokerTestSupport {
      * @throws URISyntaxException
      */
     protected TransportConnector createRemoteConnector() throws Exception, IOException, URISyntaxException {
-        return new TransportConnector(remoteBroker.getBroker(), TransportFactory.bind(broker.getBrokerName(), new URI(getRemoteURI())));
+        return new TransportConnector(TransportFactory.bind(new URI(getRemoteURI())));
     }
 
     /**
@@ -78,7 +83,7 @@ public class NetworkTestSupport extends BrokerTestSupport {
      * @throws URISyntaxException
      */
     protected TransportConnector createConnector() throws Exception, IOException, URISyntaxException {
-        return new TransportConnector(broker.getBroker(), TransportFactory.bind(broker.getBrokerName(), new URI(getLocalURI())));
+        return new TransportConnector(TransportFactory.bind(new URI(getLocalURI())));
     }
 
     protected String getRemoteURI() {
@@ -94,11 +99,6 @@ public class NetworkTestSupport extends BrokerTestSupport {
             remotePersistenceAdapter = new MemoryPersistenceAdapter();
         }
         return remotePersistenceAdapter;
-    }
-
-    protected BrokerService createBroker() throws Exception {
-        BrokerService broker = BrokerFactory.createBroker(new URI("broker:()/localhost?persistent=false&useJmx=false&"));
-        return broker;
     }
 
     protected BrokerService createRemoteBroker(PersistenceAdapter persistenceAdapter) throws Exception {
@@ -148,11 +148,10 @@ public class NetworkTestSupport extends BrokerTestSupport {
         remotePersistenceAdapter.stop();
         remotePersistenceAdapter = createRemotePersistenceAdapter(false);
         remotePersistenceAdapter.start();
+        
         remoteBroker = createRemoteBroker(remotePersistenceAdapter);
+        remoteBroker.addConnector(getRemoteURI());
         remoteBroker.start();
-        String brokerId = remoteBroker.getBrokerName();
-        remoteConnector = new TransportConnector(remoteBroker.getBroker(), TransportFactory.bind(brokerId, new URI(getRemoteURI())));
-        remoteConnector.start();
         BrokerRegistry.getInstance().bind("remotehost", remoteBroker);
     }
 

@@ -90,7 +90,7 @@ public class WireformatNegociationTest extends CombinationTestSupport {
      * @throws Exception
      */
     private void startServer(String uri) throws IOException, URISyntaxException, Exception {
-        server = TransportFactory.bind("localhost", new URI(uri));
+        server = TransportFactory.bind(new URI(uri));
         server.setAcceptListener(new TransportAcceptListener() {
             public void onAccept(Transport transport) {
                 try {

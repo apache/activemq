@@ -190,7 +190,6 @@ public class AMQDeadlockTestW4Brokers extends TestCase {
 
         final TransportConnector tConnector = new TransportConnector();
         tConnector.setUri(new URI(uri1));
-        tConnector.setBrokerName(brokerName);
         tConnector.setName(brokerName + ".transportConnector");
         brokerService.addConnector(tConnector);
 

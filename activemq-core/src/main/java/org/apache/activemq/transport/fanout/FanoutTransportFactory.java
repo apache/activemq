@@ -80,7 +80,7 @@ public class FanoutTransportFactory extends TransportFactory {
         return transport;
     }
 
-    public TransportServer doBind(String brokerId, URI location) throws IOException {
+    public TransportServer doBind(URI location) throws IOException {
         throw new IOException("Invalid server URI: " + location);
     }
 

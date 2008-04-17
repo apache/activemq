@@ -41,8 +41,8 @@ public class ManagedTransportConnector extends TransportConnector {
     private final MBeanServer mbeanServer;
     private final ObjectName connectorName;
 
-    public ManagedTransportConnector(MBeanServer mbeanServer, ObjectName connectorName, Broker next, TransportServer server) {
-        super(next, server);
+    public ManagedTransportConnector(MBeanServer mbeanServer, ObjectName connectorName, TransportServer server) {
+        super(server);
         this.mbeanServer = mbeanServer;
         this.connectorName = connectorName;
     }

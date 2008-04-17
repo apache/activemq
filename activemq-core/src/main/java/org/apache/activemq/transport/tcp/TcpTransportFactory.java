@@ -47,7 +47,7 @@ import org.apache.commons.logging.LogFactory;
 public class TcpTransportFactory extends TransportFactory {
     private static final Log LOG = LogFactory.getLog(TcpTransportFactory.class);
 
-    public TransportServer doBind(String brokerId, final URI location) throws IOException {
+    public TransportServer doBind(final URI location) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParamters(location));
 

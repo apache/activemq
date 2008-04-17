@@ -203,7 +203,7 @@ public class BrokerService implements Service {
      * @throws Exception
      */
     public TransportConnector addConnector(URI bindAddress) throws Exception {
-        return addConnector(createTransportConnector(getBroker(), bindAddress));
+        return addConnector(createTransportConnector(bindAddress));
     }
 
     /**
@@ -213,7 +213,7 @@ public class BrokerService implements Service {
      * @throws Exception
      */
     public TransportConnector addConnector(TransportServer transport) throws Exception {
-        return addConnector(new TransportConnector(getBroker(), transport));
+        return addConnector(new TransportConnector(transport));
     }
 
     /**
@@ -1665,9 +1665,9 @@ public class BrokerService implements Service {
         }
     }
 
-    protected TransportConnector createTransportConnector(Broker broker, URI brokerURI) throws Exception {
+    protected TransportConnector createTransportConnector(URI brokerURI) throws Exception {
     	TransportServer transport = TransportFactory.bind(this, brokerURI);
-        return new TransportConnector(broker, transport);
+        return new TransportConnector(transport);
     }
 
     /**
@@ -1825,8 +1825,6 @@ public class BrokerService implements Service {
     }
 
     protected TransportConnector startTransportConnector(TransportConnector connector) throws Exception {
-        connector.setBroker(getBroker());
-        connector.setBrokerName(getBrokerName());
         connector.setTaskRunnerFactory(getTaskRunnerFactory());
         MessageAuthorizationPolicy policy = getMessageAuthorizationPolicy();
         if (policy != null) {

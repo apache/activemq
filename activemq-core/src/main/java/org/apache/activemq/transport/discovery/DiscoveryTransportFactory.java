@@ -43,7 +43,7 @@ public class DiscoveryTransportFactory extends FailoverTransportFactory {
         return transport;
     }
 
-    public TransportServer doBind(String brokerId, URI location) throws IOException {
+    public TransportServer doBind(URI location) throws IOException {
         throw new IOException("Invalid server URI: " + location);
 // try{
 //            CompositeData compositData=URISupport.parseComposite(location);
