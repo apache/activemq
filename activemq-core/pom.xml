@@ -553,6 +553,8 @@
         </executions>
       </plugin>
 
+      <!-- Disable for now cause it's generating an invalid xsd file and this breaks our spring compatibility.
+           we are going to manually maintain the xsd for now until we can improve the xsd generation from xbean
       <plugin>
         <groupId>org.apache.xbean</groupId>
         <artifactId>maven-xbean-plugin</artifactId>
@@ -570,6 +572,7 @@
           </execution>
         </executions>
       </plugin>
+      -->
 
       <!--  lets ensure that the XSD gets deployed  -->
       <plugin>
