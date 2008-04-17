@@ -58,7 +58,7 @@ public class ClientTestSupport extends TestCase {
         try {
             broker = BrokerFactory.createBroker(new URI(this.brokerURL));
             String brokerId = broker.getBrokerName();
-            connector = new TransportConnector(broker.getBroker(), TransportFactory.bind(brokerId, new URI(this.brokerURL))) {
+            connector = new TransportConnector(TransportFactory.bind(new URI(this.brokerURL))) {
                 // Hook into the connector so we can assert that the server
                 // accepted a connection.
                 protected org.apache.activemq.broker.Connection createConnection(org.apache.activemq.transport.Transport transport) throws IOException {
@@ -66,7 +66,7 @@ public class ClientTestSupport extends TestCase {
                     return super.createConnection(transport);
                 }
             };
-            connector.start();
+            broker.addConnector(connector);
             broker.start();
 
         } catch (IOException e) {

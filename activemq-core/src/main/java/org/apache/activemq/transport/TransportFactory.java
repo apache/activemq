@@ -41,7 +41,7 @@ public abstract class TransportFactory {
     private static final FactoryFinder WIREFORMAT_FACTORY_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/wireformat/");
     private static final ConcurrentHashMap<String, TransportFactory> TRANSPORT_FACTORYS = new ConcurrentHashMap<String, TransportFactory>();
 
-    public abstract TransportServer doBind(String brokerId, URI location) throws IOException;
+    public abstract TransportServer doBind(URI location) throws IOException;
 
     public Transport doConnect(URI location, Executor ex) throws Exception {
         return doConnect(location);
@@ -103,17 +103,24 @@ public abstract class TransportFactory {
         return tf.doCompositeConnect(location, ex);
     }
 
-    public static TransportServer bind(String brokerId, URI location) throws IOException {
+    public static TransportServer bind(URI location) throws IOException {
         TransportFactory tf = findTransportFactory(location);
-        return tf.doBind(brokerId, location);
+        return tf.doBind(location);
+    }
+
+    /**
+     * @deprecated 
+     */
+    public static TransportServer bind(String brokerId, URI location) throws IOException {
+        return bind(location);
     }
     
     public static TransportServer bind(BrokerService brokerService, URI location) throws IOException {
         TransportFactory tf = findTransportFactory(location);
-        if (tf instanceof BrokerServiceAware) {
-        	((BrokerServiceAware)tf).setBrokerService(brokerService);
+        if (brokerService != null && tf instanceof BrokerServiceAware) {
+            ((BrokerServiceAware)tf).setBrokerService(brokerService);
         }
-        return tf.doBind(brokerService.getBrokerName(), location);
+        return tf.doBind(location);
     }    
 
     public Transport doConnect(URI location) throws Exception {

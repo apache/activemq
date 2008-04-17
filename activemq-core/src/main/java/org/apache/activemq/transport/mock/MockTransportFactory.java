@@ -53,7 +53,7 @@ public class MockTransportFactory extends TransportFactory {
         return transport;
     }
 
-    public TransportServer doBind(String brokerId, URI location) throws IOException {
+    public TransportServer doBind(URI location) throws IOException {
         throw new IOException("This protocol does not support being bound.");
     }
 
