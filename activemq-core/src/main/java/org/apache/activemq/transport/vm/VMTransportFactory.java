@@ -137,6 +137,7 @@ public class VMTransportFactory extends TransportFactory {
         }
 
         VMTransport vmtransport = server.connect();
+        IntrospectionSupport.setProperties(vmtransport.peer, new HashMap<String,String>(options));
         IntrospectionSupport.setProperties(vmtransport, options);
         Transport transport = vmtransport;
         if (vmtransport.isMarshal()) {
