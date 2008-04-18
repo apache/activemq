@@ -118,6 +118,10 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         this.brokerInfo = brokerInfo;
     }
     
+    /**
+     * 
+     * @deprecated use the {@link #setBrokerService(BrokerService)} method instead.
+     */
     @Deprecated
     public void setBrokerName(String name) {
         if (this.brokerInfo==null) {
@@ -379,6 +383,9 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         this.enableStatusMonitor = enableStatusMonitor;
     }
 
+    /**
+     * This is called by the BrokerService right before it starts the transport.
+     */
     public void setBrokerService(BrokerService brokerService) {
         this.brokerService = brokerService;
     }
