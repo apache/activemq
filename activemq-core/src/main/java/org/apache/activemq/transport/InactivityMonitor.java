@@ -239,9 +239,9 @@ public class InactivityMonitor extends TransportFilter {
     }
 
     public void onException(IOException error) {
-        if (!failed.compareAndSet(false,true)) {
-    		stopMonitorThreads();
-    		transportListener.onException(error);
+        if (failed.compareAndSet(false, true)) {
+            stopMonitorThreads();
+            transportListener.onException(error);
         }
     }    	
 
