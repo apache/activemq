@@ -18,7 +18,7 @@
 <beans>
 
 
-  <broker useJmx="true" xmlns="http://activemq.org/config/1.0">
+  <broker useJmx="true" xmlns="http://activemq.apache.org/schema/core">
 
     <!-- In ActiveMQ 4, you can setup destination policies -->
     <destinationPolicy>
@@ -56,7 +56,7 @@
   </broker>
 
   <!-- lets create a command agent to respond to admin commands over JMS or XMPP on the ActiveMQ.Agent topic -->
-  <commandAgent xmlns="http://activemq.org/config/1.0"/>
+  <commandAgent xmlns="http://activemq.apache.org/schema/core"/>
 
 </beans>
         <!-- END SNIPPET: xbean -->

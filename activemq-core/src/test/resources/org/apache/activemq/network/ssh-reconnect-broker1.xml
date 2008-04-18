@@ -18,7 +18,7 @@
 <beans>
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
-  <broker brokerName="broker1" persistent="false" useShutdownHook="false" useJmx="false" xmlns="http://activemq.org/config/1.0">
+  <broker brokerName="broker1" persistent="false" useShutdownHook="false" useJmx="false" xmlns="http://activemq.apache.org/schema/core">
 
     <!-- disabling the subscription recovery policy allows us take memory leaks easier -->
     <destinationPolicy>

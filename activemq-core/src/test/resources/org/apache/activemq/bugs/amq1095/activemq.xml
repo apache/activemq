@@ -17,7 +17,7 @@
 -->
 <beans>
 
-  <broker brokerName="localhost" xmlns="http://activemq.org/config/1.0" persistent="true">
+  <broker brokerName="localhost" xmlns="http://activemq.apache.org/schema/core" persistent="true">
   
     <persistenceAdapter>
       <kahaPersistenceAdapter directory="file:kahadir" maxDataFileLength="200000"/>

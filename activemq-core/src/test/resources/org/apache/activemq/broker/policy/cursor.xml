@@ -20,7 +20,7 @@
 <beans>
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
-  <broker persistent="false" xmlns="http://activemq.org/config/1.0">
+  <broker persistent="false" xmlns="http://activemq.apache.org/schema/core">
 
     <!--  lets define the dispatch policy -->
     <destinationPolicy>

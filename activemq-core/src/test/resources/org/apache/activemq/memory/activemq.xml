@@ -17,10 +17,10 @@
 <!-- START SNIPPET: example -->
 <beans
   xmlns="http://www.springframework.org/schema/beans"
-  xmlns:amq="http://activemq.org/config/1.0"
+  xmlns:amq="http://activemq.apache.org/schema/core"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
-  http://activemq.org/config/1.0 http://activemq.apache.org/schema/activemq-core.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/activemq-core.xsd
   http://activemq.apache.org/camel/schema/spring http://activemq.apache.org/camel/schema/spring/camel-spring.xsd">
 
   <!-- Allows us to use system properties as variables in this configuration file -->
@@ -28,7 +28,7 @@
 	<property name="location" value="org/apache/activemq/memory/usage.properties"/> 
   </bean>  
 
-  <broker xmlns="http://activemq.org/config/1.0" brokerName="${name}" persistent="false">
+  <broker xmlns="http://activemq.apache.org/schema/core" brokerName="${name}" persistent="false">
    
     <!-- Use the following to set the broker memory limit -->
 	<systemUsage>

@@ -15,7 +15,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<beans xmlns:amq="http://activemq.org/config/1.0">
+<beans xmlns:amq="http://activemq.apache.org/schema/core">
 
     <!-- normal ActiveMQ XML config which is less verbose & can be validated -->
     <amq:broker brokerName="brokerConfigTest" populateJMSXUserID="false"

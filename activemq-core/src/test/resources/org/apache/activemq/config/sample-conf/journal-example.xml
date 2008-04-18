@@ -15,7 +15,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<beans xmlns:amq="http://activemq.org/config/1.0">
+<beans xmlns:amq="http://activemq.apache.org/schema/core">
 
     <amq:broker brokerName="brokerJournalConfigTest" persistent="false" useShutdownHook="false" deleteAllMessagesOnStartup="true">
 
