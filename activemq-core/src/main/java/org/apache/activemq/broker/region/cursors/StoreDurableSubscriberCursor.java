@@ -251,7 +251,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         return pendingCount;
     }
 
-    public synchronized void setMaxBatchSize(int maxBatchSize) {
+    public void setMaxBatchSize(int maxBatchSize) {
         for (Iterator<PendingMessageCursor> i = storePrefetches.iterator(); i.hasNext();) {
             AbstractPendingMessageCursor tsp = (AbstractPendingMessageCursor)i.next();
             tsp.setMaxBatchSize(maxBatchSize);
@@ -266,7 +266,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         }
     }
 
-    public synchronized void setSystemUsage(SystemUsage usageManager) {
+    public void setSystemUsage(SystemUsage usageManager) {
         super.setSystemUsage(usageManager);
         for (Iterator<PendingMessageCursor> i = storePrefetches.iterator(); i.hasNext();) {
             PendingMessageCursor tsp = i.next();
@@ -274,28 +274,28 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         }
     }
     
-    public synchronized void setMaxProducersToAudit(int maxProducersToAudit) {
+    public void setMaxProducersToAudit(int maxProducersToAudit) {
         super.setMaxProducersToAudit(maxProducersToAudit);
         for (PendingMessageCursor cursor : storePrefetches) {
             cursor.setMaxAuditDepth(maxAuditDepth);
         }
     }
 
-    public synchronized void setMaxAuditDepth(int maxAuditDepth) {
+    public void setMaxAuditDepth(int maxAuditDepth) {
         super.setMaxAuditDepth(maxAuditDepth);
         for (PendingMessageCursor cursor : storePrefetches) {
             cursor.setMaxAuditDepth(maxAuditDepth);
         }
     }
     
-    public synchronized void setEnableAudit(boolean enableAudit) {
+    public void setEnableAudit(boolean enableAudit) {
         super.setEnableAudit(enableAudit);
         for (PendingMessageCursor cursor : storePrefetches) {
             cursor.setEnableAudit(enableAudit);
         }
     }
     
-    public synchronized void setUseCache(boolean useCache) {
+    public  void setUseCache(boolean useCache) {
         super.setUseCache(useCache);
         for (PendingMessageCursor cursor : storePrefetches) {
             cursor.setUseCache(useCache);
