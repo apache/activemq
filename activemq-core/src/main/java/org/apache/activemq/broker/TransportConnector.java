@@ -117,6 +117,14 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     public void setBrokerInfo(BrokerInfo brokerInfo) {
         this.brokerInfo = brokerInfo;
     }
+    
+    @Deprecated
+    public void setBrokerName(String name) {
+        if (this.brokerInfo==null) {
+            this.brokerInfo=new BrokerInfo();
+        }
+        this.brokerInfo.setBrokerName(name);
+    }
 
     public TransportServer getServer() throws IOException, URISyntaxException {
         if (server == null) {
