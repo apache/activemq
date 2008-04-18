@@ -94,7 +94,7 @@
         <executions>
           <execution>
             <configuration>
-              <namespace>http://activemq.org/activemq-jpa-store/config/1.0</namespace>
+              <namespace>http://activemq.apache.org/schema/jpa-store</namespace>
               <schema>target/xbean/activemq-jpa-store.xsd</schema>
             </configuration>
             <goals>

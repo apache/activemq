@@ -20,7 +20,7 @@
 
   <usageManager id="memory-manager" limit="1048576"/> <!--  1 meg limit -->
   
-  <broker useJmx="true" deleteAllMessagesOnStartup="true" memoryManager="#memory-manager"  xmlns="http://activemq.org/config/1.0">
+  <broker useJmx="true" deleteAllMessagesOnStartup="true" memoryManager="#memory-manager"  xmlns="http://activemq.apache.org/schema/core">
   
     <persistenceAdapter>
       <journaledJDBC 

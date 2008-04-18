@@ -16,7 +16,7 @@
     limitations under the License.
 -->
 
-<beans xmlns:amq="http://activemq.org/config/1.0">
+<beans xmlns:amq="http://activemq.apache.org/schema/core">
 
     <amq:broker brokerName="journaledMemBroker" start="false" persistent="false" useShutdownHook="false" deleteAllMessagesOnStartup="true" advisorySupport="false">
 

@@ -562,7 +562,7 @@
         <executions>
           <execution>
             <configuration>
-              <namespace>http://activemq.org/config/1.0</namespace>
+              <namespace>http://activemq.apache.org/schema/core</namespace>
               <schema>target/xbean/activemq.xsd</schema>
               <generateSpringSchemasFile>false</generateSpringSchemasFile>
             </configuration>

@@ -83,7 +83,7 @@
         <executions>
           <execution>
             <configuration>
-              <namespace>http://activemq.org/ra/1.0</namespace>
+              <namespace>http://activemq.apache.org/schema/ra</namespace>
             </configuration>
             <goals>
               <goal>mapping</goal>

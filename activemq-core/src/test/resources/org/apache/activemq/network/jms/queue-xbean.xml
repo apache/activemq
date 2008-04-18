@@ -21,7 +21,7 @@
 
   <!-- remote broker -->
 
-  <broker xmlns="http://activemq.org/config/1.0" id="remotebroker"
+  <broker xmlns="http://activemq.apache.org/schema/core" id="remotebroker"
     brokerName="remotebroker" persistent="false">
     <transportConnectors>
       <transportConnector uri="tcp://localhost:61666" />
@@ -31,7 +31,7 @@
   <!-- local broker with embedded Jms to Jms bridge (ok - it's contrived) -->
   
   <!-- START SNIPPET: example -->
-  <broker xmlns="http://activemq.org/config/1.0" id="localbroker"
+  <broker xmlns="http://activemq.apache.org/schema/core" id="localbroker"
     brokerName="localBroker" persistent="false">
     <transportConnectors>
       <transportConnector uri="tcp://localhost:61234" />

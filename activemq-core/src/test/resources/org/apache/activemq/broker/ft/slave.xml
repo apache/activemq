@@ -18,7 +18,7 @@
 <beans>
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
-  <broker brokerName="slave" useJmx="false" masterConnectorURI="tcp://localhost:62001"  xmlns="http://activemq.org/config/1.0">
+  <broker brokerName="slave" useJmx="false" masterConnectorURI="tcp://localhost:62001"  xmlns="http://activemq.apache.org/schema/core">
     <transportConnectors>
       <transportConnector uri="tcp://localhost:62002"/>
     </transportConnectors>
