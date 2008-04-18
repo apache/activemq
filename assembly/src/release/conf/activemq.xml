@@ -60,13 +60,13 @@
         </networkConnectors>
 
         <persistenceAdapter>
-            <amqPersistenceAdapter syncOnWrite="false" directory="${activemq.base}/activemq-data" maxFileLength="20 mb"/>
+            <amqPersistenceAdapter syncOnWrite="false" directory="${activemq.base}/data" maxFileLength="20 mb"/>
         </persistenceAdapter>
 
         <!-- Use the following if you wish to configure the journal with JDBC -->
         <!--
         <persistenceAdapter>
-            <journaledJDBC dataDirectory="${activemq.base}/activemq-data" dataSource="#postgres-ds"/>
+            <journaledJDBC dataDirectory="${activemq.base}/data" dataSource="#postgres-ds"/>
         </persistenceAdapter>
         -->
 
