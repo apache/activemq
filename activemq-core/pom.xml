@@ -502,7 +502,7 @@
                 <echo>Running the XSDDoc task</echo>
                 <taskdef name="xsddoc" classname="net.sf.xframe.xsddoc.Task" />
                 <mkdir dir="${basedir}/target/site/xsddoc" />
-                <xsddoc file="${basedir}/target/xbean/activemq.xsd" out="${basedir}/target/site/xsddoc" doctitle="Apache ActiveMQ XML Schema Reference" header="&lt;a href='http://activemq.apache.org/'&gt;Apache ActiveMQ&lt;/a&gt;" footer="Copyright 2007 (c) the &lt;a href='http://www.apache.org/'&gt;Apache Software Foundation&lt;/a&gt;" verbose="false" />
+                <xsddoc file="${basedir}/src/main/resources/activemq.xsd" out="${basedir}/target/site/xsddoc" doctitle="Apache ActiveMQ XML Schema Reference" header="&lt;a href='http://activemq.apache.org/'&gt;Apache ActiveMQ&lt;/a&gt;" footer="Copyright 2007 (c) the &lt;a href='http://www.apache.org/'&gt;Apache Software Foundation&lt;/a&gt;" verbose="false" />
                 <!--
                         css="${basedir}/../etc/css/stylesheet.css"
                 -->
@@ -588,11 +588,11 @@
             <configuration>
               <artifacts>
                 <artifact>
-                  <file>${basedir}/target/xbean/activemq.xsd</file>
+                  <file>${basedir}/src/main/resources/activemq.xsd</file>
                   <type>xsd</type>
                 </artifact>
                 <artifact>
-                  <file>${basedir}/target/xbean/activemq.xsd.html</file>
+                  <file>${basedir}/src/main/resources/activemq.xsd.html</file>
                   <type>xsd.html</type>
                 </artifact>
               </artifacts>
