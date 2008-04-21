@@ -17,9 +17,7 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
-
 import javax.jms.InvalidSelectorException;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ConsumerInfo;
@@ -33,9 +31,9 @@ public class QueueBrowserSubscription extends QueueSubscription {
     boolean browseDone;
     boolean destinationsAdded;
 
-    public QueueBrowserSubscription(Broker broker,Destination destination, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info)
+    public QueueBrowserSubscription(Broker broker,SystemUsage usageManager, ConnectionContext context, ConsumerInfo info)
         throws InvalidSelectorException {
-        super(broker,destination,usageManager, context, info);
+        super(broker,usageManager, context, info);
     }
 
     protected boolean canDispatch(MessageReference node) {

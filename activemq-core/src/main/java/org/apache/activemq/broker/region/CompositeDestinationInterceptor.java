@@ -35,5 +35,12 @@ public class CompositeDestinationInterceptor implements DestinationInterceptor {
         }
         return destination;
     }
+
+   
+    public void remove(Destination destination) {
+        for (int i = 0; i < interceptors.length; i++) {
+            interceptors[i].remove(destination);
+        } 
+    }
     
 }

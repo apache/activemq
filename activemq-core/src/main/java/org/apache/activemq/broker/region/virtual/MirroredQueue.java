@@ -67,6 +67,22 @@ public class MirroredQueue implements DestinationInterceptor, BrokerServiceAware
         }
         return destination;
     }
+    
+
+    public void remove(Destination destination) {
+        if (brokerService == null) {
+            throw new IllegalArgumentException("No brokerService injected!");
+        }
+        ActiveMQDestination topic = getMirrorTopic(destination.getActiveMQDestination());
+        if (topic != null) {
+            try {
+                brokerService.removeDestination(topic);
+            } catch (Exception e) {
+                LOG.error("Failed to remove mirror destination for " + destination + ". Reason: " + e,e);
+            }
+        }
+        
+    }
 
     // Properties
     // -------------------------------------------------------------------------
@@ -124,4 +140,5 @@ public class MirroredQueue implements DestinationInterceptor, BrokerServiceAware
     protected ActiveMQDestination getMirrorTopic(ActiveMQDestination original) {
         return new ActiveMQTopic(prefix + original.getPhysicalName() + postfix);
     }
+
 }

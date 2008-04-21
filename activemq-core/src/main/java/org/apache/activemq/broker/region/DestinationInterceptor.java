@@ -25,5 +25,7 @@ package org.apache.activemq.broker.region;
 public interface DestinationInterceptor {
 
     Destination intercept(Destination destination);
+    
+    void remove(Destination destination);
 
 }

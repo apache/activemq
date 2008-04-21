@@ -183,6 +183,10 @@ public abstract class AbstractRegion implements Region {
                 }
                 destinationMap.removeAll(destination);
                 dispose(context,dest);
+                DestinationInterceptor destinationInterceptor = broker.getDestinationInterceptor();
+                if (destinationInterceptor != null) {
+                    destinationInterceptor.remove(dest);
+                }
 
             } else {   
                 LOG.debug("Destination doesn't exist: " + dest);

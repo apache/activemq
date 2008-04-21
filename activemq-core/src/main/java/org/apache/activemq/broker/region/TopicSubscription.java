@@ -20,11 +20,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-
 import javax.jms.JMSException;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.cursors.FilePendingMessageCursor;
@@ -65,8 +62,8 @@ public class TopicSubscription extends AbstractSubscription {
     private final AtomicLong dequeueCounter = new AtomicLong(0);
     private int memoryUsageHighWaterMark = 95;
 
-    public TopicSubscription(Broker broker, Destination destination,ConnectionContext context, ConsumerInfo info, SystemUsage usageManager) throws Exception {
-        super(broker, destination,context, info);
+    public TopicSubscription(Broker broker,ConnectionContext context, ConsumerInfo info, SystemUsage usageManager) throws Exception {
+        super(broker, context, info);
         this.usageManager = usageManager;
         String matchedName = "TopicSubscription:" + CURSOR_NAME_COUNTER.getAndIncrement() + "[" + info.getConsumerId().toString() + "]";
         if (info.getDestination().isTemporary() || broker == null || broker.getTempDataStore()==null ) {
