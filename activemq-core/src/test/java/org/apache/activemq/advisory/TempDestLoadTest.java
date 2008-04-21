@@ -25,6 +25,7 @@ import javax.jms.TemporaryTopic;
 
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.command.ActiveMQDestination;
 
 /**
  * @version $Revision: 397249 $
@@ -56,9 +57,9 @@ public class TempDestLoadTest extends EmbeddedBrokerTestSupport {
                
         RegionBroker rb = (RegionBroker) broker.getBroker().getAdaptor(
                 RegionBroker.class);
-        //there should be 3 destinations - advisories - 
-        //1 for the connection + 2 generic ones
-        assertTrue(rb.getDestinationMap().size()==3);            
+        //there should be 2 destinations - advisories - 
+        //1 for the connection + 1 generic ones
+        assertTrue(rb.getDestinationMap().size()==2);            
     }
     
     public void testLoadTempAdvisoryTopics() throws Exception {
@@ -78,9 +79,9 @@ public class TempDestLoadTest extends EmbeddedBrokerTestSupport {
         assertTrue(ab.getAdvisoryProducers().size() == 0);
         RegionBroker rb = (RegionBroker) broker.getBroker().getAdaptor(
                 RegionBroker.class);
-        //there should be 3 destinations - advisories - 
-        //1 for the connection + 2 generic ones
-        assertTrue(rb.getDestinationMap().size()==3);        
+        //there should be 2 destinations - advisories - 
+        //1 for the connection + 1 generic ones
+        assertTrue(rb.getDestinationMap().size()==2);        
         
     }
 

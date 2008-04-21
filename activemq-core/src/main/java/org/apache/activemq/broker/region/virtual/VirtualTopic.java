@@ -46,6 +46,10 @@ public class VirtualTopic implements VirtualDestination {
         return new VirtualTopicInterceptor(destination, getPrefix(), getPostfix());
     }
     
+
+    public void remove(Destination destination) {        
+    }
+    
     // Properties
     // -------------------------------------------------------------------------
 

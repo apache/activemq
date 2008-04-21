@@ -1235,6 +1235,10 @@ public class BrokerService implements Service {
         return getBroker().addDestination(getAdminConnectionContext(), destination);
     }
     
+    public void removeDestination(ActiveMQDestination destination) throws Exception {
+        getBroker().removeDestination(getAdminConnectionContext(), destination,0);
+    }
+    
     public int getProducerSystemUsagePortion() {
         return producerSystemUsagePortion;
     }

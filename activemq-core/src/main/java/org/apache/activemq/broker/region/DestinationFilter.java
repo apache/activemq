@@ -19,7 +19,6 @@ package org.apache.activemq.broker.region;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Set;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
@@ -30,7 +29,6 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.usage.MemoryUsage;
-import org.apache.activemq.usage.SystemUsage;
 
 /**
  * 
