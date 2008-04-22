@@ -69,7 +69,7 @@ class HashPageInfo {
 
     void addHashEntry(int index, HashEntry entry) throws IOException {
         page.addHashEntry(index, entry);
-        size++;
+        size=page.size();
         dirty = true;
     }
 
@@ -80,7 +80,7 @@ class HashPageInfo {
     HashEntry removeHashEntry(int index) throws IOException {
         HashEntry result = page.removeHashEntry(index);
         if (result != null) {
-            size--;
+            size=page.size();
             dirty = true;
         }
         return result;
