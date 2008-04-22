@@ -52,7 +52,7 @@ public class HashIndex implements Index, HashIndexMBean {
     private int pageSize = DEFAULT_PAGE_SIZE;
     private int keySize = DEFAULT_KEY_SIZE;
     private int numberOfBins = DEFAULT_BIN_SIZE;
-    private int keysPerPage = pageSize / keySize;
+    private int keysPerPage = this.pageSize /this.keySize;
     private DataByteArrayInputStream dataIn;
     private DataByteArrayOutputStream dataOut;
     private byte[] readBuffer;
@@ -62,7 +62,7 @@ public class HashIndex implements Index, HashIndexMBean {
     private LinkedList<HashPage> freeList = new LinkedList<HashPage>();
     private AtomicBoolean loaded = new AtomicBoolean();
     private LRUCache<Long, HashPage> pageCache;
-    private boolean enablePageCaching=true;
+    private boolean enablePageCaching=false;//this is off by default - see AMQ-1667
     private int pageCacheSize = 10;
     private int size;
     private int activeBins;
