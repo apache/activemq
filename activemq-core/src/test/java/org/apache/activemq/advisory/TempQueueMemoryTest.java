@@ -86,7 +86,7 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
         
                
         //serverDestination + 
-        assertTrue(rb.getDestinationMap().size()==7);          
+        assertTrue(rb.getDestinationMap().size()==6);          
     }
 
     protected void setUp() throws Exception {

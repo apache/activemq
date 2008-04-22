@@ -52,7 +52,6 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     protected CopyOnWriteArrayList<TransportConnection> connections = new CopyOnWriteArrayList<TransportConnection>();
     protected TransportStatusDetector statusDector;
 
-    private Broker broker;
     private BrokerService brokerService;
     private TransportServer server;
     private URI uri;
@@ -66,13 +65,13 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private String name;
     private boolean disableAsyncDispatch;
     private boolean enableStatusMonitor = false;
+    private Broker broker;
 
     public TransportConnector() {
     }
 
-    public TransportConnector(Broker broker, TransportServer server) {
+    public TransportConnector(TransportServer server) {
         this();
-        setBroker(broker);
         setServer(server);
         if (server != null && server.getConnectURI() != null) {
             URI uri = server.getConnectURI();
@@ -96,8 +95,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
      * connector
      */
     public ManagedTransportConnector asManagedConnector(MBeanServer mbeanServer, ObjectName connectorName) throws IOException, URISyntaxException {
-        ManagedTransportConnector rc = new ManagedTransportConnector(mbeanServer, connectorName, getBroker(), getServer());
-        //rc.setBroker(getBroker());
+        ManagedTransportConnector rc = new ManagedTransportConnector(mbeanServer, connectorName, getServer());
         rc.setBrokerInfo(getBrokerInfo());
         rc.setConnectUri(getConnectUri());
         rc.setDisableAsyncDispatch(isDisableAsyncDispatch());
@@ -106,9 +104,9 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         rc.setEnableStatusMonitor(isEnableStatusMonitor());
         rc.setMessageAuthorizationPolicy(getMessageAuthorizationPolicy());
         rc.setName(getName());
-        //rc.setServer(getServer());
         rc.setTaskRunnerFactory(getTaskRunnerFactory());
         rc.setUri(getUri());
+        rc.setBrokerService(brokerService);
         return rc;
     }
 
@@ -119,6 +117,18 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     public void setBrokerInfo(BrokerInfo brokerInfo) {
         this.brokerInfo = brokerInfo;
     }
+    
+    /**
+     * 
+     * @deprecated use the {@link #setBrokerService(BrokerService)} method instead.
+     */
+    @Deprecated
+    public void setBrokerName(String name) {
+        if (this.brokerInfo==null) {
+            this.brokerInfo=new BrokerInfo();
+        }
+        this.brokerInfo.setBrokerName(name);
+    }
 
     public TransportServer getServer() throws IOException, URISyntaxException {
         if (server == null) {
@@ -127,59 +137,8 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         return server;
     }
 
-    public Broker getBroker() {
-        return broker;
-    }
-
-    public void setBroker(Broker broker) {
-        this.broker = broker;
-        brokerInfo.setBrokerId(broker.getBrokerId());
-        brokerInfo.setPeerBrokerInfos(broker.getPeerBrokerInfos());
-        brokerInfo.setFaultTolerantConfiguration(broker.isFaultTolerantConfiguration());
-    }
-
-    public void setBrokerName(String brokerName) {
-        brokerInfo.setBrokerName(brokerName);
-    }
-
     public void setServer(TransportServer server) {
         this.server = server;
-        this.brokerInfo.setBrokerURL(server.getConnectURI().toString());
-        this.server.setAcceptListener(new TransportAcceptListener() {
-            public void onAccept(final Transport transport) {
-                try {
-                    // Starting the connection could block due to
-                    // wireformat negotiation, so start it in an async thread.
-                    Thread startThread = new Thread("ActiveMQ Transport Initiator: " + transport.getRemoteAddress()) {
-                        public void run() {
-                            try {
-                                Connection connection = createConnection(transport);
-                                connection.start();
-                            } catch (Exception e) {
-                                ServiceSupport.dispose(transport);
-                                onAcceptError(e);
-                            }
-                        }
-                    };
-                    startThread.setPriority(4);
-                    startThread.start();
-                } catch (Exception e) {
-                    String remoteHost = transport.getRemoteAddress();
-                    ServiceSupport.dispose(transport);
-                    onAcceptError(e, remoteHost);
-                }
-            }
-
-            public void onAcceptError(Exception error) {
-                onAcceptError(error, null);
-            }
-
-            private void onAcceptError(Exception error, String remoteHost) {
-                LOG.error("Could not accept connection " + (remoteHost == null ? "" : "from " + remoteHost) + ": " + error.getMessage());
-                LOG.debug("Reason: " + error.getMessage(), error);
-            }
-        });
-        this.server.setBrokerInfo(brokerInfo);
     }
 
     public URI getUri() {
@@ -232,7 +191,54 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     }
 
     public void start() throws Exception {
-        getServer().start();
+        
+        TransportServer server = getServer();
+        
+        broker = brokerService.getBroker();
+        brokerInfo.setBrokerName(broker.getBrokerName());
+        brokerInfo.setBrokerId(broker.getBrokerId());
+        brokerInfo.setPeerBrokerInfos(broker.getPeerBrokerInfos());
+        brokerInfo.setFaultTolerantConfiguration(broker.isFaultTolerantConfiguration());
+        brokerInfo.setBrokerURL(server.getConnectURI().toString());
+        
+        server.setAcceptListener(new TransportAcceptListener() {
+            public void onAccept(final Transport transport) {
+                try {
+                    // Starting the connection could block due to
+                    // wireformat negotiation, so start it in an async thread.
+                    Thread startThread = new Thread("ActiveMQ Transport Initiator: " + transport.getRemoteAddress()) {
+                        public void run() {
+                            try {
+                                Connection connection = createConnection(transport);
+                                connection.start();
+                            } catch (Exception e) {
+                                ServiceSupport.dispose(transport);
+                                onAcceptError(e);
+                            }
+                        }
+                    };
+                    startThread.setPriority(4);
+                    startThread.start();
+                } catch (Exception e) {
+                    String remoteHost = transport.getRemoteAddress();
+                    ServiceSupport.dispose(transport);
+                    onAcceptError(e, remoteHost);
+                }
+            }
+
+            public void onAcceptError(Exception error) {
+                onAcceptError(error, null);
+            }
+
+            private void onAcceptError(Exception error, String remoteHost) {
+                LOG.error("Could not accept connection " + (remoteHost == null ? "" : "from " + remoteHost) + ": " + error.getMessage());
+                LOG.debug("Reason: " + error.getMessage(), error);
+            }
+        });
+        
+        server.setBrokerInfo(brokerInfo);
+        server.start();
+        
         DiscoveryAgent da = getDiscoveryAgent();
         if (da != null) {
             da.registerService(getConnectUri().toString());
@@ -280,14 +286,10 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         if (uri == null) {
             throw new IllegalArgumentException("You must specify either a server or uri property");
         }
-        if (broker == null) {
-            throw new IllegalArgumentException("You must specify the broker property. Maybe this connector should be added to a broker?");
+        if (brokerService == null) {
+            throw new IllegalArgumentException("You must specify the brokerService property. Maybe this connector should be added to a broker?");
         }
-        if (brokerService != null) {
-        	return TransportFactory.bind(brokerService, uri);
-        } else {
-        	return TransportFactory.bind(broker.getBrokerId().getValue(), uri);
-        }
+      	return TransportFactory.bind(brokerService, uri);
     }
 
     public DiscoveryAgent getDiscoveryAgent() throws IOException {
@@ -381,7 +383,14 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         this.enableStatusMonitor = enableStatusMonitor;
     }
 
-	public void setBrokerService(BrokerService brokerService) {
-		this.brokerService = brokerService;
-	}
+    /**
+     * This is called by the BrokerService right before it starts the transport.
+     */
+    public void setBrokerService(BrokerService brokerService) {
+        this.brokerService = brokerService;
+    }
+
+    public Broker getBroker() {
+        return broker;
+    }
 }

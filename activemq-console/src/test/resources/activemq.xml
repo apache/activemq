@@ -21,7 +21,7 @@
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
   
   <!-- Default configuration -->
-  <broker useJmx="false" xmlns="http://activemq.org/config/1.0">
+  <broker useJmx="false" xmlns="http://activemq.apache.org/schema/core">
 	  
 	<transportConnectors>
       <transportConnector uri="tcp://localhost:61616"/>
@@ -34,7 +34,7 @@
   </broker>
 
   <!-- Example of broker configuration that uses new logging options and dynamic management of logging
-  <broker useJmx="true" xmlns="http://activemq.org/config/1.0" persistent="false" deleteAllMessagesOnStartup="true">
+  <broker useJmx="true" xmlns="http://activemq.apache.org/schema/core" persistent="false" deleteAllMessagesOnStartup="true">
   
     <transportConnectors>
       <transportConnector uri="tcp://localhost:61616?trace=true&amp;logWriterName=custom&amp;dynamicManagement=true&amp;startLogging=true"/>

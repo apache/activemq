@@ -89,12 +89,12 @@ public abstract class Usage<T extends Usage> implements Service {
             }
         }
         synchronized (usageMutex) {
-            caclPercentUsage();
+            percentUsage=caclPercentUsage();
             if (percentUsage >= 100) {
                 long deadline = timeout > 0 ? System.currentTimeMillis() + timeout : Long.MAX_VALUE;
                 long timeleft = deadline;
                 while (timeleft > 0) {
-                    caclPercentUsage();
+                    percentUsage=caclPercentUsage();
                     if (percentUsage >= 100) {
                         usageMutex.wait(pollingTime);
                         timeleft = deadline - System.currentTimeMillis();
@@ -112,7 +112,7 @@ public abstract class Usage<T extends Usage> implements Service {
             return true;
         }
         synchronized (usageMutex) {
-            caclPercentUsage();
+            percentUsage=caclPercentUsage();
             return percentUsage >= 100;
         }
     }

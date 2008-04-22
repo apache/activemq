@@ -66,14 +66,14 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     private final Object dispatchLock = new Object();
     protected ActiveMQMessageAudit audit = new ActiveMQMessageAudit();
 
-    public PrefetchSubscription(Broker broker,Destination destination, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, PendingMessageCursor cursor) throws InvalidSelectorException {
-        super(broker,destination, context, info);
+    public PrefetchSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, PendingMessageCursor cursor) throws InvalidSelectorException {
+        super(broker,context, info);
         this.usageManager=usageManager;
         pending = cursor;
     }
 
-    public PrefetchSubscription(Broker broker,Destination destination, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
-        this(broker,destination,usageManager,context, info, new VMPendingMessageCursor());
+    public PrefetchSubscription(Broker broker,SystemUsage usageManager, ConnectionContext context, ConsumerInfo info) throws InvalidSelectorException {
+        this(broker,usageManager,context, info, new VMPendingMessageCursor());
     }
 
     /**
@@ -168,9 +168,10 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         + mdn.getMessageId() + ") was not in the pending list");
     }
 
-    public  void acknowledge(final ConnectionContext context,final MessageAck ack) throws Exception {
+    public final void acknowledge(final ConnectionContext context,final MessageAck ack) throws Exception {
         // Handle the standard acknowledgment case.
         boolean callDispatchMatched = false;
+        Destination destination = null;
         synchronized(dispatchLock) {
             if (ack.isStandardAck()) {
                 // Acknowledge all dispatched messages up till the message id of
@@ -233,6 +234,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                 prefetchExtension = Math.max(0,
                                         prefetchExtension - (index + 1));
                             }
+                            destination = node.getRegionDestination();
                             callDispatchMatched = true;
                             break;
                         }
@@ -268,6 +270,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     }
                     if (ack.getLastMessageId().equals(node.getMessageId())) {
                         prefetchExtension = Math.max(prefetchExtension, index + 1);
+                        destination = node.getRegionDestination();
                         callDispatchMatched = true;
                         break;
                     }
@@ -294,6 +297,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     if (inAckRange) {
                         node.incrementRedeliveryCounter();
                         if (ack.getLastMessageId().equals(messageId)) {
+                            destination = node.getRegionDestination();
                             callDispatchMatched = true;
                             break;
                         }
@@ -335,6 +339,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         if (ack.getLastMessageId().equals(messageId)) {
                             prefetchExtension = Math.max(0, prefetchExtension
                                     - (index + 1));
+                            destination = node.getRegionDestination();
                             callDispatchMatched = true;
                             break;
                         }
@@ -350,7 +355,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 }
             }
         }
-        if (callDispatchMatched) {
+        if (callDispatchMatched && destination != null) {
             if (destination.isLazyDispatch()) {
                 destination.wakeup();
             }

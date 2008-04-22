@@ -48,7 +48,7 @@
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
       org.apache.activemq*;version=${project.version},
-      '=META-INF.services.org.apache.xbean.spring.http.activemq.org.config'
+      '=META-INF.services.org.apache.xbean.spring.http.activemq.apache.org.schema'
     </activemq.osgi.export>
   </properties>
 
@@ -502,7 +502,7 @@
                 <echo>Running the XSDDoc task</echo>
                 <taskdef name="xsddoc" classname="net.sf.xframe.xsddoc.Task" />
                 <mkdir dir="${basedir}/target/site/xsddoc" />
-                <xsddoc file="${basedir}/target/xbean/activemq.xsd" out="${basedir}/target/site/xsddoc" doctitle="Apache ActiveMQ XML Schema Reference" header="&lt;a href='http://activemq.apache.org/'&gt;Apache ActiveMQ&lt;/a&gt;" footer="Copyright 2007 (c) the &lt;a href='http://www.apache.org/'&gt;Apache Software Foundation&lt;/a&gt;" verbose="false" />
+                <xsddoc file="${basedir}/src/main/resources/activemq.xsd" out="${basedir}/target/site/xsddoc" doctitle="Apache ActiveMQ XML Schema Reference" header="&lt;a href='http://activemq.apache.org/'&gt;Apache ActiveMQ&lt;/a&gt;" footer="Copyright 2007 (c) the &lt;a href='http://www.apache.org/'&gt;Apache Software Foundation&lt;/a&gt;" verbose="false" />
                 <!--
                         css="${basedir}/../etc/css/stylesheet.css"
                 -->
@@ -553,6 +553,8 @@
         </executions>
       </plugin>
 
+      <!-- Disable for now cause it's generating an invalid xsd file and this breaks our spring compatibility.
+           we are going to manually maintain the xsd for now until we can improve the xsd generation from xbean
       <plugin>
         <groupId>org.apache.xbean</groupId>
         <artifactId>maven-xbean-plugin</artifactId>
@@ -560,7 +562,7 @@
         <executions>
           <execution>
             <configuration>
-              <namespace>http://activemq.org/config/1.0</namespace>
+              <namespace>http://activemq.apache.org/schema/core</namespace>
               <schema>target/xbean/activemq.xsd</schema>
               <generateSpringSchemasFile>false</generateSpringSchemasFile>
             </configuration>
@@ -570,6 +572,7 @@
           </execution>
         </executions>
       </plugin>
+      -->
 
       <!--  lets ensure that the XSD gets deployed  -->
       <plugin>
@@ -585,11 +588,11 @@
             <configuration>
               <artifacts>
                 <artifact>
-                  <file>${basedir}/target/xbean/activemq.xsd</file>
+                  <file>${basedir}/src/main/resources/activemq.xsd</file>
                   <type>xsd</type>
                 </artifact>
                 <artifact>
-                  <file>${basedir}/target/xbean/activemq.xsd.html</file>
+                  <file>${basedir}/src/main/resources/activemq.xsd.html</file>
                   <type>xsd.html</type>
                 </artifact>
               </artifacts>

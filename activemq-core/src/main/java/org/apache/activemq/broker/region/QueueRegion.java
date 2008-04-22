@@ -46,18 +46,11 @@ public class QueueRegion extends AbstractRegion {
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info)
         throws JMSException {
-        Destination dest = null;
-        try {
-            dest = lookup(context, info.getDestination());
-        } catch (Exception e) {
-            JMSException jmsEx = new JMSException("Failed to retrieve destination from region "+ e);
-            jmsEx.setLinkedException(e);
-            throw jmsEx;
-        }
+        
         if (info.isBrowser()) {
-            return new QueueBrowserSubscription(broker,dest,usageManager, context, info);
+            return new QueueBrowserSubscription(broker,usageManager, context, info);
         } else {
-            return new QueueSubscription(broker, dest,usageManager,context, info);
+            return new QueueSubscription(broker, usageManager,context, info);
         }
     }
 

@@ -170,7 +170,6 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             this.statistics.setParent(connector.getStatistics());
         }
         this.taskRunnerFactory = taskRunnerFactory;
-        connector.setBrokerName(broker.getBrokerName());
         this.transport = transport;
         this.transport.setTransportListener(new DefaultTransportListener() {
 

@@ -38,7 +38,7 @@ public class HttpTransportFactory extends TransportFactory {
     
     private static final Log LOG = LogFactory.getLog(HttpTransportFactory.class);
 
-    public TransportServer doBind(String brokerId, URI location) throws IOException {
+    public TransportServer doBind(URI location) throws IOException {
         return new HttpTransportServer(location);
     }
 

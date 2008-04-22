@@ -74,7 +74,7 @@ public class SslTransportFactory extends TcpTransportFactory {
     /**
      * Overriding to use SslTransportServer and allow for proper reflection.
      */
-    public TransportServer doBind(String brokerId, final URI location) throws IOException {
+    public TransportServer doBind(final URI location) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParamters(location));
 

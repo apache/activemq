@@ -42,19 +42,22 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
 
     private static final Log LOG = LogFactory.getLog(ActiveMQConnectionFactory.class);
     private ConnectionManager manager;
-    private transient ActiveMQManagedConnectionFactory factory;
+    private ActiveMQManagedConnectionFactory factory;
     private Reference reference;
     private final ActiveMQConnectionRequestInfo info;
 
     /**
      * @param factory
      * @param manager
-     * @param info
+     * @param connectionRequestInfo
      */
-    public ActiveMQConnectionFactory(ActiveMQManagedConnectionFactory factory, ConnectionManager manager, ActiveMQConnectionRequestInfo info) {
+    public ActiveMQConnectionFactory(
+            ActiveMQManagedConnectionFactory factory, 
+            ConnectionManager manager, 
+            ActiveMQConnectionRequestInfo connectionRequestInfo) {
         this.factory = factory;
         this.manager = manager;
-        this.info = info;
+        this.info = connectionRequestInfo;
     }
 
     /**
@@ -76,19 +79,19 @@ public class ActiveMQConnectionFactory implements ConnectionFactory, QueueConnec
     }
 
     /**
-     * @param info
+     * @param connectionRequestInfo
      * @return
      * @throws JMSException
      */
-    private Connection createConnection(ActiveMQConnectionRequestInfo info) throws JMSException {
+    private Connection createConnection(ActiveMQConnectionRequestInfo connectionRequestInfo) throws JMSException {
         try {
-            if (info.isUseInboundSessionEnabled()) {
+            if (connectionRequestInfo.isUseInboundSessionEnabled()) {
                 return new InboundConnectionProxy();
             }
             if (manager == null) {
                 throw new JMSException("No JCA ConnectionManager configured! Either enable UseInboundSessionEnabled or get your JCA container to configure one.");
             }
-            return (Connection)manager.allocateConnection(factory, info);
+            return (Connection)manager.allocateConnection(factory, connectionRequestInfo);
         } catch (ResourceException e) {
             // Throw the root cause if it was a JMSException..
             if (e.getCause() instanceof JMSException) {

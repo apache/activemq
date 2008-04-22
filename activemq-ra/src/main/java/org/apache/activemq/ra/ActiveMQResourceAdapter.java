@@ -16,9 +16,7 @@
  */
 package org.apache.activemq.ra;
 
-import java.io.Serializable;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 
 import javax.jms.Connection;
@@ -39,8 +37,6 @@ import org.apache.activemq.RedeliveryPolicy;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.ServiceSupport;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Knows how to connect to one ActiveMQ server. It can then activate endpoints
@@ -51,18 +47,13 @@ import org.apache.commons.logging.LogFactory;
  *                         description="The JCA Resource Adaptor for ActiveMQ"
  * @version $Revision$
  */
-public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializable {
-
-    private static final long serialVersionUID = -5417363537865649130L;
-    private static final Log LOG = LogFactory.getLog(ActiveMQResourceAdapter.class);
+public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implements MessageResourceAdapter {
 
     private final HashMap<ActiveMQEndpointActivationKey, ActiveMQEndpointWorker> endpointWorkers = new HashMap<ActiveMQEndpointActivationKey, ActiveMQEndpointWorker>();
-    private final ActiveMQConnectionRequestInfo info = new ActiveMQConnectionRequestInfo();
 
     private BootstrapContext bootstrapContext;
     private String brokerXmlConfig;
     private BrokerService broker;
-    private ActiveMQConnectionFactory connectionFactory;
     private Thread brokerStartThread;
 
     /**
@@ -86,8 +77,8 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
                         }
                         broker.start();
                     } catch (Throwable e) {
-                        LOG.warn("Could not start up embeded ActiveMQ Broker '"+brokerXmlConfig+"': "+e.getMessage());
-                        LOG.debug("Reason for: "+e.getMessage(), e);
+                        log.warn("Could not start up embeded ActiveMQ Broker '"+brokerXmlConfig+"': "+e.getMessage());
+                        log.debug("Reason for: "+e.getMessage(), e);
                     }
                 }
             };
@@ -107,49 +98,22 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
      * @see org.apache.activemq.ra.MessageResourceAdapter#makeConnection()
      */
     public ActiveMQConnection makeConnection() throws JMSException {
-        if (connectionFactory != null) {
-            return makeConnection(info, connectionFactory);
+        return makeConnection(getInfo());
         }
-        return makeConnection(info);
-    }
-
-    /**
-     */
-    public ActiveMQConnection makeConnection(ActiveMQConnectionRequestInfo info) throws JMSException {
-
-        ActiveMQConnectionFactory connectionFactory = createConnectionFactory(info);
-        return makeConnection(info, connectionFactory);
-    }
-
-    /**
-     * @see org.apache.activemq.ra.MessageResourceAdapter#makeConnection(org.apache.activemq.ra.ActiveMQConnectionRequestInfo,
-     *      org.apache.activemq.ActiveMQConnectionFactory)
-     */
-    public ActiveMQConnection makeConnection(ActiveMQConnectionRequestInfo info, ActiveMQConnectionFactory connectionFactory) throws JMSException {
-        String userName = info.getUserName();
-        String password = info.getPassword();
-        ActiveMQConnection physicalConnection = (ActiveMQConnection)connectionFactory.createConnection(userName, password);
-
-        String clientId = info.getClientid();
-        if (clientId != null && clientId.length() > 0) {
-            physicalConnection.setClientID(clientId);
-        }
-        return physicalConnection;
-    }
 
     /**
      * @param activationSpec
      */
     public ActiveMQConnection makeConnection(MessageActivationSpec activationSpec) throws JMSException {
-        ActiveMQConnectionFactory connectionFactory = createConnectionFactory(info);
-        String userName = defaultValue(activationSpec.getUserName(), info.getUserName());
-        String password = defaultValue(activationSpec.getPassword(), info.getPassword());
+        ActiveMQConnectionFactory connectionFactory = createConnectionFactory(getInfo());
+        String userName = defaultValue(activationSpec.getUserName(), getInfo().getUserName());
+        String password = defaultValue(activationSpec.getPassword(), getInfo().getPassword());
         String clientId = activationSpec.getClientId();
         if (clientId != null) {
             connectionFactory.setClientID(clientId);
         } else {
             if (activationSpec.isDurableSubscription()) {
-                LOG.warn("No clientID specified for durable subscription: " + activationSpec);
+                log.warn("No clientID specified for durable subscription: " + activationSpec);
             }
         }
         ActiveMQConnection physicalConnection = (ActiveMQConnection)connectionFactory.createConnection(userName, password);
@@ -160,29 +124,6 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
             physicalConnection.setRedeliveryPolicy(redeliveryPolicy);
         }
         return physicalConnection;
-    }
-
-    /**
-     * @param info
-     * @throws JMSException
-     * @throws URISyntaxException
-     */
-    private synchronized ActiveMQConnectionFactory createConnectionFactory(ActiveMQConnectionRequestInfo info) throws JMSException {
-        ActiveMQConnectionFactory factory = connectionFactory;
-        if (factory != null && info.isConnectionFactoryConfigured()) {
-            factory = factory.copy();
-        } else if (factory == null) {
-            factory = new ActiveMQConnectionFactory();
-        }
-        info.configure(factory);
-        return factory;
-    }
-
-    private String defaultValue(String value, String defaultValue) {
-        if (value != null) {
-            return value;
-        }
-        return defaultValue;
     }
 
     /**
@@ -307,62 +248,6 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
     // ///////////////////////////////////////////////////////////////////////
 
     /**
-     * @return client id
-     */
-    public String getClientid() {
-        return emptyToNull(info.getClientid());
-    }
-
-    /**
-     * @return password
-     */
-    public String getPassword() {
-        return emptyToNull(info.getPassword());
-    }
-
-    /**
-     * @return server URL
-     */
-    public String getServerUrl() {
-        return info.getServerUrl();
-    }
-
-    /**
-     * @return user name
-     */
-    public String getUserName() {
-        return emptyToNull(info.getUserName());
-    }
-
-    /**
-     * @param clientid
-     */
-    public void setClientid(String clientid) {
-        info.setClientid(clientid);
-    }
-
-    /**
-     * @param password
-     */
-    public void setPassword(String password) {
-        info.setPassword(password);
-    }
-
-    /**
-     * @param url
-     */
-    public void setServerUrl(String url) {
-        info.setServerUrl(url);
-    }
-
-    /**
-     * @param userid
-     */
-    public void setUserName(String userid) {
-        info.setUserName(userid);
-    }
-
-    /**
      * @see org.apache.activemq.ra.MessageResourceAdapter#getBrokerXmlConfig()
      */
     public String getBrokerXmlConfig() {
@@ -385,153 +270,6 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
     }
 
     /**
-     * @return durable topic prefetch
-     */
-    public Integer getDurableTopicPrefetch() {
-        return info.getDurableTopicPrefetch();
-    }
-
-    /**
-     * @return initial redelivery delay
-     */
-    public Long getInitialRedeliveryDelay() {
-        return info.getInitialRedeliveryDelay();
-    }
-
-    /**
-     * @return input stream prefetch
-     */
-    public Integer getInputStreamPrefetch() {
-        return info.getInputStreamPrefetch();
-    }
-
-    /**
-     * @return maximum redeliveries
-     */
-    public Integer getMaximumRedeliveries() {
-        return info.getMaximumRedeliveries();
-    }
-
-    /**
-     * @return queue browser prefetch
-     */
-    public Integer getQueueBrowserPrefetch() {
-        return info.getQueueBrowserPrefetch();
-    }
-
-    /**
-     * @return queue prefetch
-     */
-    public Integer getQueuePrefetch() {
-        return info.getQueuePrefetch();
-    }
-
-    /**
-     * @return redelivery backoff multiplier
-     */
-    public Short getRedeliveryBackOffMultiplier() {
-        return info.getRedeliveryBackOffMultiplier();
-    }
-
-    /**
-     * @return redelivery use exponential backoff
-     */
-    public Boolean getRedeliveryUseExponentialBackOff() {
-        return info.getRedeliveryUseExponentialBackOff();
-    }
-
-    /**
-     * @return topic prefetch
-     */
-    public Integer getTopicPrefetch() {
-        return info.getTopicPrefetch();
-    }
-
-    /**
-     * @return use inbound session enabled
-     */
-    public boolean isUseInboundSessionEnabled() {
-        return info.isUseInboundSessionEnabled();
-    }
-
-    /**
-     * @param i
-     */
-    public void setAllPrefetchValues(Integer i) {
-        info.setAllPrefetchValues(i);
-    }
-
-    /**
-     * @param durableTopicPrefetch
-     */
-    public void setDurableTopicPrefetch(Integer durableTopicPrefetch) {
-        info.setDurableTopicPrefetch(durableTopicPrefetch);
-    }
-
-    /**
-     * @param value
-     */
-    public void setInitialRedeliveryDelay(Long value) {
-        info.setInitialRedeliveryDelay(value);
-    }
-
-    /**
-     * @param inputStreamPrefetch
-     */
-    public void setInputStreamPrefetch(Integer inputStreamPrefetch) {
-        info.setInputStreamPrefetch(inputStreamPrefetch);
-    }
-
-    /**
-     * @param value
-     */
-    public void setMaximumRedeliveries(Integer value) {
-        info.setMaximumRedeliveries(value);
-    }
-
-    /**
-     * @param queueBrowserPrefetch
-     */
-    public void setQueueBrowserPrefetch(Integer queueBrowserPrefetch) {
-        info.setQueueBrowserPrefetch(queueBrowserPrefetch);
-    }
-
-    /**
-     * @param queuePrefetch
-     */
-    public void setQueuePrefetch(Integer queuePrefetch) {
-        info.setQueuePrefetch(queuePrefetch);
-    }
-
-    /**
-     * @param value
-     */
-    public void setRedeliveryBackOffMultiplier(Short value) {
-        info.setRedeliveryBackOffMultiplier(value);
-    }
-
-    /**
-     * @param value
-     */
-    public void setRedeliveryUseExponentialBackOff(Boolean value) {
-        info.setRedeliveryUseExponentialBackOff(value);
-    }
-
-    /**
-     * @param topicPrefetch
-     */
-    public void setTopicPrefetch(Integer topicPrefetch) {
-        info.setTopicPrefetch(topicPrefetch);
-    }
-
-    /**
-     * @return Returns the info.
-     */
-    public ActiveMQConnectionRequestInfo getInfo() {
-        return info;
-    }
-
-    /**
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
@@ -545,7 +283,7 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
 
         final MessageResourceAdapter activeMQResourceAdapter = (MessageResourceAdapter)o;
 
-        if (!info.equals(activeMQResourceAdapter.getInfo())) {
+        if (!getInfo().equals(activeMQResourceAdapter.getInfo())) {
             return false;
         }
         if (notEqual(brokerXmlConfig, activeMQResourceAdapter.getBrokerXmlConfig())) {
@@ -555,60 +293,18 @@ public class ActiveMQResourceAdapter implements MessageResourceAdapter, Serializ
         return true;
     }
 
-    private boolean notEqual(Object o1, Object o2) {
-        return (o1 == null ^ o2 == null) || (o1 != null && !o1.equals(o2));
-    }
-
     /**
      * @see java.lang.Object#hashCode()
      */
     @Override
     public int hashCode() {
         int result;
-        result = info.hashCode();
+        result = getInfo().hashCode();
         if (brokerXmlConfig != null) {
             result ^= brokerXmlConfig.hashCode();
         }
         return result;
     }
 
-    private String emptyToNull(String value) {
-        if (value == null || value.length() == 0) {
-            return null;
-        }
-        return value;
-    }
 
-    /**
-     * @return use inbound session
-     */
-    public Boolean getUseInboundSession() {
-        return info.getUseInboundSession();
     }
-
-    /**
-     * @param useInboundSession
-     */
-    public void setUseInboundSession(Boolean useInboundSession) {
-        info.setUseInboundSession(useInboundSession);
-    }
-
-    /**
-     * @see org.apache.activemq.ra.MessageResourceAdapter#getConnectionFactory()
-     */
-    public ActiveMQConnectionFactory getConnectionFactory() {
-        return connectionFactory;
-    }
-
-    /**
-     * This allows a connection factory to be configured and shared between a
-     * ResourceAdaptor and outbound messaging. Note that setting the
-     * connectionFactory will overload many of the properties on this POJO such
-     * as the redelivery and prefetch policies; the properties on the
-     * connectionFactory will be used instead.
-     */
-    public void setConnectionFactory(ActiveMQConnectionFactory connectionFactory) {
-        this.connectionFactory = connectionFactory;
-    }
-
-}

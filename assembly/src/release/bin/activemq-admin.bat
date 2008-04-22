@@ -27,18 +27,6 @@ set DEFAULT_ACTIVEMQ_HOME=%~dp0..
 if "%ACTIVEMQ_HOME%"=="" set ACTIVEMQ_HOME=%DEFAULT_ACTIVEMQ_HOME%
 set DEFAULT_ACTIVEMQ_HOME=
 
-rem Slurp the command line arguments. This loop allows for an unlimited number
-rem of arguments (up to the command line limit, anyway).
-
-set ACTIVEMQ_CMD_LINE_ARGS=%1
-if ""%1""=="""" goto doneStart
-shift
-:setupArgs
-if ""%1""=="""" goto doneStart
-set ACTIVEMQ_CMD_LINE_ARGS=%ACTIVEMQ_CMD_LINE_ARGS% %1
-shift
-goto setupArgs
-
 rem This label provides a place for the argument list loop to break out 
 rem and for NT handling to skip to.
 
@@ -93,8 +81,6 @@ REM set SUNJMX=-Dcom.sun.management.jmxremote.port=1616 -Dcom.sun.management.jmx
 
 if "%SSL_OPTS%" == "" set SSL_OPTS=-Djavax.net.ssl.keyStorePassword=password -Djavax.net.ssl.trustStorePassword=password -Djavax.net.ssl.keyStore="%ACTIVEMQ_BASE%/conf/broker.ks" -Djavax.net.ssl.trustStore="%ACTIVEMQ_BASE%/conf/broker.ts"
 
-if "%ACTIVEMQ_CMD_LINE_ARGS%" == "" set ACTIVEMQ_CMD_LINE_ARGS=--help
-
 REM Uncomment to enable YourKit profiling
 REM SET ACTIVEMQ_DEBUG_OPTS="-Xrunyjpagent"
 
@@ -102,19 +88,16 @@ REM Uncomment to enable remote debugging
 REM SET ACTIVEMQ_DEBUG_OPTS=-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005
 
 REM Setup ActiveMQ Classpath. Default is the conf directory.
-set ACTIVEMQ_CLASSPATH=%ACTIVEMQ_HOME%/conf;%ACTIVEMQ_CLASSPATH%
+set ACTIVEMQ_CLASSPATH=%ACTIVEMQ_BASE%/conf;%ACTIVEMQ_CLASSPATH%
 
-"%_JAVACMD%" %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% -Djava.ext.dirs="%JAVA_EXT_DIRS%" -Dactivemq.classpath="%ACTIVEMQ_CLASSPATH%" -jar "%ACTIVEMQ_HOME%/bin/run.jar" %ACTIVEMQ_CMD_LINE_ARGS%
+"%_JAVACMD%" %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% -Djava.ext.dirs="%JAVA_EXT_DIRS%" -Dactivemq.classpath="%ACTIVEMQ_CLASSPATH%" -Dactivemq.home="%ACTIVEMQ_HOME%" -Dactivemq.base="%ACTIVEMQ_BASE%" -jar "%ACTIVEMQ_HOME%/bin/run.jar" %*
 
 goto end
 
 :end
 set _JAVACMD=
-set ACTIVEMQ_CMD_LINE_ARGS=
 
 if "%OS%"=="Windows_NT" @endlocal
 
 :mainEnd
 if exist "%HOME%\activemqrc_post.bat" call "%HOME%\activemqrc_post.bat"
-
-

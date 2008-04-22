@@ -34,6 +34,10 @@ public abstract class CompositeDestination implements VirtualDestination {
     public Destination intercept(Destination destination) {
         return new CompositeDestinationFilter(destination, getForwardTo(), isForwardOnly(), isCopyMessage());
     }
+    
+
+    public void remove(Destination destination) {        
+    }
 
     public String getName() {
         return name;

@@ -17,7 +17,7 @@
 <!-- START SNIPPET: xbean -->
 <beans>
   
-  <broker useJmx="false" brokerName="jdbcBroker" xmlns="http://activemq.org/config/1.0">
+  <broker useJmx="false" brokerName="jdbcBroker" xmlns="http://activemq.apache.org/schema/core">
     <persistenceAdapter>
        <jdbcPersistenceAdapter dataSource="#derby-ds"/>
     </persistenceAdapter>
