@@ -20,7 +20,7 @@ import javax.jms.Connection;
 import javax.resource.spi.BootstrapContext;
 import javax.resource.spi.endpoint.MessageEndpointFactory;
 
-import org.jmock.cglib.Mock;
+import org.jmock.Mock;
 import org.jmock.cglib.MockObjectTestCase;
 
 /**
@@ -40,14 +40,15 @@ public class ActiveMQAsfEndpointWorkerTest extends MockObjectTestCase {
     }
 
     public void testTopicSubscriberDurableNoDups() throws Exception {
-
-        /*
-         * Constraint[] args = {isA(Topic.class),
-         * eq(stubActivationSpec.getSubscriptionId()), NULL, ANYTHING,
-         * ANYTHING}; mockConnection.expects(once())
-         * .method("createDurableConnectionConsumer") .with(args)
-         * .will(returnValue(null)); worker.start(); verifyMocks();
-         */
+//         Constraint[] args = {isA(Topic.class),
+//            eq(stubActivationSpec.getSubscriptionId()), 
+//            NULL, 
+//            ANYTHING,
+//            ANYTHING}; 
+//         mockConnection.expects(once()).method("createDurableConnectionConsumer").with(args)
+//            .will(returnValue(null)); 
+//         worker.start();
+//         verifyMocks();
     }
 
     protected void setUp() throws Exception {
@@ -66,11 +67,11 @@ public class ActiveMQAsfEndpointWorkerTest extends MockObjectTestCase {
     }
 
     private void setupMocks() {
-        mockResourceAdapter = new Mock(ActiveMQResourceAdapter.class);
-        mockActivationKey = new Mock(ActiveMQEndpointActivationKey.class);
-        mockEndpointFactory = new Mock(MessageEndpointFactory.class);
-        mockBootstrapContext = new Mock(BootstrapContext.class);
-//        mockConnection = new Mock(Connection.class);
+        mockResourceAdapter = mock(ActiveMQResourceAdapter.class);
+        mockActivationKey = mock(ActiveMQEndpointActivationKey.class);
+        mockEndpointFactory = mock(MessageEndpointFactory.class);
+        mockBootstrapContext = mock(BootstrapContext.class);
+//        mockConnection = mock(Connection.class);
 
         mockActivationKey.expects(atLeastOnce()).method("getMessageEndpointFactory").will(returnValue((MessageEndpointFactory)mockEndpointFactory.proxy()));
 

@@ -26,7 +26,7 @@ public class ActiveMQEndpointActivationKey {
     /**
      * For testing
      */ 
-    ActiveMQEndpointActivationKey() {
+    protected ActiveMQEndpointActivationKey() {
         this(null, null);
     }
 
