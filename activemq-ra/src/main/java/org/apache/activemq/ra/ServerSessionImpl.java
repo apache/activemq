@@ -159,9 +159,14 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
         while (true) {
             log.debug("run loop start");
             try {
+                if ( session.isRunning() ) {
                 InboundContextSupport.register(this);
                 currentBatchSize = 0;
                 session.run();
+                } else {
+                    log.debug("JMS Session is no longer running (maybe due to loss of connection?), marking ServerSesison as stale");
+                    stale = true;
+                }
             } catch (Throwable e) {
                 stale = true;
                 log.debug("Endpoint failed to process message.", e);
