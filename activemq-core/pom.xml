@@ -48,7 +48,7 @@
     </activemq.osgi.import.pkg>
     <activemq.osgi.export>
       org.apache.activemq*;version=${project.version},
-      '=META-INF.services.org.apache.xbean.spring.http.activemq.org.config'
+      '=META-INF.services.org.apache.xbean.spring.http.activemq.apache.org.schema'
     </activemq.osgi.export>
   </properties>
 
