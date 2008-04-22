@@ -21,7 +21,7 @@
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
   <!-- for easier integration with the JUnit tests, lets not start the broker when the ApplicationContext starts -->
-  <broker useJmx="true" start="false" xmlns="http://activemq.org/config/1.0">
+  <broker useJmx="true" start="false" xmlns="http://activemq.apache.org/schema/core">
     <destinationPolicy>
       <policyMap>
         <policyEntries>

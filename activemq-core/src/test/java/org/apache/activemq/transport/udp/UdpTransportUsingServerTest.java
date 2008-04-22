@@ -57,7 +57,7 @@ public class UdpTransportUsingServerTest extends UdpTestSupport {
     }
 
     protected TransportServer createServer() throws Exception {
-        return TransportFactory.bind("byBroker", new URI(serverURI));
+        return TransportFactory.bind(new URI(serverURI));
     }
 
     protected Transport createConsumer() throws Exception {

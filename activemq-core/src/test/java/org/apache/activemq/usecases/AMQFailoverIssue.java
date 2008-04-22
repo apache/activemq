@@ -120,7 +120,6 @@ public class AMQFailoverIssue extends TestCase {
         brokerService.setDestinationPolicy(policyMap);
         final TransportConnector tConnector = new TransportConnector();
         tConnector.setUri(new URI(uri1));
-        tConnector.setBrokerName(brokerName);
         tConnector.setName(brokerName + ".transportConnector");
         brokerService.addConnector(tConnector);
         if (uri2 != null) {

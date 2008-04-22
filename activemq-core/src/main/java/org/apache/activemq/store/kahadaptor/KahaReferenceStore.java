@@ -79,8 +79,7 @@ public class KahaReferenceStore implements ReferenceStore {
             ReferenceRecord record) throws Exception {
         MessageId id = new MessageId(record.getMessageId());
         if (listener.hasSpace()) {
-            listener.recoverMessageReference(id);
-            return true;
+            return listener.recoverMessageReference(id);
         }
         return false;
     }

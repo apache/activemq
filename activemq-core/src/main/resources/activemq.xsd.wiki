@@ -1,0 +1,2358 @@
+h3. Elements By Type
+{anchor:org.apache.activemq.broker.TransportConnector-types}
+h4. The _[org.apache.activemq.broker.TransportConnector|#org.apache.activemq.broker.TransportConnector-types]_ Type Implementations
+    | _[<transportConnector>|#transportConnector-element]_ | {html}{html} |
+
+{anchor:org.apache.activemq.network.jms.InboundQueueBridge-types}
+h4. The _[org.apache.activemq.network.jms.InboundQueueBridge|#org.apache.activemq.network.jms.InboundQueueBridge-types]_ Type Implementations
+    | _[<inboundQueueBridge>|#inboundQueueBridge-element]_ | {html}Create an Inbound Queue Bridge{html} |
+
+{anchor:org.apache.activemq.network.NetworkConnector-types}
+h4. The _[org.apache.activemq.network.NetworkConnector|#org.apache.activemq.network.NetworkConnector-types]_ Type Implementations
+    | _[<ldapNetworkConnector>|#ldapNetworkConnector-element]_ | {html}class to create dynamic network connectors listed in an directory
+server using the LDAP v3 protocol as defined in RFC 2251, the
+entries listed in the directory server must implement the ipHost
+and ipService objectClasses as defined in RFC 2307.{html} |
+    | _[<multicastNetworkConnector>|#multicastNetworkConnector-element]_ | {html}A network connector which uses some kind of multicast-like transport that
+communicates with potentially many remote brokers over a single logical
+{@link Transport} instance such as when using multicast.
+
+This implementation does not depend on multicast at all; any other group
+based transport could be used.{html} |
+    | _[<networkConnector>|#networkConnector-element]_ | {html}A network connector which uses a discovery agent to detect the remote brokers
+available and setup a connection to each available remote broker{html} |
+
+{anchor:org.apache.activemq.broker.BrokerService-types}
+h4. The _[org.apache.activemq.broker.BrokerService|#org.apache.activemq.broker.BrokerService-types]_ Type Implementations
+    | _[<broker>|#broker-element]_ | {html}An ActiveMQ Message Broker. It consists of a number of transport
+connectors, network connectors and a bunch of properties which can be used to
+configure the broker as its lazily created.{html} |
+
+{anchor:org.apache.activemq.usage.TempUsage-types}
+h4. The _[org.apache.activemq.usage.TempUsage|#org.apache.activemq.usage.TempUsage-types]_ Type Implementations
+    | _[<tempUsage>|#tempUsage-element]_ | {html}Used to keep track of how much of something is being used so that a
+productive working set usage can be controlled. Main use case is manage
+memory usage.{html} |
+
+{anchor:org.apache.activemq.broker.region.policy.PendingSubscriberMessageStoragePolicy-types}
+h4. The _[org.apache.activemq.broker.region.policy.PendingSubscriberMessageStoragePolicy|#org.apache.activemq.broker.region.policy.PendingSubscriberMessageStoragePolicy-types]_ Type Implementations
+    | _[<fileCursor>|#fileCursor-element]_ | {html}Pending messages{html} |
+    | _[<vmCursor>|#vmCursor-element]_ | {html}Pending messages held{html} |
+
+{anchor:org.apache.activemq.usage.MemoryUsage-types}
+h4. The _[org.apache.activemq.usage.MemoryUsage|#org.apache.activemq.usage.MemoryUsage-types]_ Type Implementations
+    | _[<memoryUsage>|#memoryUsage-element]_ | {html}Used to keep track of how much of something is being used so that a
+productive working set usage can be controlled. Main use case is manage
+memory usage.{html} |
+
+{anchor:org.apache.activemq.broker.BrokerPlugin-types}
+h4. The _[org.apache.activemq.broker.BrokerPlugin|#org.apache.activemq.broker.BrokerPlugin-types]_ Type Implementations
+    | _[<authorizationPlugin>|#authorizationPlugin-element]_ | {html}An authorization plugin where each operation on a destination is checked
+against an authorizationMap{html} |
+    | _[<connectionDotFilePlugin>|#connectionDotFilePlugin-element]_ | {html}A <a href="http://www.graphviz.org/">DOT</a> file creator plugin which
+creates a DOT file showing the current connections{html} |
+    | _[<destinationDotFilePlugin>|#destinationDotFilePlugin-element]_ | {html}A <a href="http://www.graphviz.org/">DOT</a>
+file creator plugin which creates a DOT file showing the current topic & queue hierarchies.{html} |
+    | _[<jaasAuthenticationPlugin>|#jaasAuthenticationPlugin-element]_ | {html}Provides a JAAS based authentication plugin{html} |
+    | _[<jaasCertificateAuthenticationPlugin>|#jaasCertificateAuthenticationPlugin-element]_ | {html}Provides a JAAS based SSL certificate authentication plugin{html} |
+    | _[<loggingBrokerPlugin>|#loggingBrokerPlugin-element]_ | {html}A simple Broker interceptor which allows you to enable/disable logging.{html} |
+    | _[<multicastTraceBrokerPlugin>|#multicastTraceBrokerPlugin-element]_ | {html}A Broker interceptor which allows you to trace all operations to a Multicast
+socket.{html} |
+    | _[<simpleAuthenticationPlugin>|#simpleAuthenticationPlugin-element]_ | {html}Provides a simple authentication plugin{html} |
+    | _[<timeStampingBrokerPlugin>|#timeStampingBrokerPlugin-element]_ | {html}A Broker interceptor which updates a JMS Client's timestamp on the message
+with a broker timestamp. Useful when the clocks on client machines are known
+to not be correct and you can only trust the time set on the broker machines.
+
+Enabling this plugin will break JMS compliance since the timestamp that the
+producer sees on the messages after as send() will be different from the
+timestamp the consumer will observe when he receives the message. This plugin
+is not enabled in the default ActiveMQ configuration.{html} |
+    | _[<udpTraceBrokerPlugin>|#udpTraceBrokerPlugin-element]_ | {html}A Broker interceptor which allows you to trace all operations to a UDP
+socket.{html} |
+
+{anchor:org.apache.activemq.store.jdbc.JDBCAdapter-types}
+h4. The _[org.apache.activemq.store.jdbc.JDBCAdapter|#org.apache.activemq.store.jdbc.JDBCAdapter-types]_ Type Implementations
+    | _[<axionJDBCAdapter>|#axionJDBCAdapter-element]_ | {html}Axion specific Adapter.
+
+Axion does not seem to support ALTER statements or sub-selects. This means:
+- We cannot auto upgrade the schema was we roll out new versions of ActiveMQ
+- We cannot delete durable sub messages that have be acknowledged by all consumers.{html} |
+    | _[<blobJDBCAdapter>|#blobJDBCAdapter-element]_ | {html}This JDBCAdapter inserts and extracts BLOB data using the getBlob()/setBlob()
+operations. This is a little more involved since to insert a blob you have
+to:
+
+1: insert empty blob. 2: select the blob 3: finally update the blob with data
+value.
+
+The databases/JDBC drivers that use this adapter are:
+<ul>
+<li></li>
+</ul>{html} |
+    | _[<bytesJDBCAdapter>|#bytesJDBCAdapter-element]_ | {html}This JDBCAdapter inserts and extracts BLOB data using the
+setBytes()/getBytes() operations. The databases/JDBC drivers that use this
+adapter are:{html} |
+    | _[<db2JDBCAdapter>|#db2JDBCAdapter-element]_ | {html}{html} |
+    | _[<defaultJDBCAdapter>|#defaultJDBCAdapter-element]_ | {html}Implements all the default JDBC operations that are used by the
+JDBCPersistenceAdapter. <p/> sub-classing is encouraged to override the
+default implementation of methods to account for differences in JDBC Driver
+implementations. <p/> The JDBCAdapter inserts and extracts BLOB data using
+the getBytes()/setBytes() operations. <p/> The databases/JDBC drivers that
+use this adapter are:
+<ul>
+<li></li>
+</ul>{html} |
+    | _[<imageBasedJDBCAdaptor>|#imageBasedJDBCAdaptor-element]_ | {html}Provides JDBCAdapter since that uses
+IMAGE datatype to hold binary data.
+
+The databases/JDBC drivers that use this adapter are:
+<ul>
+<li>Sybase</li>
+<li>MS SQL</li>
+</ul>{html} |
+    | _[<informixJDBCAdapter>|#informixJDBCAdapter-element]_ | {html}JDBC Adapter for Informix database.
+Because Informix database restricts length of composite primary keys, length of
+<i>container name</i> field and <i>subscription id</i> field must be reduced to 150 characters.
+Therefore be sure not to use longer names for container name and subscription id than 150 characters.{html} |
+    | _[<oracleJDBCAdapter>|#oracleJDBCAdapter-element]_ | {html}Implements all the default JDBC operations that are used
+by the JDBCPersistenceAdapter.
+<p/>
+Subclassing is encouraged to override the default
+implementation of methods to account for differences
+in JDBC Driver implementations.
+<p/>
+The JDBCAdapter inserts and extracts BLOB data using the
+getBytes()/setBytes() operations.
+<p/>
+The databases/JDBC drivers that use this adapter are:
+<ul>
+<li></li>
+</ul>{html} |
+    | _[<streamJDBCAdapter>|#streamJDBCAdapter-element]_ | {html}This JDBCAdapter inserts and extracts BLOB data using the
+setBinaryStream()/getBinaryStream() operations.
+
+The databases/JDBC drivers that use this adapter are:
+<ul>
+<li>Axion</li>
+</ul>{html} |
+
+{anchor:org.apache.activemq.broker.region.policy.PendingQueueMessageStoragePolicy-types}
+h4. The _[org.apache.activemq.broker.region.policy.PendingQueueMessageStoragePolicy|#org.apache.activemq.broker.region.policy.PendingQueueMessageStoragePolicy-types]_ Type Implementations
+    | _[<fileQueueCursor>|#fileQueueCursor-element]_ | {html}Pending{html} |
+    | _[<storeCursor>|#storeCursor-element]_ | {html}Pending messages{html} |
+    | _[<vmQueueCursor>|#vmQueueCursor-element]_ | {html}Pending messages{html} |
+
+{anchor:javax.jms.TopicConnectionFactory-types}
+h4. The _[javax.jms.TopicConnectionFactory|#javax.jms.TopicConnectionFactory-types]_ Type Implementations
+    | _[<connectionFactory>|#connectionFactory-element]_ | {html}A <a href="http://www.springframework.org/">Spring</a> enhanced connection
+factory which will automatically use the Spring bean name as the clientIDPrefix property
+so that connections created have client IDs related to your Spring.xml file for
+easier comprehension from <a href="http://activemq.apache.org/jmx.html">JMX</a>.{html} |
+    | _[<xaConnectionFactory>|#xaConnectionFactory-element]_ | {html}A <a href="http://www.springframework.org/">Spring</a> enhanced XA connection
+factory which will automatically use the Spring bean name as the clientIDPrefix property
+so that connections created have client IDs related to your Spring.xml file for
+easier comprehension from <a href="http://activemq.apache.org/jmx.html">JMX</a>.{html} |
+
+{anchor:org.apache.activemq.broker.region.virtual.VirtualDestination-types}
+h4. The _[org.apache.activemq.broker.region.virtual.VirtualDestination|#org.apache.activemq.broker.region.virtual.VirtualDestination-types]_ Type Implementations
+    | _[<compositeQueue>|#compositeQueue-element]_ | {html}Represents a virtual queue which forwards to a number of other destinations.{html} |
+    | _[<compositeTopic>|#compositeTopic-element]_ | {html}Represents a virtual topic which forwards to a number of other destinations.{html} |
+    | _[<virtualTopic>|#virtualTopic-element]_ | {html}Creates <a href="http://activemq.org/site/virtual-destinations.html">Virtual
+Topics</a> using a prefix and postfix. The virtual destination creates a
+wildcard that is then used to look up all active queue subscriptions which
+match.{html} |
+
+{anchor:org.apache.activemq.broker.region.policy.PolicyMap-types}
+h4. The _[org.apache.activemq.broker.region.policy.PolicyMap|#org.apache.activemq.broker.region.policy.PolicyMap-types]_ Type Implementations
+    | _[<policyMap>|#policyMap-element]_ | {html}Represents a destination based configuration of policies so that individual
+destinations or wildcard hierarchies of destinations can be configured using
+different policies.{html} |
+
+{anchor:org.apache.activemq.usage.UsageCapacity-types}
+h4. The _[org.apache.activemq.usage.UsageCapacity|#org.apache.activemq.usage.UsageCapacity-types]_ Type Implementations
+    | _[<defaultUsageCapacity>|#defaultUsageCapacity-element]_ | {html}Identify if a limit has been reached{html} |
+    | _[<usageCapacity>|#usageCapacity-element]_ | {html}Identify if a limit has been reached{html} |
+
+{anchor:org.apache.activemq.broker.region.policy.PendingMessageLimitStrategy-types}
+h4. The _[org.apache.activemq.broker.region.policy.PendingMessageLimitStrategy|#org.apache.activemq.broker.region.policy.PendingMessageLimitStrategy-types]_ Type Implementations
+    | _[<constantPendingMessageLimitStrategy>|#constantPendingMessageLimitStrategy-element]_ | {html}This PendingMessageLimitStrategy is configured to a constant value for all subscriptions.{html} |
+    | _[<prefetchRatePendingMessageLimitStrategy>|#prefetchRatePendingMessageLimitStrategy-element]_ | {html}This PendingMessageLimitStrategy sets the maximum pending message limit value to be
+a multiplier of the prefetch limit of the subscription.{html} |
+
+{anchor:org.apache.activemq.usage.SystemUsage-types}
+h4. The _[org.apache.activemq.usage.SystemUsage|#org.apache.activemq.usage.SystemUsage-types]_ Type Implementations
+    | _[<systemUsage>|#systemUsage-element]_ | {html}Holder for Usage instances for memory, store and temp files Main use case is
+manage memory usage.{html} |
+
+{anchor:javax.jms.Destination-types}
+h4. The _[javax.jms.Destination|#javax.jms.Destination-types]_ Type Implementations
+    | _[<queue>|#queue-element]_ | {html}An ActiveMQ Queue{html} |
+    | _[<topic>|#topic-element]_ | {html}An ActiveMQ Topic{html} |
+
+{anchor:org.apache.activemq.broker.region.policy.SubscriptionRecoveryPolicy-types}
+h4. The _[org.apache.activemq.broker.region.policy.SubscriptionRecoveryPolicy|#org.apache.activemq.broker.region.policy.SubscriptionRecoveryPolicy-types]_ Type Implementations
+    | _[<fixedCountSubscriptionRecoveryPolicy>|#fixedCountSubscriptionRecoveryPolicy-element]_ | {html}This implementation of {@link SubscriptionRecoveryPolicy} will keep a fixed
+count of last messages.{html} |
+    | _[<fixedSizedSubscriptionRecoveryPolicy>|#fixedSizedSubscriptionRecoveryPolicy-element]_ | {html}This implementation of {@link SubscriptionRecoveryPolicy} will keep a fixed
+amount of memory available in RAM for message history which is evicted in
+time order.{html} |
+    | _[<lastImageSubscriptionRecoveryPolicy>|#lastImageSubscriptionRecoveryPolicy-element]_ | {html}This implementation of {@link SubscriptionRecoveryPolicy} will only keep the
+last message.{html} |
+    | _[<noSubscriptionRecoveryPolicy>|#noSubscriptionRecoveryPolicy-element]_ | {html}This SubscriptionRecoveryPolicy disable recovery of messages.{html} |
+    | _[<queryBasedSubscriptionRecoveryPolicy>|#queryBasedSubscriptionRecoveryPolicy-element]_ | {html}This implementation of {@link SubscriptionRecoveryPolicy} will perform a user
+specific query mechanism to load any messages they may have missed.{html} |
+    | _[<timedSubscriptionRecoveryPolicy>|#timedSubscriptionRecoveryPolicy-element]_ | {html}This implementation of {@link SubscriptionRecoveryPolicy} will keep a timed
+buffer of messages around in memory and use that to recover new
+subscriptions.{html} |
+
+{anchor:javax.jms.QueueConnectionFactory-types}
+h4. The _[javax.jms.QueueConnectionFactory|#javax.jms.QueueConnectionFactory-types]_ Type Implementations
+    | _[<connectionFactory>|#connectionFactory-element]_ | {html}A <a href="http://www.springframework.org/">Spring</a> enhanced connection
+factory which will automatically use the Spring bean name as the clientIDPrefix property
+so that connections created have client IDs related to your Spring.xml file for
+easier comprehension from <a href="http://activemq.apache.org/jmx.html">JMX</a>.{html} |
+    | _[<xaConnectionFactory>|#xaConnectionFactory-element]_ | {html}A <a href="http://www.springframework.org/">Spring</a> enhanced XA connection
+factory which will automatically use the Spring bean name as the clientIDPrefix property
+so that connections created have client IDs related to your Spring.xml file for
+easier comprehension from <a href="http://activemq.apache.org/jmx.html">JMX</a>.{html} |
+
+{anchor:org.apache.activemq.broker.jmx.ManagementContext-types}
+h4. The _[org.apache.activemq.broker.jmx.ManagementContext|#org.apache.activemq.broker.jmx.ManagementContext-types]_ Type Implementations
+    | _[<managementContext>|#managementContext-element]_ | {html}A Flow provides different dispatch policies within the NMR{html} |
+
+{anchor:org.apache.activemq.store.jdbc.Statements-types}
+h4. The _[org.apache.activemq.store.jdbc.Statements|#org.apache.activemq.store.jdbc.Statements-types]_ Type Implementations
+    | _[<statements>|#statements-element]_ | {html}{html} |
+
+{anchor:org.apache.activemq.store.PersistenceAdapterFactory-types}
+h4. The _[org.apache.activemq.store.PersistenceAdapterFactory|#org.apache.activemq.store.PersistenceAdapterFactory-types]_ Type Implementations
+    | _[<amqPersistenceAdapterFactory>|#amqPersistenceAdapterFactory-element]_ | {html}An implementation of {@link PersistenceAdapterFactory}{html} |
+    | _[<journaledJDBC>|#journaledJDBC-element]_ | {html}Creates a default persistence model using the Journal and JDBC{html} |
+
+{anchor:org.apache.activemq.security.AuthorizationEntry-types}
+h4. The _[org.apache.activemq.security.AuthorizationEntry|#org.apache.activemq.security.AuthorizationEntry-types]_ Type Implementations
+    | _[<authorizationEntry>|#authorizationEntry-element]_ | {html}Represents an entry in a {@link DefaultAuthorizationMap} for assigning
+different operations (read, write, admin) of user roles to a specific
+destination or a hierarchical wildcard area of destinations.{html} |
+    | _[<tempDestinationAuthorizationEntry>|#tempDestinationAuthorizationEntry-element]_ | {html}Represents an entry in a {@link DefaultAuthorizationMap} for assigning
+different operations (read, write, admin) of user roles to a temporary
+destination{html} |
+
+{anchor:org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy-types}
+h4. The _[org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy|#org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy-types]_ Type Implementations
+    | _[<fileDurableSubscriberCursor>|#fileDurableSubscriberCursor-element]_ | {html}Pending messages for durable subscribers{html} |
+    | _[<storeDurableSubscriberCursor>|#storeDurableSubscriberCursor-element]_ | {html}Pending messages for a durable{html} |
+    | _[<vmDurableCursor>|#vmDurableCursor-element]_ | {html}Pending{html} |
+
+{anchor:org.apache.activemq.broker.region.group.MessageGroupMapFactory-types}
+h4. The _[org.apache.activemq.broker.region.group.MessageGroupMapFactory|#org.apache.activemq.broker.region.group.MessageGroupMapFactory-types]_ Type Implementations
+    | _[<messageGroupHashBucketFactory>|#messageGroupHashBucketFactory-element]_ | {html}A factory to create instances of {@link SimpleMessageGroupMap} when
+implementing the <a
+href="http://activemq.apache.org/message-groups.html">Message
+Groups</a> functionality.{html} |
+    | _[<simpleMessageGroupMapFactory>|#simpleMessageGroupMapFactory-element]_ | {html}A factory to create instances of {@link SimpleMessageGroupMap} when implementing the
+<a href="http://activemq.apache.org/message-groups.html">Message Groups</a> functionality.{html} |
+
+{anchor:org.apache.activemq.usage.StoreUsage-types}
+h4. The _[org.apache.activemq.usage.StoreUsage|#org.apache.activemq.usage.StoreUsage-types]_ Type Implementations
+    | _[<storeUsage>|#storeUsage-element]_ | {html}Used to keep track of how much of something is being used so that a
+productive working set usage can be controlled. Main use case is manage
+memory usage.{html} |
+
+{anchor:org.apache.activemq.broker.region.policy.DeadLetterStrategy-types}
+h4. The _[org.apache.activemq.broker.region.policy.DeadLetterStrategy|#org.apache.activemq.broker.region.policy.DeadLetterStrategy-types]_ Type Implementations
+    | _[<individualDeadLetterStrategy>|#individualDeadLetterStrategy-element]_ | {html}A {@link DeadLetterStrategy} where each destination has its own individual
+DLQ using the subject naming hierarchy.{html} |
+    | _[<sharedDeadLetterStrategy>|#sharedDeadLetterStrategy-element]_ | {html}A default implementation of {@link DeadLetterStrategy} which uses
+a constant destination.{html} |
+
+{anchor:javax.jms.Topic-types}
+h4. The _[javax.jms.Topic|#javax.jms.Topic-types]_ Type Implementations
+    | _[<topic>|#topic-element]_ | {html}An ActiveMQ Topic{html} |
+
+{anchor:org.apache.activemq.ActiveMQPrefetchPolicy-types}
+h4. The _[org.apache.activemq.ActiveMQPrefetchPolicy|#org.apache.activemq.ActiveMQPrefetchPolicy-types]_ Type Implementations
+    | _[<prefetchPolicy>|#prefetchPolicy-element]_ | {html}Defines the prefetch message policies for different types of consumers{html} |
+
+{anchor:org.apache.activemq.broker.Broker-types}
+h4. The _[org.apache.activemq.broker.Broker|#org.apache.activemq.broker.Broker-types]_ Type Implementations
+    | _[<loggingBrokerPlugin>|#loggingBrokerPlugin-element]_ | {html}A simple Broker interceptor which allows you to enable/disable logging.{html} |
+    | _[<multicastTraceBrokerPlugin>|#multicastTraceBrokerPlugin-element]_ | {html}A Broker interceptor which allows you to trace all operations to a Multicast
+socket.{html} |
+    | _[<timeStampingBrokerPlugin>|#timeStampingBrokerPlugin-element]_ | {html}A Broker interceptor which updates a JMS Client's timestamp on the message
+with a broker timestamp. Useful when the clocks on client machines are known
+to not be correct and you can only trust the time set on the broker machines.
+
+Enabling this plugin will break JMS compliance since the timestamp that the
+producer sees on the messages after as send() will be different from the
+timestamp the consumer will observe when he receives the message. This plugin
+is not enabled in the default ActiveMQ configuration.{html} |
+    | _[<udpTraceBrokerPlugin>|#udpTraceBrokerPlugin-element]_ | {html}A Broker interceptor which allows you to trace all operations to a UDP
+socket.{html} |
+
+{anchor:org.apache.activemq.store.PersistenceAdapter-types}
+h4. The _[org.apache.activemq.store.PersistenceAdapter|#org.apache.activemq.store.PersistenceAdapter-types]_ Type Implementations
+    | _[<amqPersistenceAdapter>|#amqPersistenceAdapter-element]_ | {html}An implementation of {@link PersistenceAdapter} designed for use with a
+{@link Journal} and then check pointing asynchronously on a timeout with some
+other long term persistent storage.{html} |
+    | _[<jdbcPersistenceAdapter>|#jdbcPersistenceAdapter-element]_ | {html}A {@link PersistenceAdapter} implementation using JDBC for persistence
+storage.
+
+This persistence adapter will correctly remember prepared XA transactions,
+but it will not keep track of local transaction commits so that operations
+performed against the Message store are done as a single uow.{html} |
+    | _[<journalPersistenceAdapter>|#journalPersistenceAdapter-element]_ | {html}An implementation of {@link PersistenceAdapter} designed for use with a
+{@link Journal} and then check pointing asynchronously on a timeout with some
+other long term persistent storage.{html} |
+    | _[<kahaPersistenceAdapter>|#kahaPersistenceAdapter-element]_ | {html}{html} |
+    | _[<memoryPersistenceAdapter>|#memoryPersistenceAdapter-element]_ | {html}{html} |
+
+{anchor:org.apache.activemq.broker.region.policy.PolicyEntry-types}
+h4. The _[org.apache.activemq.broker.region.policy.PolicyEntry|#org.apache.activemq.broker.region.policy.PolicyEntry-types]_ Type Implementations
+    | _[<policyEntry>|#policyEntry-element]_ | {html}Represents an entry in a {@link PolicyMap} for assigning policies to a
+specific destination or a hierarchical wildcard area of destinations.{html} |
+
+{anchor:org.apache.activemq.network.DemandForwardingBridgeSupport-types}
+h4. The _[org.apache.activemq.network.DemandForwardingBridgeSupport|#org.apache.activemq.network.DemandForwardingBridgeSupport-types]_ Type Implementations
+    | _[<compositeDemandForwardingBridge>|#compositeDemandForwardingBridge-element]_ | {html}A demand forwarding bridge which works with multicast style transports where
+a single Transport could be communicating with multiple remote brokers{html} |
+    | _[<demandForwardingBridge>|#demandForwardingBridge-element]_ | {html}Forwards messages from the local broker to the remote broker based on demand.{html} |
+
+{anchor:org.apache.activemq.network.jms.OutboundQueueBridge-types}
+h4. The _[org.apache.activemq.network.jms.OutboundQueueBridge|#org.apache.activemq.network.jms.OutboundQueueBridge-types]_ Type Implementations
+    | _[<outboundQueueBridge>|#outboundQueueBridge-element]_ | {html}Create an Outbound Queue Bridge{html} |
+
+{anchor:org.apache.activemq.store.jdbc.JDBCPersistenceAdapter-types}
+h4. The _[org.apache.activemq.store.jdbc.JDBCPersistenceAdapter|#org.apache.activemq.store.jdbc.JDBCPersistenceAdapter-types]_ Type Implementations
+    | _[<jdbcPersistenceAdapter>|#jdbcPersistenceAdapter-element]_ | {html}A {@link PersistenceAdapter} implementation using JDBC for persistence
+storage.
+
+This persistence adapter will correctly remember prepared XA transactions,
+but it will not keep track of local transaction commits so that operations
+performed against the Message store are done as a single uow.{html} |
+
+{anchor:org.apache.activemq.command.ActiveMQDestination-types}
+h4. The _[org.apache.activemq.command.ActiveMQDestination|#org.apache.activemq.command.ActiveMQDestination-types]_ Type Implementations
+    | _[<queue>|#queue-element]_ | {html}An ActiveMQ Queue{html} |
+    | _[<topic>|#topic-element]_ | {html}An ActiveMQ Topic{html} |
+
+{anchor:org.apache.activemq.network.jms.InboundTopicBridge-types}
+h4. The _[org.apache.activemq.network.jms.InboundTopicBridge|#org.apache.activemq.network.jms.InboundTopicBridge-types]_ Type Implementations
+    | _[<inboundTopicBridge>|#inboundTopicBridge-element]_ | {html}Create an Inbound Topic Bridge{html} |
+
+{anchor:org.apache.activemq.network.jms.JmsConnector-types}
+h4. The _[org.apache.activemq.network.jms.JmsConnector|#org.apache.activemq.network.jms.JmsConnector-types]_ Type Implementations
+    | _[<jmsQueueConnector>|#jmsQueueConnector-element]_ | {html}A Bridge to other JMS Queue providers{html} |
+    | _[<jmsTopicConnector>|#jmsTopicConnector-element]_ | {html}A Bridge to other JMS Topic providers{html} |
+
+{anchor:org.apache.activemq.RedeliveryPolicy-types}
+h4. The _[org.apache.activemq.RedeliveryPolicy|#org.apache.activemq.RedeliveryPolicy-types]_ Type Implementations
+    | _[<redeliveryPolicy>|#redeliveryPolicy-element]_ | {html}Configuration options used to control how messages are re-delivered when they
+are rolled back.{html} |
+
+{anchor:org.apache.activemq.security.AuthorizationMap-types}
+h4. The _[org.apache.activemq.security.AuthorizationMap|#org.apache.activemq.security.AuthorizationMap-types]_ Type Implementations
+    | _[<authorizationMap>|#authorizationMap-element]_ | {html}Represents a destination based configuration of policies so that individual
+destinations or wildcard hierarchies of destinations can be configured using
+different policies. Each entry in the map represents the authorization ACLs
+for each operation.{html} |
+    | _[<lDAPAuthorizationMap>|#lDAPAuthorizationMap-element]_ | {html}An {@link AuthorizationMap} which uses LDAP{html} |
+    | _[<simpleAuthorizationMap>|#simpleAuthorizationMap-element]_ | {html}An AuthorizationMap which is configured with individual DestinationMaps for
+each operation.{html} |
+
+{anchor:org.apache.activemq.security.TempDestinationAuthorizationEntry-types}
+h4. The _[org.apache.activemq.security.TempDestinationAuthorizationEntry|#org.apache.activemq.security.TempDestinationAuthorizationEntry-types]_ Type Implementations
+    | _[<tempDestinationAuthorizationEntry>|#tempDestinationAuthorizationEntry-element]_ | {html}Represents an entry in a {@link DefaultAuthorizationMap} for assigning
+different operations (read, write, admin) of user roles to a temporary
+destination{html} |
+
+{anchor:org.apache.activemq.broker.region.policy.DispatchPolicy-types}
+h4. The _[org.apache.activemq.broker.region.policy.DispatchPolicy|#org.apache.activemq.broker.region.policy.DispatchPolicy-types]_ Type Implementations
+    | _[<roundRobinDispatchPolicy>|#roundRobinDispatchPolicy-element]_ | {html}Simple dispatch policy that sends a message to every subscription that
+matches the message.{html} |
+    | _[<simpleDispatchPolicy>|#simpleDispatchPolicy-element]_ | {html}Simple dispatch policy that sends a message to every subscription that
+matches the message.{html} |
+    | _[<strictOrderDispatchPolicy>|#strictOrderDispatchPolicy-element]_ | {html}Dispatch policy that causes every subscription to see messages in the same
+order.{html} |
+
+{anchor:javax.jms.ConnectionFactory-types}
+h4. The _[javax.jms.ConnectionFactory|#javax.jms.ConnectionFactory-types]_ Type Implementations
+    | _[<connectionFactory>|#connectionFactory-element]_ | {html}A <a href="http://www.springframework.org/">Spring</a> enhanced connection
+factory which will automatically use the Spring bean name as the clientIDPrefix property
+so that connections created have client IDs related to your Spring.xml file for
+easier comprehension from <a href="http://activemq.apache.org/jmx.html">JMX</a>.{html} |
+    | _[<xaConnectionFactory>|#xaConnectionFactory-element]_ | {html}A <a href="http://www.springframework.org/">Spring</a> enhanced XA connection
+factory which will automatically use the Spring bean name as the clientIDPrefix property
+so that connections created have client IDs related to your Spring.xml file for
+easier comprehension from <a href="http://activemq.apache.org/jmx.html">JMX</a>.{html} |
+
+{anchor:javax.jms.Queue-types}
+h4. The _[javax.jms.Queue|#javax.jms.Queue-types]_ Type Implementations
+    | _[<queue>|#queue-element]_ | {html}An ActiveMQ Queue{html} |
+
+{anchor:org.apache.activemq.broker.region.policy.MessageEvictionStrategy-types}
+h4. The _[org.apache.activemq.broker.region.policy.MessageEvictionStrategy|#org.apache.activemq.broker.region.policy.MessageEvictionStrategy-types]_ Type Implementations
+    | _[<oldestMessageEvictionStrategy>|#oldestMessageEvictionStrategy-element]_ | {html}An eviction strategy which evicts the oldest message first (which is the
+default).{html} |
+    | _[<oldestMessageWithLowestPriorityEvictionStrategy>|#oldestMessageWithLowestPriorityEvictionStrategy-element]_ | {html}An eviction strategy which evicts the oldest message with the lowest priority first.{html} |
+
+{anchor:org.apache.activemq.Service-types}
+h4. The _[org.apache.activemq.Service|#org.apache.activemq.Service-types]_ Type Implementations
+    | _[<broker>|#broker-element]_ | {html}An ActiveMQ Message Broker. It consists of a number of transport
+connectors, network connectors and a bunch of properties which can be used to
+configure the broker as its lazily created.{html} |
+    | _[<commandAgent>|#commandAgent-element]_ | {html}An agent which listens to commands on a JMS destination{html} |
+    | _[<forwardingBridge>|#forwardingBridge-element]_ | {html}Forwards all messages from the local broker to the remote broker.{html} |
+    | _[<inboundQueueBridge>|#inboundQueueBridge-element]_ | {html}Create an Inbound Queue Bridge{html} |
+    | _[<inboundTopicBridge>|#inboundTopicBridge-element]_ | {html}Create an Inbound Topic Bridge{html} |
+    | _[<jmsQueueConnector>|#jmsQueueConnector-element]_ | {html}A Bridge to other JMS Queue providers{html} |
+    | _[<jmsTopicConnector>|#jmsTopicConnector-element]_ | {html}A Bridge to other JMS Topic providers{html} |
+    | _[<ldapNetworkConnector>|#ldapNetworkConnector-element]_ | {html}class to create dynamic network connectors listed in an directory
+server using the LDAP v3 protocol as defined in RFC 2251, the
+entries listed in the directory server must implement the ipHost
+and ipService objectClasses as defined in RFC 2307.{html} |
+    | _[<managementContext>|#managementContext-element]_ | {html}A Flow provides different dispatch policies within the NMR{html} |
+    | _[<masterConnector>|#masterConnector-element]_ | {html}Connects a Slave Broker to a Master when using <a
+href="http://activemq.apache.org/masterslave.html">Master Slave</a> for High
+Availability of messages.{html} |
+    | _[<memoryUsage>|#memoryUsage-element]_ | {html}Used to keep track of how much of something is being used so that a
+productive working set usage can be controlled. Main use case is manage
+memory usage.{html} |
+    | _[<multicastNetworkConnector>|#multicastNetworkConnector-element]_ | {html}A network connector which uses some kind of multicast-like transport that
+communicates with potentially many remote brokers over a single logical
+{@link Transport} instance such as when using multicast.
+
+This implementation does not depend on multicast at all; any other group
+based transport could be used.{html} |
+    | _[<networkConnector>|#networkConnector-element]_ | {html}A network connector which uses a discovery agent to detect the remote brokers
+available and setup a connection to each available remote broker{html} |
+    | _[<outboundQueueBridge>|#outboundQueueBridge-element]_ | {html}Create an Outbound Queue Bridge{html} |
+    | _[<outboundTopicBridge>|#outboundTopicBridge-element]_ | {html}Create an Outbound Topic Bridge{html} |
+    | _[<proxyConnector>|#proxyConnector-element]_ | {html}{html} |
+    | _[<storeUsage>|#storeUsage-element]_ | {html}Used to keep track of how much of something is being used so that a
+productive working set usage can be controlled. Main use case is manage
+memory usage.{html} |
+    | _[<systemUsage>|#systemUsage-element]_ | {html}Holder for Usage instances for memory, store and temp files Main use case is
+manage memory usage.{html} |
+    | _[<tempUsage>|#tempUsage-element]_ | {html}Used to keep track of how much of something is being used so that a
+productive working set usage can be controlled. Main use case is manage
+memory usage.{html} |
+
+{anchor:org.apache.activemq.network.jms.JmsMesageConvertor-types}
+h4. The _[org.apache.activemq.network.jms.JmsMesageConvertor|#org.apache.activemq.network.jms.JmsMesageConvertor-types]_ Type Implementations
+    | _[<simpleJmsMessageConvertor>|#simpleJmsMessageConvertor-element]_ | {html}Converts Message from one JMS to another{html} |
+
+{anchor:org.apache.activemq.network.jms.OutboundTopicBridge-types}
+h4. The _[org.apache.activemq.network.jms.OutboundTopicBridge|#org.apache.activemq.network.jms.OutboundTopicBridge-types]_ Type Implementations
+    | _[<outboundTopicBridge>|#outboundTopicBridge-element]_ | {html}Create an Outbound Topic Bridge{html} |
+
+{anchor:org.apache.activemq.broker.region.DestinationInterceptor-types}
+h4. The _[org.apache.activemq.broker.region.DestinationInterceptor|#org.apache.activemq.broker.region.DestinationInterceptor-types]_ Type Implementations
+    | _[<mirroredQueue>|#mirroredQueue-element]_ | {html}Creates <a href="http://activemq.org/site/mirrored-queues.html">Mirrored
+Queue</a> using a prefix and postfix to define the topic name on which to mirror the queue to.{html} |
+    | _[<virtualDestinationInterceptor>|#virtualDestinationInterceptor-element]_ | {html}Implements <a
+href="http://activemq.apache.org/virtual-destinations.html">Virtual Topics</a>.{html} |
+
+{anchor:org.apache.activemq.filter.DestinationMap-types}
+h4. The _[org.apache.activemq.filter.DestinationMap|#org.apache.activemq.filter.DestinationMap-types]_ Type Implementations
+    | _[<authorizationMap>|#authorizationMap-element]_ | {html}Represents a destination based configuration of policies so that individual
+destinations or wildcard hierarchies of destinations can be configured using
+different policies. Each entry in the map represents the authorization ACLs
+for each operation.{html} |
+    | _[<policyMap>|#policyMap-element]_ | {html}Represents a destination based configuration of policies so that individual
+destinations or wildcard hierarchies of destinations can be configured using
+different policies.{html} |
+
+{anchor:org.apache.activemq.network.NetworkBridgeConfiguration-types}
+h4. The _[org.apache.activemq.network.NetworkBridgeConfiguration|#org.apache.activemq.network.NetworkBridgeConfiguration-types]_ Type Implementations
+    | _[<ldapNetworkConnector>|#ldapNetworkConnector-element]_ | {html}class to create dynamic network connectors listed in an directory
+server using the LDAP v3 protocol as defined in RFC 2251, the
+entries listed in the directory server must implement the ipHost
+and ipService objectClasses as defined in RFC 2307.{html} |
+    | _[<multicastNetworkConnector>|#multicastNetworkConnector-element]_ | {html}A network connector which uses some kind of multicast-like transport that
+communicates with potentially many remote brokers over a single logical
+{@link Transport} instance such as when using multicast.
+
+This implementation does not depend on multicast at all; any other group
+based transport could be used.{html} |
+    | _[<networkConnector>|#networkConnector-element]_ | {html}A network connector which uses a discovery agent to detect the remote brokers
+available and setup a connection to each available remote broker{html} |
+
+
+{anchor:amqPersistenceAdapter-element}
+h3. The _[<amqPersistenceAdapter>|#amqPersistenceAdapter-element]_ Element
+    {html}An implementation of {@link PersistenceAdapter} designed for use with a
+{@link Journal} and then check pointing asynchronously on a timeout with some
+other long term persistent storage.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | archiveDataLogs | _boolean_ | {html}{html} |
+    | asyncDataManager | _org.apache.activemq.kaha.impl.async.AsyncDataManager_ | {html}{html} |
+    | brokerName | _java.lang.String_ | {html}{html} |
+    | brokerService | _[org.apache.activemq.broker.BrokerService|#org.apache.activemq.broker.BrokerService-types]_ | {html}{html} |
+    | checkpointInterval | _long_ | {html}{html} |
+    | cleanupInterval | _long_ | {html}{html} |
+    | directory | _java.io.File_ | {html}{html} |
+    | directoryArchive | _java.io.File_ | {html}{html} |
+    | disableLocking | _boolean_ | {html}{html} |
+    | indexBinSize | _int_ | {html}{html} |
+    | indexKeySize | _int_ | {html}{html} |
+    | indexPageSize | _int_ | {html}When set using XBean, you can use values such as: "20
+mb", "1024 kb", or "1 gb"{html} |
+    | maxCheckpointMessageAddSize | _int_ | {html}When set using XBean, you can use values such as: "20
+mb", "1024 kb", or "1 gb"{html} |
+    | maxFileLength | _int_ | {html}When set using XBean, you can use values such as: "20
+mb", "1024 kb", or "1 gb"{html} |
+    | maxReferenceFileLength | _int_ | {html}When set using XBean, you can use values such as: "20
+mb", "1024 kb", or "1 gb"{html} |
+    | persistentIndex | _boolean_ | {html}{html} |
+    | referenceStoreAdapter | _org.apache.activemq.store.ReferenceStoreAdapter_ | {html}{html} |
+    | syncOnWrite | _boolean_ | {html}{html} |
+    | taskRunnerFactory | _org.apache.activemq.thread.TaskRunnerFactory_ | {html}{html} |
+    | usageManager | _[org.apache.activemq.usage.SystemUsage|#org.apache.activemq.usage.SystemUsage-types]_ | {html}{html} |
+    | useNio | _boolean_ | {html}{html} |
+    | wireFormat | _org.apache.activemq.wireformat.WireFormat_ | {html}{html} |
+
+{anchor:amqPersistenceAdapterFactory-element}
+h3. The _[<amqPersistenceAdapterFactory>|#amqPersistenceAdapterFactory-element]_ Element
+    {html}An implementation of {@link PersistenceAdapterFactory}{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | brokerName | _java.lang.String_ | {html}{html} |
+    | dataDirectory | _java.io.File_ | {html}{html} |
+    | journalThreadPriority | _int_ | {html}{html} |
+    | maxFileLength | _int_ | {html}{html} |
+    | persistentIndex | _boolean_ | {html}{html} |
+    | referenceStoreAdapter | _org.apache.activemq.store.ReferenceStoreAdapter_ | {html}{html} |
+    | syncOnWrite | _boolean_ | {html}{html} |
+    | taskRunnerFactory | _org.apache.activemq.thread.TaskRunnerFactory_ | {html}{html} |
+    | useNio | _boolean_ | {html}{html} |
+
+{anchor:authenticationUser-element}
+h3. The _[<authenticationUser>|#authenticationUser-element]_ Element
+    {html}A helper object used to configure simple authentiaction plugin{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | groups | _java.lang.String_ | {html}{html} |
+    | password | _java.lang.String_ | {html}{html} |
+    | username | _java.lang.String_ | {html}{html} |
+
+{anchor:authorizationEntry-element}
+h3. The _[<authorizationEntry>|#authorizationEntry-element]_ Element
+    {html}Represents an entry in a {@link DefaultAuthorizationMap} for assigning
+different operations (read, write, admin) of user roles to a specific
+destination or a hierarchical wildcard area of destinations.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | admin | _java.lang.String_ | {html}{html} |
+    | adminACLs | (_java.lang.Object_)\* | {html}{html} |
+    | destination | _[org.apache.activemq.command.ActiveMQDestination|#org.apache.activemq.command.ActiveMQDestination-types]_ | {html}{html} |
+    | groupClass | _java.lang.String_ | {html}{html} |
+    | queue | _java.lang.String_ | {html}A helper method to set the destination from a configuration file{html} |
+    | read | _java.lang.String_ | {html}{html} |
+    | readACLs | (_java.lang.Object_)\* | {html}{html} |
+    | topic | _java.lang.String_ | {html}A helper method to set the destination from a configuration file{html} |
+    | write | _java.lang.String_ | {html}{html} |
+    | writeACLs | (_java.lang.Object_)\* | {html}{html} |
+
+{anchor:authorizationMap-element}
+h3. The _[<authorizationMap>|#authorizationMap-element]_ Element
+    {html}Represents a destination based configuration of policies so that individual
+destinations or wildcard hierarchies of destinations can be configured using
+different policies. Each entry in the map represents the authorization ACLs
+for each operation.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | authorizationEntries | (_java.lang.Object_)\* | {html}Sets the individual entries on the authorization map{html} |
+    | defaultEntry | _[org.apache.activemq.security.AuthorizationEntry|#org.apache.activemq.security.AuthorizationEntry-types]_ | {html}{html} |
+    | entries | (_java.lang.Object_)\* | {html}A helper method to allow the destination map to be populated from a
+dependency injection framework such as Spring{html} |
+    | tempDestinationAuthorizationEntry | _[org.apache.activemq.security.TempDestinationAuthorizationEntry|#org.apache.activemq.security.TempDestinationAuthorizationEntry-types]_ | {html}{html} |
+
+{anchor:authorizationPlugin-element}
+h3. The _[<authorizationPlugin>|#authorizationPlugin-element]_ Element
+    {html}An authorization plugin where each operation on a destination is checked
+against an authorizationMap{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | map | _[org.apache.activemq.security.AuthorizationMap|#org.apache.activemq.security.AuthorizationMap-types]_ | {html}{html} |
+
+{anchor:axionJDBCAdapter-element}
+h3. The _[<axionJDBCAdapter>|#axionJDBCAdapter-element]_ Element
+    {html}Axion specific Adapter.
+
+Axion does not seem to support ALTER statements or sub-selects. This means:
+- We cannot auto upgrade the schema was we roll out new versions of ActiveMQ
+- We cannot delete durable sub messages that have be acknowledged by all consumers.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | batchStatments | _boolean_ | {html}{html} |
+    | statements | _[org.apache.activemq.store.jdbc.Statements|#org.apache.activemq.store.jdbc.Statements-types]_ | {html}{html} |
+    | useExternalMessageReferences | _boolean_ | {html}{html} |
+
+{anchor:blobJDBCAdapter-element}
+h3. The _[<blobJDBCAdapter>|#blobJDBCAdapter-element]_ Element
+    {html}This JDBCAdapter inserts and extracts BLOB data using the getBlob()/setBlob()
+operations. This is a little more involved since to insert a blob you have
+to:
+
+1: insert empty blob. 2: select the blob 3: finally update the blob with data
+value.
+
+The databases/JDBC drivers that use this adapter are:
+<ul>
+<li></li>
+</ul>{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | batchStatments | _boolean_ | {html}{html} |
+    | statements | _[org.apache.activemq.store.jdbc.Statements|#org.apache.activemq.store.jdbc.Statements-types]_ | {html}{html} |
+    | useExternalMessageReferences | _boolean_ | {html}{html} |
+
+{anchor:broker-element}
+h3. The _[<broker>|#broker-element]_ Element
+    {html}An ActiveMQ Message Broker. It consists of a number of transport
+connectors, network connectors and a bunch of properties which can be used to
+configure the broker as its lazily created.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | adminView | _org.apache.activemq.broker.jmx.BrokerView_ | {html}Returns the administration view of the broker; used to create and destroy
+resources such as queues and topics. Note this method returns null if JMX
+is disabled.{html} |
+    | advisorySupport | _boolean_ | {html}Allows the support of advisory messages to be disabled for performance
+reasons.{html} |
+    | applicationContext | _org.springframework.context.ApplicationContext_ | {html}{html} |
+    | brokerName | _java.lang.String_ | {html}Sets the name of this broker; which must be unique in the network{html} |
+    | brokerObjectName | _javax.management.ObjectName_ | {html}Sets the JMX ObjectName for this broker{html} |
+    | cacheTempDestinations | _boolean_ | {html}{html} |
+    | consumerSystemUsage | _[org.apache.activemq.usage.SystemUsage|#org.apache.activemq.usage.SystemUsage-types]_ | {html}{html} |
+    | consumerSystemUsagePortion | _int_ | {html}{html} |
+    | dataDirectory | _java.lang.String_ | {html}Sets the directory in which the data files will be stored by default for
+the JDBC and Journal persistence adaptors.{html} |
+    | dataDirectoryFile | _java.io.File_ | {html}Sets the directory in which the data files will be stored by default for
+the JDBC and Journal persistence adaptors.{html} |
+    | dedicatedTaskRunner | _boolean_ | {html}{html} |
+    | deleteAllMessagesOnStartup | _boolean_ | {html}Sets whether or not all messages are deleted on startup - mostly only
+useful for testing.{html} |
+    | destinationFactory | _org.apache.activemq.broker.region.DestinationFactory_ | {html}{html} |
+    | destinationInterceptors | (_[org.apache.activemq.broker.region.DestinationInterceptor|#org.apache.activemq.broker.region.DestinationInterceptor-types]_)\* | {html}Sets the destination interceptors to use{html} |
+    | destinationPolicy | _[org.apache.activemq.broker.region.policy.PolicyMap|#org.apache.activemq.broker.region.policy.PolicyMap-types]_ | {html}Sets the destination specific policies available either for exact
+destinations or for wildcard areas of destinations.{html} |
+    | destinations | (_[org.apache.activemq.command.ActiveMQDestination|#org.apache.activemq.command.ActiveMQDestination-types]_)\* | {html}Sets the destinations which should be loaded/created on startup{html} |
+    | enableStatistics | _boolean_ | {html}Sets whether or not the Broker's services enable statistics or not.{html} |
+    | jmsBridgeConnectors | (_[org.apache.activemq.network.jms.JmsConnector|#org.apache.activemq.network.jms.JmsConnector-types]_)\* | {html}{html} |
+    | keepDurableSubsActive | _boolean_ | {html}{html} |
+    | managementContext | _[org.apache.activemq.broker.jmx.ManagementContext|#org.apache.activemq.broker.jmx.ManagementContext-types]_ | {html}{html} |
+    | masterConnectorURI | _java.lang.String_ | {html}{html} |
+    | messageAuthorizationPolicy | _org.apache.activemq.security.MessageAuthorizationPolicy_ | {html}Sets the policy used to decide if the current connection is authorized to
+consume a given message{html} |
+    | monitorConnectionSplits | _boolean_ | {html}{html} |
+    | networkConnectorURIs | (_java.lang.String_)\* | {html}{html} |
+    | networkConnectors | (_[org.apache.activemq.network.NetworkConnector|#org.apache.activemq.network.NetworkConnector-types]_)\* | {html}Sets the network connectors which this broker will use to connect to
+other brokers in a federated network{html} |
+    | persistenceAdapter | _[org.apache.activemq.store.PersistenceAdapter|#org.apache.activemq.store.PersistenceAdapter-types]_ | {html}Sets the persistence adaptor implementation to use for this broker{html} |
+    | persistenceFactory | _[org.apache.activemq.store.PersistenceAdapterFactory|#org.apache.activemq.store.PersistenceAdapterFactory-types]_ | {html}{html} |
+    | persistenceTaskRunnerFactory | _org.apache.activemq.thread.TaskRunnerFactory_ | {html}{html} |
+    | persistenceThreadPriority | _int_ | {html}{html} |
+    | persistent | _boolean_ | {html}Sets whether or not persistence is enabled or disabled.{html} |
+    | plugins | (_[org.apache.activemq.broker.BrokerPlugin|#org.apache.activemq.broker.BrokerPlugin-types]_)\* | {html}Sets a number of broker plugins to install such as for security
+authentication or authorization{html} |
+    | populateJMSXUserID | _boolean_ | {html}Sets whether or not the broker should populate the JMSXUserID header.{html} |
+    | producerSystemUsage | _[org.apache.activemq.usage.SystemUsage|#org.apache.activemq.usage.SystemUsage-types]_ | {html}{html} |
+    | producerSystemUsagePortion | _int_ | {html}{html} |
+    | proxyConnectors | (_java.lang.Object_)\* | {html}Sets the network connectors which this broker will use to connect to
+other brokers in a federated network{html} |
+    | regionBroker | _[org.apache.activemq.broker.Broker|#org.apache.activemq.broker.Broker-types]_ | {html}{html} |
+    | services | (_[org.apache.activemq.Service|#org.apache.activemq.Service-types]_)\* | {html}Sets the services associated with this broker such as a
+{@link MasterConnector}{html} |
+    | shutdownOnMasterFailure | _boolean_ | {html}{html} |
+    | splitSystemUsageForProducersConsumers | _boolean_ | {html}{html} |
+    | start | _boolean_ | {html}Sets whether or not the broker is started along with the ApplicationContext it is defined within.
+Normally you would want the broker to start up along with the ApplicationContext but sometimes when working
+with JUnit tests you may wish to start and stop the broker explicitly yourself.{html} |
+    | supportFailOver | _boolean_ | {html}{html} |
+    | systemUsage | _[org.apache.activemq.usage.SystemUsage|#org.apache.activemq.usage.SystemUsage-types]_ | {html}{html} |
+    | taskRunnerFactory | _org.apache.activemq.thread.TaskRunnerFactory_ | {html}{html} |
+    | taskRunnerPriority | _int_ | {html}{html} |
+    | tempDataStore | _org.apache.activemq.kaha.Store_ | {html}{html} |
+    | timeBeforePurgeTempDestinations | _int_ | {html}{html} |
+    | tmpDataDirectory | _java.io.File_ | {html}{html} |
+    | transportConnectorURIs | (_java.lang.String_)\* | {html}{html} |
+    | transportConnectors | (_[org.apache.activemq.broker.TransportConnector|#org.apache.activemq.broker.TransportConnector-types]_)\* | {html}Sets the transport connectors which this broker will listen on for new
+clients{html} |
+    | useJmx | _boolean_ | {html}Sets whether or not the Broker's services should be exposed into JMX or
+not.{html} |
+    | useLocalHostBrokerName | _boolean_ | {html}{html} |
+    | useLoggingForShutdownErrors | _boolean_ | {html}Sets whether or not we should use commons-logging when reporting errors
+when shutting down the broker{html} |
+    | useMirroredQueues | _boolean_ | {html}Sets whether or not <a
+href="http://activemq.apache.org/mirrored-queues.html">Mirrored
+Queues</a> should be supported by default if they have not been
+explicitly configured.{html} |
+    | useShutdownHook | _boolean_ | {html}Sets whether or not we should use a shutdown handler to close down the
+broker cleanly if the JVM is terminated. It is recommended you leave this
+enabled.{html} |
+    | useVirtualTopics | _boolean_ | {html}Sets whether or not <a
+href="http://activemq.apache.org/virtual-destinations.html">Virtual
+Topics</a> should be supported by default if they have not been
+explicitly configured.{html} |
+    | vmConnectorURI | _java.net.URI_ | {html}{html} |
+
+{anchor:bytesJDBCAdapter-element}
+h3. The _[<bytesJDBCAdapter>|#bytesJDBCAdapter-element]_ Element
+    {html}This JDBCAdapter inserts and extracts BLOB data using the
+setBytes()/getBytes() operations. The databases/JDBC drivers that use this
+adapter are:{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | batchStatments | _boolean_ | {html}{html} |
+    | statements | _[org.apache.activemq.store.jdbc.Statements|#org.apache.activemq.store.jdbc.Statements-types]_ | {html}{html} |
+    | useExternalMessageReferences | _boolean_ | {html}{html} |
+
+{anchor:commandAgent-element}
+h3. The _[<commandAgent>|#commandAgent-element]_ Element
+    {html}An agent which listens to commands on a JMS destination{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | brokerUrl | _java.lang.String_ | {html}{html} |
+    | commandDestination | _[javax.jms.Destination|#javax.jms.Destination-types]_ | {html}{html} |
+    | connection | _javax.jms.Connection_ | {html}{html} |
+    | connectionFactory | _[javax.jms.ConnectionFactory|#javax.jms.ConnectionFactory-types]_ | {html}{html} |
+
+{anchor:compositeDemandForwardingBridge-element}
+h3. The _[<compositeDemandForwardingBridge>|#compositeDemandForwardingBridge-element]_ Element
+    {html}A demand forwarding bridge which works with multicast style transports where
+a single Transport could be communicating with multiple remote brokers{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | configuration | _[org.apache.activemq.network.NetworkBridgeConfiguration|#org.apache.activemq.network.NetworkBridgeConfiguration-types]_ | {html}{html} |
+    | createdByDuplex | _boolean_ | {html}{html} |
+    | durableDestinations | (_[org.apache.activemq.command.ActiveMQDestination|#org.apache.activemq.command.ActiveMQDestination-types]_)\* | {html}{html} |
+    | dynamicallyIncludedDestinations | (_[org.apache.activemq.command.ActiveMQDestination|#org.apache.activemq.command.ActiveMQDestination-types]_)\* | {html}{html} |
+    | excludedDestinations | (_[org.apache.activemq.command.ActiveMQDestination|#org.apache.activemq.command.ActiveMQDestination-types]_)\* | {html}{html} |
+    | localBroker | _org.apache.activemq.transport.Transport_ | {html}{html} |
+    | networkBridgeListener | _org.apache.activemq.network.NetworkBridgeListener_ | {html}{html} |
+    | remoteBroker | _org.apache.activemq.transport.Transport_ | {html}{html} |
+    | staticallyIncludedDestinations | (_[org.apache.activemq.command.ActiveMQDestination|#org.apache.activemq.command.ActiveMQDestination-types]_)\* | {html}{html} |
+
+{anchor:compositeQueue-element}
+h3. The _[<compositeQueue>|#compositeQueue-element]_ Element
+    {html}Represents a virtual queue which forwards to a number of other destinations.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | copyMessage | _boolean_ | {html}Sets whether a copy of the message will be sent to each destination.
+Defaults to true so that the forward destination is set as the
+destination of the message{html} |
+    | forwardOnly | _boolean_ | {html}Sets if the virtual destination is forward only (and so there is no
+physical queue to match the virtual queue) or if there is also a physical
+queue with the same name).{html} |
+    | forwardTo | (_java.lang.Object_)\* | {html}Sets the list of destinations to forward to{html} |
+    | name | _java.lang.String_ | {html}Sets the name of this composite destination{html} |
+
+{anchor:compositeTopic-element}
+h3. The _[<compositeTopic>|#compositeTopic-element]_ Element
+    {html}Represents a virtual topic which forwards to a number of other destinations.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | copyMessage | _boolean_ | {html}Sets whether a copy of the message will be sent to each destination.
+Defaults to true so that the forward destination is set as the
+destination of the message{html} |
+    | forwardOnly | _boolean_ | {html}Sets if the virtual destination is forward only (and so there is no
+physical queue to match the virtual queue) or if there is also a physical
+queue with the same name).{html} |
+    | forwardTo | (_java.lang.Object_)\* | {html}Sets the list of destinations to forward to{html} |
+    | name | _java.lang.String_ | {html}Sets the name of this composite destination{html} |
+
+{anchor:connectionDotFilePlugin-element}
+h3. The _[<connectionDotFilePlugin>|#connectionDotFilePlugin-element]_ Element
+    {html}A <a href="http://www.graphviz.org/">DOT</a> file creator plugin which
+creates a DOT file showing the current connections{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | file | _java.lang.String_ | {html}Sets the destination file name to create the destination diagram{html} |
+
+{anchor:connectionFactory-element}
+h3. The _[<connectionFactory>|#connectionFactory-element]_ Element
+    {html}A <a href="http://www.springframework.org/">Spring</a> enhanced connection
+factory which will automatically use the Spring bean name as the clientIDPrefix property
+so that connections created have client IDs related to your Spring.xml file for
+easier comprehension from <a href="http://activemq.apache.org/jmx.html">JMX</a>.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | alwaysSessionAsync | _boolean_ | {html}If this flag is set then a separate thread is not used for dispatching
+messages for each Session in the Connection. However, a separate thread
+is always used if there is more than one session, or the session isn't in
+auto acknowledge or duplicates ok mode{html} |
+    | alwaysSyncSend | _boolean_ | {html}Set true if always require messages to be sync sent{html} |
+    | beanName | _java.lang.String_ | {html}{html} |
+    | blobTransferPolicy | _org.apache.activemq.blob.BlobTransferPolicy_ | {html}Sets the policy used to describe how out-of-band BLOBs (Binary Large
+OBjects) are transferred from producers to brokers to consumers{html} |
+    | brokerURL | _java.lang.String_ | {html}Sets the <a
+href="http://activemq.apache.org/configuring-transports.html">connection
+URL</a> used to connect to the ActiveMQ broker.{html} |
+    | clientID | _java.lang.String_ | {html}Sets the JMS clientID to use for the created connection. Note that this
+can only be used by one connection at once so generally its a better idea
+to set the clientID on a Connection{html} |
+    | clientIDPrefix | _java.lang.String_ | {html}Sets the prefix used by autogenerated JMS Client ID values which are used
+if the JMS client does not explicitly specify on.{html} |
+    | clientIdGenerator | _org.apache.activemq.util.IdGenerator_ | {html}{html} |
+    | closeTimeout | _int_ | {html}Sets the timeout before a close is considered complete. Normally a
+close() on a connection waits for confirmation from the broker; this
+allows that operation to timeout to save the client hanging if there is
+no broker{html} |
+    | copyMessageOnSend | _boolean_ | {html}Should a JMS message be copied to a new JMS Message object as part of the
+send() method in JMS. This is enabled by default to be compliant with the
+JMS specification. You can disable it if you do not mutate JMS messages
+after they are sent for a performance boost{html} |
+    | disableTimeStampsByDefault | _boolean_ | {html}Sets whether or not timestamps on messages should be disabled or not. If
+you disable them it adds a small performance boost.{html} |
+    | dispatchAsync | _boolean_ | {html}Enables or disables the default setting of whether or not consumers have
+their messages <a
+href="http://activemq.apache.org/consumer-dispatch-async.html">dispatched
+synchronously or asynchronously by the broker</a>. For non-durable
+topics for example we typically dispatch synchronously by default to
+minimize context switches which boost performance. However sometimes its
+better to go slower to ensure that a single blocked consumer socket does
+not block delivery to other consumers.{html} |
+    | exclusiveConsumer | _boolean_ | {html}Enables or disables whether or not queue consumers should be exclusive or
+not for example to preserve ordering when not using <a
+href="http://activemq.apache.org/message-groups.html">Message Groups</a>{html} |
+    | nestedMapAndListEnabled | _boolean_ | {html}Enables/disables whether or not Message properties and MapMessage entries
+support <a
+href="http://activemq.apache.org/structured-message-properties-and-mapmessages.html">Nested
+Structures</a> of Map and List objects{html} |
+    | objectMessageSerializationDefered | _boolean_ | {html}When an object is set on an ObjectMessage, the JMS spec requires the
+object to be serialized by that set method. Enabling this flag causes the
+object to not get serialized. The object may subsequently get serialized
+if the message needs to be sent over a socket or stored to disk.{html} |
+    | optimizeAcknowledge | _boolean_ | {html}{html} |
+    | optimizedMessageDispatch | _boolean_ | {html}If this flag is set then an larger prefetch limit is used - only
+applicable for durable topic subscribers.{html} |
+    | password | _java.lang.String_ | {html}Sets the JMS password used for connections created from this factory{html} |
+    | prefetchPolicy | _[org.apache.activemq.ActiveMQPrefetchPolicy|#org.apache.activemq.ActiveMQPrefetchPolicy-types]_ | {html}Sets the <a
+href="http://activemq.apache.org/what-is-the-prefetch-limit-for.html">prefetch
+policy</a> for consumers created by this connection.{html} |
+    | producerWindowSize | _int_ | {html}{html} |
+    | properties | _java.util.Properties_ | {html}Get the properties from this instance for storing in JNDI{html} |
+    | redeliveryPolicy | _[org.apache.activemq.RedeliveryPolicy|#org.apache.activemq.RedeliveryPolicy-types]_ | {html}Sets the global redelivery policy to be used when a message is delivered
+but the session is rolled back{html} |
+    | sendTimeout | _int_ | {html}{html} |
+    | statsEnabled | _boolean_ | {html}{html} |
+    | transformer | _org.apache.activemq.MessageTransformer_ | {html}Sets the transformer used to transform messages before they are sent on
+to the JMS bus or when they are received from the bus but before they are
+delivered to the JMS client{html} |
+    | transportListener | _org.apache.activemq.transport.TransportListener_ | {html}Allows a listener to be configured on the ConnectionFactory so that when this factory is used
+with frameworks which don't expose the Connection such as Spring JmsTemplate, you can still register
+a transport listener.{html} |
+    | useAsyncSend | _boolean_ | {html}Forces the use of <a
+href="http://activemq.apache.org/async-sends.html">Async Sends</a> which
+adds a massive performance boost; but means that the send() method will
+return immediately whether the message has been sent or not which could
+lead to message loss.{html} |
+    | useBeanNameAsClientIdPrefix | _boolean_ | {html}{html} |
+    | useCompression | _boolean_ | {html}Enables the use of compression of the message bodies{html} |
+    | useRetroactiveConsumer | _boolean_ | {html}Sets whether or not retroactive consumers are enabled. Retroactive
+consumers allow non-durable topic subscribers to receive old messages
+that were published before the non-durable subscriber started.{html} |
+    | userName | _java.lang.String_ | {html}Sets the JMS userName used by connections created by this factory{html} |
+    | warnAboutUnstartedConnectionTimeout | _long_ | {html}Enables the timeout from a connection creation to when a warning is
+generated if the connection is not properly started via
+{@link Connection#start()} and a message is received by a consumer. It is
+a very common gotcha to forget to <a
+href="http://activemq.apache.org/i-am-not-receiving-any-messages-what-is-wrong.html">start
+the connection</a> so this option makes the default case to create a
+warning if the user forgets. To disable the warning just set the value to <
+0 (say -1).{html} |
+    | watchTopicAdvisories | _boolean_ | {html}{html} |
+
+{anchor:constantPendingMessageLimitStrategy-element}
+h3. The _[<constantPendingMessageLimitStrategy>|#constantPendingMessageLimitStrategy-element]_ Element
+    {html}This PendingMessageLimitStrategy is configured to a constant value for all subscriptions.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | limit | _int_ | {html}{html} |
+
+{anchor:db2JDBCAdapter-element}
+h3. The _[<db2JDBCAdapter>|#db2JDBCAdapter-element]_ Element
+    {html}{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | batchStatments | _boolean_ | {html}{html} |
+    | statements | _[org.apache.activemq.store.jdbc.Statements|#org.apache.activemq.store.jdbc.Statements-types]_ | {html}{html} |
+    | useExternalMessageReferences | _boolean_ | {html}{html} |
+
+{anchor:defaultJDBCAdapter-element}
+h3. The _[<defaultJDBCAdapter>|#defaultJDBCAdapter-element]_ Element
+    {html}Implements all the default JDBC operations that are used by the
+JDBCPersistenceAdapter. <p/> sub-classing is encouraged to override the
+default implementation of methods to account for differences in JDBC Driver
+implementations. <p/> The JDBCAdapter inserts and extracts BLOB data using
+the getBytes()/setBytes() operations. <p/> The databases/JDBC drivers that
+use this adapter are:
+<ul>
+<li></li>
+</ul>{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | batchStatments | _boolean_ | {html}{html} |
+    | statements | _[org.apache.activemq.store.jdbc.Statements|#org.apache.activemq.store.jdbc.Statements-types]_ | {html}{html} |
+    | useExternalMessageReferences | _boolean_ | {html}{html} |
+
+{anchor:defaultUsageCapacity-element}
+h3. The _[<defaultUsageCapacity>|#defaultUsageCapacity-element]_ Element
+    {html}Identify if a limit has been reached{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | limit | _long_ | {html}{html} |
+
+{anchor:demandForwardingBridge-element}
+h3. The _[<demandForwardingBridge>|#demandForwardingBridge-element]_ Element
+    {html}Forwards messages from the local broker to the remote broker based on demand.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | configuration | _[org.apache.activemq.network.NetworkBridgeConfiguration|#org.apache.activemq.network.NetworkBridgeConfiguration-types]_ | {html}{html} |
+    | createdByDuplex | _boolean_ | {html}{html} |
+    | durableDestinations | (_[org.apache.activemq.command.ActiveMQDestination|#org.apache.activemq.command.ActiveMQDestination-types]_)\* | {html}{html} |
+    | dynamicallyIncludedDestinations | (_[org.apache.activemq.command.ActiveMQDestination|#org.apache.activemq.command.ActiveMQDestination-types]_)\* | {html}{html} |
+    | excludedDestinations | (_[org.apache.activemq.command.ActiveMQDestination|#org.apache.activemq.command.ActiveMQDestination-types]_)\* | {html}{html} |
+    | localBroker | _org.apache.activemq.transport.Transport_ | {html}{html} |
+    | networkBridgeListener | _org.apache.activemq.network.NetworkBridgeListener_ | {html}{html} |
+    | remoteBroker | _org.apache.activemq.transport.Transport_ | {html}{html} |
+    | staticallyIncludedDestinations | (_[org.apache.activemq.command.ActiveMQDestination|#org.apache.activemq.command.ActiveMQDestination-types]_)\* | {html}{html} |
+
+{anchor:destinationDotFilePlugin-element}
+h3. The _[<destinationDotFilePlugin>|#destinationDotFilePlugin-element]_ Element
+    {html}A <a href="http://www.graphviz.org/">DOT</a>
+file creator plugin which creates a DOT file showing the current topic & queue hierarchies.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | file | _java.lang.String_ | {html}Sets the destination file name to create the destination diagram{html} |
+
+{anchor:destinationEntry-element}
+h3. The _[<destinationEntry>|#destinationEntry-element]_ Element
+    {html}A default entry in a DestinationMap which holds a single value.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | destination | _[org.apache.activemq.command.ActiveMQDestination|#org.apache.activemq.command.ActiveMQDestination-types]_ | {html}{html} |
+    | queue | _java.lang.String_ | {html}A helper method to set the destination from a configuration file{html} |
+    | topic | _java.lang.String_ | {html}A helper method to set the destination from a configuration file{html} |
+    | value | _java.lang.Object_ | {html}{html} |
+
+{anchor:fileCursor-element}
+h3. The _[<fileCursor>|#fileCursor-element]_ Element
+    {html}Pending messages{html}
+
+{anchor:fileDurableSubscriberCursor-element}
+h3. The _[<fileDurableSubscriberCursor>|#fileDurableSubscriberCursor-element]_ Element
+    {html}Pending messages for durable subscribers{html}
+
+{anchor:fileQueueCursor-element}
+h3. The _[<fileQueueCursor>|#fileQueueCursor-element]_ Element
+    {html}Pending{html}
+
+{anchor:filteredDestination-element}
+h3. The _[<filteredDestination>|#filteredDestination-element]_ Element
+    {html}Represents a destination which is filtered using some predicate such as a selector
+so that messages are only dispatched to the destination if they match the filter.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | destination | _[org.apache.activemq.command.ActiveMQDestination|#org.apache.activemq.command.ActiveMQDestination-types]_ | {html}The destination to send messages to if they match the filter{html} |
+    | filter | _org.apache.activemq.filter.BooleanExpression_ | {html}{html} |
+    | queue | _java.lang.String_ | {html}Sets the destination property to the given queue name{html} |
+    | selector | _java.lang.String_ | {html}Sets the JMS selector used to filter messages before forwarding them to this destination{html} |
+    | topic | _java.lang.String_ | {html}Sets the destination property to the given topic name{html} |
+
+{anchor:fixedCountSubscriptionRecoveryPolicy-element}
+h3. The _[<fixedCountSubscriptionRecoveryPolicy>|#fixedCountSubscriptionRecoveryPolicy-element]_ Element
+    {html}This implementation of {@link SubscriptionRecoveryPolicy} will keep a fixed
+count of last messages.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | maximumSize | _int_ | {html}Sets the maximum number of messages that this destination will hold
+around in RAM{html} |
+
+{anchor:fixedSizedSubscriptionRecoveryPolicy-element}
+h3. The _[<fixedSizedSubscriptionRecoveryPolicy>|#fixedSizedSubscriptionRecoveryPolicy-element]_ Element
+    {html}This implementation of {@link SubscriptionRecoveryPolicy} will keep a fixed
+amount of memory available in RAM for message history which is evicted in
+time order.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | buffer | _org.apache.activemq.memory.list.MessageList_ | {html}{html} |
+    | maximumSize | _int_ | {html}Sets the maximum amount of RAM in bytes that this buffer can hold in RAM{html} |
+    | useSharedBuffer | _boolean_ | {html}{html} |
+
+{anchor:forwardingBridge-element}
+h3. The _[<forwardingBridge>|#forwardingBridge-element]_ Element
+    {html}Forwards all messages from the local broker to the remote broker.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | clientId | _java.lang.String_ | {html}{html} |
+    | destinationFilter | _java.lang.String_ | {html}{html} |
+    | dispatchAsync | _boolean_ | {html}{html} |
+    | localBroker | _org.apache.activemq.transport.Transport_ | {html}{html} |
+    | networkBridgeFailedListener | _org.apache.activemq.network.NetworkBridgeListener_ | {html}{html} |
+    | prefetchSize | _int_ | {html}{html} |
+    | remoteBroker | _org.apache.activemq.transport.Transport_ | {html}{html} |
+
+{anchor:imageBasedJDBCAdaptor-element}
+h3. The _[<imageBasedJDBCAdaptor>|#imageBasedJDBCAdaptor-element]_ Element
+    {html}Provides JDBCAdapter since that uses
+IMAGE datatype to hold binary data.
+
+The databases/JDBC drivers that use this adapter are:
+<ul>
+<li>Sybase</li>
+<li>MS SQL</li>
+</ul>{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | batchStatments | _boolean_ | {html}{html} |
+    | statements | _[org.apache.activemq.store.jdbc.Statements|#org.apache.activemq.store.jdbc.Statements-types]_ | {html}{html} |
+    | useExternalMessageReferences | _boolean_ | {html}{html} |
+
+{anchor:inboundQueueBridge-element}
+h3. The _[<inboundQueueBridge>|#inboundQueueBridge-element]_ Element
+    {html}Create an Inbound Queue Bridge{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | consumer | _javax.jms.MessageConsumer_ | {html}{html} |
+    | consumerConnection | _javax.jms.QueueConnection_ | {html}{html} |
+    | consumerQueue | _[javax.jms.Queue|#javax.jms.Queue-types]_ | {html}{html} |
+    | doHandleReplyTo | _boolean_ | {html}{html} |
+    | inboundQueueName | _java.lang.String_ | {html}{html} |
+    | jmsConnector | _[org.apache.activemq.network.jms.JmsConnector|#org.apache.activemq.network.jms.JmsConnector-types]_ | {html}{html} |
+    | jmsMessageConvertor | _[org.apache.activemq.network.jms.JmsMesageConvertor|#org.apache.activemq.network.jms.JmsMesageConvertor-types]_ | {html}{html} |
+    | localQueueName | _java.lang.String_ | {html}{html} |
+    | maximumRetries | _int_ | {html}Sets the maximum number of retries if a send fails before closing the
+bridge{html} |
+    | producerConnection | _javax.jms.QueueConnection_ | {html}{html} |
+    | producerQueue | _[javax.jms.Queue|#javax.jms.Queue-types]_ | {html}{html} |
+    | selector | _java.lang.String_ | {html}{html} |
+
+{anchor:inboundTopicBridge-element}
+h3. The _[<inboundTopicBridge>|#inboundTopicBridge-element]_ Element
+    {html}Create an Inbound Topic Bridge{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | consumer | _javax.jms.MessageConsumer_ | {html}{html} |
+    | consumerConnection | _javax.jms.TopicConnection_ | {html}{html} |
+    | consumerName | _java.lang.String_ | {html}{html} |
+    | consumerTopic | _[javax.jms.Topic|#javax.jms.Topic-types]_ | {html}{html} |
+    | doHandleReplyTo | _boolean_ | {html}{html} |
+    | inboundTopicName | _java.lang.String_ | {html}{html} |
+    | jmsConnector | _[org.apache.activemq.network.jms.JmsConnector|#org.apache.activemq.network.jms.JmsConnector-types]_ | {html}{html} |
+    | jmsMessageConvertor | _[org.apache.activemq.network.jms.JmsMesageConvertor|#org.apache.activemq.network.jms.JmsMesageConvertor-types]_ | {html}{html} |
+    | localTopicName | _java.lang.String_ | {html}{html} |
+    | maximumRetries | _int_ | {html}Sets the maximum number of retries if a send fails before closing the
+bridge{html} |
+    | producerConnection | _javax.jms.TopicConnection_ | {html}{html} |
+    | producerTopic | _[javax.jms.Topic|#javax.jms.Topic-types]_ | {html}{html} |
+    | selector | _java.lang.String_ | {html}{html} |
+
+{anchor:individualDeadLetterStrategy-element}
+h3. The _[<individualDeadLetterStrategy>|#individualDeadLetterStrategy-element]_ Element
+    {html}A {@link DeadLetterStrategy} where each destination has its own individual
+DLQ using the subject naming hierarchy.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | processExpired | _boolean_ | {html}{html} |
+    | processNonPersistent | _boolean_ | {html}{html} |
+    | queuePrefix | _java.lang.String_ | {html}Sets the prefix to use for all dead letter queues for queue messages{html} |
+    | topicPrefix | _java.lang.String_ | {html}Sets the prefix to use for all dead letter queues for topic messages{html} |
+    | useQueueForQueueMessages | _boolean_ | {html}Sets whether a queue or topic should be used for queue messages sent to a
+DLQ. The default is to use a Queue{html} |
+    | useQueueForTopicMessages | _boolean_ | {html}Sets whether a queue or topic should be used for topic messages sent to a
+DLQ. The default is to use a Queue{html} |
+
+{anchor:informixJDBCAdapter-element}
+h3. The _[<informixJDBCAdapter>|#informixJDBCAdapter-element]_ Element
+    {html}JDBC Adapter for Informix database.
+Because Informix database restricts length of composite primary keys, length of
+<i>container name</i> field and <i>subscription id</i> field must be reduced to 150 characters.
+Therefore be sure not to use longer names for container name and subscription id than 150 characters.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | batchStatments | _boolean_ | {html}{html} |
+    | statements | _[org.apache.activemq.store.jdbc.Statements|#org.apache.activemq.store.jdbc.Statements-types]_ | {html}{html} |
+    | useExternalMessageReferences | _boolean_ | {html}{html} |
+
+{anchor:jaasAuthenticationPlugin-element}
+h3. The _[<jaasAuthenticationPlugin>|#jaasAuthenticationPlugin-element]_ Element
+    {html}Provides a JAAS based authentication plugin{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | configuration | _java.lang.String_ | {html}Sets the JAAS configuration domain name used{html} |
+    | discoverLoginConfig | _boolean_ | {html}Enables or disables the auto-discovery of the login.config file for JAAS to initialize itself.
+This flag is enabled by default such that if the <b>java.security.auth.login.config</b> system property
+is not defined then it is set to the location of the <b>login.config</b> file on the classpath.{html} |
+
+{anchor:jaasCertificateAuthenticationPlugin-element}
+h3. The _[<jaasCertificateAuthenticationPlugin>|#jaasCertificateAuthenticationPlugin-element]_ Element
+    {html}Provides a JAAS based SSL certificate authentication plugin{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | configuration | _java.lang.String_ | {html}Sets the JAAS configuration domain name used{html} |
+    | discoverLoginConfig | _boolean_ | {html}Enables or disables the auto-discovery of the login.config file for JAAS to initialize itself.
+This flag is enabled by default such that if the <b>java.security.auth.login.config</b> system property
+is not defined then it is set to the location of the <b>login.config</b> file on the classpath.{html} |
+
+{anchor:jdbcPersistenceAdapter-element}
+h3. The _[<jdbcPersistenceAdapter>|#jdbcPersistenceAdapter-element]_ Element
+    {html}A {@link PersistenceAdapter} implementation using JDBC for persistence
+storage.
+
+This persistence adapter will correctly remember prepared XA transactions,
+but it will not keep track of local transaction commits so that operations
+performed against the Message store are done as a single uow.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | adapter | _[org.apache.activemq.store.jdbc.JDBCAdapter|#org.apache.activemq.store.jdbc.JDBCAdapter-types]_ | {html}{html} |
+    | brokerName | _java.lang.String_ | {html}{html} |
+    | brokerService | _[org.apache.activemq.broker.BrokerService|#org.apache.activemq.broker.BrokerService-types]_ | {html}{html} |
+    | cleanupPeriod | _int_ | {html}Sets the number of milliseconds until the database is attempted to be
+cleaned up for durable topics{html} |
+    | createTablesOnStartup | _boolean_ | {html}Sets whether or not tables are created on startup{html} |
+    | dataDirectory | _java.lang.String_ | {html}{html} |
+    | dataDirectoryFile | _java.io.File_ | {html}{html} |
+    | dataSource | _javax.sql.DataSource_ | {html}{html} |
+    | databaseLocker | _org.apache.activemq.store.jdbc.DatabaseLocker_ | {html}Sets the database locker strategy to use to lock the database on startup{html} |
+    | directory | _java.io.File_ | {html}{html} |
+    | ds | _javax.sql.DataSource_ | {html}{html} |
+    | lockKeepAlivePeriod | _long_ | {html}{html} |
+    | scheduledThreadPoolExecutor | _java.util.concurrent.ScheduledThreadPoolExecutor_ | {html}{html} |
+    | statements | _[org.apache.activemq.store.jdbc.Statements|#org.apache.activemq.store.jdbc.Statements-types]_ | {html}{html} |
+    | usageManager | _[org.apache.activemq.usage.SystemUsage|#org.apache.activemq.usage.SystemUsage-types]_ | {html}{html} |
+    | useDatabaseLock | _boolean_ | {html}Sets whether or not an exclusive database lock should be used to enable
+JDBC Master/Slave. Enabled by default.{html} |
+    | useExternalMessageReferences | _boolean_ | {html}{html} |
+    | wireFormat | _org.apache.activemq.wireformat.WireFormat_ | {html}{html} |
+
+{anchor:jmsQueueConnector-element}
+h3. The _[<jmsQueueConnector>|#jmsQueueConnector-element]_ Element
+    {html}A Bridge to other JMS Queue providers{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | brokerService | _[org.apache.activemq.broker.BrokerService|#org.apache.activemq.broker.BrokerService-types]_ | {html}One way to configure the local connection - this is called by The
+BrokerService when the Connector is embedded{html} |
+    | inboundMessageConvertor | _[org.apache.activemq.network.jms.JmsMesageConvertor|#org.apache.activemq.network.jms.JmsMesageConvertor-types]_ | {html}{html} |
+    | inboundQueueBridges | (_[org.apache.activemq.network.jms.InboundQueueBridge|#org.apache.activemq.network.jms.InboundQueueBridge-types]_)\* | {html}{html} |
+    | jndiLocalTemplate | _org.springframework.jndi.JndiTemplate_ | {html}{html} |
+    | jndiOutboundTemplate | _org.springframework.jndi.JndiTemplate_ | {html}{html} |
+    | localClientId | _java.lang.String_ | {html}{html} |
+    | localConnectionFactoryName | _java.lang.String_ | {html}{html} |
+    | localPassword | _java.lang.String_ | {html}{html} |
+    | localQueueConnection | _javax.jms.QueueConnection_ | {html}{html} |
+    | localQueueConnectionFactory | _[javax.jms.QueueConnectionFactory|#javax.jms.QueueConnectionFactory-types]_ | {html}{html} |
+    | localUsername | _java.lang.String_ | {html}{html} |
+    | name | _java.lang.String_ | {html}{html} |
+    | outboundClientId | _java.lang.String_ | {html}{html} |
+    | outboundMessageConvertor | _[org.apache.activemq.network.jms.JmsMesageConvertor|#org.apache.activemq.network.jms.JmsMesageConvertor-types]_ | {html}{html} |
+    | outboundPassword | _java.lang.String_ | {html}{html} |
+    | outboundQueueBridges | (_[org.apache.activemq.network.jms.OutboundQueueBridge|#org.apache.activemq.network.jms.OutboundQueueBridge-types]_)\* | {html}{html} |
+    | outboundQueueConnection | _javax.jms.QueueConnection_ | {html}{html} |
+    | outboundQueueConnectionFactory | _[javax.jms.QueueConnectionFactory|#javax.jms.QueueConnectionFactory-types]_ | {html}{html} |
+    | outboundQueueConnectionFactoryName | _java.lang.String_ | {html}{html} |
+    | outboundUsername | _java.lang.String_ | {html}{html} |
+    | replyToDestinationCacheSize | _int_ | {html}{html} |
+
+{anchor:jmsTopicConnector-element}
+h3. The _[<jmsTopicConnector>|#jmsTopicConnector-element]_ Element
+    {html}A Bridge to other JMS Topic providers{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | brokerService | _[org.apache.activemq.broker.BrokerService|#org.apache.activemq.broker.BrokerService-types]_ | {html}One way to configure the local connection - this is called by The
+BrokerService when the Connector is embedded{html} |
+    | inboundMessageConvertor | _[org.apache.activemq.network.jms.JmsMesageConvertor|#org.apache.activemq.network.jms.JmsMesageConvertor-types]_ | {html}{html} |
+    | inboundTopicBridges | (_[org.apache.activemq.network.jms.InboundTopicBridge|#org.apache.activemq.network.jms.InboundTopicBridge-types]_)\* | {html}{html} |
+    | jndiLocalTemplate | _org.springframework.jndi.JndiTemplate_ | {html}{html} |
+    | jndiOutboundTemplate | _org.springframework.jndi.JndiTemplate_ | {html}{html} |
+    | localClientId | _java.lang.String_ | {html}{html} |
+    | localConnectionFactoryName | _java.lang.String_ | {html}{html} |
+    | localPassword | _java.lang.String_ | {html}{html} |
+    | localTopicConnection | _javax.jms.TopicConnection_ | {html}{html} |
+    | localTopicConnectionFactory | _[javax.jms.TopicConnectionFactory|#javax.jms.TopicConnectionFactory-types]_ | {html}{html} |
+    | localUsername | _java.lang.String_ | {html}{html} |
+    | name | _java.lang.String_ | {html}{html} |
+    | outboundClientId | _java.lang.String_ | {html}{html} |
+    | outboundMessageConvertor | _[org.apache.activemq.network.jms.JmsMesageConvertor|#org.apache.activemq.network.jms.JmsMesageConvertor-types]_ | {html}{html} |
+    | outboundPassword | _java.lang.String_ | {html}{html} |
+    | outboundTopicBridges | (_[org.apache.activemq.network.jms.OutboundTopicBridge|#org.apache.activemq.network.jms.OutboundTopicBridge-types]_)\* | {html}{html} |
+    | outboundTopicConnection | _javax.jms.TopicConnection_ | {html}{html} |
+    | outboundTopicConnectionFactory | _[javax.jms.TopicConnectionFactory|#javax.jms.TopicConnectionFactory-types]_ | {html}{html} |
+    | outboundTopicConnectionFactoryName | _java.lang.String_ | {html}{html} |
+    | outboundUsername | _java.lang.String_ | {html}{html} |
+    | replyToDestinationCacheSize | _int_ | {html}{html} |
+
+{anchor:journalPersistenceAdapter-element}
+h3. The _[<journalPersistenceAdapter>|#journalPersistenceAdapter-element]_ Element
+    {html}An implementation of {@link PersistenceAdapter} designed for use with a
+{@link Journal} and then check pointing asynchronously on a timeout with some
+other long term persistent storage.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | brokerName | _java.lang.String_ | {html}{html} |
+    | directory | _java.io.File_ | {html}{html} |
+    | journal | _org.apache.activeio.journal.Journal_ | {html}{html} |
+    | longTermPersistence | _[org.apache.activemq.store.PersistenceAdapter|#org.apache.activemq.store.PersistenceAdapter-types]_ | {html}{html} |
+    | maxCheckpointMessageAddSize | _int_ | {html}{html} |
+    | maxCheckpointWorkers | _int_ | {html}{html} |
+    | taskRunnerFactory | _org.apache.activemq.thread.TaskRunnerFactory_ | {html}{html} |
+    | usageManager | _[org.apache.activemq.usage.SystemUsage|#org.apache.activemq.usage.SystemUsage-types]_ | {html}{html} |
+    | useExternalMessageReferences | _boolean_ | {html}{html} |
+
+{anchor:journaledJDBC-element}
+h3. The _[<journaledJDBC>|#journaledJDBC-element]_ Element
+    {html}Creates a default persistence model using the Journal and JDBC{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | adapter | _[org.apache.activemq.store.jdbc.JDBCAdapter|#org.apache.activemq.store.jdbc.JDBCAdapter-types]_ | {html}{html} |
+    | createTablesOnStartup | _boolean_ | {html}Sets whether or not tables are created on startup{html} |
+    | dataDirectory | _java.lang.String_ | {html}{html} |
+    | dataDirectoryFile | _java.io.File_ | {html}{html} |
+    | dataSource | _javax.sql.DataSource_ | {html}{html} |
+    | jdbcAdapter | _[org.apache.activemq.store.jdbc.JDBCPersistenceAdapter|#org.apache.activemq.store.jdbc.JDBCPersistenceAdapter-types]_ | {html}{html} |
+    | journal | _org.apache.activeio.journal.Journal_ | {html}{html} |
+    | journalArchiveDirectory | _java.io.File_ | {html}{html} |
+    | journalLogFileSize | _int_ | {html}Sets the size of the journal log files{html} |
+    | journalLogFiles | _int_ | {html}Sets the number of journal log files to use{html} |
+    | journalThreadPriority | _int_ | {html}Sets the thread priority of the journal thread{html} |
+    | statements | _[org.apache.activemq.store.jdbc.Statements|#org.apache.activemq.store.jdbc.Statements-types]_ | {html}{html} |
+    | taskRunnerFactory | _org.apache.activemq.thread.TaskRunnerFactory_ | {html}{html} |
+    | useDatabaseLock | _boolean_ | {html}Sets whether or not an exclusive database lock should be used to enable
+JDBC Master/Slave. Enabled by default.{html} |
+    | useJournal | _boolean_ | {html}Enables or disables the use of the journal. The default is to use the
+journal{html} |
+    | useQuickJournal | _boolean_ | {html}Enables or disables the use of quick journal, which keeps messages in the
+journal and just stores a reference to the messages in JDBC. Defaults to
+false so that messages actually reside long term in the JDBC database.{html} |
+
+{anchor:kahaPersistenceAdapter-element}
+h3. The _[<kahaPersistenceAdapter>|#kahaPersistenceAdapter-element]_ Element
+    {html}{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | brokerName | _java.lang.String_ | {html}{html} |
+    | directory | _java.io.File_ | {html}{html} |
+    | maxDataFileLength | _long_ | {html}{html} |
+    | persistentIndex | _boolean_ | {html}{html} |
+    | size | _java.util.concurrent.atomic.AtomicLong_ | {html}{html} |
+    | usageManager | _[org.apache.activemq.usage.SystemUsage|#org.apache.activemq.usage.SystemUsage-types]_ | {html}{html} |
+
+{anchor:lDAPAuthorizationMap-element}
+h3. The _[<lDAPAuthorizationMap>|#lDAPAuthorizationMap-element]_ Element
+    {html}An {@link AuthorizationMap} which uses LDAP{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | adminAttribute | _java.lang.String_ | {html}{html} |
+    | adminBase | _java.lang.String_ | {html}{html} |
+    | authentication | _java.lang.String_ | {html}{html} |
+    | connectionPassword | _java.lang.String_ | {html}{html} |
+    | connectionProtocol | _java.lang.String_ | {html}{html} |
+    | connectionURL | _java.lang.String_ | {html}{html} |
+    | connectionUsername | _java.lang.String_ | {html}{html} |
+    | context | _javax.naming.directory.DirContext_ | {html}{html} |
+    | initialContextFactory | _java.lang.String_ | {html}{html} |
+    | options | _java.util.Map_ | {html}{html} |
+    | queueSearchMatchingFormat | _java.text.MessageFormat_ | {html}{html} |
+    | queueSearchSubtreeBool | _boolean_ | {html}{html} |
+    | readAttribute | _java.lang.String_ | {html}{html} |
+    | readBase | _java.lang.String_ | {html}{html} |
+    | topicSearchMatchingFormat | _java.text.MessageFormat_ | {html}{html} |
+    | topicSearchSubtreeBool | _boolean_ | {html}{html} |
+    | writeAttribute | _java.lang.String_ | {html}{html} |
+    | writeBase | _java.lang.String_ | {html}{html} |
+
+{anchor:lastImageSubscriptionRecoveryPolicy-element}
+h3. The _[<lastImageSubscriptionRecoveryPolicy>|#lastImageSubscriptionRecoveryPolicy-element]_ Element
+    {html}This implementation of {@link SubscriptionRecoveryPolicy} will only keep the
+last message.{html}
+
+{anchor:ldapNetworkConnector-element}
+h3. The _[<ldapNetworkConnector>|#ldapNetworkConnector-element]_ Element
+    {html}class to create dynamic network connectors listed in an directory
+server using the LDAP v3 protocol as defined in RFC 2251, the
+entries listed in the directory server must implement the ipHost
+and ipService objectClasses as defined in RFC 2307.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | anonymousAuthentication | _boolean_ | {html}sets LDAP anonymous authentication access credentials{html} |
+    | base | _java.lang.String_ | {html}sets the base LDAP dn used for lookup operations{html} |
+    | bridgeTempDestinations | _boolean_ | {html}{html} |
+    | brokerName | _java.lang.String_ | {html}{html} |
+    | brokerService | _[org.apache.activemq.broker.BrokerService|#org.apache.activemq.broker.BrokerService-types]_ | {html}{html} |
+    | conduitSubscriptions | _boolean_ | {html}{html} |
+    | connectionFilter | _org.apache.activemq.network.ConnectionFilter_ | {html}{html} |
+    | decreaseNetworkConsumerPriority | _boolean_ | {html}{html} |
+    | destinationFilter | _java.lang.String_ | {html}{html} |
+    | dispatchAsync | _boolean_ | {html}{html} |
+    | duplex | _boolean_ | {html}{html} |
+    | durableDestinations | (_java.lang.Object_)\* | {html}{html} |
+    | dynamicOnly | _boolean_ | {html}{html} |
+    | dynamicallyIncludedDestinations | (_java.lang.Object_)\* | {html}{html} |
+    | excludedDestinations | (_java.lang.Object_)\* | {html}{html} |
+    | localUri | _java.net.URI_ | {html}{html} |
+    | name | _java.lang.String_ | {html}{html} |
+    | networkTTL | _int_ | {html}{html} |
+    | objectName | _javax.management.ObjectName_ | {html}{html} |
+    | password | _java.lang.String_ | {html}sets the LDAP password for access credentials{html} |
+    | prefetchSize | _int_ | {html}{html} |
+    | searchEventListener | _boolean_ | {html}enables/disable a persistent search to the LDAP server as defined
+in draft-ietf-ldapext-psearch-03.txt (2.16.840.1.113730.3.4.3){html} |
+    | searchFilter | _java.lang.String_ | {html}sets the LDAP search filter as defined in RFC 2254{html} |
+    | searchScope | _java.lang.String_ | {html}sets the LDAP search scope{html} |
+    | staticallyIncludedDestinations | (_java.lang.Object_)\* | {html}{html} |
+    | uri | _java.net.URI_ | {html}returns the next URI from the configured list{html} |
+    | user | _java.lang.String_ | {html}sets the LDAP user for access credentials{html} |
+    | userName | _java.lang.String_ | {html}{html} |
+
+{anchor:loggingBrokerPlugin-element}
+h3. The _[<loggingBrokerPlugin>|#loggingBrokerPlugin-element]_ Element
+    {html}A simple Broker interceptor which allows you to enable/disable logging.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | ackLog | _org.apache.commons.logging.Log_ | {html}{html} |
+    | adminConnectionContext | _org.apache.activemq.broker.ConnectionContext_ | {html}{html} |
+    | log | _org.apache.commons.logging.Log_ | {html}{html} |
+    | next | _[org.apache.activemq.broker.Broker|#org.apache.activemq.broker.Broker-types]_ | {html}{html} |
+    | sendLog | _org.apache.commons.logging.Log_ | {html}{html} |
+
+{anchor:managementContext-element}
+h3. The _[<managementContext>|#managementContext-element]_ Element
+    {html}A Flow provides different dispatch policies within the NMR{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | MBeanServer | _javax.management.MBeanServer_ | {html}Get the MBeanServer{html} |
+    | connectorPath | _java.lang.String_ | {html}{html} |
+    | connectorPort | _int_ | {html}{html} |
+    | createConnector | _boolean_ | {html}{html} |
+    | createMBeanServer | _boolean_ | {html}{html} |
+    | findTigerMbeanServer | _boolean_ | {html}Enables/disables the searching for the Java 5 platform MBeanServer{html} |
+    | jmxDomainName | _java.lang.String_ | {html}{html} |
+    | rmiServerPort | _int_ | {html}{html} |
+    | server | _javax.management.MBeanServer_ | {html}{html} |
+    | useMBeanServer | _boolean_ | {html}{html} |
+
+{anchor:masterConnector-element}
+h3. The _[<masterConnector>|#masterConnector-element]_ Element
+    {html}Connects a Slave Broker to a Master when using <a
+href="http://activemq.apache.org/masterslave.html">Master Slave</a> for High
+Availability of messages.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | brokerService | _[org.apache.activemq.broker.BrokerService|#org.apache.activemq.broker.BrokerService-types]_ | {html}{html} |
+    | localURI | _java.net.URI_ | {html}{html} |
+    | password | _java.lang.String_ | {html}{html} |
+    | remoteURI | _java.net.URI_ | {html}{html} |
+    | remoteUri | _java.lang.String_ | {html}{html} |
+    | userName | _java.lang.String_ | {html}{html} |
+
+{anchor:memoryPersistenceAdapter-element}
+h3. The _[<memoryPersistenceAdapter>|#memoryPersistenceAdapter-element]_ Element
+    {html}{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | brokerName | _java.lang.String_ | {html}{html} |
+    | directory | _java.io.File_ | {html}{html} |
+    | usageManager | _[org.apache.activemq.usage.SystemUsage|#org.apache.activemq.usage.SystemUsage-types]_ | {html}{html} |
+    | useExternalMessageReferences | _boolean_ | {html}{html} |
+
+{anchor:memoryUsage-element}
+h3. The _[<memoryUsage>|#memoryUsage-element]_ Element
+    {html}Used to keep track of how much of something is being used so that a
+productive working set usage can be controlled. Main use case is manage
+memory usage.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | limit | _long_ | {html}Sets the memory limit in bytes. Setting the limit in bytes will set the
+usagePortion to 0 since the UsageManager is not going to be portion based
+off the parent. When set using XBean, you can use values such as: "20
+mb", "1024 kb", or "1 gb"{html} |
+    | limiter | _[org.apache.activemq.usage.UsageCapacity|#org.apache.activemq.usage.UsageCapacity-types]_ | {html}{html} |
+    | name | _java.lang.String_ | {html}{html} |
+    | parent | _T_ | {html}{html} |
+    | percentUsage | _int_ | {html}{html} |
+    | percentUsageMinDelta | _int_ | {html}Sets the minimum number of percentage points the usage has to change
+before a UsageListener event is fired by the manager.{html} |
+    | pollingTime | _int_ | {html}{html} |
+    | portion | _float_ | {html}{html} |
+    | usage | _long_ | {html}{html} |
+    | usagePortion | _float_ | {html}{html} |
+
+{anchor:messageGroupHashBucketFactory-element}
+h3. The _[<messageGroupHashBucketFactory>|#messageGroupHashBucketFactory-element]_ Element
+    {html}A factory to create instances of {@link SimpleMessageGroupMap} when
+implementing the <a
+href="http://activemq.apache.org/message-groups.html">Message
+Groups</a> functionality.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | bucketCount | _int_ | {html}Sets the number of hash buckets to use for the message group
+functionality. This is only applicable to using message groups to
+parallelize processing of a queue while preserving order across an
+individual JMSXGroupID header value. This value sets the number of hash
+buckets that will be used (i.e. the maximum possible concurrency).{html} |
+
+{anchor:mirroredQueue-element}
+h3. The _[<mirroredQueue>|#mirroredQueue-element]_ Element
+    {html}Creates <a href="http://activemq.org/site/mirrored-queues.html">Mirrored
+Queue</a> using a prefix and postfix to define the topic name on which to mirror the queue to.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | brokerService | _[org.apache.activemq.broker.BrokerService|#org.apache.activemq.broker.BrokerService-types]_ | {html}{html} |
+    | copyMessage | _boolean_ | {html}Sets whether a copy of the message will be sent to each destination.
+Defaults to true so that the forward destination is set as the
+destination of the message{html} |
+    | postfix | _java.lang.String_ | {html}Sets any postix used to identify the queue consumers{html} |
+    | prefix | _java.lang.String_ | {html}Sets the prefix wildcard used to identify the queue consumers for a given
+topic{html} |
+
+{anchor:multicastNetworkConnector-element}
+h3. The _[<multicastNetworkConnector>|#multicastNetworkConnector-element]_ Element
+    {html}A network connector which uses some kind of multicast-like transport that
+communicates with potentially many remote brokers over a single logical
+{@link Transport} instance such as when using multicast.
+
+This implementation does not depend on multicast at all; any other group
+based transport could be used.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | bridge | _[org.apache.activemq.network.DemandForwardingBridgeSupport|#org.apache.activemq.network.DemandForwardingBridgeSupport-types]_ | {html}{html} |
+    | bridgeTempDestinations | _boolean_ | {html}{html} |
+    | brokerName | _java.lang.String_ | {html}{html} |
+    | brokerService | _[org.apache.activemq.broker.BrokerService|#org.apache.activemq.broker.BrokerService-types]_ | {html}{html} |
+    | conduitSubscriptions | _boolean_ | {html}{html} |
+    | connectionFilter | _org.apache.activemq.network.ConnectionFilter_ | {html}{html} |
+    | decreaseNetworkConsumerPriority | _boolean_ | {html}{html} |
+    | destinationFilter | _java.lang.String_ | {html}{html} |
+    | dispatchAsync | _boolean_ | {html}{html} |
+    | duplex | _boolean_ | {html}{html} |
+    | durableDestinations | (_java.lang.Object_)\* | {html}{html} |
+    | dynamicOnly | _boolean_ | {html}{html} |
+    | dynamicallyIncludedDestinations | (_java.lang.Object_)\* | {html}{html} |
+    | excludedDestinations | (_java.lang.Object_)\* | {html}{html} |
+    | localTransport | _org.apache.activemq.transport.Transport_ | {html}{html} |
+    | localUri | _java.net.URI_ | {html}{html} |
+    | name | _java.lang.String_ | {html}{html} |
+    | networkTTL | _int_ | {html}{html} |
+    | objectName | _javax.management.ObjectName_ | {html}{html} |
+    | password | _java.lang.String_ | {html}{html} |
+    | prefetchSize | _int_ | {html}{html} |
+    | remoteTransport | _org.apache.activemq.transport.Transport_ | {html}Sets the remote transport implementation{html} |
+    | remoteURI | _java.net.URI_ | {html}Sets the remote transport URI to some group transport like
+<code>multicast://address:port</code>{html} |
+    | staticallyIncludedDestinations | (_java.lang.Object_)\* | {html}{html} |
+    | userName | _java.lang.String_ | {html}{html} |
+
+{anchor:multicastTraceBrokerPlugin-element}
+h3. The _[<multicastTraceBrokerPlugin>|#multicastTraceBrokerPlugin-element]_ Element
+    {html}A Broker interceptor which allows you to trace all operations to a Multicast
+socket.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | address | _java.net.SocketAddress_ | {html}{html} |
+    | adminConnectionContext | _org.apache.activemq.broker.ConnectionContext_ | {html}{html} |
+    | broadcast | _boolean_ | {html}{html} |
+    | destination | _java.net.URI_ | {html}{html} |
+    | maxTraceDatagramSize | _int_ | {html}{html} |
+    | next | _[org.apache.activemq.broker.Broker|#org.apache.activemq.broker.Broker-types]_ | {html}{html} |
+    | timeToLive | _int_ | {html}{html} |
+    | wireFormat | _org.apache.activemq.wireformat.WireFormat_ | {html}{html} |
+    | wireFormatFactory | _org.apache.activemq.wireformat.WireFormatFactory_ | {html}{html} |
+
+{anchor:networkConnector-element}
+h3. The _[<networkConnector>|#networkConnector-element]_ Element
+    {html}A network connector which uses a discovery agent to detect the remote brokers
+available and setup a connection to each available remote broker{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | bridgeTempDestinations | _boolean_ | {html}{html} |
+    | brokerName | _java.lang.String_ | {html}{html} |
+    | brokerService | _[org.apache.activemq.broker.BrokerService|#org.apache.activemq.broker.BrokerService-types]_ | {html}{html} |
+    | conduitSubscriptions | _boolean_ | {html}{html} |
+    | connectionFilter | _org.apache.activemq.network.ConnectionFilter_ | {html}{html} |
+    | decreaseNetworkConsumerPriority | _boolean_ | {html}{html} |
+    | destinationFilter | _java.lang.String_ | {html}{html} |
+    | discoveryAgent | _org.apache.activemq.transport.discovery.DiscoveryAgent_ | {html}{html} |
+    | discoveryURI | _java.net.URI_ | {html}{html} |
+    | dispatchAsync | _boolean_ | {html}{html} |
+    | duplex | _boolean_ | {html}{html} |
+    | durableDestinations | (_java.lang.Object_)\* | {html}{html} |
+    | dynamicOnly | _boolean_ | {html}{html} |
+    | dynamicallyIncludedDestinations | (_java.lang.Object_)\* | {html}{html} |
+    | excludedDestinations | (_java.lang.Object_)\* | {html}{html} |
+    | localUri | _java.net.URI_ | {html}{html} |
+    | name | _java.lang.String_ | {html}{html} |
+    | networkTTL | _int_ | {html}{html} |
+    | objectName | _javax.management.ObjectName_ | {html}{html} |
+    | password | _java.lang.String_ | {html}{html} |
+    | prefetchSize | _int_ | {html}{html} |
+    | staticallyIncludedDestinations | (_java.lang.Object_)\* | {html}{html} |
+    | uri | _java.net.URI_ | {html}{html} |
+    | userName | _java.lang.String_ | {html}{html} |
+
+{anchor:noSubscriptionRecoveryPolicy-element}
+h3. The _[<noSubscriptionRecoveryPolicy>|#noSubscriptionRecoveryPolicy-element]_ Element
+    {html}This SubscriptionRecoveryPolicy disable recovery of messages.{html}
+
+{anchor:oldestMessageEvictionStrategy-element}
+h3. The _[<oldestMessageEvictionStrategy>|#oldestMessageEvictionStrategy-element]_ Element
+    {html}An eviction strategy which evicts the oldest message first (which is the
+default).{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | evictExpiredMessagesHighWatermark | _int_ | {html}Sets the high water mark on which we will eagerly evict expired messages from RAM{html} |
+
+{anchor:oldestMessageWithLowestPriorityEvictionStrategy-element}
+h3. The _[<oldestMessageWithLowestPriorityEvictionStrategy>|#oldestMessageWithLowestPriorityEvictionStrategy-element]_ Element
+    {html}An eviction strategy which evicts the oldest message with the lowest priority first.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | evictExpiredMessagesHighWatermark | _int_ | {html}Sets the high water mark on which we will eagerly evict expired messages from RAM{html} |
+
+{anchor:oracleJDBCAdapter-element}
+h3. The _[<oracleJDBCAdapter>|#oracleJDBCAdapter-element]_ Element
+    {html}Implements all the default JDBC operations that are used
+by the JDBCPersistenceAdapter.
+<p/>
+Subclassing is encouraged to override the default
+implementation of methods to account for differences
+in JDBC Driver implementations.
+<p/>
+The JDBCAdapter inserts and extracts BLOB data using the
+getBytes()/setBytes() operations.
+<p/>
+The databases/JDBC drivers that use this adapter are:
+<ul>
+<li></li>
+</ul>{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | batchStatments | _boolean_ | {html}{html} |
+    | statements | _[org.apache.activemq.store.jdbc.Statements|#org.apache.activemq.store.jdbc.Statements-types]_ | {html}{html} |
+    | useExternalMessageReferences | _boolean_ | {html}{html} |
+
+{anchor:outboundQueueBridge-element}
+h3. The _[<outboundQueueBridge>|#outboundQueueBridge-element]_ Element
+    {html}Create an Outbound Queue Bridge{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | consumer | _javax.jms.MessageConsumer_ | {html}{html} |
+    | consumerConnection | _javax.jms.QueueConnection_ | {html}{html} |
+    | consumerQueue | _[javax.jms.Queue|#javax.jms.Queue-types]_ | {html}{html} |
+    | doHandleReplyTo | _boolean_ | {html}{html} |
+    | jmsConnector | _[org.apache.activemq.network.jms.JmsConnector|#org.apache.activemq.network.jms.JmsConnector-types]_ | {html}{html} |
+    | jmsMessageConvertor | _[org.apache.activemq.network.jms.JmsMesageConvertor|#org.apache.activemq.network.jms.JmsMesageConvertor-types]_ | {html}{html} |
+    | localQueueName | _java.lang.String_ | {html}{html} |
+    | maximumRetries | _int_ | {html}Sets the maximum number of retries if a send fails before closing the
+bridge{html} |
+    | outboundQueueName | _java.lang.String_ | {html}{html} |
+    | producerConnection | _javax.jms.QueueConnection_ | {html}{html} |
+    | producerQueue | _[javax.jms.Queue|#javax.jms.Queue-types]_ | {html}{html} |
+    | selector | _java.lang.String_ | {html}{html} |
+
+{anchor:outboundTopicBridge-element}
+h3. The _[<outboundTopicBridge>|#outboundTopicBridge-element]_ Element
+    {html}Create an Outbound Topic Bridge{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | consumer | _javax.jms.MessageConsumer_ | {html}{html} |
+    | consumerConnection | _javax.jms.TopicConnection_ | {html}{html} |
+    | consumerName | _java.lang.String_ | {html}{html} |
+    | consumerTopic | _[javax.jms.Topic|#javax.jms.Topic-types]_ | {html}{html} |
+    | doHandleReplyTo | _boolean_ | {html}{html} |
+    | jmsConnector | _[org.apache.activemq.network.jms.JmsConnector|#org.apache.activemq.network.jms.JmsConnector-types]_ | {html}{html} |
+    | jmsMessageConvertor | _[org.apache.activemq.network.jms.JmsMesageConvertor|#org.apache.activemq.network.jms.JmsMesageConvertor-types]_ | {html}{html} |
+    | localTopicName | _java.lang.String_ | {html}{html} |
+    | maximumRetries | _int_ | {html}Sets the maximum number of retries if a send fails before closing the
+bridge{html} |
+    | outboundTopicName | _java.lang.String_ | {html}{html} |
+    | producerConnection | _javax.jms.TopicConnection_ | {html}{html} |
+    | producerTopic | _[javax.jms.Topic|#javax.jms.Topic-types]_ | {html}{html} |
+    | selector | _java.lang.String_ | {html}{html} |
+
+{anchor:policyEntry-element}
+h3. The _[<policyEntry>|#policyEntry-element]_ Element
+    {html}Represents an entry in a {@link PolicyMap} for assigning policies to a
+specific destination or a hierarchical wildcard area of destinations.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | deadLetterStrategy | _[org.apache.activemq.broker.region.policy.DeadLetterStrategy|#org.apache.activemq.broker.region.policy.DeadLetterStrategy-types]_ | {html}Sets the policy used to determine which dead letter queue destination
+should be used{html} |
+    | destination | _[org.apache.activemq.command.ActiveMQDestination|#org.apache.activemq.command.ActiveMQDestination-types]_ | {html}{html} |
+    | dispatchPolicy | _[org.apache.activemq.broker.region.policy.DispatchPolicy|#org.apache.activemq.broker.region.policy.DispatchPolicy-types]_ | {html}{html} |
+    | enableAudit | _boolean_ | {html}{html} |
+    | lazyDispatch | _boolean_ | {html}{html} |
+    | maxAuditDepth | _int_ | {html}{html} |
+    | maxPageSize | _int_ | {html}{html} |
+    | maxProducersToAudit | _int_ | {html}{html} |
+    | maxQueueAuditDepth | _int_ | {html}{html} |
+    | memoryLimit | _long_ | {html}{html} |
+    | messageEvictionStrategy | _[org.apache.activemq.broker.region.policy.MessageEvictionStrategy|#org.apache.activemq.broker.region.policy.MessageEvictionStrategy-types]_ | {html}Sets the eviction strategy used to decide which message to evict when the
+slow consumer needs to discard messages{html} |
+    | messageGroupMapFactory | _[org.apache.activemq.broker.region.group.MessageGroupMapFactory|#org.apache.activemq.broker.region.group.MessageGroupMapFactory-types]_ | {html}Sets the factory used to create new instances of {MessageGroupMap} used
+to implement the <a
+href="http://activemq.apache.org/message-groups.html">Message Groups</a>
+functionality.{html} |
+    | minimumMessageSize | _long_ | {html}{html} |
+    | optimizedDispatch | _boolean_ | {html}{html} |
+    | pendingDurableSubscriberPolicy | _[org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy|#org.apache.activemq.broker.region.policy.PendingDurableSubscriberMessageStoragePolicy-types]_ | {html}{html} |
+    | pendingMessageLimitStrategy | _[org.apache.activemq.broker.region.policy.PendingMessageLimitStrategy|#org.apache.activemq.broker.region.policy.PendingMessageLimitStrategy-types]_ | {html}Sets the strategy to calculate the maximum number of messages that are
+allowed to be pending on consumers (in addition to their prefetch sizes).
+Once the limit is reached, non-durable topics can then start discarding
+old messages. This allows us to keep dispatching messages to slow
+consumers while not blocking fast consumers and discarding the messages
+oldest first.{html} |
+    | pendingQueuePolicy | _[org.apache.activemq.broker.region.policy.PendingQueueMessageStoragePolicy|#org.apache.activemq.broker.region.policy.PendingQueueMessageStoragePolicy-types]_ | {html}{html} |
+    | pendingSubscriberPolicy | _[org.apache.activemq.broker.region.policy.PendingSubscriberMessageStoragePolicy|#org.apache.activemq.broker.region.policy.PendingSubscriberMessageStoragePolicy-types]_ | {html}{html} |
+    | producerFlowControl | _boolean_ | {html}{html} |
+    | queue | _java.lang.String_ | {html}A helper method to set the destination from a configuration file{html} |
+    | sendAdvisoryIfNoConsumers | _boolean_ | {html}Sends an advisory message if a non-persistent message is sent and there
+are no active consumers{html} |
+    | strictOrderDispatch | _boolean_ | {html}{html} |
+    | subscriptionRecoveryPolicy | _[org.apache.activemq.broker.region.policy.SubscriptionRecoveryPolicy|#org.apache.activemq.broker.region.policy.SubscriptionRecoveryPolicy-types]_ | {html}{html} |
+    | topic | _java.lang.String_ | {html}A helper method to set the destination from a configuration file{html} |
+    | useCache | _boolean_ | {html}{html} |
+    | useConsumerPriority | _boolean_ | {html}{html} |
+
+{anchor:policyMap-element}
+h3. The _[<policyMap>|#policyMap-element]_ Element
+    {html}Represents a destination based configuration of policies so that individual
+destinations or wildcard hierarchies of destinations can be configured using
+different policies.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | defaultEntry | _[org.apache.activemq.broker.region.policy.PolicyEntry|#org.apache.activemq.broker.region.policy.PolicyEntry-types]_ | {html}{html} |
+    | entries | (_java.lang.Object_)\* | {html}A helper method to allow the destination map to be populated from a
+dependency injection framework such as Spring{html} |
+    | policyEntries | (_java.lang.Object_)\* | {html}Sets the individual entries on the policy map{html} |
+
+{anchor:prefetchPolicy-element}
+h3. The _[<prefetchPolicy>|#prefetchPolicy-element]_ Element
+    {html}Defines the prefetch message policies for different types of consumers{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | all | _int_ | {html}{html} |
+    | durableTopicPrefetch | _int_ | {html}{html} |
+    | inputStreamPrefetch | _int_ | {html}{html} |
+    | maximumPendingMessageLimit | _int_ | {html}Sets how many messages a broker will keep around, above the prefetch
+limit, for non-durable topics before starting to discard older messages.{html} |
+    | optimizeDurableTopicPrefetch | _int_ | {html}{html} |
+    | queueBrowserPrefetch | _int_ | {html}{html} |
+    | queuePrefetch | _int_ | {html}{html} |
+    | topicPrefetch | _int_ | {html}{html} |
+
+{anchor:prefetchRatePendingMessageLimitStrategy-element}
+h3. The _[<prefetchRatePendingMessageLimitStrategy>|#prefetchRatePendingMessageLimitStrategy-element]_ Element
+    {html}This PendingMessageLimitStrategy sets the maximum pending message limit value to be
+a multiplier of the prefetch limit of the subscription.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | multiplier | _double_ | {html}Sets the multiplier of the prefetch size which will be used to define the maximum number of pending
+messages for non-durable topics before messages are discarded.{html} |
+
+{anchor:proxyConnector-element}
+h3. The _[<proxyConnector>|#proxyConnector-element]_ Element
+    {html}{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | bind | _java.net.URI_ | {html}{html} |
+    | localUri | _java.net.URI_ | {html}{html} |
+    | name | _java.lang.String_ | {html}{html} |
+    | remote | _java.net.URI_ | {html}{html} |
+    | server | _org.apache.activemq.transport.TransportServer_ | {html}{html} |
+
+{anchor:queryBasedSubscriptionRecoveryPolicy-element}
+h3. The _[<queryBasedSubscriptionRecoveryPolicy>|#queryBasedSubscriptionRecoveryPolicy-element]_ Element
+    {html}This implementation of {@link SubscriptionRecoveryPolicy} will perform a user
+specific query mechanism to load any messages they may have missed.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | query | _org.apache.activemq.broker.region.policy.MessageQuery_ | {html}Sets the query strategy to load initial messages{html} |
+
+{anchor:queue-element}
+h3. The _[<queue>|#queue-element]_ Element
+    {html}An ActiveMQ Queue{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | compositeDestinations | (_[org.apache.activemq.command.ActiveMQDestination|#org.apache.activemq.command.ActiveMQDestination-types]_)\* | {html}{html} |
+    | name | _java.lang.String_ | {html}{html} |
+    | physicalName | _java.lang.String_ | {html}{html} |
+    | properties | _java.util.Properties_ | {html}Get the properties from this instance for storing in JNDI{html} |
+
+{anchor:queueDispatchSelector-element}
+h3. The _[<queueDispatchSelector>|#queueDispatchSelector-element]_ Element
+    {html}Queue dispatch policy that determines if a message can be sent to a subscription{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | destination | _[org.apache.activemq.command.ActiveMQDestination|#org.apache.activemq.command.ActiveMQDestination-types]_ | {html}{html} |
+    | exclusiveConsumer | _org.apache.activemq.broker.region.Subscription_ | {html}{html} |
+
+{anchor:redeliveryPolicy-element}
+h3. The _[<redeliveryPolicy>|#redeliveryPolicy-element]_ Element
+    {html}Configuration options used to control how messages are re-delivered when they
+are rolled back.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | backOffMultiplier | _short_ | {html}{html} |
+    | collisionAvoidancePercent | _short_ | {html}{html} |
+    | initialRedeliveryDelay | _long_ | {html}{html} |
+    | maximumRedeliveries | _int_ | {html}{html} |
+    | useCollisionAvoidance | _boolean_ | {html}{html} |
+    | useExponentialBackOff | _boolean_ | {html}{html} |
+
+{anchor:roundRobinDispatchPolicy-element}
+h3. The _[<roundRobinDispatchPolicy>|#roundRobinDispatchPolicy-element]_ Element
+    {html}Simple dispatch policy that sends a message to every subscription that
+matches the message.{html}
+
+{anchor:sharedDeadLetterStrategy-element}
+h3. The _[<sharedDeadLetterStrategy>|#sharedDeadLetterStrategy-element]_ Element
+    {html}A default implementation of {@link DeadLetterStrategy} which uses
+a constant destination.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | deadLetterQueue | _[org.apache.activemq.command.ActiveMQDestination|#org.apache.activemq.command.ActiveMQDestination-types]_ | {html}{html} |
+    | processExpired | _boolean_ | {html}{html} |
+    | processNonPersistent | _boolean_ | {html}{html} |
+
+{anchor:simpleAuthenticationPlugin-element}
+h3. The _[<simpleAuthenticationPlugin>|#simpleAuthenticationPlugin-element]_ Element
+    {html}Provides a simple authentication plugin{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | userGroups | _java.util.Map_ | {html}Sets the groups a user is in. The key is the user name and the value is a
+Set of groups{html} |
+    | userPasswords | _java.util.Map_ | {html}Sets the map indexed by user name with the value the password{html} |
+    | users | (_java.lang.Object_)\* | {html}Sets individual users for authentication{html} |
+
+{anchor:simpleAuthorizationMap-element}
+h3. The _[<simpleAuthorizationMap>|#simpleAuthorizationMap-element]_ Element
+    {html}An AuthorizationMap which is configured with individual DestinationMaps for
+each operation.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | adminACLs | _[org.apache.activemq.filter.DestinationMap|#org.apache.activemq.filter.DestinationMap-types]_ | {html}{html} |
+    | readACLs | _[org.apache.activemq.filter.DestinationMap|#org.apache.activemq.filter.DestinationMap-types]_ | {html}{html} |
+    | tempDestinationAuthorizationEntry | _[org.apache.activemq.security.TempDestinationAuthorizationEntry|#org.apache.activemq.security.TempDestinationAuthorizationEntry-types]_ | {html}{html} |
+    | writeACLs | _[org.apache.activemq.filter.DestinationMap|#org.apache.activemq.filter.DestinationMap-types]_ | {html}{html} |
+
+{anchor:simpleDispatchPolicy-element}
+h3. The _[<simpleDispatchPolicy>|#simpleDispatchPolicy-element]_ Element
+    {html}Simple dispatch policy that sends a message to every subscription that
+matches the message.{html}
+
+{anchor:simpleDispatchSelector-element}
+h3. The _[<simpleDispatchSelector>|#simpleDispatchSelector-element]_ Element
+    {html}Simple dispatch policy that determines if a message can be sent to a subscription{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | destination | _[org.apache.activemq.command.ActiveMQDestination|#org.apache.activemq.command.ActiveMQDestination-types]_ | {html}{html} |
+
+{anchor:simpleJmsMessageConvertor-element}
+h3. The _[<simpleJmsMessageConvertor>|#simpleJmsMessageConvertor-element]_ Element
+    {html}Converts Message from one JMS to another{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | connection | _javax.jms.Connection_ | {html}{html} |
+
+{anchor:simpleMessageGroupMapFactory-element}
+h3. The _[<simpleMessageGroupMapFactory>|#simpleMessageGroupMapFactory-element]_ Element
+    {html}A factory to create instances of {@link SimpleMessageGroupMap} when implementing the
+<a href="http://activemq.apache.org/message-groups.html">Message Groups</a> functionality.{html}
+
+{anchor:statements-element}
+h3. The _[<statements>|#statements-element]_ Element
+    {html}{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | addMessageStatement | _java.lang.String_ | {html}{html} |
+    | binaryDataType | _java.lang.String_ | {html}{html} |
+    | containerNameDataType | _java.lang.String_ | {html}{html} |
+    | createDurableSubStatement | _java.lang.String_ | {html}{html} |
+    | createSchemaStatements | (_java.lang.String_)\* | {html}{html} |
+    | deleteOldMessagesStatement | _java.lang.String_ | {html}{html} |
+    | deleteSubscriptionStatement | _java.lang.String_ | {html}{html} |
+    | destinationMessageCountStatement | _java.lang.String_ | {html}{html} |
+    | dropSchemaStatements | (_java.lang.String_)\* | {html}{html} |
+    | durableSubAcksTableName | _java.lang.String_ | {html}{html} |
+    | durableSubscriberMessageCountStatement | _java.lang.String_ | {html}{html} |
+    | findAllDestinationsStatement | _java.lang.String_ | {html}{html} |
+    | findAllDurableSubMessagesStatement | _java.lang.String_ | {html}{html} |
+    | findAllDurableSubsStatement | _java.lang.String_ | {html}{html} |
+    | findAllMessagesStatement | _java.lang.String_ | {html}{html} |
+    | findDurableSubMessagesStatement | _java.lang.String_ | {html}{html} |
+    | findDurableSubStatement | _java.lang.String_ | {html}{html} |
+    | findLastSequenceIdInAcksStatement | _java.lang.String_ | {html}{html} |
+    | findLastSequenceIdInMsgsStatement | _java.lang.String_ | {html}{html} |
+    | findMessageSequenceIdStatement | _java.lang.String_ | {html}{html} |
+    | findMessageStatement | _java.lang.String_ | {html}{html} |
+    | findNextMessagesStatement | _java.lang.String_ | {html}{html} |
+    | lastAckedDurableSubscriberMessageStatement | _java.lang.String_ | {html}{html} |
+    | lockCreateStatement | _java.lang.String_ | {html}{html} |
+    | lockTableName | _java.lang.String_ | {html}{html} |
+    | lockUpdateStatement | _java.lang.String_ | {html}{html} |
+    | longDataType | _java.lang.String_ | {html}{html} |
+    | messageTableName | _java.lang.String_ | {html}{html} |
+    | msgIdDataType | _java.lang.String_ | {html}{html} |
+    | nextDurableSubscriberMessageStatement | _java.lang.String_ | {html}{html} |
+    | removeAllMessagesStatement | _java.lang.String_ | {html}{html} |
+    | removeAllSubscriptionsStatement | _java.lang.String_ | {html}{html} |
+    | removeMessageStatment | _java.lang.String_ | {html}{html} |
+    | sequenceDataType | _java.lang.String_ | {html}{html} |
+    | stringIdDataType | _java.lang.String_ | {html}{html} |
+    | tablePrefix | _java.lang.String_ | {html}{html} |
+    | updateLastAckOfDurableSubStatement | _java.lang.String_ | {html}{html} |
+    | updateMessageStatement | _java.lang.String_ | {html}{html} |
+    | useExternalMessageReferences | _boolean_ | {html}{html} |
+    | useLockCreateWhereClause | _boolean_ | {html}{html} |
+
+{anchor:storeCursor-element}
+h3. The _[<storeCursor>|#storeCursor-element]_ Element
+    {html}Pending messages{html}
+
+{anchor:storeDurableSubscriberCursor-element}
+h3. The _[<storeDurableSubscriberCursor>|#storeDurableSubscriberCursor-element]_ Element
+    {html}Pending messages for a durable{html}
+
+{anchor:storeUsage-element}
+h3. The _[<storeUsage>|#storeUsage-element]_ Element
+    {html}Used to keep track of how much of something is being used so that a
+productive working set usage can be controlled. Main use case is manage
+memory usage.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | limit | _long_ | {html}Sets the memory limit in bytes. Setting the limit in bytes will set the
+usagePortion to 0 since the UsageManager is not going to be portion based
+off the parent. When set using XBean, you can use values such as: "20
+mb", "1024 kb", or "1 gb"{html} |
+    | limiter | _[org.apache.activemq.usage.UsageCapacity|#org.apache.activemq.usage.UsageCapacity-types]_ | {html}{html} |
+    | name | _java.lang.String_ | {html}{html} |
+    | parent | _T_ | {html}{html} |
+    | percentUsage | _int_ | {html}{html} |
+    | percentUsageMinDelta | _int_ | {html}Sets the minimum number of percentage points the usage has to change
+before a UsageListener event is fired by the manager.{html} |
+    | pollingTime | _int_ | {html}{html} |
+    | store | _[org.apache.activemq.store.PersistenceAdapter|#org.apache.activemq.store.PersistenceAdapter-types]_ | {html}{html} |
+    | usagePortion | _float_ | {html}{html} |
+
+{anchor:streamJDBCAdapter-element}
+h3. The _[<streamJDBCAdapter>|#streamJDBCAdapter-element]_ Element
+    {html}This JDBCAdapter inserts and extracts BLOB data using the
+setBinaryStream()/getBinaryStream() operations.
+
+The databases/JDBC drivers that use this adapter are:
+<ul>
+<li>Axion</li>
+</ul>{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | batchStatments | _boolean_ | {html}{html} |
+    | statements | _[org.apache.activemq.store.jdbc.Statements|#org.apache.activemq.store.jdbc.Statements-types]_ | {html}{html} |
+    | useExternalMessageReferences | _boolean_ | {html}{html} |
+
+{anchor:strictOrderDispatchPolicy-element}
+h3. The _[<strictOrderDispatchPolicy>|#strictOrderDispatchPolicy-element]_ Element
+    {html}Dispatch policy that causes every subscription to see messages in the same
+order.{html}
+
+{anchor:systemUsage-element}
+h3. The _[<systemUsage>|#systemUsage-element]_ Element
+    {html}Holder for Usage instances for memory, store and temp files Main use case is
+manage memory usage.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | adapter | _[org.apache.activemq.store.PersistenceAdapter|#org.apache.activemq.store.PersistenceAdapter-types]_ | {html}{html} |
+    | memoryUsage | _[org.apache.activemq.usage.MemoryUsage|#org.apache.activemq.usage.MemoryUsage-types]_ | {html}{html} |
+    | name | _java.lang.String_ | {html}{html} |
+    | parent | _[org.apache.activemq.usage.SystemUsage|#org.apache.activemq.usage.SystemUsage-types]_ | {html}{html} |
+    | sendFailIfNoSpace | _boolean_ | {html}Sets whether or not a send() should fail if there is no space free. The
+default value is false which means to block the send() method until space
+becomes available{html} |
+    | sendFailIfNoSpaceExplicitySet | _boolean_ | {html}{html} |
+    | storeUsage | _[org.apache.activemq.usage.StoreUsage|#org.apache.activemq.usage.StoreUsage-types]_ | {html}{html} |
+    | tempStore | _org.apache.activemq.kaha.Store_ | {html}{html} |
+    | tempUsage | _[org.apache.activemq.usage.TempUsage|#org.apache.activemq.usage.TempUsage-types]_ | {html}{html} |
+
+{anchor:tempDestinationAuthorizationEntry-element}
+h3. The _[<tempDestinationAuthorizationEntry>|#tempDestinationAuthorizationEntry-element]_ Element
+    {html}Represents an entry in a {@link DefaultAuthorizationMap} for assigning
+different operations (read, write, admin) of user roles to a temporary
+destination{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | admin | _java.lang.String_ | {html}{html} |
+    | adminACLs | (_java.lang.Object_)\* | {html}{html} |
+    | destination | _[org.apache.activemq.command.ActiveMQDestination|#org.apache.activemq.command.ActiveMQDestination-types]_ | {html}{html} |
+    | groupClass | _java.lang.String_ | {html}{html} |
+    | queue | _java.lang.String_ | {html}A helper method to set the destination from a configuration file{html} |
+    | read | _java.lang.String_ | {html}{html} |
+    | readACLs | (_java.lang.Object_)\* | {html}{html} |
+    | topic | _java.lang.String_ | {html}A helper method to set the destination from a configuration file{html} |
+    | write | _java.lang.String_ | {html}{html} |
+    | writeACLs | (_java.lang.Object_)\* | {html}{html} |
+
+{anchor:tempUsage-element}
+h3. The _[<tempUsage>|#tempUsage-element]_ Element
+    {html}Used to keep track of how much of something is being used so that a
+productive working set usage can be controlled. Main use case is manage
+memory usage.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | limit | _long_ | {html}Sets the memory limit in bytes. Setting the limit in bytes will set the
+usagePortion to 0 since the UsageManager is not going to be portion based
+off the parent. When set using XBean, you can use values such as: "20
+mb", "1024 kb", or "1 gb"{html} |
+    | limiter | _[org.apache.activemq.usage.UsageCapacity|#org.apache.activemq.usage.UsageCapacity-types]_ | {html}{html} |
+    | name | _java.lang.String_ | {html}{html} |
+    | parent | _T_ | {html}{html} |
+    | percentUsage | _int_ | {html}{html} |
+    | percentUsageMinDelta | _int_ | {html}Sets the minimum number of percentage points the usage has to change
+before a UsageListener event is fired by the manager.{html} |
+    | pollingTime | _int_ | {html}{html} |
+    | store | _org.apache.activemq.kaha.Store_ | {html}{html} |
+    | usagePortion | _float_ | {html}{html} |
+
+{anchor:timeStampingBrokerPlugin-element}
+h3. The _[<timeStampingBrokerPlugin>|#timeStampingBrokerPlugin-element]_ Element
+    {html}A Broker interceptor which updates a JMS Client's timestamp on the message
+with a broker timestamp. Useful when the clocks on client machines are known
+to not be correct and you can only trust the time set on the broker machines.
+
+Enabling this plugin will break JMS compliance since the timestamp that the
+producer sees on the messages after as send() will be different from the
+timestamp the consumer will observe when he receives the message. This plugin
+is not enabled in the default ActiveMQ configuration.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | adminConnectionContext | _org.apache.activemq.broker.ConnectionContext_ | {html}{html} |
+    | next | _[org.apache.activemq.broker.Broker|#org.apache.activemq.broker.Broker-types]_ | {html}{html} |
+
+{anchor:timedSubscriptionRecoveryPolicy-element}
+h3. The _[<timedSubscriptionRecoveryPolicy>|#timedSubscriptionRecoveryPolicy-element]_ Element
+    {html}This implementation of {@link SubscriptionRecoveryPolicy} will keep a timed
+buffer of messages around in memory and use that to recover new
+subscriptions.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | recoverDuration | _long_ | {html}{html} |
+
+{anchor:topic-element}
+h3. The _[<topic>|#topic-element]_ Element
+    {html}An ActiveMQ Topic{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | compositeDestinations | (_[org.apache.activemq.command.ActiveMQDestination|#org.apache.activemq.command.ActiveMQDestination-types]_)\* | {html}{html} |
+    | name | _java.lang.String_ | {html}{html} |
+    | physicalName | _java.lang.String_ | {html}{html} |
+    | properties | _java.util.Properties_ | {html}Get the properties from this instance for storing in JNDI{html} |
+
+{anchor:transportConnector-element}
+h3. The _[<transportConnector>|#transportConnector-element]_ Element
+    {html}{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | brokerInfo | _org.apache.activemq.command.BrokerInfo_ | {html}{html} |
+    | brokerService | _[org.apache.activemq.broker.BrokerService|#org.apache.activemq.broker.BrokerService-types]_ | {html}{html} |
+    | connectUri | _java.net.URI_ | {html}{html} |
+    | disableAsyncDispatch | _boolean_ | {html}{html} |
+    | discoveryAgent | _org.apache.activemq.transport.discovery.DiscoveryAgent_ | {html}{html} |
+    | discoveryUri | _java.net.URI_ | {html}{html} |
+    | enableStatusMonitor | _boolean_ | {html}{html} |
+    | messageAuthorizationPolicy | _org.apache.activemq.security.MessageAuthorizationPolicy_ | {html}Sets the policy used to decide if the current connection is authorized to
+consume a given message{html} |
+    | name | _java.lang.String_ | {html}{html} |
+    | server | _org.apache.activemq.transport.TransportServer_ | {html}{html} |
+    | taskRunnerFactory | _org.apache.activemq.thread.TaskRunnerFactory_ | {html}{html} |
+    | uri | _java.net.URI_ | {html}Sets the server transport URI to use if there is not a
+{@link TransportServer} configured via the
+{@link #setServer(TransportServer)} method. This value is used to lazy
+create a {@link TransportServer} instance{html} |
+
+{anchor:udpTraceBrokerPlugin-element}
+h3. The _[<udpTraceBrokerPlugin>|#udpTraceBrokerPlugin-element]_ Element
+    {html}A Broker interceptor which allows you to trace all operations to a UDP
+socket.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | address | _java.net.SocketAddress_ | {html}{html} |
+    | adminConnectionContext | _org.apache.activemq.broker.ConnectionContext_ | {html}{html} |
+    | broadcast | _boolean_ | {html}{html} |
+    | destination | _java.net.URI_ | {html}{html} |
+    | maxTraceDatagramSize | _int_ | {html}{html} |
+    | next | _[org.apache.activemq.broker.Broker|#org.apache.activemq.broker.Broker-types]_ | {html}{html} |
+    | wireFormat | _org.apache.activemq.wireformat.WireFormat_ | {html}{html} |
+    | wireFormatFactory | _org.apache.activemq.wireformat.WireFormatFactory_ | {html}{html} |
+
+{anchor:usageCapacity-element}
+h3. The _[<usageCapacity>|#usageCapacity-element]_ Element
+    {html}Identify if a limit has been reached{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | limit | _long_ | {html}{html} |
+
+{anchor:virtualDestinationInterceptor-element}
+h3. The _[<virtualDestinationInterceptor>|#virtualDestinationInterceptor-element]_ Element
+    {html}Implements <a
+href="http://activemq.apache.org/virtual-destinations.html">Virtual Topics</a>.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | virtualDestinations | (_[org.apache.activemq.broker.region.virtual.VirtualDestination|#org.apache.activemq.broker.region.virtual.VirtualDestination-types]_)\* | {html}{html} |
+
+{anchor:virtualTopic-element}
+h3. The _[<virtualTopic>|#virtualTopic-element]_ Element
+    {html}Creates <a href="http://activemq.org/site/virtual-destinations.html">Virtual
+Topics</a> using a prefix and postfix. The virtual destination creates a
+wildcard that is then used to look up all active queue subscriptions which
+match.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | name | _java.lang.String_ | {html}{html} |
+    | postfix | _java.lang.String_ | {html}Sets any postix used to identify the queue consumers{html} |
+    | prefix | _java.lang.String_ | {html}Sets the prefix wildcard used to identify the queue consumers for a given
+topic{html} |
+
+{anchor:vmCursor-element}
+h3. The _[<vmCursor>|#vmCursor-element]_ Element
+    {html}Pending messages held{html}
+
+{anchor:vmDurableCursor-element}
+h3. The _[<vmDurableCursor>|#vmDurableCursor-element]_ Element
+    {html}Pending{html}
+
+{anchor:vmQueueCursor-element}
+h3. The _[<vmQueueCursor>|#vmQueueCursor-element]_ Element
+    {html}Pending messages{html}
+
+{anchor:xaConnectionFactory-element}
+h3. The _[<xaConnectionFactory>|#xaConnectionFactory-element]_ Element
+    {html}A <a href="http://www.springframework.org/">Spring</a> enhanced XA connection
+factory which will automatically use the Spring bean name as the clientIDPrefix property
+so that connections created have client IDs related to your Spring.xml file for
+easier comprehension from <a href="http://activemq.apache.org/jmx.html">JMX</a>.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | alwaysSessionAsync | _boolean_ | {html}If this flag is set then a separate thread is not used for dispatching
+messages for each Session in the Connection. However, a separate thread
+is always used if there is more than one session, or the session isn't in
+auto acknowledge or duplicates ok mode{html} |
+    | alwaysSyncSend | _boolean_ | {html}Set true if always require messages to be sync sent{html} |
+    | beanName | _java.lang.String_ | {html}{html} |
+    | blobTransferPolicy | _org.apache.activemq.blob.BlobTransferPolicy_ | {html}Sets the policy used to describe how out-of-band BLOBs (Binary Large
+OBjects) are transferred from producers to brokers to consumers{html} |
+    | brokerURL | _java.lang.String_ | {html}Sets the <a
+href="http://activemq.apache.org/configuring-transports.html">connection
+URL</a> used to connect to the ActiveMQ broker.{html} |
+    | clientID | _java.lang.String_ | {html}Sets the JMS clientID to use for the created connection. Note that this
+can only be used by one connection at once so generally its a better idea
+to set the clientID on a Connection{html} |
+    | clientIDPrefix | _java.lang.String_ | {html}Sets the prefix used by autogenerated JMS Client ID values which are used
+if the JMS client does not explicitly specify on.{html} |
+    | clientIdGenerator | _org.apache.activemq.util.IdGenerator_ | {html}{html} |
+    | closeTimeout | _int_ | {html}Sets the timeout before a close is considered complete. Normally a
+close() on a connection waits for confirmation from the broker; this
+allows that operation to timeout to save the client hanging if there is
+no broker{html} |
+    | copyMessageOnSend | _boolean_ | {html}Should a JMS message be copied to a new JMS Message object as part of the
+send() method in JMS. This is enabled by default to be compliant with the
+JMS specification. You can disable it if you do not mutate JMS messages
+after they are sent for a performance boost{html} |
+    | disableTimeStampsByDefault | _boolean_ | {html}Sets whether or not timestamps on messages should be disabled or not. If
+you disable them it adds a small performance boost.{html} |
+    | dispatchAsync | _boolean_ | {html}Enables or disables the default setting of whether or not consumers have
+their messages <a
+href="http://activemq.apache.org/consumer-dispatch-async.html">dispatched
+synchronously or asynchronously by the broker</a>. For non-durable
+topics for example we typically dispatch synchronously by default to
+minimize context switches which boost performance. However sometimes its
+better to go slower to ensure that a single blocked consumer socket does
+not block delivery to other consumers.{html} |
+    | exclusiveConsumer | _boolean_ | {html}Enables or disables whether or not queue consumers should be exclusive or
+not for example to preserve ordering when not using <a
+href="http://activemq.apache.org/message-groups.html">Message Groups</a>{html} |
+    | nestedMapAndListEnabled | _boolean_ | {html}Enables/disables whether or not Message properties and MapMessage entries
+support <a
+href="http://activemq.apache.org/structured-message-properties-and-mapmessages.html">Nested
+Structures</a> of Map and List objects{html} |
+    | objectMessageSerializationDefered | _boolean_ | {html}When an object is set on an ObjectMessage, the JMS spec requires the
+object to be serialized by that set method. Enabling this flag causes the
+object to not get serialized. The object may subsequently get serialized
+if the message needs to be sent over a socket or stored to disk.{html} |
+    | optimizeAcknowledge | _boolean_ | {html}{html} |
+    | optimizedMessageDispatch | _boolean_ | {html}If this flag is set then an larger prefetch limit is used - only
+applicable for durable topic subscribers.{html} |
+    | password | _java.lang.String_ | {html}Sets the JMS password used for connections created from this factory{html} |
+    | prefetchPolicy | _[org.apache.activemq.ActiveMQPrefetchPolicy|#org.apache.activemq.ActiveMQPrefetchPolicy-types]_ | {html}Sets the <a
+href="http://activemq.apache.org/what-is-the-prefetch-limit-for.html">prefetch
+policy</a> for consumers created by this connection.{html} |
+    | producerWindowSize | _int_ | {html}{html} |
+    | properties | _java.util.Properties_ | {html}Get the properties from this instance for storing in JNDI{html} |
+    | redeliveryPolicy | _[org.apache.activemq.RedeliveryPolicy|#org.apache.activemq.RedeliveryPolicy-types]_ | {html}Sets the global redelivery policy to be used when a message is delivered
+but the session is rolled back{html} |
+    | sendTimeout | _int_ | {html}{html} |
+    | statsEnabled | _boolean_ | {html}{html} |
+    | transformer | _org.apache.activemq.MessageTransformer_ | {html}Sets the transformer used to transform messages before they are sent on
+to the JMS bus or when they are received from the bus but before they are
+delivered to the JMS client{html} |
+    | transportListener | _org.apache.activemq.transport.TransportListener_ | {html}Allows a listener to be configured on the ConnectionFactory so that when this factory is used
+with frameworks which don't expose the Connection such as Spring JmsTemplate, you can still register
+a transport listener.{html} |
+    | useAsyncSend | _boolean_ | {html}Forces the use of <a
+href="http://activemq.apache.org/async-sends.html">Async Sends</a> which
+adds a massive performance boost; but means that the send() method will
+return immediately whether the message has been sent or not which could
+lead to message loss.{html} |
+    | useBeanNameAsClientIdPrefix | _boolean_ | {html}{html} |
+    | useCompression | _boolean_ | {html}Enables the use of compression of the message bodies{html} |
+    | useRetroactiveConsumer | _boolean_ | {html}Sets whether or not retroactive consumers are enabled. Retroactive
+consumers allow non-durable topic subscribers to receive old messages
+that were published before the non-durable subscriber started.{html} |
+    | userName | _java.lang.String_ | {html}Sets the JMS userName used by connections created by this factory{html} |
+    | warnAboutUnstartedConnectionTimeout | _long_ | {html}Enables the timeout from a connection creation to when a warning is
+generated if the connection is not properly started via
+{@link Connection#start()} and a message is received by a consumer. It is
+a very common gotcha to forget to <a
+href="http://activemq.apache.org/i-am-not-receiving-any-messages-what-is-wrong.html">start
+the connection</a> so this option makes the default case to create a
+warning if the user forgets. To disable the warning just set the value to <
+0 (say -1).{html} |
+    | watchTopicAdvisories | _boolean_ | {html}{html} |
+
+h3. Element Index
+    | _[<amqPersistenceAdapter>|#amqPersistenceAdapter-element]_ | {html}An implementation of {@link PersistenceAdapter} designed for use with a
+{@link Journal} and then check pointing asynchronously on a timeout with some
+other long term persistent storage.{html} |
+    | _[<amqPersistenceAdapterFactory>|#amqPersistenceAdapterFactory-element]_ | {html}An implementation of {@link PersistenceAdapterFactory}{html} |
+    | _[<authenticationUser>|#authenticationUser-element]_ | {html}A helper object used to configure simple authentiaction plugin{html} |
+    | _[<authorizationEntry>|#authorizationEntry-element]_ | {html}Represents an entry in a {@link DefaultAuthorizationMap} for assigning
+different operations (read, write, admin) of user roles to a specific
+destination or a hierarchical wildcard area of destinations.{html} |
+    | _[<authorizationMap>|#authorizationMap-element]_ | {html}Represents a destination based configuration of policies so that individual
+destinations or wildcard hierarchies of destinations can be configured using
+different policies. Each entry in the map represents the authorization ACLs
+for each operation.{html} |
+    | _[<authorizationPlugin>|#authorizationPlugin-element]_ | {html}An authorization plugin where each operation on a destination is checked
+against an authorizationMap{html} |
+    | _[<axionJDBCAdapter>|#axionJDBCAdapter-element]_ | {html}Axion specific Adapter.
+
+Axion does not seem to support ALTER statements or sub-selects. This means:
+- We cannot auto upgrade the schema was we roll out new versions of ActiveMQ
+- We cannot delete durable sub messages that have be acknowledged by all consumers.{html} |
+    | _[<blobJDBCAdapter>|#blobJDBCAdapter-element]_ | {html}This JDBCAdapter inserts and extracts BLOB data using the getBlob()/setBlob()
+operations. This is a little more involved since to insert a blob you have
+to:
+
+1: insert empty blob. 2: select the blob 3: finally update the blob with data
+value.
+
+The databases/JDBC drivers that use this adapter are:
+<ul>
+<li></li>
+</ul>{html} |
+    | _[<broker>|#broker-element]_ | {html}An ActiveMQ Message Broker. It consists of a number of transport
+connectors, network connectors and a bunch of properties which can be used to
+configure the broker as its lazily created.{html} |
+    | _[<bytesJDBCAdapter>|#bytesJDBCAdapter-element]_ | {html}This JDBCAdapter inserts and extracts BLOB data using the
+setBytes()/getBytes() operations. The databases/JDBC drivers that use this
+adapter are:{html} |
+    | _[<commandAgent>|#commandAgent-element]_ | {html}An agent which listens to commands on a JMS destination{html} |
+    | _[<compositeDemandForwardingBridge>|#compositeDemandForwardingBridge-element]_ | {html}A demand forwarding bridge which works with multicast style transports where
+a single Transport could be communicating with multiple remote brokers{html} |
+    | _[<compositeQueue>|#compositeQueue-element]_ | {html}Represents a virtual queue which forwards to a number of other destinations.{html} |
+    | _[<compositeTopic>|#compositeTopic-element]_ | {html}Represents a virtual topic which forwards to a number of other destinations.{html} |
+    | _[<connectionDotFilePlugin>|#connectionDotFilePlugin-element]_ | {html}A <a href="http://www.graphviz.org/">DOT</a> file creator plugin which
+creates a DOT file showing the current connections{html} |
+    | _[<connectionFactory>|#connectionFactory-element]_ | {html}A <a href="http://www.springframework.org/">Spring</a> enhanced connection
+factory which will automatically use the Spring bean name as the clientIDPrefix property
+so that connections created have client IDs related to your Spring.xml file for
+easier comprehension from <a href="http://activemq.apache.org/jmx.html">JMX</a>.{html} |
+    | _[<constantPendingMessageLimitStrategy>|#constantPendingMessageLimitStrategy-element]_ | {html}This PendingMessageLimitStrategy is configured to a constant value for all subscriptions.{html} |
+    | _[<db2JDBCAdapter>|#db2JDBCAdapter-element]_ | {html}{html} |
+    | _[<defaultJDBCAdapter>|#defaultJDBCAdapter-element]_ | {html}Implements all the default JDBC operations that are used by the
+JDBCPersistenceAdapter. <p/> sub-classing is encouraged to override the
+default implementation of methods to account for differences in JDBC Driver
+implementations. <p/> The JDBCAdapter inserts and extracts BLOB data using
+the getBytes()/setBytes() operations. <p/> The databases/JDBC drivers that
+use this adapter are:
+<ul>
+<li></li>
+</ul>{html} |
+    | _[<defaultUsageCapacity>|#defaultUsageCapacity-element]_ | {html}Identify if a limit has been reached{html} |
+    | _[<demandForwardingBridge>|#demandForwardingBridge-element]_ | {html}Forwards messages from the local broker to the remote broker based on demand.{html} |
+    | _[<destinationDotFilePlugin>|#destinationDotFilePlugin-element]_ | {html}A <a href="http://www.graphviz.org/">DOT</a>
+file creator plugin which creates a DOT file showing the current topic & queue hierarchies.{html} |
+    | _[<destinationEntry>|#destinationEntry-element]_ | {html}A default entry in a DestinationMap which holds a single value.{html} |
+    | _[<fileCursor>|#fileCursor-element]_ | {html}Pending messages{html} |
+    | _[<fileDurableSubscriberCursor>|#fileDurableSubscriberCursor-element]_ | {html}Pending messages for durable subscribers{html} |
+    | _[<fileQueueCursor>|#fileQueueCursor-element]_ | {html}Pending{html} |
+    | _[<filteredDestination>|#filteredDestination-element]_ | {html}Represents a destination which is filtered using some predicate such as a selector
+so that messages are only dispatched to the destination if they match the filter.{html} |
+    | _[<fixedCountSubscriptionRecoveryPolicy>|#fixedCountSubscriptionRecoveryPolicy-element]_ | {html}This implementation of {@link SubscriptionRecoveryPolicy} will keep a fixed
+count of last messages.{html} |
+    | _[<fixedSizedSubscriptionRecoveryPolicy>|#fixedSizedSubscriptionRecoveryPolicy-element]_ | {html}This implementation of {@link SubscriptionRecoveryPolicy} will keep a fixed
+amount of memory available in RAM for message history which is evicted in
+time order.{html} |
+    | _[<forwardingBridge>|#forwardingBridge-element]_ | {html}Forwards all messages from the local broker to the remote broker.{html} |
+    | _[<imageBasedJDBCAdaptor>|#imageBasedJDBCAdaptor-element]_ | {html}Provides JDBCAdapter since that uses
+IMAGE datatype to hold binary data.
+
+The databases/JDBC drivers that use this adapter are:
+<ul>
+<li>Sybase</li>
+<li>MS SQL</li>
+</ul>{html} |
+    | _[<inboundQueueBridge>|#inboundQueueBridge-element]_ | {html}Create an Inbound Queue Bridge{html} |
+    | _[<inboundTopicBridge>|#inboundTopicBridge-element]_ | {html}Create an Inbound Topic Bridge{html} |
+    | _[<individualDeadLetterStrategy>|#individualDeadLetterStrategy-element]_ | {html}A {@link DeadLetterStrategy} where each destination has its own individual
+DLQ using the subject naming hierarchy.{html} |
+    | _[<informixJDBCAdapter>|#informixJDBCAdapter-element]_ | {html}JDBC Adapter for Informix database.
+Because Informix database restricts length of composite primary keys, length of
+<i>container name</i> field and <i>subscription id</i> field must be reduced to 150 characters.
+Therefore be sure not to use longer names for container name and subscription id than 150 characters.{html} |
+    | _[<jaasAuthenticationPlugin>|#jaasAuthenticationPlugin-element]_ | {html}Provides a JAAS based authentication plugin{html} |
+    | _[<jaasCertificateAuthenticationPlugin>|#jaasCertificateAuthenticationPlugin-element]_ | {html}Provides a JAAS based SSL certificate authentication plugin{html} |
+    | _[<jdbcPersistenceAdapter>|#jdbcPersistenceAdapter-element]_ | {html}A {@link PersistenceAdapter} implementation using JDBC for persistence
+storage.
+
+This persistence adapter will correctly remember prepared XA transactions,
+but it will not keep track of local transaction commits so that operations
+performed against the Message store are done as a single uow.{html} |
+    | _[<jmsQueueConnector>|#jmsQueueConnector-element]_ | {html}A Bridge to other JMS Queue providers{html} |
+    | _[<jmsTopicConnector>|#jmsTopicConnector-element]_ | {html}A Bridge to other JMS Topic providers{html} |
+    | _[<journalPersistenceAdapter>|#journalPersistenceAdapter-element]_ | {html}An implementation of {@link PersistenceAdapter} designed for use with a
+{@link Journal} and then check pointing asynchronously on a timeout with some
+other long term persistent storage.{html} |
+    | _[<journaledJDBC>|#journaledJDBC-element]_ | {html}Creates a default persistence model using the Journal and JDBC{html} |
+    | _[<kahaPersistenceAdapter>|#kahaPersistenceAdapter-element]_ | {html}{html} |
+    | _[<lDAPAuthorizationMap>|#lDAPAuthorizationMap-element]_ | {html}An {@link AuthorizationMap} which uses LDAP{html} |
+    | _[<lastImageSubscriptionRecoveryPolicy>|#lastImageSubscriptionRecoveryPolicy-element]_ | {html}This implementation of {@link SubscriptionRecoveryPolicy} will only keep the
+last message.{html} |
+    | _[<ldapNetworkConnector>|#ldapNetworkConnector-element]_ | {html}class to create dynamic network connectors listed in an directory
+server using the LDAP v3 protocol as defined in RFC 2251, the
+entries listed in the directory server must implement the ipHost
+and ipService objectClasses as defined in RFC 2307.{html} |
+    | _[<loggingBrokerPlugin>|#loggingBrokerPlugin-element]_ | {html}A simple Broker interceptor which allows you to enable/disable logging.{html} |
+    | _[<managementContext>|#managementContext-element]_ | {html}A Flow provides different dispatch policies within the NMR{html} |
+    | _[<masterConnector>|#masterConnector-element]_ | {html}Connects a Slave Broker to a Master when using <a
+href="http://activemq.apache.org/masterslave.html">Master Slave</a> for High
+Availability of messages.{html} |
+    | _[<memoryPersistenceAdapter>|#memoryPersistenceAdapter-element]_ | {html}{html} |
+    | _[<memoryUsage>|#memoryUsage-element]_ | {html}Used to keep track of how much of something is being used so that a
+productive working set usage can be controlled. Main use case is manage
+memory usage.{html} |
+    | _[<messageGroupHashBucketFactory>|#messageGroupHashBucketFactory-element]_ | {html}A factory to create instances of {@link SimpleMessageGroupMap} when
+implementing the <a
+href="http://activemq.apache.org/message-groups.html">Message
+Groups</a> functionality.{html} |
+    | _[<mirroredQueue>|#mirroredQueue-element]_ | {html}Creates <a href="http://activemq.org/site/mirrored-queues.html">Mirrored
+Queue</a> using a prefix and postfix to define the topic name on which to mirror the queue to.{html} |
+    | _[<multicastNetworkConnector>|#multicastNetworkConnector-element]_ | {html}A network connector which uses some kind of multicast-like transport that
+communicates with potentially many remote brokers over a single logical
+{@link Transport} instance such as when using multicast.
+
+This implementation does not depend on multicast at all; any other group
+based transport could be used.{html} |
+    | _[<multicastTraceBrokerPlugin>|#multicastTraceBrokerPlugin-element]_ | {html}A Broker interceptor which allows you to trace all operations to a Multicast
+socket.{html} |
+    | _[<networkConnector>|#networkConnector-element]_ | {html}A network connector which uses a discovery agent to detect the remote brokers
+available and setup a connection to each available remote broker{html} |
+    | _[<noSubscriptionRecoveryPolicy>|#noSubscriptionRecoveryPolicy-element]_ | {html}This SubscriptionRecoveryPolicy disable recovery of messages.{html} |
+    | _[<oldestMessageEvictionStrategy>|#oldestMessageEvictionStrategy-element]_ | {html}An eviction strategy which evicts the oldest message first (which is the
+default).{html} |
+    | _[<oldestMessageWithLowestPriorityEvictionStrategy>|#oldestMessageWithLowestPriorityEvictionStrategy-element]_ | {html}An eviction strategy which evicts the oldest message with the lowest priority first.{html} |
+    | _[<oracleJDBCAdapter>|#oracleJDBCAdapter-element]_ | {html}Implements all the default JDBC operations that are used
+by the JDBCPersistenceAdapter.
+<p/>
+Subclassing is encouraged to override the default
+implementation of methods to account for differences
+in JDBC Driver implementations.
+<p/>
+The JDBCAdapter inserts and extracts BLOB data using the
+getBytes()/setBytes() operations.
+<p/>
+The databases/JDBC drivers that use this adapter are:
+<ul>
+<li></li>
+</ul>{html} |
+    | _[<outboundQueueBridge>|#outboundQueueBridge-element]_ | {html}Create an Outbound Queue Bridge{html} |
+    | _[<outboundTopicBridge>|#outboundTopicBridge-element]_ | {html}Create an Outbound Topic Bridge{html} |
+    | _[<policyEntry>|#policyEntry-element]_ | {html}Represents an entry in a {@link PolicyMap} for assigning policies to a
+specific destination or a hierarchical wildcard area of destinations.{html} |
+    | _[<policyMap>|#policyMap-element]_ | {html}Represents a destination based configuration of policies so that individual
+destinations or wildcard hierarchies of destinations can be configured using
+different policies.{html} |
+    | _[<prefetchPolicy>|#prefetchPolicy-element]_ | {html}Defines the prefetch message policies for different types of consumers{html} |
+    | _[<prefetchRatePendingMessageLimitStrategy>|#prefetchRatePendingMessageLimitStrategy-element]_ | {html}This PendingMessageLimitStrategy sets the maximum pending message limit value to be
+a multiplier of the prefetch limit of the subscription.{html} |
+    | _[<proxyConnector>|#proxyConnector-element]_ | {html}{html} |
+    | _[<queryBasedSubscriptionRecoveryPolicy>|#queryBasedSubscriptionRecoveryPolicy-element]_ | {html}This implementation of {@link SubscriptionRecoveryPolicy} will perform a user
+specific query mechanism to load any messages they may have missed.{html} |
+    | _[<queue>|#queue-element]_ | {html}An ActiveMQ Queue{html} |
+    | _[<queueDispatchSelector>|#queueDispatchSelector-element]_ | {html}Queue dispatch policy that determines if a message can be sent to a subscription{html} |
+    | _[<redeliveryPolicy>|#redeliveryPolicy-element]_ | {html}Configuration options used to control how messages are re-delivered when they
+are rolled back.{html} |
+    | _[<roundRobinDispatchPolicy>|#roundRobinDispatchPolicy-element]_ | {html}Simple dispatch policy that sends a message to every subscription that
+matches the message.{html} |
+    | _[<sharedDeadLetterStrategy>|#sharedDeadLetterStrategy-element]_ | {html}A default implementation of {@link DeadLetterStrategy} which uses
+a constant destination.{html} |
+    | _[<simpleAuthenticationPlugin>|#simpleAuthenticationPlugin-element]_ | {html}Provides a simple authentication plugin{html} |
+    | _[<simpleAuthorizationMap>|#simpleAuthorizationMap-element]_ | {html}An AuthorizationMap which is configured with individual DestinationMaps for
+each operation.{html} |
+    | _[<simpleDispatchPolicy>|#simpleDispatchPolicy-element]_ | {html}Simple dispatch policy that sends a message to every subscription that
+matches the message.{html} |
+    | _[<simpleDispatchSelector>|#simpleDispatchSelector-element]_ | {html}Simple dispatch policy that determines if a message can be sent to a subscription{html} |
+    | _[<simpleJmsMessageConvertor>|#simpleJmsMessageConvertor-element]_ | {html}Converts Message from one JMS to another{html} |
+    | _[<simpleMessageGroupMapFactory>|#simpleMessageGroupMapFactory-element]_ | {html}A factory to create instances of {@link SimpleMessageGroupMap} when implementing the
+<a href="http://activemq.apache.org/message-groups.html">Message Groups</a> functionality.{html} |
+    | _[<statements>|#statements-element]_ | {html}{html} |
+    | _[<storeCursor>|#storeCursor-element]_ | {html}Pending messages{html} |
+    | _[<storeDurableSubscriberCursor>|#storeDurableSubscriberCursor-element]_ | {html}Pending messages for a durable{html} |
+    | _[<storeUsage>|#storeUsage-element]_ | {html}Used to keep track of how much of something is being used so that a
+productive working set usage can be controlled. Main use case is manage
+memory usage.{html} |
+    | _[<streamJDBCAdapter>|#streamJDBCAdapter-element]_ | {html}This JDBCAdapter inserts and extracts BLOB data using the
+setBinaryStream()/getBinaryStream() operations.
+
+The databases/JDBC drivers that use this adapter are:
+<ul>
+<li>Axion</li>
+</ul>{html} |
+    | _[<strictOrderDispatchPolicy>|#strictOrderDispatchPolicy-element]_ | {html}Dispatch policy that causes every subscription to see messages in the same
+order.{html} |
+    | _[<systemUsage>|#systemUsage-element]_ | {html}Holder for Usage instances for memory, store and temp files Main use case is
+manage memory usage.{html} |
+    | _[<tempDestinationAuthorizationEntry>|#tempDestinationAuthorizationEntry-element]_ | {html}Represents an entry in a {@link DefaultAuthorizationMap} for assigning
+different operations (read, write, admin) of user roles to a temporary
+destination{html} |
+    | _[<tempUsage>|#tempUsage-element]_ | {html}Used to keep track of how much of something is being used so that a
+productive working set usage can be controlled. Main use case is manage
+memory usage.{html} |
+    | _[<timeStampingBrokerPlugin>|#timeStampingBrokerPlugin-element]_ | {html}A Broker interceptor which updates a JMS Client's timestamp on the message
+with a broker timestamp. Useful when the clocks on client machines are known
+to not be correct and you can only trust the time set on the broker machines.
+
+Enabling this plugin will break JMS compliance since the timestamp that the
+producer sees on the messages after as send() will be different from the
+timestamp the consumer will observe when he receives the message. This plugin
+is not enabled in the default ActiveMQ configuration.{html} |
+    | _[<timedSubscriptionRecoveryPolicy>|#timedSubscriptionRecoveryPolicy-element]_ | {html}This implementation of {@link SubscriptionRecoveryPolicy} will keep a timed
+buffer of messages around in memory and use that to recover new
+subscriptions.{html} |
+    | _[<topic>|#topic-element]_ | {html}An ActiveMQ Topic{html} |
+    | _[<transportConnector>|#transportConnector-element]_ | {html}{html} |
+    | _[<udpTraceBrokerPlugin>|#udpTraceBrokerPlugin-element]_ | {html}A Broker interceptor which allows you to trace all operations to a UDP
+socket.{html} |
+    | _[<usageCapacity>|#usageCapacity-element]_ | {html}Identify if a limit has been reached{html} |
+    | _[<virtualDestinationInterceptor>|#virtualDestinationInterceptor-element]_ | {html}Implements <a
+href="http://activemq.apache.org/virtual-destinations.html">Virtual Topics</a>.{html} |
+    | _[<virtualTopic>|#virtualTopic-element]_ | {html}Creates <a href="http://activemq.org/site/virtual-destinations.html">Virtual
+Topics</a> using a prefix and postfix. The virtual destination creates a
+wildcard that is then used to look up all active queue subscriptions which
+match.{html} |
+    | _[<vmCursor>|#vmCursor-element]_ | {html}Pending messages held{html} |
+    | _[<vmDurableCursor>|#vmDurableCursor-element]_ | {html}Pending{html} |
+    | _[<vmQueueCursor>|#vmQueueCursor-element]_ | {html}Pending messages{html} |
+    | _[<xaConnectionFactory>|#xaConnectionFactory-element]_ | {html}A <a href="http://www.springframework.org/">Spring</a> enhanced XA connection
+factory which will automatically use the Spring bean name as the clientIDPrefix property
+so that connections created have client IDs related to your Spring.xml file for
+easier comprehension from <a href="http://activemq.apache.org/jmx.html">JMX</a>.{html} |
+

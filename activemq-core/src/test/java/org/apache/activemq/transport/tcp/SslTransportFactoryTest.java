@@ -53,7 +53,7 @@ public class SslTransportFactoryTest extends TestCase {
                              + (needClientAuth ? "true" : "false");
 
             try {
-                sslTransportServer = (SslTransportServer)factory.doBind("brokerId", new URI(
+                sslTransportServer = (SslTransportServer)factory.doBind(new URI(
                                                                                             "ssl://localhost:61616?"
                                                                                                 + options));
             } catch (Exception e) {

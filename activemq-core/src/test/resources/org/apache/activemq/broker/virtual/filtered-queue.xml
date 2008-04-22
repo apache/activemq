@@ -22,7 +22,7 @@
 
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" />
 
-  <broker xmlns="http://activemq.org/config/1.0">
+  <broker xmlns="http://activemq.apache.org/schema/core">
     <destinationInterceptors>
       <virtualDestinationInterceptor>
         <virtualDestinations>

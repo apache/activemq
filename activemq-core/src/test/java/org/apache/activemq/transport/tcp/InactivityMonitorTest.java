@@ -95,7 +95,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
      * @throws Exception
      */
     private void startTransportServer() throws IOException, URISyntaxException, Exception {
-        server = TransportFactory.bind("localhost", new URI("tcp://localhost:61616?trace=true&wireFormat.maxInactivityDuration=1000"));
+        server = TransportFactory.bind(new URI("tcp://localhost:61616?trace=true&wireFormat.maxInactivityDuration=1000"));
         server.setAcceptListener(this);
         server.start();
     }

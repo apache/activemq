@@ -126,7 +126,8 @@ public class VMTransportFactory extends TransportFactory {
                 server = SERVERS.get(host);
                 if (server == null) {
                     server = (VMTransportServer)bind(location, true);
-                    TransportConnector connector = new TransportConnector(broker.getBroker(), server);
+                    TransportConnector connector = new TransportConnector(server);
+                    connector.setBrokerService(broker);
                     connector.setUri(location);
                     connector.setTaskRunnerFactory(broker.getTaskRunnerFactory());
                     connector.start();
@@ -137,6 +138,7 @@ public class VMTransportFactory extends TransportFactory {
         }
 
         VMTransport vmtransport = server.connect();
+        IntrospectionSupport.setProperties(vmtransport.peer, new HashMap<String,String>(options));
         IntrospectionSupport.setProperties(vmtransport, options);
         Transport transport = vmtransport;
         if (vmtransport.isMarshal()) {
@@ -150,7 +152,7 @@ public class VMTransportFactory extends TransportFactory {
         return transport;
     }
 
-    public TransportServer doBind(String brokerId, URI location) throws IOException {
+    public TransportServer doBind(URI location) throws IOException {
         return bind(location, false);
     }
 

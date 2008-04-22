@@ -16,12 +16,74 @@
  */
 package org.apache.activemq.ra;
 
-import org.jmock.MockObjectTestCase;
+import java.lang.reflect.Method;
+import javax.jms.Message;
+import javax.jms.MessageListener;
+import javax.jms.Session;
+import javax.resource.ResourceException;
+import javax.resource.spi.endpoint.MessageEndpoint;
+import javax.resource.spi.work.WorkManager;
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQSession;
+import org.jmock.Mock;
+import org.jmock.cglib.MockObjectTestCase;
 
 /**
  * @version $Revision: 1.1.1.1 $
  */
 public class ServerSessionImplTest extends MockObjectTestCase {
+    private static final String BROKER_URL = "vm://localhost";
+    private ServerSessionImpl serverSession;
+    private Mock pool;
+    private Mock workManager;
+    private MessageEndpoint messageEndpoint;
+    private ActiveMQConnection con;
+    private ActiveMQSession session;
+    
+    @Override
+    protected void setUp() throws Exception
+    {
+        super.setUp();
+        org.apache.activemq.ActiveMQConnectionFactory factory = 
+                new org.apache.activemq.ActiveMQConnectionFactory(BROKER_URL);
+        con = (ActiveMQConnection) factory.createConnection();
+        session = (ActiveMQSession) con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        pool = mock(ServerSessionPoolImpl.class, new Class[]{ActiveMQEndpointWorker.class, int.class}, new Object[]{null, 10});        
+        workManager = mock(WorkManager.class);
+        messageEndpoint = new MockMessageEndpoint();
+        
+        serverSession = new ServerSessionImpl(
+                (ServerSessionPoolImpl) pool.proxy(), 
+                session, 
+                (WorkManager) workManager.proxy(), 
+                messageEndpoint, 
+                false, 
+                10);
+    }
+    
+    private class MockMessageEndpoint implements MessageEndpoint, MessageListener {
+
+        public void afterDelivery() throws ResourceException
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public void beforeDelivery(Method arg0) throws NoSuchMethodException, ResourceException
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public void release()
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public void onMessage(Message msg)
+        {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+        
+    }
     
     /**
      * Need to re-work this test case, it broke since the amq4 internals changed and
@@ -90,4 +152,11 @@ public class ServerSessionImplTest extends MockObjectTestCase {
         return (TransportChannel) tc.proxy();
     }
     */
+    
+    public void testRunDetectsStoppedSession() throws Exception {
+        con.close();
+        pool.expects(once()).method("removeFromPool").with(eq(serverSession));
+        serverSession.run();
+        pool.verify();
+}
 }

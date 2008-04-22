@@ -228,14 +228,7 @@ public class TopicRegion extends AbstractRegion {
 
     protected Subscription createSubscription(ConnectionContext context, ConsumerInfo info) throws JMSException {
         ActiveMQDestination destination = info.getDestination();
-        Destination dest=null;
-        try {
-            dest = lookup(context, destination);
-        } catch (Exception e) {
-            JMSException jmsEx = new JMSException("Failed to retrieve destination from region "+ e);
-            jmsEx.setLinkedException(e);
-            throw jmsEx;
-        }
+        
         if (info.isDurable()) {
             if (AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
                 throw new JMSException("Cannot create a durable subscription for an advisory Topic");
@@ -245,7 +238,7 @@ public class TopicRegion extends AbstractRegion {
             
             if (sub == null) {
                 
-                sub = new DurableTopicSubscription(broker,dest, usageManager, context, info, keepDurableSubsActive);
+                sub = new DurableTopicSubscription(broker, usageManager, context, info, keepDurableSubsActive);
                 if (destination != null && broker.getDestinationPolicy() != null) {
                     PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);
                     if (entry != null) {
@@ -259,7 +252,7 @@ public class TopicRegion extends AbstractRegion {
             return sub;
         }
         try {
-            TopicSubscription answer = new TopicSubscription(broker, dest,context, info, usageManager);
+            TopicSubscription answer = new TopicSubscription(broker, context, info, usageManager);
             // lets configure the subscription depending on the destination
             if (destination != null && broker.getDestinationPolicy() != null) {
                 PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(destination);

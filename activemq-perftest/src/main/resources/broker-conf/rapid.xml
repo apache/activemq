@@ -16,7 +16,7 @@
     limitations under the License.
 -->
 
-<beans xmlns:amq="http://activemq.org/config/1.0">
+<beans xmlns:amq="http://activemq.apache.org/schema/core">
 
     <amq:broker brokerName="rapidBroker" start="false" persistent="true" useShutdownHook="false" deleteAllMessagesOnStartup="true" advisorySupport="false">
 

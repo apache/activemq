@@ -14,4 +14,5 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 ## ---------------------------------------------------------------------------
+http\://activemq.apache.org/schema/core=org.apache.xbean.spring.context.v2.XBeanNamespaceHandler
 http\://activemq.org/config/1.0=org.apache.xbean.spring.context.v2.XBeanNamespaceHandler

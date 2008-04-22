@@ -179,25 +179,25 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
      * @see org.apache.activemq.region.cursors.PendingMessageCursor
      * @return true if recovery required
      */
-    public synchronized boolean isRecoveryRequired() {
+    public boolean isRecoveryRequired() {
         return false;
     }
 
     /**
      * @return the nonPersistent Cursor
      */
-    public synchronized PendingMessageCursor getNonPersistent() {
+    public PendingMessageCursor getNonPersistent() {
         return this.nonPersistent;
     }
 
     /**
      * @param nonPersistent cursor to set
      */
-    public synchronized void setNonPersistent(PendingMessageCursor nonPersistent) {
+    public void setNonPersistent(PendingMessageCursor nonPersistent) {
         this.nonPersistent = nonPersistent;
     }
 
-    public synchronized void setMaxBatchSize(int maxBatchSize) {
+    public void setMaxBatchSize(int maxBatchSize) {
         persistent.setMaxBatchSize(maxBatchSize);
         if (nonPersistent != null) {
             nonPersistent.setMaxBatchSize(maxBatchSize);
@@ -206,7 +206,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
     }
     
     
-    public synchronized void setMaxProducersToAudit(int maxProducersToAudit) {
+    public void setMaxProducersToAudit(int maxProducersToAudit) {
         super.setMaxProducersToAudit(maxProducersToAudit);
         if (persistent != null) {
             persistent.setMaxProducersToAudit(maxProducersToAudit);
@@ -216,7 +216,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         }
     }
 
-    public synchronized void setMaxAuditDepth(int maxAuditDepth) {
+    public void setMaxAuditDepth(int maxAuditDepth) {
         super.setMaxAuditDepth(maxAuditDepth);
         if (persistent != null) {
             persistent.setMaxAuditDepth(maxAuditDepth);
@@ -226,7 +226,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         }
     }
     
-    public synchronized void setEnableAudit(boolean enableAudit) {
+    public void setEnableAudit(boolean enableAudit) {
         super.setEnableAudit(enableAudit);
         if (persistent != null) {
             persistent.setEnableAudit(enableAudit);
@@ -236,7 +236,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         }
     }
     
-    public synchronized void setUseCache(boolean useCache) {
+    public void setUseCache(boolean useCache) {
         super.setUseCache(useCache);
         if (persistent != null) {
             persistent.setUseCache(useCache);
@@ -257,7 +257,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         }
     }
 
-    public synchronized void setSystemUsage(SystemUsage usageManager) {
+    public void setSystemUsage(SystemUsage usageManager) {
         super.setSystemUsage(usageManager);
         if (persistent != null) {
             persistent.setSystemUsage(usageManager);

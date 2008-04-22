@@ -22,7 +22,7 @@
   		brokerName="broker" 
   		persistent="false" useJmx="false" 
   		deleteAllMessagesOnStartup="true" 
-        xmlns="http://activemq.org/config/1.0" persistenceAdapter="#jpa">
+        xmlns="http://activemq.apache.org/schema/core" persistenceAdapter="#jpa">
         
      <transportConnectors>
       <transportConnector uri="tcp://localhost:0"/>

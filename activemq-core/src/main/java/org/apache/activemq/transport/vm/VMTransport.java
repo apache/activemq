@@ -77,6 +77,8 @@ public class VMTransport implements Transport, Task {
             throw new IOException("Peer not connected.");
         }
 
+        
+        TransportListener transportListener=null;
         try {
             // Disable the peer from changing his state while we try to enqueue onto him.
             peer.enqueueValve.increment();
@@ -90,11 +92,7 @@ public class VMTransport implements Transport, Task {
                     peer.getMessageQueue().put(command);
                     peer.wakeup();
                 } else {
-                    if( command == DISCONNECT ) {
-                        peer.transportListener.onException(new TransportDisposedIOException("Peer (" + peer.toString() + ") disposed."));
-                    } else {
-                        peer.transportListener.onCommand(command);
-                    }
+                    transportListener = peer.transportListener;
                 }
                 enqueueValve.decrement();
             } else {
@@ -108,6 +106,13 @@ public class VMTransport implements Transport, Task {
             peer.enqueueValve.decrement();
         }
 
+        if( transportListener!=null ) {
+            if( command == DISCONNECT ) {
+                transportListener.onException(new TransportDisposedIOException("Peer (" + peer.toString() + ") disposed."));
+            } else {
+                transportListener.onCommand(command);
+            }
+        }
     }
 
     public void start() throws Exception {

@@ -15,7 +15,7 @@
     limitations under the License.
 -->
 <!-- START SNIPPET: xbean -->
-<beans xmlns="http://activemq.org/config/1.0">
+<beans xmlns="http://activemq.apache.org/schema/core">
   
   <broker useJmx="false" brokerName="kahaBroker" start="false" persistent="true" useShutdownHook="false" deleteAllMessagesOnStartup="true" advisorySupport="false">
     <persistenceAdapter>

@@ -92,7 +92,7 @@ public class SslBrokerService extends BrokerService {
             SslTransportFactory transportFactory = new SslTransportFactory();
             transportFactory.setKeyAndTrustManagers(km, tm, random);
 
-            return transportFactory.doBind(getBrokerName(), brokerURI);
+            return transportFactory.doBind(brokerURI);
         } else {
             // Else, business as usual.
             return TransportFactory.bind(this, brokerURI);

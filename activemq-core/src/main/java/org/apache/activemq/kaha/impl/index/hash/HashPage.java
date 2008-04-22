@@ -46,20 +46,7 @@ class HashPage {
     private long nextFreePageId = HashEntry.NOT_SET;
     private boolean active = true;
 
-    /**
-     * Constructor
-     * 
-     * @param hashIndex
-     * @param id
-     * @param parentId
-     * @param maximumEntries
-     */
-    HashPage(long id, int maximumEntries) {
-        this(maximumEntries);
-
-        this.id = id;
-    }
-
+    
     /**
      * Constructor
      * 

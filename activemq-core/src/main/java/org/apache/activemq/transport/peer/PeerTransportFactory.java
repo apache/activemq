@@ -104,7 +104,7 @@ public class PeerTransportFactory extends TransportFactory {
         }
     }
 
-    public TransportServer doBind(String brokerId, URI location) throws IOException {
+    public TransportServer doBind(URI location) throws IOException {
         throw new IOException("This protocol does not support being bound.");
     }
 

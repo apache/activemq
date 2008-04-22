@@ -49,23 +49,14 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     private final boolean keepDurableSubsActive;
     private boolean active;
 
-    public DurableTopicSubscription(Broker broker, Destination dest,SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, boolean keepDurableSubsActive)
+    public DurableTopicSubscription(Broker broker, SystemUsage usageManager, ConnectionContext context, ConsumerInfo info, boolean keepDurableSubsActive)
         throws JMSException {
-        super(broker,dest,usageManager, context, info);
+        super(broker,usageManager, context, info);
         this.pending = new StoreDurableSubscriberCursor(broker,context.getClientId(), info.getSubscriptionName(), info.getPrefetchSize(), this);
         this.pending.setSystemUsage(usageManager);
         this.keepDurableSubsActive = keepDurableSubsActive;
         subscriptionKey = new SubscriptionKey(context.getClientId(), info.getSubscriptionName());
-        if (dest != null && dest.getMessageStore() != null) {
-            TopicMessageStore store = (TopicMessageStore)dest.getMessageStore();
-            try {
-                this.enqueueCounter=store.getMessageCount(subscriptionKey.getClientId(),subscriptionKey.getSubscriptionName());
-            } catch (IOException e) {
-                JMSException jmsEx = new JMSException("Failed to retrieve eunqueueCount from store "+ e);
-                jmsEx.setLinkedException(e);
-                throw jmsEx;
-            }
-        }
+        
     }
 
     public boolean isActive() {
@@ -82,6 +73,16 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     public void add(ConnectionContext context, Destination destination) throws Exception {
         super.add(context, destination);
         destinations.put(destination.getActiveMQDestination(), destination);
+        if (destination.getMessageStore() != null) {
+            TopicMessageStore store = (TopicMessageStore)destination.getMessageStore();
+            try {
+                this.enqueueCounter+=store.getMessageCount(subscriptionKey.getClientId(),subscriptionKey.getSubscriptionName());
+            } catch (IOException e) {
+                JMSException jmsEx = new JMSException("Failed to retrieve eunqueueCount from store "+ e);
+                jmsEx.setLinkedException(e);
+                throw jmsEx;
+            }
+        }
         if (active || keepDurableSubsActive) {
             Topic topic = (Topic)destination;
             topic.activate(context, this);

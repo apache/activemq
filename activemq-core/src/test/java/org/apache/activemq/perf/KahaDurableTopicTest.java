@@ -35,8 +35,9 @@ public class KahaDurableTopicTest extends SimpleDurableTopicTest {
     protected void configureBroker(BrokerService answer,String uri) throws Exception {
         KahaPersistenceAdapter adaptor = new KahaPersistenceAdapter();
         answer.setPersistenceAdapter(adaptor);
-        answer.addConnector(uri);
         answer.setDeleteAllMessagesOnStartup(true);
+        answer.addConnector(uri);
+       
     }
 
 }

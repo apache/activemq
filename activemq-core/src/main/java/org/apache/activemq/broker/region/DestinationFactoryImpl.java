@@ -18,9 +18,6 @@ package org.apache.activemq.broker.region;
 
 import java.io.IOException;
 import java.util.Set;
-
-import javax.jms.JMSException;
-
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
@@ -34,7 +31,6 @@ import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.thread.TaskRunnerFactory;
-import org.apache.activemq.usage.SystemUsage;
 
 /**
  * Creates standard ActiveMQ implementations of

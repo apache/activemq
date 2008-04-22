@@ -51,7 +51,7 @@ public class UdpTransportFactory extends TransportFactory {
     
     private static final Log log = LogFactory.getLog(TcpTransportFactory.class);
     
-    public TransportServer doBind(String brokerId, final URI location) throws IOException {
+    public TransportServer doBind(final URI location) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParamters(location));
             if (options.containsKey("port")) {
