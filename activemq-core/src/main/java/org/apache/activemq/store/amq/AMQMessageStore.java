@@ -328,7 +328,7 @@ public class AMQMessageStore implements MessageStore {
      * @return
      * @throws IOException
      */
-    void asyncWrite() {
+    synchronized void asyncWrite() {
         try {
             CountDownLatch countDown;
             lock.lock();
