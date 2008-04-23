@@ -32,7 +32,7 @@ public class SimpleNetworkTest extends SimpleTopicTest {
 
     private static final Log LOG = LogFactory.getLog(SimpleNetworkTest.class);
     //protected String consumerBindAddress = "tcp://rexmac.home:61616?wireFormat.maxInactivityDuration=1000,tcp://localhost:61617?wireFormat.maxInactivityDuration=1000";
-    protected String consumerBindAddress = "tcp://rexmac.home:61616?wireFormat.maxInactivityDuration=1000&wireFormat.maxInactivityDurationInitalDelay=2000&socket.tcpNoDelayEnabled=false";
+    protected String consumerBindAddress = "tcp://localhost:61616";
     protected String producerBindAddress = "tcp://localhost:61617";
     protected static final String CONSUMER_BROKER_NAME = "Consumer";
     protected static final String PRODUCER_BROKER_NAME = "Producer";
@@ -44,7 +44,7 @@ public class SimpleNetworkTest extends SimpleTopicTest {
     
     protected void setUp() throws Exception {
         if (consumerBroker == null) {
-           // consumerBroker = createConsumerBroker(consumerBindAddress);
+           consumerBroker = createConsumerBroker(consumerBindAddress);
         }
         if (producerBroker == null) {
             producerBroker = createProducerBroker(producerBindAddress);
@@ -69,7 +69,7 @@ public class SimpleNetworkTest extends SimpleTopicTest {
             Destination destination = createDestination(session, destinationName+":"+k);
             LOG.info("Testing against destination: " + destination);
             for (int i = 0; i < numberOfConsumers; i++) {
-                consumers[consumerCount] = createConsumer(factory, destination, consumerCount);
+                consumers[consumerCount] = createConsumer(consumerFactory, destination, consumerCount);
                 consumers[consumerCount].setSleepDuration(consumerSleepDuration);
                 consumerCount++;
             }
@@ -78,7 +78,7 @@ public class SimpleNetworkTest extends SimpleTopicTest {
                 for (int j = i; j < array.length; j++) {
                     array[j] = (byte)j;
                 }
-                producers[producerCount] = createProducer(factory, destination, i, array);
+                producers[producerCount] = createProducer(producerFactory, destination, i, array);
                 producerCount++;
             }
         }
@@ -133,10 +133,10 @@ public class SimpleNetworkTest extends SimpleTopicTest {
         //answer.setSplitSystemUsageForProducersConsumers(true);
         answer.setPersistent(false);
         answer.setDeleteAllMessagesOnStartup(true);
-        NetworkConnector connector = answer.addNetworkConnector("static://tcp://rexmac.home:61616?wireFormat.maxInactivityDuration=2000");
+        NetworkConnector connector = answer.addNetworkConnector("static://"+consumerBindAddress);
         //connector.setNetworkTTL(3);
         //connector.setDynamicOnly(true);
-        //connector.setDuplex(true);
+        connector.setDuplex(true);
         answer.addConnector(uri);
         answer.setUseShutdownHook(false);
     }
