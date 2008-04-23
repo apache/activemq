@@ -47,8 +47,8 @@ public class SimpleTopicTest extends TestCase {
     protected int samepleCount = 20;
     protected long sampleInternal = 10000;
     protected int numberOfDestinations=1;
-    protected int numberOfConsumers = 10;
-    protected int numberofProducers = 10;
+    protected int numberOfConsumers = 1;
+    protected int numberofProducers = 1;
     protected int totalNumberOfProducers;
     protected int totalNumberOfConsumers;
     protected int playloadSize = 1024;
