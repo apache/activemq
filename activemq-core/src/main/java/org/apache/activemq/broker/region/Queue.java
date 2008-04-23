@@ -23,14 +23,14 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.locks.ReentrantLock;
-
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
-
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
@@ -68,6 +68,7 @@ import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.util.BrokerSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 
 /**
  * The Queue is a List of MessageEntry objects that are dispatched to matching
@@ -749,27 +750,27 @@ public class Queue extends BaseDestination implements Task {
      */
     public int removeMatchingMessages(MessageReferenceFilter filter, int maximumMessages) throws Exception {
         int movedCounter = 0;
-        int count = 0;
+        Set<MessageReference> set = new CopyOnWriteArraySet<MessageReference>();
         ConnectionContext context = createConnectionContext();
-        List<MessageReference> list = null;
         do {
             pageInMessages();
             synchronized (pagedInMessages) {
-                list = new ArrayList<MessageReference>(pagedInMessages.values());
+                set.addAll(pagedInMessages.values());
             }
+            List <MessageReference>list = new ArrayList<MessageReference>(set);
             for (MessageReference ref : list) {
                 IndirectMessageReference r = (IndirectMessageReference) ref;
                 if (filter.evaluate(context, r)) {
 
                     removeMessage(context, r);
+                    set.remove(r);
                     if (++movedCounter >= maximumMessages
                             && maximumMessages > 0) {
                         return movedCounter;
                     }
                 }
-                count++;
             }
-        } while (count < this.destinationStatistics.getMessages().getCount());
+        } while (set.size() < this.destinationStatistics.getMessages().getCount());
         return movedCounter;
     }
 
@@ -808,16 +809,21 @@ public class Queue extends BaseDestination implements Task {
     public int copyMatchingMessages(ConnectionContext context, MessageReferenceFilter filter, ActiveMQDestination dest, int maximumMessages) throws Exception {
         int movedCounter = 0;
         int count = 0;
-        List<MessageReference> list = null;
+        Set<MessageReference> set = new CopyOnWriteArraySet<MessageReference>();
         do {
+            int oldMaxSize=getMaxPageSize();
+            setMaxPageSize((int) this.destinationStatistics.getMessages().getCount());
             pageInMessages();
+            setMaxPageSize(oldMaxSize);
             synchronized (pagedInMessages) {
-                list = new ArrayList<MessageReference>(pagedInMessages.values());
+                set.addAll(pagedInMessages.values());
             }
+            List <MessageReference>list = new ArrayList<MessageReference>(set);
             for (MessageReference ref : list) {
                 IndirectMessageReference r = (IndirectMessageReference) ref;
                 if (filter.evaluate(context, r)) {
-                    r.incrementReferenceCount();
+                    
+                    r.incrementReferenceCount();                    
                     try {
                         Message m = r.getMessage();
                         BrokerSupport.resend(context, m, dest);
@@ -865,14 +871,14 @@ public class Queue extends BaseDestination implements Task {
      */
     public int moveMatchingMessagesTo(ConnectionContext context,MessageReferenceFilter filter, ActiveMQDestination dest,int maximumMessages) throws Exception {
         int movedCounter = 0;
-        int count = 0;
-        List<MessageReference> list = null;
+        Set<MessageReference> set = new CopyOnWriteArraySet<MessageReference>();
         do {
             pageInMessages();
             synchronized (pagedInMessages) {
-                list = new ArrayList<MessageReference>(pagedInMessages.values());
+                set.addAll(pagedInMessages.values());
             }
-            for (MessageReference ref : list) {
+            List <MessageReference>list = new ArrayList<MessageReference>(set);
+            for (MessageReference ref:list) {
                 IndirectMessageReference r = (IndirectMessageReference) ref;
                 if (filter.evaluate(context, r)) {
                     // We should only move messages that can be locked.
@@ -881,6 +887,7 @@ public class Queue extends BaseDestination implements Task {
                         Message m = r.getMessage();
                         BrokerSupport.resend(context, m, dest);
                         removeMessage(context, r);
+                        set.remove(r);
                         if (++movedCounter >= maximumMessages
                                 && maximumMessages > 0) {
                             return movedCounter;
@@ -889,9 +896,9 @@ public class Queue extends BaseDestination implements Task {
                         r.decrementReferenceCount();
                     }
                 }
-                count++;
+                
             }
-        } while (count < this.destinationStatistics.getMessages().getCount());
+        } while (set.size() < this.destinationStatistics.getMessages().getCount());
         return movedCounter;
     }
     
@@ -1065,12 +1072,12 @@ public class Queue extends BaseDestination implements Task {
             }
         }
     }
-
+    
+  
     private List<QueueMessageReference> doPageIn(boolean force) throws Exception {
         List<QueueMessageReference> result = null;
         dispatchLock.lock();
         try{
-        
             int toPageIn = (getMaxPageSize()+(int)destinationStatistics.getInflight().getCount()) - pagedInMessages.size();
             if (isLazyDispatch()&& !force) {
              // Only page in the minimum number of messages which can be dispatched immediately.
