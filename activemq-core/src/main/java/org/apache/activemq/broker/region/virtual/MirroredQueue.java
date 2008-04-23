@@ -44,25 +44,27 @@ public class MirroredQueue implements DestinationInterceptor, BrokerServiceAware
 
     public Destination intercept(final Destination destination) {
         if (destination.getActiveMQDestination().isQueue()) {
-            try {
-                final Destination mirrorDestination = getMirrorDestination(destination);
-                if (mirrorDestination != null) {
-                    return new DestinationFilter(destination) {
-                        public void send(ProducerBrokerExchange context, Message message) throws Exception {
-                            message.setDestination(mirrorDestination.getActiveMQDestination());
-                            mirrorDestination.send(context, message);
-
-                            if (isCopyMessage()) {
-                                message = message.copy();
+            if (!destination.getActiveMQDestination().isTemporary() || brokerService.isUseTempMirroredQueues()) {
+                try {
+                    final Destination mirrorDestination = getMirrorDestination(destination);
+                    if (mirrorDestination != null) {
+                        return new DestinationFilter(destination) {
+                            public void send(ProducerBrokerExchange context, Message message) throws Exception {
+                                message.setDestination(mirrorDestination.getActiveMQDestination());
+                                mirrorDestination.send(context, message);
+    
+                                if (isCopyMessage()) {
+                                    message = message.copy();
+                                }
+                                message.setDestination(destination.getActiveMQDestination());
+                                super.send(context, message);
                             }
-                            message.setDestination(destination.getActiveMQDestination());
-                            super.send(context, message);
-                        }
-                    };
+                        };
+                    }
                 }
-            }
-            catch (Exception e) {
-                LOG.error("Failed to lookup the mirror destination for: " + destination + ". Reason: " + e, e);
+                catch (Exception e) {
+                    LOG.error("Failed to lookup the mirror destination for: " + destination + ". Reason: " + e, e);
+                }
             }
         }
         return destination;

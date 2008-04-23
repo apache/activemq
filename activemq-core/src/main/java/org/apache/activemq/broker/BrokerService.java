@@ -152,6 +152,7 @@ public class BrokerService implements Service {
     private boolean keepDurableSubsActive = true;
     private boolean useVirtualTopics = true;
     private boolean useMirroredQueues = false;
+    private boolean useTempMirroredQueues=true;
     private BrokerId brokerId;
     private DestinationInterceptor[] destinationInterceptors;
     private ActiveMQDestination[] destinations;
@@ -1303,6 +1304,14 @@ public class BrokerService implements Service {
             int timeBeforePurgeTempDestinations) {
         this.timeBeforePurgeTempDestinations = timeBeforePurgeTempDestinations;
     }
+    
+    public boolean isUseTempMirroredQueues() {
+        return useTempMirroredQueues;
+    }
+
+    public void setUseTempMirroredQueues(boolean useTempMirroredQueues) {
+        this.useTempMirroredQueues = useTempMirroredQueues;
+    }
 	//
     // Implementation methods
     // -------------------------------------------------------------------------
@@ -1902,4 +1911,5 @@ public class BrokerService implements Service {
     public void setRegionBroker(Broker regionBroker) {
         this.regionBroker = regionBroker;
     }
+
 }
