@@ -30,7 +30,7 @@ import org.apache.activemq.usage.SystemUsage;
  * @version $Revision: 1.12 $
  */
 public abstract class BaseDestination implements Destination {
-
+    public static final int DEFAULT_PAGE_SIZE=100;
     protected final ActiveMQDestination destination;
     protected final Broker broker;
     protected final MessageStore store;
@@ -40,7 +40,7 @@ public abstract class BaseDestination implements Destination {
     private int maxProducersToAudit=1024;
     private int maxAuditDepth=2048;
     private boolean enableAudit=true;
-    private int maxPageSize=100;
+    private int maxPageSize=DEFAULT_PAGE_SIZE;
     private boolean useCache=true;
     private int minimumMessageSize=1024;
     private boolean lazyDispatch=false;
