@@ -18,7 +18,6 @@ package org.apache.activemq.broker.jmx;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-
 import javax.jms.Connection;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
@@ -29,11 +28,10 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
-
 import junit.textui.TestRunner;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
-import org.apache.activemq.advisory.TempDestDeleteTest;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -56,7 +54,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     protected Connection connection;
     protected boolean transacted;
     protected int authMode = Session.AUTO_ACKNOWLEDGE;
-    protected int messageCount = 10;
+    protected static final int MESSAGE_COUNT = 2*BaseDestination.DEFAULT_PAGE_SIZE;
 
     /**
      * When you run this test case from the command line it will pause before
@@ -93,8 +91,8 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + newDestination + ",BrokerName=localhost");
 
         queue = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
-
-        assertTrue("Should have at least one message in the queue: " + queueViewMBeanName, queue.getQueueSize() > 0);
+        int movedSize = MESSAGE_COUNT-3;
+        assertEquals("Unexpected number of messages ",movedSize,queue.getQueueSize());
 
         // now lets remove them by selector
         queue.removeMatchingMessages("counter > 2");
@@ -114,16 +112,14 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         long queueSize = queue.getQueueSize();
         queue.copyMatchingMessagesTo("counter > 2", newDestination);
 
-        assertEquals("Should have same number of messages in the queue: " + queueViewMBeanName, queueSize, queueSize);
+        
 
         queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + newDestination + ",BrokerName=localhost");
 
         queue = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
 
         LOG.info("Queue: " + queueViewMBeanName + " now has: " + queue.getQueueSize() + " message(s)");
-
-        assertTrue("Should have at least one message in the queue: " + queueViewMBeanName, queue.getQueueSize() > 0);
-
+        assertEquals("Expected messages in a queue: " + queueViewMBeanName, MESSAGE_COUNT-3, queue.getQueueSize());
         // now lets remove them by selector
         queue.removeMatchingMessages("counter > 2");
 
@@ -165,20 +161,20 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         echo("Found tabular data: " + table);
         assertTrue("Table should not be empty!", table.size() > 0);
 
-        assertEquals("Queue size", 10, proxy.getQueueSize());
+        assertEquals("Queue size", MESSAGE_COUNT, proxy.getQueueSize());
 
         String messageID = messageIDs[0];
         String newDestinationName = "queue://dummy.test.cheese";
         echo("Attempting to copy: " + messageID + " to destination: " + newDestinationName);
         proxy.copyMessageTo(messageID, newDestinationName);
 
-        assertEquals("Queue size", 10, proxy.getQueueSize());
+        assertEquals("Queue size", MESSAGE_COUNT, proxy.getQueueSize());
 
         messageID = messageIDs[1];
         echo("Attempting to remove: " + messageID);
         proxy.removeMessage(messageID);
 
-        assertEquals("Queue size", 9, proxy.getQueueSize());
+        assertEquals("Queue size", MESSAGE_COUNT-1, proxy.getQueueSize());
 
         echo("Worked!");
     }
@@ -296,8 +292,9 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
     protected BrokerService createBroker() throws Exception {
         BrokerService answer = new BrokerService();
+        answer.setDeleteAllMessagesOnStartup(true);
         answer.setUseJmx(true);
-        answer.setEnableStatistics(true);
+        //answer.setEnableStatistics(true);
         answer.setPersistent(false);
         answer.addConnector(bindAddress);
         return answer;
@@ -309,7 +306,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         Session session = connection.createSession(transacted, authMode);
         destination = createDestination();
         MessageProducer producer = session.createProducer(destination);
-        for (int i = 0; i < messageCount; i++) {
+        for (int i = 0; i < MESSAGE_COUNT; i++) {
             Message message = session.createTextMessage("Message: " + i);
             message.setIntProperty("counter", i);
             producer.send(message);
