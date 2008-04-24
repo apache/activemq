@@ -27,6 +27,16 @@ set DEFAULT_ACTIVEMQ_HOME=%~dp0..
 if "%ACTIVEMQ_HOME%"=="" set ACTIVEMQ_HOME=%DEFAULT_ACTIVEMQ_HOME%
 set DEFAULT_ACTIVEMQ_HOME=
 
+rem Slurp the command line arguments. This loop allows for an unlimited number
+rem of arguments (up to the command line limit, anyway).
+set ACTIVEMQ_CMD_LINE_ARGS=%1
+if ""%1""=="""" goto doneStart
+shift
+:setupArgs
+if ""%1""=="""" goto doneStart
+set ACTIVEMQ_CMD_LINE_ARGS=%ACTIVEMQ_CMD_LINE_ARGS% %1
+shift
+goto setupArgs
 rem This label provides a place for the argument list loop to break out 
 rem and for NT handling to skip to.
 
@@ -59,8 +69,6 @@ goto end
 :checkJava
 set _JAVACMD=%JAVACMD%
 
-set JAVA_EXT_DIRS=%JAVA_HOME%\lib\ext;%ACTIVEMQ_HOME%;%ACTIVEMQ_HOME%\lib;%ACTIVEMQ_HOME%\lib\optional
-
 if "%JAVA_HOME%" == "" goto noJavaHome
 if not exist "%JAVA_HOME%\bin\java.exe" goto noJavaHome
 if "%_JAVACMD%" == "" set _JAVACMD=%JAVA_HOME%\bin\java.exe
@@ -73,8 +81,10 @@ echo Warning: JAVA_HOME environment variable is not set.
 echo.
 
 :runAnt
+
 if "%ACTIVEMQ_BASE%" == "" set ACTIVEMQ_BASE=%ACTIVEMQ_HOME%
-if "%ACTIVEMQ_OPTS%" == "" set ACTIVEMQ_OPTS=-Xmx512M -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Dderby.system.home="%ACTIVEMQ_BASE%\data" -Dderby.storage.fileSyncTransactionLog=true
+
+if "%ACTIVEMQ_OPTS%" == "" set ACTIVEMQ_OPTS=-Xmx512M -Dorg.apache.activemq.UseDedicatedTaskRunner=true
 
 if "%SUNJMX%" == "" set SUNJMX=-Dcom.sun.management.jmxremote
 REM set SUNJMX=-Dcom.sun.management.jmxremote.port=1616 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false
@@ -82,7 +92,7 @@ REM set SUNJMX=-Dcom.sun.management.jmxremote.port=1616 -Dcom.sun.management.jmx
 if "%SSL_OPTS%" == "" set SSL_OPTS=-Djavax.net.ssl.keyStorePassword=password -Djavax.net.ssl.trustStorePassword=password -Djavax.net.ssl.keyStore="%ACTIVEMQ_BASE%/conf/broker.ks" -Djavax.net.ssl.trustStore="%ACTIVEMQ_BASE%/conf/broker.ts"
 
 REM Uncomment to enable YourKit profiling
-REM SET ACTIVEMQ_DEBUG_OPTS="-Xrunyjpagent"
+REM SET ACTIVEMQ_DEBUG_OPTS="-agentlib:yjpagent"
 
 REM Uncomment to enable remote debugging
 REM SET ACTIVEMQ_DEBUG_OPTS=-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005
@@ -90,14 +100,18 @@ REM SET ACTIVEMQ_DEBUG_OPTS=-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:tra
 REM Setup ActiveMQ Classpath. Default is the conf directory.
 set ACTIVEMQ_CLASSPATH=%ACTIVEMQ_BASE%/conf;%ACTIVEMQ_CLASSPATH%
 
-"%_JAVACMD%" %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% -Djava.ext.dirs="%JAVA_EXT_DIRS%" -Dactivemq.classpath="%ACTIVEMQ_CLASSPATH%" -Dactivemq.home="%ACTIVEMQ_HOME%" -Dactivemq.base="%ACTIVEMQ_BASE%" -jar "%ACTIVEMQ_HOME%/bin/run.jar" %*
+"%_JAVACMD%" %SUNJMX% %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% %SSL_OPTS% -Dactivemq.classpath="%ACTIVEMQ_CLASSPATH%" -Dactivemq.home="%ACTIVEMQ_HOME%" -Dactivemq.base="%ACTIVEMQ_BASE%" -jar "%ACTIVEMQ_HOME%/bin/run.jar" %ACTIVEMQ_CMD_LINE_ARGS%
 
 goto end
 
+
 :end
 set _JAVACMD=
+set ACTIVEMQ_CMD_LINE_ARGS=
 
 if "%OS%"=="Windows_NT" @endlocal
 
 :mainEnd
 if exist "%HOME%\activemqrc_post.bat" call "%HOME%\activemqrc_post.bat"
+
+
