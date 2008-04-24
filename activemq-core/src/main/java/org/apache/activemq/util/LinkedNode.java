@@ -133,6 +133,7 @@ public class LinkedNode {
     public void unlink() {
         // If we are allready unlinked...
         if (prev == this) {
+            reset();
             return;
         }
 
@@ -145,6 +146,10 @@ public class LinkedNode {
         prev.next = next;
 
         // Update our links..
+        reset();
+    }
+    
+    public void reset() {
         next = this;
         prev = this;
         tail = true;
