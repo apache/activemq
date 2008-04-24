@@ -69,8 +69,6 @@ goto end
 :checkJava
 set _JAVACMD=%JAVACMD%
 
-set JAVA_EXT_DIRS=%JAVA_HOME%\lib\ext;%ACTIVEMQ_HOME%;%ACTIVEMQ_HOME%\lib;%ACTIVEMQ_HOME%\lib\optional
-
 if "%JAVA_HOME%" == "" goto noJavaHome
 if not exist "%JAVA_HOME%\bin\java.exe" goto noJavaHome
 if "%_JAVACMD%" == "" set _JAVACMD=%JAVA_HOME%\bin\java.exe
@@ -86,7 +84,7 @@ echo.
 
 if "%ACTIVEMQ_BASE%" == "" set ACTIVEMQ_BASE=%ACTIVEMQ_HOME%
 
-if "%ACTIVEMQ_OPTS%" == "" set ACTIVEMQ_OPTS=-Xmx512M -Dorg.apache.activemq.UseDedicatedTaskRunner=true -Dderby.system.home="%ACTIVEMQ_BASE%\data" -Dderby.storage.fileSyncTransactionLog=true
+if "%ACTIVEMQ_OPTS%" == "" set ACTIVEMQ_OPTS=-Xmx512M -Dorg.apache.activemq.UseDedicatedTaskRunner=true
 
 if "%SUNJMX%" == "" set SUNJMX=-Dcom.sun.management.jmxremote
 REM set SUNJMX=-Dcom.sun.management.jmxremote.port=1616 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false
@@ -102,10 +100,7 @@ REM SET ACTIVEMQ_DEBUG_OPTS=-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:tra
 REM Setup ActiveMQ Classpath. Default is the conf directory.
 set ACTIVEMQ_CLASSPATH=%ACTIVEMQ_BASE%/conf;%ACTIVEMQ_CLASSPATH%
 
-REM Set the task to run
-set ACTIVEMQ_TASK="start"
-
-"%_JAVACMD%" %SUNJMX% %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% %SSL_OPTS% -Dactivemq.classpath="%ACTIVEMQ_CLASSPATH%" -Dactivemq.home="%ACTIVEMQ_HOME%" -Dactivemq.base="%ACTIVEMQ_BASE%" -jar "%ACTIVEMQ_HOME%/bin/run.jar" %ACTIVEMQ_TASK% %ACTIVEMQ_CMD_LINE_ARGS%
+"%_JAVACMD%" %SUNJMX% %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% %SSL_OPTS% -Dactivemq.classpath="%ACTIVEMQ_CLASSPATH%" -Dactivemq.home="%ACTIVEMQ_HOME%" -Dactivemq.base="%ACTIVEMQ_BASE%" -jar "%ACTIVEMQ_HOME%/bin/run.jar" start %ACTIVEMQ_CMD_LINE_ARGS%
 
 goto end
 
