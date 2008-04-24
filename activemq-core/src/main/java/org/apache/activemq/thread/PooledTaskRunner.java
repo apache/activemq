@@ -127,24 +127,23 @@ class PooledTaskRunner implements TaskRunner {
         } finally {
             synchronized( runable ) {
                 iterating = false;
-            }
-        }
-
-        synchronized (runable) {
-            if (shutdown) {
-                queued = false;
                 runable.notifyAll();
-                return;
-            }
+                if (shutdown) {
+                    queued = false;
+                    runable.notifyAll();
+                    return;
+                }
 
-            // If we could not iterate all the items
-            // then we need to re-queue.
-            if (!done) {
-                queued = true;
-            }
+                // If we could not iterate all the items
+                // then we need to re-queue.
+                if (!done) {
+                    queued = true;
+                }
 
-            if (queued) {
-                executor.execute(runable);
+                if (queued) {
+                    executor.execute(runable);
+                }
+
             }
         }
     }
