@@ -61,7 +61,7 @@ public class TempTopic  extends Topic  implements Task{
                                         .getConnectionId()))) {
 
             tempDest.setConnectionId(sub.getConsumerInfo().getConsumerId().getConnectionId());
-            log.debug(" changed ownership of " + this + " to "+ tempDest.getConnectionId());
+            LOG.debug(" changed ownership of " + this + " to "+ tempDest.getConnectionId());
         }
         super.addSubscription(context, sub);
     } 
