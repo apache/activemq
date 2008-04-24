@@ -352,7 +352,9 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
     }
     
     private String getSubscriptionContainerName(String subscriptionKey) {
-        StringBuffer buffer = new StringBuffer(subscriptionKey);
-        return buffer.append(":").append(destination.getQualifiedName()).append(TOPIC_SUB_NAME).toString();
+        StringBuffer result = new StringBuffer(TOPIC_SUB_NAME);
+        result.append(destination.getQualifiedName());
+        result.append(subscriptionKey);
+        return result.toString();
     }
 }
