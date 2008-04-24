@@ -37,7 +37,7 @@ public class HttpsTransportFactory extends HttpTransportFactory {
     }
 
     protected Transport createTransport(URI location, WireFormat wf) throws MalformedURLException {
-        return new HttpsTransport(asTextWireFormat(wf), location);
+        return new HttpsClientTransport(asTextWireFormat(wf), location);
     }
 
 }
