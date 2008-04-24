@@ -27,19 +27,6 @@ set DEFAULT_ACTIVEMQ_HOME=%~dp0..
 if "%ACTIVEMQ_HOME%"=="" set ACTIVEMQ_HOME=%DEFAULT_ACTIVEMQ_HOME%
 set DEFAULT_ACTIVEMQ_HOME=
 
-rem Slurp the command line arguments. This loop allows for an unlimited number
-rem of arguments (up to the command line limit, anyway).
-set ACTIVEMQ_CMD_LINE_ARGS=%1
-if ""%1""=="""" goto doneStart
-shift
-:setupArgs
-if ""%1""=="""" goto doneStart
-set ACTIVEMQ_CMD_LINE_ARGS=%ACTIVEMQ_CMD_LINE_ARGS% %1
-shift
-goto setupArgs
-rem This label provides a place for the argument list loop to break out 
-rem and for NT handling to skip to.
-
 :doneStart
 rem find ACTIVEMQ_HOME if it does not exist due to either an invalid value passed
 rem by the user or the %0 problem on Windows 9x
@@ -100,15 +87,13 @@ REM SET ACTIVEMQ_DEBUG_OPTS=-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:tra
 REM Setup ActiveMQ Classpath. Default is the conf directory.
 set ACTIVEMQ_CLASSPATH=%ACTIVEMQ_BASE%/conf;%ACTIVEMQ_CLASSPATH%
 
-"%_JAVACMD%" %SUNJMX% %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% %SSL_OPTS% -Dactivemq.classpath="%ACTIVEMQ_CLASSPATH%" -Dactivemq.home="%ACTIVEMQ_HOME%" -Dactivemq.base="%ACTIVEMQ_BASE%" -jar "%ACTIVEMQ_HOME%/bin/run.jar" start %ACTIVEMQ_CMD_LINE_ARGS%
+"%_JAVACMD%" %SUNJMX% %ACTIVEMQ_DEBUG_OPTS% %ACTIVEMQ_OPTS% %SSL_OPTS% -Dactivemq.classpath="%ACTIVEMQ_CLASSPATH%" -Dactivemq.home="%ACTIVEMQ_HOME%" -Dactivemq.base="%ACTIVEMQ_BASE%" -jar "%ACTIVEMQ_HOME%/bin/run.jar" start %*
 
 goto end
 
 
 :end
 set _JAVACMD=
-set ACTIVEMQ_CMD_LINE_ARGS=
-
 if "%OS%"=="Windows_NT" @endlocal
 
 :mainEnd
