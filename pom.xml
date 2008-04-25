@@ -1228,6 +1228,14 @@
       <build>
         <plugins>
 
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <test>false</test>
+            </configuration>
+          </plugin>
+
           <!-- We want a source jar -->
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
