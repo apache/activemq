@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans 
+  xmlns="http://www.springframework.org/schema/beans" 
+  xmlns:amq="http://activemq.org/config/1.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+  http://activemq.org/config/1.0 http://activemq.apache.org/snapshot-schema/activemq-core-5.0-SNAPSHOT.xsd">
+ 
+  <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+  </bean>
+ 
+  <!-- Broker1 -->
+  <broker brokerName="broker1" id="broker1" useJmx="true" persistent="true" deleteAllMessagesOnStartup="true" start="false" xmlns="http://activemq.org/config/1.0">
+    <transportConnectors>
+      <transportConnector uri="tcp://localhost:61616" />
+    </transportConnectors>
+ 
+    <persistenceAdapter>
+      <amqPersistenceAdapter directory="target/Broker1-data/activemq-data" syncOnWrite="true"  indexPageSize="16kb" indexBinSize="100" maxReferenceFileLength="8192"/>
+    </persistenceAdapter>
+  </broker>
+ 
+ 
+  <!-- Broker2 -->
+  <broker brokerName="broker2" id="broker2" useJmx="true" persistent="false" deleteAllMessagesOnStartup="true" start="false" xmlns="http://activemq.org/config/1.0">
+    <transportConnectors>
+      <transportConnector uri="tcp://localhost:62616" />
+    </transportConnectors>
+     <persistenceAdapter>
+      <amqPersistenceAdapter directory="target/Broker2-data/activemq-data" syncOnWrite="true"  indexPageSize="16kb" indexBinSize="100" maxReferenceFileLength="8192"/>
+    </persistenceAdapter>
+  </broker>
+</beans>

@@ -36,7 +36,7 @@ import org.apache.activemq.util.LinkedNode;
 class DataFileAppender {
 
     protected static final byte[] RESERVED_SPACE = new byte[AsyncDataManager.ITEM_HEAD_RESERVED_SPACE];
-    protected static final String SHUTDOWN_COMMAND = "SHUTDOWN";
+    protected static final int DEFAULT_MAX_BATCH_SIZE = 1024 * 1024 * 4;
 
     protected final AsyncDataManager dataManager;
     protected final Map<WriteKey, WriteCommand> inflightWrites;
@@ -46,7 +46,7 @@ class DataFileAppender {
     protected boolean shutdown;
     protected IOException firstAsyncException;
     protected final CountDownLatch shutdownDone = new CountDownLatch(1);
-    protected int maxWriteBatchSize = 1024 * 1024 * 4;
+    protected int maxWriteBatchSize = DEFAULT_MAX_BATCH_SIZE;
 
     private boolean running;
     private Thread thread;
@@ -311,22 +311,17 @@ class DataFileAppender {
                 // Block till we get a command.
                 synchronized (enqueueMutex) {
                     while (true) {
-                        if (shutdown) {
-                            o = SHUTDOWN_COMMAND;
-                            break;
-                        }
                         if (nextWriteBatch != null) {
                             o = nextWriteBatch;
                             nextWriteBatch = null;
                             break;
                         }
+                        if (shutdown) {
+                            return;
+                        }
                         enqueueMutex.wait();
                     }
                     enqueueMutex.notify();
-                }
-
-                if (o == SHUTDOWN_COMMAND) {
-                    break;
                 }
 
                 WriteBatch wb = (WriteBatch)o;
@@ -345,10 +340,14 @@ class DataFileAppender {
                 // are in sequence.
                 file.seek(write.location.getOffset());
 
+                
+                boolean forceToDisk=false;
+                
                 // 
                 // is it just 1 big write?
                 if (wb.size == write.location.getSize()) {
-
+                    forceToDisk = write.sync | write.onComplete!=null;
+                    
                     // Just write it directly..
                     file.writeInt(write.location.getSize());
                     file.writeByte(write.location.getType());
@@ -361,6 +360,7 @@ class DataFileAppender {
 
                     // Combine the smaller writes into 1 big buffer
                     while (write != null) {
+                        forceToDisk |= write.sync | write.onComplete!=null;
 
                         buff.writeInt(write.location.getSize());
                         buff.writeByte(write.location.getType());
@@ -378,13 +378,12 @@ class DataFileAppender {
                     buff.reset();
                 }
 
-                file.getFD().sync();                
+                if( forceToDisk ) {
+                    file.getFD().sync();
+                }
                 
                 WriteCommand lastWrite = (WriteCommand)wb.first.getTailNode();
                 dataManager.setLastAppendLocation(lastWrite.location);
-
-                // Signal any waiting threads that the write is on disk.
-                wb.latch.countDown();
 
                 // Now that the data is on disk, remove the writes from the in
                 // flight
@@ -403,8 +402,10 @@ class DataFileAppender {
                     }
                     write = (WriteCommand)write.getNext();
                 }
+                
+                // Signal any waiting threads that the write is on disk.
+                wb.latch.countDown();
             }
-            buff.close();
         } catch (IOException e) {
             synchronized (enqueueMutex) {
                 firstAsyncException = e;
