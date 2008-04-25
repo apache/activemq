@@ -31,7 +31,6 @@ import org.apache.commons.logging.LogFactory;
 public class SimpleNetworkTest extends SimpleTopicTest {
 
     private static final Log LOG = LogFactory.getLog(SimpleNetworkTest.class);
-    //protected String consumerBindAddress = "tcp://rexmac.home:61616?wireFormat.maxInactivityDuration=1000,tcp://localhost:61617?wireFormat.maxInactivityDuration=1000";
     protected String consumerBindAddress = "tcp://localhost:61616";
     protected String producerBindAddress = "tcp://localhost:61617";
     protected static final String CONSUMER_BROKER_NAME = "Consumer";
@@ -49,10 +48,7 @@ public class SimpleNetworkTest extends SimpleTopicTest {
         if (producerBroker == null) {
             producerBroker = createProducerBroker(producerBindAddress);
         }
-        //consumerFactory = createConnectionFactory("vm://"+CONSUMER_BROKER_NAME);
-        //producerFactory = createConnectionFactory("vm://"+ PRODUCER_BROKER_NAME);
-        consumerFactory = createConnectionFactory("failover://("+consumerBindAddress + "," + producerBindAddress +")?randomize=false&backup=false");
-        //consumerFactory = createConnectionFactory("failover://("+consumerBindAddress+")?backup=true");
+        consumerFactory = createConnectionFactory(consumerBindAddress);
         consumerFactory.setDispatchAsync(true);
         ActiveMQPrefetchPolicy policy = new ActiveMQPrefetchPolicy();
         policy.setQueuePrefetch(100);
@@ -63,23 +59,23 @@ public class SimpleNetworkTest extends SimpleTopicTest {
         
         producers = new PerfProducer[numberofProducers*numberOfDestinations];
         consumers = new PerfConsumer[numberOfConsumers*numberOfDestinations];
-        int consumerCount = 0;
-        int producerCount = 0;
+        
         for (int k =0; k < numberOfDestinations;k++) {
             Destination destination = createDestination(session, destinationName+":"+k);
             LOG.info("Testing against destination: " + destination);
             for (int i = 0; i < numberOfConsumers; i++) {
-                consumers[consumerCount] = createConsumer(consumerFactory, destination, consumerCount);
-                consumers[consumerCount].setSleepDuration(consumerSleepDuration);
-                consumerCount++;
+                consumers[i] = createConsumer(consumerFactory, destination, i);
+                consumers[i].setSleepDuration(consumerSleepDuration);
+                consumers[i].start();
             }
             for (int i = 0; i < numberofProducers; i++) {
                 array = new byte[playloadSize];
                 for (int j = i; j < array.length; j++) {
                     array[j] = (byte)j;
                 }
-                producers[producerCount] = createProducer(producerFactory, destination, i, array);
-                producerCount++;
+                producers[i] = createProducer(producerFactory, destination, i, array);
+                producers[i].start();
+               
             }
         }
         con.close();
