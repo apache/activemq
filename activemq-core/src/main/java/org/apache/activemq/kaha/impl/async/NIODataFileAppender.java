@@ -68,22 +68,17 @@ class NIODataFileAppender extends DataFileAppender {
                 // Block till we get a command.
                 synchronized (enqueueMutex) {
                     while (true) {
-                        if (shutdown) {
-                            o = SHUTDOWN_COMMAND;
-                            break;
-                        }
                         if (nextWriteBatch != null) {
                             o = nextWriteBatch;
                             nextWriteBatch = null;
                             break;
                         }
+                        if (shutdown) {
+                            return;
+                        }
                         enqueueMutex.wait();
                     }
                     enqueueMutex.notify();
-                }
-
-                if (o == SHUTDOWN_COMMAND) {
-                    break;
                 }
 
                 WriteBatch wb = (WriteBatch)o;
@@ -103,10 +98,14 @@ class NIODataFileAppender extends DataFileAppender {
                 // are in sequence.
                 file.seek(write.location.getOffset());
 
+                
+                boolean forceToDisk=false;
+                
                 // 
                 // is it just 1 big write?
                 if (wb.size == write.location.getSize()) {
-
+                    forceToDisk = write.sync | write.onComplete!=null;
+                    
                     header.clear();
                     header.putInt(write.location.getSize());
                     header.put(write.location.getType());
@@ -122,7 +121,8 @@ class NIODataFileAppender extends DataFileAppender {
 
                     // Combine the smaller writes into 1 big buffer
                     while (write != null) {
-
+                        forceToDisk |= write.sync | write.onComplete!=null;
+                        
                         header.clear();
                         header.putInt(write.location.getSize());
                         header.put(write.location.getType());
@@ -148,15 +148,12 @@ class NIODataFileAppender extends DataFileAppender {
                     buffer.clear();
                 }
 
-                file.getChannel().force(false);
+                if( forceToDisk ) {
+                    file.getChannel().force(false);
+                }
 
                 WriteCommand lastWrite = (WriteCommand)wb.first.getTailNode();
                 dataManager.setLastAppendLocation(lastWrite.location);
-
-                // Signal any waiting threads that the write is on disk.
-                if (wb.latch != null) {
-                    wb.latch.countDown();
-                }
 
                 // Now that the data is on disk, remove the writes from the in
                 // flight
@@ -175,6 +172,9 @@ class NIODataFileAppender extends DataFileAppender {
 					}
                     write = (WriteCommand)write.getNext();
                 }
+                
+                // Signal any waiting threads that the write is on disk.
+                wb.latch.countDown();
             }
 
         } catch (IOException e) {
