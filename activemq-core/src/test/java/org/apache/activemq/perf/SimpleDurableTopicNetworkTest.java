@@ -27,7 +27,7 @@ public class SimpleDurableTopicNetworkTest extends SimpleNetworkTest {
     protected void setUp() throws Exception {
         numberofProducers=1;
         numberOfConsumers=1;
-        samepleCount=1000;
+        sampleCount=1000;
         playloadSize = 1024;
         super.setUp();
     }

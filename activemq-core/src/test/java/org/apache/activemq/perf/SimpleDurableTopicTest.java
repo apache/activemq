@@ -30,7 +30,7 @@ public class SimpleDurableTopicTest extends SimpleTopicTest {
         numberOfDestinations=1;
         numberOfConsumers = 4;
         numberofProducers = 1;
-        samepleCount=1000;
+        sampleCount=1000;
         playloadSize = 1024;
         super.setUp();
     }
