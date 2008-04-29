@@ -55,7 +55,8 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
     private String brokerXmlConfig;
     private BrokerService broker;
     private Thread brokerStartThread;
-
+    private ActiveMQConnectionFactory connectionFactory;
+    
     /**
      * 
      */
@@ -98,14 +99,21 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
      * @see org.apache.activemq.ra.MessageResourceAdapter#makeConnection()
      */
     public ActiveMQConnection makeConnection() throws JMSException {
-        return makeConnection(getInfo());
+        if( connectionFactory == null ) {
+            return makeConnection(getInfo());
+        } else {
+            return makeConnection(getInfo(), connectionFactory);
         }
+    }
 
     /**
      * @param activationSpec
      */
     public ActiveMQConnection makeConnection(MessageActivationSpec activationSpec) throws JMSException {
-        ActiveMQConnectionFactory connectionFactory = createConnectionFactory(getInfo());
+        ActiveMQConnectionFactory connectionFactory = this.connectionFactory;
+        if (connectionFactory == null) {
+            connectionFactory = createConnectionFactory(getInfo());
+        }
         String userName = defaultValue(activationSpec.getUserName(), getInfo().getUserName());
         String password = defaultValue(activationSpec.getPassword(), getInfo().getPassword());
         String clientId = activationSpec.getClientId();
@@ -304,6 +312,14 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
             result ^= brokerXmlConfig.hashCode();
         }
         return result;
+    }
+
+    public ActiveMQConnectionFactory getConnectionFactory() {
+        return connectionFactory;
+    }
+
+    public void setConnectionFactory(ActiveMQConnectionFactory connectionFactory) {
+        this.connectionFactory = connectionFactory;
     }
 
 

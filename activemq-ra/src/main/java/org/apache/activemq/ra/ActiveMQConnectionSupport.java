@@ -70,7 +70,7 @@ public class ActiveMQConnectionSupport {
      * @return the physical connection
      * @throws JMSException if the connection could not be established
      */
-    protected ActiveMQConnection makeConnection(
+    public ActiveMQConnection makeConnection(
             ActiveMQConnectionRequestInfo connectionRequestInfo,
             ActiveMQConnectionFactory connectionFactory) throws JMSException
     {
