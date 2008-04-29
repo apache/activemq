@@ -39,7 +39,7 @@
       <outputDirectory>/</outputDirectory>
       <includes>
         <include>bin/macosx/wrapper.conf</include>
-        <include>bin/linux/wrapper.conf</include>
+        <include>bin/linux-*/wrapper.conf</include>
       </includes>
       <lineEnding>unix</lineEnding>
     </fileSet>
@@ -49,8 +49,8 @@
       <directory>src/release</directory>
       <outputDirectory></outputDirectory>
       <includes>
-        <include>bin/linux/wrapper</include>
-        <include>bin/linux/libwrapper.so</include>
+        <include>bin/linux-*/wrapper</include>
+        <include>bin/linux-*/libwrapper.so</include>
         <include>bin/macosx/wrapper</include>
         <include>bin/macosx/libwrapper.jnilib</include>
       </includes>
