@@ -265,8 +265,8 @@ public class InactivityMonitor extends TransportFilter {
             writeCheckTime = readCheckTime/3;
             synchronized( InactivityMonitor.class ) {
             	if( CHECKER_COUNTER == 0 ) {
-            	    READ_CHECK_TIMER = new Timer("InactivityMonitor ReadCheck");
-            	    WRITE_CHECK_TIMER = new Timer("InactivityMonitor WriteCheck");
+            	    READ_CHECK_TIMER = new Timer("InactivityMonitor ReadCheck",true);
+            	    WRITE_CHECK_TIMER = new Timer("InactivityMonitor WriteCheck",true);
             	}
             	CHECKER_COUNTER++;
                 WRITE_CHECK_TIMER.scheduleAtFixedRate(writeCheckerTask, initialDelayTime,writeCheckTime);
