@@ -161,10 +161,8 @@ class DataFileAppender {
         WriteCommand write = new WriteCommand(location, data, sync);
 
         // Locate datafile and enqueue into the executor in sychronized block so
-        // that
-        // writes get equeued onto the executor in order that they were assigned
-        // by
-        // the data manager (which is basically just appending)
+        // that writes get equeued onto the executor in order that they were assigned
+        // by the data manager (which is basically just appending)
 
         synchronized (this) {
             // Find the position where this item will land at.
@@ -197,10 +195,8 @@ class DataFileAppender {
         WriteCommand write = new WriteCommand(location, data, onComplete);
 
         // Locate datafile and enqueue into the executor in sychronized block so
-        // that
-        // writes get equeued onto the executor in order that they were assigned
-        // by
-        // the data manager (which is basically just appending)
+        // that writes get equeued onto the executor in order that they were assigned
+        // by the data manager (which is basically just appending)
 
         synchronized (this) {
             // Find the position where this item will land at.

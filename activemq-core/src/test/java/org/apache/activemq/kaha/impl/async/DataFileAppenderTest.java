@@ -66,7 +66,8 @@ public class DataFileAppenderTest extends TestCase {
         for (int i=0; i<iterations; i++) {
             dataManager.write(data, false);
         }
-        assertTrue("writes are queued up", dataManager.getInflightWrites().size() >= iterations);
+        // at this point most probably dataManager.getInflightWrites().size() >= 0
+        // as the Thread created in DataFileAppender.enqueue() may not have caught up.
         Thread.sleep(1000);
         assertTrue("queued data is written", dataManager.getInflightWrites().isEmpty());
     }
@@ -76,15 +77,15 @@ public class DataFileAppenderTest extends TestCase {
         final int iterations = 10;
         final CountDownLatch latch = new CountDownLatch(iterations);
         ByteSequence data = new ByteSequence("DATA".getBytes());
-        for (int i=0; i<iterations; i++) {
+        for (int i=0; i < iterations; i++) {
             dataManager.write(data, new Runnable() {
                 public void run() {
                     latch.countDown();                 
                 }
             });
         }
-        assertTrue("writes are queued up", dataManager.getInflightWrites().size() >= iterations);
-        assertEquals("none written", iterations, latch.getCount());
+        // at this point most probably dataManager.getInflightWrites().size() >= 0
+        // as the Thread created in DataFileAppender.enqueue() may not have caught up.
         Thread.sleep(1000);
         assertTrue("queued data is written", dataManager.getInflightWrites().isEmpty());
         assertEquals("none written", 0, latch.getCount());
