@@ -37,7 +37,6 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
     private final Statements statements;
     private long sleepTime = 1000;
     private Connection connection;
-    private PreparedStatement statement;
     private boolean stopping;
 
     public DefaultDatabaseLocker(DataSource dataSource, Statements statements) {
@@ -49,7 +48,7 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
         stopping = false;
 
         LOG.info("Attempting to acquire the exclusive lock to become the Master broker");
-
+        PreparedStatement statement = null;
         while (true) {
             try {
                 connection = dataSource.getConnection();
@@ -97,16 +96,26 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
     }
 
     public boolean keepAlive() {
+        PreparedStatement statement = null;
+        boolean result = false;
         try {
-            PreparedStatement statement = connection.prepareStatement(statements.getLockUpdateStatement());
+            statement = connection.prepareStatement(statements.getLockUpdateStatement());
             statement.setLong(1, System.currentTimeMillis());
             int rows = statement.executeUpdate();
             if (rows == 1) {
-                return true;
+                result=true;
             }
         } catch (Exception e) {
             LOG.error("Failed to update database lock: " + e, e);
+        }finally {
+            if (statement != null) {
+                try {
+                    statement.close();
+                } catch (SQLException e) {
+                    LOG.error("Failed to close statement",e);
+                }
+            }
         }
-        return false;
+        return result;
     }
 }
