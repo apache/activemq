@@ -41,6 +41,7 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
+          <childDelegation>true</childDelegation>
           <forkMode>once</forkMode>
           <excludes>
             <exclude implementation="java.lang.String">**/LDAPLoginModuleTest.*</exclude>
