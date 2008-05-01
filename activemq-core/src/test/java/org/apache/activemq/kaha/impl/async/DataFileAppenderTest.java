@@ -58,20 +58,7 @@ public class DataFileAppenderTest extends TestCase {
             }   
             f.delete();
         }  
-    }
-    
-    public void testBatchWriteCompleteAfterTimeout() throws Exception {
-        ByteSequence data = new ByteSequence("DATA".getBytes());
-        final int iterations = 10;
-        for (int i=0; i<iterations; i++) {
-            dataManager.write(data, false);
-        }
-        // at this point most probably dataManager.getInflightWrites().size() >= 0
-        // as the Thread created in DataFileAppender.enqueue() may not have caught up.
-        Thread.sleep(1000);
-        assertTrue("queued data is written", dataManager.getInflightWrites().isEmpty());
-    }
-
+    }  
 
     public void testBatchWriteCallbackCompleteAfterTimeout() throws Exception {
         final int iterations = 10;
@@ -86,9 +73,7 @@ public class DataFileAppenderTest extends TestCase {
         }
         // at this point most probably dataManager.getInflightWrites().size() >= 0
         // as the Thread created in DataFileAppender.enqueue() may not have caught up.
-        Thread.sleep(1000);
-        assertTrue("queued data is written", dataManager.getInflightWrites().isEmpty());
-        assertEquals("none written", 0, latch.getCount());
+        assertTrue("queued data is written", latch.await(5, TimeUnit.SECONDS));
     }
 
     public void testBatchWriteCallbackCompleteAfterClose() throws Exception {
@@ -102,8 +87,6 @@ public class DataFileAppenderTest extends TestCase {
                 }
             });
         }
-        assertTrue("writes are queued up", dataManager.getInflightWrites().size() >= iterations);
-        assertEquals("none written", iterations, latch.getCount());
         dataManager.close();
         assertTrue("queued data is written", dataManager.getInflightWrites().isEmpty());
         assertEquals("none written", 0, latch.getCount());
@@ -131,13 +114,12 @@ public class DataFileAppenderTest extends TestCase {
         byte[] message = new byte[messageSize];
         ByteSequence data = new ByteSequence(message);
         
-        for (int i=0; i< iterations - 1; i++) {
+        for (int i=0; i< iterations; i++) {
             dataManager.write(data, done);
         }
-        assertEquals("all writes are queued", iterations, latch.getCount());
-        dataManager.write(data, done);
-        latch.await(10, TimeUnit.SECONDS); // write may take some time
-        assertEquals("all callbacks complete", 0, latch.getCount());
+        
+        // write may take some time
+        assertTrue("all callbacks complete", latch.await(10, TimeUnit.SECONDS));
     }
     
     public void testNoBatchWriteWithSync() throws Exception {
