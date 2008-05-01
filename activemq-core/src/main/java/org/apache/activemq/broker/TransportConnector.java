@@ -259,6 +259,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         }
         if (server != null) {
             ss.stop(server);
+            server = null;
         }
         if (this.statusDector != null) {
             this.statusDector.stop();
