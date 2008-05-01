@@ -74,7 +74,7 @@ if "%ACTIVEMQ_BASE%" == "" set ACTIVEMQ_BASE=%ACTIVEMQ_HOME%
 if "%ACTIVEMQ_OPTS%" == "" set ACTIVEMQ_OPTS=-Xmx512M -Dorg.apache.activemq.UseDedicatedTaskRunner=true
 
 if "%SUNJMX%" == "" set SUNJMX=-Dcom.sun.management.jmxremote
-REM set SUNJMX=-Dcom.sun.management.jmxremote.port=1616 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false
+REM set SUNJMX=-Dcom.sun.management.jmxremote.port=1099 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false
 
 if "%SSL_OPTS%" == "" set SSL_OPTS=-Djavax.net.ssl.keyStorePassword=password -Djavax.net.ssl.trustStorePassword=password -Djavax.net.ssl.keyStore="%ACTIVEMQ_BASE%/conf/broker.ks" -Djavax.net.ssl.trustStore="%ACTIVEMQ_BASE%/conf/broker.ts"
 
