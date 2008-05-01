@@ -463,6 +463,12 @@ public class HashIndex implements Index, HashIndexMBean {
         openIndexFile();
         doLoad();
     }
+    
+    
+    public String toString() {
+        String str = "HashIndex"+System.identityHashCode(this)+": "+file.getName();
+        return str;
+    }
       
 
     static int hash(Object x) {

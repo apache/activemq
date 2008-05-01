@@ -17,10 +17,6 @@
 package org.apache.activemq.kaha.impl.index.hash;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Bin in a HashIndex
@@ -28,12 +24,13 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1.1.1 $
  */
 class HashBin {
-    private static final transient Log LOG = LogFactory.getLog(HashBin.class);
     private HashIndex hashIndex;
     private int id;
     private int maximumEntries;
     private int size;
-    private List<HashPageInfo> hashPages = new ArrayList<HashPageInfo>();
+    private int numberOfPages =0;
+    private HashPageInfo root = null;
+    private HashPageInfo tail = null;
 
     /**
      * Constructor
@@ -62,43 +59,49 @@ class HashBin {
     }
 
     public int hashCode() {
-        return (int)id;
+        return (int)getId();
     }
 
-    int getId() {
+     int  getId() {
         return id;
     }
 
-    void setId(int id) {
+     void setId(int id) {
         this.id = id;
     }
 
-    boolean isEmpty() {
+     boolean isEmpty() {
         return true;
     }
 
-    int getMaximumEntries() {
+     int getMaximumEntries() {
         return this.maximumEntries;
     }
 
-    void setMaximumEntries(int maximumEntries) {
+     void setMaximumEntries(int maximumEntries) {
         this.maximumEntries = maximumEntries;
     }
 
-    int size() {
+     int size() {
         return size;
     }
 
-    HashPageInfo addHashPageInfo(long id, int size) throws IOException {
+     HashPageInfo addHashPageInfo(long id, int size) throws IOException {
         HashPageInfo info = new HashPageInfo(hashIndex);
         info.setId(id);
         info.setSize(size);
-        hashPages.add(info);
+        if (root == null) {
+            root=info;
+        }else {
+            tail.linkAfter(info);
+        }
+        tail=info;
+        this.numberOfPages++;
         this.size += size;
         return info;
     }
 
-    public HashEntry find(HashEntry key) throws IOException {
+     public HashEntry find(HashEntry key) throws IOException {
         HashEntry result = null;
         try {
             int low = 0;
@@ -122,7 +125,7 @@ class HashBin {
         return result;
     }
 
-    boolean put(HashEntry newEntry) throws IOException {
+     boolean put(HashEntry newEntry) throws IOException {
         boolean replace = false;
         try {
             int low = 0;
@@ -151,7 +154,7 @@ class HashBin {
         return replace;
     }
 
-    HashEntry remove(HashEntry entry) throws IOException {
+     HashEntry remove(HashEntry entry) throws IOException {
         HashEntry result = null;
         try {
             int low = 0;
@@ -191,8 +194,10 @@ class HashBin {
             int count = 0;
             int countSoFar=0;
             int pageNo = 0;
-            for (HashPageInfo page : hashPages) {
+            HashPageInfo page = root;
+            while (page != null) {
                 count += page.size();
+                pageToUse=page;
                 if (index < count ) {
                     offset = index - countSoFar;
                     break;
@@ -203,13 +208,12 @@ class HashBin {
                 }
                 countSoFar += page.size();
                 pageNo++;
+                page = (HashPageInfo) page.getNext();
             }
-            while(pageNo >= hashPages.size()) {
-                HashPage hp = hashIndex.createPage(id);
-                addHashPageInfo(hp.getId(), 0);               
-            }
-            pageToUse = hashPages.get(pageNo);
-           
+            while(pageNo >= this.numberOfPages) {
+                HashPage hp  = hashIndex.createPage(id);
+                pageToUse = addHashPageInfo(hp.getId(), 0);               
+            }            
         }
         pageToUse.begin();  
         pageToUse.addHashEntry(offset, entry);
@@ -222,7 +226,14 @@ class HashBin {
         HashEntry result = page.removeHashEntry(offset);
         
         if (page.isEmpty()) {
-            hashPages.remove(page);
+            if (root.equals(page)) {
+                root=(HashPageInfo) root.getNext();
+            }
+            if (tail.equals(page)) {
+                tail=(HashPageInfo) page.getPrevious();
+            }
+            page.unlink();
+            this.numberOfPages--;
             hashIndex.releasePage(page.getPage());
         }
         doUnderFlow(index);
@@ -239,21 +250,22 @@ class HashBin {
     
 
     private int getMaximumBinSize() {
-        return maximumEntries * hashPages.size();
+        return maximumEntries * this.numberOfPages;
     }
 
     private HashPageInfo getRetrievePage(int index) throws IOException {
         HashPageInfo result = null;
         int count = 0;
-        int pageNo = 0;
-        for (HashPageInfo page : hashPages) {
+        HashPageInfo page = root;
+        while (page != null) {
             count += page.size();
+            result = page;
             if (index < count) {
                 break;
             }
-            pageNo++;
+            page = (HashPageInfo) page.getNext();
         }
-        result = hashPages.get(pageNo);
+        
         result.begin();
         return result;
     }
@@ -261,12 +273,14 @@ class HashBin {
     private int getRetrieveOffset(int index) throws IOException {
         int result = 0;
         int count = 0;
-        for (HashPageInfo page : hashPages) {
+        HashPageInfo page = root;
+        while (page != null) {
             if ((index + 1) <= (count + page.size())) {
                 result = index - count;
                 break;
             }
             count += page.size();
+            page = (HashPageInfo) page.getNext();
         }
         return result;
     }
@@ -277,43 +291,51 @@ class HashBin {
             // overflowed
             info.begin();
             HashEntry entry = info.removeHashEntry(info.size() - 1);
-            doOverFlow(hashPages.indexOf(info)+1, entry);
+            doOverFlow(getNextPage(info), entry);
         }
     }
 
-    private void doOverFlow(int pageNo, HashEntry entry) throws IOException {
+    private void doOverFlow(HashPageInfo next, HashEntry entry) throws IOException {
         HashPageInfo info = null;
-        if (pageNo >= hashPages.size()) {
+        if (next == null) {
             HashPage page = hashIndex.createPage(id);
             info = addHashPageInfo(page.getId(), 0);
             info.setPage(page);
         } else {
-            info = hashPages.get(pageNo);
+            info = next;
         }
         info.begin();
         info.addHashEntry(0, entry);
         if (info.size() > maximumEntries) {
             // overflowed
             HashEntry overflowed = info.removeHashEntry(info.size() - 1);
-            doOverFlow(pageNo+1, overflowed);
+            doOverFlow(getNextPage(info), overflowed);
         }
+    }
+    
+    private HashPageInfo getNextPage(HashPageInfo start) {
+        return (HashPageInfo) start.getNext();
     }
 
     private void doUnderFlow(int index) {
     }
 
     String dump() throws IOException {
-        String str = "[" + hashPages.size()+"]";
-        for (HashPageInfo page : hashPages) {
+        String str = "[" + this.numberOfPages+"]";
+        HashPageInfo page = root;
+        while (page != null) {
             page.begin();
             str +=page.dump();
             page.end();
+            page = (HashPageInfo) page.getNext();
         }
         return str;
     }
     private void end() throws IOException {
-        for (HashPageInfo info : hashPages) {
-            info.end();
+        HashPageInfo page = root;
+        while (page != null) {
+            page.end();
+            page = (HashPageInfo) page.getNext();
         }
     }
 }

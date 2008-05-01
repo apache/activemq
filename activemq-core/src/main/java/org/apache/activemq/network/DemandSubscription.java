@@ -37,6 +37,7 @@ public class DemandSubscription {
     DemandSubscription(ConsumerInfo info) {
         remoteInfo = info;
         localInfo = info.copy();
+        localInfo.setSelector(null);
         localInfo.setBrokerPath(info.getBrokerPath());
         localInfo.setNetworkSubscription(true);
         remoteSubsIds.add(info.getConsumerId());    

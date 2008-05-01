@@ -21,16 +21,13 @@ import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 
-import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.network.NetworkConnector;
-
 
 public class SimpleDurableTopicNetworkTest extends SimpleNetworkTest {
     
     protected void setUp() throws Exception {
-        numberofProducers=60;
-        numberOfConsumers=60;
-        samepleCount=1000;
+        numberofProducers=1;
+        numberOfConsumers=1;
+        sampleCount=1000;
         playloadSize = 1024;
         super.setUp();
     }

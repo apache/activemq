@@ -77,7 +77,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.28 $
  */
 public class Queue extends BaseDestination implements Task {
-    protected final Log log;
+    protected static final Log LOG = LogFactory.getLog(Queue.class);
     protected TaskRunnerFactory taskFactory;
     protected TaskRunner taskRunner;    
     protected final List<Subscription> consumers = new ArrayList<Subscription>(50);
@@ -114,7 +114,6 @@ public class Queue extends BaseDestination implements Task {
                  TaskRunnerFactory taskFactory) throws Exception {
         super(brokerService, store, destination, parentStats);
         this.taskFactory=taskFactory;       
-        this.log = LogFactory.getLog(getClass().getName() + "." + destination.getPhysicalName());
         this.dispatchSelector=new QueueDispatchSelector(destination);
     }
         
@@ -174,7 +173,7 @@ public class Queue extends BaseDestination implements Task {
                                 try {
                                     messages.addMessageLast(message);
                                 } catch (Exception e) {
-                                    log.fatal("Failed to add message to cursor", e);
+                                    LOG.fatal("Failed to add message to cursor", e);
                                 }
                             }
                             destinationStatistics.getMessages().increment();
@@ -406,8 +405,8 @@ public class Queue extends BaseDestination implements Task {
                 // The usage manager could have delayed us by the time
                 // we unblock the message could have expired..
                 if (message.isExpired()) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("Expired message: " + message);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Expired message: " + message);
                     }
                     broker.getRoot().messageExpired(context, message);
                     return;
@@ -622,7 +621,7 @@ public class Queue extends BaseDestination implements Task {
         try {
             doPageIn(true);
         } catch (Exception e) {
-            log.error("caught an exception browsing " + this, e);
+            LOG.error("caught an exception browsing " + this, e);
         }
         synchronized (pagedInMessages) {
             for (QueueMessageReference node:pagedInMessages.values()){
@@ -633,7 +632,7 @@ public class Queue extends BaseDestination implements Task {
                         l.add(m);
                     }
                 } catch (IOException e) {
-                    log.error("caught an exception browsing " + this, e);
+                    LOG.error("caught an exception browsing " + this, e);
                 } finally {
                     node.decrementReferenceCount();
                 }
@@ -655,7 +654,7 @@ public class Queue extends BaseDestination implements Task {
                             r.decrementReferenceCount();
                         }
                     } catch (IOException e) {
-                        log.error("caught an exception brwsing " + this, e);
+                        LOG.error("caught an exception brwsing " + this, e);
                     }
                 }
             } finally {
@@ -686,7 +685,7 @@ public class Queue extends BaseDestination implements Task {
                             break;
                         }
                     } catch (IOException e) {
-                        log.error("got an exception retrieving message " + messageId);
+                        LOG.error("got an exception retrieving message " + messageId);
                     }
                 }
             } finally {
@@ -957,7 +956,7 @@ public class Queue extends BaseDestination implements Task {
 	               pageInMessages(false);
 	               
 	            } catch (Throwable e) {
-	                log.error("Failed to page in more queue messages ", e);
+	                LOG.error("Failed to page in more queue messages ", e);
 	            }
 	        }
 	        synchronized(messagesWaitingForSpace) {
@@ -1068,7 +1067,7 @@ public class Queue extends BaseDestination implements Task {
             try {
                 taskRunner.wakeup();
             } catch (InterruptedException e) {
-                log.warn("Task Runner failed to wakeup ", e);
+                LOG.warn("Task Runner failed to wakeup ", e);
             }
         }
     }
