@@ -262,12 +262,17 @@ public abstract class AbstractRegion implements Region {
             // so everything after this point would be leaked.
 
             // Add the subscription to all the matching queues.
-            
+            // But copy the matches first - to prevent deadlocks
+            List<Destination>addList = new ArrayList<Destination>();
             synchronized(destinationsMutex) {
                 for (Iterator iter = destinationMap.get(info.getDestination()).iterator(); iter.hasNext();) {
                     Destination dest = (Destination)iter.next();
-                    dest.addSubscription(context, sub);
+                    addList.add(dest);
                 }
+            }
+            
+            for (Destination dest:addList) {
+                dest.addSubscription(context, sub);
             }
 
             if (info.isBrowser()) {
