@@ -26,7 +26,6 @@ import javax.jms.TextMessage;
 import org.apache.activemq.broker.util.CommandHandler;
 import org.apache.activemq.console.command.ShellCommand;
 import org.apache.activemq.console.formatter.CommandShellOutputFormatter;
-import org.apache.activemq.console.formatter.GlobalWriter;
 
 /**
  * A default implementation of the @{link CommandHandler} interface
@@ -40,12 +39,14 @@ public class ConsoleCommandHandler implements CommandHandler {
     public void processCommand(TextMessage request, TextMessage response) throws Exception {
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        GlobalWriter.instantiate(new CommandShellOutputFormatter(out));
+        CommandContext ctx = new CommandContext();
+        ctx.setFormatter(new CommandShellOutputFormatter(out));
 
         // lets turn the text into a list of arguments
         String requestText = request.getText();
 
         List<String> tokens = tokenize(requestText);
+        command.setCommandContext(ctx);
         command.execute(tokens);
 
         out.flush();

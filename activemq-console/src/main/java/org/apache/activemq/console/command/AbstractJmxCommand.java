@@ -24,8 +24,6 @@ import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
-import org.apache.activemq.console.formatter.GlobalWriter;
-
 public abstract class AbstractJmxCommand extends AbstractCommand {
     public static final String DEFAULT_JMX_URL    = "service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi";
 
@@ -112,12 +110,12 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
         if (token.equals("--jmxurl")) {
             // If no jmx url specified, or next token is a new option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
-                GlobalWriter.printException(new IllegalArgumentException("JMX URL not specified."));
+                context.printException(new IllegalArgumentException("JMX URL not specified."));
             }
 
             // If jmx url already specified
             if (getJmxServiceUrl() != null) {
-                GlobalWriter.printException(new IllegalArgumentException("Multiple JMX URL cannot be specified."));
+                context.printException(new IllegalArgumentException("Multiple JMX URL cannot be specified."));
                 tokens.clear();
             }
 
@@ -125,7 +123,7 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
             try {
                 this.setJmxServiceUrl(new JMXServiceURL(strJmxUrl));
             } catch (MalformedURLException e) {
-                GlobalWriter.printException(e);
+                context.printException(e);
                 tokens.clear();
             }
         } else {

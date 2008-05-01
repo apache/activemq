@@ -27,7 +27,6 @@ import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 import javax.management.remote.JMXConnector;
 
-import org.apache.activemq.console.formatter.GlobalWriter;
 import org.apache.activemq.console.util.JmxMBeansUtil;
 
 public class PurgeCommand extends AbstractJmxCommand {
@@ -87,7 +86,7 @@ public class PurgeCommand extends AbstractJmxCommand {
                 }
             }
         } catch (Exception e) {
-            GlobalWriter.printException(new RuntimeException("Failed to execute purge task. Reason: " + e));
+            context.printException(new RuntimeException("Failed to execute purge task. Reason: " + e));
             throw new Exception(e);
         }
     }
@@ -101,7 +100,7 @@ public class PurgeCommand extends AbstractJmxCommand {
     public void purgeQueue(ObjectName queue) throws Exception {
         JMXConnector conn = createJmxConnector();
         MBeanServerConnection server = conn.getMBeanServerConnection();
-        GlobalWriter.printInfo("Purging all messages in queue: " + queue.getKeyProperty("Destination"));
+        context.printInfo("Purging all messages in queue: " + queue.getKeyProperty("Destination"));
         server.invoke(queue, "purge", new Object[] {}, new String[] {});
         conn.close();
     }
@@ -121,7 +120,7 @@ public class PurgeCommand extends AbstractJmxCommand {
         for (Iterator i = messages.iterator(); i.hasNext();) {
             CompositeData msg = (CompositeData)i.next();
             param[0] = "" + msg.get("JMSMessageID");
-            GlobalWriter.printInfo("Removing message: " + param[0] + " from queue: " + queue.getKeyProperty("Destination"));
+            context.printInfo("Removing message: " + param[0] + " from queue: " + queue.getKeyProperty("Destination"));
             server.invoke(queue, "removeMessage", param, new String[] {
                 "java.lang.String"
             });
@@ -144,7 +143,7 @@ public class PurgeCommand extends AbstractJmxCommand {
             // If no message selector is specified, or next token is a new
             // option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
-                GlobalWriter.printException(new IllegalArgumentException("Message selector not specified"));
+                context.printException(new IllegalArgumentException("Message selector not specified"));
                 return;
             }
 
@@ -158,7 +157,7 @@ public class PurgeCommand extends AbstractJmxCommand {
             // If no message selector is specified, or next token is a new
             // option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
-                GlobalWriter.printException(new IllegalArgumentException("Message selector not specified"));
+                context.printException(new IllegalArgumentException("Message selector not specified"));
                 return;
             }
 
@@ -177,7 +176,7 @@ public class PurgeCommand extends AbstractJmxCommand {
      * Print the help messages for the browse command
      */
     protected void printHelp() {
-        GlobalWriter.printHelp(helpFile);
+        context.printHelp(helpFile);
     }
 
 }

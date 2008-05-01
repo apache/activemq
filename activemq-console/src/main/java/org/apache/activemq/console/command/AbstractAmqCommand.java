@@ -27,7 +27,6 @@ import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.console.formatter.GlobalWriter;
 
 public abstract class AbstractAmqCommand extends AbstractCommand {
     private URI brokerUrl;
@@ -43,7 +42,7 @@ public abstract class AbstractAmqCommand extends AbstractCommand {
      */
     protected Connection createConnection() throws JMSException {
         if (getBrokerUrl() == null) {
-            GlobalWriter
+            context
                 .printException(new IllegalStateException("You must specify a broker "
                                                           + "URL to connect to using the --amqurl option."));
             return null;
@@ -70,7 +69,7 @@ public abstract class AbstractAmqCommand extends AbstractCommand {
      */
     protected Connection createConnection(String username, String password) throws JMSException {
         if (getBrokerUrl() == null) {
-            GlobalWriter
+            context
                 .printException(new IllegalStateException(
                                                           "You must specify a broker URL to connect to using the --amqurl option."));
             return null;
@@ -113,14 +112,14 @@ public abstract class AbstractAmqCommand extends AbstractCommand {
         if (token.equals("--amqurl")) {
             // If no broker url specified, or next token is a new option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
-                GlobalWriter.printException(new IllegalArgumentException("Broker URL not specified."));
+                context.printException(new IllegalArgumentException("Broker URL not specified."));
                 tokens.clear();
                 return;
             }
 
             // If broker url already specified
             if (getBrokerUrl() != null) {
-                GlobalWriter
+                context
                     .printException(new IllegalArgumentException("Multiple broker URL cannot be specified."));
                 tokens.clear();
                 return;
@@ -131,7 +130,7 @@ public abstract class AbstractAmqCommand extends AbstractCommand {
             try {
                 setBrokerUrl(new URI(strBrokerUrl));
             } catch (URISyntaxException e) {
-                GlobalWriter.printException(e);
+                context.printException(e);
                 tokens.clear();
                 return;
             }

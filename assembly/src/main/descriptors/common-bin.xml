@@ -146,6 +146,9 @@
         <include>org.apache.xbean:xbean-spring</include>
         <include>org.springframework:spring-core</include>
         <include>org.springframework:spring-beans</include>
+        <include>org.springframework:spring-context</include>
+        <include>org.springframework:spring-tx</include>
+        <include>org.springframework:spring-jms</include>
         <include>xstream:xstream</include>
         <include>xmlpull:xmlpull</include>
       </includes>

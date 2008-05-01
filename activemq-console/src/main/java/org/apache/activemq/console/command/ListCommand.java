@@ -20,7 +20,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.activemq.console.formatter.GlobalWriter;
 import org.apache.activemq.console.util.JmxMBeansUtil;
 
 public class ListCommand extends AbstractJmxCommand {
@@ -45,9 +44,9 @@ public class ListCommand extends AbstractJmxCommand {
         try {
             Set<String> propsView = new HashSet<String>();
             propsView.add("BrokerName");
-            GlobalWriter.printMBean(JmxMBeansUtil.filterMBeansView(JmxMBeansUtil.getAllBrokers(useJmxServiceUrl()), propsView));
+            context.printMBean(JmxMBeansUtil.filterMBeansView(JmxMBeansUtil.getAllBrokers(useJmxServiceUrl()), propsView));
         } catch (Exception e) {
-            GlobalWriter.printException(new RuntimeException("Failed to execute list task. Reason: " + e));
+            context.printException(new RuntimeException("Failed to execute list task. Reason: " + e));
             throw new Exception(e);
         }
     }
@@ -56,7 +55,7 @@ public class ListCommand extends AbstractJmxCommand {
      * Print the help messages for the browse command
      */
     protected void printHelp() {
-        GlobalWriter.printHelp(helpFile);
+        context.printHelp(helpFile);
     }
 
 }

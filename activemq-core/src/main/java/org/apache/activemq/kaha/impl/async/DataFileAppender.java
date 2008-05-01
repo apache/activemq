@@ -167,6 +167,9 @@ class DataFileAppender {
         synchronized (this) {
             // Find the position where this item will land at.
             DataFile dataFile = dataManager.allocateLocation(location);
+            if( !sync ) {
+                inflightWrites.put(new WriteKey(location), write);
+            }
             batch = enqueue(dataFile, write);
         }
         location.setLatch(batch.latch);
@@ -176,8 +179,6 @@ class DataFileAppender {
             } catch (InterruptedException e) {
                 throw new InterruptedIOException();
             }
-        } else {
-            inflightWrites.put(new WriteKey(location), write);
         }
 
         return location;
@@ -201,10 +202,10 @@ class DataFileAppender {
         synchronized (this) {
             // Find the position where this item will land at.
             DataFile dataFile = dataManager.allocateLocation(location);
+            inflightWrites.put(new WriteKey(location), write);
             batch = enqueue(dataFile, write);
         }
         location.setLatch(batch.latch);
-        inflightWrites.put(new WriteKey(location), write);
 
         return location;
 	}
