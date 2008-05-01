@@ -481,6 +481,11 @@ public class BrokerService implements Service {
             }
         }
         stopAllConnectors(stopper);
+        // remove any VMTransports connected
+        // this has to be done after services are stopped,
+        // to avoid timimg issue with discovery (spinning up a new instance)
+        BrokerRegistry.getInstance().unbind(getBrokerName());
+        VMTransportFactory.stopped(getBrokerName());        
         stopper.stop(persistenceAdapter);
         if (broker != null) {
             stopper.stop(broker);
@@ -502,11 +507,6 @@ public class BrokerService implements Service {
             }
             stopper.stop(getManagementContext());
         }
-        // remove any VMTransports connected
-        // this has to be done after services are stopped,
-        // to avoid timimg issue with discovery (spinning up a new instance)
-        BrokerRegistry.getInstance().unbind(getBrokerName());
-        VMTransportFactory.stopped(getBrokerName());
         stopped.set(true);
         stoppedLatch.countDown();
         LOG.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ", " + brokerId + ") stopped");

@@ -97,12 +97,6 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- For Spring servlet -->
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring</artifactId>
-    </dependency>
-
     <!--  for custom XML parsing -->
     <dependency>
       <groupId>org.apache.xbean</groupId>

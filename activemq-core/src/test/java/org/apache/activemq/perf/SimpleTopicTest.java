@@ -44,11 +44,11 @@ public class SimpleTopicTest extends TestCase {
     protected PerfProducer[] producers;
     protected PerfConsumer[] consumers;
     protected String destinationName = getClass().getName();
-    protected int samepleCount = 20;
+    protected int sampleCount = 20;
     protected long sampleInternal = 10000;
     protected int numberOfDestinations=1;
-    protected int numberOfConsumers = 10;
-    protected int numberofProducers = 10;
+    protected int numberOfConsumers = 1;
+    protected int numberofProducers = 1;
     protected int totalNumberOfProducers;
     protected int totalNumberOfConsumers;
     protected int playloadSize = 1024;
@@ -156,8 +156,8 @@ public class SimpleTopicTest extends TestCase {
         for (int i = 0; i < totalNumberOfProducers; i++) {
             producers[i].start();
         }
-        LOG.info("Sampling performance " + samepleCount + " times at a " + sampleInternal + " ms interval.");
-        for (int i = 0; i < samepleCount; i++) {
+        LOG.info("Sampling performance " + sampleCount + " times at a " + sampleInternal + " ms interval.");
+        for (int i = 0; i < sampleCount; i++) {
             Thread.sleep(sampleInternal);
             dumpProducerRate();
             dumpConsumerRate();

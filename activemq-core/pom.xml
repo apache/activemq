@@ -123,11 +123,6 @@
       <artifactId>xbean-spring</artifactId>
       <optional>true</optional>
     </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring</artifactId>
-      <optional>true</optional>
-    </dependency>
 
     <dependency>
       <groupId>org.apache.derby</groupId>
@@ -366,6 +361,9 @@
           <includes>
             <include>**/*Test.*</include>
           </includes>
+          <excludes>
+            <exclude>**/perf/SimpleDurableTopicTest.*</exclude>
+          </excludes>
           <excludes>
 
             <!-- These tests run too slow to execute as part of the unit tests -->

@@ -69,7 +69,7 @@ public class TempQueue extends Queue{
                                         .getConnectionId()))) {
 
             tempDest.setConnectionId(sub.getConsumerInfo().getConsumerId().getConnectionId());
-            log.debug(" changed ownership of " + this + " to "+ tempDest.getConnectionId());
+            LOG.debug(" changed ownership of " + this + " to "+ tempDest.getConnectionId());
         }
         super.addSubscription(context, sub);
     } 
@@ -84,14 +84,14 @@ public class TempQueue extends Queue{
                pageInMessages(false);
                
             } catch (Throwable e) {
-                log.error("Failed to page in more queue messages ", e);
+                LOG.error("Failed to page in more queue messages ", e);
             }
         }
         if (!messagesWaitingForSpace.isEmpty() || !isRecoveryDispatchEmpty()) {
             try {
                 taskRunner.wakeup();
             } catch (InterruptedException e) {
-                log.warn("Task Runner failed to wakeup ", e);
+                LOG.warn("Task Runner failed to wakeup ", e);
             }
         }
     }

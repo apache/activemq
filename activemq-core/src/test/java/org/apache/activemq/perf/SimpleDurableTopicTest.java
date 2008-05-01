@@ -27,10 +27,10 @@ import javax.jms.JMSException;
 public class SimpleDurableTopicTest extends SimpleTopicTest {
     
     protected void setUp() throws Exception {
-        numberOfDestinations=6;
-        numberOfConsumers = 1;
+        numberOfDestinations=1;
+        numberOfConsumers = 4;
         numberofProducers = 1;
-        samepleCount=1000;
+        sampleCount=1000;
         playloadSize = 1024;
         super.setUp();
     }
