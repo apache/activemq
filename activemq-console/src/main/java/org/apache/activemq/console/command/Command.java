@@ -19,7 +19,12 @@ package org.apache.activemq.console.command;
 
 import java.util.List;
 
+import org.apache.activemq.console.CommandContext;
+
 public interface Command {
+    
+    void setCommandContext( CommandContext context );
+    
     /**
      * Execute the specified command
      * @param tokens - arguments to the command

@@ -27,7 +27,6 @@ import javax.jms.Destination;
 
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.console.formatter.GlobalWriter;
 import org.apache.activemq.console.util.AmqMessagesUtil;
 
 public class AmqBrowseCommand extends AbstractAmqCommand {
@@ -86,13 +85,13 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
         try {
             // If no destination specified
             if (tokens.isEmpty()) {
-                GlobalWriter.printException(new IllegalArgumentException("No JMS destination specified."));
+                context.printException(new IllegalArgumentException("No JMS destination specified."));
                 return;
             }
 
             // If no broker url specified
             if (getBrokerUrl() == null) {
-                GlobalWriter.printException(new IllegalStateException("No broker url specified. Use the --amqurl option to specify a broker url."));
+                context.printException(new IllegalStateException("No broker url specified. Use the --amqurl option to specify a broker url."));
                 return;
             }
 
@@ -124,11 +123,11 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
                 }
 
                 // Display the messages
-                GlobalWriter.printMessage(AmqMessagesUtil.filterMessagesView(addMsgs, groupViews, queryViews));
+                context.printMessage(AmqMessagesUtil.filterMessagesView(addMsgs, groupViews, queryViews));
             }
 
         } catch (Exception e) {
-            GlobalWriter.printException(new RuntimeException("Failed to execute browse task. Reason: " + e));
+            context.printException(new RuntimeException("Failed to execute browse task. Reason: " + e));
             throw new Exception(e);
         }
     }
@@ -148,7 +147,7 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
             // If no message selector is specified, or next token is a new
             // option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
-                GlobalWriter.printException(new IllegalArgumentException("Message selector not specified"));
+                context.printException(new IllegalArgumentException("Message selector not specified"));
                 return;
             }
 
@@ -162,7 +161,7 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
             // If no message selector is specified, or next token is a new
             // option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
-                GlobalWriter.printException(new IllegalArgumentException("Message selector not specified"));
+                context.printException(new IllegalArgumentException("Message selector not specified"));
                 return;
             }
 
@@ -176,7 +175,7 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
 
             // If no view specified, or next token is a new option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
-                GlobalWriter.printException(new IllegalArgumentException("Attributes to view not specified"));
+                context.printException(new IllegalArgumentException("Attributes to view not specified"));
                 return;
             }
 
@@ -223,7 +222,7 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
 
                 // Unknown group view
             } else {
-                GlobalWriter.printInfo("Unknown group view: " + viewGroup + ". Ignoring group view option.");
+                context.printInfo("Unknown group view: " + viewGroup + ". Ignoring group view option.");
             }
         } else {
             // Let super class handle unknown option
@@ -235,7 +234,7 @@ public class AmqBrowseCommand extends AbstractAmqCommand {
      * Print the help messages for the browse command
      */
     protected void printHelp() {
-        GlobalWriter.printHelp(helpFile);
+        context.printHelp(helpFile);
     }
 
 }

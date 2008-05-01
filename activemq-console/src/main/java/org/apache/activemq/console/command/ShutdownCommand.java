@@ -26,7 +26,6 @@ import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import javax.management.remote.JMXServiceURL;
 
-import org.apache.activemq.console.formatter.GlobalWriter;
 import org.apache.activemq.console.util.JmxMBeansUtil;
 
 public class ShutdownCommand extends AbstractJmxCommand {
@@ -70,12 +69,12 @@ public class ShutdownCommand extends AbstractJmxCommand {
 
                 // If there is no broker to stop
                 if (mbeans.isEmpty()) {
-                    GlobalWriter.printInfo("There are no brokers to stop.");
+                    context.printInfo("There are no brokers to stop.");
                     return;
 
                     // There should only be one broker to stop
                 } else if (mbeans.size() > 1) {
-                    GlobalWriter.printInfo("There are multiple brokers to stop. Please select the broker(s) to stop or use --all to stop all brokers.");
+                    context.printInfo("There are multiple brokers to stop. Please select the broker(s) to stop or use --all to stop all brokers.");
                     return;
 
                     // Get the first broker only
@@ -92,7 +91,7 @@ public class ShutdownCommand extends AbstractJmxCommand {
                     brokerName = (String)brokerNames.remove(0);
                     Collection matchedBrokers = JmxMBeansUtil.getBrokersByName(useJmxServiceUrl(), brokerName);
                     if (matchedBrokers.isEmpty()) {
-                        GlobalWriter.printInfo(brokerName + " did not match any running brokers.");
+                        context.printInfo(brokerName + " did not match any running brokers.");
                     } else {
                         mbeans.addAll(matchedBrokers);
                     }
@@ -102,7 +101,7 @@ public class ShutdownCommand extends AbstractJmxCommand {
             // Stop all brokers in set
             stopBrokers(useJmxServiceUrl(), mbeans);
         } catch (Exception e) {
-            GlobalWriter.printException(new RuntimeException("Failed to execute stop task. Reason: " + e));
+            context.printException(new RuntimeException("Failed to execute stop task. Reason: " + e));
             throw new Exception(e);
         }
     }
@@ -122,7 +121,7 @@ public class ShutdownCommand extends AbstractJmxCommand {
             brokerObjName = ((ObjectInstance)i.next()).getObjectName();
 
             String brokerName = brokerObjName.getKeyProperty("BrokerName");
-            GlobalWriter.print("Stopping broker: " + brokerName);
+            context.print("Stopping broker: " + brokerName);
 
             try {
                 server.invoke(brokerObjName, "terminateJVM", new Object[] {
@@ -130,7 +129,7 @@ public class ShutdownCommand extends AbstractJmxCommand {
                 }, new String[] {
                     "int"
                 });
-                GlobalWriter.print("Succesfully stopped broker: " + brokerName);
+                context.print("Succesfully stopped broker: " + brokerName);
             } catch (Exception e) {
                 // TODO: Check exceptions throwned
                 // System.out.println("Failed to stop broker: [ " + brokerName +
@@ -162,7 +161,7 @@ public class ShutdownCommand extends AbstractJmxCommand {
      * Print the help messages for the browse command
      */
     protected void printHelp() {
-        GlobalWriter.printHelp(helpFile);
+        context.printHelp(helpFile);
     }
 
 }

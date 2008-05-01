@@ -25,7 +25,6 @@ import java.util.List;
 
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.console.formatter.GlobalWriter;
 
 public class StartCommand extends AbstractCommand {
 
@@ -84,7 +83,7 @@ public class StartCommand extends AbstractCommand {
                     try {
                         setConfigUri(new URI(strConfigURI));
                     } catch (URISyntaxException e) {
-                        GlobalWriter.printException(e);
+                        context.printException(e);
                         return;
                     }
 
@@ -96,7 +95,7 @@ public class StartCommand extends AbstractCommand {
             // elsewhere
             waitForShutdown();
         } catch (Exception e) {
-            GlobalWriter.printException(new RuntimeException("Failed to execute start task. Reason: " + e, e));
+            context.printException(new RuntimeException("Failed to execute start task. Reason: " + e, e));
             throw new Exception(e);
         }
     }
@@ -171,7 +170,7 @@ public class StartCommand extends AbstractCommand {
      * Print the help messages for the browse command
      */
     protected void printHelp() {
-        GlobalWriter.printHelp(helpFile);
+        context.printHelp(helpFile);
     }
 
 }

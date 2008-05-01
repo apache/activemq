@@ -25,7 +25,6 @@ import java.util.StringTokenizer;
 
 import javax.management.ObjectInstance;
 
-import org.apache.activemq.console.formatter.GlobalWriter;
 import org.apache.activemq.console.util.AmqMessagesUtil;
 import org.apache.activemq.console.util.JmxMBeansUtil;
 
@@ -95,11 +94,11 @@ public class BrowseCommand extends AbstractJmxCommand {
                 // Iterate through the queue result
                 for (Iterator j = queueList.iterator(); j.hasNext();) {
                     List messages = JmxMBeansUtil.createMessageQueryFilter(useJmxServiceUrl(), ((ObjectInstance)j.next()).getObjectName()).query(queryAddObjects);
-                    GlobalWriter.printMessage(JmxMBeansUtil.filterMessagesView(messages, groupViews, queryViews));
+                    context.printMessage(JmxMBeansUtil.filterMessagesView(messages, groupViews, queryViews));
                 }
             }
         } catch (Exception e) {
-            GlobalWriter.printException(new RuntimeException("Failed to execute browse task. Reason: " + e));
+            context.printException(new RuntimeException("Failed to execute browse task. Reason: " + e));
             throw new Exception(e);
         }
     }
@@ -119,7 +118,7 @@ public class BrowseCommand extends AbstractJmxCommand {
             // If no message selector is specified, or next token is a new
             // option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
-                GlobalWriter.printException(new IllegalArgumentException("Message selector not specified"));
+                context.printException(new IllegalArgumentException("Message selector not specified"));
                 return;
             }
 
@@ -133,7 +132,7 @@ public class BrowseCommand extends AbstractJmxCommand {
             // If no message selector is specified, or next token is a new
             // option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
-                GlobalWriter.printException(new IllegalArgumentException("Message selector not specified"));
+                context.printException(new IllegalArgumentException("Message selector not specified"));
                 return;
             }
 
@@ -147,7 +146,7 @@ public class BrowseCommand extends AbstractJmxCommand {
 
             // If no view specified, or next token is a new option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
-                GlobalWriter.printException(new IllegalArgumentException("Attributes to view not specified"));
+                context.printException(new IllegalArgumentException("Attributes to view not specified"));
                 return;
             }
 
@@ -194,7 +193,7 @@ public class BrowseCommand extends AbstractJmxCommand {
 
                 // Unknown group view
             } else {
-                GlobalWriter.printInfo("Unknown group view: " + viewGroup + ". Ignoring group view option.");
+                context.printInfo("Unknown group view: " + viewGroup + ". Ignoring group view option.");
             }
         } else {
             // Let super class handle unknown option
@@ -206,7 +205,7 @@ public class BrowseCommand extends AbstractJmxCommand {
      * Print the help messages for the browse command
      */
     protected void printHelp() {
-        GlobalWriter.printHelp(helpFile);
+        context.printHelp(helpFile);
     }
 
 }

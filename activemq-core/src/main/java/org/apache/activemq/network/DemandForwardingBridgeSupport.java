@@ -282,8 +282,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                     brokerInfo.setDuplexConnection(configuration.isDuplex());
                     // set our properties
                     Properties props = new Properties();
-                    IntrospectionSupport.getProperties(this, props, null);
-                    props.setProperty("networkTTL", String.valueOf(configuration.getNetworkTTL()));
+                    IntrospectionSupport.getProperties(configuration, props, null);
                     String str = MarshallingSupport.propertiesToString(props);
                     brokerInfo.setNetworkProperties(str);
                     remoteBroker.oneway(brokerInfo);

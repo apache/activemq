@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.console.formatter;
+package org.apache.activemq.console;
 
 import java.io.OutputStream;
 import java.util.Collection;
@@ -25,30 +25,17 @@ import javax.management.AttributeList;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 
-public final class GlobalWriter {
-    private static OutputFormatter formatter;
+import org.apache.activemq.console.formatter.OutputFormatter;
 
-    /**
-     * Creates a singleton global writer
-     */
-    private GlobalWriter() {
-    }
-
-    /**
-     * Maintains a global output formatter
-     * 
-     * @param formatter - the output formatter to use
-     */
-    public static void instantiate(OutputFormatter formatter) {
-        GlobalWriter.formatter = formatter;
-    }
+public final class CommandContext {
+    private OutputFormatter formatter;
 
     /**
      * Retrieve the output stream being used by the global formatter
      * 
      * @return
      */
-    public static OutputStream getOutputStream() {
+    public OutputStream getOutputStream() {
         if (formatter == null) {
             throw new IllegalStateException("No OutputFormatter specified. Use GlobalWriter.instantiate(OutputFormatter).");
         }
@@ -60,7 +47,7 @@ public final class GlobalWriter {
      * 
      * @param mbean - mbean to print
      */
-    public static void printMBean(ObjectInstance mbean) {
+    public void printMBean(ObjectInstance mbean) {
         if (formatter == null) {
             throw new IllegalStateException("No OutputFormatter specified. Use GlobalWriter.instantiate(OutputFormatter).");
         }
@@ -72,7 +59,7 @@ public final class GlobalWriter {
      * 
      * @param mbean - mbean to print
      */
-    public static void printMBean(ObjectName mbean) {
+    public void printMBean(ObjectName mbean) {
         if (formatter == null) {
             throw new IllegalStateException("No OutputFormatter specified. Use GlobalWriter.instantiate(OutputFormatter).");
         }
@@ -84,7 +71,7 @@ public final class GlobalWriter {
      * 
      * @param mbean - mbean to print
      */
-    public static void printMBean(AttributeList mbean) {
+    public void printMBean(AttributeList mbean) {
         if (formatter == null) {
             throw new IllegalStateException("No OutputFormatter specified. Use GlobalWriter.instantiate(OutputFormatter).");
         }
@@ -96,7 +83,7 @@ public final class GlobalWriter {
      * 
      * @param mbean
      */
-    public static void printMBean(Map mbean) {
+    public void printMBean(Map mbean) {
         if (formatter == null) {
             throw new IllegalStateException("No OutputFormatter specified. Use GlobalWriter.instantiate(OutputFormatter).");
         }
@@ -108,7 +95,7 @@ public final class GlobalWriter {
      * 
      * @param mbean - collection of mbeans
      */
-    public static void printMBean(Collection mbean) {
+    public void printMBean(Collection mbean) {
         if (formatter == null) {
             throw new IllegalStateException("No OutputFormatter specified. Use GlobalWriter.instantiate(OutputFormatter).");
         }
@@ -120,7 +107,7 @@ public final class GlobalWriter {
      * 
      * @param msg
      */
-    public static void printMessage(Map msg) {
+    public void printMessage(Map msg) {
         if (formatter == null) {
             throw new IllegalStateException("No OutputFormatter specified. Use GlobalWriter.instantiate(OutputFormatter).");
         }
@@ -132,7 +119,7 @@ public final class GlobalWriter {
      * 
      * @param msg - JMS message to print
      */
-    public static void printMessage(Message msg) {
+    public void printMessage(Message msg) {
         if (formatter == null) {
             throw new IllegalStateException("No OutputFormatter specified. Use GlobalWriter.instantiate(OutputFormatter).");
         }
@@ -144,7 +131,7 @@ public final class GlobalWriter {
      * 
      * @param msg - collection of JMS messages
      */
-    public static void printMessage(Collection msg) {
+    public void printMessage(Collection msg) {
         if (formatter == null) {
             throw new IllegalStateException("No OutputFormatter specified. Use GlobalWriter.instantiate(OutputFormatter).");
         }
@@ -156,7 +143,7 @@ public final class GlobalWriter {
      * 
      * @param helpMsgs - help messages to print
      */
-    public static void printHelp(String[] helpMsgs) {
+    public void printHelp(String[] helpMsgs) {
         if (formatter == null) {
             throw new IllegalStateException("No OutputFormatter specified. Use GlobalWriter.instantiate(OutputFormatter).");
         }
@@ -168,7 +155,7 @@ public final class GlobalWriter {
      * 
      * @param info - information message to print
      */
-    public static void printInfo(String info) {
+    public void printInfo(String info) {
         if (formatter == null) {
             throw new IllegalStateException("No OutputFormatter specified. Use GlobalWriter.instantiate(OutputFormatter).");
         }
@@ -180,7 +167,7 @@ public final class GlobalWriter {
      * 
      * @param e - exception to print
      */
-    public static void printException(Exception e) {
+    public void printException(Exception e) {
         if (formatter == null) {
             throw new IllegalStateException("No OutputFormatter specified. Use GlobalWriter.instantiate(OutputFormatter).");
         }
@@ -192,7 +179,7 @@ public final class GlobalWriter {
      * 
      * @param version - version info to print
      */
-    public static void printVersion(String version) {
+    public void printVersion(String version) {
         if (formatter == null) {
             throw new IllegalStateException("No OutputFormatter specified. Use GlobalWriter.instantiate(OutputFormatter).");
         }
@@ -204,7 +191,7 @@ public final class GlobalWriter {
      * 
      * @param map to print
      */
-    public static void print(Map map) {
+    public void print(Map map) {
         if (formatter == null) {
             throw new IllegalStateException("No OutputFormatter specified. Use GlobalWriter.instantiate(OutputFormatter).");
         }
@@ -216,7 +203,7 @@ public final class GlobalWriter {
      * 
      * @param strings - string array to print
      */
-    public static void print(String[] strings) {
+    public void print(String[] strings) {
         if (formatter == null) {
             throw new IllegalStateException("No OutputFormatter specified. Use GlobalWriter.instantiate(OutputFormatter).");
         }
@@ -228,7 +215,7 @@ public final class GlobalWriter {
      * 
      * @param collection - collection to print
      */
-    public static void print(Collection collection) {
+    public void print(Collection collection) {
         if (formatter == null) {
             throw new IllegalStateException("No OutputFormatter specified. Use GlobalWriter.instantiate(OutputFormatter).");
         }
@@ -240,10 +227,18 @@ public final class GlobalWriter {
      * 
      * @param string - string to print
      */
-    public static void print(String string) {
+    public void print(String string) {
         if (formatter == null) {
             throw new IllegalStateException("No OutputFormatter specified. Use GlobalWriter.instantiate(OutputFormatter).");
         }
         formatter.print(string);
+    }
+
+    public OutputFormatter getFormatter() {
+        return formatter;
+    }
+
+    public void setFormatter(OutputFormatter formatter) {
+        this.formatter = formatter;
     }
 }
