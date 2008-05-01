@@ -59,7 +59,7 @@ public final class IntrospectionSupport {
             String name = method.getName();
             Class type = method.getReturnType();
             Class params[] = method.getParameterTypes();
-            if (name.startsWith("get") && params.length == 0 && type != null && isSettableType(type)) {
+            if ((name.startsWith("is") || name.startsWith("get")) && params.length == 0 && type != null && isSettableType(type)) {
 
                 try {
 
@@ -72,8 +72,13 @@ public final class IntrospectionSupport {
                     if (strValue == null) {
                         continue;
                     }
-
-                    name = name.substring(3, 4).toLowerCase() + name.substring(4);
+                    if (name.startsWith("get")) {
+                        name = name.substring(3, 4).toLowerCase()
+                                + name.substring(4);
+                    } else {
+                        name = name.substring(2, 3).toLowerCase()
+                                + name.substring(3);
+                    }
                     props.put(optionPrefix + name, strValue);
                     rc = true;
 
