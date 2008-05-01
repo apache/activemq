@@ -25,7 +25,7 @@ import javax.management.AttributeList;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 
-interface OutputFormatter {
+public interface OutputFormatter {
 
     /**
      * Retrieve the output stream being used by the formatter
