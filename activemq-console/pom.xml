@@ -26,9 +26,21 @@
   </parent>
 
   <artifactId>activemq-console</artifactId>
+  <packaging>bundle</packaging>
   <name>ActiveMQ :: Console</name>
   <description>ActiveMQ Management Console</description>
 
+  <properties>
+    <activemq.osgi.import.pkg>
+      org.apache.activemq*;resolution:=optional,
+      org.springframework*;resolution:=optional,
+      *
+    </activemq.osgi.import.pkg>
+    <activemq.osgi.export>
+      org.apache.activemq.console*;version=${project.version},
+    </activemq.osgi.export>
+  </properties>
+  
   <dependencies>
     <!-- activemq related dependencies -->
     <dependency>

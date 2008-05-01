@@ -38,7 +38,6 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQObjectMessage;
 import org.apache.activemq.command.ActiveMQStreamMessage;
 import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.activemq.console.formatter.GlobalWriter;
 import org.apache.activemq.console.util.AmqMessagesUtil;
 
 public class MapTransformFilter extends ResultTransformFilter {
@@ -68,7 +67,7 @@ public class MapTransformFilter extends ResultTransformFilter {
                 object
             });
         } catch (NoSuchMethodException e) {
-            GlobalWriter.print("Unable to transform mbean of type: " + object.getClass().getName() + ". No corresponding transformToMap method found.");
+//            CommandContext.print("Unable to transform mbean of type: " + object.getClass().getName() + ". No corresponding transformToMap method found.");
             return null;
         }
     }

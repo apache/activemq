@@ -19,7 +19,7 @@ package org.apache.activemq.console.command;
 import java.util.List;
 
 import org.apache.activemq.ActiveMQConnectionMetaData;
-import org.apache.activemq.console.formatter.GlobalWriter;
+import org.apache.activemq.console.CommandContext;
 
 public abstract class AbstractCommand implements Command {
     public static final String COMMAND_OPTION_DELIMETER = ",";
@@ -27,6 +27,12 @@ public abstract class AbstractCommand implements Command {
     private boolean isPrintHelp;
     private boolean isPrintVersion;
 
+    protected CommandContext context;
+
+    public void setCommandContext(CommandContext context) {
+        this.context = context;
+    }
+    
     /**
      * Execute a generic command, which includes parsing the options for the
      * command and running the specific task.
@@ -44,7 +50,7 @@ public abstract class AbstractCommand implements Command {
 
             // Print the AMQ version
         } else if (isPrintVersion) {
-            GlobalWriter.printVersion(ActiveMQConnectionMetaData.PROVIDER_VERSION);
+            context.printVersion(ActiveMQConnectionMetaData.PROVIDER_VERSION);
 
             // Run the specified task
         } else {
@@ -103,7 +109,7 @@ public abstract class AbstractCommand implements Command {
             System.setProperty(key, value);
         } else {
             // Token is unrecognized
-            GlobalWriter.printInfo("Unrecognized option: " + token);
+            context.printInfo("Unrecognized option: " + token);
             isPrintHelp = true;
         }
     }

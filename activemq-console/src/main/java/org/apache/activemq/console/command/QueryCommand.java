@@ -24,7 +24,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import org.apache.activemq.console.formatter.GlobalWriter;
 import org.apache.activemq.console.util.JmxMBeansUtil;
 
 public class QueryCommand extends AbstractJmxCommand {
@@ -112,10 +111,10 @@ public class QueryCommand extends AbstractJmxCommand {
                 addMBeans.removeAll(subMBeans);
             }
 
-            GlobalWriter.printMBean(JmxMBeansUtil.filterMBeansView(addMBeans, queryViews));
+            context.printMBean(JmxMBeansUtil.filterMBeansView(addMBeans, queryViews));
 
         } catch (Exception e) {
-            GlobalWriter.printException(new RuntimeException("Failed to execute query task. Reason: " + e));
+            context.printException(new RuntimeException("Failed to execute query task. Reason: " + e));
             throw new Exception(e);
         }
     }
@@ -141,7 +140,7 @@ public class QueryCommand extends AbstractJmxCommand {
             // If additive query
             String predefQuery = PREDEFINED_OBJNAME_QUERY.getProperty(key);
             if (predefQuery == null) {
-                GlobalWriter.printException(new IllegalArgumentException("Unknown query object type: " + key));
+                context.printException(new IllegalArgumentException("Unknown query object type: " + key));
                 return;
             }
             String queryStr = JmxMBeansUtil.createQueryString(predefQuery, value);
@@ -162,7 +161,7 @@ public class QueryCommand extends AbstractJmxCommand {
             // If subtractive query
             String predefQuery = PREDEFINED_OBJNAME_QUERY.getProperty(key);
             if (predefQuery == null) {
-                GlobalWriter.printException(new IllegalArgumentException("Unknown query object type: " + key));
+                context.printException(new IllegalArgumentException("Unknown query object type: " + key));
                 return;
             }
             String queryStr = JmxMBeansUtil.createQueryString(predefQuery, value);
@@ -176,7 +175,7 @@ public class QueryCommand extends AbstractJmxCommand {
             // If no object name query is specified, or next token is a new
             // option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
-                GlobalWriter.printException(new IllegalArgumentException("Object name query not specified"));
+                context.printException(new IllegalArgumentException("Object name query not specified"));
                 return;
             }
 
@@ -190,7 +189,7 @@ public class QueryCommand extends AbstractJmxCommand {
             // If no object name query is specified, or next token is a new
             // option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
-                GlobalWriter.printException(new IllegalArgumentException("Object name query not specified"));
+                context.printException(new IllegalArgumentException("Object name query not specified"));
                 return;
             }
 
@@ -203,7 +202,7 @@ public class QueryCommand extends AbstractJmxCommand {
 
             // If no view specified, or next token is a new option
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
-                GlobalWriter.printException(new IllegalArgumentException("Attributes to view not specified"));
+                context.printException(new IllegalArgumentException("Attributes to view not specified"));
                 return;
             }
 
@@ -222,7 +221,7 @@ public class QueryCommand extends AbstractJmxCommand {
      * Print the help messages for the browse command
      */
     protected void printHelp() {
-        GlobalWriter.printHelp(helpFile);
+        context.printHelp(helpFile);
     }
 
 }
