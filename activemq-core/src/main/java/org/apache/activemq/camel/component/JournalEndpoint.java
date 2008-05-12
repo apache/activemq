@@ -58,6 +58,11 @@ public class JournalEndpoint extends DefaultEndpoint<Exchange> {
         this.directory = directory;
     }
 
+    public JournalEndpoint(String endpointUri, File directory) {
+        super(endpointUri);
+        this.directory = directory;
+    }
+
     public boolean isSingleton() {
         return true;
     }
