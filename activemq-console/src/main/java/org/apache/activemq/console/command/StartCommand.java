@@ -22,6 +22,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -93,11 +94,14 @@ public class StartCommand extends AbstractCommand {
 
             // Prevent the main thread from exiting unless it is terminated
             // elsewhere
-            waitForShutdown();
         } catch (Exception e) {
             context.printException(new RuntimeException("Failed to execute start task. Reason: " + e, e));
             throw new Exception(e);
         }
+        
+        // The broker start up fine.  If this unblocks it's cause they were stopped
+        // and this would occur because of an internal error (like the DB going offline)
+        waitForShutdown();
     }
 
     /**
@@ -122,14 +126,33 @@ public class StartCommand extends AbstractCommand {
         final boolean[] shutdown = new boolean[] {
             false
         };
+        
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
-                synchronized (shutdown) {
-                    shutdown[0] = true;
-                    shutdown.notify();
+                for (Iterator<BrokerService> i = brokers.iterator(); i.hasNext();) {
+                    try {
+                        BrokerService broker = i.next();
+                        broker.stop();
+                    } catch (Exception e) {
+                    }
                 }
             }
         });
+        
+        final AtomicInteger brokerCounter = new AtomicInteger(brokers.size());
+        for (BrokerService bs : brokers) {
+            bs.addShutdownHook(new Runnable() {
+                public void run() {
+                    // When the last broker lets us know he is closed....
+                    if( brokerCounter.decrementAndGet() == 0 ) {
+                        synchronized (shutdown) {
+                            shutdown[0] = true;
+                            shutdown.notify();
+                        }
+                    }
+                }
+            });
+        }
 
         // Wait for any shutdown event
         synchronized (shutdown) {
@@ -141,11 +164,6 @@ public class StartCommand extends AbstractCommand {
             }
         }
 
-        // Stop each broker
-        for (Iterator<BrokerService> i = brokers.iterator(); i.hasNext();) {
-            BrokerService broker = i.next();
-            broker.stop();
-        }
     }
 
     /**

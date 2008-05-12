@@ -473,7 +473,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         try {
             brokerService.stop();
         } catch (Exception e) {
-            LOG.warn("Failed to stop broker");
+            LOG.warn("Failure occured while stopping broker");
         }
     }
 

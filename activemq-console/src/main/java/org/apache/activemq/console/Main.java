@@ -104,6 +104,7 @@ public class Main {
 
         try {
             app.runTaskClass(tokens);
+            System.exit(0);
         } catch (ClassNotFoundException e) {
             System.out.println("Could not load class: " + e.getMessage());
             try {
@@ -114,8 +115,10 @@ public class Main {
                 }
             } catch (MalformedURLException e1) {
             }
+            System.exit(1);
         } catch (Throwable e) {
             System.out.println("Failed to execute main task. Reason: " + e);
+            System.exit(1);
         }
     }
 

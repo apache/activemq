@@ -170,8 +170,10 @@ public class BrokerService implements Service {
     private boolean dedicatedTaskRunner;
     private boolean cacheTempDestinations=false;//useful for failover
     private int timeBeforePurgeTempDestinations = 5000;
-   
-
+    private List<Runnable> shutdownHooks= new ArrayList<Runnable>();
+    private boolean systemExitOnShutdown;
+    private int systemExitOnShutdownExitCode;    
+    
     static {
         String localHostName = "localhost";
         try {
@@ -425,6 +427,15 @@ public class BrokerService implements Service {
         }
 
         try {
+            
+            if( systemExitOnShutdown ) {
+                addShutdownHook(new Runnable(){
+                    public void run() {
+                        System.exit(systemExitOnShutdownExitCode);
+                    }
+                });
+            }
+            
             processHelperProperties();
 
             BrokerRegistry.getInstance().bind(getBrokerName(), this);
@@ -510,6 +521,15 @@ public class BrokerService implements Service {
         stopped.set(true);
         stoppedLatch.countDown();
         LOG.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ", " + brokerId + ") stopped");
+        synchronized(shutdownHooks) {
+            for (Runnable hook : shutdownHooks) {
+                try {
+                    hook.run();
+                } catch ( Throwable e ) {
+                    stopper.onException(hook, e);
+                }
+            }
+        }
         stopper.throwFirstException();
     }
 
@@ -1912,4 +1932,25 @@ public class BrokerService implements Service {
         this.regionBroker = regionBroker;
     }
 
+    
+    public void addShutdownHook(Runnable hook) {
+        synchronized(shutdownHooks) {
+            shutdownHooks.add(hook);
+        }
+    }
+    
+    public void removeShutdownHook(Runnable hook) {
+        synchronized(shutdownHooks) {
+            shutdownHooks.remove(hook);
+        }
+    }
+
+    public boolean isSystemExitOnShutdown() {
+        return systemExitOnShutdown;
+    }
+
+    public void setSystemExitOnShutdown(boolean systemExitOnShutdown) {
+        this.systemExitOnShutdown = systemExitOnShutdown;
+    }
+    
 }

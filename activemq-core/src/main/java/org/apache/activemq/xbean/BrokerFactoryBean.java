@@ -51,6 +51,9 @@ public class BrokerFactoryBean implements FactoryBean, InitializingBean, Disposa
     private boolean start;
     private ResourceXmlApplicationContext context;
     private ApplicationContext parentContext;
+    
+    private boolean systemExitOnShutdown;
+    private int systemExitOnShutdownExitCode;
 
     public BrokerFactoryBean() {
     }
@@ -101,6 +104,14 @@ public class BrokerFactoryBean implements FactoryBean, InitializingBean, Disposa
         if (broker == null) {
             throw new IllegalArgumentException("The configuration has no BrokerService instance for resource: " + config);
         }
+        
+        if( systemExitOnShutdown ) {
+            broker.addShutdownHook(new Runnable(){
+                public void run() {
+                    System.exit(systemExitOnShutdownExitCode);
+                }
+            });
+        }
         if (start) {
             broker.start();
         }
@@ -133,6 +144,30 @@ public class BrokerFactoryBean implements FactoryBean, InitializingBean, Disposa
 
     public void setStart(boolean start) {
         this.start = start;
+    }
+
+    public boolean isSystemExitOnStop() {
+        return systemExitOnShutdown;
+    }
+
+    public void setSystemExitOnStop(boolean systemExitOnStop) {
+        this.systemExitOnShutdown = systemExitOnStop;
+    }
+
+    public boolean isSystemExitOnShutdown() {
+        return systemExitOnShutdown;
+    }
+
+    public void setSystemExitOnShutdown(boolean systemExitOnShutdown) {
+        this.systemExitOnShutdown = systemExitOnShutdown;
+    }
+
+    public int getSystemExitOnShutdownExitCode() {
+        return systemExitOnShutdownExitCode;
+    }
+
+    public void setSystemExitOnShutdownExitCode(int systemExitOnShutdownExitCode) {
+        this.systemExitOnShutdownExitCode = systemExitOnShutdownExitCode;
     }
 
 }
