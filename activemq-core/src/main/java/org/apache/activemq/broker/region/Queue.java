@@ -957,7 +957,7 @@ public class Queue extends BaseDestination implements Task {
 	               
 	            } catch (Throwable e) {
 	                LOG.error("Failed to page in more queue messages ", e);
-	            }
+                }
 	        }
 	        synchronized(messagesWaitingForSpace) {
 	               while (!messagesWaitingForSpace.isEmpty() && !memoryUsage.isFull()) {
@@ -1122,50 +1122,54 @@ public class Queue extends BaseDestination implements Task {
     private void doDispatch(List<QueueMessageReference> list) throws Exception {
         if (list != null) {
             List<Subscription> consumers;
-            synchronized (this.consumers) {
-                consumers = new ArrayList<Subscription>(this.consumers);
-            }
+            dispatchLock.lock();
+            try {
+                synchronized (this.consumers) {
+                    consumers = new ArrayList<Subscription>(this.consumers);
+                }
             
-            for (MessageReference node : list) {
-                Subscription target = null;
-                List<Subscription> targets = null;
-                for (Subscription s : consumers) {
-                    if (dispatchSelector.canSelect(s, node)) {
-                        if (!s.isFull()) {
-                            s.add(node);
-                            target = s;
-                            break;
-                        } else {
-                            if (targets == null) {
-                                targets = new ArrayList<Subscription>();
+            
+                for (MessageReference node : list) {
+                    Subscription target = null;
+                    List<Subscription> targets = null;
+                    for (Subscription s : consumers) {
+                        if (dispatchSelector.canSelect(s, node)) {
+                            if (!s.isFull()) {
+                                s.add(node);
+                                target = s;
+                                break;
+                            } else {
+                                if (targets == null) {
+                                    targets = new ArrayList<Subscription>();
+                                }
+                                targets.add(s);
                             }
-                            targets.add(s);
+                        }
+                    }
+                    if (target == null && targets != null) {
+                        // pick the least loaded to add the message too
+                        for (Subscription s : targets) {
+                            if (target == null
+                                    || target.getInFlightUsage() > s.getInFlightUsage()) {
+                                target = s;
+                            }
+                        }
+                        if (target != null) {
+                            target.add(node);
+                        }
+                    }
+                    if (target != null && !strictOrderDispatch && consumers.size() > 1 &&
+                            !dispatchSelector.isExclusiveConsumer(target)) {
+                        synchronized (this.consumers) {
+                            if( removeFromConsumerList(target) ) {
+                                addToConsumerList(target);
+                                consumers = new ArrayList<Subscription>(this.consumers);
+                            }
                         }
                     }
                 }
-                if (target == null && targets != null) {
-                    // pick the least loaded to add the message too
-                    for (Subscription s : targets) {
-                        if (target == null
-                                || target.getInFlightUsage() > s
-                                        .getInFlightUsage()) {
-                            target = s;
-                        }
-                    }
-                    if (target != null) {
-                        target.add(node);
-                    }
-                }
-                if (target != null && !strictOrderDispatch && consumers.size() > 1 &&
-                         !dispatchSelector.isExclusiveConsumer(target)) {
-                    synchronized (this.consumers) {
-                        if( removeFromConsumerList(target) ) {
-                            addToConsumerList(target);
-                            consumers = new ArrayList<Subscription>(this.consumers);
-                        }
-                    }
-                }
-
+            } finally {
+                dispatchLock.unlock();
             }
         }
     }
