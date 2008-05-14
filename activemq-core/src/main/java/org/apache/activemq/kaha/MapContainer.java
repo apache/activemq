@@ -260,6 +260,17 @@ public interface MapContainer<K, V> extends Map<K, V> {
     int getIndexPageSize();
     
     /**
+     * set the meximum bin size
+     */
+    void setMaxBinSize(int size);
+    
+    /**
+     * @return the maximum bin size
+     * @return
+     */
+    int getMaxBinSize();
+    
+    /**
      * @return the Index MBean
      */
     IndexMBean getIndexMBean();

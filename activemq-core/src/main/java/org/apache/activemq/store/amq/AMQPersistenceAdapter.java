@@ -118,6 +118,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private int indexBinSize = HashIndex.DEFAULT_BIN_SIZE;
     private int indexKeySize = HashIndex.DEFAULT_KEY_SIZE;
     private int indexPageSize = HashIndex.DEFAULT_PAGE_SIZE;
+    private int maxBinSize = HashIndex.MAXIMUM_CAPACITY;
     private int maxReferenceFileLength=AsyncDataManager.DEFAULT_MAX_FILE_LENGTH;
     private Map<AMQMessageStore,Set<Integer>> dataFilesInProgress = new ConcurrentHashMap<AMQMessageStore,Set<Integer>> ();
     private String directoryPath = "";
@@ -685,6 +686,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         adaptor.setIndexBinSize(getIndexBinSize());
         adaptor.setIndexKeySize(getIndexKeySize());
         adaptor.setIndexPageSize(getIndexPageSize());
+        adaptor.setMaxBinSize(getMaxBinSize());
         return adaptor;
     }
 
@@ -832,6 +834,14 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 
     public int getIndexPageSize() {
         return indexPageSize;
+    }
+    
+    public int getMaxBinSize() {
+        return maxBinSize;
+    }
+
+    public void setMaxBinSize(int maxBinSize) {
+        this.maxBinSize = maxBinSize;
     }
 
     /**

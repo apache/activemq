@@ -42,6 +42,11 @@ public class HashIndex implements Index, HashIndexMBean {
     public static final int DEFAULT_PAGE_SIZE;
     public static final int DEFAULT_KEY_SIZE;
     public static final int DEFAULT_BIN_SIZE;
+    public static final int MAXIMUM_CAPACITY = 16384;
+    /**
+     * The load factor used when none specified in constructor.
+     **/
+    static final float DEFAULT_LOAD_FACTOR;
     private static final String NAME_PREFIX = "hash-index-";
     private static final Log LOG = LogFactory.getLog(HashIndex.class);
     private final String name;
@@ -66,6 +71,9 @@ public class HashIndex implements Index, HashIndexMBean {
     private int pageCacheSize = 10;
     private int size;
     private int activeBins;
+    private int threshold;
+    private int maximumCapacity=MAXIMUM_CAPACITY;
+    private float loadFactor=0.75f;
     
     
     /**
@@ -178,6 +186,48 @@ public class HashIndex implements Index, HashIndexMBean {
         return false;
     }
     
+    /**
+     * @return the threshold
+     */
+    public int getThreshold() {
+        return threshold;
+    }
+
+    /**
+     * @param threshold the threshold to set
+     */
+    public void setThreshold(int threshold) {
+        this.threshold = threshold;
+    }
+
+    /**
+     * @return the loadFactor
+     */
+    public float getLoadFactor() {
+        return loadFactor;
+    }
+
+    /**
+     * @param loadFactor the loadFactor to set
+     */
+    public void setLoadFactor(float loadFactor) {
+        this.loadFactor = loadFactor;
+    }
+    
+    /**
+     * @return the maximumCapacity
+     */
+    public int getMaximumCapacity() {
+        return maximumCapacity;
+    }
+
+    /**
+     * @param maximumCapacity the maximumCapacity to set
+     */
+    public void setMaximumCapacity(int maximumCapacity) {
+        this.maximumCapacity = maximumCapacity;
+    }
+    
     public synchronized int getSize() {
         return size;
     }
@@ -193,6 +243,7 @@ public class HashIndex implements Index, HashIndexMBean {
                 capacity <<= 1;
             }
             this.bins = new HashBin[capacity];
+            threshold = calculateThreashold();
             keysPerPage = pageSize / keySize;
             dataIn = new DataByteArrayInputStream();
             dataOut = new DataByteArrayOutputStream(pageSize);
@@ -228,6 +279,9 @@ public class HashIndex implements Index, HashIndexMBean {
         entry.setIndexOffset(value.getOffset());
         if (!getBin(key).put(entry)) {
             size++;
+        }
+        if (size >= threshold) {
+            resize(2*bins.length);
         }
     }
 
@@ -361,11 +415,18 @@ public class HashIndex implements Index, HashIndexMBean {
     }
 
     void addToBin(HashPage page) throws IOException {
-        HashBin bin = getBin(page.getBinId());
+        int index = page.getBinId();
+        if (index >= numberOfBins) {
+            HashBin[] newBins = new HashBin[index+1];
+            System.arraycopy(this.bins, 0, newBins, 0, this.bins.length);
+            this.bins=newBins;
+        }
+        HashBin bin = getBin(index);
         bin.addHashPageInfo(page.getId(), page.getPersistedSize());
     }
 
     private HashBin getBin(int index) {
+        
         HashBin result = bins[index];
         if (result == null) {
             result = new HashBin(this, index, pageSize / keySize);
@@ -464,6 +525,49 @@ public class HashIndex implements Index, HashIndexMBean {
         doLoad();
     }
     
+    private void resize(int newCapacity) throws IOException {
+        if (bins.length == getMaximumCapacity()) {
+            threshold = Integer.MAX_VALUE;
+            return;
+        }
+        String backFileName = name + "-REISZE";
+        HashIndex backIndex = new HashIndex(directory,backFileName,indexManager);
+        backIndex.setKeyMarshaller(keyMarshaller);
+        backIndex.setKeySize(getKeySize());
+        backIndex.setNumberOfBins(newCapacity);
+        backIndex.setPageSize(getPageSize());
+        backIndex.load();
+        File backFile = backIndex.file;
+        long offset = 0;
+        while ((offset + pageSize) <= indexFile.length()) {
+            indexFile.seek(offset);
+            HashPage page = getFullPage(offset);
+            if (page.isActive()) {
+                for (HashEntry entry : page.getEntries()) {
+                    backIndex.getBin(entry.getKey()).put(entry);
+                    backIndex.size++;
+                }
+            }
+            page=null;
+            offset += pageSize;
+        }
+        backIndex.unload();
+      
+        unload();
+        IOHelper.deleteFile(file);
+        IOHelper.copyFile(backFile, file);
+        IOHelper.deleteFile(backFile);
+        setNumberOfBins(newCapacity);
+        bins = new HashBin[newCapacity];
+        threshold = calculateThreashold();
+        openIndexFile();
+        doLoad();
+    }
+    
+    private int calculateThreashold() {
+        return (int)(bins.length * 100 * loadFactor);
+    }
+    
     
     public String toString() {
         String str = "HashIndex"+System.identityHashCode(this)+": "+file.getName();
@@ -488,5 +592,6 @@ public class HashIndex implements Index, HashIndexMBean {
         DEFAULT_PAGE_SIZE = Integer.parseInt(System.getProperty("defaultPageSize", "16384"));
         DEFAULT_KEY_SIZE = Integer.parseInt(System.getProperty("defaultKeySize", "96"));
         DEFAULT_BIN_SIZE= Integer.parseInt(System.getProperty("defaultBinSize", "1024"));
+        DEFAULT_LOAD_FACTOR=Float.parseFloat(System.getProperty("defaultLoadFactor","1.5f"));
     }
 }
