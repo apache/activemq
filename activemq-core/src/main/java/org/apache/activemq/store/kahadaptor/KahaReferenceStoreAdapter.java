@@ -72,6 +72,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     private int indexBinSize = HashIndex.DEFAULT_BIN_SIZE;
     private int indexKeySize = HashIndex.DEFAULT_KEY_SIZE;
     private int indexPageSize = HashIndex.DEFAULT_PAGE_SIZE;
+    private int maxBinSize = HashIndex.MAXIMUM_CAPACITY;
    
 
     public KahaReferenceStoreAdapter(AtomicLong size){
@@ -203,6 +204,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
         container.setIndexBinSize(getIndexBinSize());
         container.setIndexKeySize(getIndexKeySize());
         container.setIndexPageSize(getIndexPageSize());
+        container.setMaxBinSize(getIndexBinSize());
         container.setKeyMarshaller(new MessageIdMarshaller());
         container.setValueMarshaller(new ReferenceRecordMarshaller());
         container.load();
@@ -360,5 +362,13 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
 
     public void setIndexPageSize(int indexPageSize) {
         this.indexPageSize = indexPageSize;
+    }
+    
+    public int getMaxBinSize() {
+        return maxBinSize;
+    }
+
+    public void setMaxBinSize(int maxBinSize) {
+        this.maxBinSize = maxBinSize;
     }
 }
