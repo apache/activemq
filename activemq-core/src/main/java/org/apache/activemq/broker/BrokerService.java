@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.security.KeyManagementException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -34,6 +36,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.TrustManager;
 
 import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.Service;
@@ -79,6 +83,7 @@ import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.tcp.SslTransportFactory;
 import org.apache.activemq.transport.vm.VMTransportFactory;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -172,7 +177,8 @@ public class BrokerService implements Service {
     private int timeBeforePurgeTempDestinations = 5000;
     private List<Runnable> shutdownHooks= new ArrayList<Runnable>();
     private boolean systemExitOnShutdown;
-    private int systemExitOnShutdownExitCode;    
+    private int systemExitOnShutdownExitCode;
+    private SslContext sslContext = new SslContext();
     
     static {
         String localHostName = "localhost";
@@ -1952,5 +1958,21 @@ public class BrokerService implements Service {
     public void setSystemExitOnShutdown(boolean systemExitOnShutdown) {
         this.systemExitOnShutdown = systemExitOnShutdown;
     }
-    
+
+    public int getSystemExitOnShutdownExitCode() {
+        return systemExitOnShutdownExitCode;
+    }
+
+    public void setSystemExitOnShutdownExitCode(int systemExitOnShutdownExitCode) {
+        this.systemExitOnShutdownExitCode = systemExitOnShutdownExitCode;
+    }
+
+    public SslContext getSslContext() {
+        return sslContext;
+    }
+
+    public void setSslContext(SslContext sslContext) {
+        this.sslContext = sslContext;
+    }
+
 }

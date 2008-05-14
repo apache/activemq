@@ -34,6 +34,9 @@ import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerServiceAware;
+import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.InactivityMonitor;
 import org.apache.activemq.transport.Transport;
@@ -57,7 +60,7 @@ import org.apache.commons.logging.LogFactory;
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
  * @version $Revision$
  */
-public class SslTransportFactory extends TcpTransportFactory {
+public class SslTransportFactory extends TcpTransportFactory implements BrokerServiceAware {
     // The log this uses.,
     private static final Log LOG = LogFactory.getLog(SslTransportFactory.class);
 
@@ -161,6 +164,17 @@ public class SslTransportFactory extends TcpTransportFactory {
             throw new RuntimeException("Unknown SSL algorithm encountered.", e);
         }
         sslContext.init(km, tm, random);
+    }
+    
+    public void setBrokerService(BrokerService brokerService) {
+        SslContext c = brokerService.getSslContext();
+        if( sslContext == null && c!=null ) {            
+            try {
+                setKeyAndTrustManagers(c.getKeyManagersAsArray(), c.getTrustManagersAsArray(), c.getSecureRandom());
+            } catch (KeyManagementException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     /**

@@ -650,6 +650,14 @@ other brokers in a federated network
             </xs:choice>
           </xs:complexType>
         </xs:element>
+        <xs:element name='sslContext' minOccurs='0' maxOccurs='1'>
+          <xs:complexType>
+            <xs:choice minOccurs='0' maxOccurs='1'>
+              <xs:element ref='tns:sslContext'/>
+              <xs:any namespace='##other'/>
+            </xs:choice>
+          </xs:complexType>
+        </xs:element>
         <xs:element name='systemUsage' minOccurs='0' maxOccurs='1'>
           <xs:complexType>
             <xs:choice minOccurs='0' maxOccurs='1'>
@@ -806,6 +814,7 @@ consume a given message
       <xs:attribute name='regionBroker' type='xs:string'/>
       <xs:attribute name='shutdownOnMasterFailure' type='xs:boolean'/>
       <xs:attribute name='splitSystemUsageForProducersConsumers' type='xs:boolean'/>
+      <xs:attribute name='sslContext' type='xs:string'/>
       <xs:attribute name='start' type='xs:boolean'>
         <xs:annotation>
           <xs:documentation><![CDATA[
@@ -816,6 +825,8 @@ with JUnit tests you may wish to start and stop the broker explicitly yourself.
         </xs:annotation>
       </xs:attribute>
       <xs:attribute name='supportFailOver' type='xs:boolean'/>
+      <xs:attribute name='systemExitOnShutdown' type='xs:boolean'/>
+      <xs:attribute name='systemExitOnShutdownExitCode' type='xs:integer'/>
       <xs:attribute name='systemUsage' type='xs:string'/>
       <xs:attribute name='taskRunnerFactory' type='xs:string'/>
       <xs:attribute name='taskRunnerPriority' type='xs:integer'/>
@@ -858,6 +869,7 @@ enabled.
           ]]></xs:documentation>
         </xs:annotation>
       </xs:attribute>
+      <xs:attribute name='useTempMirroredQueues' type='xs:boolean'/>
       <xs:attribute name='useVirtualTopics' type='xs:boolean'>
         <xs:annotation>
           <xs:documentation><![CDATA[
@@ -4602,6 +4614,48 @@ matches the message.
   </xs:element>
 
 
+  <!-- element for type: org.apache.activemq.spring.SpringSslContext -->
+  <xs:element name='sslContext'>
+    <xs:annotation>
+      <xs:documentation><![CDATA[
+        Extends the SslContext so that it's easier to configure from spring.
+      ]]></xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name='keyManagers' minOccurs='0' maxOccurs='1'>
+          <xs:complexType>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name='secureRandom' minOccurs='0' maxOccurs='1'>
+          <xs:complexType>
+            <xs:sequence minOccurs='0' maxOccurs='1'><xs:any namespace='##other'/></xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name='trustManagers' minOccurs='0' maxOccurs='1'>
+          <xs:complexType>
+            <xs:sequence minOccurs='0' maxOccurs='unbounded'><xs:any namespace='##other'/></xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:any namespace='##other' minOccurs='0' maxOccurs='unbounded'/>
+      </xs:sequence>
+      <xs:attribute name='keyStore' type='xs:string'/>
+      <xs:attribute name='keyStoreAlgorithm' type='xs:string'/>
+      <xs:attribute name='keyStorePassword' type='xs:string'/>
+      <xs:attribute name='keyStoreType' type='xs:string'/>
+      <xs:attribute name='secureRandom' type='xs:string'/>
+      <xs:attribute name='secureRandomAlgorithm' type='xs:string'/>
+      <xs:attribute name='trustStore' type='xs:string'/>
+      <xs:attribute name='trustStoreAlgorithm' type='xs:string'/>
+      <xs:attribute name='trustStorePassword' type='xs:string'/>
+      <xs:attribute name='trustStoreType' type='xs:string'/>
+      <xs:attribute name='id' type='xs:ID'/>
+      <xs:anyAttribute namespace='##other' processContents='lax'/>
+    </xs:complexType>
+  </xs:element>
+
+
   <!-- element for type: org.apache.activemq.store.jdbc.Statements -->
   <xs:element name='statements'>
     <xs:complexType>
@@ -5132,6 +5186,11 @@ subscriptions.
           </xs:complexType>
         </xs:element>
         <xs:element name='brokerService' minOccurs='0' maxOccurs='1'>
+          <xs:annotation>
+            <xs:documentation><![CDATA[
+              This is called by the BrokerService right before it starts the transport.
+            ]]></xs:documentation>
+          </xs:annotation>
           <xs:complexType>
             <xs:choice minOccurs='0' maxOccurs='1'>
               <xs:element ref='tns:broker'/>
@@ -5168,7 +5227,14 @@ consume a given message
         <xs:any namespace='##other' minOccurs='0' maxOccurs='unbounded'/>
       </xs:sequence>
       <xs:attribute name='brokerInfo' type='xs:string'/>
-      <xs:attribute name='brokerService' type='xs:string'/>
+      <xs:attribute name='brokerName' type='xs:string'/>
+      <xs:attribute name='brokerService' type='xs:string'>
+        <xs:annotation>
+          <xs:documentation><![CDATA[
+            This is called by the BrokerService right before it starts the transport.
+          ]]></xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
       <xs:attribute name='connectUri' type='xs:string'/>
       <xs:attribute name='disableAsyncDispatch' type='xs:boolean'/>
       <xs:attribute name='discoveryAgent' type='xs:string'/>

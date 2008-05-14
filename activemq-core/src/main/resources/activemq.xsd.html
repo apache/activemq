@@ -221,6 +221,7 @@ matches the message.</td><td>org.apache.activemq.broker.region.policy.SimpleDisp
   <tr><td><a href='#simpleJmsMessageConvertor'>simpleJmsMessageConvertor</a></td><td>Converts Message from one JMS to another</td><td>org.apache.activemq.network.jms.SimpleJmsMessageConvertor</td></tr>
   <tr><td><a href='#simpleMessageGroupMapFactory'>simpleMessageGroupMapFactory</a></td><td>A factory to create instances of {@link SimpleMessageGroupMap} when implementing the
 <a href="http://activemq.apache.org/message-groups.html">Message Groups</a> functionality.</td><td>org.apache.activemq.broker.region.group.SimpleMessageGroupMapFactory</td></tr>
+  <tr><td><a href='#sslContext'>sslContext</a></td><td>Extends the SslContext so that it's easier to configure from spring.</td><td>org.apache.activemq.spring.SpringSslContext</td></tr>
   <tr><td><a href='#statements'>statements</a></td><td></td><td>org.apache.activemq.store.jdbc.Statements</td></tr>
   <tr><td><a href='#storeCursor'>storeCursor</a></td><td>Pending messages</td><td>org.apache.activemq.broker.region.policy.StorePendingQueueMessageStoragePolicy</td></tr>
   <tr><td><a href='#storeDurableSubscriberCursor'>storeDurableSubscriberCursor</a></td><td>Pending messages for a durable</td><td>org.apache.activemq.broker.region.policy.StorePendingDurableSubscriberMessageStoragePolicy</td></tr>
@@ -414,6 +415,7 @@ useful for testing.</td></tr>
 Normally you would want the broker to start up along with the ApplicationContext but sometimes when working
 with JUnit tests you may wish to start and stop the broker explicitly yourself.</td></tr>
   <tr><td>supportFailOver</td><td>xs:boolean</td><td></td></tr>
+  <tr><td>systemExitOnShutdown</td><td>xs:boolean</td><td></td></tr>
   <tr><td>taskRunnerPriority</td><td>xs:integer</td><td></td></tr>
   <tr><td>timeBeforePurgeTempDestinations</td><td>xs:integer</td><td></td></tr>
   <tr><td>tmpDataDirectory</td><td>xs:string</td><td></td></tr>
@@ -429,6 +431,7 @@ explicitly configured.</td></tr>
   <tr><td>useShutdownHook</td><td>xs:boolean</td><td>Sets whether or not we should use a shutdown handler to close down the
 broker cleanly if the JVM is terminated. It is recommended you leave this
 enabled.</td></tr>
+  <tr><td>useTempMirroredQueues</td><td>xs:boolean</td><td></td></tr>
   <tr><td>useVirtualTopics</td><td>xs:boolean</td><td>Sets whether or not <a
 href="http://activemq.apache.org/virtual-destinations.html">Virtual
 Topics</a> should be supported by default if they have not been
@@ -465,6 +468,7 @@ other brokers in a federated network</td></tr>
   <tr><td>regionBroker</td><td><a href='#loggingBrokerPlugin'>loggingBrokerPlugin</a> | <a href='#multicastTraceBrokerPlugin'>multicastTraceBrokerPlugin</a> | <a href='#timeStampingBrokerPlugin'>timeStampingBrokerPlugin</a> | <a href='#udpTraceBrokerPlugin'>udpTraceBrokerPlugin</a></td><td></td></tr>
   <tr><td>services</td><td>(<a href='#broker'>broker</a> | <a href='#commandAgent'>commandAgent</a> | <a href='#forwardingBridge'>forwardingBridge</a> | <a href='#inboundQueueBridge'>inboundQueueBridge</a> | <a href='#inboundTopicBridge'>inboundTopicBridge</a> | <a href='#jmsQueueConnector'>jmsQueueConnector</a> | <a href='#jmsTopicConnector'>jmsTopicConnector</a> | <a href='#ldapNetworkConnector'>ldapNetworkConnector</a> | <a href='#managementContext'>managementContext</a> | <a href='#masterConnector'>masterConnector</a> | <a href='#memoryUsage'>memoryUsage</a> | <a href='#multicastNetworkConnector'>multicastNetworkConnector</a> | <a href='#networkConnector'>networkConnector</a> | <a href='#outboundQueueBridge'>outboundQueueBridge</a> | <a href='#outboundTopicBridge'>outboundTopicBridge</a> | <a href='#proxyConnector'>proxyConnector</a> | <a href='#storeUsage'>storeUsage</a> | <a href='#systemUsage'>systemUsage</a> | <a href='#tempUsage'>tempUsage</a>)*</td><td>Sets the services associated with this broker such as a
 {@link MasterConnector}</td></tr>
+  <tr><td>sslContext</td><td><a href='#sslContext'>sslContext</a></td><td></td></tr>
   <tr><td>systemUsage</td><td><a href='#systemUsage'>systemUsage</a></td><td></td></tr>
   <tr><td>taskRunnerFactory</td><td>&lt;spring:bean/&gt;</td><td></td></tr>
   <tr><td>tempDataStore</td><td>&lt;spring:bean/&gt;</td><td></td></tr>
@@ -1425,6 +1429,25 @@ Set of groups</td></tr>
   <tr><td>connection</td><td>&lt;spring:bean/&gt;</td><td></td></tr>
 </table>
 <h2>Element: <a name='simpleMessageGroupMapFactory'>simpleMessageGroupMapFactory</a></h2>
+<h2>Element: <a name='sslContext'>sslContext</a></h2>
+<table>
+  <tr><th>Attribute</th><th>Type</th><th>Description</th>
+  <tr><td>keyStore</td><td>xs:string</td><td></td></tr>
+  <tr><td>keyStoreAlgorithm</td><td>xs:string</td><td></td></tr>
+  <tr><td>keyStorePassword</td><td>xs:string</td><td></td></tr>
+  <tr><td>keyStoreType</td><td>xs:string</td><td></td></tr>
+  <tr><td>secureRandomAlgorithm</td><td>xs:string</td><td></td></tr>
+  <tr><td>trustStore</td><td>xs:string</td><td></td></tr>
+  <tr><td>trustStoreAlgorithm</td><td>xs:string</td><td></td></tr>
+  <tr><td>trustStorePassword</td><td>xs:string</td><td></td></tr>
+  <tr><td>trustStoreType</td><td>xs:string</td><td></td></tr>
+</table>
+<table>
+  <tr><th>Element</th><th>Type</th><th>Description</th>
+  <tr><td>keyManagers</td><td>(&lt;spring:bean/&gt;)*</td><td></td></tr>
+  <tr><td>secureRandom</td><td>&lt;spring:bean/&gt;</td><td></td></tr>
+  <tr><td>trustManagers</td><td>(&lt;spring:bean/&gt;)*</td><td></td></tr>
+</table>
 <h2>Element: <a name='statements'>statements</a></h2>
 <table>
   <tr><th>Attribute</th><th>Type</th><th>Description</th>
@@ -1585,6 +1608,7 @@ before a UsageListener event is fired by the manager.</td></tr>
 <h2>Element: <a name='transportConnector'>transportConnector</a></h2>
 <table>
   <tr><th>Attribute</th><th>Type</th><th>Description</th>
+  <tr><td>brokerName</td><td>xs:string</td><td></td></tr>
   <tr><td>connectUri</td><td>xs:string</td><td></td></tr>
   <tr><td>disableAsyncDispatch</td><td>xs:boolean</td><td></td></tr>
   <tr><td>discoveryUri</td><td>xs:string</td><td></td></tr>
@@ -1598,7 +1622,7 @@ create a {@link TransportServer} instance</td></tr>
 <table>
   <tr><th>Element</th><th>Type</th><th>Description</th>
   <tr><td>brokerInfo</td><td>&lt;spring:bean/&gt;</td><td></td></tr>
-  <tr><td>brokerService</td><td><a href='#broker'>broker</a></td><td></td></tr>
+  <tr><td>brokerService</td><td><a href='#broker'>broker</a></td><td>This is called by the BrokerService right before it starts the transport.</td></tr>
   <tr><td>discoveryAgent</td><td>&lt;spring:bean/&gt;</td><td></td></tr>
   <tr><td>messageAuthorizationPolicy</td><td>&lt;spring:bean/&gt;</td><td>Sets the policy used to decide if the current connection is authorized to
 consume a given message</td></tr>
