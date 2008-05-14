@@ -28,7 +28,7 @@ public class SimpleDurableTopicTest extends SimpleTopicTest {
     
     protected void setUp() throws Exception {
         numberOfDestinations=1;
-        numberOfConsumers = 4;
+        numberOfConsumers = 1;
         numberofProducers = 1;
         sampleCount=1000;
         playloadSize = 1024;
@@ -41,7 +41,9 @@ public class SimpleDurableTopicTest extends SimpleTopicTest {
     }
 
     protected PerfConsumer createConsumer(ConnectionFactory fac, Destination dest, int number) throws JMSException {
-        return new PerfConsumer(fac, dest, "subs:" + number);
+        PerfConsumer result = new PerfConsumer(fac, dest, "subs:" + number);
+        result.setInitialDelay(20000);
+        return result;
     }
 
 }
