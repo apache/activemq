@@ -38,15 +38,17 @@ public class PerfConsumer implements MessageListener {
     protected Connection connection;
     protected MessageConsumer consumer;
     protected long sleepDuration;
+    protected long initialDelay;
     protected boolean enableAudit = false;
     protected ActiveMQMessageAudit audit = new ActiveMQMessageAudit(16 * 1024,20);
+    protected boolean firstMessage =true;
 
     protected PerfRate rate = new PerfRate();
 
     public PerfConsumer(ConnectionFactory fac, Destination dest, String consumerName) throws JMSException {
         connection = fac.createConnection();
         connection.setClientID(consumerName);
-        Session s = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Session s = connection.createSession(false, Session.DUPS_OK_ACKNOWLEDGE);
         if (dest instanceof Topic && consumerName != null && consumerName.length() > 0) {
             consumer = s.createDurableSubscriber((Topic)dest, consumerName);
         } else {
@@ -77,6 +79,15 @@ public class PerfConsumer implements MessageListener {
     }
 
     public void onMessage(Message msg) {
+        if (firstMessage) {
+            firstMessage=false;
+            if (getInitialDelay() > 0) {
+                try {
+                    Thread.sleep(getInitialDelay());
+                } catch (InterruptedException e) {
+                }
+            }
+        }
         rate.increment();
         try {
             if (enableAudit && !this.audit.isInOrder(msg.getJMSMessageID())) {
@@ -111,5 +122,19 @@ public class PerfConsumer implements MessageListener {
 
     public void setEnableAudit(boolean doAudit) {
         this.enableAudit = doAudit;
+    }
+
+    /**
+     * @return the initialDelay
+     */
+    public long getInitialDelay() {
+        return initialDelay;
+    }
+
+    /**
+     * @param initialDelay the initialDelay to set
+     */
+    public void setInitialDelay(long initialDelay) {
+        this.initialDelay = initialDelay;
     }
 }
