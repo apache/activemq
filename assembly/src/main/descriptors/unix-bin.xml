@@ -65,7 +65,7 @@
         <include>bin/activemq</include>
         <include>bin/activemq-admin</include>
         <include>bin/macosx/activemq</include>
-        <include>bin/linux/activemq</include>
+        <include>bin/linux-*/activemq</include>
       </includes>
       <fileMode>0755</fileMode>
       <lineEnding>unix</lineEnding>
