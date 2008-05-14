@@ -28,6 +28,10 @@ h4. The _[org.apache.activemq.broker.BrokerService|#org.apache.activemq.broker.B
 connectors, network connectors and a bunch of properties which can be used to
 configure the broker as its lazily created.{html} |
 
+{anchor:org.apache.activemq.broker.SslContext-types}
+h4. The _[org.apache.activemq.broker.SslContext|#org.apache.activemq.broker.SslContext-types]_ Type Implementations
+    | _[<sslContext>|#sslContext-element]_ | {html}Extends the SslContext so that it's easier to configure from spring.{html} |
+
 {anchor:org.apache.activemq.usage.TempUsage-types}
 h4. The _[org.apache.activemq.usage.TempUsage|#org.apache.activemq.usage.TempUsage-types]_ Type Implementations
     | _[<tempUsage>|#tempUsage-element]_ | {html}Used to keep track of how much of something is being used so that a
@@ -666,10 +670,12 @@ other brokers in a federated network{html} |
 {@link MasterConnector}{html} |
     | shutdownOnMasterFailure | _boolean_ | {html}{html} |
     | splitSystemUsageForProducersConsumers | _boolean_ | {html}{html} |
+    | sslContext | _[org.apache.activemq.broker.SslContext|#org.apache.activemq.broker.SslContext-types]_ | {html}{html} |
     | start | _boolean_ | {html}Sets whether or not the broker is started along with the ApplicationContext it is defined within.
 Normally you would want the broker to start up along with the ApplicationContext but sometimes when working
 with JUnit tests you may wish to start and stop the broker explicitly yourself.{html} |
     | supportFailOver | _boolean_ | {html}{html} |
+    | systemExitOnShutdown | _boolean_ | {html}{html} |
     | systemUsage | _[org.apache.activemq.usage.SystemUsage|#org.apache.activemq.usage.SystemUsage-types]_ | {html}{html} |
     | taskRunnerFactory | _org.apache.activemq.thread.TaskRunnerFactory_ | {html}{html} |
     | taskRunnerPriority | _int_ | {html}{html} |
@@ -691,6 +697,7 @@ explicitly configured.{html} |
     | useShutdownHook | _boolean_ | {html}Sets whether or not we should use a shutdown handler to close down the
 broker cleanly if the JVM is terminated. It is recommended you leave this
 enabled.{html} |
+    | useTempMirroredQueues | _boolean_ | {html}{html} |
     | useVirtualTopics | _boolean_ | {html}Sets whether or not <a
 href="http://activemq.apache.org/virtual-destinations.html">Virtual
 Topics</a> should be supported by default if they have not been
@@ -1760,6 +1767,24 @@ h3. The _[<simpleMessageGroupMapFactory>|#simpleMessageGroupMapFactory-element]_
     {html}A factory to create instances of {@link SimpleMessageGroupMap} when implementing the
 <a href="http://activemq.apache.org/message-groups.html">Message Groups</a> functionality.{html}
 
+{anchor:sslContext-element}
+h3. The _[<sslContext>|#sslContext-element]_ Element
+    {html}Extends the SslContext so that it's easier to configure from spring.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | keyManagers | (_java.lang.Object_)\* | {html}{html} |
+    | keyStore | _org.springframework.core.io.Resource_ | {html}{html} |
+    | keyStoreAlgorithm | _java.lang.String_ | {html}{html} |
+    | keyStorePassword | _java.lang.String_ | {html}{html} |
+    | keyStoreType | _java.lang.String_ | {html}{html} |
+    | secureRandom | _java.security.SecureRandom_ | {html}{html} |
+    | secureRandomAlgorithm | _java.lang.String_ | {html}{html} |
+    | trustManagers | (_java.lang.Object_)\* | {html}{html} |
+    | trustStore | _org.springframework.core.io.Resource_ | {html}{html} |
+    | trustStoreAlgorithm | _java.lang.String_ | {html}{html} |
+    | trustStorePassword | _java.lang.String_ | {html}{html} |
+    | trustStoreType | _java.lang.String_ | {html}{html} |
+
 {anchor:statements-element}
 h3. The _[<statements>|#statements-element]_ Element
     {html}{html}
@@ -1952,7 +1977,8 @@ h3. The _[<transportConnector>|#transportConnector-element]_ Element
 h4. Properties
     || Property Name || Type || Description ||
     | brokerInfo | _org.apache.activemq.command.BrokerInfo_ | {html}{html} |
-    | brokerService | _[org.apache.activemq.broker.BrokerService|#org.apache.activemq.broker.BrokerService-types]_ | {html}{html} |
+    | brokerName | _java.lang.String_ | {html}{html} |
+    | brokerService | _[org.apache.activemq.broker.BrokerService|#org.apache.activemq.broker.BrokerService-types]_ | {html}This is called by the BrokerService right before it starts the transport.{html} |
     | connectUri | _java.net.URI_ | {html}{html} |
     | disableAsyncDispatch | _boolean_ | {html}{html} |
     | discoveryAgent | _org.apache.activemq.transport.discovery.DiscoveryAgent_ | {html}{html} |
@@ -2303,6 +2329,7 @@ matches the message.{html} |
     | _[<simpleJmsMessageConvertor>|#simpleJmsMessageConvertor-element]_ | {html}Converts Message from one JMS to another{html} |
     | _[<simpleMessageGroupMapFactory>|#simpleMessageGroupMapFactory-element]_ | {html}A factory to create instances of {@link SimpleMessageGroupMap} when implementing the
 <a href="http://activemq.apache.org/message-groups.html">Message Groups</a> functionality.{html} |
+    | _[<sslContext>|#sslContext-element]_ | {html}Extends the SslContext so that it's easier to configure from spring.{html} |
     | _[<statements>|#statements-element]_ | {html}{html} |
     | _[<storeCursor>|#storeCursor-element]_ | {html}Pending messages{html} |
     | _[<storeDurableSubscriberCursor>|#storeDurableSubscriberCursor-element]_ | {html}Pending messages for a durable{html} |
