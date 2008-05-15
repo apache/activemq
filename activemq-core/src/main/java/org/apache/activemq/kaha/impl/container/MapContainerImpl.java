@@ -58,7 +58,8 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
     private int indexBinSize = HashIndex.DEFAULT_BIN_SIZE;
     private int indexKeySize = HashIndex.DEFAULT_KEY_SIZE;
     private int indexPageSize = HashIndex.DEFAULT_PAGE_SIZE;
-    private int maxBinSize = HashIndex.MAXIMUM_CAPACITY;
+    private int indexMaxBinSize = HashIndex.MAXIMUM_CAPACITY;
+    private int indexLoadFactor = HashIndex.DEFAULT_LOAD_FACTOR;
 
     public MapContainerImpl(File directory, ContainerId id, IndexItem root, IndexManager indexManager,
                             DataManager dataManager, boolean persistentIndex) {
@@ -77,7 +78,8 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
                     hashIndex.setNumberOfBins(getIndexBinSize());
                     hashIndex.setKeySize(getIndexKeySize());
                     hashIndex.setPageSize(getIndexPageSize());
-                    hashIndex.setMaximumCapacity(getMaxBinSize());
+                    hashIndex.setMaximumCapacity(getIndexMaxBinSize());
+                    hashIndex.setLoadFactor(getIndexLoadFactor());
                     this.index = hashIndex;
                 } catch (IOException e) {
                     LOG.error("Failed to create HashIndex", e);
@@ -563,18 +565,26 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
     public void setIndexPageSize(int indexPageSize) {
         this.indexPageSize = indexPageSize;
     }
+    
+    public int getIndexLoadFactor() {
+        return indexLoadFactor;
+    }
+
+    public void setIndexLoadFactor(int loadFactor) {
+        this.indexLoadFactor = loadFactor;
+    }
 
   
     public IndexMBean getIndexMBean() {
       return (IndexMBean) index;
     }
   
-    public int getMaxBinSize() {
-        return maxBinSize;
+    public int getIndexMaxBinSize() {
+        return indexMaxBinSize;
     }
 
-    public void setMaxBinSize(int maxBinSize) {
-        this.maxBinSize = maxBinSize;
+    public void setIndexMaxBinSize(int maxBinSize) {
+        this.indexMaxBinSize = maxBinSize;
     }
    
 
