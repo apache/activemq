@@ -285,6 +285,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                     IntrospectionSupport.getProperties(configuration, props, null);
                     String str = MarshallingSupport.propertiesToString(props);
                     brokerInfo.setNetworkProperties(str);
+                    brokerInfo.setBrokerId(this.localBrokerId);
                     remoteBroker.oneway(brokerInfo);
                 }
                 if (remoteConnectionInfo != null) {
