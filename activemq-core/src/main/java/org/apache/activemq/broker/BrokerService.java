@@ -1818,7 +1818,7 @@ public class BrokerService implements Service {
      */
     protected void startAllConnectors() throws Exception {
         if (!isSlave()) {
-
+        	Set<ActiveMQDestination> durableDestinations = getBroker().getDurableDestinations();
             List<TransportConnector> al = new ArrayList<TransportConnector>();
 
             for (Iterator<TransportConnector> iter = getTransportConnectors().iterator(); iter.hasNext();) {
@@ -1843,7 +1843,7 @@ public class BrokerService implements Service {
                 NetworkConnector connector = iter.next();
                 connector.setLocalUri(uri);
                 connector.setBrokerName(getBrokerName());
-                connector.setDurableDestinations(getBroker().getDurableDestinations());
+                connector.setDurableDestinations(durableDestinations);
                 connector.start();
             }
 
