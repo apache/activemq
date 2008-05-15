@@ -134,10 +134,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         copy.brokerInTime = brokerInTime;
         copy.brokerOutTime = brokerOutTime;
         copy.memoryUsage=this.memoryUsage;
-        // copying the broker path breaks networks - if a consumer re-uses a
-        // consumed
-        // message and forwards it on
-        // copy.brokerPath = brokerPath;
+        copy.brokerPath = brokerPath;
 
         // lets not copy the following fields
         // copy.targetConsumerId = targetConsumerId;
