@@ -413,7 +413,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
             }
             Integer lastDataFile = asyncDataManager.getCurrentDataFileId();   
             inProgress.add(lastDataFile);
-            Set<Integer> inUse = referenceStoreAdapter.getReferenceFileIdsInUse();
+            Set<Integer> inUse = new HashSet<Integer>(referenceStoreAdapter.getReferenceFileIdsInUse());
             asyncDataManager.consolidateDataFilesNotIn(inUse, inProgress);
         } catch (IOException e) {
             LOG.error("Could not cleanup data files: " + e, e);
