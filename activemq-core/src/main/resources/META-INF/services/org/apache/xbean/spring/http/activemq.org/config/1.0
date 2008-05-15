@@ -210,6 +210,8 @@ simpleJmsMessageConvertor = org.apache.activemq.network.jms.SimpleJmsMessageConv
 
 simpleMessageGroupMapFactory = org.apache.activemq.broker.region.group.SimpleMessageGroupMapFactory
 
+sslContext = org.apache.activemq.spring.SpringSslContext
+
 statements = org.apache.activemq.store.jdbc.Statements
 
 storeCursor = org.apache.activemq.broker.region.policy.StorePendingQueueMessageStoragePolicy
