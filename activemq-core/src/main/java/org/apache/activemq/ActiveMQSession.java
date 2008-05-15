@@ -1599,6 +1599,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                 msg.setMessageId(new MessageId(producer.getProducerInfo().getProducerId(), sequenceNumber));
                 message.setJMSMessageID(msg.getMessageId().toString());
             }
+            //clear the brokerPath in case we are re-sending this message
+            msg.setBrokerPath(null);
 
             msg.setJMSDestination(destination);
             msg.setJMSDeliveryMode(deliveryMode);
