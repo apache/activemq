@@ -42,11 +42,8 @@ public class HashIndex implements Index, HashIndexMBean {
     public static final int DEFAULT_PAGE_SIZE;
     public static final int DEFAULT_KEY_SIZE;
     public static final int DEFAULT_BIN_SIZE;
-    public static final int MAXIMUM_CAPACITY = 16384;
-    /**
-     * The load factor used when none specified in constructor.
-     **/
-    static final float DEFAULT_LOAD_FACTOR;
+    public static final int MAXIMUM_CAPACITY;
+    public static final int DEFAULT_LOAD_FACTOR;
     private static final String NAME_PREFIX = "hash-index-";
     private static final Log LOG = LogFactory.getLog(HashIndex.class);
     private final String name;
@@ -73,7 +70,7 @@ public class HashIndex implements Index, HashIndexMBean {
     private int activeBins;
     private int threshold;
     private int maximumCapacity=MAXIMUM_CAPACITY;
-    private float loadFactor=0.75f;
+    private int loadFactor=DEFAULT_LOAD_FACTOR;
     
     
     /**
@@ -203,14 +200,14 @@ public class HashIndex implements Index, HashIndexMBean {
     /**
      * @return the loadFactor
      */
-    public float getLoadFactor() {
+    public int getLoadFactor() {
         return loadFactor;
     }
 
     /**
      * @param loadFactor the loadFactor to set
      */
-    public void setLoadFactor(float loadFactor) {
+    public void setLoadFactor(int loadFactor) {
         this.loadFactor = loadFactor;
     }
     
@@ -565,7 +562,7 @@ public class HashIndex implements Index, HashIndexMBean {
     }
     
     private int calculateThreashold() {
-        return (int)(bins.length * 100 * loadFactor);
+        return (int)(bins.length * loadFactor);
     }
     
     
@@ -592,6 +589,7 @@ public class HashIndex implements Index, HashIndexMBean {
         DEFAULT_PAGE_SIZE = Integer.parseInt(System.getProperty("defaultPageSize", "16384"));
         DEFAULT_KEY_SIZE = Integer.parseInt(System.getProperty("defaultKeySize", "96"));
         DEFAULT_BIN_SIZE= Integer.parseInt(System.getProperty("defaultBinSize", "1024"));
-        DEFAULT_LOAD_FACTOR=Float.parseFloat(System.getProperty("defaultLoadFactor","1.5f"));
+        MAXIMUM_CAPACITY = Integer.parseInt(System.getProperty("defaultPageSize", "16384"));
+        DEFAULT_LOAD_FACTOR=Integer.parseInt(System.getProperty("defaultLoadFactor","50"));
     }
 }

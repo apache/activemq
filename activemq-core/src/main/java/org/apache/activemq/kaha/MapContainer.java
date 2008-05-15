@@ -262,13 +262,22 @@ public interface MapContainer<K, V> extends Map<K, V> {
     /**
      * set the meximum bin size
      */
-    void setMaxBinSize(int size);
+    void setIndexMaxBinSize(int size);
     
     /**
      * @return the maximum bin size
      * @return
      */
-    int getMaxBinSize();
+    int getIndexMaxBinSize();
+    
+    /**
+     * @return the loadFactor
+     */
+    public int getIndexLoadFactor();
+    /**
+     * @param loadFactor the loadFactor to set
+     */
+    public void setIndexLoadFactor(int loadFactor);
     
     /**
      * @return the Index MBean
