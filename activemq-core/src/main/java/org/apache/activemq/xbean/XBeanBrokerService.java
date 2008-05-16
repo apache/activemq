@@ -22,6 +22,7 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.ConfigurableApplicationContext;
 
 /**
  * An ActiveMQ Message Broker. It consists of a number of transport
@@ -41,6 +42,7 @@ public class XBeanBrokerService extends BrokerService implements InitializingBea
 
     private boolean start = true;
     private ApplicationContext applicationContext = null;
+    private boolean destroyApplicationContextOnShutdown = false;
 
     public XBeanBrokerService() {
     }
@@ -48,6 +50,15 @@ public class XBeanBrokerService extends BrokerService implements InitializingBea
     public void afterPropertiesSet() throws Exception {
         if (start) {
             start();
+        }
+        if (destroyApplicationContextOnShutdown) {
+            addShutdownHook(new Runnable() {
+                public void run() {
+                    if (applicationContext instanceof ConfigurableApplicationContext) {
+	                    ((ConfigurableApplicationContext) applicationContext).close();
+                    }
+                }
+            });
         }
     }
 
@@ -66,6 +77,14 @@ public class XBeanBrokerService extends BrokerService implements InitializingBea
      */
     public void setStart(boolean start) {
         this.start = start;
+    }
+
+    /**
+     * Sets whether the broker should shutdown the ApplicationContext when the broker is stopped.
+     * The broker can be stopped because the underlying JDBC store is unavailable for example.
+     */
+    public void setDestroyApplicationContextOnShutdown(boolean destroy) {
+        this.destroyApplicationContextOnShutdown = destroy;
     }
 
 	public void setApplicationContext(ApplicationContext applicationContext)

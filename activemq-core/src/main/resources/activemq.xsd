@@ -824,6 +824,14 @@ with JUnit tests you may wish to start and stop the broker explicitly yourself.
           ]]></xs:documentation>
         </xs:annotation>
       </xs:attribute>
+      <xs:attribute name='destroyApplicationContextOnShutdown' type='xs:boolean'>
+        <xs:annotation>
+          <xs:documentation><![CDATA[
+            Sets whether the broker should shutdown the ApplicationContext when the broker is stopped.
+The broker can be stopped because the underlying JDBC store is unavailable for example.
+          ]]></xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
       <xs:attribute name='supportFailOver' type='xs:boolean'/>
       <xs:attribute name='systemExitOnShutdown' type='xs:boolean'/>
       <xs:attribute name='systemExitOnShutdownExitCode' type='xs:integer'/>

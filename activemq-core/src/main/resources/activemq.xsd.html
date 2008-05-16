@@ -401,6 +401,8 @@ the JDBC and Journal persistence adaptors.</td></tr>
   <tr><td>dedicatedTaskRunner</td><td>xs:boolean</td><td></td></tr>
   <tr><td>deleteAllMessagesOnStartup</td><td>xs:boolean</td><td>Sets whether or not all messages are deleted on startup - mostly only
 useful for testing.</td></tr>
+  <tr><td>destroyApplicationContextOnShutdown</td><td>xs:boolean</td><td>	Sets whether the broker should shutdown the ApplicationContext when the broker is stopped.
+The broker can be stopped because the underlying JDBC store is unavailable for example.</td></tr>
   <tr><td>enableStatistics</td><td>xs:boolean</td><td>Sets whether or not the Broker's services enable statistics or not.</td></tr>
   <tr><td>keepDurableSubsActive</td><td>xs:boolean</td><td></td></tr>
   <tr><td>masterConnectorURI</td><td>xs:string</td><td></td></tr>

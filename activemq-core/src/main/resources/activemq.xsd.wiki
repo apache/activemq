@@ -642,6 +642,8 @@ useful for testing.{html} |
     | destinationPolicy | _[org.apache.activemq.broker.region.policy.PolicyMap|#org.apache.activemq.broker.region.policy.PolicyMap-types]_ | {html}Sets the destination specific policies available either for exact
 destinations or for wildcard areas of destinations.{html} |
     | destinations | (_[org.apache.activemq.command.ActiveMQDestination|#org.apache.activemq.command.ActiveMQDestination-types]_)\* | {html}Sets the destinations which should be loaded/created on startup{html} |
+    | destroyApplicationContextOnShutdown | _boolean_ | {html}Sets whether the broker should shutdown the ApplicationContext when the broker is stopped.
+	The broker can be stopped because the underlying JDBC store is unavailable for example.{html} |
     | enableStatistics | _boolean_ | {html}Sets whether or not the Broker's services enable statistics or not.{html} |
     | jmsBridgeConnectors | (_[org.apache.activemq.network.jms.JmsConnector|#org.apache.activemq.network.jms.JmsConnector-types]_)\* | {html}{html} |
     | keepDurableSubsActive | _boolean_ | {html}{html} |
