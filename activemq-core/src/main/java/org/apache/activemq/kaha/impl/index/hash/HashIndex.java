@@ -55,9 +55,6 @@ public class HashIndex implements Index, HashIndexMBean {
     private int keySize = DEFAULT_KEY_SIZE;
     private int numberOfBins = DEFAULT_BIN_SIZE;
     private int keysPerPage = this.pageSize /this.keySize;
-    private DataByteArrayInputStream dataIn;
-    private DataByteArrayOutputStream dataOut;
-    private byte[] readBuffer;
     private HashBin[] bins;
     private Marshaller keyMarshaller;
     private long length;
@@ -242,9 +239,6 @@ public class HashIndex implements Index, HashIndexMBean {
             this.bins = new HashBin[capacity];
             threshold = calculateThreashold();
             keysPerPage = pageSize / keySize;
-            dataIn = new DataByteArrayInputStream();
-            dataOut = new DataByteArrayOutputStream(pageSize);
-            readBuffer = new byte[pageSize];
             try {
                 openIndexFile();
                 if (indexFile.length() > 0) {
@@ -375,6 +369,7 @@ public class HashIndex implements Index, HashIndexMBean {
     }
 
     void writeFullPage(HashPage page) throws IOException {
+        DataByteArrayOutputStream dataOut = new DataByteArrayOutputStream(pageSize);
         dataOut.reset();
         page.write(keyMarshaller, dataOut);
         if (dataOut.size() > pageSize) {
@@ -385,6 +380,7 @@ public class HashIndex implements Index, HashIndexMBean {
     }
 
     void writePageHeader(HashPage page) throws IOException {
+        DataByteArrayOutputStream dataOut = new DataByteArrayOutputStream(pageSize);
         dataOut.reset();
         page.writeHeader(dataOut);
         indexFile.seek(page.getId());
@@ -392,6 +388,9 @@ public class HashIndex implements Index, HashIndexMBean {
     }
 
     HashPage getFullPage(long id) throws IOException {
+        byte[] readBuffer = new byte[pageSize];
+        DataByteArrayInputStream dataIn = new DataByteArrayInputStream();
+        readBuffer = new byte[pageSize];
         indexFile.seek(id);
         indexFile.readFully(readBuffer, 0, pageSize);
         dataIn.restart(readBuffer);
@@ -402,6 +401,8 @@ public class HashIndex implements Index, HashIndexMBean {
     }
 
     HashPage getPageHeader(long id) throws IOException {
+        byte[] readBuffer = new byte[pageSize];
+        DataByteArrayInputStream dataIn = new DataByteArrayInputStream();
         indexFile.seek(id);
         indexFile.readFully(readBuffer, 0, HashPage.PAGE_HEADER_SIZE);
         dataIn.restart(readBuffer);
@@ -468,6 +469,8 @@ public class HashIndex implements Index, HashIndexMBean {
     }
     
     private void doLoad() throws IOException {
+        byte[] readBuffer = new byte[pageSize];
+        DataByteArrayInputStream dataIn = new DataByteArrayInputStream();
         long offset = 0;
         if (loaded.compareAndSet(false, true)) {
             while ((offset + pageSize) <= indexFile.length()) {
