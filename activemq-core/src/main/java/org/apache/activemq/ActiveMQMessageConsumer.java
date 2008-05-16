@@ -477,7 +477,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 m = ActiveMQMessageTransformation.transformMessage(transformedMessage, session.connection);
             }
         }
-        if (session.isClientAcknowledge()) {
+        if (session.isClientAcknowledge() || session.isIndividualAcknowledge()) {
             m.setAcknowledgeCallback(new Callback() {
                 public void execute() throws Exception {
                     session.checkClosed();
@@ -767,7 +767,14 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 ackLater(md, MessageAck.STANDARD_ACK_TYPE);
             } else if (session.isClientAcknowledge()) {
                 ackLater(md, MessageAck.DELIVERED_ACK_TYPE);
-            } else {
+            } else if (session.isIndividualAcknowledge()){
+            	MessageAck ack = new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,deliveredMessages.size());
+                session.asyncSendPacket(ack);
+                synchronized(deliveredMessages){
+	                deliveredMessages.remove(md);
+                }
+            }
+            else {
                 throw new IllegalStateException("Invalid session state.");
             }
         }
@@ -968,7 +975,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                 }
                                 afterMessageIsConsumed(md, expired);
                             } catch (RuntimeException e) {
-                                if (session.isDupsOkAcknowledge() || session.isAutoAcknowledge()) {
+                                if (session.isDupsOkAcknowledge() || session.isAutoAcknowledge() || session.isIndividualAcknowledge()) {
                                     // Redeliver the message
                                 } else {
                                     // Transacted or Client ack: Deliver the

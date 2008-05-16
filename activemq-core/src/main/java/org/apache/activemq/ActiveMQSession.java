@@ -132,6 +132,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @see javax.jms.XASession
  */
 public class ActiveMQSession implements Session, QueueSession, TopicSession, StatsCapable, ActiveMQDispatcher {
+	
+	public static final int INDIVIDUAL_ACKNOWLEDGE=4;
 
     public static interface DeliveryListener {
         void beforeDelivery(ActiveMQSession session, Message msg);
@@ -710,7 +712,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                 continue;
             }
 
-            if (isClientAcknowledge()) {
+            if (isClientAcknowledge()||isIndividualAcknowledge()) {
                 message.setAcknowledgeCallback(new Callback() {
                     public void execute() throws Exception {
                     }
@@ -1704,6 +1706,10 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     public boolean isDupsOkAcknowledge() {
         return acknowledgementMode == Session.DUPS_OK_ACKNOWLEDGE;
+    }
+    
+    public boolean isIndividualAcknowledge(){
+    	return acknowledgementMode == ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE;
     }
 
     /**
