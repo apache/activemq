@@ -477,11 +477,18 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 m = ActiveMQMessageTransformation.transformMessage(transformedMessage, session.connection);
             }
         }
-        if (session.isClientAcknowledge() || session.isIndividualAcknowledge()) {
+        if (session.isClientAcknowledge()) {
             m.setAcknowledgeCallback(new Callback() {
                 public void execute() throws Exception {
                     session.checkClosed();
                     session.acknowledge();
+                }
+            });
+        }else if (session.isIndividualAcknowledge()) {
+            m.setAcknowledgeCallback(new Callback() {
+                public void execute() throws Exception {
+                    session.checkClosed();
+                    acknowledge(md);
                 }
             });
         }
@@ -765,15 +772,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 }
             } else if (session.isDupsOkAcknowledge()) {
                 ackLater(md, MessageAck.STANDARD_ACK_TYPE);
-            } else if (session.isClientAcknowledge()) {
+            } else if (session.isClientAcknowledge()||session.isIndividualAcknowledge()) {
                 ackLater(md, MessageAck.DELIVERED_ACK_TYPE);
-            } else if (session.isIndividualAcknowledge()){
-            	MessageAck ack = new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,deliveredMessages.size());
-                session.asyncSendPacket(ack);
-                synchronized(deliveredMessages){
-	                deliveredMessages.remove(md);
-                }
-            }
+            } 
             else {
                 throw new IllegalStateException("Invalid session state.");
             }
@@ -853,6 +854,14 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             if (!session.isTransacted()) {
                 deliveredMessages.clear();
             }
+        }
+    }
+    
+    void acknowledge(MessageDispatch md) throws JMSException {
+        MessageAck ack = new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,deliveredMessages.size());
+        session.asyncSendPacket(ack);
+        synchronized(deliveredMessages){
+            deliveredMessages.remove(md);
         }
     }
 
