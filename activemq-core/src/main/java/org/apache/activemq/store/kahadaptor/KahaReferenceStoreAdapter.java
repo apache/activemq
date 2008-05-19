@@ -59,7 +59,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     private static final Log LOG = LogFactory.getLog(KahaReferenceStoreAdapter.class);
     private static final String STORE_STATE = "store-state";
     private static final String INDEX_VERSION_NAME = "INDEX_VERSION";
-    private static final Integer INDEX_VERSION = new Integer(6);
+    private static final Integer INDEX_VERSION = new Integer(7);
     private static final String RECORD_REFERENCES = "record-references";
     private static final String TRANSACTIONS = "transactions-state";
     private MapContainer stateMap;
