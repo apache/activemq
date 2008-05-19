@@ -182,7 +182,7 @@ public class TopicSubscription extends AbstractSubscription {
 
     public synchronized void acknowledge(final ConnectionContext context, final MessageAck ack) throws Exception {
         // Handle the standard acknowledgment case.
-        if (ack.isStandardAck() || ack.isPoisonAck()) {
+        if (ack.isStandardAck() || ack.isPoisonAck() || ack.isIndividualAck()) {
             if (context.isInTransaction()) {
                 context.getTransaction().addSynchronization(new Synchronization() {
 

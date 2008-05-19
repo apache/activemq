@@ -133,6 +133,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class ActiveMQSession implements Session, QueueSession, TopicSession, StatsCapable, ActiveMQDispatcher {
 	
+	/**
+	 * Only acknowledge an individual message - using message.acknowledge()
+	 * as opposed to CLIENT_ACKNOWLEDGE which 
+	 * acknowledges all messages consumed by a session at when acknowledge()
+	 * is called
+	 */
 	public static final int INDIVIDUAL_ACKNOWLEDGE=4;
 
     public static interface DeliveryListener {

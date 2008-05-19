@@ -252,7 +252,24 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                         + ack);
                     }
                 }
-            } else if (ack.isDeliveredAck()) {
+            } else if (ack.isIndividualAck()) {
+                // Message was delivered and acknowledge - but only delete the
+                // individual message
+                for (final MessageReference node : dispatched) {
+                    MessageId messageId = node.getMessageId();
+                    if (ack.getLastMessageId().equals(messageId)) {
+                        // this should never be within a transaction
+                        node.getRegionDestination().getDestinationStatistics().getDequeues().increment();
+                        node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
+                        destination = node.getRegionDestination();
+                        acknowledge(context, ack, node);
+                        dispatched.remove(node);
+                        prefetchExtension = Math.max(0, prefetchExtension - 1);
+                        callDispatchMatched = true;
+                        break;
+                    }
+                }
+            }else if (ack.isDeliveredAck()) {
                 // Message was delivered but not acknowledged: update pre-fetch
                 // counters.
                 // Acknowledge all dispatched messages up till the message id of
