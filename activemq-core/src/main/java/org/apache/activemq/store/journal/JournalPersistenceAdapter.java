@@ -38,6 +38,8 @@ import org.apache.activeio.journal.JournalEventListener;
 import org.apache.activeio.journal.RecordLocation;
 import org.apache.activeio.packet.ByteArrayPacket;
 import org.apache.activeio.packet.Packet;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -79,7 +81,7 @@ import org.apache.commons.logging.LogFactory;
  * @org.apache.xbean.XBean
  * @version $Revision: 1.17 $
  */
-public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEventListener, UsageListener {
+public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEventListener, UsageListener, BrokerServiceAware {
 
     private static final Log LOG = LogFactory.getLog(JournalPersistenceAdapter.class);
 
@@ -687,6 +689,13 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
     
     public long size(){
         return 0;
+    }
+
+    public void setBrokerService(BrokerService brokerService) {
+        PersistenceAdapter pa = getLongTermPersistence();
+        if( pa instanceof BrokerServiceAware ) {
+            ((BrokerServiceAware)pa).setBrokerService(brokerService);
+        }
     }
 
 }
