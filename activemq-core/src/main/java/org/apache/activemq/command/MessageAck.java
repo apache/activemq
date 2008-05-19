@@ -54,6 +54,11 @@ public class MessageAck extends BaseCommand {
      */
     public static final byte REDELIVERED_ACK_TYPE = 3;
     
+    /**
+     * The  ack case where a client wants only an individual message to be discarded.
+     */
+    public static final byte INDIVIDUAL_ACK_TYPE = 4;
+    
     protected byte ackType;
     protected ConsumerId consumerId;
     protected MessageId firstMessageId;
@@ -107,6 +112,10 @@ public class MessageAck extends BaseCommand {
     
     public boolean isRedeliveredAck() {
         return ackType == REDELIVERED_ACK_TYPE;
+    }
+    
+    public boolean isIndividualAck() {
+        return ackType == INDIVIDUAL_ACK_TYPE;
     }
 
     /**

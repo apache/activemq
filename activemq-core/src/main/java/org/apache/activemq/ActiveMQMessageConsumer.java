@@ -858,7 +858,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
     
     void acknowledge(MessageDispatch md) throws JMSException {
-        MessageAck ack = new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,deliveredMessages.size());
+        MessageAck ack = new MessageAck(md,MessageAck.INDIVIDUAL_ACK_TYPE,1);
         session.asyncSendPacket(ack);
         synchronized(deliveredMessages){
             deliveredMessages.remove(md);
