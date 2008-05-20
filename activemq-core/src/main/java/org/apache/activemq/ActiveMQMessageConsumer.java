@@ -624,7 +624,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 executorService.submit(new Runnable() {
                     public void run() {
                         try {
-                            session.asyncSendPacket(ackToSend);
+                            session.sendAck(ackToSend,true);
                         } catch (JMSException e) {
                             LOG.error(getConsumerId() + " failed to delivered acknowledgements", e);
                         } finally {
@@ -757,7 +757,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                 if (ackCounter >= (info
                                         .getCurrentPrefetchSize() * .65)) {
                                     MessageAck ack = new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,deliveredMessages.size());
-                                    session.asyncSendPacket(ack);
+                                    session.sendAck(ack);
                                     ackCounter = 0;
                                     deliveredMessages.clear();
                                 }
@@ -765,7 +765,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                             }
                         } else {
                             MessageAck ack = new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,deliveredMessages.size());
-                            session.asyncSendPacket(ack);
+                            session.sendAck(ack);
                             deliveredMessages.clear();
                         }
                     }
@@ -815,7 +815,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         if ((0.5 * info.getPrefetchSize()) <= (deliveredCounter - additionalWindowSize)) {
             MessageAck ack = new MessageAck(md, ackType, deliveredCounter);
             ack.setTransactionId(session.getTransactionContext().getTransactionId());
-            session.asyncSendPacket(ack);
+            session.sendAck(ack);
             additionalWindowSize = deliveredCounter;
 
             // When using DUPS ok, we do a real ack.
@@ -845,7 +845,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 session.doStartTransaction();
                 ack.setTransactionId(session.getTransactionContext().getTransactionId());
             }
-            session.asyncSendPacket(ack);
+            session.sendAck(ack);
     
             // Adjust the counters
             deliveredCounter -= deliveredMessages.size();
@@ -859,7 +859,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     
     void acknowledge(MessageDispatch md) throws JMSException {
         MessageAck ack = new MessageAck(md,MessageAck.INDIVIDUAL_ACK_TYPE,1);
-        session.asyncSendPacket(ack);
+        session.sendAck(ack);
         synchronized(deliveredMessages){
             deliveredMessages.remove(md);
         }
@@ -910,7 +910,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     // Acknowledge the last message.
                     
                     MessageAck ack = new MessageAck(lastMd, MessageAck.POSION_ACK_TYPE, deliveredMessages.size());
-                    session.asyncSendPacket(ack);
+                    session.sendAck(ack,true);
                     // ensure we don't filter this as a duplicate
                     session.connection.rollbackDuplicate(this, lastMd.getMessage());
                     // Adjust the window size.
@@ -919,7 +919,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 } else {
                     
                     MessageAck ack = new MessageAck(lastMd, MessageAck.REDELIVERED_ACK_TYPE, deliveredMessages.size());
-                    session.asyncSendPacket(ack);
+                    session.sendAck(ack,true);
     
                     // stop the delivery of messages.
                     unconsumedMessages.stop();

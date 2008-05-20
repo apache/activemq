@@ -1903,5 +1903,17 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         }
         return false;
     }
+    
+    protected void sendAck(MessageAck ack) throws JMSException {
+        sendAck(ack,false);
+    }
+    
+    protected void sendAck(MessageAck ack, boolean lazy) throws JMSException {
+        if (lazy || connection.isSendAcksAsync() || isTransacted()) {
+            asyncSendPacket(ack);
+        } else {
+            syncSendPacket(ack);
+        }
+    }
 
 }
