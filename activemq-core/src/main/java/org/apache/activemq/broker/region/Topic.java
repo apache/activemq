@@ -385,6 +385,11 @@ public class Topic  extends BaseDestination  implements Task{
 
         if (topicStore != null && message.isPersistent()
                 && !canOptimizeOutPersistence()) {
+            if (isProducerFlowControl() && context.isProducerFlowControl() ) {
+                if (systemUsage.isSendFailIfNoSpace() && systemUsage.getStoreUsage().isFull()) {
+                    throw new javax.jms.ResourceAllocationException("Usage Manager Store is Full");
+                }
+            }
             while (!systemUsage.getStoreUsage().waitForSpace(1000)) {
                 if (context.getStopping().get()) {
                     throw new IOException("Connection closed, send aborted.");
