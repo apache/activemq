@@ -23,7 +23,9 @@ import javax.jms.ConnectionFactory;
 import org.apache.activemq.spring.ActiveMQConnectionFactory;
 import org.apache.camel.component.jms.JmsConfiguration;
 import org.springframework.jms.connection.SingleConnectionFactory;
+import org.springframework.jms.connection.JmsTransactionManager;
 import org.springframework.jms.core.JmsTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
 
 /**
  * @version $Revision$
@@ -32,6 +34,8 @@ public class ActiveMQConfiguration extends JmsConfiguration {
     private String brokerURL = ActiveMQConnectionFactory.DEFAULT_BROKER_URL;
     private boolean useSingleConnection = false;
     private boolean usePooledConnection = true;
+    private String userName;
+    private String password;
 
     public ActiveMQConfiguration() {
     }
@@ -52,6 +56,31 @@ public class ActiveMQConfiguration extends JmsConfiguration {
 
     public boolean isUseSingleConnection() {
         return useSingleConnection;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    /**
+     * Sets the username to be used to login to ActiveMQ
+     * @param userName
+     */
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    /**
+     * Sets the password/passcode used to login to ActiveMQ
+     *
+     * @param password
+     */
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     /**
@@ -85,8 +114,35 @@ public class ActiveMQConfiguration extends JmsConfiguration {
     }
 
     @Override
+    public PlatformTransactionManager getTransactionManager() {
+        PlatformTransactionManager answer = super.getTransactionManager();
+        if (isTransacted() && answer == null) {
+            // lets auto-default the transaction manager if its not specified
+            answer = createTransactionManager();
+            setTransactionManager(answer);
+            answer = getTransactionManager();
+        }
+        return answer;
+    }
+
+    /**
+     * Factory method to create a default transaction manager if one is not specified
+     */
+    protected PlatformTransactionManager createTransactionManager() {
+        JmsTransactionManager answer = new JmsTransactionManager(getConnectionFactory());
+        answer.afterPropertiesSet();
+        return answer;
+    }
+
+    @Override
     protected ConnectionFactory createConnectionFactory() {
         ActiveMQConnectionFactory answer = new ActiveMQConnectionFactory();
+        if (userName != null) {
+            answer.setUserName(userName);
+        }
+        if (password != null) {
+            answer.setPassword(password);
+        }
         if (answer.getBeanName() == null) {
             answer.setBeanName("Camel");
         }
