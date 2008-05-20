@@ -143,6 +143,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean watchTopicAdvisories = true;
     private long warnAboutUnstartedConnectionTimeout = 500L;
     private int sendTimeout =0;
+    private boolean sendAcksAsync=true;
 
     private final Transport transport;
     private final IdGenerator clientIdGenerator;
@@ -1532,6 +1533,20 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     public void setSendTimeout(int sendTimeout) {
         this.sendTimeout = sendTimeout;
+    }
+    
+    /**
+     * @return the sendAcksAsync
+     */
+    public boolean isSendAcksAsync() {
+        return sendAcksAsync;
+    }
+
+    /**
+     * @param sendAcksAsync the sendAcksAsync to set
+     */
+    public void setSendAcksAsync(boolean sendAcksAsync) {
+        this.sendAcksAsync = sendAcksAsync;
     }
 
 

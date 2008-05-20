@@ -107,6 +107,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private int producerWindowSize = DEFAULT_PRODUCER_WINDOW_SIZE;
     private long warnAboutUnstartedConnectionTimeout = 500L;
     private int sendTimeout =0;
+    private boolean sendAcksAsync=true;
     private TransportListener transportListener;
 
     // /////////////////////////////////////////////
@@ -304,6 +305,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setProducerWindowSize(getProducerWindowSize());
         connection.setWarnAboutUnstartedConnectionTimeout(getWarnAboutUnstartedConnectionTimeout());
         connection.setSendTimeout(getSendTimeout());
+        connection.setSendAcksAsync(isSendAcksAsync());
         if (transportListener != null) {
             connection.addTransportListener(transportListener);
         }
@@ -549,6 +551,20 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public void setSendTimeout(int sendTimeout) {
         this.sendTimeout = sendTimeout;
     }
+    
+    /**
+     * @return the sendAcksAsync
+     */
+    public boolean isSendAcksAsync() {
+        return sendAcksAsync;
+    }
+
+    /**
+     * @param sendAcksAsync the sendAcksAsync to set
+     */
+    public void setSendAcksAsync(boolean sendAcksAsync) {
+        this.sendAcksAsync = sendAcksAsync;
+    }
 
 
     /**
@@ -645,6 +661,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("alwaysSyncSend", Boolean.toString(isAlwaysSyncSend()));
         props.setProperty("producerWindowSize", Integer.toString(getProducerWindowSize()));
         props.setProperty("sendTimeout", Integer.toString(getSendTimeout()));
+        props.setProperty("sendAcksAsync",Boolean.toString(isSendAcksAsync()));
     }
 
     public boolean isUseCompression() {
