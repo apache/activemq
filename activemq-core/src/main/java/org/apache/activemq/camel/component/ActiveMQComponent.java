@@ -71,6 +71,14 @@ public class ActiveMQComponent extends JmsComponent {
         getConfiguration().setBrokerURL(brokerURL);
     }
 
+    public void setUserName(String userName) {
+        getConfiguration().setUserName(userName);
+    }
+
+    public void setPassword(String password) {
+        getConfiguration().setPassword(password);
+    }
+
     public boolean isExposeAllQueues() {
         return exposeAllQueues;
     }
