@@ -464,8 +464,6 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     
                     public void run() {
                         try {
-                            socket.shutdownInput();
-                            socket.shutdownOutput();
                             socket.close();
                         } catch (IOException e) {
                             LOG.debug("Caught exception closing socket",e);
