@@ -139,7 +139,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     public void add(MessageReference node) throws Exception {
         synchronized (pendingLock) {
             // The destination may have just been removed...  
-            if( !destinations.contains(node.getRegionDestination()) ) {
+            if( !destinations.contains(node.getRegionDestination()) && node!=QueueMessageReference.NULL_MESSAGE) {
                 // perhaps we should inform the caller that we are no longer valid to dispatch to?
                 return;
             }
