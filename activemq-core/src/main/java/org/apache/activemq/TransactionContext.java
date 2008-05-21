@@ -153,6 +153,8 @@ public class TransactionContext implements XAResource {
             throw e;
         } catch (Throwable e) {
             throw JMSExceptionSupport.create(e);
+        } finally {
+        	synchornizations = null;
         }
     }
 
@@ -170,6 +172,8 @@ public class TransactionContext implements XAResource {
             throw e;
         } catch (Throwable e) {
             throw JMSExceptionSupport.create(e);
+        } finally {
+        	synchornizations = null;
         }
     }
 
