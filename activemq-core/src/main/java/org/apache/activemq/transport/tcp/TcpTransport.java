@@ -65,6 +65,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     protected int soTimeout;
     protected int socketBufferSize = 64 * 1024;
     protected int ioBufferSize = 8 * 1024;
+    protected boolean closeAsync=true;
     protected Socket socket;
     protected DataOutputStream dataOut;
     protected DataInputStream dataIn;
@@ -335,6 +336,20 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     public void setIoBufferSize(int ioBufferSize) {
         this.ioBufferSize = ioBufferSize;
     }
+    
+    /**
+     * @return the closeAsync
+     */
+    public boolean isCloseAsync() {
+        return closeAsync;
+    }
+
+    /**
+     * @param closeAsync the closeAsync to set
+     */
+    public void setCloseAsync(boolean closeAsync) {
+        this.closeAsync = closeAsync;
+    }
 
     // Implementation methods
     // -------------------------------------------------------------------------
@@ -441,22 +456,33 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         // is hung.. then this hangs the close.
         // closeStreams();
         if (socket != null) {
-            //closing the socket can hang also 
-            final CountDownLatch latch = new CountDownLatch(1);
-            SOCKET_CLOSE.execute(new Runnable() {
-
-                public void run() {
-                    try {
-                        socket.close();
-                    } catch (IOException e) {
-                        LOG.debug("Caught exception closing socket",e);
-                    }finally {
-                        latch.countDown();
-                    }
-                }
+            if (closeAsync) {
+                //closing the socket can hang also 
+                final CountDownLatch latch = new CountDownLatch(1);
                 
-            });
-            latch.await(1,TimeUnit.SECONDS);
+                SOCKET_CLOSE.execute(new Runnable() {
+    
+                    public void run() {
+                        try {
+                            socket.shutdownInput();
+                            socket.shutdownOutput();
+                            socket.close();
+                        } catch (IOException e) {
+                            LOG.debug("Caught exception closing socket",e);
+                        }finally {
+                            latch.countDown();
+                        }
+                    }
+                    
+                });
+                latch.await(1,TimeUnit.SECONDS);
+            }else {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    LOG.debug("Caught exception closing socket",e);
+                }
+            }
            
         }
     }
@@ -512,6 +538,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         SOCKET_CLOSE =   new ThreadPoolExecutor(0, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
             public Thread newThread(Runnable runnable) {
                 Thread thread = new Thread(runnable, "TcpSocketClose: "+runnable);
+                thread.setPriority(Thread.MAX_PRIORITY);
                 thread.setDaemon(true);
                 return thread;
             }
