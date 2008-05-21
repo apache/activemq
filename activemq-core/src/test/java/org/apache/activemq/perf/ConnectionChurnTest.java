@@ -36,7 +36,7 @@ public class ConnectionChurnTest extends TestCase {
     protected static final int CONNECTION_COUNT = 200;
     private static final Log LOG = LogFactory.getLog(ConnectionChurnTest.class);
     protected BrokerService broker;
-    protected String bindAddress = ActiveMQConnection.DEFAULT_BROKER_BIND_URL+"?transport.closeAsync=false";
+    protected String bindAddress = ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL+"?transport.closeAsync=false";
     protected int topicCount;
 
     public void testPerformance() throws Exception {
