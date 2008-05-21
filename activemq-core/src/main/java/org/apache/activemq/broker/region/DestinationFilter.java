@@ -109,7 +109,7 @@ public class DestinationFilter implements Destination {
 
         for (Iterator iter = destinations.iterator(); iter.hasNext();) {
             Destination dest = (Destination)iter.next();
-            dest.send(context, message);
+            dest.send(context, message.copy());
         }
     }
 
