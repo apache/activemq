@@ -28,7 +28,6 @@ public class BitArrayBin {
     private LinkedList<BitArray> list;
     private int maxNumberOfArrays;
     private int firstIndex = -1;
-    private int firstBin = -1;
     private long lastInOrderBit=-1;
 
     /**
@@ -54,15 +53,12 @@ public class BitArrayBin {
      * @return true if set
      */
     public boolean setBit(long index, boolean value) {
-        boolean answer = true;
+        boolean answer = false;
         BitArray ba = getBitArray(index);
         if (ba != null) {
             int offset = getOffset(index);
             if (offset >= 0) {
                 answer = ba.set(offset, value);
-            }
-            if (value) {
-            }else {
             }
         }
         return answer;
@@ -117,14 +113,16 @@ public class BitArrayBin {
         int bin = getBin(index);
         BitArray answer = null;
         if (bin >= 0) {
-            if (firstIndex < 0) {
-                firstIndex = 0;
-            }
-            if (bin >= list.size()) {
-                list.removeFirst();
-                firstIndex += BitArray.LONG_SIZE;
-                list.add(new BitArray());
-                bin = list.size() - 1;
+            if (bin >= maxNumberOfArrays) {
+                int overShoot = bin - maxNumberOfArrays + 1;
+                while (overShoot > 0) {
+                    list.removeFirst();
+                    firstIndex += BitArray.LONG_SIZE;
+                    list.add(new BitArray());
+                    overShoot--;
+                }
+                
+                bin = maxNumberOfArrays - 1;
             }
             answer = list.get(bin);
             if (answer == null) {
@@ -143,8 +141,8 @@ public class BitArrayBin {
      */
     private int getBin(long index) {
         int answer = 0;
-        if (firstBin < 0) {
-            firstBin = 0;
+        if (firstIndex < 0) {
+            firstIndex = (int) (index - (index % BitArray.LONG_SIZE));
         } else if (firstIndex >= 0) {
             answer = (int)((index - firstIndex) / BitArray.LONG_SIZE);
         }
