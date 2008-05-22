@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import javax.jms.JMSException;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.advisory.AdvisorySupport;
@@ -92,6 +93,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     private BrokerId[] cluster;
 
     public abstract Message copy();
+    public abstract void clearBody() throws JMSException;
 
     protected void copy(Message copy) {
         super.copy(copy);

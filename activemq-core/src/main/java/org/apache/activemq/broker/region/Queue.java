@@ -337,79 +337,83 @@ public class Queue extends BaseDestination implements Task {
             }
             return;
         }
-        if (isProducerFlowControl() && context.isProducerFlowControl() && memoryUsage.isFull()) {
-            if (systemUsage.isSendFailIfNoSpace()) {
-                throw new javax.jms.ResourceAllocationException("SystemUsage memory limit reached");
-            }
-
-            // We can avoid blocking due to low usage if the producer is sending
-            // a sync message or
-            // if it is using a producer window
-            if (producerInfo.getWindowSize() > 0 || message.isResponseRequired()) {
-                synchronized (messagesWaitingForSpace) {
-                    messagesWaitingForSpace.add(new Runnable() {
-                        public void run() {
-
-                            try {
-
-                                // While waiting for space to free up... the
-                                // message may have expired.
-                                if (broker.isExpired(message)) {
-                                    broker.messageExpired(context, message);
-                                    //message not added to stats yet
-                                    //destinationStatistics.getMessages().decrement();
-                                } else {
-                                    doMessageSend(producerExchange, message);
-                                }
-
-                                if (sendProducerAck) {
-                                    ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
-                                    context.getConnection().dispatchAsync(ack);
-                                } else {
-                                    Response response = new Response();
-                                    response.setCorrelationId(message.getCommandId());
-                                    context.getConnection().dispatchAsync(response);
-                                }
-
-                            } catch (Exception e) {
-                                if (!sendProducerAck && !context.isInRecoveryMode()) {
-                                    ExceptionResponse response = new ExceptionResponse(e);
-                                    response.setCorrelationId(message.getCommandId());
-                                    context.getConnection().dispatchAsync(response);
+        if(memoryUsage.isFull()) {
+            isFull(context, memoryUsage);
+            fastProducer(context, producerInfo);
+            if (isProducerFlowControl() && context.isProducerFlowControl()) {
+                if (systemUsage.isSendFailIfNoSpace()) {
+                    throw new javax.jms.ResourceAllocationException("SystemUsage memory limit reached");
+                }
+    
+                // We can avoid blocking due to low usage if the producer is sending
+                // a sync message or
+                // if it is using a producer window
+                if (producerInfo.getWindowSize() > 0 || message.isResponseRequired()) {
+                    synchronized (messagesWaitingForSpace) {
+                        messagesWaitingForSpace.add(new Runnable() {
+                            public void run() {
+    
+                                try {
+    
+                                    // While waiting for space to free up... the
+                                    // message may have expired.
+                                    if (broker.isExpired(message)) {
+                                        broker.messageExpired(context, message);
+                                        //message not added to stats yet
+                                        //destinationStatistics.getMessages().decrement();
+                                    } else {
+                                        doMessageSend(producerExchange, message);
+                                    }
+    
+                                    if (sendProducerAck) {
+                                        ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
+                                        context.getConnection().dispatchAsync(ack);
+                                    } else {
+                                        Response response = new Response();
+                                        response.setCorrelationId(message.getCommandId());
+                                        context.getConnection().dispatchAsync(response);
+                                    }
+    
+                                } catch (Exception e) {
+                                    if (!sendProducerAck && !context.isInRecoveryMode()) {
+                                        ExceptionResponse response = new ExceptionResponse(e);
+                                        response.setCorrelationId(message.getCommandId());
+                                        context.getConnection().dispatchAsync(response);
+                                    }
                                 }
                             }
+                        });
+    
+                        // If the user manager is not full, then the task will not
+                        // get called..
+                        if (!memoryUsage.notifyCallbackWhenNotFull(sendMessagesWaitingForSpaceTask)) {
+                            // so call it directly here.
+                            sendMessagesWaitingForSpaceTask.run();
                         }
-                    });
-
-                    // If the user manager is not full, then the task will not
-                    // get called..
-                    if (!memoryUsage.notifyCallbackWhenNotFull(sendMessagesWaitingForSpaceTask)) {
-                        // so call it directly here.
-                        sendMessagesWaitingForSpaceTask.run();
+                        context.setDontSendReponse(true);
+                        return;
                     }
-                    context.setDontSendReponse(true);
-                    return;
-                }
-
-            } else {
-
-                // Producer flow control cannot be used, so we have do the flow
-                // control at the broker
-                // by blocking this thread until there is space available.
-                while (!memoryUsage.waitForSpace(1000)) {
-                    if (context.getStopping().get()) {
-                        throw new IOException("Connection closed, send aborted.");
+    
+                } else {
+    
+                    // Producer flow control cannot be used, so we have do the flow
+                    // control at the broker
+                    // by blocking this thread until there is space available.
+                    while (!memoryUsage.waitForSpace(1000)) {
+                        if (context.getStopping().get()) {
+                            throw new IOException("Connection closed, send aborted.");
+                        }
                     }
-                }
-
-                // The usage manager could have delayed us by the time
-                // we unblock the message could have expired..
-                if (message.isExpired()) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Expired message: " + message);
+    
+                    // The usage manager could have delayed us by the time
+                    // we unblock the message could have expired..
+                    if (message.isExpired()) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Expired message: " + message);
+                        }
+                        broker.getRoot().messageExpired(context, message);
+                        return;
                     }
-                    broker.getRoot().messageExpired(context, message);
-                    return;
                 }
             }
         }
@@ -485,6 +489,7 @@ public class Queue extends BaseDestination implements Task {
 	}
     
     public void acknowledge(ConnectionContext context, Subscription sub, MessageAck ack, MessageReference node) throws IOException {
+        messageConsumed(context, node);
         if (store != null && node.isPersistent()) {
             // the original ack may be a ranged ack, but we are trying to delete
             // a specific
@@ -1062,6 +1067,7 @@ public class Queue extends BaseDestination implements Task {
         }
         destinationStatistics.getEnqueues().increment();
         destinationStatistics.getMessages().increment();
+        messageDelivered(context, msg);
         wakeup();
     }
     

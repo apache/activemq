@@ -16,12 +16,10 @@
  */
 package org.apache.activemq.advisory;
 
-import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
@@ -38,10 +36,12 @@ import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DestinationInfo;
+import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.state.ProducerState;
+import org.apache.activemq.usage.Usage;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
 import org.apache.commons.logging.Log;
@@ -72,7 +72,7 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
-        next.addConnection(context, info);
+        super.addConnection(context, info);
 
         ActiveMQTopic topic = AdvisorySupport.getConnectionAdvisoryTopic();
         fireAdvisory(context, topic, info);
@@ -80,7 +80,7 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        Subscription answer = next.addConsumer(context, info);
+        Subscription answer = super.addConsumer(context, info);
         
         // Don't advise advisory topics.
         if (!AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
@@ -133,7 +133,7 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
-        next.addProducer(context, info);
+        super.addProducer(context, info);
 
         // Don't advise advisory topics.
         if (info.getDestination() != null && !AdvisorySupport.isAdvisoryTopic(info.getDestination())) {
@@ -144,7 +144,7 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination) throws Exception {
-        Destination answer = next.addDestination(context, destination);
+        Destination answer = super.addDestination(context, destination);
         if (!AdvisorySupport.isAdvisoryTopic(destination)) {
             DestinationInfo info = new DestinationInfo(context.getConnectionId(), DestinationInfo.ADD_OPERATION_TYPE, destination);
             DestinationInfo previous = destinations.putIfAbsent(destination, info);
@@ -170,7 +170,7 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
-        next.removeDestination(context, destination, timeout);
+        super.removeDestination(context, destination, timeout);
         DestinationInfo info = destinations.remove(destination);
         if (info != null) {
             info.setDestination(destination);
@@ -190,7 +190,7 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     public void removeDestinationInfo(ConnectionContext context, DestinationInfo destInfo) throws Exception {
-        next.removeDestinationInfo(context, destInfo);   
+        super.removeDestinationInfo(context, destInfo);   
         DestinationInfo info = destinations.remove(destInfo.getDestination());
         if (info != null) {
             info.setDestination(destInfo.getDestination());
@@ -211,7 +211,7 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
-        next.removeConnection(context, info, error);
+        super.removeConnection(context, info, error);
 
         ActiveMQTopic topic = AdvisorySupport.getConnectionAdvisoryTopic();
         fireAdvisory(context, topic, info.createRemoveCommand());
@@ -219,7 +219,7 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     public void removeConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        next.removeConsumer(context, info);
+        super.removeConsumer(context, info);
 
         // Don't advise advisory topics.
         ActiveMQDestination dest = info.getDestination();
@@ -233,7 +233,7 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
-        next.removeProducer(context, info);
+        super.removeProducer(context, info);
 
         // Don't advise advisory topics.
         ActiveMQDestination dest = info.getDestination();
@@ -247,12 +247,90 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     public void messageExpired(ConnectionContext context, MessageReference messageReference) {
-        next.messageExpired(context, messageReference);
+        super.messageExpired(context, messageReference);
         try {
-            ActiveMQTopic topic = AdvisorySupport.getExpiredMessageTopic(messageReference.getMessage().getDestination());
-            fireAdvisory(context, topic, messageReference.getMessage());
+            if(!messageReference.isAdvisory()) {
+                ActiveMQTopic topic = AdvisorySupport.getExpiredMessageTopic(messageReference.getMessage().getDestination());
+                Message payload = messageReference.getMessage().copy();
+                payload.clearBody();
+                fireAdvisory(context, topic,payload);
+            }
         } catch (Exception e) {
             LOG.warn("Failed to fire message expired advisory");
+        }
+    }
+    
+    public void messageConsumed(ConnectionContext context, MessageReference messageReference) {
+        super.messageConsumed(context, messageReference);
+        try {
+            if(!messageReference.isAdvisory()) {
+                ActiveMQTopic topic = AdvisorySupport.getMessageConsumedAdvisoryTopic(messageReference.getMessage().getDestination());
+                Message payload = messageReference.getMessage().copy();
+                payload.clearBody();
+                fireAdvisory(context, topic,payload);
+            }
+        } catch (Exception e) {
+            LOG.warn("Failed to fire message consumed advisory");
+        }
+    }
+    
+    public void messageDelivered(ConnectionContext context, MessageReference messageReference) {
+        super.messageDelivered(context, messageReference);
+        try {
+            if (!messageReference.isAdvisory()) {
+                ActiveMQTopic topic = AdvisorySupport.getMessageDeliveredAdvisoryTopic(messageReference.getMessage().getDestination());
+                Message payload = messageReference.getMessage().copy();
+                payload.clearBody();
+                fireAdvisory(context, topic,payload);
+            }
+        } catch (Exception e) {
+            LOG.warn("Failed to fire message delivered advisory");
+        }
+    }
+    
+    public void messageDiscarded(ConnectionContext context, MessageReference messageReference) {
+        super.messageDiscarded(context, messageReference);
+        try {
+            if (!messageReference.isAdvisory()) {
+                ActiveMQTopic topic = AdvisorySupport.getMessageDiscardedAdvisoryTopic(messageReference.getMessage().getDestination());
+                Message payload = messageReference.getMessage().copy();
+                payload.clearBody();
+                fireAdvisory(context, topic,payload);
+            }
+        } catch (Exception e) {
+            LOG.warn("Failed to fire message discarded advisory");
+        }
+    }
+    
+    public void slowConsumer(ConnectionContext context, Destination destination,Subscription subs) {
+        super.slowConsumer(context, destination,subs);
+        try {
+            ActiveMQTopic topic = AdvisorySupport.getSlowConsumerAdvisoryTopic(destination.getActiveMQDestination());
+            fireAdvisory(context, topic,subs.getConsumerInfo());
+        } catch (Exception e) {
+            LOG.warn("Failed to fire message slow consumer advisory");
+        }
+    }
+    
+    public void fastProducer(ConnectionContext context,ProducerInfo producerInfo) {
+        super.fastProducer(context, producerInfo);
+        try {
+            ActiveMQTopic topic = AdvisorySupport.getFastProducerAdvisoryTopic(producerInfo.getDestination());
+            fireAdvisory(context, topic,producerInfo);
+        } catch (Exception e) {
+            LOG.warn("Failed to fire message fast producer advisory");
+        }
+    }
+    
+    public void isFull(ConnectionContext context,Destination destination,Usage usage) {
+        super.isFull(context,destination, usage);
+        try {
+            ActiveMQTopic topic = AdvisorySupport.getFullAdvisoryTopic(destination.getActiveMQDestination());
+            ActiveMQMessage advisoryMessage = new ActiveMQMessage();           
+            advisoryMessage.setStringProperty("usageName", usage.getName());
+            fireAdvisory(context, topic,advisoryMessage);
+        } catch (Exception e) {
+            LOG.warn("Failed to fire message is full advisory");
         }
     }
 

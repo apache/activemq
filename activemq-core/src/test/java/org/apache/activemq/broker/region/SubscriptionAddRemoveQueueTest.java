@@ -307,5 +307,11 @@ public class SubscriptionAddRemoveQueueTest extends TestCase {
             return false;
         }
 
+        public void addDestination(Destination destination) {            
+        }
+
+        public void removeDestination(Destination destination) {            
+        }
+
     }
 }

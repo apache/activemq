@@ -39,6 +39,7 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.kaha.Store;
+import org.apache.activemq.usage.Usage;
 
 /**
  * Allows you to intercept broker operation so that features such as security
@@ -263,5 +264,30 @@ public class BrokerFilter implements Broker {
 
     public long getBrokerSequenceId() {
         return next.getBrokerSequenceId();
+    }
+
+   
+    public void fastProducer(ConnectionContext context,ProducerInfo producerInfo) {
+        next.fastProducer(context, producerInfo);
+    }
+
+    public void isFull(ConnectionContext context,Destination destination, Usage usage) {
+        next.isFull(context,destination, usage);
+    }
+
+    public void messageConsumed(ConnectionContext context,MessageReference messageReference) {
+        next.messageConsumed(context, messageReference);
+    }
+
+    public void messageDelivered(ConnectionContext context,MessageReference messageReference) {
+        next.messageDelivered(context, messageReference);
+    }
+
+    public void messageDiscarded(ConnectionContext context,MessageReference messageReference) {
+        next.messageDiscarded(context, messageReference);
+    }
+
+    public void slowConsumer(ConnectionContext context, Destination destination,Subscription subs) {
+        next.slowConsumer(context, destination,subs);
     }
 }

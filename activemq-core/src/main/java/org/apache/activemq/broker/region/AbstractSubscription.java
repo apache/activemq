@@ -190,6 +190,23 @@ public abstract class AbstractSubscription implements Subscription {
         }
         return Integer.MAX_VALUE;
     }
+    
+    /**
+     * Add a destination
+     * @param destination
+     */
+    public void addDestination(Destination destination) {
+        
+    }
+    
+    
+    /**
+     * Remove a destination
+     * @param destination
+     */
+    public void removeDestination(Destination destination) {
+        
+    }
 
     protected void doAddRecoveredMessage(MessageReference message) throws Exception {
         add(message);

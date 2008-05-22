@@ -40,6 +40,7 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.kaha.Store;
+import org.apache.activemq.usage.Usage;
 
 /**
  * Implementation of the broker where all it's methods throw an
@@ -265,6 +266,30 @@ public class ErrorBroker implements Broker {
     }
     
     public long getBrokerSequenceId() {
+        throw new BrokerStoppedException(this.message);
+    }
+    
+    public void fastProducer(ConnectionContext context,ProducerInfo producerInfo) {
+        throw new BrokerStoppedException(this.message);
+    }
+
+    public void isFull(ConnectionContext context,Destination destination, Usage usage) {
+        throw new BrokerStoppedException(this.message);
+    }
+
+    public void messageConsumed(ConnectionContext context,MessageReference messageReference) {
+        throw new BrokerStoppedException(this.message);
+    }
+
+    public void messageDelivered(ConnectionContext context,MessageReference messageReference) {
+        throw new BrokerStoppedException(this.message);
+    }
+
+    public void messageDiscarded(ConnectionContext context,MessageReference messageReference) {
+        throw new BrokerStoppedException(this.message);
+    }
+
+    public void slowConsumer(ConnectionContext context, Destination destination,Subscription subs) {
         throw new BrokerStoppedException(this.message);
     }
 }
