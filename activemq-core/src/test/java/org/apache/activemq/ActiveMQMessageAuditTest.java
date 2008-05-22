@@ -67,8 +67,9 @@ public class ActiveMQMessageAuditTest extends TestCase {
             list.add(id);
             assertFalse(audit.isDuplicate(id));
         }
-        for (String id : list) {
-            assertTrue(audit.isDuplicate(id));
+        List<String> windowList = list.subList(list.size() -1 -audit.getAuditDepth(), list.size() -1);
+        for (String id : windowList) {
+            assertTrue("duplicate, id:" + id, audit.isDuplicate(id));
         }
     }
 
@@ -90,8 +91,9 @@ public class ActiveMQMessageAuditTest extends TestCase {
             list.add(msg);
             assertFalse(audit.isDuplicate(msg.getMessageId()));
         }
-        for (MessageReference msg : list) {
-            assertTrue(audit.isDuplicate(msg));
+        List<MessageReference> windowList = list.subList(list.size() -1 -audit.getAuditDepth(), list.size() -1);
+        for (MessageReference msg : windowList) {
+            assertTrue("duplicate msg:" + msg, audit.isDuplicate(msg));
         }
     }
     
