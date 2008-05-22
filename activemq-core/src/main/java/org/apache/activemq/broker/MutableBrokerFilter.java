@@ -41,6 +41,7 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.kaha.Store;
+import org.apache.activemq.usage.Usage;
 
 /**
  * Like a BrokerFilter but it allows you to switch the getNext().broker. This
@@ -276,6 +277,30 @@ public class MutableBrokerFilter implements Broker {
     
     public long getBrokerSequenceId() {
         return getNext().getBrokerSequenceId();
+    }
+    
+    public void fastProducer(ConnectionContext context,ProducerInfo producerInfo) {
+        getNext().fastProducer(context, producerInfo);
+    }
+
+    public void isFull(ConnectionContext context,Destination destination, Usage usage) {
+        getNext().isFull(context,destination, usage);
+    }
+
+    public void messageConsumed(ConnectionContext context,MessageReference messageReference) {
+        getNext().messageConsumed(context, messageReference);
+    }
+
+    public void messageDelivered(ConnectionContext context,MessageReference messageReference) {
+        getNext().messageDelivered(context, messageReference);
+    }
+
+    public void messageDiscarded(ConnectionContext context,MessageReference messageReference) {
+        getNext().messageDiscarded(context, messageReference);
+    }
+
+    public void slowConsumer(ConnectionContext context, Destination dest, Subscription subs) {
+        getNext().slowConsumer(context, dest,subs);
     }
 
 }

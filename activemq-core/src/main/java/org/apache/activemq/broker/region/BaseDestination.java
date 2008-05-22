@@ -24,12 +24,17 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
+import org.apache.activemq.usage.Usage;
 
 
 /**
  * @version $Revision: 1.12 $
  */
 public abstract class BaseDestination implements Destination {
+    /**
+     * The default number of messages to page in to the destination
+     * from persistent storage
+     */
     public static final int DEFAULT_PAGE_SIZE=100;
     protected final ActiveMQDestination destination;
     protected final Broker broker;
@@ -44,6 +49,12 @@ public abstract class BaseDestination implements Destination {
     private boolean useCache=true;
     private int minimumMessageSize=1024;
     private boolean lazyDispatch=false;
+    private boolean advisoryForSlowConsumers;
+    private boolean advisdoryForFastProducers;
+    private boolean advisoryForDiscardingMessages;
+    private boolean advisoryWhenFull;
+    private boolean advisoryForDelivery;
+    private boolean advisoryForConsumed;
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
     protected final BrokerService brokerService;
     protected final Broker regionBroker;
@@ -200,4 +211,157 @@ public abstract class BaseDestination implements Destination {
     protected long getDestinationSequenceId() {
         return regionBroker.getBrokerSequenceId();
     }
+
+    /**
+     * @return the advisoryForSlowConsumers
+     */
+    public boolean isAdvisoryForSlowConsumers() {
+        return advisoryForSlowConsumers;
+    }
+
+    /**
+     * @param advisoryForSlowConsumers the advisoryForSlowConsumers to set
+     */
+    public void setAdvisoryForSlowConsumers(boolean advisoryForSlowConsumers) {
+        this.advisoryForSlowConsumers = advisoryForSlowConsumers;
+    }
+
+    /**
+     * @return the advisoryForDiscardingMessages
+     */
+    public boolean isAdvisoryForDiscardingMessages() {
+        return advisoryForDiscardingMessages;
+    }
+
+    /**
+     * @param advisoryForDiscardingMessages the advisoryForDiscardingMessages to set
+     */
+    public void setAdvisoryForDiscardingMessages(
+            boolean advisoryForDiscardingMessages) {
+        this.advisoryForDiscardingMessages = advisoryForDiscardingMessages;
+    }
+
+    /**
+     * @return the advisoryWhenFull
+     */
+    public boolean isAdvisoryWhenFull() {
+        return advisoryWhenFull;
+    }
+
+    /**
+     * @param advisoryWhenFull the advisoryWhenFull to set
+     */
+    public void setAdvisoryWhenFull(boolean advisoryWhenFull) {
+        this.advisoryWhenFull = advisoryWhenFull;
+    }
+
+    /**
+     * @return the advisoryForDelivery
+     */
+    public boolean isAdvisoryForDelivery() {
+        return advisoryForDelivery;
+    }
+
+    /**
+     * @param advisoryForDelivery the advisoryForDelivery to set
+     */
+    public void setAdvisoryForDelivery(boolean advisoryForDelivery) {
+        this.advisoryForDelivery = advisoryForDelivery;
+    }
+
+    /**
+     * @return the advisoryForConsumed
+     */
+    public boolean isAdvisoryForConsumed() {
+        return advisoryForConsumed;
+    }
+
+    /**
+     * @param advisoryForConsumed the advisoryForConsumed to set
+     */
+    public void setAdvisoryForConsumed(boolean advisoryForConsumed) {
+        this.advisoryForConsumed = advisoryForConsumed;
+    }
+
+    /**
+     * @return the advisdoryForFastProducers
+     */
+    public boolean isAdvisdoryForFastProducers() {
+        return advisdoryForFastProducers;
+    }
+
+    /**
+     * @param advisdoryForFastProducers the advisdoryForFastProducers to set
+     */
+    public void setAdvisdoryForFastProducers(boolean advisdoryForFastProducers) {
+        this.advisdoryForFastProducers = advisdoryForFastProducers;
+    }
+    
+    /**
+     * called when message is consumed
+     * @param context
+     * @param messageReference
+     */
+    public void messageConsumed(ConnectionContext context, MessageReference messageReference) {
+        if (advisoryForConsumed) {
+            broker.messageConsumed(context, messageReference);
+        }
+    }
+    
+    /**
+     * Called when message is delivered to the broker
+     * @param context
+     * @param messageReference
+     */
+    public void messageDelivered(ConnectionContext context, MessageReference messageReference) {
+        if(advisoryForDelivery) {
+            broker.messageDelivered(context, messageReference);
+        }
+    }
+    
+    /**
+     * Called when a message is discarded - e.g. running low on memory
+     * This will happen only if the policy is enabled - e.g. non durable topics
+     * @param context
+     * @param messageReference
+     */
+    public void messageDiscarded(ConnectionContext context, MessageReference messageReference) {
+        if (advisoryForDiscardingMessages) {
+            broker.messageDiscarded(context, messageReference);
+        }
+    }
+    
+    /**
+     * Called when there is a slow consumer
+     * @param context
+     * @param subs
+     */
+    public void slowConsumer(ConnectionContext context, Subscription subs) {
+        if(advisoryForSlowConsumers) {
+            broker.slowConsumer(context, this, subs);
+        }
+    }
+    
+    /**
+     * Called to notify a producer is too fast
+     * @param context
+     * @param producerInfo
+     */
+    public void fastProducer(ConnectionContext context,ProducerInfo producerInfo) {
+        if(advisdoryForFastProducers) {
+            broker.fastProducer(context, producerInfo);
+        }
+    }
+    
+    /**
+     * Called when a Usage reaches a limit
+     * @param context
+     * @param usage
+     */
+    public void isFull(ConnectionContext context,Usage usage) {
+        if(advisoryWhenFull) {
+            broker.isFull(context,this, usage);
+        }
+    }
+
 }

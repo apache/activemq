@@ -29,6 +29,7 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.usage.MemoryUsage;
+import org.apache.activemq.usage.Usage;
 
 /**
  * 
@@ -208,4 +209,33 @@ public class DestinationFilter implements Destination {
 	public boolean iterate() {
 		return next.iterate();
 	}
+
+    public void fastProducer(ConnectionContext context,ProducerInfo producerInfo) {
+       next.fastProducer(context, producerInfo);       
+    }
+
+   
+    public void isFull(ConnectionContext context, Usage usage) {
+       next.isFull(context, usage);
+    }
+
+   
+    public void messageConsumed(ConnectionContext context,MessageReference messageReference) {
+        next.messageConsumed(context, messageReference);
+    }
+
+    
+    public void messageDelivered(ConnectionContext context,MessageReference messageReference) {
+        next.messageDelivered(context, messageReference);
+    }
+
+    
+    public void messageDiscarded(ConnectionContext context,MessageReference messageReference) {
+        next.messageDiscarded(context, messageReference);
+    }
+
+    
+    public void slowConsumer(ConnectionContext context, Subscription subs) {
+       next.slowConsumer(context, subs);
+    }
 }

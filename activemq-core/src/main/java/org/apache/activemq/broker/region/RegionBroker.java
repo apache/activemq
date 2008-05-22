@@ -58,6 +58,7 @@ import org.apache.activemq.kaha.Store;
 import org.apache.activemq.state.ConnectionState;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.usage.SystemUsage;
+import org.apache.activemq.usage.Usage;
 import org.apache.activemq.util.BrokerSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
@@ -677,6 +678,24 @@ public class RegionBroker implements Broker {
             LOG.debug("Message expired " + node);
         }
         getRoot().sendToDeadLetterQueue(context, node);
+    }
+    
+    public void fastProducer(ConnectionContext context,ProducerInfo producerInfo) {
+    }
+
+    public void isFull(ConnectionContext context,Destination destination, Usage usage) {
+    }
+
+    public void messageConsumed(ConnectionContext context,MessageReference messageReference) {
+    }
+
+    public void messageDelivered(ConnectionContext context,MessageReference messageReference) {
+    }
+
+    public void messageDiscarded(ConnectionContext context,MessageReference messageReference) {
+    }
+
+    public void slowConsumer(ConnectionContext context, Destination dest, Subscription subs) {
     }
 
     public void sendToDeadLetterQueue(ConnectionContext context,

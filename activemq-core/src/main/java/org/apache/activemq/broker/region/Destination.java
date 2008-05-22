@@ -29,6 +29,7 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.thread.Task;
 import org.apache.activemq.usage.MemoryUsage;
+import org.apache.activemq.usage.Usage;
 
 /**
  * @version $Revision: 1.12 $
@@ -114,4 +115,48 @@ public interface Destination extends Service, Task {
     public void setLazyDispatch(boolean value);
 
     void messageExpired(ConnectionContext context, PrefetchSubscription prefetchSubscription, MessageReference node);
+
+    /**
+     * called when message is consumed
+     * @param context
+     * @param messageReference
+     */
+     void messageConsumed(ConnectionContext context, MessageReference messageReference);
+    
+    /**
+     * Called when message is delivered to the broker
+     * @param context
+     * @param messageReference
+     */
+     void messageDelivered(ConnectionContext context, MessageReference messageReference);
+    
+    /**
+     * Called when a message is discarded - e.g. running low on memory
+     * This will happen only if the policy is enabled - e.g. non durable topics
+     * @param context
+     * @param messageReference
+     */
+     void messageDiscarded(ConnectionContext context, MessageReference messageReference);
+    
+    /**
+     * Called when there is a slow consumer
+     * @param context
+     * @param subs
+     */
+     void slowConsumer(ConnectionContext context, Subscription subs);
+    
+    /**
+     * Called to notify a producer is too fast
+     * @param context
+     * @param producerInfo
+     */
+     void fastProducer(ConnectionContext context,ProducerInfo producerInfo);
+    
+    /**
+     * Called when a Usage reaches a limit
+     * @param context
+     * @param usage
+     */
+     void isFull(ConnectionContext context,Usage usage);
+
 }

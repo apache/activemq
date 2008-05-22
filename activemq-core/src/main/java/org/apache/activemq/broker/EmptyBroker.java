@@ -40,6 +40,7 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.kaha.Store;
+import org.apache.activemq.usage.Usage;
 
 /**
  * Dumb implementation - used to be overriden by listeners
@@ -255,5 +256,23 @@ public class EmptyBroker implements Broker {
     
     public long getBrokerSequenceId() {
         return -1l;
+    }
+    
+    public void fastProducer(ConnectionContext context,ProducerInfo producerInfo) {
+    }
+
+    public void isFull(ConnectionContext context, Destination destination,Usage usage) {
+    }
+
+    public void messageConsumed(ConnectionContext context,MessageReference messageReference) {
+    }
+
+    public void messageDelivered(ConnectionContext context,MessageReference messageReference) {
+    }
+
+    public void messageDiscarded(ConnectionContext context,MessageReference messageReference) {
+    }
+
+    public void slowConsumer(ConnectionContext context,Destination destination, Subscription subs) {
     }
 }

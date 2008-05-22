@@ -19,8 +19,10 @@ package org.apache.activemq.broker;
 import java.net.URI;
 import java.util.Set;
 import org.apache.activemq.Service;
+import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Region;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.BrokerInfo;
@@ -31,6 +33,7 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.kaha.Store;
+import org.apache.activemq.usage.Usage;
 
 /**
  * The Message Broker which routes messages, maintains subscriptions and
@@ -317,5 +320,51 @@ public interface Broker extends Region, Service {
      * @return the broker sequence id
      */
     long getBrokerSequenceId();
+    
+    /**
+     * called when message is consumed
+     * @param context
+     * @param messageReference
+     */
+    void messageConsumed(ConnectionContext context, MessageReference messageReference);
+    
+    /**
+     * Called when message is delivered to the broker
+     * @param context
+     * @param messageReference
+     */
+    void messageDelivered(ConnectionContext context, MessageReference messageReference);
+    
+    /**
+     * Called when a message is discarded - e.g. running low on memory
+     * This will happen only if the policy is enabled - e.g. non durable topics
+     * @param context
+     * @param messageReference
+     */
+    void messageDiscarded(ConnectionContext context, MessageReference messageReference);
+    
+    /**
+     * Called when there is a slow consumer
+     * @param context
+     * @param destination 
+     * @param subs
+     */
+    void slowConsumer(ConnectionContext context,Destination destination, Subscription subs);
+    
+    /**
+     * Called to notify a producer is too fast
+     * @param context
+     * @param producerInfo
+     */
+    void fastProducer(ConnectionContext context,ProducerInfo producerInfo);
+    
+    /**
+     * Called when a Usage reaches a limit
+     * @param context
+     * @param destination 
+     * @param usage
+     */
+    void isFull(ConnectionContext context,Destination destination,Usage usage);
+
 
 }

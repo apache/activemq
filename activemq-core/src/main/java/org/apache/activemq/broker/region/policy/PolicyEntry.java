@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.region.policy;
 
 import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.Topic;
@@ -62,8 +63,15 @@ public class PolicyEntry extends DestinationMapEntry {
     private boolean useConsumerPriority=true;
     private boolean strictOrderDispatch=false;
     private boolean lazyDispatch=false;
+    private boolean advisoryForSlowConsumers;
+    private boolean advisdoryForFastProducers;
+    private boolean advisoryForDiscardingMessages;
+    private boolean advisoryWhenFull;
+    private boolean advisoryForDelivery;
+    private boolean advisoryForConsumed;
    
     public void configure(Broker broker,Queue queue) {
+        baseConfiguration(queue);
         if (dispatchPolicy != null) {
             queue.setDispatchPolicy(dispatchPolicy);
         }
@@ -78,20 +86,16 @@ public class PolicyEntry extends DestinationMapEntry {
             PendingMessageCursor messages = pendingQueuePolicy.getQueuePendingMessageCursor(broker,queue);
             queue.setMessages(messages);
         }
-        queue.setProducerFlowControl(isProducerFlowControl());
-        queue.setEnableAudit(isEnableAudit());
-        queue.setMaxAuditDepth(getMaxQueueAuditDepth());
-        queue.setMaxProducersToAudit(getMaxProducersToAudit());
-        queue.setMaxPageSize(getMaxPageSize());
-        queue.setUseCache(isUseCache());
-        queue.setMinimumMessageSize((int) getMinimumMessageSize());
+        
         queue.setUseConsumerPriority(isUseConsumerPriority());
         queue.setStrictOrderDispatch(isStrictOrderDispatch());
         queue.setOptimizedDispatch(isOptimizedDispatch());
         queue.setLazyDispatch(isLazyDispatch());
+        
     }
 
     public void configure(Topic topic) {
+        baseConfiguration(topic);
         if (dispatchPolicy != null) {
             topic.setDispatchPolicy(dispatchPolicy);
         }
@@ -105,14 +109,23 @@ public class PolicyEntry extends DestinationMapEntry {
         if (memoryLimit > 0) {
             topic.getMemoryUsage().setLimit(memoryLimit);
         }
-        topic.setProducerFlowControl(isProducerFlowControl());
-        topic.setEnableAudit(isEnableAudit());
-        topic.setMaxAuditDepth(getMaxAuditDepth());
-        topic.setMaxProducersToAudit(getMaxProducersToAudit());
-        topic.setMaxPageSize(getMaxPageSize());
-        topic.setUseCache(isUseCache());
-        topic.setMinimumMessageSize((int) getMinimumMessageSize());
         topic.setLazyDispatch(isLazyDispatch());
+    }
+    
+    public void baseConfiguration(BaseDestination destination) {
+        destination.setProducerFlowControl(isProducerFlowControl());
+        destination.setEnableAudit(isEnableAudit());
+        destination.setMaxAuditDepth(getMaxQueueAuditDepth());
+        destination.setMaxProducersToAudit(getMaxProducersToAudit());
+        destination.setMaxPageSize(getMaxPageSize());
+        destination.setUseCache(isUseCache());
+        destination.setMinimumMessageSize((int) getMinimumMessageSize());
+        destination.setAdvisoryForConsumed(isAdvisoryForConsumed());
+        destination.setAdvisoryForDelivery(isAdvisoryForDelivery());
+        destination.setAdvisoryForDiscardingMessages(isAdvisoryForDiscardingMessages());
+        destination.setAdvisoryForSlowConsumers(isAdvisoryForSlowConsumers());
+        destination.setAdvisdoryForFastProducers(isAdvisdoryForFastProducers());
+        destination.setAdvisoryWhenFull(isAdvisoryWhenFull());
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
@@ -413,6 +426,91 @@ public class PolicyEntry extends DestinationMapEntry {
 
     public void setLazyDispatch(boolean lazyDispatch) {
         this.lazyDispatch = lazyDispatch;
+    }
+
+    /**
+     * @return the advisoryForSlowConsumers
+     */
+    public boolean isAdvisoryForSlowConsumers() {
+        return advisoryForSlowConsumers;
+    }
+
+    /**
+     * @param advisoryForSlowConsumers the advisoryForSlowConsumers to set
+     */
+    public void setAdvisoryForSlowConsumers(boolean advisoryForSlowConsumers) {
+        this.advisoryForSlowConsumers = advisoryForSlowConsumers;
+    }
+
+    /**
+     * @return the advisoryForDiscardingMessages
+     */
+    public boolean isAdvisoryForDiscardingMessages() {
+        return advisoryForDiscardingMessages;
+    }
+
+    /**
+     * @param advisoryForDiscardingMessages the advisoryForDiscardingMessages to set
+     */
+    public void setAdvisoryForDiscardingMessages(
+            boolean advisoryForDiscardingMessages) {
+        this.advisoryForDiscardingMessages = advisoryForDiscardingMessages;
+    }
+
+    /**
+     * @return the advisoryWhenFull
+     */
+    public boolean isAdvisoryWhenFull() {
+        return advisoryWhenFull;
+    }
+
+    /**
+     * @param advisoryWhenFull the advisoryWhenFull to set
+     */
+    public void setAdvisoryWhenFull(boolean advisoryWhenFull) {
+        this.advisoryWhenFull = advisoryWhenFull;
+    }
+
+    /**
+     * @return the advisoryForDelivery
+     */
+    public boolean isAdvisoryForDelivery() {
+        return advisoryForDelivery;
+    }
+
+    /**
+     * @param advisoryForDelivery the advisoryForDelivery to set
+     */
+    public void setAdvisoryForDelivery(boolean advisoryForDelivery) {
+        this.advisoryForDelivery = advisoryForDelivery;
+    }
+
+    /**
+     * @return the advisoryForConsumed
+     */
+    public boolean isAdvisoryForConsumed() {
+        return advisoryForConsumed;
+    }
+
+    /**
+     * @param advisoryForConsumed the advisoryForConsumed to set
+     */
+    public void setAdvisoryForConsumed(boolean advisoryForConsumed) {
+        this.advisoryForConsumed = advisoryForConsumed;
+    }
+    
+    /**
+     * @return the advisdoryForFastProducers
+     */
+    public boolean isAdvisdoryForFastProducers() {
+        return advisdoryForFastProducers;
+    }
+
+    /**
+     * @param advisdoryForFastProducers the advisdoryForFastProducers to set
+     */
+    public void setAdvisdoryForFastProducers(boolean advisdoryForFastProducers) {
+        this.advisdoryForFastProducers = advisdoryForFastProducers;
     }
 
 }

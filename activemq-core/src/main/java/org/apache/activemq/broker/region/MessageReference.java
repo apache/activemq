@@ -61,4 +61,9 @@ public interface MessageReference {
      */
     boolean isDropped();
     
+    /**
+     * @return true if the message is an advisory
+     */
+    boolean isAdvisory();
+    
 }

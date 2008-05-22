@@ -61,6 +61,7 @@ public class TopicSubscription extends AbstractSubscription {
     private final AtomicLong enqueueCounter = new AtomicLong(0);
     private final AtomicLong dequeueCounter = new AtomicLong(0);
     private int memoryUsageHighWaterMark = 95;
+    private boolean slowConsumer;
 
     public TopicSubscription(Broker broker,ConnectionContext context, ConsumerInfo info, SystemUsage usageManager) throws Exception {
         super(broker, context, info);
@@ -87,7 +88,15 @@ public class TopicSubscription extends AbstractSubscription {
             // have not been dispatched (i.e. we allow the prefetch buffer to be
             // filled)
             dispatch(node);
+            slowConsumer=false;
         } else {
+          //we are slow
+            if(!slowConsumer) {
+                slowConsumer=true;
+                for (Destination dest: destinations) {
+                    dest.slowConsumer(getContext(), this);
+                }
+            }
             if (maximumPendingMessages != 0) {
                 synchronized (matchedListMutex) {
                     matched.addMessageLast(node);
@@ -431,6 +440,10 @@ public class TopicSubscription extends AbstractSubscription {
         destination.getDestinationStatistics().getInflight().decrement();
         if (LOG.isDebugEnabled()) {
             LOG.debug("Discarding message " + message);
+        }
+        Destination dest = message.getRegionDestination();
+        if (dest != null) {
+            dest.messageDiscarded(getContext(), message);
         }
         broker.getRoot().sendToDeadLetterQueue(getContext(), message);
     }

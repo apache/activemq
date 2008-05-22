@@ -39,6 +39,12 @@ public final class AdvisorySupport {
     public static final String EXPIRED_QUEUE_MESSAGES_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "Expired.Queue.";
     public static final String NO_TOPIC_CONSUMERS_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "NoConsumer.Topic.";
     public static final String NO_QUEUE_CONSUMERS_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "NoConsumer.Queue.";
+    public static final String SLOW_CONSUMER_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "SlowConsumer.";
+    public static final String FAST_PRODUCER_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "FastConsumer.";
+    public static final String MESSAGE_DISCAREDED_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "MessageDiscarded.";
+    public static final String FULL_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "FULL.";
+    public static final String MESSAGE_DELIVERED_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "MessageDelivered.";
+    public static final String MESSAGE_CONSUMED_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "MessageConsumed.";
     public static final String AGENT_TOPIC = "ActiveMQ.Agent";
     public static final String ADIVSORY_MESSAGE_TYPE = "Advisory";
     public static final String MSG_PROPERTY_ORIGIN_BROKER_ID="originBrokerId";
@@ -93,6 +99,48 @@ public final class AdvisorySupport {
 
     public static ActiveMQTopic getNoQueueConsumersAdvisoryTopic(ActiveMQDestination destination) {
         String name = NO_QUEUE_CONSUMERS_TOPIC_PREFIX + destination.getPhysicalName();
+        return new ActiveMQTopic(name);
+    }
+    
+    public static ActiveMQTopic getSlowConsumerAdvisoryTopic(ActiveMQDestination destination) {
+        String name = SLOW_CONSUMER_TOPIC_PREFIX
+                + destination.getDestinationTypeAsString() + "."
+                + destination.getPhysicalName();
+        return new ActiveMQTopic(name);
+    }
+    
+    public static ActiveMQTopic getFastProducerAdvisoryTopic(ActiveMQDestination destination) {
+        String name = FAST_PRODUCER_TOPIC_PREFIX
+                + destination.getDestinationTypeAsString() + "."
+                + destination.getPhysicalName();
+        return new ActiveMQTopic(name);
+    }
+    
+    public static ActiveMQTopic getMessageDiscardedAdvisoryTopic(ActiveMQDestination destination) {
+        String name = MESSAGE_DISCAREDED_TOPIC_PREFIX
+                + destination.getDestinationTypeAsString() + "."
+                + destination.getPhysicalName();
+        return new ActiveMQTopic(name);
+    }
+    
+    public static ActiveMQTopic getMessageDeliveredAdvisoryTopic(ActiveMQDestination destination) {
+        String name = MESSAGE_DELIVERED_TOPIC_PREFIX
+                + destination.getDestinationTypeAsString() + "."
+                + destination.getPhysicalName();
+        return new ActiveMQTopic(name);
+    }
+    
+    public static ActiveMQTopic getMessageConsumedAdvisoryTopic(ActiveMQDestination destination) {
+        String name = MESSAGE_CONSUMED_TOPIC_PREFIX
+                + destination.getDestinationTypeAsString() + "."
+                + destination.getPhysicalName();
+        return new ActiveMQTopic(name);
+    }
+    
+    public static ActiveMQTopic getFullAdvisoryTopic(ActiveMQDestination destination) {
+        String name = FULL_TOPIC_PREFIX
+                + destination.getDestinationTypeAsString() + "."
+                + destination.getPhysicalName();
         return new ActiveMQTopic(name);
     }
 
@@ -179,6 +227,90 @@ public final class AdvisorySupport {
             return false;
         } else {
             return destination.isTopic() && destination.getPhysicalName().startsWith(CONSUMER_ADVISORY_TOPIC_PREFIX);
+        }
+    }
+    
+    public static boolean isSlowConsumerAdvisoryTopic(ActiveMQDestination destination) {
+        if (destination.isComposite()) {
+            ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
+            for (int i = 0; i < compositeDestinations.length; i++) {
+                if (isSlowConsumerAdvisoryTopic(compositeDestinations[i])) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            return destination.isTopic() && destination.getPhysicalName().startsWith(SLOW_CONSUMER_TOPIC_PREFIX);
+        }
+    }
+    
+    public static boolean isFastProducerAdvisoryTopic(ActiveMQDestination destination) {
+        if (destination.isComposite()) {
+            ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
+            for (int i = 0; i < compositeDestinations.length; i++) {
+                if (isFastProducerAdvisoryTopic(compositeDestinations[i])) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            return destination.isTopic() && destination.getPhysicalName().startsWith(FAST_PRODUCER_TOPIC_PREFIX);
+        }
+    }
+    
+    public static boolean isMessageConsumedAdvisoryTopic(ActiveMQDestination destination) {
+        if (destination.isComposite()) {
+            ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
+            for (int i = 0; i < compositeDestinations.length; i++) {
+                if (isMessageConsumedAdvisoryTopic(compositeDestinations[i])) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            return destination.isTopic() && destination.getPhysicalName().startsWith(MESSAGE_CONSUMED_TOPIC_PREFIX);
+        }
+    }
+    
+    public static boolean isMessageDeliveredAdvisoryTopic(ActiveMQDestination destination) {
+        if (destination.isComposite()) {
+            ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
+            for (int i = 0; i < compositeDestinations.length; i++) {
+                if (isMessageDeliveredAdvisoryTopic(compositeDestinations[i])) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            return destination.isTopic() && destination.getPhysicalName().startsWith(MESSAGE_DELIVERED_TOPIC_PREFIX);
+        }
+    }
+    
+    public static boolean isMessageDiscardedAdvisoryTopic(ActiveMQDestination destination) {
+        if (destination.isComposite()) {
+            ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
+            for (int i = 0; i < compositeDestinations.length; i++) {
+                if (isMessageDiscardedAdvisoryTopic(compositeDestinations[i])) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            return destination.isTopic() && destination.getPhysicalName().startsWith(MESSAGE_DISCAREDED_TOPIC_PREFIX);
+        }
+    }
+    
+    public static boolean isFullAdvisoryTopic(ActiveMQDestination destination) {
+        if (destination.isComposite()) {
+            ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
+            for (int i = 0; i < compositeDestinations.length; i++) {
+                if (isFullAdvisoryTopic(compositeDestinations[i])) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            return destination.isTopic() && destination.getPhysicalName().startsWith(FULL_TOPIC_PREFIX);
         }
     }
 

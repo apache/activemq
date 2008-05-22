@@ -57,6 +57,7 @@ import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.util.SubscriptionKey;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.tools.ant.taskdefs.condition.IsFalse;
 
 /**
  * The Topic is a destination that sends a copy of a message to every active
@@ -277,90 +278,95 @@ public class Topic  extends BaseDestination  implements Task{
             return;
         }
 
-        if (isProducerFlowControl() && context.isProducerFlowControl() && memoryUsage.isFull()) {
-            if (systemUsage.isSendFailIfNoSpace()) {
-                throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
-            }
-
-            // We can avoid blocking due to low usage if the producer is sending
-            // a sync message or
-            // if it is using a producer window
-            if (producerInfo.getWindowSize() > 0 || message.isResponseRequired()) {
-                synchronized (messagesWaitingForSpace) {
-                    messagesWaitingForSpace.add(new Runnable() {
-                        public void run() {
-                            
-                            try {
-
-                                // While waiting for space to free up... the
-                                // message may have expired.
-                                if (broker.isExpired(message)) {
-                                    broker.messageExpired(context, message);
-                                    //destinationStatistics.getEnqueues().increment();
-                                    //destinationStatistics.getMessages().decrement();
-                                } else {
-                                    doMessageSend(producerExchange, message);
+        if(memoryUsage.isFull()) {
+            isFull(context, memoryUsage);
+            fastProducer(context, producerInfo);
+            if (isProducerFlowControl() && context.isProducerFlowControl()) {
+                if (systemUsage.isSendFailIfNoSpace()) {
+                    throw new javax.jms.ResourceAllocationException("Usage Manager memory limit reached");
+                }
+    
+                // We can avoid blocking due to low usage if the producer is sending
+                // a sync message or
+                // if it is using a producer window
+                if (producerInfo.getWindowSize() > 0 || message.isResponseRequired()) {
+                    synchronized (messagesWaitingForSpace) {
+                        messagesWaitingForSpace.add(new Runnable() {
+                            public void run() {
+                                
+                                try {
+    
+                                    // While waiting for space to free up... the
+                                    // message may have expired.
+                                    if (broker.isExpired(message)) {
+                                        broker.messageExpired(context, message);
+                                        //destinationStatistics.getEnqueues().increment();
+                                        //destinationStatistics.getMessages().decrement();
+                                    } else {
+                                        doMessageSend(producerExchange, message);
+                                    }
+    
+                                    if (sendProducerAck) {
+                                        ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
+                                        context.getConnection().dispatchAsync(ack);
+                                    } else {
+                                        Response response = new Response();
+                                        response.setCorrelationId(message.getCommandId());
+                                        context.getConnection().dispatchAsync(response);
+                                    }
+    
+                                } catch (Exception e) {
+                                    if (!sendProducerAck && !context.isInRecoveryMode()) {
+                                        ExceptionResponse response = new ExceptionResponse(e);
+                                        response.setCorrelationId(message.getCommandId());
+                                        context.getConnection().dispatchAsync(response);
+                                    }
                                 }
-
-                                if (sendProducerAck) {
-                                    ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
-                                    context.getConnection().dispatchAsync(ack);
-                                } else {
-                                    Response response = new Response();
-                                    response.setCorrelationId(message.getCommandId());
-                                    context.getConnection().dispatchAsync(response);
-                                }
-
-                            } catch (Exception e) {
-                                if (!sendProducerAck && !context.isInRecoveryMode()) {
-                                    ExceptionResponse response = new ExceptionResponse(e);
-                                    response.setCorrelationId(message.getCommandId());
-                                    context.getConnection().dispatchAsync(response);
-                                }
+                                
                             }
-                            
+                        });
+    
+                        // If the user manager is not full, then the task will not
+                        // get called..
+                        if (!memoryUsage.notifyCallbackWhenNotFull(sendMessagesWaitingForSpaceTask)) {
+                            // so call it directly here.
+                            sendMessagesWaitingForSpaceTask.run();
                         }
-                    });
-
-                    // If the user manager is not full, then the task will not
-                    // get called..
-                    if (!memoryUsage.notifyCallbackWhenNotFull(sendMessagesWaitingForSpaceTask)) {
-                        // so call it directly here.
-                        sendMessagesWaitingForSpaceTask.run();
+                        context.setDontSendReponse(true);
+                        return;
                     }
-                    context.setDontSendReponse(true);
-                    return;
-                }
-
-            } else {
-
-                // Producer flow control cannot be used, so we have do the flow
-                // control at the broker
-                // by blocking this thread until there is space available.
-                int count = 0;
-                while (!memoryUsage.waitForSpace(1000)) {
-                    if (context.getStopping().get()) {
-                        throw new IOException("Connection closed, send aborted.");
+    
+                } else {
+    
+                    // Producer flow control cannot be used, so we have do the flow
+                    // control at the broker
+                    // by blocking this thread until there is space available.
+                    int count = 0;
+                    while (!memoryUsage.waitForSpace(1000)) {
+                        if (context.getStopping().get()) {
+                            throw new IOException("Connection closed, send aborted.");
+                        }
+                        if (count > 2 && context.isInTransaction()) {
+                            count =0;
+                            int size = context.getTransaction().size();
+                            LOG.warn("Waiting for space to send  transacted message - transaction elements = " + size + " need more space to commit. Message = " + message);
+                        }
                     }
-                    if (count > 2 && context.isInTransaction()) {
-                        count =0;
-                        int size = context.getTransaction().size();
-                        LOG.warn("Waiting for space to send  transacted message - transaction elements = " + size + " need more space to commit. Message = " + message);
+    
+                    // The usage manager could have delayed us by the time
+                    // we unblock the message could have expired..
+                    if (message.isExpired()) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Expired message: " + message);
+                        }
+                        return;
                     }
-                }
-
-                // The usage manager could have delayed us by the time
-                // we unblock the message could have expired..
-                if (message.isExpired()) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Expired message: " + message);
-                    }
-                    return;
                 }
             }
         }
 
         doMessageSend(producerExchange, message);
+        messageDelivered(context, message);
         if (sendProducerAck) {
             ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
             context.getConnection().dispatchAsync(ack);
@@ -445,6 +451,7 @@ public class Topic  extends BaseDestination  implements Task{
             SubscriptionKey key = dsub.getSubscriptionKey();
             topicStore.acknowledge(context, key.getClientId(), key.getSubscriptionName(), node.getMessageId());
         }
+        messageConsumed(context, node);
     }
 
     public void dispose(ConnectionContext context) throws IOException {

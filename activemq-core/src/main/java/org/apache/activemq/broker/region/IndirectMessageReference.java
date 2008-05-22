@@ -157,4 +157,8 @@ public class IndirectMessageReference implements QueueMessageReference {
     public synchronized int getSize() {
        return message.getSize();
     }
+
+    public boolean isAdvisory() {
+       return message.isAdvisory();
+    }
 }

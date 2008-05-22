@@ -402,6 +402,10 @@ public class ActiveMQMessageTest extends TestCase {
             public Response visit(CommandVisitor visitor) throws Exception {
                 return null;
             }
+
+            @Override
+            public void clearBody() throws JMSException {                
+            }
         };
 
         msg.setProperty("stringProperty", "string");

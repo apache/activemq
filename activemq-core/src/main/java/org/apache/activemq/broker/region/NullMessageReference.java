@@ -123,4 +123,8 @@ final class NullMessageReference implements QueueMessageReference {
         throw new RuntimeException("not implemented");
     }
 
+    public boolean isAdvisory() {
+        return false;
+    }
+
 }
