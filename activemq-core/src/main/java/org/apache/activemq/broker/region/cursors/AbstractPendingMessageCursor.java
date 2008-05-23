@@ -19,12 +19,10 @@ package org.apache.activemq.broker.region.cursors;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-
 import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.broker.region.QueueMessageReference;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.usage.SystemUsage;
 
@@ -35,7 +33,7 @@ import org.apache.activemq.usage.SystemUsage;
  * @version $Revision$
  */
 public class AbstractPendingMessageCursor implements PendingMessageCursor {
-    protected int memoryUsageHighWaterMark = 90;
+    protected int memoryUsageHighWaterMark = 70;
     protected int maxBatchSize = 100;
     protected SystemUsage systemUsage;
     protected int maxProducersToAudit=1024;
