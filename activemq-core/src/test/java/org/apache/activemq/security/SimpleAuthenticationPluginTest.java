@@ -18,9 +18,16 @@ package org.apache.activemq.security;
 
 import java.net.URI;
 
+import javax.jms.JMSException;
+import javax.jms.Message;
+
 import junit.framework.Test;
+
+import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -43,6 +50,21 @@ public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
     protected BrokerService createBroker(String uri) throws Exception {
         LOG.info("Loading broker configuration from the classpath with URI: " + uri);
         return BrokerFactory.createBroker(new URI("xbean:" + uri));
+    }
+    
+    /**
+     * @see {@link CombinationTestSupport}
+     */
+    public void initCombosForTestPredefinedDestinations() {
+        addCombinationValues("userName", new Object[] {"guest"});
+        addCombinationValues("password", new Object[] {"password"});
+        addCombinationValues("destination", new Object[] {new ActiveMQQueue("TEST.Q")});
+    }
+    
+    public void testPredefinedDestinations() throws JMSException {
+    	Message sent = doSend(false);
+        assertEquals("guest", ((ActiveMQMessage)sent).getUserID());
+        assertEquals("guest", sent.getStringProperty("JMSXUserID"));
     }
 
 }
