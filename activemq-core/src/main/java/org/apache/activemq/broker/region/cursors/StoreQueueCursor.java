@@ -16,12 +16,10 @@
  */
 package org.apache.activemq.broker.region.cursors;
 
-import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.Message;
-import org.apache.activemq.kaha.Store;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -89,7 +87,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         pendingCount = 0;
     }
 
-    public synchronized void addMessageLast(MessageReference node) throws Exception {
+    public void addMessageLast(MessageReference node) throws Exception {
         if (node != null) {
             Message msg = node.getMessage();
             if (started) {
@@ -104,7 +102,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         }
     }
 
-    public synchronized void addMessageFirst(MessageReference node) throws Exception {
+    public void addMessageFirst(MessageReference node) throws Exception {
         if (node != null) {
             Message msg = node.getMessage();
             if (started) {
@@ -142,6 +140,11 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         MessageReference result = currentCursor != null ? currentCursor.next() : null;
         return result;
     }
+    
+    public synchronized void release() {
+    	nonPersistent.release();
+    	persistent.release();
+    }
 
     public synchronized void remove() {
         if (currentCursor != null) {
@@ -159,7 +162,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         pendingCount--;
     }
 
-    public synchronized void reset() {
+    public void reset() {
         nonPersistent.reset();
         persistent.reset();
     }

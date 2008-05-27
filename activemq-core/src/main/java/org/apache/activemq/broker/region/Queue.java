@@ -1062,9 +1062,7 @@ public class Queue extends BaseDestination implements Task {
     }
 
     final void sendMessage(final ConnectionContext context, Message msg) throws Exception {
-        synchronized (messages) {
-            messages.addMessageLast(msg);
-        }
+        messages.addMessageLast(msg);
         destinationStatistics.getEnqueues().increment();
         destinationStatistics.getMessages().increment();
         messageDelivered(context, msg);
