@@ -149,11 +149,11 @@ public class TcpTransportFactory extends TransportFactory {
         return new TcpTransport(wf, socketFactory, location, localLocation);
     }
 
-    protected ServerSocketFactory createServerSocketFactory() {
+    protected ServerSocketFactory createServerSocketFactory() throws IOException {
         return ServerSocketFactory.getDefault();
     }
 
-    protected SocketFactory createSocketFactory() {
+    protected SocketFactory createSocketFactory() throws IOException {
         return SocketFactory.getDefault();
     }
 }

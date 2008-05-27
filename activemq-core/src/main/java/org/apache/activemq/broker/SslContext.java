@@ -16,11 +16,16 @@
  */
 package org.apache.activemq.broker;
 
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
 /**
@@ -28,9 +33,34 @@ import javax.net.ssl.TrustManager;
  */
 public class SslContext {
     
+    protected String protocol = "TLS";
+    protected String provider = null;
     protected List<KeyManager> keyManagers = new ArrayList<KeyManager>();
     protected List<TrustManager> trustManagers = new ArrayList<TrustManager>();
     protected SecureRandom secureRandom;
+    private SSLContext sslContext;
+    
+    private static final ThreadLocal<SslContext> current = new ThreadLocal<SslContext>();
+    
+    public SslContext() {
+    }
+    
+    public SslContext(KeyManager[] km, TrustManager[] tm, SecureRandom random) {
+        if( km!=null ) {
+            setKeyManagers(Arrays.asList(km));
+        }
+        if( tm!=null ) {
+            setTrustManagers(Arrays.asList(tm));
+        }
+        setSecureRandom(random);        
+    }
+    
+    static public void setCurrentSslContext(SslContext bs) {
+        current.set(bs);
+    }
+    static public SslContext getCurrentSslContext() {
+        return current.get();
+    }
     
     public KeyManager[] getKeyManagersAsArray() {
         KeyManager rc[] = new KeyManager[keyManagers.size()];
@@ -73,4 +103,33 @@ public class SslContext {
         this.secureRandom = secureRandom;
     }
         
+    public String getProtocol() {
+        return protocol;
+    }
+    public void setProtocol(String protocol) {
+        this.protocol = protocol;
+    }
+    public String getProvider() {
+        return provider;
+    }
+    public void setProvider(String provider) {
+        this.provider = provider;
+    }
+
+    public SSLContext getSSLContext() throws NoSuchProviderException, NoSuchAlgorithmException, KeyManagementException {
+        if( sslContext == null ) {
+            if( provider == null ) {
+                sslContext = SSLContext.getInstance(protocol);
+            } else {
+                sslContext = SSLContext.getInstance(protocol, provider);
+            }
+            sslContext.init(getKeyManagersAsArray(), getTrustManagersAsArray(), getSecureRandom());
+        }
+        return sslContext;
+    }
+    public void setSSLContext(SSLContext sslContext) {
+        this.sslContext = sslContext;
+    }
+    
+    
 }

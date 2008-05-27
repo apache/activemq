@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.security.KeyManagementException;
 import java.security.SecureRandom;
+import java.util.Arrays;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.TrustManager;
@@ -90,9 +91,15 @@ public class SslBrokerService extends BrokerService {
             // If given an SSL URI, use an SSL TransportFactory and configure
             // it to use the given key and trust managers.
             SslTransportFactory transportFactory = new SslTransportFactory();
-            transportFactory.setKeyAndTrustManagers(km, tm, random);
-
-            return transportFactory.doBind(brokerURI);
+            
+            SslContext ctx = new SslContext(km, tm, random);
+            SslContext.setCurrentSslContext(ctx);
+            try {
+                return transportFactory.doBind(brokerURI);
+            } finally {
+                SslContext.setCurrentSslContext(null);
+            }
+            
         } else {
             // Else, business as usual.
             return TransportFactory.bind(this, brokerURI);

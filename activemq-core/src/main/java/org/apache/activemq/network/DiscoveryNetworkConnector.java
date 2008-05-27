@@ -22,6 +22,7 @@ import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
@@ -82,22 +83,29 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
             }
             URI connectUri = uri;
             LOG.info("Establishing network connection between from " + localURIName + " to " + connectUri);
+
             Transport remoteTransport;
-            try {
-                remoteTransport = TransportFactory.connect(connectUri);
-            } catch (Exception e) {
-                LOG.warn("Could not connect to remote URI: " + localURIName + ": " + e.getMessage());
-                LOG.debug("Connection failure exception: " + e, e);
-                return;
-            }
             Transport localTransport;
             try {
-                localTransport = createLocalTransport();
-            } catch (Exception e) {
-                ServiceSupport.dispose(remoteTransport);
-                LOG.warn("Could not connect to local URI: " + localURIName + ": " + e.getMessage());
-                LOG.debug("Connection failure exception: " + e, e);
-                return;
+                // Allows the transport to access the broker's ssl configuration.
+                SslContext.setCurrentSslContext(getBrokerService().getSslContext());
+                try {
+                    remoteTransport = TransportFactory.connect(connectUri);
+                } catch (Exception e) {
+                    LOG.warn("Could not connect to remote URI: " + localURIName + ": " + e.getMessage());
+                    LOG.debug("Connection failure exception: " + e, e);
+                    return;
+                }
+                try {
+                    localTransport = createLocalTransport();
+                } catch (Exception e) {
+                    ServiceSupport.dispose(remoteTransport);
+                    LOG.warn("Could not connect to local URI: " + localURIName + ": " + e.getMessage());
+                    LOG.debug("Connection failure exception: " + e, e);
+                    return;
+                }
+            } finally {
+                SslContext.setCurrentSslContext(null);
             }
             NetworkBridge bridge = createBridge(localTransport, remoteTransport, event);
             bridges.put(uri, bridge);

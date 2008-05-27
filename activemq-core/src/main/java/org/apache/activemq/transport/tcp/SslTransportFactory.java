@@ -22,6 +22,7 @@ import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,6 +41,7 @@ import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.InactivityMonitor;
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportLoggerFactory;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.WireFormatNegotiator;
@@ -60,20 +62,10 @@ import org.apache.commons.logging.LogFactory;
  * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com (logging improvement modifications)
  * @version $Revision$
  */
-public class SslTransportFactory extends TcpTransportFactory implements BrokerServiceAware {
+public class SslTransportFactory extends TcpTransportFactory {
     // The log this uses.,
     private static final Log LOG = LogFactory.getLog(SslTransportFactory.class);
-
-    // The context used to creat ssl sockets.
-    private SSLContext sslContext;
-
-
-    /**
-     * Constructor. Nothing special.
-     */
-    public SslTransportFactory() {
-    }
-
+    
     /**
      * Overriding to use SslTransportServer and allow for proper reflection.
      */
@@ -147,47 +139,25 @@ public class SslTransportFactory extends TcpTransportFactory implements BrokerSe
         return new SslTransport(wf, (SSLSocketFactory)socketFactory, location, localLocation, false);
     }
 
-    /**
-     * Sets the key and trust managers used in constructed socket factories.
-     * Passes given arguments to SSLContext.init(...).
-     * 
-     * @param km The sources of authentication keys or null.
-     * @param tm The sources of peer authentication trust decisions or null.
-     * @param random The source of randomness for this generator or null.
-     */
-    public void setKeyAndTrustManagers(KeyManager[] km, TrustManager[] tm, SecureRandom random) throws KeyManagementException {
-        // Killing old context and making a new one just to be safe.
-        try {
-            sslContext = SSLContext.getInstance("TLS");
-        } catch (NoSuchAlgorithmException e) {
-            // This should not happen unless this class is improperly modified.
-            throw new RuntimeException("Unknown SSL algorithm encountered.", e);
-        }
-        sslContext.init(km, tm, random);
-    }
-    
-    public void setBrokerService(BrokerService brokerService) {
-        SslContext c = brokerService.getSslContext();
-        if( sslContext == null && c!=null ) {            
-            try {
-                setKeyAndTrustManagers(c.getKeyManagersAsArray(), c.getTrustManagersAsArray(), c.getSecureRandom());
-            } catch (KeyManagementException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
+
 
     /**
      * Creates a new SSL ServerSocketFactory. The given factory will use
      * user-provided key and trust managers (if the user provided them).
      * 
      * @return Newly created (Ssl)ServerSocketFactory.
+     * @throws IOException 
      */
-    protected ServerSocketFactory createServerSocketFactory() {
-        if (sslContext == null) {
-            return SSLServerSocketFactory.getDefault();
+    protected ServerSocketFactory createServerSocketFactory() throws IOException {
+        if( SslContext.getCurrentSslContext()!=null ) {
+            SslContext ctx = SslContext.getCurrentSslContext();
+            try {
+                return ctx.getSSLContext().getServerSocketFactory();
+            } catch (Exception e) {
+                throw IOExceptionSupport.create(e);
+            }
         } else {
-            return sslContext.getServerSocketFactory();
+            return SSLServerSocketFactory.getDefault();
         }
     }
 
@@ -196,13 +166,33 @@ public class SslTransportFactory extends TcpTransportFactory implements BrokerSe
      * key and trust managers (if the user provided them).
      * 
      * @return Newly created (Ssl)SocketFactory.
+     * @throws IOException 
      */
-    protected SocketFactory createSocketFactory() {
-        if (sslContext == null) {
-            return SSLSocketFactory.getDefault();
+    protected SocketFactory createSocketFactory() throws IOException {
+        
+        if( SslContext.getCurrentSslContext()!=null ) {
+            SslContext ctx = SslContext.getCurrentSslContext();
+            try {
+                return ctx.getSSLContext().getSocketFactory();
+            } catch (Exception e) {
+                throw IOExceptionSupport.create(e);
+            }
         } else {
-            return sslContext.getSocketFactory();
+            return SSLSocketFactory.getDefault();
         }
+        
+    }
+
+    /**
+     * 
+     * @param km
+     * @param tm
+     * @param object
+     * @deprecated "Do not use anymore... using static initializers like this method only allows the JVM to use 1 SSL configuration per broker."
+     */
+    public void setKeyAndTrustManagers(KeyManager[] km, TrustManager[] tm, SecureRandom random) {
+        SslContext ctx = new SslContext(km, tm, random);
+        SslContext.setCurrentSslContext(ctx);
     }
 
 }
