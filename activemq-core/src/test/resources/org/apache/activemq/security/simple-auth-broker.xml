@@ -23,6 +23,10 @@
 
   <broker useJmx="false" persistent="false" xmlns="http://activemq.apache.org/schema/core" populateJMSXUserID="true">
 
+    <destinations>
+      <queue physicalName="TEST.Q" />      
+    </destinations> 
+
     <plugins>
 		<simpleAuthenticationPlugin>
 			<users>
@@ -43,6 +47,8 @@
               <authorizationEntry queue=">" read="admins" write="admins" admin="admins" />
               <authorizationEntry queue="USERS.>" read="users" write="users" admin="users" />
               <authorizationEntry queue="GUEST.>" read="guests" write="guests,users" admin="guests,users" />
+              
+              <authorizationEntry queue="TEST.Q" read="guests" write="guests" />
               
               <authorizationEntry topic=">" read="admins" write="admins" admin="admins" />
               <authorizationEntry topic="USERS.>" read="users" write="users" admin="users" />

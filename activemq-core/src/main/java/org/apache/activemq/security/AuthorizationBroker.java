@@ -51,6 +51,12 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         if (securityContext == null) {
             throw new SecurityException("User is not authenticated.");
         }
+        
+        Destination existing = this.getDestinationMap().get(destination);
+        if (existing != null) {
+        	return existing;
+        }
+        
         // if(!((ActiveMQTempDestination)destination).getConnectionId().equals(context.getConnectionId().getValue())
         // ) {
         if (!securityContext.isBrokerContext()) {
