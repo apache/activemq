@@ -200,11 +200,13 @@ public class NetworkLoadTest extends TestCase {
 		
         TransportConnector transportConnector = new TransportConnector();
         transportConnector.setUri(new URI("tcp://localhost:"+(60000+brokerId)));
-        transportConnector.setDiscoveryUri(new URI("multicast://network-load-test"));        
+        
+        String groupId = "network-load-test-"+System.currentTimeMillis();
+        transportConnector.setDiscoveryUri(new URI("multicast://"+groupId));        
         broker.addConnector(transportConnector);
                         
         DiscoveryNetworkConnector networkConnector = new DiscoveryNetworkConnector();
-        networkConnector.setUri(new URI("multicast://network-load-test"));
+        networkConnector.setUri(new URI("multicast://"+groupId));
 	    networkConnector.setBridgeTempDestinations(true);
 	    networkConnector.setPrefetchSize(1);
 	    broker.addNetworkConnector(networkConnector);

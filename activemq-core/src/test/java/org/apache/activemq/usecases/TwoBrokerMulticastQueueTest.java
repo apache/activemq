@@ -45,6 +45,7 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
     public String sendUri;
     public String recvUri;
     private BrokerService[] brokers;
+    private String groupId;
 
     public static Test suite() {
         return suite(TwoBrokerMulticastQueueTest.class);
@@ -55,6 +56,8 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
     }
 
     public void setUp() throws Exception {
+    	groupId = getClass().getName()+"-"+System.currentTimeMillis();
+    	System.setProperty("groupId", groupId);
         super.setAutoFail(true);
         super.setUp();
     }
@@ -137,49 +140,48 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
     }
 
     public void testSendReceiveUsingDiscovery() throws Exception {
-        sendUri = "discovery:multicast://default";
-        recvUri = "discovery:multicast://default";
+        sendUri = "discovery:multicast://"+groupId;
+        recvUri = "discovery:multicast://"+groupId;
         createMulticastBrokerNetwork();
         doSendReceiveTest();
     }
 
     public void testMultipleConsumersConnectUsingDiscovery() throws Exception {
-        sendUri = "discovery:multicast://default";
-        recvUri = "discovery:multicast://default";
+        sendUri = "discovery:multicast://"+groupId;
+        recvUri = "discovery:multicast://"+groupId;
         createMulticastBrokerNetwork();
         doMultipleConsumersConnectTest();
     }
 
     public void testSendReceiveUsingAutoAssignFailover() throws Exception {
-        sendUri = "failover:(discovery:multicast://default)";
-        recvUri = "failover:(discovery:multicast://default)";
+        sendUri = "failover:(discovery:multicast://"+groupId+")";
+        recvUri = "failover:(discovery:multicast://"+groupId+")";
         createAutoAssignMulticastBrokerNetwork();
         doSendReceiveTest();
     }
 
     public void testMultipleConsumersConnectUsingAutoAssignFailover() throws Exception {
-        sendUri = "failover:(discovery:multicast://default)";
-        recvUri = "failover:(discovery:multicast://default)";
+        sendUri = "failover:(discovery:multicast://"+groupId+")";
+        recvUri = "failover:(discovery:multicast://"+groupId+")";
         createAutoAssignMulticastBrokerNetwork();
         doMultipleConsumersConnectTest();
     }
 
     public void testSendReceiveUsingAutoAssignDiscovery() throws Exception {
-        sendUri = "discovery:multicast://default";
-        recvUri = "discovery:multicast://default";
+        sendUri = "discovery:multicast://"+groupId;
+        recvUri = "discovery:multicast://"+groupId;
         createAutoAssignMulticastBrokerNetwork();
         doSendReceiveTest();
     }
 
     public void testMultipleConsumersConnectUsingAutoAssignDiscovery() throws Exception {
-        sendUri = "discovery:multicast://default";
-        recvUri = "discovery:multicast://default";
+        sendUri = "discovery:multicast://"+groupId;
+        recvUri = "discovery:multicast://"+groupId;
         createAutoAssignMulticastBrokerNetwork();
         doMultipleConsumersConnectTest();
     }
 
     protected void createMulticastBrokerNetwork() throws Exception {
-
         brokers = new BrokerService[BROKER_COUNT];
         for (int i = 0; i < BROKER_COUNT; i++) {
             brokers[i] = createBroker("org/apache/activemq/usecases/multicast-broker-" + (i + 1) + ".xml");

@@ -17,13 +17,15 @@
 -->
 <beans>
 
+  <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
+
   <broker brokerName="sender" persistent="false" useJmx="false" xmlns="http://activemq.apache.org/schema/core">
     <transportConnectors>
-      <transportConnector uri="tcp://localhost:0" discoveryUri="multicast://default"/>
+      <transportConnector uri="tcp://localhost:0" discoveryUri="multicast://${groupId}"/>
     </transportConnectors>
 
     <networkConnectors>
-      <networkConnector uri="multicast://default"/>
+      <networkConnector uri="multicast://${groupId}"/>
     </networkConnectors>
 
     <persistenceAdapter>
