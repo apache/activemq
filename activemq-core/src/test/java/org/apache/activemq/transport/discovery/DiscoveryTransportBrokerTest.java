@@ -43,6 +43,8 @@ public class DiscoveryTransportBrokerTest extends NetworkTestSupport {
 
     private static final Log LOG = LogFactory.getLog(DiscoveryTransportBrokerTest.class);
 
+    String groupName;
+    
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();
@@ -129,7 +131,10 @@ public class DiscoveryTransportBrokerTest extends NetworkTestSupport {
     }
 
     protected String getDiscoveryUri() {
-        return "multicast://default";
+    	if ( groupName == null ) {
+    		groupName = "group-"+System.currentTimeMillis();
+    	}
+        return "multicast://"+groupName;
     }
 
     protected TransportConnector createRemoteConnector() throws Exception, IOException, URISyntaxException {

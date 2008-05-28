@@ -1,4 +1,5 @@
 /**
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -6,7 +7,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,30 +22,32 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.activemq.command.DataStructure;
-import org.apache.activemq.command.MessageId;
-import org.apache.activemq.openwire.BooleanStream;
-import org.apache.activemq.openwire.OpenWireFormat;
+import org.apache.activemq.openwire.*;
+import org.apache.activemq.command.*;
+
+
 
 /**
- * Marshalling code for Open Wire Format for MessageIdMarshaller NOTE!: This
- * file is auto generated - do not modify! if you need to make a change, please
- * see the modify the groovy scripts in the under src/gram/script and then use
- * maven openwire:generate to regenerate this file.
- * 
+ * Marshalling code for Open Wire Format for MessageIdMarshaller
+ *
+ *
+ * NOTE!: This file is auto generated - do not modify!
+ *        if you need to make a change, please see the modify the groovy scripts in the
+ *        under src/gram/script and then use maven openwire:generate to regenerate 
+ *        this file.
+ *
  * @version $Revision$
  */
 public class MessageIdMarshaller extends BaseDataStreamMarshaller {
 
     /**
      * Return the type of Data Structure we marshal
-     * 
      * @return short representation of the type data structure
      */
     public byte getDataStructureType() {
         return MessageId.DATA_STRUCTURE_TYPE;
     }
-
+    
     /**
      * @return a new object instance
      */
@@ -54,7 +57,7 @@ public class MessageIdMarshaller extends BaseDataStreamMarshaller {
 
     /**
      * Un-marshal an object instance from the data input stream
-     * 
+     *
      * @param o the object to un-marshal
      * @param dataIn the data input stream to build the object from
      * @throws IOException
@@ -63,11 +66,12 @@ public class MessageIdMarshaller extends BaseDataStreamMarshaller {
         super.tightUnmarshal(wireFormat, o, dataIn, bs);
 
         MessageId info = (MessageId)o;
-        info.setProducerId((org.apache.activemq.command.ProducerId)tightUnmarsalCachedObject(wireFormat, dataIn, bs));
+        info.setProducerId((org.apache.activemq.command.ProducerId) tightUnmarsalCachedObject(wireFormat, dataIn, bs));
         info.setProducerSequenceId(tightUnmarshalLong(wireFormat, dataIn, bs));
         info.setBrokerSequenceId(tightUnmarshalLong(wireFormat, dataIn, bs));
 
     }
+
 
     /**
      * Write the booleans that this object uses to a BooleanStream
@@ -78,15 +82,15 @@ public class MessageIdMarshaller extends BaseDataStreamMarshaller {
 
         int rc = super.tightMarshal1(wireFormat, o, bs);
         rc += tightMarshalCachedObject1(wireFormat, (DataStructure)info.getProducerId(), bs);
-        rc += tightMarshalLong1(wireFormat, info.getProducerSequenceId(), bs);
-        rc += tightMarshalLong1(wireFormat, info.getBrokerSequenceId(), bs);
+        rc+=tightMarshalLong1(wireFormat, info.getProducerSequenceId(), bs);
+        rc+=tightMarshalLong1(wireFormat, info.getBrokerSequenceId(), bs);
 
         return rc + 0;
     }
 
     /**
      * Write a object instance to data output stream
-     * 
+     *
      * @param o the instance to be marshaled
      * @param dataOut the output stream
      * @throws IOException thrown if an error occurs
@@ -103,7 +107,7 @@ public class MessageIdMarshaller extends BaseDataStreamMarshaller {
 
     /**
      * Un-marshal an object instance from the data input stream
-     * 
+     *
      * @param o the object to un-marshal
      * @param dataIn the data input stream to build the object from
      * @throws IOException
@@ -112,11 +116,12 @@ public class MessageIdMarshaller extends BaseDataStreamMarshaller {
         super.looseUnmarshal(wireFormat, o, dataIn);
 
         MessageId info = (MessageId)o;
-        info.setProducerId((org.apache.activemq.command.ProducerId)looseUnmarsalCachedObject(wireFormat, dataIn));
+        info.setProducerId((org.apache.activemq.command.ProducerId) looseUnmarsalCachedObject(wireFormat, dataIn));
         info.setProducerSequenceId(looseUnmarshalLong(wireFormat, dataIn));
         info.setBrokerSequenceId(looseUnmarshalLong(wireFormat, dataIn));
 
     }
+
 
     /**
      * Write the booleans that this object uses to a BooleanStream
