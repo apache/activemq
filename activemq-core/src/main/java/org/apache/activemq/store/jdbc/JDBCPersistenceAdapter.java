@@ -175,6 +175,9 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
                 LOG.warn("No databaseLocker configured for the JDBC Persistence Adapter");
             } else {
                 service.start();
+                if (brokerService != null) {
+                    brokerService.getBroker().nowMasterBroker();
+                }
             }
         }
 

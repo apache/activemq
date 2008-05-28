@@ -290,4 +290,8 @@ public class BrokerFilter implements Broker {
     public void slowConsumer(ConnectionContext context, Destination destination,Subscription subs) {
         next.slowConsumer(context, destination,subs);
     }
+    
+    public void nowMasterBroker() {   
+        next.nowMasterBroker();
+    }
 }

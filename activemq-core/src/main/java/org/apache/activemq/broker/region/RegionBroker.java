@@ -25,15 +25,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-
 import javax.jms.InvalidClientIDException;
 import javax.jms.JMSException;
-
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.Connection;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
+import org.apache.activemq.broker.EmptyBroker;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.PolicyMap;
@@ -52,13 +51,11 @@ import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
-import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.state.ConnectionState;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.usage.SystemUsage;
-import org.apache.activemq.usage.Usage;
 import org.apache.activemq.util.BrokerSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.LongSequenceGenerator;
@@ -71,7 +68,7 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision$
  */
-public class RegionBroker implements Broker {
+public class RegionBroker extends EmptyBroker {
     private static final Log LOG = LogFactory.getLog(RegionBroker.class);
     private static final IdGenerator BROKER_ID_GENERATOR = new IdGenerator();
 
@@ -322,12 +319,6 @@ public class RegionBroker implements Broker {
         ActiveMQDestination rc[] = new ActiveMQDestination[l.size()];
         l.toArray(rc);
         return rc;
-    }
-
-    public void addSession(ConnectionContext context, SessionInfo info) throws Exception {
-    }
-
-    public void removeSession(ConnectionContext context, SessionInfo info) throws Exception {
     }
 
     public void addProducer(ConnectionContext context, ProducerInfo info)
@@ -619,10 +610,6 @@ public class RegionBroker implements Broker {
         return destinationFactory.getDestinations();
     }
 
-    public boolean isFaultTolerantConfiguration() {
-        return false;
-    }
-
     protected void doStop(ServiceStopper ss) {
         ss.stop(queueRegion);
         ss.stop(topicRegion);
@@ -680,24 +667,6 @@ public class RegionBroker implements Broker {
         getRoot().sendToDeadLetterQueue(context, node);
     }
     
-    public void fastProducer(ConnectionContext context,ProducerInfo producerInfo) {
-    }
-
-    public void isFull(ConnectionContext context,Destination destination, Usage usage) {
-    }
-
-    public void messageConsumed(ConnectionContext context,MessageReference messageReference) {
-    }
-
-    public void messageDelivered(ConnectionContext context,MessageReference messageReference) {
-    }
-
-    public void messageDiscarded(ConnectionContext context,MessageReference messageReference) {
-    }
-
-    public void slowConsumer(ConnectionContext context, Destination dest, Subscription subs) {
-    }
-
     public void sendToDeadLetterQueue(ConnectionContext context,
 	        MessageReference node){
 		try{
