@@ -365,6 +365,12 @@ public interface Broker extends Region, Service {
      * @param usage
      */
     void isFull(ConnectionContext context,Destination destination,Usage usage);
+    
+    /**
+     *  called when the broker becomes the master in a master/slave
+     *  configuration
+     */
+    void nowMasterBroker();
 
 
 }

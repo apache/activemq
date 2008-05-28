@@ -333,6 +333,27 @@ public class AdvisoryBroker extends BrokerFilter {
             LOG.warn("Failed to fire message is full advisory");
         }
     }
+    
+    public void nowMasterBroker() {   
+        super.nowMasterBroker();
+        try {
+            ActiveMQTopic topic = AdvisorySupport.getMasterBrokerAdvisoryTopic();
+            ActiveMQMessage advisoryMessage = new ActiveMQMessage();           
+            advisoryMessage.setStringProperty("brokerName", getBrokerName());
+            String[] uris = getBrokerService().getTransportConnectorURIs();
+            String uri = getBrokerService().getVmConnectorURI().toString();
+            if (uris != null && uris.length > 0) {
+                uri = uris[0];
+            }
+            advisoryMessage.setStringProperty("brokerURL", getBrokerName());
+            advisoryMessage.setStringProperty("brokerURI", uri);
+            ConnectionContext context = new ConnectionContext();
+            context.setBroker(getBrokerService().getBroker());
+            fireAdvisory(context, topic,advisoryMessage);
+        } catch (Exception e) {
+            LOG.warn("Failed to fire message master broker advisory");
+        }
+    }
 
     protected void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command) throws Exception {
         fireAdvisory(context, topic, command, null);

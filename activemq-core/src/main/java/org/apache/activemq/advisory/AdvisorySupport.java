@@ -45,6 +45,7 @@ public final class AdvisorySupport {
     public static final String FULL_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "FULL.";
     public static final String MESSAGE_DELIVERED_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "MessageDelivered.";
     public static final String MESSAGE_CONSUMED_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "MessageConsumed.";
+    public static final String MASTER_BROKER_TOPIC_PREFIX = ADVISORY_TOPIC_PREFIX + "MasterBroker";
     public static final String AGENT_TOPIC = "ActiveMQ.Agent";
     public static final String ADIVSORY_MESSAGE_TYPE = "Advisory";
     public static final String MSG_PROPERTY_ORIGIN_BROKER_ID="originBrokerId";
@@ -135,6 +136,10 @@ public final class AdvisorySupport {
                 + destination.getDestinationTypeAsString() + "."
                 + destination.getPhysicalName();
         return new ActiveMQTopic(name);
+    }
+    
+    public static ActiveMQTopic getMasterBrokerAdvisoryTopic() {
+        return new ActiveMQTopic(MASTER_BROKER_TOPIC_PREFIX);
     }
     
     public static ActiveMQTopic getFullAdvisoryTopic(ActiveMQDestination destination) {
@@ -269,6 +274,20 @@ public final class AdvisorySupport {
             return false;
         } else {
             return destination.isTopic() && destination.getPhysicalName().startsWith(MESSAGE_CONSUMED_TOPIC_PREFIX);
+        }
+    }
+    
+    public static boolean isMasterBrokerAdvisoryTopic(ActiveMQDestination destination) {
+        if (destination.isComposite()) {
+            ActiveMQDestination[] compositeDestinations = destination.getCompositeDestinations();
+            for (int i = 0; i < compositeDestinations.length; i++) {
+                if (isMasterBrokerAdvisoryTopic(compositeDestinations[i])) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            return destination.isTopic() && destination.getPhysicalName().startsWith(MASTER_BROKER_TOPIC_PREFIX);
         }
     }
     

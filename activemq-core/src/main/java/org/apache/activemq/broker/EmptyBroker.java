@@ -221,7 +221,7 @@ public class EmptyBroker implements Broker {
     public void setAdminConnectionContext(ConnectionContext adminConnectionContext) {
     }
 
-    public Response messagePull(ConnectionContext context, MessagePull pull) {
+    public Response messagePull(ConnectionContext context, MessagePull pull) throws Exception {
         return null;
     }
 
@@ -274,5 +274,8 @@ public class EmptyBroker implements Broker {
     }
 
     public void slowConsumer(ConnectionContext context,Destination destination, Subscription subs) {
+    }
+
+    public void nowMasterBroker() {        
     }
 }

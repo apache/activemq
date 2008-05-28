@@ -921,7 +921,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 	
 	
 	
-	protected void lock() throws IOException, InterruptedException {
+	protected void lock() throws Exception {
         boolean logged = false;
         boolean aquiredLock = false;
         do {
@@ -937,6 +937,9 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 
             if (aquiredLock && logged) {
                 LOG.info("Aquired lock for AMQ Store" + getDirectory());
+                if (brokerService != null) {
+                    brokerService.getBroker().nowMasterBroker();
+                }
             }
 
         } while (!aquiredLock && !disableLocking);

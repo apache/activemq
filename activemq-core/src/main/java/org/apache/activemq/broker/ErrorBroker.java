@@ -292,4 +292,8 @@ public class ErrorBroker implements Broker {
     public void slowConsumer(ConnectionContext context, Destination destination,Subscription subs) {
         throw new BrokerStoppedException(this.message);
     }
+    
+    public void nowMasterBroker() {   
+        throw new BrokerStoppedException(this.message);
+    }
 }

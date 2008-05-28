@@ -302,5 +302,9 @@ public class MutableBrokerFilter implements Broker {
     public void slowConsumer(ConnectionContext context, Destination dest, Subscription subs) {
         getNext().slowConsumer(context, dest,subs);
     }
+    
+    public void nowMasterBroker() {   
+       getNext().nowMasterBroker();
+    }
 
 }
