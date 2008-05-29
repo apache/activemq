@@ -447,18 +447,23 @@ public class BrokerService implements Service {
 
             BrokerRegistry.getInstance().bind(getBrokerName(), this);
 
-            startDestinations();
-
-            addShutdownHook();
+            
             LOG.info("Using Persistence Adapter: " + getPersistenceAdapter());
+            getPersistenceAdapter().setUsageManager(getProducerSystemUsage());
+            getPersistenceAdapter().setBrokerName(getBrokerName());
             if (deleteAllMessagesOnStartup) {
                 deleteAllMessages();
             }
+            getPersistenceAdapter().start();
+
+            startDestinations();
+
+            addShutdownHook();
 
             if (isUseJmx()) {
                 getManagementContext().start();
             }
-
+            
             getBroker().start();
 
            // see if there is a MasterBroker service and if so, configure
@@ -1596,12 +1601,10 @@ public class BrokerService implements Service {
     protected Broker createRegionBroker() throws Exception {
         // we must start the persistence adaptor before we can create the region
         // broker
-        getPersistenceAdapter().setUsageManager(getProducerSystemUsage());
-        getPersistenceAdapter().setBrokerName(getBrokerName());
         if (this.deleteAllMessagesOnStartup) {
             getPersistenceAdapter().deleteAllMessages();
         }
-        getPersistenceAdapter().start();
+//        getPersistenceAdapter().start();
 
         if (destinationInterceptors == null) {
             destinationInterceptors = createDefaultDestinationInterceptor();
