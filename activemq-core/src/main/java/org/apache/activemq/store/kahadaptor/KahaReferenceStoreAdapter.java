@@ -26,10 +26,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
 
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.MessageId;
@@ -41,7 +39,6 @@ import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.MessageIdMarshaller;
 import org.apache.activemq.kaha.Store;
 import org.apache.activemq.kaha.StoreFactory;
-import org.apache.activemq.kaha.impl.StoreLockedExcpetion;
 import org.apache.activemq.kaha.impl.index.hash.HashIndex;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.ReferenceStore;
@@ -49,6 +46,7 @@ import org.apache.activemq.store.ReferenceStoreAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TopicReferenceStore;
 import org.apache.activemq.store.amq.AMQTx;
+import org.apache.activemq.util.IOHelper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -295,7 +293,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     protected synchronized Store getStateStore() throws IOException {
         if (this.stateStore == null) {
             File stateDirectory = new File(getDirectory(), "kr-state");
-            stateDirectory.mkdirs();
+            IOHelper.mkdirs(stateDirectory);
             this.stateStore = createStateStore(getDirectory());
         }
         return this.stateStore;
@@ -325,8 +323,8 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
 
     private Store createStateStore(File directory) {
         File stateDirectory = new File(directory, "state");
-        stateDirectory.mkdirs();
         try {
+            IOHelper.mkdirs(stateDirectory);
             return StoreFactory.open(stateDirectory, "rw");
         } catch (IOException e) {
             LOG.error("Failed to create the state store", e);

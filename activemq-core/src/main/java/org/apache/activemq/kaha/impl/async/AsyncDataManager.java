@@ -40,6 +40,7 @@ import org.apache.activemq.kaha.impl.async.DataFileAppender.WriteCommand;
 import org.apache.activemq.kaha.impl.async.DataFileAppender.WriteKey;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.IOHelper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -190,15 +191,15 @@ public class AsyncDataManager {
         Scheduler.executePeriodically(cleanupTask, 1000 * 30);
     }
 
-	public void lock() throws IOException {
-		synchronized (this) {
-			if( controlFile == null ) {
-		        directory.mkdirs();
-				controlFile = new ControlFile(new File(directory, filePrefix + "control"), CONTROL_RECORD_MAX_LENGTH);
-			}
+    public void lock() throws IOException {
+        synchronized (this) {
+            if (controlFile == null) {
+                IOHelper.mkdirs(directory);
+                controlFile = new ControlFile(new File(directory, filePrefix + "control"), CONTROL_RECORD_MAX_LENGTH);
+            }
             controlFile.lock();
         }
-	}
+    }
 
     protected Location recoveryCheck(DataFile dataFile, Location location) throws IOException {
         if (location == null) {

@@ -183,7 +183,7 @@ public final class IndexManager {
 
     protected void initialize() throws IOException {
         file = new File(directory, NAME_PREFIX + IOHelper.toFileSystemSafeName(name) );
-        file.getParentFile().mkdirs();        
+        IOHelper.mkdirs(file.getParentFile());        
         indexFile = new RandomAccessFile(file, mode);
         reader = new StoreIndexReader(indexFile);
         writer = new StoreIndexWriter(indexFile, name, redoLog);

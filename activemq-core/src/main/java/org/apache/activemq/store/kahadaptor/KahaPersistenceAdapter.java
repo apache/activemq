@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -48,8 +49,6 @@ import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.IOHelper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import sun.misc.Perf.GetPerfAction;
 
 /**
  * @org.apache.xbean.XBean
@@ -328,7 +327,11 @@ public class KahaPersistenceAdapter implements PersistenceAdapter {
                 file = new File(file, IOHelper.toFileSystemSafeName(brokerName) + "-kahastore");
                 setDirectory(file);
             }
-            this.directory.mkdirs();
+            try {
+                IOHelper.mkdirs(this.directory);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             wireFormat.setCacheEnabled(false);
             wireFormat.setTightEncodingEnabled(true);
         }
