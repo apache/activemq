@@ -34,7 +34,7 @@ public class TwoMulticastDiscoveryBrokerTopicSendReceiveTest extends TwoBrokerTo
     }
     
     protected void setUp() throws Exception{
-    	System.setProperty("groupId", getClass().getName()+"+"+System.currentTimeMillis());
+    	System.setProperty("groupId", getClass().getName()+"-"+System.currentTimeMillis());
         messageCount = 100000;
         super.setUp();
     }
