@@ -112,5 +112,38 @@ public interface QueueViewMBean extends DestinationViewMBean {
      * of matched messages
      */
     int moveMatchingMessagesTo(String selector, String destinationName, int maximumMessages) throws Exception;
-
+    
+    /**
+     * @return true if the message cursor has memory space available
+     * to page in more messages
+     */
+    public boolean doesCursorHaveSpace();
+    
+    /**
+     * @return true if the cursor has reached its memory limit for
+     * paged in messages
+     */
+    public boolean isCursorFull();
+    
+    /**
+     * @return true if the cursor has messages buffered to deliver
+     */
+    public boolean doesCursorHaveMessagesBuffered();
+    
+    /**
+     * @return the cursor memory usage in bytes
+     */
+    public long getCursorMemoryUsage();
+    
+    /**
+     * @return the cursor memory usage as a percentage
+     */
+    public int getCursorPercentUsage();
+    
+    /**
+     * @return the number of messages available to be paged in 
+     * by the cursor
+     */
+    public int cursorSize();
+    
 }

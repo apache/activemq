@@ -25,12 +25,10 @@ import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.SubscriptionInfo;
 
 /**
- * TODO why does this class not inherit from DurableSubscriptionView?
  * 
  * @version $Revision: 1.5 $
  */
-public class InactiveDurableSubscriptionView extends SubscriptionView implements DurableSubscriptionViewMBean {
-    protected ManagedRegionBroker broker;
+public class InactiveDurableSubscriptionView extends DurableSubscriptionView implements DurableSubscriptionViewMBean {
     protected SubscriptionInfo subscriptionInfo;
 
     /**
@@ -41,7 +39,7 @@ public class InactiveDurableSubscriptionView extends SubscriptionView implements
      * @param sub
      */
     public InactiveDurableSubscriptionView(ManagedRegionBroker broker, String clientId, SubscriptionInfo sub) {
-        super(clientId, null);
+        super(broker,clientId, null);
         this.broker = broker;
         this.subscriptionInfo = sub;
     }

@@ -19,14 +19,11 @@ package org.apache.activemq.broker.region.cursors;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-
 import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
-import org.apache.activemq.broker.region.QueueMessageReference;
-import org.apache.activemq.command.MessageId;
 import org.apache.activemq.usage.SystemUsage;
 
 /**
@@ -194,6 +191,11 @@ public interface PendingMessageCursor extends Service {
      * @return true if the cursor is full
      */
     boolean isFull();
+    
+    /**
+     * @return true if the cursor has space to page messages into
+     */
+    public boolean hasSpace();
 
     /**
      * @return true if the cursor has buffered messages ready to deliver
@@ -280,6 +282,5 @@ public interface PendingMessageCursor extends Service {
      * @return true if a cache is being used
      */
     public boolean isUseCache();
-
-
+   
 }

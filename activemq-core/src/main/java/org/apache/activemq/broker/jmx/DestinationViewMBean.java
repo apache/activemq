@@ -214,5 +214,28 @@ public interface DestinationViewMBean {
      * @param maxAuditDepth the maxAuditDepth to set
      */
     public void setMaxAuditDepth(int maxAuditDepth);
+    
+    /**
+     * @return the maximum number of message to be paged into the 
+     * destination
+     */
+    public int getMaxPageSize();
+    
+    /**
+     * @param pageSize
+     * Set the maximum number of messages to page into the destination
+     */
+    public void setMaxPageSize(int pageSize);
+    
+    /**
+     * @return true if caching is enabled of for the destination
+     */
+    public boolean isUseCache();
+    
+    /**
+     * @param value
+     * enable/disable caching on the destination
+     */
+    public void setUseCache(boolean value);
 
 }
