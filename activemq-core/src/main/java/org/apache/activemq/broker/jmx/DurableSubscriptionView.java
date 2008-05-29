@@ -21,6 +21,7 @@ import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
 
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 
@@ -31,6 +32,7 @@ public class DurableSubscriptionView extends SubscriptionView implements Durable
 
     protected ManagedRegionBroker broker;
     protected String subscriptionName;
+    protected DurableTopicSubscription durableSub;
 
     /**
      * Constructor
@@ -41,6 +43,7 @@ public class DurableSubscriptionView extends SubscriptionView implements Durable
     public DurableSubscriptionView(ManagedRegionBroker broker, String clientId, Subscription sub) {
         super(clientId, sub);
         this.broker = broker;
+        this.durableSub=(DurableTopicSubscription) sub;
         this.subscriptionName = sub.getConsumerInfo().getSubscriptionName();
     }
 
@@ -86,6 +89,55 @@ public class DurableSubscriptionView extends SubscriptionView implements Durable
     }
 
     public String toString() {
-        return "InactiveDurableSubscriptionView: " + getClientId() + ":" + getSubscriptionName();
+        return "ActiveDurableSubscriptionView: " + getClientId() + ":" + getSubscriptionName();
+    }
+
+    
+    public int cursorSize() {
+        if (durableSub != null && durableSub.getPending() != null) {
+            return durableSub.getPending().size();
+        }
+        return 0;
+    }
+
+   
+    public boolean doesCursorHaveMessagesBuffered() {
+        if (durableSub != null && durableSub.getPending() != null) {
+            return durableSub.getPending().hasMessagesBufferedToDeliver();
+        }
+        return false;
+    }
+
+   
+    public boolean doesCursorHaveSpace() {
+        if (durableSub != null && durableSub.getPending() != null) {
+            return durableSub.getPending().hasSpace();
+        }
+        return false;
+    }
+
+    /* (non-Javadoc)
+     * @see org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean#getCursorMemoryUsage()
+     */
+    public long getCursorMemoryUsage() {
+        if (durableSub != null && durableSub.getPending() != null && durableSub.getPending().getSystemUsage()!=null) {
+            return durableSub.getPending().getSystemUsage().getMemoryUsage().getUsage();
+        }
+        return 0;
+    }
+
+    
+    public int getCursorPercentUsage() {
+        if (durableSub != null && durableSub.getPending() != null && durableSub.getPending().getSystemUsage()!=null) {
+            return durableSub.getPending().getSystemUsage().getMemoryUsage().getPercentUsage();
+        }
+        return 0;
+    }
+
+    public boolean isCursorFull() {
+        if (durableSub != null && durableSub.getPending() != null) {
+            return durableSub.getPending().isFull();
+        }
+        return false;
     }
 }

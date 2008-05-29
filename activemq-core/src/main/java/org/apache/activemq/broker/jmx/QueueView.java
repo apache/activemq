@@ -92,4 +92,56 @@ public class QueueView extends DestinationView implements QueueViewMBean {
         return ((Queue)destination).moveMatchingMessagesTo(context, selector, toDestination, maximumMessages);
     }
 
+    
+    public int cursorSize() {
+        Queue queue = (Queue) destination;
+        if (queue.getMessages() != null){
+            return queue.getMessages().size();
+        }
+        return 0;
+    }
+
+   
+    public boolean doesCursorHaveMessagesBuffered() {
+       Queue queue = (Queue) destination;
+       if (queue.getMessages() != null){
+           return queue.getMessages().hasMessagesBufferedToDeliver();
+       }
+       return false;
+
+    }
+
+    
+    public boolean doesCursorHaveSpace() {
+        Queue queue = (Queue) destination;
+        if (queue.getMessages() != null){
+            return queue.getMessages().hasSpace();
+        }
+        return false;
+    }
+
+    
+    public long getCursorMemoryUsage() {
+        Queue queue = (Queue) destination;
+        if (queue.getMessages() != null &&  queue.getMessages().getSystemUsage() != null){
+            return queue.getMessages().getSystemUsage().getMemoryUsage().getUsage();
+        }
+        return 0;
+    }
+
+    public int getCursorPercentUsage() {
+        Queue queue = (Queue) destination;
+        if (queue.getMessages() != null &&  queue.getMessages().getSystemUsage() != null){
+            return queue.getMessages().getSystemUsage().getMemoryUsage().getPercentUsage();
+        }
+        return 0;
+    }
+
+    public boolean isCursorFull() {
+        Queue queue = (Queue) destination;
+        if (queue.getMessages() != null){
+            return queue.getMessages().isFull();
+        }
+        return false;
+    }
 }

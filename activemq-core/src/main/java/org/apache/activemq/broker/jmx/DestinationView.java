@@ -37,6 +37,7 @@ import javax.management.openmbean.TabularType;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.jmx.OpenTypeSupport.OpenTypeFactory;
 import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTextMessage;
@@ -316,6 +317,22 @@ public class DestinationView implements DestinationViewMBean {
 
     public void setProducerFlowControl(boolean producerFlowControl) {
       destination.setProducerFlowControl(producerFlowControl);      
+    }
+
+    public int getMaxPageSize() {
+        return destination.getMaxPageSize();
+    }
+    
+    public void setMaxPageSize(int pageSize) {
+        destination.setMaxPageSize(pageSize);
+    }
+    
+    public boolean isUseCache() {
+        return destination.isUseCache();
+    }
+
+    public void setUseCache(boolean value) {
+        destination.setUseCache(value);    
     }
   
 }
