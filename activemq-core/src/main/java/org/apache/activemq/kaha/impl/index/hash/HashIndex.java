@@ -436,7 +436,7 @@ public class HashIndex implements Index, HashIndexMBean {
     private void openIndexFile() throws IOException {
         if (indexFile == null) {
             file = new File(directory, NAME_PREFIX + IOHelper.toFileSystemSafeName(name));
-            file.getParentFile().mkdirs();
+            IOHelper.mkdirs(file.getParentFile());
             indexFile = new RandomAccessFile(file, "rw");
         }
     }

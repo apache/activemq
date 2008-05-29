@@ -45,7 +45,7 @@ public class HashTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         directory = new File(IOHelper.getDefaultDataDirectory());
-        directory.mkdirs();
+        IOHelper.mkdirs(directory);
         IOHelper.deleteChildren(directory);
         indexManager = new IndexManager(directory, "im-hash-test", "rw", null,
                 new AtomicLong());

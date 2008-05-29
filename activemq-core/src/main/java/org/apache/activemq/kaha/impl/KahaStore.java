@@ -103,7 +103,7 @@ public class KahaStore implements Store {
         this.mode = mode;
         this.storeSize = storeSize;
         this.directory = directory;
-        this.directory.mkdirs();
+        IOHelper.mkdirs(this.directory);
     }
 
     public synchronized void close() throws IOException {

@@ -448,9 +448,9 @@ public class BrokerService implements Service {
             BrokerRegistry.getInstance().bind(getBrokerName(), this);
 
             
-            LOG.info("Using Persistence Adapter: " + getPersistenceAdapter());
             getPersistenceAdapter().setUsageManager(getProducerSystemUsage());
             getPersistenceAdapter().setBrokerName(getBrokerName());
+            LOG.info("Using Persistence Adapter: " + getPersistenceAdapter());
             if (deleteAllMessagesOnStartup) {
                 deleteAllMessages();
             }

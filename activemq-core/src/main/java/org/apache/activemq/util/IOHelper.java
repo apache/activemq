@@ -171,5 +171,17 @@ public final class IOHelper {
         MAX_FILE_NAME_LENGTH = Integer.valueOf(System.getProperty("MaximumFileNameLength","64")).intValue();             
     }
 
-   
+    
+    public static void mkdirs(File dir) throws IOException {
+        if (dir.exists()) {
+            if (!dir.isDirectory()) {
+                throw new IOException("Failed to create directory '" + dir +"', regular file already existed with that name");
+            }
+            
+        } else {
+            if (!dir.mkdirs()) {
+                throw new IOException("Failed to create directory '" + dir+"'");
+            }
+        }
+    }
 }

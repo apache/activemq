@@ -30,6 +30,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.activeio.journal.Journal;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
@@ -164,12 +165,12 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         if (this.directoryArchive == null) {
             this.directoryArchive = new File(this.directory,"archive");
         }
-        this.directory.mkdirs();
+        IOHelper.mkdirs(this.directory);
         lockFile = new RandomAccessFile(new File(directory, "lock"), "rw");
         lock();
         LOG.info("AMQStore starting using directory: " + directory); 
         if (archiveDataLogs) {
-            this.directoryArchive.mkdirs();
+            IOHelper.mkdirs(this.directoryArchive);
         }
 
         if (this.usageManager != null) {
