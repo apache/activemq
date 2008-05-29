@@ -128,6 +128,8 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private FileLock lock;
     private boolean disableLocking = DISABLE_LOCKING;
 	private boolean failIfJournalIsLocked;
+    private boolean lockLogged;
+    private boolean lockAquired;
 
     public String getBrokerName() {
         return this.brokerName;
@@ -271,6 +273,14 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
             }
         };
         Scheduler.executePeriodically(periodicCleanupTask, cleanupInterval);
+        
+        if (lockAquired && lockLogged) {
+            LOG.info("Aquired lock for AMQ Store" + getDirectory());
+            if (brokerService != null) {
+                brokerService.getBroker().nowMasterBroker();
+            }
+        }
+
     }
 
     public void stop() throws Exception {
@@ -923,27 +933,20 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 	
 	
 	protected void lock() throws Exception {
-        boolean logged = false;
-        boolean aquiredLock = false;
+        lockLogged = false;
+        lockAquired = false;
         do {
             if (doLock()) {
-                aquiredLock = true;
+                lockAquired = true;
             } else {
-                if (!logged) {
+                if (!lockLogged) {
                     LOG.warn("Waiting to Lock the Store " + getDirectory());
-                    logged = true;
+                    lockLogged = true;
                 }
                 Thread.sleep(1000);
             }
 
-            if (aquiredLock && logged) {
-                LOG.info("Aquired lock for AMQ Store" + getDirectory());
-                if (brokerService != null) {
-                    brokerService.getBroker().nowMasterBroker();
-                }
-            }
-
-        } while (!aquiredLock && !disableLocking);
+        } while (!lockAquired && !disableLocking);
     }
 	
 	private synchronized void unlock() throws IOException {
