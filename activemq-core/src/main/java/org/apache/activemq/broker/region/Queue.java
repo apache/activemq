@@ -1062,7 +1062,12 @@ public class Queue extends BaseDestination implements Task {
     }
 
     final void sendMessage(final ConnectionContext context, Message msg) throws Exception {
-        messages.addMessageLast(msg);
+        if (!msg.isPersistent() && messages.getSystemUsage() != null) {
+            messages.getSystemUsage().getTempUsage().waitForSpace();
+        }
+        synchronized(messages) {
+            messages.addMessageLast(msg);
+        }
         destinationStatistics.getEnqueues().increment();
         destinationStatistics.getMessages().increment();
         messageDelivered(context, msg);
