@@ -60,8 +60,10 @@ public class TopicClusterTest extends TestCase implements MessageListener {
     protected MessageProducer[] producers;
     protected Connection[] connections;
     protected List<BrokerService> services = new ArrayList<BrokerService>();
-
+    protected String groupId;
+    
     protected void setUp() throws Exception {
+        groupId = "topic-cluster-test-"+System.currentTimeMillis();
         connections = new Connection[NUMBER_IN_CLUSTER];
         producers = new MessageProducer[NUMBER_IN_CLUSTER];
         Destination destination = createDestination();
@@ -110,7 +112,6 @@ public class TopicClusterTest extends TestCase implements MessageListener {
 
         String url = "tcp://localhost:0";
         TransportConnector connector = container.addConnector(url);
-        String groupId = "topic-cluster-test-"+System.currentTimeMillis();
         connector.setDiscoveryUri(new URI("multicast://"+groupId));
         container.addNetworkConnector("multicast://"+groupId);
         container.start();
