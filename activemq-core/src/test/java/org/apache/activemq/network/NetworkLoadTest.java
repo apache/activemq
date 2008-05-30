@@ -71,7 +71,8 @@ public class NetworkLoadTest extends TestCase {
     private static final long SAMPLE_DURATION = Integer.parseInt(System.getProperty("SAMPLES_DURATION", "" + 1000 * 5));
 	protected static final int BROKER_COUNT = 4;
 	protected static final int MESSAGE_SIZE = 2000;
-
+        String groupId;
+        
 	class ForwardingClient {
 
 		private final AtomicLong forwardCounter = new AtomicLong();
@@ -122,6 +123,7 @@ public class NetworkLoadTest extends TestCase {
 
 	
 	protected void setUp() throws Exception {
+	        groupId = "network-load-test-"+System.currentTimeMillis();
 		brokers = new BrokerService[BROKER_COUNT];
 		for (int i = 0; i < brokers.length; i++) {
 		    LOG.info("Starting broker: "+i);
@@ -201,7 +203,6 @@ public class NetworkLoadTest extends TestCase {
         TransportConnector transportConnector = new TransportConnector();
         transportConnector.setUri(new URI("tcp://localhost:"+(60000+brokerId)));
         
-        String groupId = "network-load-test-"+System.currentTimeMillis();
         transportConnector.setDiscoveryUri(new URI("multicast://"+groupId));        
         broker.addConnector(transportConnector);
                         
