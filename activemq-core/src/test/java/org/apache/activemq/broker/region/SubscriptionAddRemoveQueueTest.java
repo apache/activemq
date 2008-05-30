@@ -44,6 +44,7 @@ public class SubscriptionAddRemoveQueueTest extends TestCase {
     @Override
     public void setUp() throws Exception {
         BrokerService brokerService = new BrokerService();
+        brokerService.start();
         ActiveMQDestination destination = new ActiveMQQueue("TEST");
         DestinationStatistics parentStats = new DestinationStatistics();
         parentStats.setEnabled(true);
