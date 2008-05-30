@@ -1091,20 +1091,20 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         ensureConnectionInfoSent();
 
         ConsumerId consumerId = createConsumerId();
-        ConsumerInfo info = new ConsumerInfo(consumerId);
-        info.setDestination(ActiveMQMessageTransformation.transformDestination(destination));
-        info.setSelector(messageSelector);
-        info.setPrefetchSize(maxMessages);
-        info.setNoLocal(noLocal);
-        info.setDispatchAsync(isDispatchAsync());
+        ConsumerInfo consumerInfo = new ConsumerInfo(consumerId);
+        consumerInfo.setDestination(ActiveMQMessageTransformation.transformDestination(destination));
+        consumerInfo.setSelector(messageSelector);
+        consumerInfo.setPrefetchSize(maxMessages);
+        consumerInfo.setNoLocal(noLocal);
+        consumerInfo.setDispatchAsync(isDispatchAsync());
 
         // Allows the options on the destination to configure the consumerInfo
-        if (info.getDestination().getOptions() != null) {
-            Map<String, String> options = new HashMap<String, String>(info.getDestination().getOptions());
-            IntrospectionSupport.setProperties(info, options, "consumer.");
+        if (consumerInfo.getDestination().getOptions() != null) {
+            Map<String, String> options = new HashMap<String, String>(consumerInfo.getDestination().getOptions());
+            IntrospectionSupport.setProperties(consumerInfo, options, "consumer.");
         }
 
-        return new ActiveMQConnectionConsumer(this, sessionPool, info);
+        return new ActiveMQConnectionConsumer(this, sessionPool, consumerInfo);
     }
 
     /**
