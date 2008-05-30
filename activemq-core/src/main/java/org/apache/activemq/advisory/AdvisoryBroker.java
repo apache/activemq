@@ -253,7 +253,9 @@ public class AdvisoryBroker extends BrokerFilter {
                 ActiveMQTopic topic = AdvisorySupport.getExpiredMessageTopic(messageReference.getMessage().getDestination());
                 Message payload = messageReference.getMessage().copy();
                 payload.clearBody();
-                fireAdvisory(context, topic,payload);
+                ActiveMQMessage advisoryMessage = new ActiveMQMessage();
+                advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_MESSAGE_ID, payload.getMessageId().toString());
+                fireAdvisory(context, topic, payload, null, advisoryMessage);
             }
         } catch (Exception e) {
             LOG.warn("Failed to fire message expired advisory");
@@ -306,7 +308,9 @@ public class AdvisoryBroker extends BrokerFilter {
         super.slowConsumer(context, destination,subs);
         try {
             ActiveMQTopic topic = AdvisorySupport.getSlowConsumerAdvisoryTopic(destination.getActiveMQDestination());
-            fireAdvisory(context, topic,subs.getConsumerInfo());
+            ActiveMQMessage advisoryMessage = new ActiveMQMessage();
+            advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_CONSUMER_ID, subs.getConsumerInfo().getConsumerId().toString());
+            fireAdvisory(context, topic, subs.getConsumerInfo(), null, advisoryMessage);
         } catch (Exception e) {
             LOG.warn("Failed to fire message slow consumer advisory");
         }
@@ -316,7 +320,9 @@ public class AdvisoryBroker extends BrokerFilter {
         super.fastProducer(context, producerInfo);
         try {
             ActiveMQTopic topic = AdvisorySupport.getFastProducerAdvisoryTopic(producerInfo.getDestination());
-            fireAdvisory(context, topic,producerInfo);
+            ActiveMQMessage advisoryMessage = new ActiveMQMessage();
+            advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_PRODUCER_ID, producerInfo.getProducerId().toString());
+            fireAdvisory(context, topic, producerInfo, null, advisoryMessage);
         } catch (Exception e) {
             LOG.warn("Failed to fire message fast producer advisory");
         }
@@ -327,8 +333,8 @@ public class AdvisoryBroker extends BrokerFilter {
         try {
             ActiveMQTopic topic = AdvisorySupport.getFullAdvisoryTopic(destination.getActiveMQDestination());
             ActiveMQMessage advisoryMessage = new ActiveMQMessage();           
-            advisoryMessage.setStringProperty("usageName", usage.getName());
-            fireAdvisory(context, topic,advisoryMessage);
+            advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_USAGE_NAME, usage.getName());
+            fireAdvisory(context, topic,null,null,advisoryMessage);
         } catch (Exception e) {
             LOG.warn("Failed to fire message is full advisory");
         }
@@ -338,18 +344,10 @@ public class AdvisoryBroker extends BrokerFilter {
         super.nowMasterBroker();
         try {
             ActiveMQTopic topic = AdvisorySupport.getMasterBrokerAdvisoryTopic();
-            ActiveMQMessage advisoryMessage = new ActiveMQMessage();           
-            advisoryMessage.setStringProperty("brokerName", getBrokerName());
-            String[] uris = getBrokerService().getTransportConnectorURIs();
-            String uri = getBrokerService().getVmConnectorURI().toString();
-            if (uris != null && uris.length > 0) {
-                uri = uris[0];
-            }
-            advisoryMessage.setStringProperty("brokerURL", getBrokerName());
-            advisoryMessage.setStringProperty("brokerURI", uri);
+            ActiveMQMessage advisoryMessage = new ActiveMQMessage();                       
             ConnectionContext context = new ConnectionContext();
             context.setBroker(getBrokerService().getBroker());
-            fireAdvisory(context, topic,advisoryMessage);
+            fireAdvisory(context, topic,null,null,advisoryMessage);
         } catch (Exception e) {
             LOG.warn("Failed to fire message master broker advisory");
         }
@@ -361,9 +359,6 @@ public class AdvisoryBroker extends BrokerFilter {
 
     protected void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId) throws Exception {
         ActiveMQMessage advisoryMessage = new ActiveMQMessage();
-        advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_NAME, getBrokerName());
-        String id = getBrokerId() != null ? getBrokerId().getValue() : "NOT_SET";
-        advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_ID, id);
         fireAdvisory(context, topic, command, targetConsumerId, advisoryMessage);
     }
 
@@ -406,6 +401,19 @@ public class AdvisoryBroker extends BrokerFilter {
 
     protected void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId, ActiveMQMessage advisoryMessage) throws Exception {
         if (getBrokerService().isStarted()) {
+            //set properties
+            advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_NAME, getBrokerName());
+            String id = getBrokerId() != null ? getBrokerId().getValue() : "NOT_SET";
+            advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_ID, id);
+            
+            String[] uris = getBrokerService().getTransportConnectorURIs();
+            String url = getBrokerService().getVmConnectorURI().toString();
+            if (uris != null && uris.length > 0) {
+                url = uris[0];
+            } 
+            advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL, url);
+            
+            //set the data structure
             advisoryMessage.setDataStructure(command);
             advisoryMessage.setPersistent(false);
             advisoryMessage.setType(AdvisorySupport.ADIVSORY_MESSAGE_TYPE);
