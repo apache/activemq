@@ -134,6 +134,27 @@ public interface DestinationViewMBean {
     String sendTextMessage(Map headers, String body) throws Exception;
 
     /**
+     * Sends a TextMesage to the destination.
+     * @param body the text to send
+     * @param user
+     * @param password
+     * @return
+     * @throws Exception
+     */
+    String sendTextMessage(String body, String user, String password) throws Exception;
+    
+    /**
+     * 
+     * @param headers the message headers and properties to set. Can only
+     *                container Strings maped to primitive types.
+     * @param body the text to send
+     * @param user
+     * @param password
+     * @return
+     * @throws Exception
+     */
+    String sendTextMessage(Map headers, String body, String user, String password) throws Exception;
+    /**
      * @return the percentage of amount of memory used
      */
     int getMemoryPercentUsage();

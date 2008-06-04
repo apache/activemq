@@ -239,8 +239,16 @@ public class DestinationView implements DestinationViewMBean {
     public String sendTextMessage(String body) throws Exception {
         return sendTextMessage(Collections.EMPTY_MAP, body);
     }
-
+    
     public String sendTextMessage(Map headers, String body) throws Exception {
+        return sendTextMessage(headers,body,null,null);
+    }
+
+    public String sendTextMessage(String body, String user, String password) throws Exception {
+        return sendTextMessage(Collections.EMPTY_MAP,body,null,null);
+    }
+
+    public String sendTextMessage(Map headers, String body,String userName,String password) throws Exception {
 
         String brokerUrl = "vm://" + broker.getBrokerName();
         ActiveMQDestination dest = destination.getActiveMQDestination();
@@ -249,7 +257,7 @@ public class DestinationView implements DestinationViewMBean {
         Connection connection = null;
         try {
 
-            connection = cf.createConnection();
+            connection = cf.createConnection(userName,password);
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             MessageProducer producer = session.createProducer(dest);
             ActiveMQTextMessage msg = (ActiveMQTextMessage)session.createTextMessage(body);
@@ -333,6 +341,5 @@ public class DestinationView implements DestinationViewMBean {
 
     public void setUseCache(boolean value) {
         destination.setUseCache(value);    
-    }
-  
+    }  
 }
