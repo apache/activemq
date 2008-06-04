@@ -733,10 +733,15 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
             try {
                 messageListener.onMessage(message);
-            } catch (Throwable e) {
-                // TODO: figure out proper way to handle error.
+            } catch (RuntimeException e) {
                 LOG.error("error dispatching message: ", e);
-                connection.onAsyncException(e);
+                // A problem while invoking the MessageListener does not
+                // in general indicate a problem with the connection to the broker, i.e.
+                // it will usually be sufficient to let the afterDelivery() method either
+                // commit or roll back in order to deal with the exception.
+                // However, we notify any registered client internal exception listener
+                // of the problem.
+                connection.onClientInternalException(e);
             }
 
             try {
@@ -786,7 +791,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                 }
                 asyncSendPacket(ack);
             } catch (Throwable e) {
-                connection.onAsyncException(e);
+                connection.onClientInternalException(e);
             }
 
             if (deliveryListener != null) {
@@ -1431,7 +1436,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             executor.execute(messageDispatch);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            connection.onAsyncException(e);
+            connection.onClientInternalException(e);
         }
     }
 

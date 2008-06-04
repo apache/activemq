@@ -118,6 +118,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     // Connection state variables
     private final ConnectionInfo info;
     private ExceptionListener exceptionListener;
+    private ClientInternalExceptionListener clientInternalExceptionListener;
     private boolean clientIDSet;
     private boolean isConnectionInfoSentToBroker;
     private boolean userSpecifiedClientID;
@@ -404,7 +405,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * associated with it.
      * 
      * @return the <CODE>ExceptionListener</CODE> for this connection, or
-     *         null. if no <CODE>ExceptionListener</CODE> is associated with
+     *         null, if no <CODE>ExceptionListener</CODE> is associated with
      *         this connection.
      * @throws JMSException if the JMS provider fails to get the
      *                 <CODE>ExceptionListener</CODE> for this connection.
@@ -443,6 +444,32 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         this.exceptionListener = listener;
     }
 
+    /**
+     * Gets the <code>ClientInternalExceptionListener</code> object for this connection.
+     * Not every <CODE>ActiveMQConnectionn</CODE> has a <CODE>ClientInternalExceptionListener</CODE>
+     * associated with it.
+     * 
+     * @return the listener or <code>null</code> if no listener is registered with the connection.
+     */
+    public ClientInternalExceptionListener getClientInternalExceptionListener()
+    {
+        return clientInternalExceptionListener;
+    }
+
+    /**
+     * Sets a client internal exception listener for this connection.
+     * The connection will notify the listener, if one has been registered, of exceptions thrown by container components
+     * (e.g. an EJB container in case of Message Driven Beans) during asynchronous processing of a message.
+     * It does this by calling the listener's <code>onException()</code> method passing it a <code>Throwable</code>
+     * describing the problem.
+     * 
+     * @param listener the exception listener
+     */
+    public void setClientInternalExceptionListener(ClientInternalExceptionListener listener)
+    {
+        this.clientInternalExceptionListener = listener;
+    }
+    
     /**
      * Starts (or restarts) a connection's delivery of incoming messages. A call
      * to <CODE>start</CODE> on a connection that has already been started is
@@ -1672,7 +1699,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                     }
                 });
             } catch (Exception e) {
-                onAsyncException(e);
+                onClientInternalException(e);
             }
 
         }
@@ -1686,6 +1713,30 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         protocolVersion.set(info.getVersion());
     }
 
+    /**
+     * Handles async client internal exceptions.
+     * A client internal exception is usually one that has been thrown
+     * by a container runtie component during asynchronous processing of a
+     * message that does not affect the connection itself.
+     * This method notifies the <code>ClientInternalExceptionListener</code> by invoking
+     * its <code>onException</code> method, if one has been registered with this connection.
+     * 
+     * @param error the exception that the problem
+     */
+    public void onClientInternalException(final Throwable error) {
+        if ( !closed.get() && !closing.get() ) {
+            if ( this.clientInternalExceptionListener != null ) {
+                asyncConnectionThread.execute(new Runnable() {
+                    public void run() {
+                        ActiveMQConnection.this.clientInternalExceptionListener.onException(error);
+                    }
+                });
+            } else {
+                LOG.debug("Async client internal exception occurred with no exception listener registered: " 
+                        + error, error);
+            }
+        }
+    }
     /**
      * Used for handling async exceptions
      * 

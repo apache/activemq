@@ -186,7 +186,7 @@ public class ActiveMQQueueBrowser implements QueueBrowser, Enumeration {
                     return answer;
                 }
             } catch (JMSException e) {
-                this.session.connection.onAsyncException(e);
+                this.session.connection.onClientInternalException(e);
                 return null;
             }
 
