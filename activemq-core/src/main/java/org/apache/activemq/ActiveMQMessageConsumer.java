@@ -1013,7 +1013,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 Thread.yield();
             }
         } catch (Exception e) {
-            session.connection.onAsyncException(e);
+            session.connection.onClientInternalException(e);
         }
     }
 
@@ -1057,7 +1057,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     listener.onMessage(message);
                     afterMessageIsConsumed(md, false);
                 } catch (JMSException e) {
-                    session.connection.onAsyncException(e);
+                    session.connection.onClientInternalException(e);
                 }
                 return true;
             }

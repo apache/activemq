@@ -72,7 +72,7 @@ public class AdvisoryConsumer implements ActiveMQDispatcher {
                 connection.asyncSendPacket(ack);
                 deliveredCounter = 0;
             } catch (JMSException e) {
-                connection.onAsyncException(e);
+                connection.onClientInternalException(e);
             }
         }
 
