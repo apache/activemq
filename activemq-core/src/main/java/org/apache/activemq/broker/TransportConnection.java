@@ -847,14 +847,13 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         starting = true;
         try {
                synchronized(this) {
-                   transport.start();
-
                    if (taskRunnerFactory != null) {
                        taskRunner = taskRunnerFactory.createTaskRunner(this, "ActiveMQ Connection Dispatcher: "
                                                                              + getRemoteAddress());
                    } else {
                        taskRunner = null;
                    }
+                   transport.start();
 
                    active = true;
                    this.processDispatch(connector.getBrokerInfo());
