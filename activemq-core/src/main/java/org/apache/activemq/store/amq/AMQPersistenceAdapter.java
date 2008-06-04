@@ -107,6 +107,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private Runnable periodicCleanupTask;
     private boolean deleteAllMessages;
     private boolean syncOnWrite;
+    private boolean syncOnTransaction=true;
     private String brokerName = "";
     private File directory;
     private File directoryArchive;
@@ -650,7 +651,11 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
      * @throws IOException
      */
     public Location writeCommand(DataStructure command, boolean syncHint) throws IOException {
-        return asyncDataManager.write(wireFormat.marshal(command), syncHint && syncOnWrite);
+        return writeCommand(command, syncHint,false);
+    }
+    
+    public Location writeCommand(DataStructure command, boolean syncHint,boolean forceSync) throws IOException {
+        return asyncDataManager.write(wireFormat.marshal(command), (forceSync||(syncHint && syncOnWrite)));
     }
 
     private Location writeTraceMessage(String message, boolean sync) throws IOException {
@@ -778,6 +783,14 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 
     public void setSyncOnWrite(boolean syncOnWrite) {
         this.syncOnWrite = syncOnWrite;
+    }
+    
+    public boolean isSyncOnTransaction() {
+        return syncOnTransaction;
+    }
+
+    public void setSyncOnTransaction(boolean syncOnTransaction) {
+        this.syncOnTransaction = syncOnTransaction;
     }
 
     /**
@@ -998,5 +1011,4 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 	           + ".DisableLocking",
 	           "false"));
 	}
-
 }

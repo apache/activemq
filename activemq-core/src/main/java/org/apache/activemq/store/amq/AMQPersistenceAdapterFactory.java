@@ -40,6 +40,7 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
     private String brokerName = "localhost";
     private ReferenceStoreAdapter referenceStoreAdapter;
     private boolean syncOnWrite;
+    private boolean syncOnTransaction=true;
     private boolean persistentIndex=true;
     private boolean useNio = true;
     private int maxFileLength = AsyncDataManager.DEFAULT_MAX_FILE_LENGTH;
@@ -154,6 +155,14 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
 	public void setSyncOnWrite(boolean syncOnWrite) {
 		this.syncOnWrite = syncOnWrite;
 	}
+	
+	public boolean isSyncOnTransaction() {
+        return syncOnTransaction;
+    }
+
+    public void setSyncOnTransaction(boolean syncOnTransaction) {
+        this.syncOnTransaction = syncOnTransaction;
+    }
 
 	public boolean isUseNio() {
 		return useNio;
