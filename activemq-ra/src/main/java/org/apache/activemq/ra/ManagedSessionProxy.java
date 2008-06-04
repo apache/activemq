@@ -324,7 +324,7 @@ public class ManagedSessionProxy implements Session, QueueSession, TopicSession 
      * @throws JMSException
      */
     public void setMessageListener(MessageListener listener) throws JMSException {
-        getSession(); // .setMessageListener(listener);
+        getSession().setMessageListener(listener);
     }
 
     /**
