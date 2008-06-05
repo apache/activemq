@@ -25,7 +25,7 @@ import org.apache.activemq.command.Message;
  * @version $Revision: 426366 $
  */
 public abstract class AbstractDeadLetterStrategy implements DeadLetterStrategy {
-    private boolean processNonPersistent = true;
+    private boolean processNonPersistent = false;
     private boolean processExpired = true;
 
     public boolean isSendToDeadLetterQueue(Message message) {
