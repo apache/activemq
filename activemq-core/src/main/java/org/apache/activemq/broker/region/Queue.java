@@ -1057,6 +1057,7 @@ public class Queue extends BaseDestination implements Task {
     
     protected ConnectionContext createConnectionContext() {
         ConnectionContext answer = new ConnectionContext(new NonCachedMessageEvaluationContext());
+        answer.setBroker(this.broker);
         answer.getMessageEvaluationContext().setDestination(getActiveMQDestination());
         return answer;
     }
