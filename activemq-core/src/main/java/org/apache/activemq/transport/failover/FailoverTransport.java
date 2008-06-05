@@ -694,7 +694,7 @@ public class FailoverTransport implements CompositeTransport {
                                     try {
                                         //if it isn't set after 2secs - it
                                         //probably never will be
-                                    listenerMutex.wait(2000);
+                                        listenerMutex.wait(2000);
                                     }catch(InterruptedException ex) {}
                                 }
                             }
@@ -725,11 +725,12 @@ public class FailoverTransport implements CompositeTransport {
  	
                 // Make sure on initial startup, that the transportListener has been initialized
                 // for this instance.
-                while(transportListener == null) {
-                    try {
-                        Thread.sleep(100);
+                synchronized(listenerMutex) {
+                    if (transportListener==null) {
+                        try {
+                            listenerMutex.wait(2000);
+                        }catch(InterruptedException ex) {}
                     }
-                    catch(InterruptedException iEx) {}
                 }
 
           
