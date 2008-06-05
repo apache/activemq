@@ -118,8 +118,10 @@ public class CamelEndpointLoader implements InitializingBean, DisposableBean, Ca
     }
 
     public ConnectionFactory getConnectionFactory() {
-        if (connectionFactory == null) {
-            connectionFactory = getComponent().getConfiguration().createConnectionFactory();
+        if (connectionFactory == null
+                && getComponent().getConfiguration() instanceof ActiveMQConfiguration) {
+            connectionFactory = ((ActiveMQConfiguration) getComponent()
+                    .getConfiguration()).createConnectionFactory();
         }
         return connectionFactory;
     }

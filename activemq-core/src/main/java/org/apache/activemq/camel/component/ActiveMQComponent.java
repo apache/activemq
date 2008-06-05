@@ -47,7 +47,10 @@ public class ActiveMQComponent extends JmsComponent {
      */
     public static ActiveMQComponent activeMQComponent(String brokerURL) {
         ActiveMQComponent answer = new ActiveMQComponent();
-        answer.getConfiguration().setBrokerURL(brokerURL);
+        if (answer.getConfiguration() instanceof ActiveMQConfiguration) {
+            ((ActiveMQConfiguration) answer.getConfiguration())
+                    .setBrokerURL(brokerURL);
+        }
         return answer;
     }
 
@@ -62,21 +65,23 @@ public class ActiveMQComponent extends JmsComponent {
         super(configuration);
     }
 
-    @Override
-    public ActiveMQConfiguration getConfiguration() {
-        return (ActiveMQConfiguration) super.getConfiguration();
-    }
-
+   
     public void setBrokerURL(String brokerURL) {
-        getConfiguration().setBrokerURL(brokerURL);
+        if (getConfiguration() instanceof ActiveMQConfiguration) {
+            ((ActiveMQConfiguration)getConfiguration()).setBrokerURL(brokerURL);
+        }
     }
 
     public void setUserName(String userName) {
-        getConfiguration().setUserName(userName);
+        if (getConfiguration() instanceof ActiveMQConfiguration) {
+            ((ActiveMQConfiguration)getConfiguration()).setUserName(userName);
+        }
     }
 
     public void setPassword(String password) {
-        getConfiguration().setPassword(password);
+        if (getConfiguration() instanceof ActiveMQConfiguration) {
+            ((ActiveMQConfiguration)getConfiguration()).setPassword(password);
+        }
     }
 
     public boolean isExposeAllQueues() {
@@ -94,11 +99,15 @@ public class ActiveMQComponent extends JmsComponent {
     }
 
     public void setUsePooledConnection(boolean usePooledConnection) {
-        getConfiguration().setUsePooledConnection(usePooledConnection);
+        if (getConfiguration() instanceof ActiveMQConfiguration) {
+            ((ActiveMQConfiguration)getConfiguration()).setUsePooledConnection(usePooledConnection);
+        }
     }
 
     public void setUseSingleConnection(boolean useSingleConnection) {
-        getConfiguration().setUseSingleConnection(useSingleConnection);
+        if (getConfiguration() instanceof ActiveMQConfiguration) {
+            ((ActiveMQConfiguration)getConfiguration()).setUseSingleConnection(useSingleConnection);
+        }
     }
 
     @Override
