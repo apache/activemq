@@ -487,6 +487,11 @@ public class BrokerService implements Service {
             getBroker().brokerServiceStarted();
         } catch (Exception e) {
             LOG.error("Failed to start ActiveMQ JMS Message Broker. Reason: " + e, e);
+            try{
+                stop();
+            }catch(Exception ex) {
+                LOG.warn("Failed to stop broker after failure in start ",ex);
+            }
             throw e;
         }
     }
