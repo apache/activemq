@@ -57,6 +57,7 @@ public class ActiveMQBlobMessage extends ActiveMQMessage implements BlobMessage 
         copy.setRemoteBlobUrl(getRemoteBlobUrl());
         copy.setMimeType(getMimeType());
         copy.setDeletedByBroker(isDeletedByBroker());
+        copy.setBlobUploader(getBlobUploader());
     }
 
     public byte getDataStructureType() {
