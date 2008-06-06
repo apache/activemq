@@ -76,7 +76,7 @@ public class ActiveMQConnectionConsumer implements ConnectionConsumer, ActiveMQD
 
         this.connection.addConnectionConsumer(this);
         this.connection.addDispatcher(consumerInfo.getConsumerId(), this);
-        this.connection.syncSendPacket(this.consumerInfo);
+        this.connection.asyncSendPacket(this.consumerInfo);
     }
 
     /**
