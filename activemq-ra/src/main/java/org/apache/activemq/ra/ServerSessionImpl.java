@@ -104,6 +104,10 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
         return session;
     }
 
+    protected boolean isStale() {
+        return stale || !session.isRunning();
+    }
+
     public MessageProducer getMessageProducer() throws JMSException {
         if (messageProducer == null) {
             messageProducer = getSession().createProducer(null);
@@ -156,12 +160,12 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
      */
     public void run() {
         log.debug("Running");
+        currentBatchSize = 0;
         while (true) {
             log.debug("run loop start");
             try {
-                if ( session.isRunning() ) {
                 InboundContextSupport.register(this);
-                currentBatchSize = 0;
+                if ( session.isRunning() ) {
                 session.run();
                 } else {
                     log.debug("JMS Session is no longer running (maybe due to loss of connection?), marking ServerSesison as stale");
@@ -169,8 +173,11 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
                 }
             } catch (Throwable e) {
                 stale = true;
+                if ( log.isInfoEnabled() ) {
+                    log.info("Endpoint failed to process message. Reason: " + e.getMessage());                    
+                } else if ( log.isDebugEnabled() ) {
                 log.debug("Endpoint failed to process message.", e);
-                log.info("Endpoint failed to process message. Reason: " + e);
+                }
             } finally {
                 InboundContextSupport.unregister(this);
                 log.debug("run loop end");
@@ -224,7 +231,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
                         // Sanitiy Check: If the local transaction has not been
                         // commited..
                         // Commit it now.
-                        log.warn("Local transaction had not been commited.  Commiting now.");
+                        log.warn("Local transaction had not been commited. Commiting now.");
                     }
                     try {
                         session.commit();
@@ -246,6 +253,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
     /**
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString() {
         return "ServerSessionImpl:" + serverSessionId;
     }
@@ -254,12 +262,12 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
         try {
             endpoint.release();
         } catch (Throwable e) {
-            log.debug("Endpoint did not release properly: " + e, e);
+            log.debug("Endpoint did not release properly: " + e.getMessage(), e);
         }
         try {
             session.close();
         } catch (Throwable e) {
-            log.debug("Session did not close properly: " + e, e);
+            log.debug("Session did not close properly: " + e.getMessage(), e);
         }
     }
 

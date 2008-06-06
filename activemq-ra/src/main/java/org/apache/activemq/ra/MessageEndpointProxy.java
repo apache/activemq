@@ -22,6 +22,8 @@ import javax.jms.Message;
 import javax.jms.MessageListener;
 import javax.resource.ResourceException;
 import javax.resource.spi.endpoint.MessageEndpoint;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @author <a href="mailto:michael.gaffney@panacya.com">Michael Gaffney </a>
@@ -30,6 +32,7 @@ public class MessageEndpointProxy implements MessageListener, MessageEndpoint {
 
     private static final MessageEndpointState ALIVE = new MessageEndpointAlive();
     private static final MessageEndpointState DEAD = new MessageEndpointDead();
+    private static final Log LOG = LogFactory.getLog(MessageEndpointProxy.class);
 
     private static int proxyCount;
     private final int proxyID;
@@ -52,18 +55,22 @@ public class MessageEndpointProxy implements MessageListener, MessageEndpoint {
     }
 
     public void beforeDelivery(Method method) throws NoSuchMethodException, ResourceException {
+        LOG.trace("Invoking MessageEndpoint.beforeDelivery()");
         state.beforeDelivery(this, method);
     }
 
     public void onMessage(Message message) {
+        LOG.trace("Invoking MessageEndpoint.onMethod()");
         state.onMessage(this, message);
     }
 
     public void afterDelivery() throws ResourceException {
+        LOG.trace("Invoking MessageEndpoint.afterDelivery()");
         state.afterDelivery(this);
     }
 
     public void release() {
+        LOG.trace("Invoking MessageEndpoint.release()");
         state.release(this);
     }
 
