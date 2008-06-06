@@ -71,6 +71,7 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
         this.bootstrapContext = bootstrapContext;
         if (brokerXmlConfig != null && brokerXmlConfig.trim().length() > 0) {
             brokerStartThread = new Thread("Starting ActiveMQ Broker") {
+                @Override
                 public void run () {
                     try {
                         synchronized( ActiveMQResourceAdapter.this ) {
@@ -110,21 +111,21 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
      * @param activationSpec
      */
     public ActiveMQConnection makeConnection(MessageActivationSpec activationSpec) throws JMSException {
-        ActiveMQConnectionFactory connectionFactory = this.connectionFactory;
-        if (connectionFactory == null) {
-            connectionFactory = createConnectionFactory(getInfo());
+        ActiveMQConnectionFactory cf = getConnectionFactory();
+        if (cf == null) {
+            cf = createConnectionFactory(getInfo());
         }
         String userName = defaultValue(activationSpec.getUserName(), getInfo().getUserName());
         String password = defaultValue(activationSpec.getPassword(), getInfo().getPassword());
         String clientId = activationSpec.getClientId();
         if (clientId != null) {
-            connectionFactory.setClientID(clientId);
+            cf.setClientID(clientId);
         } else {
             if (activationSpec.isDurableSubscription()) {
                 log.warn("No clientID specified for durable subscription: " + activationSpec);
             }
         }
-        ActiveMQConnection physicalConnection = (ActiveMQConnection)connectionFactory.createConnection(userName, password);
+        ActiveMQConnection physicalConnection = (ActiveMQConnection) cf.createConnection(userName, password);
 
         // have we configured a redelivery policy
         RedeliveryPolicy redeliveryPolicy = activationSpec.redeliveryPolicy();
@@ -318,8 +319,8 @@ public class ActiveMQResourceAdapter extends ActiveMQConnectionSupport implement
         return connectionFactory;
     }
 
-    public void setConnectionFactory(ActiveMQConnectionFactory connectionFactory) {
-        this.connectionFactory = connectionFactory;
+    public void setConnectionFactory(ActiveMQConnectionFactory aConnectionFactory) {
+        this.connectionFactory = aConnectionFactory;
     }
 
 

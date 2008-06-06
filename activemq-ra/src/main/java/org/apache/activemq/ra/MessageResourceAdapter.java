@@ -30,7 +30,7 @@ import org.apache.activemq.ActiveMQConnection;
  * 
  * @version $Revision$
  */
-interface MessageResourceAdapter extends ResourceAdapter {
+public interface MessageResourceAdapter extends ResourceAdapter {
 
     /**
      */

@@ -60,7 +60,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
     private ServerSessionImpl createServerSessionImpl() throws JMSException {
         MessageActivationSpec activationSpec = activeMQAsfEndpointWorker.endpointActivationKey.getActivationSpec();
         int acknowledge = (activeMQAsfEndpointWorker.transacted) ? Session.SESSION_TRANSACTED : activationSpec.getAcknowledgeModeForSession();
-        final ActiveMQSession session = (ActiveMQSession)activeMQAsfEndpointWorker.connection.createSession(activeMQAsfEndpointWorker.transacted, acknowledge);
+        final ActiveMQSession session = (ActiveMQSession)activeMQAsfEndpointWorker.getConnection().createSession(activeMQAsfEndpointWorker.transacted, acknowledge);
         MessageEndpoint endpoint;
         try {
             int batchSize = 0;
@@ -188,13 +188,21 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
     }
 
     public void returnToPool(ServerSessionImpl ss) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Session returned to pool: " + ss);
-        }
         sessionLock.lock();
-        try {
             activeSessions.remove(ss);
+        try {
+            // make sure we only return non-stale sessions to the pool
+            if ( ss.isStale() ) {
+                if ( LOG.isDebugEnabled() ) {
+                    LOG.debug("Discarding stale ServerSession to be returned to pool: " + ss);
+                }
+                ss.close();
+            } else {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("ServerSession returned to pool: " + ss);
+                }
             idleSessions.add(ss);
+            }
         } finally {
             sessionLock.unlock();
         }
@@ -243,7 +251,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
         } else if (s instanceof ActiveMQTopicSession) {
             session = (ActiveMQSession) s;
         } else {
-            activeMQAsfEndpointWorker.connection
+            activeMQAsfEndpointWorker.getConnection()
                     .onAsyncException(new JMSException(
                             "Session pool provided an invalid session type: "
                                     + s.getClass()));
@@ -275,7 +283,7 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
     }
 
 
-    private int closeIdleSessions() {
+    protected int closeIdleSessions() {
         sessionLock.lock();
         try {
             for (ServerSessionImpl ss : idleSessions) {

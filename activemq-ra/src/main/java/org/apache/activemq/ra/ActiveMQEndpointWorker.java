@@ -18,6 +18,7 @@ package org.apache.activemq.ra;
 
 import java.lang.reflect.Method;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.jms.Connection;
 import javax.jms.ConnectionConsumer;
 import javax.jms.ExceptionListener;
@@ -61,24 +62,23 @@ public class ActiveMQEndpointWorker {
         }
     }
 
-    protected MessageResourceAdapter adapter;
-    protected ActiveMQEndpointActivationKey endpointActivationKey;
-    protected MessageEndpointFactory endpointFactory;
-    protected WorkManager workManager;
-    protected boolean transacted;
-    protected ActiveMQConnection connection;
+    protected final ActiveMQEndpointActivationKey endpointActivationKey;
+    protected final MessageEndpointFactory endpointFactory;
+    protected final WorkManager workManager;
+    protected final boolean transacted;
 
+    private final ActiveMQDestination dest;
+    private final Work connectWork;
+    private final AtomicBoolean connecting = new AtomicBoolean(false);    
+    private final String shutdownMutex = "shutdownMutex";
+    
+    private ActiveMQConnection connection;
     private ConnectionConsumer consumer;
     private ServerSessionPoolImpl serverSessionPool;
-    private ActiveMQDestination dest;
     private boolean running;
-    private Work connectWork;
 
-    private long reconnectDelay = INITIAL_RECONNECT_DELAY;
-
-    public ActiveMQEndpointWorker(final MessageResourceAdapter adapter, ActiveMQEndpointActivationKey key) throws ResourceException {
+    protected ActiveMQEndpointWorker(final MessageResourceAdapter adapter, ActiveMQEndpointActivationKey key) throws ResourceException {
         this.endpointActivationKey = key;
-        this.adapter = adapter;
         this.endpointFactory = endpointActivationKey.getMessageEndpointFactory();
         this.workManager = adapter.getBootstrapContext().getWorkManager();
         try {
@@ -88,43 +88,98 @@ public class ActiveMQEndpointWorker {
         }
 
         connectWork = new Work() {
+            long currentReconnectDelay = INITIAL_RECONNECT_DELAY;
 
             public void release() {
                 //
             }
 
             public synchronized void run() {
-                if (!isRunning()) {
-                    return;
-                }
-                if (connection != null) {
-                    return;
+                currentReconnectDelay = INITIAL_RECONNECT_DELAY;
+                MessageActivationSpec activationSpec = endpointActivationKey.getActivationSpec();
+                if ( LOG.isInfoEnabled() ) {
+                    LOG.info("Establishing connection to broker [" + adapter.getInfo().getServerUrl() + "]");
                 }
 
-                MessageActivationSpec activationSpec = endpointActivationKey.getActivationSpec();
+                while ( connecting.get() && running ) {
                 try {
                     connection = adapter.makeConnection(activationSpec);
-                    connection.start();
                     connection.setExceptionListener(new ExceptionListener() {
                         public void onException(JMSException error) {
                             if (!serverSessionPool.isClosing()) {
-                                reconnect(error);
+                                    // initiate reconnection only once, i.e. on initial exception
+                                    // and only if not already trying to connect
+                                    LOG.error("Connection to broker failed: " + error.getMessage(), error);
+                                    if ( connecting.compareAndSet(false, true) ) {
+                                        synchronized ( connectWork ) {
+                                            disconnect();
+                                            serverSessionPool.closeIdleSessions();
+                                            connect();
                             }
+                                    } else {
+                                        // connection attempt has already been initiated
+                                        LOG.info("Connection attempt already in progress, ignoring connection exception");
                         }
+                                }
+                            }
                     });
+                        connection.start();
 
+                        int prefetchSize = activationSpec.getMaxMessagesPerSessionsIntValue() * activationSpec.getMaxSessionsIntValue();
                     if (activationSpec.isDurableSubscription()) {
-                        consumer = connection.createDurableConnectionConsumer((Topic)dest, activationSpec.getSubscriptionName(), emptyToNull(activationSpec.getMessageSelector()), serverSessionPool,
-                                                                              activationSpec.getMaxMessagesPerSessionsIntValue(), activationSpec.getNoLocalBooleanValue());
+                            consumer = connection.createDurableConnectionConsumer(
+                                    (Topic) dest,
+                                    activationSpec.getSubscriptionName(), 
+                                    emptyToNull(activationSpec.getMessageSelector()),
+                                    serverSessionPool, 
+                                    prefetchSize,
+                                    activationSpec.getNoLocalBooleanValue());
                     } else {
-                        consumer = connection.createConnectionConsumer(dest, emptyToNull(activationSpec.getMessageSelector()), serverSessionPool, activationSpec.getMaxMessagesPerSessionsIntValue(),
+                            consumer = connection.createConnectionConsumer(
+                                    dest, 
+                                    emptyToNull(activationSpec.getMessageSelector()), 
+                                    serverSessionPool, 
+                                    prefetchSize,
                                                                        activationSpec.getNoLocalBooleanValue());
                     }
 
+
+                        if ( connecting.compareAndSet(true, false) ) {
+                            if ( LOG.isInfoEnabled() ) {
+                                LOG.info("Successfully established connection to broker [" + adapter.getInfo().getServerUrl() + "]");
+                            }
+                        } else {
+                            LOG.error("Could not release connection lock");
+                        }
                 } catch (JMSException error) {
-                    LOG.debug("Fail to to connect: " + error, error);
-                    reconnect(error);
+                        if ( LOG.isDebugEnabled() ) {
+                            LOG.debug("Failed to connect: " + error.getMessage(), error);
                 }
+                        disconnect();
+                        pause(error);
+            }
+                }
+            }
+            
+            private void pause(JMSException error) {
+                if (currentReconnectDelay == MAX_RECONNECT_DELAY) {
+                    LOG.error("Failed to connect to broker [" + adapter.getInfo().getServerUrl() + "]: " 
+                            + error.getMessage(), error);
+                    LOG.error("Endpoint will try to reconnect to the JMS broker in " + (MAX_RECONNECT_DELAY / 1000) + " seconds");
+                }
+                try {
+                    synchronized ( shutdownMutex ) {
+                        // shutdownMutex will be notified by stop() method in
+                        // order to accelerate shutdown of endpoint
+                        shutdownMutex.wait(currentReconnectDelay);
+                    }
+                } catch ( InterruptedException e ) {
+                    Thread.interrupted();
+                }
+                currentReconnectDelay *= 2;
+                if (currentReconnectDelay > MAX_RECONNECT_DELAY) {
+                    currentReconnectDelay = MAX_RECONNECT_DELAY;
+                }                
             }
         };
 
@@ -140,24 +195,12 @@ public class ActiveMQEndpointWorker {
     }
 
     /**
-     * @param s
-     */
-    public static void safeClose(Session s) {
-        try {
-            if (s != null) {
-                s.close();
-            }
-        } catch (JMSException e) {
-            //
-        }
-    }
-
-    /**
      * @param c
      */
     public static void safeClose(Connection c) {
         try {
             if (c != null) {
+                LOG.debug("Closing connection to broker");
                 c.close();
             }
         } catch (JMSException e) {
@@ -171,6 +214,7 @@ public class ActiveMQEndpointWorker {
     public static void safeClose(ConnectionConsumer cc) {
         try {
             if (cc != null) {
+                LOG.debug("Closing ConnectionConsumer");
                 cc.close();
             }
         } catch (JMSException e) {
@@ -181,35 +225,44 @@ public class ActiveMQEndpointWorker {
     /**
      * 
      */
-    public synchronized void start() throws WorkException, ResourceException {
-        if (running) {
+    public void start() throws ResourceException {
+        synchronized (connectWork) {
+            if (running)
             return;
-        }
         running = true;
 
-        LOG.debug("Starting");
+            if ( connecting.compareAndSet(false, true) ) {
+                LOG.info("Starting");
         serverSessionPool = new ServerSessionPoolImpl(this, endpointActivationKey.getActivationSpec().getMaxSessionsIntValue());
         connect();
-        LOG.debug("Started");
+            } else {
+                LOG.warn("Ignoring start command, EndpointWorker is already trying to connect");
+    }
+        }
     }
 
     /**
      * 
      */
-    public synchronized void stop() throws InterruptedException {
-        if (!running) {
+    public void stop() throws InterruptedException {
+        synchronized (shutdownMutex) {
+            if (!running)
             return;
-        }
         running = false;
+            LOG.info("Stopping");
+            // wake up pausing reconnect attempt
+            shutdownMutex.notifyAll();
         serverSessionPool.close();
         disconnect();
+    }
     }
 
     private boolean isRunning() {
         return running;
     }
 
-    private synchronized void connect() {
+    private void connect() {
+        synchronized ( connectWork ) {
         if (!running) {
             return;
         }
@@ -221,45 +274,19 @@ public class ActiveMQEndpointWorker {
             LOG.error("Work Manager did not accept work: ", e);
         }
     }
+    }
 
     /**
      * 
      */
-    private synchronized void disconnect() {
+    private void disconnect() {
+        synchronized ( connectWork ) {
         safeClose(consumer);
         consumer = null;
         safeClose(connection);
         connection = null;
     }
-
-    private void reconnect(JMSException error) {
-        LOG.debug("Reconnect cause: ", error);
-        long reconnectDelay;
-        synchronized (this) {
-            reconnectDelay = this.reconnectDelay;
-            // Only log errors if the server is really down.. And not a temp
-            // failure.
-            if (reconnectDelay == MAX_RECONNECT_DELAY) {
-                LOG.error("Endpoint connection to JMS broker failed: " + error.getMessage());
-                LOG.error("Endpoint will try to reconnect to the JMS broker in " + (MAX_RECONNECT_DELAY / 1000) + " seconds");
             }
-        }
-        try {
-            disconnect();
-            Thread.sleep(reconnectDelay);
-
-            synchronized (this) {
-                // Use exponential rollback.
-                this.reconnectDelay *= 2;
-                if (this.reconnectDelay > MAX_RECONNECT_DELAY) {
-                    this.reconnectDelay = MAX_RECONNECT_DELAY;
-                }
-            }
-            connect();
-        } catch (InterruptedException e) {
-            //
-        }
-    }
 
     protected void registerThreadSession(Session session) {
         THREAD_LOCAL.set(session);
@@ -267,6 +294,16 @@ public class ActiveMQEndpointWorker {
 
     protected void unregisterThreadSession(Session session) {
         THREAD_LOCAL.set(null);
+    }
+
+    protected ActiveMQConnection getConnection() {
+        // make sure we only return a working connection
+        // in particular make sure that we do not return null
+        // after the resource adapter got disconnected from
+        // the broker via the disconnect() method
+        synchronized ( connectWork ) {
+            return connection;
+        }
     }
 
     private String emptyToNull(String value) {
