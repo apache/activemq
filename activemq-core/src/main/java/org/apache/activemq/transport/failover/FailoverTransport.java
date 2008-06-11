@@ -529,11 +529,17 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     public void reconnect() {
-        LOG.debug("Waking up reconnect task");
-        try {
-            reconnectTask.wakeup();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+        synchronized (reconnectMutex) {
+            if (started) {
+                LOG.debug("Waking up reconnect task");
+                try {
+                    reconnectTask.wakeup();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            } else {
+                LOG.debug("Reconnect was triggered but transport is not started yet. Wait for start to connect the transport.");
+            }
         }
     }
 
