@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.region;
 
+import java.io.IOException;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
@@ -362,6 +363,11 @@ public abstract class BaseDestination implements Destination {
         if(advisoryWhenFull) {
             broker.isFull(context,this, usage);
         }
+    }
+    
+    public void dispose(ConnectionContext context) throws IOException {
+        destinationStatistics.setParent(null);
+        this.memoryUsage.stop();
     }
 
 }

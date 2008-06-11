@@ -479,10 +479,10 @@ public class Queue extends BaseDestination implements Task {
     }
 
     public void dispose(ConnectionContext context) throws IOException {
+        super.dispose(context);
         if (store != null) {
             store.removeAllMessages(context);
         }
-        destinationStatistics.setParent(null);
     }
 
 	public void gc(){
