@@ -78,7 +78,7 @@
         -->
 
         <sslContext>
-            <sslContext keyStore="file:${activemq.base}/conf/dummy.keystore" keyStorePassword="password" trustStore="file:${activemq.base}/conf/broker.ts" trustStorePassword="password"/>
+            <sslContext keyStore="file:${activemq.base}/conf/broker.ks" keyStorePassword="password" trustStore="file:${activemq.base}/conf/broker.ts" trustStorePassword="password"/>
         </sslContext>
         
         <!--  The maximum about of space the broker will use before slowing down producers -->
