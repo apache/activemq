@@ -178,7 +178,7 @@ public class BrokerService implements Service {
     private List<Runnable> shutdownHooks= new ArrayList<Runnable>();
     private boolean systemExitOnShutdown;
     private int systemExitOnShutdownExitCode;
-    private SslContext sslContext = new SslContext();
+    private SslContext sslContext;
     
     static {
         String localHostName = "localhost";
