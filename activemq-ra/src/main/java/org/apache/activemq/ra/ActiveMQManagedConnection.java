@@ -17,9 +17,9 @@
 package org.apache.activemq.ra;
 
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.Iterator;
-
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import javax.jms.Connection;
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
@@ -32,7 +32,6 @@ import javax.resource.spi.ManagedConnection;
 import javax.resource.spi.ManagedConnectionMetaData;
 import javax.security.auth.Subject;
 import javax.transaction.xa.XAResource;
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.LocalTransactionEventListener;
 import org.apache.activemq.TransactionContext;
@@ -63,8 +62,8 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
 
     private final ActiveMQConnection physicalConnection;
     private final TransactionContext transactionContext;
-    private final ArrayList<ManagedConnectionProxy> proxyConnections = new ArrayList<ManagedConnectionProxy>();
-    private final ArrayList<ConnectionEventListener> listeners = new ArrayList<ConnectionEventListener>();
+    private final List<ManagedConnectionProxy> proxyConnections = new CopyOnWriteArrayList<ManagedConnectionProxy>();
+    private final List<ConnectionEventListener> listeners = new CopyOnWriteArrayList<ConnectionEventListener>();
     private final LocalAndXATransaction localAndXATransaction;
 
     private Subject subject;
@@ -81,9 +80,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
             this.localAndXATransaction = new LocalAndXATransaction(transactionContext) {
                 public void setInManagedTx(boolean inManagedTx) throws JMSException {
                     super.setInManagedTx(inManagedTx);
-                    Iterator<ManagedConnectionProxy> iterator = proxyConnections.iterator();
-                    while (iterator.hasNext()) {
-                        ManagedConnectionProxy proxy = iterator.next();
+                    for (ManagedConnectionProxy proxy:proxyConnections) {
                         proxy.setUseSharedTxContext(inManagedTx);
                     }
                 }
@@ -145,27 +142,21 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
 
     private void fireBeginEvent() {
         ConnectionEvent event = new ConnectionEvent(ActiveMQManagedConnection.this, ConnectionEvent.LOCAL_TRANSACTION_STARTED);
-        Iterator<ConnectionEventListener> iterator = listeners.iterator();
-        while (iterator.hasNext()) {
-            ConnectionEventListener l = iterator.next();
+        for(ConnectionEventListener l:listeners) {
             l.localTransactionStarted(event);
         }
     }
 
     private void fireCommitEvent() {
         ConnectionEvent event = new ConnectionEvent(ActiveMQManagedConnection.this, ConnectionEvent.LOCAL_TRANSACTION_COMMITTED);
-        Iterator<ConnectionEventListener> iterator = listeners.iterator();
-        while (iterator.hasNext()) {
-            ConnectionEventListener l = iterator.next();
+        for(ConnectionEventListener l:listeners) {
             l.localTransactionCommitted(event);
         }
     }
 
     private void fireRollbackEvent() {
         ConnectionEvent event = new ConnectionEvent(ActiveMQManagedConnection.this, ConnectionEvent.LOCAL_TRANSACTION_ROLLEDBACK);
-        Iterator<ConnectionEventListener> iterator = listeners.iterator();
-        while (iterator.hasNext()) {
-            ConnectionEventListener l = iterator.next();
+        for(ConnectionEventListener l:listeners) {
             l.localTransactionRolledback(event);
         }
     }
@@ -174,18 +165,14 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
         ConnectionEvent event = new ConnectionEvent(ActiveMQManagedConnection.this, ConnectionEvent.CONNECTION_CLOSED);
         event.setConnectionHandle(proxy);
 
-        Iterator<ConnectionEventListener> iterator = listeners.iterator();
-        while (iterator.hasNext()) {
-            ConnectionEventListener l = iterator.next();
+        for(ConnectionEventListener l:listeners) {
             l.connectionClosed(event);
         }
     }
 
     private void fireErrorOccurredEvent(Exception error) {
         ConnectionEvent event = new ConnectionEvent(ActiveMQManagedConnection.this, ConnectionEvent.CONNECTION_ERROR_OCCURRED, error);
-        Iterator<ConnectionEventListener> iterator = listeners.iterator();
-        while (iterator.hasNext()) {
-            ConnectionEventListener l = iterator.next();
+        for(ConnectionEventListener l:listeners) {
             l.connectionErrorOccurred(event);
         }
     }
@@ -238,9 +225,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
             return;
         }
 
-        Iterator<ManagedConnectionProxy> iterator = proxyConnections.iterator();
-        while (iterator.hasNext()) {
-            ManagedConnectionProxy proxy = iterator.next();
+        for (ManagedConnectionProxy proxy:proxyConnections) {
             proxy.cleanup();
         }
         proxyConnections.clear();
@@ -399,9 +384,7 @@ public class ActiveMQManagedConnection implements ManagedConnection, ExceptionLi
         LOG.warn("Connection failed: " + e);
         LOG.debug("Cause: ", e);
 
-        // Let any active proxy connections know that exception occured.
-        for (Iterator<ManagedConnectionProxy> iter = proxyConnections.iterator(); iter.hasNext();) {
-            ManagedConnectionProxy proxy = iter.next();
+        for (ManagedConnectionProxy proxy:proxyConnections) {
             proxy.onException(e);
         }
         // Let the container know that the error occured.
