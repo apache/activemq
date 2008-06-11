@@ -135,10 +135,6 @@ if [ -z "$SUNJMX" ] ; then
   SUNJMX="-Dcom.sun.management.jmxremote"
 fi
 
-if [ -z "$SSL_OPTS" ] ; then
-  SSL_OPTS="-Djavax.net.ssl.keyStorePassword=password -Djavax.net.ssl.trustStorePassword=password -Djavax.net.ssl.keyStore=${ACTIVEMQ_BASE}/conf/broker.ks -Djavax.net.ssl.trustStore=${ACTIVEMQ_BASE}/conf/broker.ts"
-fi
-
 ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS $SUNJMX $SSL_OPTS"
 
 # Set default classpath
