@@ -21,6 +21,7 @@ import java.io.PrintStream;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Arrays;
 
 import javax.jms.Message;
 import javax.management.Attribute;

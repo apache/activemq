@@ -39,20 +39,20 @@ import javax.management.remote.JMXServiceURL;
 public class MBeansAttributeQueryFilter extends AbstractQueryFilter {
     public static final String KEY_OBJECT_NAME_ATTRIBUTE = "Attribute:ObjectName:";
 
-    private JMXServiceURL jmxServiceUrl;
+    private MBeanServerConnection jmxConnection;
     private Set attribView;
 
     /**
      * Create an mbean attributes query filter that is able to select specific
      * mbean attributes based on the object name to get.
      * 
-     * @param jmxServiceUrl - JMX service url to connect to.
+     * @param jmxConnection - JMX connection to use.
      * @param attribView - the attributes to extract
      * @param next - the next query filter
      */
-    public MBeansAttributeQueryFilter(JMXServiceURL jmxServiceUrl, Set attribView, MBeansObjectNameQueryFilter next) {
+    public MBeansAttributeQueryFilter(MBeanServerConnection jmxConnection, Set attribView, MBeansObjectNameQueryFilter next) {
         super(next);
-        this.jmxServiceUrl = jmxServiceUrl;
+        this.jmxConnection = jmxConnection;
         this.attribView = attribView;
     }
 
@@ -121,13 +121,10 @@ public class MBeansAttributeQueryFilter extends AbstractQueryFilter {
      * @throws InstanceNotFoundException
      */
     protected AttributeList getMBeanAttributes(ObjectName objName, Set attrView) throws IOException, ReflectionException, InstanceNotFoundException, IntrospectionException {
-        JMXConnector jmxConnector = JMXConnectorFactory.connect(jmxServiceUrl);
-        MBeanServerConnection server = jmxConnector.getMBeanServerConnection();
-
         // If no attribute view specified, get all attributes
         String[] attribs;
         if (attrView == null || attrView.isEmpty()) {
-            MBeanAttributeInfo[] infos = server.getMBeanInfo(objName).getAttributes();
+            MBeanAttributeInfo[] infos = jmxConnection.getMBeanInfo(objName).getAttributes();
             attribs = new String[infos.length];
 
             for (int i = 0; i < infos.length; i++) {
@@ -146,9 +143,7 @@ public class MBeansAttributeQueryFilter extends AbstractQueryFilter {
             }
         }
 
-        AttributeList attribList = server.getAttributes(objName, attribs);
-
-        jmxConnector.close();
+        AttributeList attribList = jmxConnection.getAttributes(objName, attribs);
 
         attribList.add(0, new Attribute(KEY_OBJECT_NAME_ATTRIBUTE, objName));
 

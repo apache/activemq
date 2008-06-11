@@ -42,4 +42,5 @@ public abstract class AbstractQueryFilter implements QueryFilter {
         StringTokenizer tokens = new StringTokenizer(query, QUERY_DELIMETER);
         return query(Collections.list(tokens));
     }
+
 }

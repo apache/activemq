@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.management.ObjectName;
+import javax.management.MBeanServerConnection;
 import javax.management.remote.JMXServiceURL;
 
 import org.apache.activemq.console.filter.GroupPropertiesViewFilter;
@@ -40,50 +41,50 @@ public final class JmxMBeansUtil {
     private JmxMBeansUtil() {
     }
 
-    public static List getAllBrokers(JMXServiceURL jmxUrl) throws Exception {
-        return (new MBeansObjectNameQueryFilter(jmxUrl)).query("Type=Broker");
+    public static List getAllBrokers(MBeanServerConnection jmxConnection) throws Exception {
+        return (new MBeansObjectNameQueryFilter(jmxConnection)).query("Type=Broker");
     }
 
-    public static List getBrokersByName(JMXServiceURL jmxUrl, String brokerName) throws Exception {
-        return (new MBeansObjectNameQueryFilter(jmxUrl)).query("Type=Broker,BrokerName=" + brokerName);
+    public static List getBrokersByName(MBeanServerConnection jmxConnection, String brokerName) throws Exception {
+        return (new MBeansObjectNameQueryFilter(jmxConnection)).query("Type=Broker,BrokerName=" + brokerName);
     }
 
-    public static List getAllBrokers(JMXServiceURL jmxUrl, Set attributes) throws Exception {
-        return (new MBeansAttributeQueryFilter(jmxUrl, attributes, new MBeansObjectNameQueryFilter(jmxUrl))).query("Type=Broker");
+    public static List getAllBrokers(MBeanServerConnection jmxConnection, Set attributes) throws Exception {
+        return (new MBeansAttributeQueryFilter(jmxConnection, attributes, new MBeansObjectNameQueryFilter(jmxConnection))).query("Type=Broker");
     }
 
-    public static List getBrokersByName(JMXServiceURL jmxUrl, String brokerName, Set attributes) throws Exception {
-        return (new MBeansAttributeQueryFilter(jmxUrl, attributes, new MBeansObjectNameQueryFilter(jmxUrl))).query("Type=Broker,BrokerName=" + brokerName);
+    public static List getBrokersByName(MBeanServerConnection jmxConnection, String brokerName, Set attributes) throws Exception {
+        return (new MBeansAttributeQueryFilter(jmxConnection, attributes, new MBeansObjectNameQueryFilter(jmxConnection))).query("Type=Broker,BrokerName=" + brokerName);
     }
 
-    public static List queryMBeans(JMXServiceURL jmxUrl, List queryList) throws Exception {
+    public static List queryMBeans(MBeanServerConnection jmxConnection, List queryList) throws Exception {
         // If there is no query defined get all mbeans
         if (queryList == null || queryList.size() == 0) {
-            return createMBeansObjectNameQuery(jmxUrl).query("");
+            return createMBeansObjectNameQuery(jmxConnection).query("");
 
             // Parse through all the query strings
         } else {
-            return createMBeansObjectNameQuery(jmxUrl).query(queryList);
+            return createMBeansObjectNameQuery(jmxConnection).query(queryList);
         }
     }
 
-    public static List queryMBeans(JMXServiceURL jmxUrl, List queryList, Set attributes) throws Exception {
+    public static List queryMBeans(MBeanServerConnection jmxConnection, List queryList, Set attributes) throws Exception {
         // If there is no query defined get all mbeans
         if (queryList == null || queryList.size() == 0) {
-            return createMBeansAttributeQuery(jmxUrl, attributes).query("");
+            return createMBeansAttributeQuery(jmxConnection, attributes).query("");
 
             // Parse through all the query strings
         } else {
-            return createMBeansAttributeQuery(jmxUrl, attributes).query(queryList);
+            return createMBeansAttributeQuery(jmxConnection, attributes).query(queryList);
         }
     }
 
-    public static List queryMBeans(JMXServiceURL jmxUrl, String queryString) throws Exception {
-        return createMBeansObjectNameQuery(jmxUrl).query(queryString);
+    public static List queryMBeans(MBeanServerConnection jmxConnection, String queryString) throws Exception {
+        return createMBeansObjectNameQuery(jmxConnection).query(queryString);
     }
 
-    public static List queryMBeans(JMXServiceURL jmxUrl, String queryString, Set attributes) throws Exception {
-        return createMBeansAttributeQuery(jmxUrl, attributes).query(queryString);
+    public static List queryMBeans(MBeanServerConnection jmxConnection, String queryString, Set attributes) throws Exception {
+        return createMBeansAttributeQuery(jmxConnection, attributes).query(queryString);
     }
 
     public static List filterMBeansView(List mbeans, Set viewFilter) throws Exception {
@@ -104,23 +105,23 @@ public final class JmxMBeansUtil {
         return output;
     }
 
-    public static QueryFilter createMBeansObjectNameQuery(JMXServiceURL jmxUrl) {
+    public static QueryFilter createMBeansObjectNameQuery(MBeanServerConnection jmxConnection) {
         // Let us be able to accept wildcard queries
         // Use regular expressions to filter the query results
         // Let us retrieve the mbeans object name specified by the query
-        return new WildcardToRegExTransformFilter(new MBeansRegExQueryFilter(new MBeansObjectNameQueryFilter(jmxUrl)));
+        return new WildcardToRegExTransformFilter(new MBeansRegExQueryFilter(new MBeansObjectNameQueryFilter(jmxConnection)));
     }
 
-    public static QueryFilter createMBeansAttributeQuery(JMXServiceURL jmxUrl, Set attributes) {
+    public static QueryFilter createMBeansAttributeQuery(MBeanServerConnection jmxConnection, Set attributes) {
         // Let use be able to accept wildcard queries
         // Use regular expressions to filter the query result
         // Retrieve the attributes needed
         // Retrieve the mbeans object name specified by the query
-        return new WildcardToRegExTransformFilter(new MBeansRegExQueryFilter(new MBeansAttributeQueryFilter(jmxUrl, attributes, new MBeansObjectNameQueryFilter(jmxUrl))));
+        return new WildcardToRegExTransformFilter(new MBeansRegExQueryFilter(new MBeansAttributeQueryFilter(jmxConnection, attributes, new MBeansObjectNameQueryFilter(jmxConnection))));
     }
 
-    public static QueryFilter createMessageQueryFilter(JMXServiceURL jmxUrl, ObjectName destName) {
-        return new WildcardToMsgSelectorTransformFilter(new MessagesQueryFilter(jmxUrl, destName));
+    public static QueryFilter createMessageQueryFilter(MBeanServerConnection jmxConnection, ObjectName destName) {
+        return new WildcardToMsgSelectorTransformFilter(new MessagesQueryFilter(jmxConnection, destName));
     }
 
     public static List filterMessagesView(List messages, Set groupViews, Set attributeViews) throws Exception {

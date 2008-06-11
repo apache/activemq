@@ -39,6 +39,9 @@ public class PurgeCommand extends AbstractJmxCommand {
         "    --msgsel <msgsel1,msglsel2>   Add to the search list messages matched by the query similar to",
         "                                  the messages selector format.",
         "    --jmxurl <url>                Set the JMX URL to connect to.",
+        "    --jmxuser <user>              Set the JMX user used for authenticating.",
+        "    --jmxpassword <password>      Set the JMX password used for authenticating.",
+        "    --jmxlocal                    Use the local JMX server instead of a remote one.",
         "    --version                     Display the version information.",
         "    -h,-?,--help                  Display the browse broker help information.", 
         "", 
@@ -73,14 +76,14 @@ public class PurgeCommand extends AbstractJmxCommand {
 
             // Iterate through the queue names
             for (Iterator<String> i = tokens.iterator(); i.hasNext();) {
-                List queueList = JmxMBeansUtil.queryMBeans(useJmxServiceUrl(), "Type=Queue,Destination=" + i.next() + ",*");
+                List queueList = JmxMBeansUtil.queryMBeans(createJmxConnection(), "Type=Queue,Destination=" + i.next() + ",*");
 
                 for (Iterator j = queueList.iterator(); j.hasNext();) {
                     ObjectName queueName = ((ObjectInstance)j.next()).getObjectName();
                     if (queryAddObjects.isEmpty()) {
                         purgeQueue(queueName);
                     } else {
-                        List messages = JmxMBeansUtil.createMessageQueryFilter(useJmxServiceUrl(), queueName).query(queryAddObjects);
+                        List messages = JmxMBeansUtil.createMessageQueryFilter(createJmxConnection(), queueName).query(queryAddObjects);
                         purgeMessages(queueName, messages);
                     }
                 }
@@ -98,11 +101,8 @@ public class PurgeCommand extends AbstractJmxCommand {
      * @throws Exception
      */
     public void purgeQueue(ObjectName queue) throws Exception {
-        JMXConnector conn = createJmxConnector();
-        MBeanServerConnection server = conn.getMBeanServerConnection();
         context.printInfo("Purging all messages in queue: " + queue.getKeyProperty("Destination"));
-        server.invoke(queue, "purge", new Object[] {}, new String[] {});
-        conn.close();
+        createJmxConnection().invoke(queue, "purge", new Object[] {}, new String[] {});
     }
 
     /**
@@ -113,20 +113,15 @@ public class PurgeCommand extends AbstractJmxCommand {
      * @throws Exception
      */
     public void purgeMessages(ObjectName queue, List messages) throws Exception {
-        JMXConnector conn = createJmxConnector();
-        MBeanServerConnection server = conn.getMBeanServerConnection();
-
         Object[] param = new Object[1];
         for (Iterator i = messages.iterator(); i.hasNext();) {
             CompositeData msg = (CompositeData)i.next();
             param[0] = "" + msg.get("JMSMessageID");
             context.printInfo("Removing message: " + param[0] + " from queue: " + queue.getKeyProperty("Destination"));
-            server.invoke(queue, "removeMessage", param, new String[] {
+            createJmxConnection().invoke(queue, "removeMessage", param, new String[] {
                 "java.lang.String"
             });
         }
-
-        conn.close();
     }
 
     /**
