@@ -94,7 +94,7 @@
     </dependency>
     <!-- for the XML parsing -->
     <dependency>
-      <groupId>javax.xml</groupId>
+      <groupId>javax.xml.bind</groupId>
       <artifactId>jaxb-api</artifactId>
     </dependency>
     <dependency>
