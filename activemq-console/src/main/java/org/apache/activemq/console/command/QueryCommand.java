@@ -55,6 +55,9 @@ public class QueryCommand extends AbstractJmxCommand {
         "    --view <attr1>,<attr2>,...    Select the specific attribute of the object to view.",
         "                                  By default all attributes will be displayed.",
         "    --jmxurl <url>                Set the JMX URL to connect to.",
+        "    --jmxuser <user>              Set the JMX user used for authenticating.",
+        "    --jmxpassword <password>      Set the JMX password used for authenticating.",
+        "    --jmxlocal                    Use the local JMX server instead of a remote one.",
         "    --version                     Display the version information.",
         "    -h,-?,--help                  Display the query broker help information.",
         "", "Examples:",
@@ -103,11 +106,11 @@ public class QueryCommand extends AbstractJmxCommand {
     protected void runTask(List<String> tokens) throws Exception {
         try {
             // Query for the mbeans to add
-            List addMBeans = JmxMBeansUtil.queryMBeans(useJmxServiceUrl(), queryAddObjects, queryViews);
+            List addMBeans = JmxMBeansUtil.queryMBeans(createJmxConnection(), queryAddObjects, queryViews);
 
             // Query for the mbeans to sub
             if (querySubObjects.size() > 0) {
-                List subMBeans = JmxMBeansUtil.queryMBeans(useJmxServiceUrl(), querySubObjects, queryViews);
+                List subMBeans = JmxMBeansUtil.queryMBeans(createJmxConnection(), querySubObjects, queryViews);
                 addMBeans.removeAll(subMBeans);
             }
 

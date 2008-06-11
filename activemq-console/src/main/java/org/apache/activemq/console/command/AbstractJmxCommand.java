@@ -19,16 +19,24 @@ package org.apache.activemq.console.command;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.lang.management.ManagementFactory;
 
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
+import javax.management.MBeanServerConnection;
 
 public abstract class AbstractJmxCommand extends AbstractCommand {
     public static final String DEFAULT_JMX_URL    = "service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi";
 
     private JMXServiceURL jmxServiceUrl;
-    private JMXConnector  jmxConnector;
+    private String jmxUser;
+    private String jmxPassword;
+    private boolean jmxUseLocal;
+    private JMXConnector jmxConnector;
+    private MBeanServerConnection jmxConnection;
 
     /**
      * Get the current specified JMX service url.
@@ -69,12 +77,60 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
     }
 
     /**
+     * Get the JMX user name to be used when authenticating.
+     * @return the JMX user name
+     */
+    public String getJmxUser() {
+        return jmxUser;
+    }
+
+    /**
+     * Sets the JMS user name to use
+     * @param jmxUser - the jmx 
+     */
+    public void setJmxUser(String jmxUser) {
+        this.jmxUser = jmxUser;
+    }
+
+    /**
+     * Get the password used when authenticating
+     * @return the password used for JMX authentication
+     */
+    public String getJmxPassword() {
+        return jmxPassword;
+    }
+
+    /**
+     * Sets the password to use when authenticating
+     * @param jmxPassword - the password used for JMX authentication
+     */
+    public void setJmxPassword(String jmxPassword) {
+        this.jmxPassword = jmxPassword;
+    }
+
+    /**
+     * Get whether the default mbean server for this JVM should be used instead of the jmx url
+     * @return <code>true</code> if the mbean server from this JVM should be used, <code>false<code> if the jmx url should be used
+     */
+    public boolean isJmxUseLocal() {
+        return jmxUseLocal;
+    }
+
+    /**
+     * Sets whether the the default mbean server for this JVM should be used instead of the jmx url
+     * @param jmxUseLocal - <code>true</code> if the mbean server from this JVM should be used, <code>false<code> if the jmx url should be used
+     */
+    public void setJmxUseLocal(boolean jmxUseLocal) {
+        this.jmxUseLocal = jmxUseLocal;
+    }
+
+    /**
      * Create a JMX connector using the current specified JMX service url. If there is an existing connection,
      * it tries to reuse this connection.
      * @return created JMX connector
      * @throws IOException
      */
-    protected JMXConnector createJmxConnector() throws IOException {
+    private JMXConnector createJmxConnector() throws IOException {
         // Reuse the previous connection
         if (jmxConnector != null) {
             jmxConnector.connect();
@@ -82,14 +138,20 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
         }
 
         // Create a new JMX connector
-        jmxConnector = JMXConnectorFactory.connect(useJmxServiceUrl());
+        if (jmxUser != null && jmxPassword != null) {
+            Map<String,Object> props = new HashMap<String,Object>();
+            props.put(JMXConnector.CREDENTIALS, new String[] { jmxUser, jmxPassword });
+            jmxConnector = JMXConnectorFactory.connect(useJmxServiceUrl(), props);
+        } else {
+            jmxConnector = JMXConnectorFactory.connect(useJmxServiceUrl());
+        }
         return jmxConnector;
     }
 
     /**
      * Close the current JMX connector
      */
-    protected void closeJmxConnector() {
+    protected void closeJmxConnection() {
         try {
             if (jmxConnector != null) {
                 jmxConnector.close();
@@ -97,6 +159,17 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
             }
         } catch (IOException e) {
         }
+    }
+
+    protected MBeanServerConnection createJmxConnection() throws IOException {
+        if (jmxConnection == null) {
+            if (isJmxUseLocal()) {
+                jmxConnection = ManagementFactory.getPlatformMBeanServer();
+            } else {
+                jmxConnection = createJmxConnector().getMBeanServerConnection();
+            }
+        }
+        return jmxConnection;
     }
 
     /**
@@ -126,9 +199,31 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
                 context.printException(e);
                 tokens.clear();
             }
+        } else if (token.equals("--jmxuser")) {
+            // If no jmx user specified, or next token is a new option
+            if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
+                context.printException(new IllegalArgumentException("JMX user not specified."));
+            }
+            this.setJmxUser((String) tokens.remove(0));
+        } else if (token.equals("--jmxpassword")) {
+            // If no jmx password specified, or next token is a new option
+            if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
+                context.printException(new IllegalArgumentException("JMX password not specified."));
+            }
+            this.setJmxPassword((String) tokens.remove(0));
+        } else if (token.equals("--jmxlocal")) {
+            this.setJmxUseLocal(true);
         } else {
             // Let the super class handle the option
             super.handleOption(token, tokens);
+        }
+    }
+
+    public void execute(List<String> tokens) throws Exception {
+        try {
+            super.execute(tokens);
+        } finally {
+            closeJmxConnection();
         }
     }
 }

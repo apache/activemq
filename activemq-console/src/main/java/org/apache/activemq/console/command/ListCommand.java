@@ -29,9 +29,12 @@ public class ListCommand extends AbstractJmxCommand {
         "Description:  Lists all available broker in the specified JMX context.",
         "",
         "List Options:",
-        "    --jmxurl <url>      Set the JMX URL to connect to.",
-        "    --version           Display the version information.",
-        "    -h,-?,--help        Display the stop broker help information.",
+        "    --jmxurl <url>             Set the JMX URL to connect to.",
+        "    --jmxuser <user>           Set the JMX user used for authenticating.",
+        "    --jmxpassword <password>   Set the JMX password used for authenticating.",
+        "    --jmxlocal                 Use the local JMX server instead of a remote one.",
+        "    --version                  Display the version information.",
+        "    -h,-?,--help               Display the stop broker help information.",
         ""
     };
 
@@ -44,7 +47,7 @@ public class ListCommand extends AbstractJmxCommand {
         try {
             Set<String> propsView = new HashSet<String>();
             propsView.add("BrokerName");
-            context.printMBean(JmxMBeansUtil.filterMBeansView(JmxMBeansUtil.getAllBrokers(useJmxServiceUrl()), propsView));
+            context.printMBean(JmxMBeansUtil.filterMBeansView(JmxMBeansUtil.getAllBrokers(createJmxConnection()), propsView));
         } catch (Exception e) {
             context.printException(new RuntimeException("Failed to execute list task. Reason: " + e));
             throw new Exception(e);

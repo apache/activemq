@@ -17,7 +17,6 @@
 package org.apache.activemq.console.filter;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -26,37 +25,23 @@ import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.QueryExp;
-import javax.management.remote.JMXConnector;
-import javax.management.remote.JMXConnectorFactory;
-import javax.management.remote.JMXServiceURL;
 
 public class MBeansObjectNameQueryFilter extends AbstractQueryFilter {
 
     public static final String DEFAULT_JMX_DOMAIN = "org.apache.activemq";
     public static final String QUERY_EXP_PREFIX = "MBeans.QueryExp.";
 
-    private JMXServiceURL jmxServiceUrl;
+    private MBeanServerConnection jmxConnection;
 
     /**
      * Creates an mbeans object name query filter that will query on the given
-     * JMX Service URL
+     * JMX connection
      * 
-     * @param jmxUrl - JMX service URL to connect to
-     * @throws MalformedURLException
+     * @param jmxConnection - JMX connection to use
      */
-    public MBeansObjectNameQueryFilter(String jmxUrl) throws MalformedURLException {
-        this(new JMXServiceURL(jmxUrl));
-    }
-
-    /**
-     * Creates an mbeans objecet name query filter that will query on the given
-     * JMX Service URL
-     * 
-     * @param jmxUrl - JMX service URL to connect to
-     */
-    public MBeansObjectNameQueryFilter(JMXServiceURL jmxUrl) {
+    public MBeansObjectNameQueryFilter(MBeanServerConnection jmxConnection) {
         super(null);
-        this.jmxServiceUrl = jmxUrl;
+        this.jmxConnection = jmxConnection;
     }
 
     /**
@@ -70,7 +55,6 @@ public class MBeansObjectNameQueryFilter extends AbstractQueryFilter {
      * @throws IOException - if there is a problem querying the JMX context
      */
     public List query(List queries) throws MalformedObjectNameException, IOException {
-
         // Query all mbeans
         if (queries == null || queries.isEmpty()) {
             return queryMBeans(new ObjectName(DEFAULT_JMX_DOMAIN + ":*"), null);
@@ -111,55 +95,13 @@ public class MBeansObjectNameQueryFilter extends AbstractQueryFilter {
      * @throws IOException - if there is a problem querying the JMX context
      */
     protected List queryMBeans(ObjectName objName, String queryExpStr) throws IOException {
-        JMXConnector jmxConn = createJmxConnector();
-        MBeanServerConnection server = jmxConn.getMBeanServerConnection();
-
         QueryExp queryExp = createQueryExp(queryExpStr);
 
         // Convert mbeans set to list to make it standard throughout the query
         // filter
-        List mbeans = new ArrayList(server.queryMBeans(objName, queryExp));
-
-        jmxConn.close();
+        List mbeans = new ArrayList(jmxConnection.queryMBeans(objName, queryExp));
 
         return mbeans;
-    }
-
-    /**
-     * Get the JMX service URL the query is connecting to.
-     * 
-     * @return JMX service URL
-     */
-    public JMXServiceURL getJmxServiceUrl() {
-        return jmxServiceUrl;
-    }
-
-    /**
-     * Sets the JMX service URL the query is going to connect to.
-     * 
-     * @param jmxServiceUrl - new JMX service URL
-     */
-    public void setJmxServiceUrl(JMXServiceURL jmxServiceUrl) {
-        this.jmxServiceUrl = jmxServiceUrl;
-    }
-
-    /**
-     * Sets the JMX service URL the query is going to connect to.
-     * 
-     * @param jmxServiceUrl - new JMX service URL
-     */
-    public void setJmxServiceUrl(String jmxServiceUrl) throws MalformedURLException {
-        setJmxServiceUrl(new JMXServiceURL(jmxServiceUrl));
-    }
-
-    /**
-     * Creates a JMX connector
-     * 
-     * @return JMX connector
-     * @throws IOException
-     */
-    protected JMXConnector createJmxConnector() throws IOException {
-        return JMXConnectorFactory.connect(getJmxServiceUrl());
     }
 
     /**

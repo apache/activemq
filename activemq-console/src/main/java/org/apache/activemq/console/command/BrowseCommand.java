@@ -47,7 +47,10 @@ public class BrowseCommand extends AbstractJmxCommand {
         "                                  message header, or the message body.",
         "    --view <attr1>,<attr2>,...    Select the specific attribute of the message to view.", 
         "    --jmxurl <url>                Set the JMX URL to connect to.",
-        "    --version                     Display the version information.", 
+        "    --jmxuser <user>              Set the JMX user used for authenticating.",
+        "    --jmxpassword <password>      Set the JMX password used for authenticating.",
+        "    --jmxlocal                    Use the local JMX server instead of a remote one.",
+        "    --version                     Display the version information.",
         "    -h,-?,--help                  Display the browse broker help information.", 
         "", 
         "Examples:",
@@ -89,11 +92,11 @@ public class BrowseCommand extends AbstractJmxCommand {
 
             // Iterate through the queue names
             for (Iterator<String> i = tokens.iterator(); i.hasNext();) {
-                List queueList = JmxMBeansUtil.queryMBeans(useJmxServiceUrl(), "Type=Queue,Destination=" + i.next() + ",*");
+                List queueList = JmxMBeansUtil.queryMBeans(createJmxConnection(), "Type=Queue,Destination=" + i.next() + ",*");
 
                 // Iterate through the queue result
                 for (Iterator j = queueList.iterator(); j.hasNext();) {
-                    List messages = JmxMBeansUtil.createMessageQueryFilter(useJmxServiceUrl(), ((ObjectInstance)j.next()).getObjectName()).query(queryAddObjects);
+                    List messages = JmxMBeansUtil.createMessageQueryFilter(createJmxConnection(), ((ObjectInstance)j.next()).getObjectName()).query(queryAddObjects);
                     context.printMessage(JmxMBeansUtil.filterMessagesView(messages, groupViews, queryViews));
                 }
             }

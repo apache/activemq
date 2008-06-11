@@ -88,6 +88,8 @@ public abstract class AbstractCommand implements Command {
      * @throws Exception
      */
     protected void handleOption(String token, List<String> tokens) throws Exception {
+        isPrintHelp = false;
+        isPrintVersion = false;
         // If token is a help option
         if (token.equals("-h") || token.equals("-?") || token.equals("--help")) {
             isPrintHelp = true;

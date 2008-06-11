@@ -24,7 +24,6 @@ import java.util.List;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
-import javax.management.remote.JMXServiceURL;
 
 import org.apache.activemq.console.util.JmxMBeansUtil;
 
@@ -35,10 +34,13 @@ public class ShutdownCommand extends AbstractJmxCommand {
         "Description: Stops a running broker.",
         "", 
         "Stop Options:",
-        "    --jmxurl <url>      Set the JMX URL to connect to.",
-        "    --all               Stop all brokers.",
-        "    --version           Display the version information.",
-        "    -h,-?,--help        Display the stop broker help information.",
+        "    --jmxurl <url>             Set the JMX URL to connect to.",
+        "    --jmxuser <user>           Set the JMX user used for authenticating.",
+        "    --jmxpassword <password>   Set the JMX password used for authenticating.",
+        "    --jmxlocal                 Use the local JMX server instead of a remote one.",
+        "    --all                      Stop all brokers.",
+        "    --version                  Display the version information.",
+        "    -h,-?,--help               Display the stop broker help information.",
         "",
         "Broker Names:",
         "    Name of the brokers that will be stopped.",
@@ -61,11 +63,11 @@ public class ShutdownCommand extends AbstractJmxCommand {
 
             // Stop all brokers
             if (isStopAllBrokers) {
-                mbeans = JmxMBeansUtil.getAllBrokers(useJmxServiceUrl());
+                mbeans = JmxMBeansUtil.getAllBrokers(createJmxConnection());
                 brokerNames.clear();
             } else if (brokerNames.isEmpty()) {
                 // Stop the default broker
-                mbeans = JmxMBeansUtil.getAllBrokers(useJmxServiceUrl());
+                mbeans = JmxMBeansUtil.getAllBrokers(createJmxConnection());
 
                 // If there is no broker to stop
                 if (mbeans.isEmpty()) {
@@ -89,7 +91,7 @@ public class ShutdownCommand extends AbstractJmxCommand {
                 mbeans = new HashSet();
                 while (!brokerNames.isEmpty()) {
                     brokerName = (String)brokerNames.remove(0);
-                    Collection matchedBrokers = JmxMBeansUtil.getBrokersByName(useJmxServiceUrl(), brokerName);
+                    Collection matchedBrokers = JmxMBeansUtil.getBrokersByName(createJmxConnection(), brokerName);
                     if (matchedBrokers.isEmpty()) {
                         context.printInfo(brokerName + " did not match any running brokers.");
                     } else {
@@ -99,7 +101,7 @@ public class ShutdownCommand extends AbstractJmxCommand {
             }
 
             // Stop all brokers in set
-            stopBrokers(useJmxServiceUrl(), mbeans);
+            stopBrokers(createJmxConnection(), mbeans);
         } catch (Exception e) {
             context.printException(new RuntimeException("Failed to execute stop task. Reason: " + e));
             throw new Exception(e);
@@ -109,13 +111,10 @@ public class ShutdownCommand extends AbstractJmxCommand {
     /**
      * Stops the list of brokers.
      * 
-     * @param jmxServiceUrl - JMX service url to connect to
-     * @param brokerBeans - broker mbeans to stop
-     * @throws Exception
+     * @param jmxConnection - connection to the mbean server
+     * @param brokerBeans - broker mbeans to stop @throws Exception
      */
-    protected void stopBrokers(JMXServiceURL jmxServiceUrl, Collection brokerBeans) throws Exception {
-        MBeanServerConnection server = createJmxConnector().getMBeanServerConnection();
-
+    protected void stopBrokers(MBeanServerConnection jmxConnection, Collection brokerBeans) throws Exception {
         ObjectName brokerObjName;
         for (Iterator i = brokerBeans.iterator(); i.hasNext();) {
             brokerObjName = ((ObjectInstance)i.next()).getObjectName();
@@ -124,7 +123,7 @@ public class ShutdownCommand extends AbstractJmxCommand {
             context.print("Stopping broker: " + brokerName);
 
             try {
-                server.invoke(brokerObjName, "terminateJVM", new Object[] {
+                jmxConnection.invoke(brokerObjName, "terminateJVM", new Object[] {
                     Integer.valueOf(0)
                 }, new String[] {
                     "int"
@@ -137,7 +136,7 @@ public class ShutdownCommand extends AbstractJmxCommand {
             }
         }
 
-        closeJmxConnector();
+        closeJmxConnection();
     }
 
     /**

@@ -31,18 +31,18 @@ import javax.management.remote.JMXServiceURL;
 
 public class MessagesQueryFilter extends AbstractQueryFilter {
 
-    private JMXServiceURL jmxServiceUrl;
+    private MBeanServerConnection jmxConnection;
     private ObjectName destName;
 
     /**
      * Create a JMS message query filter
      * 
-     * @param jmxServiceUrl - JMX service URL to connect to
+     * @param jmxConnection - JMX connection to use
      * @param destName - object name query to retrieve the destination
      */
-    public MessagesQueryFilter(JMXServiceURL jmxServiceUrl, ObjectName destName) {
+    public MessagesQueryFilter(MBeanServerConnection jmxConnection, ObjectName destName) {
         super(null);
-        this.jmxServiceUrl = jmxServiceUrl;
+        this.jmxConnection = jmxConnection;
         this.destName = destName;
     }
 
@@ -77,48 +77,8 @@ public class MessagesQueryFilter extends AbstractQueryFilter {
      * @throws Exception
      */
     protected List queryMessages(String selector) throws Exception {
-        JMXConnector connector = createJmxConnector();
-        MBeanServerConnection server = connector.getMBeanServerConnection();
-        CompositeData[] messages = (CompositeData[])server.invoke(destName, "browse", new Object[] {}, new String[] {});
-        connector.close();
-
+        CompositeData[] messages = (CompositeData[]) jmxConnection.invoke(destName, "browse", new Object[] {}, new String[] {});
         return Arrays.asList(messages);
     }
 
-    /**
-     * Get the JMX service URL the query is connecting to.
-     * 
-     * @return JMX service URL
-     */
-    public JMXServiceURL getJmxServiceUrl() {
-        return jmxServiceUrl;
-    }
-
-    /**
-     * Sets the JMX service URL the query is going to connect to.
-     * 
-     * @param jmxServiceUrl - new JMX service URL
-     */
-    public void setJmxServiceUrl(JMXServiceURL jmxServiceUrl) {
-        this.jmxServiceUrl = jmxServiceUrl;
-    }
-
-    /**
-     * Sets the JMX service URL the query is going to connect to.
-     * 
-     * @param jmxServiceUrl - new JMX service URL
-     */
-    public void setJmxServiceUrl(String jmxServiceUrl) throws MalformedURLException {
-        setJmxServiceUrl(new JMXServiceURL(jmxServiceUrl));
-    }
-
-    /**
-     * Creates a JMX connector
-     * 
-     * @return JMX connector
-     * @throws java.io.IOException
-     */
-    protected JMXConnector createJmxConnector() throws IOException {
-        return JMXConnectorFactory.connect(getJmxServiceUrl());
-    }
 }

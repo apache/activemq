@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Arrays;
 
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
@@ -97,7 +98,7 @@ public class MapTransformFilter extends ResultTransformFilter {
             Object key = i.next();
             Object val = objProps.get(key);
             if (val != null) {
-                props.setProperty(key.toString(), val.toString());
+                props.setProperty(key.toString(), getDisplayString(val));
             }
         }
 
@@ -120,7 +121,7 @@ public class MapTransformFilter extends ResultTransformFilter {
                 props.putAll(transformToMap((ObjectName)attrib.getValue()));
             } else {
                 if (attrib.getValue() != null) {
-                    props.setProperty(attrib.getName(), attrib.getValue().toString());
+                    props.setProperty(attrib.getName(), getDisplayString(attrib.getValue()));
                 }
             }
         }
@@ -186,7 +187,7 @@ public class MapTransformFilter extends ResultTransformFilter {
         if (msg.getObject() != null) {
             // Just add the class name and toString value of the object
             props.setProperty(AmqMessagesUtil.JMS_MESSAGE_BODY_PREFIX + "JMSObjectClass", msg.getObject().getClass().getName());
-            props.setProperty(AmqMessagesUtil.JMS_MESSAGE_BODY_PREFIX + "JMSObjectString", msg.getObject().toString());
+            props.setProperty(AmqMessagesUtil.JMS_MESSAGE_BODY_PREFIX + "JMSObjectString", getDisplayString(msg.getObject()));
         }
         return props;
     }
@@ -209,7 +210,7 @@ public class MapTransformFilter extends ResultTransformFilter {
             String key = (String)e.nextElement();
             Object val = msg.getObject(key);
             if (val != null) {
-                props.setProperty(AmqMessagesUtil.JMS_MESSAGE_BODY_PREFIX + key, val.toString());
+                props.setProperty(AmqMessagesUtil.JMS_MESSAGE_BODY_PREFIX + key, getDisplayString(val));
             }
         }
 
@@ -229,7 +230,7 @@ public class MapTransformFilter extends ResultTransformFilter {
         props.putAll(transformToMap((ActiveMQMessage)msg));
         // Just set the toString of the message as the body of the stream
         // message
-        props.setProperty(AmqMessagesUtil.JMS_MESSAGE_BODY_PREFIX + "JMSStreamMessage", msg.toString());
+        props.setProperty(AmqMessagesUtil.JMS_MESSAGE_BODY_PREFIX + "JMSStreamMessage", getDisplayString(msg));
 
         return props;
     }
@@ -269,7 +270,7 @@ public class MapTransformFilter extends ResultTransformFilter {
         while (e.hasMoreElements()) {
             String name = (String)e.nextElement();
             if (msg.getObjectProperty(name) != null) {
-                props.put(AmqMessagesUtil.JMS_MESSAGE_CUSTOM_PREFIX + name, msg.getObjectProperty(name).toString());
+                props.put(AmqMessagesUtil.JMS_MESSAGE_CUSTOM_PREFIX + name, getDisplayString(msg.getObjectProperty(name)));
             }
         }
 
@@ -328,5 +329,12 @@ public class MapTransformFilter extends ResultTransformFilter {
         props.setProperty(AmqMessagesUtil.JMS_MESSAGE_CUSTOM_PREFIX + "Properties", "" + data.get("Properties"));
 
         return props;
+    }
+
+    protected String getDisplayString(Object obj) {
+        if (obj != null && obj.getClass().isArray()) {
+            obj = Arrays.asList((Object[]) obj);
+        }
+        return obj.toString();
     }
 }
