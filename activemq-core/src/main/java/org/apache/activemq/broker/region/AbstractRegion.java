@@ -311,12 +311,17 @@ public abstract class AbstractRegion implements Region {
         if (sub != null) {
 
             // remove the subscription from all the matching queues.
+            List<Destination> removeList = new ArrayList<Destination>();
             synchronized (destinationsMutex) {
                 for (Iterator iter = destinationMap.get(info.getDestination())
                         .iterator(); iter.hasNext();) {
                     Destination dest = (Destination) iter.next();
-                    dest.removeSubscription(context, sub);
+                    removeList.add(dest);
+                    
                 }
+            }
+            for(Destination dest:removeList) {
+              dest.removeSubscription(context, sub);
             }
 
             destroySubscription(sub);
