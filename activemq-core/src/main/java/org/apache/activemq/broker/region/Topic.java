@@ -453,10 +453,10 @@ public class Topic  extends BaseDestination  implements Task{
     }
 
     public void dispose(ConnectionContext context) throws IOException {
+        super.dispose(context);
         if (topicStore != null) {
             topicStore.removeAllMessages(context);
         }
-        destinationStatistics.setParent(null);
     }
 
     public void gc() {
