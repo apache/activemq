@@ -20,7 +20,7 @@ package org.apache.activemq.camel.component;
 import org.apache.activemq.camel.SetHeaderTest;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.uface.swing.SwingBrowser;
-import org.apache.camel.impl.CamelTemplate;
+import org.apache.camel.CamelTemplate;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
