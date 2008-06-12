@@ -27,24 +27,24 @@ import javax.jms.Session;
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
+import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /*
- * simulate message flow which cause the following exception in the broker
- * (exception logged by client) <p/> 2007-07-24 13:51:23,624
- * com.easynet.halo.Halo ERROR (LoggingErrorHandler.java: 23) JMS failure
- * javax.jms.JMSException: Transaction 'TX:ID:dmt-53625-1185281414694-1:0:344'
- * has not been started. at
- * org.apache.activemq.broker.TransactionBroker.getTransaction(TransactionBroker.java:230)
- * This appears to be consistent in a MacBook. Haven't been able to replicate it
- * on Windows though
+ * Try and replicate:
+ * Caused by: java.io.IOException: Could not locate data file data--188
+ *  at org.apache.activemq.kaha.impl.async.AsyncDataManager.getDataFile(AsyncDataManager.java:302)
+ *  at org.apache.activemq.kaha.impl.async.AsyncDataManager.read(AsyncDataManager.java:614)
+ *  at org.apache.activemq.store.amq.AMQPersistenceAdapter.readCommand(AMQPersistenceAdapter.java:523)
  */
-public class TransactionNotStartedErrorTest extends TestCase {
 
-    private static final Log LOG = LogFactory.getLog(TransactionNotStartedErrorTest.class);
+public class MissingDataFileTest extends TestCase {
+
+    private static final Log LOG = LogFactory.getLog(MissingDataFileTest.class);
     
-    private static int counter = 500;
+    private static int counter = 300;
 
     private static int hectorToHaloCtr;
     private static int xenaToHaloCtr;
@@ -71,6 +71,10 @@ public class TransactionNotStartedErrorTest extends TestCase {
     private Connection haloConnection;
 
     private final Object lock = new Object();
+    final boolean useTopic = false;
+    final boolean useSleep = true;
+    
+    protected static final String payload = new String(new byte[500]);
 
     public Connection createConnection() throws JMSException {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
@@ -87,6 +91,16 @@ public class TransactionNotStartedErrorTest extends TestCase {
         broker.setPersistent(true);
         broker.setUseJmx(true);
         broker.addConnector("tcp://localhost:61616").setName("Default");
+   
+        SystemUsage systemUsage;
+        systemUsage = new SystemUsage();
+        systemUsage.getMemoryUsage().setLimit(1024 * 10); // Just a few messags 
+        broker.setSystemUsage(systemUsage);
+        
+        AMQPersistenceAdapterFactory factory = (AMQPersistenceAdapterFactory) broker.getPersistenceFactory();
+        factory.setMaxFileLength(2*1024); // ~4 messages
+        factory.setCleanupInterval(5000); // every few second
+        
         broker.start();
         LOG.info("Starting broker..");
     }
@@ -99,10 +113,11 @@ public class TransactionNotStartedErrorTest extends TestCase {
         broker.stop();
     }
 
-    public void testTransactionNotStartedError() throws Exception {
+    public void testForNoDataFoundError() throws Exception {
+        
         startBroker();
         hectorConnection = createConnection();
-        Thread hectorThread = buildProducer(hectorConnection, hectorToHalo);
+        Thread hectorThread = buildProducer(hectorConnection, hectorToHalo, false, useTopic);
         Receiver hHectorReceiver = new Receiver() {
             public void receive(String s) throws Exception {
                 haloToHectorCtr++;
@@ -111,9 +126,10 @@ public class TransactionNotStartedErrorTest extends TestCase {
                         lock.notifyAll();
                     }
                 }
+                possiblySleep(haloToHectorCtr);
             }
         };
-        buildReceiver(hectorConnection, haloToHector, false, hHectorReceiver);
+        buildReceiver(hectorConnection, haloToHector, false, hHectorReceiver, useTopic);
 
         troyConnection = createConnection();
         Thread troyThread = buildProducer(troyConnection, troyToHalo);
@@ -125,9 +141,10 @@ public class TransactionNotStartedErrorTest extends TestCase {
                         lock.notifyAll();
                     }
                 }
+                possiblySleep(haloToTroyCtr);
             }
         };
-        buildReceiver(hectorConnection, haloToTroy, false, hTroyReceiver);
+        buildReceiver(hectorConnection, haloToTroy, false, hTroyReceiver, false);
 
         xenaConnection = createConnection();
         Thread xenaThread = buildProducer(xenaConnection, xenaToHalo);
@@ -139,40 +156,43 @@ public class TransactionNotStartedErrorTest extends TestCase {
                         lock.notifyAll();
                     }
                 }
+                possiblySleep(haloToXenaCtr);
             }
         };
-        buildReceiver(xenaConnection, haloToXena, false, hXenaReceiver);
+        buildReceiver(xenaConnection, haloToXena, false, hXenaReceiver, false);
 
         haloConnection = createConnection();
-        final MessageSender hectorSender = buildTransactionalProducer(haloToHector, haloConnection);
-        final MessageSender troySender = buildTransactionalProducer(haloToTroy, haloConnection);
-        final MessageSender xenaSender = buildTransactionalProducer(haloToXena, haloConnection);
+        final MessageSender hectorSender = buildTransactionalProducer(haloToHector, haloConnection, false);
+        final MessageSender troySender = buildTransactionalProducer(haloToTroy, haloConnection, false);
+        final MessageSender xenaSender = buildTransactionalProducer(haloToXena, haloConnection, false);
         Receiver hectorReceiver = new Receiver() {
             public void receive(String s) throws Exception {
                 hectorToHaloCtr++;
-                troySender.send("halo to troy because of hector");
+                troySender.send(payload);
                 if (hectorToHaloCtr >= counter) {
                     synchronized (lock) {
                         lock.notifyAll();
                     }
+                    possiblySleep(hectorToHaloCtr);
                 }
             }
         };
         Receiver xenaReceiver = new Receiver() {
             public void receive(String s) throws Exception {
                 xenaToHaloCtr++;
-                hectorSender.send("halo to hector because of xena");
+                hectorSender.send(payload);
                 if (xenaToHaloCtr >= counter) {
                     synchronized (lock) {
                         lock.notifyAll();
                     }
                 }
+                possiblySleep(xenaToHaloCtr);
             }
         };
         Receiver troyReceiver = new Receiver() {
             public void receive(String s) throws Exception {
                 troyToHaloCtr++;
-                xenaSender.send("halo to xena because of troy");
+                xenaSender.send(payload);
                 if (troyToHaloCtr >= counter) {
                     synchronized (lock) {
                         lock.notifyAll();
@@ -180,9 +200,9 @@ public class TransactionNotStartedErrorTest extends TestCase {
                 }
             }
         };
-        buildReceiver(haloConnection, hectorToHalo, true, hectorReceiver);
-        buildReceiver(haloConnection, xenaToHalo, true, xenaReceiver);
-        buildReceiver(haloConnection, troyToHalo, true, troyReceiver);
+        buildReceiver(haloConnection, hectorToHalo, true, hectorReceiver, false);
+        buildReceiver(haloConnection, xenaToHalo, true, xenaReceiver, false);
+        buildReceiver(haloConnection, troyToHalo, true, troyReceiver, false);
 
         haloConnection.start();
 
@@ -211,9 +231,18 @@ public class TransactionNotStartedErrorTest extends TestCase {
 
     }
 
+    protected void possiblySleep(int count) throws InterruptedException {
+        if (useSleep) {
+            if (count % 100 == 0) {
+                Thread.sleep(5000);
+            }
+        }
+        
+    }
+
     protected void waitForMessagesToBeDelivered() {
         // let's give the listeners enough time to read all messages
-        long maxWaitTime = counter * 3000;
+        long maxWaitTime = counter * 1000;
         long waitTime = maxWaitTime;
         long start = (maxWaitTime <= 0) ? 0 : System.currentTimeMillis();
 
@@ -233,25 +262,22 @@ public class TransactionNotStartedErrorTest extends TestCase {
         }
     }
 
-    public MessageSender buildTransactionalProducer(String queueName, Connection connection) throws Exception {
+    public MessageSender buildTransactionalProducer(String queueName, Connection connection, boolean isTopic) throws Exception {
 
-        return new MessageSender(queueName, connection, true, false);
+        return new MessageSender(queueName, connection, true, isTopic);
     }
 
     public Thread buildProducer(Connection connection, final String queueName) throws Exception {
-
-        final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        final MessageSender producer = new MessageSender(queueName, connection, false, false);
+        return buildProducer(connection, queueName, false, false);
+    }
+    
+    public Thread buildProducer(Connection connection, final String queueName, boolean transacted, boolean isTopic) throws Exception {
+        final MessageSender producer = new MessageSender(queueName, connection, transacted, isTopic);
         Thread thread = new Thread() {
-
             public synchronized void run() {
                 for (int i = 0; i < counter; i++) {
                     try {
-                        producer.send(queueName);
-                        if (session.getTransacted()) {
-                            session.commit();
-                        }
-
+                        producer.send(payload );
                     } catch (Exception e) {
                         throw new RuntimeException("on " + queueName + " send", e);
                     }
@@ -261,9 +287,9 @@ public class TransactionNotStartedErrorTest extends TestCase {
         return thread;
     }
 
-    public void buildReceiver(Connection connection, final String queueName, boolean transacted, final Receiver receiver) throws Exception {
+    public void buildReceiver(Connection connection, final String queueName, boolean transacted, final Receiver receiver, boolean isTopic) throws Exception {
         final Session session = transacted ? connection.createSession(true, Session.SESSION_TRANSACTED) : connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageConsumer inputMessageConsumer = session.createConsumer(session.createQueue(queueName));
+        MessageConsumer inputMessageConsumer = session.createConsumer(isTopic ? session.createTopic(queueName) : session.createQueue(queueName));
         MessageListener messageListener = new MessageListener() {
 
             public void onMessage(Message message) {

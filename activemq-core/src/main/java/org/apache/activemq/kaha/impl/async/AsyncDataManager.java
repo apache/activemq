@@ -71,6 +71,7 @@ public class AsyncDataManager {
     public static final String DEFAULT_ARCHIVE_DIRECTORY = "data-archive";
     public static final String DEFAULT_FILE_PREFIX = "data-";
     public static final int DEFAULT_MAX_FILE_LENGTH = 1024 * 1024 * 32;
+    public static final int DEFAULT_CLEANUP_INTERVAL = 1000 * 30;
 
     private static final Log LOG = LogFactory.getLog(AsyncDataManager.class);
 
@@ -188,7 +189,7 @@ public class AsyncDataManager {
                 cleanup();
             }
         };
-        Scheduler.executePeriodically(cleanupTask, 1000 * 30);
+        Scheduler.executePeriodically(cleanupTask, DEFAULT_CLEANUP_INTERVAL);
     }
 
     public void lock() throws IOException {
@@ -272,6 +273,7 @@ public class AsyncDataManager {
             if (currentWriteFile != null) {
                 currentWriteFile.linkAfter(nextWriteFile);
                 if (currentWriteFile.isUnused()) {
+                    System.err.println("remove current file unused:" + currentWriteFile);
                     removeDataFile(currentWriteFile);
                 }
             }
@@ -298,7 +300,7 @@ public class AsyncDataManager {
         DataFile dataFile = fileMap.get(key);
         if (dataFile == null) {
             LOG.error("Looking for key " + key + " but not found in fileMap: " + fileMap);
-            throw new IOException("Could not locate data file " + filePrefix + "-" + item.getDataFileId());
+            throw new IOException("Could not locate data file " + filePrefix + item.getDataFileId());
         }
         return dataFile;
     }
@@ -308,7 +310,7 @@ public class AsyncDataManager {
         DataFile dataFile = fileMap.get(key);
         if (dataFile == null) {
             LOG.error("Looking for key " + key + " but not found in fileMap: " + fileMap);
-            throw new IOException("Could not locate data file " + filePrefix + "-" + item.getDataFileId());
+            throw new IOException("Could not locate data file " + filePrefix  + item.getDataFileId());
         }
         return dataFile.getFile();
     }
@@ -411,7 +413,9 @@ public class AsyncDataManager {
             purgeList.add(dataFile);
         }
         for (DataFile dataFile : purgeList) {
-            forceRemoveDataFile(dataFile);
+            if (dataFile.getDataFileId() != currentWriteFile.getDataFileId()) {
+                forceRemoveDataFile(dataFile);
+            }
         }
     }
 
@@ -463,11 +467,11 @@ public class AsyncDataManager {
         dataFile.unlink();
         if (archiveDataLogs) {
             dataFile.move(getDirectoryArchive());
-            LOG.debug("moced data file " + dataFile + " to "
+            LOG.debug("moved data file " + dataFile + " to "
                     + getDirectoryArchive());
         } else {
             boolean result = dataFile.delete();
-            LOG.debug("discarding data file " + dataFile
+            LOG.info("discarding data file " + dataFile
                     + (result ? "successful " : "failed"));
         }
     }

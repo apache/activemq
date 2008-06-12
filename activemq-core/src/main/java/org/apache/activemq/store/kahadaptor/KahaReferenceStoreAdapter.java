@@ -234,8 +234,8 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
      * @throws IOException
      * @see org.apache.activemq.store.ReferenceStoreAdapter#getReferenceFileIdsInUse()
      */
-    public Set<Integer> getReferenceFileIdsInUse() throws IOException {
-        return recordReferences.keySet();
+    public synchronized Set<Integer> getReferenceFileIdsInUse() throws IOException {
+        return new HashSet<Integer>(recordReferences.keySet());
     }
 
     /**

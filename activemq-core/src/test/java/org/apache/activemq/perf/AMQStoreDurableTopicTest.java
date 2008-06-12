@@ -40,7 +40,6 @@ public class AMQStoreDurableTopicTest extends SimpleDurableTopicTest {
     protected void setUp() throws Exception {
         numberofProducers=1;
         numberOfConsumers=1;
-        this.consumerSleepDuration=0;
         super.setUp();
     }
 }

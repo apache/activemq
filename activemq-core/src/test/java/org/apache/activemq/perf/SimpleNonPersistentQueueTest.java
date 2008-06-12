@@ -18,18 +18,13 @@ package org.apache.activemq.perf;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.jms.ConnectionFactory;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
-
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.region.policy.NoSubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
-import org.apache.activemq.broker.region.policy.VMPendingQueueMessageStoragePolicy;
-import org.apache.activemq.broker.region.policy.VMPendingSubscriberMessageStoragePolicy;
 
 /**
  * @version $Revision: 1.3 $
@@ -37,18 +32,24 @@ import org.apache.activemq.broker.region.policy.VMPendingSubscriberMessageStorag
 public class SimpleNonPersistentQueueTest extends SimpleQueueTest {
 
     protected void setUp() throws Exception {
-        numberOfConsumers = 10;
-        numberofProducers = 10;
-        //this.consumerSleepDuration=100;
+        numberOfConsumers = 1;
+        numberofProducers = 1;
         super.setUp();
     }
     protected PerfProducer createProducer(ConnectionFactory fac, Destination dest, int number, byte[] payload) throws JMSException {
         PerfProducer pp = new PerfProducer(fac, dest, payload);
         pp.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-        //pp.setTimeToLive(100);
+        pp.setTimeToLive(100);
         return pp;
     }
     
+    protected PerfConsumer createConsumer(ConnectionFactory fac, Destination dest, int number) throws JMSException {
+        PerfConsumer result =  new PerfConsumer(fac, dest);
+        result.setInitialDelay(20*1000);
+        return result;
+    }
+    
+    /*
     protected void configureBroker(BrokerService answer,String uri) throws Exception {
         answer.setPersistent(false);
         final List<PolicyEntry> policyEntries = new ArrayList<PolicyEntry>();
@@ -65,4 +66,5 @@ public class SimpleNonPersistentQueueTest extends SimpleQueueTest {
         answer.setDestinationPolicy(policyMap);
         super.configureBroker(answer, uri);
     }
+    */
 }
