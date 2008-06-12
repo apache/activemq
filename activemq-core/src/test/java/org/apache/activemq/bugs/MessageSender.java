@@ -25,9 +25,9 @@ public class MessageSender {
     private MessageProducer producer;
     private Session session;
 
-    public MessageSender(String queueName, Connection connection, boolean useTransactedSession) throws Exception {
+    public MessageSender(String queueName, Connection connection, boolean useTransactedSession, boolean topic) throws Exception {
         session = useTransactedSession ? connection.createSession(true, Session.SESSION_TRANSACTED) : connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        producer = session.createProducer(session.createQueue(queueName));
+        producer = session.createProducer(topic ? session.createTopic(queueName) : session.createQueue(queueName));
     }
 
     public void send(String payload) throws Exception {

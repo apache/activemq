@@ -90,13 +90,11 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private static final boolean BROKEN_FILE_LOCK;
     private static final boolean DISABLE_LOCKING;
     private static final int JOURNAL_LOCKED_WAIT_DELAY = 10 * 1000;
-
     private AsyncDataManager asyncDataManager;
     private ReferenceStoreAdapter referenceStoreAdapter;
     private TaskRunnerFactory taskRunnerFactory;
     private WireFormat wireFormat = new OpenWireFormat();
     private SystemUsage usageManager;
-    private long cleanupInterval = 1000 * 30;
     private long checkpointInterval = 1000 * 60;
     private int maxCheckpointMessageAddSize = 1024 * 4;
     private AMQTransactionStore transactionStore = new AMQTransactionStore(this);
@@ -116,6 +114,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private boolean persistentIndex=true;
     private boolean useNio = true;
     private boolean archiveDataLogs=false;
+    private long cleanupInterval = AsyncDataManager.DEFAULT_CLEANUP_INTERVAL;
     private int maxFileLength = AsyncDataManager.DEFAULT_MAX_FILE_LENGTH;
     private int indexBinSize = HashIndex.DEFAULT_BIN_SIZE;
     private int indexKeySize = HashIndex.DEFAULT_KEY_SIZE;
@@ -425,8 +424,12 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
             }
             Integer lastDataFile = asyncDataManager.getCurrentDataFileId();   
             inProgress.add(lastDataFile);
-            Set<Integer> inUse = new HashSet<Integer>(referenceStoreAdapter.getReferenceFileIdsInUse());
-            asyncDataManager.consolidateDataFilesNotIn(inUse, inProgress);
+            inProgress.addAll(referenceStoreAdapter.getReferenceFileIdsInUse());
+            Location lastActiveTx = transactionStore.checkpoint();
+            if (lastActiveTx != null) {
+                lastDataFile = Math.min(lastDataFile, lastActiveTx.getDataFileId());
+            }
+            asyncDataManager.consolidateDataFilesNotIn(inProgress, lastDataFile - 1);
         } catch (IOException e) {
             LOG.error("Could not cleanup data files: " + e, e);
         }

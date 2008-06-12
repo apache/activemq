@@ -44,6 +44,7 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
     private boolean persistentIndex=true;
     private boolean useNio = true;
     private int maxFileLength = AsyncDataManager.DEFAULT_MAX_FILE_LENGTH;
+    private long cleanupInterval = AsyncDataManager.DEFAULT_CLEANUP_INTERVAL;
 
 
     /**
@@ -60,7 +61,16 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
         result.setReferenceStoreAdapter(getReferenceStoreAdapter());
         result.setUseNio(isUseNio());
         result.setMaxFileLength(getMaxFileLength());
+        result.setCleanupInterval(getCleanupInterval());
         return result;
+    }
+
+    public long getCleanupInterval() {
+        return cleanupInterval;
+    }
+    
+    public void setCleanupInterval(long val) {
+        cleanupInterval = val;
     }
 
     /**

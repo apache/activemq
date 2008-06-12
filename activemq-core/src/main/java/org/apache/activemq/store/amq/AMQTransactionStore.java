@@ -18,9 +18,12 @@
 package org.apache.activemq.store.amq;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.activemq.command.JournalTopicAck;
 import org.apache.activemq.command.JournalTransaction;
@@ -230,13 +233,13 @@ public class AMQTransactionStore implements TransactionStore {
         // But we keep track of the first location of an operation
         // that was associated with an active tx. The journal can not
         // roll over active tx records.
-        Location rc = null;
+        Location minimumLocationInUse = null;
         synchronized (inflightTransactions) {
             for (Iterator<AMQTx> iter = inflightTransactions.values().iterator(); iter.hasNext();) {
                 AMQTx tx = iter.next();
                 Location location = tx.getLocation();
-                if (rc == null || rc.compareTo(location) < 0) {
-                    rc = location;
+                if (minimumLocationInUse == null || location.compareTo(minimumLocationInUse) < 0) {
+                    minimumLocationInUse = location;
                 }
             }
         }
@@ -244,11 +247,11 @@ public class AMQTransactionStore implements TransactionStore {
             for (Iterator<AMQTx> iter = preparedTransactions.values().iterator(); iter.hasNext();) {
                 AMQTx tx = iter.next();
                 Location location = tx.getLocation();
-                if (rc == null || rc.compareTo(location) < 0) {
-                    rc = location;
+                if (minimumLocationInUse == null || location.compareTo(minimumLocationInUse) < 0) {
+                    minimumLocationInUse = location;
                 }
             }
-            return rc;
+            return minimumLocationInUse;
         }
     }
 

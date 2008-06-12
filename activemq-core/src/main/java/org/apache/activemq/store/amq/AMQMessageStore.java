@@ -113,6 +113,7 @@ public class AMQMessageStore implements MessageStore {
             if (debug) {
                 LOG.debug("Journalled message add for: " + id + ", at: " + location);
             }
+            this.peristenceAdapter.addInProgressDataFile(this, location.getDataFileId());
             addMessage(message, location);
         } else {
             if (debug) {
@@ -164,7 +165,6 @@ public class AMQMessageStore implements MessageStore {
          try {
             lastLocation = location;
             messages.put(message.getMessageId(), data);
-            this.peristenceAdapter.addInProgressDataFile(this, location.getDataFileId());
         }finally {
             lock.unlock();
         }

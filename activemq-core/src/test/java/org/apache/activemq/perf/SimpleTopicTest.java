@@ -55,9 +55,7 @@ public class SimpleTopicTest extends TestCase {
     protected byte[] array;
     protected ConnectionFactory factory;
     
-    protected long consumerSleepDuration=0;
-
-    /**
+     /**
      * Sets up a test where the producer and consumer have their own connection.
      * 
      * @see junit.framework.TestCase#setUp()
@@ -84,7 +82,6 @@ public class SimpleTopicTest extends TestCase {
             LOG.info("Testing against destination: " + destination);
             for (int i = 0; i < numberOfConsumers; i++) {
                 consumers[consumerCount] = createConsumer(factory, destination, consumerCount);
-                consumers[consumerCount].setSleepDuration(consumerSleepDuration);
                 consumerCount++;
             }
             for (int i = 0; i < numberofProducers; i++) {

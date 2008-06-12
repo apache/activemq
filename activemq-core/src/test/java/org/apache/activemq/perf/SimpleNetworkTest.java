@@ -65,7 +65,6 @@ public class SimpleNetworkTest extends SimpleTopicTest {
             LOG.info("Testing against destination: " + destination);
             for (int i = 0; i < numberOfConsumers; i++) {
                 consumers[i] = createConsumer(consumerFactory, destination, i);
-                consumers[i].setSleepDuration(consumerSleepDuration);
                 consumers[i].start();
             }
             for (int i = 0; i < numberofProducers; i++) {
