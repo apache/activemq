@@ -273,7 +273,6 @@ public class AsyncDataManager {
             if (currentWriteFile != null) {
                 currentWriteFile.linkAfter(nextWriteFile);
                 if (currentWriteFile.isUnused()) {
-                    System.err.println("remove current file unused:" + currentWriteFile);
                     removeDataFile(currentWriteFile);
                 }
             }
