@@ -142,10 +142,10 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
             if (container != null) {
                 ConsumerMessageRef ref = null;
                 if((ref = container.remove(messageId)) != null) {
-                    TopicSubAck tsa = ackContainer.get(ref.getAckEntry());
+                    StoreEntry entry = ref.getAckEntry();
+                    TopicSubAck tsa = ackContainer.get(entry);
                     if (tsa != null) {
                         if (tsa.decrementCount() <= 0) {
-                            StoreEntry entry = ref.getAckEntry();
                             entry = ackContainer.refresh(entry);
                             ackContainer.remove(entry);
                             ReferenceRecord rr = messageContainer.get(messageId);
@@ -156,6 +156,8 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
                                 removeInterest(rr);
                                 removeMessage = true;
                             }
+                        }else {
+                            ackContainer.update(entry,tsa);
                         }
                     }
                 }else{

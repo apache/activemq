@@ -95,7 +95,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private TaskRunnerFactory taskRunnerFactory;
     private WireFormat wireFormat = new OpenWireFormat();
     private SystemUsage usageManager;
-    private long checkpointInterval = 1000 * 60;
+    private long checkpointInterval = 1000 * 20;
     private int maxCheckpointMessageAddSize = 1024 * 4;
     private AMQTransactionStore transactionStore = new AMQTransactionStore(this);
     private TaskRunner checkpointTask;
@@ -375,12 +375,13 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
                 LOG.debug("Checkpoint started.");
             }
 
-            Location newMark = null;
+            Location currentMark = asyncDataManager.getMark();
+            Location newMark = currentMark;
             Iterator<AMQMessageStore> queueIterator = queues.values().iterator();
             while (queueIterator.hasNext()) {
                 final AMQMessageStore ms = queueIterator.next();
                 Location mark = (Location)ms.getMark();
-                if (mark != null && (newMark == null || newMark.compareTo(mark) < 0)) {
+                if (mark != null && (newMark == null || mark.compareTo(newMark) > 0)) {
                     newMark = mark;
                 }
             }
@@ -388,12 +389,12 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
             while (topicIterator.hasNext()) {
                 final AMQTopicMessageStore ms = topicIterator.next();
                 Location mark = (Location)ms.getMark();
-                if (mark != null && (newMark == null || newMark.compareTo(mark) < 0)) {
+                if (mark != null && (newMark == null || mark.compareTo(newMark) > 0)) {
                     newMark = mark;
                 }
             }
             try {
-                if (newMark != null) {
+                if (newMark != currentMark) {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("Marking journal at: " + newMark);
                     }
