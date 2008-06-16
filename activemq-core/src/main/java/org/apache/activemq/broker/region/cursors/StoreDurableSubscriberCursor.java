@@ -20,9 +20,9 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
@@ -47,7 +47,7 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
     private String clientId;
     private String subscriberName;
     private Map<Destination, TopicStorePrefetch> topics = new HashMap<Destination, TopicStorePrefetch>();
-    private LinkedList<PendingMessageCursor> storePrefetches = new LinkedList<PendingMessageCursor>();
+    private List<PendingMessageCursor> storePrefetches = new CopyOnWriteArrayList<PendingMessageCursor>();
     private boolean started;
     private PendingMessageCursor nonPersistent;
     private PendingMessageCursor currentCursor;
@@ -322,7 +322,10 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
                 }
             }
             // round-robin
-            storePrefetches.addLast(storePrefetches.removeFirst());
+            if (storePrefetches.size()>1) {
+                PendingMessageCursor first = storePrefetches.remove(0);
+                storePrefetches.add(first);
+            }
         }
         return currentCursor;
     }
