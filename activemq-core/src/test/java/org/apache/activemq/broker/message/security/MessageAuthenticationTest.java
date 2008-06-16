@@ -19,27 +19,60 @@ package org.apache.activemq.broker.message.security;
 
 import java.io.IOException;
 
+import javax.jms.Connection;
+import javax.jms.Session;
+import javax.jms.Destination;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.TextMessage;
+import javax.jms.JMSException;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.camel.CamelEmbeddedBrokerTestSupport;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
-import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.CamelContext;
-import org.apache.camel.builder.RouteBuilder;
+import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.spring.ConsumerBean;
 
 /**
  * @version $Revision: 1.1 $
  */
-public class MessageAuthenticationTest extends CamelEmbeddedBrokerTestSupport {
+public class MessageAuthenticationTest extends EmbeddedBrokerTestSupport {
+
+    private Connection connection;
+
     public void testSendInvalidMessage() throws Exception {
-        MockEndpoint results = getMockEndpoint("mock:results");
-        results.expectedBodiesReceived("validBody");
+        if (connection == null) {
+            connection = createConnection();
+        }
+        connection.start();
 
-        template.sendBodyAndHeader("activemq:MyQueue", "invalidBody", "myHeader", "xyz");
-        template.sendBodyAndHeader("activemq:MyQueue", "validBody", "myHeader", "abc");
+        ConsumerBean messageList = new ConsumerBean();
+        messageList.setVerbose(true);
 
-        assertMockEndpointsSatisifed();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        Destination destination = new ActiveMQQueue("MyQueue");
+
+        MessageConsumer c1 = session.createConsumer(destination);
+
+        c1.setMessageListener(messageList);
+
+        MessageProducer producer = session.createProducer(destination);
+        assertNotNull(producer);
+
+        producer.send(createMessage(session, "invalidBody", "myHeader", "xyz"));
+        producer.send(createMessage(session, "validBody", "myHeader", "abc"));
+
+        messageList.assertMessagesArrived(1);
+        assertEquals("validBody", ((TextMessage) messageList.flushMessages().get(0)).getText());
+    }
+
+    private javax.jms.Message createMessage(Session session, String body, String header, String value) throws JMSException {
+        TextMessage msg = session.createTextMessage(body);
+        msg.setStringProperty(header, value);
+        return msg;
     }
 
     @Override
@@ -63,12 +96,4 @@ public class MessageAuthenticationTest extends CamelEmbeddedBrokerTestSupport {
         return answer;
     }
 
-    @Override
-    protected void addCamelRoutes(CamelContext camelContext) throws Exception {
-        camelContext.addRoutes(new RouteBuilder() {
-            public void configure() throws Exception {
-                from("activemq:MyQueue").to("mock:results");
-            }
-        });
-    }
 }

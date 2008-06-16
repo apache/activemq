@@ -30,6 +30,7 @@ import junit.framework.Assert;
 
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.CamelTemplate;
+import org.apache.camel.impl.DefaultProducerTemplate;
 import org.apache.camel.spring.SpringTestSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -72,7 +73,7 @@ public class CamelJmsTest extends SpringTestSupport {
         // lets create a message
         Destination destination = getMandatoryBean(Destination.class, "consumeFrom");
         ConnectionFactory factory = getMandatoryBean(ConnectionFactory.class, "connectionFactory");
-        CamelTemplate template = getMandatoryBean(CamelTemplate.class, "camelTemplate");
+        DefaultProducerTemplate template = getMandatoryBean(DefaultProducerTemplate.class, "camelTemplate");
 
         Connection connection = factory.createConnection();
         connection.start();

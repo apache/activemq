@@ -22,6 +22,10 @@
     </dependency>
     <dependency>
       <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-camel</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-core</artifactId>
     </dependency>
     <dependency>

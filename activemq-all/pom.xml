@@ -35,6 +35,10 @@
     <!-- activemq -->
     <dependency>
       <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-camel</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-console</artifactId>
     </dependency>
     <dependency>
@@ -65,6 +69,7 @@
 
               <artifactSet>
                 <includes>
+                  <include>${project.groupId}:activemq-camel</include>
                   <include>${project.groupId}:activemq-core</include>
                   <include>${project.groupId}:activemq-console</include>
                   <include>${project.groupId}:activemq-jaas</include>
