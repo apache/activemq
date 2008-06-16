@@ -41,10 +41,8 @@ import org.apache.activemq.broker.region.group.MessageGroupHashBucketFactory;
 import org.apache.activemq.broker.region.group.MessageGroupMap;
 import org.apache.activemq.broker.region.group.MessageGroupMapFactory;
 import org.apache.activemq.broker.region.group.MessageGroupSet;
-import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.DispatchPolicy;
 import org.apache.activemq.broker.region.policy.RoundRobinDispatchPolicy;
-import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ExceptionResponse;
@@ -85,7 +83,6 @@ public class Queue extends BaseDestination implements Task {
     private final LinkedHashMap<MessageId,QueueMessageReference> pagedInMessages = new LinkedHashMap<MessageId,QueueMessageReference>();
     private MessageGroupMap messageGroupOwners;
     private DispatchPolicy dispatchPolicy = new RoundRobinDispatchPolicy();
-    private DeadLetterStrategy deadLetterStrategy = new SharedDeadLetterStrategy();
     private MessageGroupMapFactory messageGroupMapFactory = new MessageGroupHashBucketFactory();
     private final Object sendLock = new Object();
     private ExecutorService executor;
@@ -163,8 +160,7 @@ public class Queue extends BaseDestination implements Task {
                         // Message could have expired while it was being
                         // loaded..
                         if (broker.isExpired(message)) {
-                            broker.messageExpired(createConnectionContext(), message);
-                            destinationStatistics.getMessages().decrement();
+                            messageExpired(createConnectionContext(), message);
                             return true;
                         }
                         if (hasSpace()) {
@@ -328,9 +324,8 @@ public class Queue extends BaseDestination implements Task {
         final ProducerInfo producerInfo = producerExchange.getProducerState().getInfo();
         final boolean sendProducerAck = !message.isResponseRequired() && producerInfo.getWindowSize() > 0 && !context.isInRecoveryMode();
         if (message.isExpired()) {
+            //message not stored - or added to stats yet - so chuck here
             broker.getRoot().messageExpired(context, message);
-            //message not added to stats yet
-            //destinationStatistics.getMessages().decrement();
             if (sendProducerAck) {
                 ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
                 context.getConnection().dispatchAsync(ack);
@@ -357,10 +352,8 @@ public class Queue extends BaseDestination implements Task {
     
                                     // While waiting for space to free up... the
                                     // message may have expired.
-                                    if (broker.isExpired(message)) {
+                                    if (message.isExpired()) {
                                         broker.messageExpired(context, message);
-                                        //message not added to stats yet
-                                        //destinationStatistics.getMessages().decrement();
                                     } else {
                                         doMessageSend(producerExchange, message);
                                     }
@@ -568,14 +561,6 @@ public class Queue extends BaseDestination implements Task {
 
     public void setDispatchPolicy(DispatchPolicy dispatchPolicy) {
         this.dispatchPolicy = dispatchPolicy;
-    }
-
-    public DeadLetterStrategy getDeadLetterStrategy() {
-        return deadLetterStrategy;
-    }
-
-    public void setDeadLetterStrategy(DeadLetterStrategy deadLetterStrategy) {
-        this.deadLetterStrategy = deadLetterStrategy;
     }
 
     public MessageGroupMapFactory getMessageGroupMapFactory() {
@@ -1005,11 +990,15 @@ public class Queue extends BaseDestination implements Task {
     }
 
     protected void removeMessage(ConnectionContext c, QueueMessageReference r) throws IOException {
+        removeMessage(c, null, r);
+    }
+    
+    protected void removeMessage(ConnectionContext c, Subscription subs,QueueMessageReference r) throws IOException {
         MessageAck ack = new MessageAck();
         ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
         ack.setDestination(destination);
         ack.setMessageID(r.getMessageId());
-        removeMessage(c, null, r, ack);
+        removeMessage(c, subs, r, ack);
     }
     
     protected void removeMessage(ConnectionContext context,Subscription sub,final QueueMessageReference reference,MessageAck ack) throws IOException {
@@ -1044,11 +1033,19 @@ public class Queue extends BaseDestination implements Task {
 
     }
     
-    public void messageExpired(ConnectionContext context, PrefetchSubscription prefetchSubscription, MessageReference reference) {
-        ((QueueMessageReference)reference).drop();
-        // Not sure.. perhaps we should forge an ack to remove the message from the store.
-        // acknowledge(context, sub, ack, reference);
-        destinationStatistics.getMessages().decrement();
+    public void messageExpired(ConnectionContext context,MessageReference reference) {
+        messageExpired(context,null,reference);
+    }
+    
+    public void messageExpired(ConnectionContext context,Subscription subs, MessageReference reference) {
+        broker.messageExpired(context, reference);
+        destinationStatistics.getDequeues().increment();
+        destinationStatistics.getInflight().decrement();
+        try {
+            removeMessage(context,subs,(QueueMessageReference)reference);
+        } catch (IOException e) {
+            LOG.error("Failed to remove expired Message from the store ",e);
+        }
         synchronized(pagedInMessages) {
             pagedInMessages.remove(reference.getMessageId());
         }
@@ -1113,9 +1110,7 @@ public class Queue extends BaseDestination implements Task {
                                 result.add(ref);
                                 count++;
                             } else {
-                                broker.messageExpired(createConnectionContext(),
-                                        node);
-                                destinationStatistics.getMessages().decrement();
+                                messageExpired(createConnectionContext(), node);
                             }
                         }
                     } finally {

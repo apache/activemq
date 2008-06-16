@@ -38,5 +38,25 @@ public interface DeadLetterStrategy {
      * Returns the dead letter queue for the given destination.
      */
     ActiveMQDestination getDeadLetterQueueFor(ActiveMQDestination originalDestination);
+    
+    /**
+     * @return true if processes expired messages
+     */
+    public boolean isProcessExpired() ;
+
+    /**
+     * @param processExpired the processExpired to set
+     */
+    public void setProcessExpired(boolean processExpired);
+
+    /**
+     * @return the processNonPersistent
+     */
+    public boolean isProcessNonPersistent();
+
+    /**
+     * @param processNonPersistent the processNonPersistent to set
+     */
+    public void setProcessNonPersistent(boolean processNonPersistent);
 
 }

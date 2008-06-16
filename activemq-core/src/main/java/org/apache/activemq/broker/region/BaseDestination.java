@@ -20,6 +20,7 @@ import java.io.IOException;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.store.MessageStore;
@@ -37,6 +38,7 @@ public abstract class BaseDestination implements Destination {
      * from persistent storage
      */
     public static final int DEFAULT_PAGE_SIZE=100;
+   
     protected final ActiveMQDestination destination;
     protected final Broker broker;
     protected final MessageStore store;
@@ -59,6 +61,7 @@ public abstract class BaseDestination implements Destination {
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
     protected final BrokerService brokerService;
     protected final Broker regionBroker;
+    protected DeadLetterStrategy deadLetterStrategy = DEFAULT_DEAD_LETTER_STRATEGY;
     
     /**
      * @param broker 
@@ -298,6 +301,20 @@ public abstract class BaseDestination implements Destination {
         this.advisdoryForFastProducers = advisdoryForFastProducers;
     }
     
+    /**
+     * @return the dead letter strategy
+     */
+    public DeadLetterStrategy getDeadLetterStrategy() {
+        return deadLetterStrategy;
+    }
+
+    /**
+     * set the dead letter strategy
+     * @param deadLetterStrategy
+     */
+    public void setDeadLetterStrategy(DeadLetterStrategy deadLetterStrategy) {
+        this.deadLetterStrategy = deadLetterStrategy;
+    }
     /**
      * called when message is consumed
      * @param context

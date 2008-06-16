@@ -32,7 +32,7 @@
               <strictOrderDispatchPolicy />
             </dispatchPolicy>
             <deadLetterStrategy>
-              <individualDeadLetterStrategy  topicPrefix="Test.DLQ." />
+              <individualDeadLetterStrategy  topicPrefix="Test.DLQ." processNonPersistent="true" />
             </deadLetterStrategy>
           </policyEntry>
 
@@ -41,7 +41,7 @@
               <strictOrderDispatchPolicy />
             </dispatchPolicy>
             <deadLetterStrategy>
-              <individualDeadLetterStrategy queuePrefix="Test.DLQ."/>
+              <individualDeadLetterStrategy queuePrefix="Test.DLQ." processNonPersistent="true"/>
             </deadLetterStrategy>
           </policyEntry>
 

@@ -18,6 +18,7 @@ package org.apache.activemq.broker.region.policy;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.region.BaseDestination;
+import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.Topic;
@@ -43,7 +44,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private DispatchPolicy dispatchPolicy;
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy;
     private boolean sendAdvisoryIfNoConsumers;
-    private DeadLetterStrategy deadLetterStrategy;
+    private DeadLetterStrategy deadLetterStrategy = Destination.DEFAULT_DEAD_LETTER_STRATEGY;
     private PendingMessageLimitStrategy pendingMessageLimitStrategy;
     private MessageEvictionStrategy messageEvictionStrategy;
     private long memoryLimit;
