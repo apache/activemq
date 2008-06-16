@@ -29,6 +29,9 @@ import javax.jms.Topic;
 
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -78,6 +81,14 @@ public abstract class DeadLetterTestSupport extends TestSupport {
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = new BrokerService();
         broker.setPersistent(false);
+        PolicyEntry policy = new PolicyEntry();
+        DeadLetterStrategy defaultDeadLetterStrategy = policy.getDeadLetterStrategy();
+        if(defaultDeadLetterStrategy!=null) {
+            defaultDeadLetterStrategy.setProcessNonPersistent(true);
+        }
+        PolicyMap pMap = new PolicyMap();
+        pMap.setDefaultEntry(policy);
+        broker.setDestinationPolicy(pMap);
         return broker;
     }
 

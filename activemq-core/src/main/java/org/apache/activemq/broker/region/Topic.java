@@ -71,7 +71,6 @@ public class Topic  extends BaseDestination  implements Task{
     private DispatchPolicy dispatchPolicy = new SimpleDispatchPolicy();
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy;
     private boolean sendAdvisoryIfNoConsumers;
-    private DeadLetterStrategy deadLetterStrategy = new SharedDeadLetterStrategy();
     private final ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription> durableSubcribers = new ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription>();
     private final TaskRunner taskRunner;
     private final LinkedList<Runnable> messagesWaitingForSpace = new LinkedList<Runnable>();
@@ -266,9 +265,8 @@ public class Topic  extends BaseDestination  implements Task{
 
         // There is delay between the client sending it and it arriving at the
         // destination.. it may have expired.
-        if (broker.isExpired(message)) {
+        if (message.isExpired()) {
             broker.messageExpired(context, message);
-            destinationStatistics.getMessages().decrement();
             if (sendProducerAck) {
                 ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
                 context.getConnection().dispatchAsync(ack);
@@ -296,10 +294,8 @@ public class Topic  extends BaseDestination  implements Task{
     
                                     // While waiting for space to free up... the
                                     // message may have expired.
-                                    if (broker.isExpired(message)) {
+                                    if (message.isExpired()) {
                                         broker.messageExpired(context, message);
-                                        //destinationStatistics.getEnqueues().increment();
-                                        //destinationStatistics.getMessages().decrement();
                                     } else {
                                         doMessageSend(producerExchange, message);
                                     }
@@ -413,8 +409,6 @@ public class Topic  extends BaseDestination  implements Task{
                     if (broker.isExpired(message)) {
                         broker.messageExpired(context, message);
                         message.decrementReferenceCount();
-                        //destinationStatistics.getEnqueues().increment();
-                        //destinationStatistics.getMessages().decrement();
                         return;
                     }
                     try {
@@ -555,14 +549,6 @@ public class Topic  extends BaseDestination  implements Task{
         this.sendAdvisoryIfNoConsumers = sendAdvisoryIfNoConsumers;
     }
 
-    public DeadLetterStrategy getDeadLetterStrategy() {
-        return deadLetterStrategy;
-    }
-
-    public void setDeadLetterStrategy(DeadLetterStrategy deadLetterStrategy) {
-        this.deadLetterStrategy = deadLetterStrategy;
-    }
-
     
     // Implementation methods
     // -------------------------------------------------------------------------
@@ -593,6 +579,21 @@ public class Topic  extends BaseDestination  implements Task{
             }
         } finally {
             dispatchValve.decrement();
+        }
+    }
+    
+    public void messageExpired(ConnectionContext context,Subscription subs, MessageReference reference) {
+        broker.messageExpired(context, reference);
+        destinationStatistics.getMessages().decrement();
+        destinationStatistics.getEnqueues().decrement();
+        MessageAck ack = new MessageAck();
+        ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
+        ack.setDestination(destination);
+        ack.setMessageID(reference.getMessageId());
+        try {
+            acknowledge(context, subs, ack, reference);
+        } catch (IOException e) {
+            LOG.error("Failed to remove expired Message from the store ",e);
         }
     }
 
@@ -640,10 +641,4 @@ public class Topic  extends BaseDestination  implements Task{
             }
         }
     }
-
-    public void messageExpired(ConnectionContext context, PrefetchSubscription prefetchSubscription, MessageReference node) {
-        // TODO Auto-generated method stub
-        
-    }
-
 }

@@ -238,4 +238,9 @@ public class DestinationFilter implements Destination {
     public void slowConsumer(ConnectionContext context, Subscription subs) {
        next.slowConsumer(context, subs);
     }
+
+   
+    public void messageExpired(ConnectionContext context, Subscription subs,MessageReference node) {
+       next.messageExpired(context,subs, node);    
+    }
 }

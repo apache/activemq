@@ -22,6 +22,7 @@ import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
+import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
@@ -36,6 +37,7 @@ import org.apache.activemq.usage.Usage;
  */
 public interface Destination extends Service, Task {
 
+    public static final DeadLetterStrategy DEFAULT_DEAD_LETTER_STRATEGY = new SharedDeadLetterStrategy();
     void addSubscription(ConnectionContext context, Subscription sub) throws Exception;
 
     void removeSubscription(ConnectionContext context, Subscription sub) throws Exception;
@@ -114,7 +116,14 @@ public interface Destination extends Service, Task {
      */
     public void setLazyDispatch(boolean value);
 
-    void messageExpired(ConnectionContext context, PrefetchSubscription prefetchSubscription, MessageReference node);
+        
+    /**
+     * Inform the Destination a message has expired
+     * @param context
+     * @param subs 
+     * @param node
+     */
+    void messageExpired(ConnectionContext context, Subscription subs,MessageReference node);
 
     /**
      * called when message is consumed

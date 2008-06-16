@@ -19,6 +19,7 @@ package org.apache.activemq.broker.policy;
 import javax.jms.Destination;
 
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.IndividualDeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
@@ -33,7 +34,9 @@ public class IndividualDeadLetterTest extends DeadLetterTest {
         BrokerService broker = super.createBroker();
 
         PolicyEntry policy = new PolicyEntry();
-        policy.setDeadLetterStrategy(new IndividualDeadLetterStrategy());
+        DeadLetterStrategy strategy = new IndividualDeadLetterStrategy();
+        strategy.setProcessNonPersistent(true);
+        policy.setDeadLetterStrategy(strategy);
 
         PolicyMap pMap = new PolicyMap();
         pMap.setDefaultEntry(policy);
