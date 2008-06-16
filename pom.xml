@@ -121,8 +121,8 @@
   <modules>
     <module>activemq-all</module>
     <module>activemq-book</module>
+    <module>activemq-camel</module>
     <module>activemq-core</module>
-    <module>activemq-console</module>
     <module>activemq-fileserver</module>
     <module>activemq-jaas</module>
     <module>activemq-jpa-store</module>
@@ -155,6 +155,11 @@
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-all</artifactId>
+        <version>${activemq-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-camel</artifactId>
         <version>${activemq-version}</version>
       </dependency>
       <dependency>

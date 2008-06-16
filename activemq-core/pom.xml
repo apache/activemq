@@ -43,6 +43,7 @@
       org.apache.xpath*;resolution:=optional,
       org.codehaus.jam*;resolution:=optional,
       org.springframework*;resolution:=optional,
+      org.springframework.beans.factory.xml;resolution:=optional,
       org.w3c.dom.traversal*;resolution:=optional,
       *
     </activemq.osgi.import.pkg>
