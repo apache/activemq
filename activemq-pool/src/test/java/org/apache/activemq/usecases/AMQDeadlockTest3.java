@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq;
+package org.apache.activemq.usecases;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -35,7 +35,6 @@ import javax.jms.MessageListener;
 import javax.jms.Session;
 
 import junit.framework.Assert;
-import junit.framework.TestCase;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
@@ -45,13 +44,15 @@ import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.pool.PooledConnectionFactory;
 import org.apache.activemq.usage.SystemUsage;
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
 import org.springframework.jms.listener.DefaultMessageListenerContainer;
 
-public class AMQDeadlockTest3 extends TestCase {
+public class AMQDeadlockTest3 extends org.apache.activemq.test.TestSupport {
+
     private static final transient Log LOG = LogFactory.getLog(AMQDeadlockTest3.class);
 
     private static final String URL1 = "tcp://localhost:61616";

@@ -36,6 +36,7 @@ import javax.jms.Session;
 
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.test.*;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -50,7 +51,8 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
 import org.springframework.jms.listener.DefaultMessageListenerContainer;
 
-public class AMQDeadlockTestW4Brokers extends TestCase {
+public class AMQDeadlockTestW4Brokers extends org.apache.activemq.test.TestSupport {
+
     private static final transient Log LOG = LogFactory.getLog(AMQDeadlockTestW4Brokers.class);
 
     private static final String BROKER_URL1 = "tcp://localhost:61616";

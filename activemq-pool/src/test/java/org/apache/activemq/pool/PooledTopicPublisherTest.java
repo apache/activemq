@@ -23,12 +23,14 @@ import javax.jms.TopicSession;
 
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.test.TestSupport;
 import org.apache.activemq.command.ActiveMQTopic;
 
 /**
  * @version $Revision$
  */
-public class PooledTopicPublisherTest extends TestCase {
+public class PooledTopicPublisherTest extends TestSupport {
+
     private TopicConnection connection;
 
     public void testPooledConnectionFactory() throws Exception {

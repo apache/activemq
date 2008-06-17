@@ -35,6 +35,7 @@ import javax.jms.Session;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.test.*;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -47,7 +48,7 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
 import org.springframework.jms.listener.DefaultMessageListenerContainer;
 
-public class AMQFailoverIssue extends TestCase {
+public class AMQFailoverIssue extends org.apache.activemq.test.TestSupport {
 
     private static final String URL1 = "tcp://localhost:61616";
     private static final String QUEUE1_NAME = "test.queue.1";

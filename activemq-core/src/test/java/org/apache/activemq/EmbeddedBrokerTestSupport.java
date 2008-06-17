@@ -25,7 +25,6 @@ import junit.framework.TestCase;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.pool.PooledConnectionFactory;
 import org.springframework.jms.core.JmsTemplate;
 
 /**
@@ -42,8 +41,7 @@ public abstract class EmbeddedBrokerTestSupport extends TestCase {
     protected boolean useTopic;
     protected Destination destination;
     protected JmsTemplate template;
-    private boolean usePooledConnectionWithTemplate = true;
-
+    
     protected void setUp() throws Exception {
         if (broker == null) {
             broker = createBroker();
@@ -72,12 +70,7 @@ public abstract class EmbeddedBrokerTestSupport extends TestCase {
      * @return a newly created JmsTemplate
      */
     protected JmsTemplate createJmsTemplate() {
-        if (usePooledConnectionWithTemplate) {
-            // lets use a pool to avoid creating and closing producers
-            return new JmsTemplate(new PooledConnectionFactory(bindAddress));
-        } else {
-            return new JmsTemplate(connectionFactory);
-        }
+        return new JmsTemplate(connectionFactory);
     }
 
     /**

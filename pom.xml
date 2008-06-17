@@ -128,6 +128,7 @@
     <module>activemq-jpa-store</module>
     <module>activemq-openwire-generator</module>
     <module>activemq-optional</module>
+    <module>activemq-pool</module>
     <module>activemq-ra</module>
     <module>activemq-rar</module>
     <module>activemq-run</module>
@@ -187,6 +188,11 @@
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-jmdns_1.0</artifactId>
+        <version>${activemq-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-pool</artifactId>
         <version>${activemq-version}</version>
       </dependency>
       <dependency>
@@ -895,6 +901,12 @@
         <groupId>taglibs</groupId>
         <artifactId>standard</artifactId>
         <version>1.1.2</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.geronimo.components</groupId>
+        <artifactId>geronimo-transaction</artifactId>
+        <version>2.1</version>
       </dependency>
 
     </dependencies>
