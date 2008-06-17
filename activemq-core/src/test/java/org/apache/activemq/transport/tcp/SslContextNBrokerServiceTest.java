@@ -30,7 +30,6 @@ import javax.net.ssl.X509TrustManager;
 
 import junit.framework.TestCase;
 
-import org.apache.activemq.AMQDeadlockTest3;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.commons.logging.Log;

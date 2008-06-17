@@ -42,7 +42,6 @@ import org.apache.commons.pool.ObjectPoolFactory;
  */
 public class ConnectionPool {
 
-    private TransactionManager transactionManager;
     private ActiveMQConnection connection;
     private Map<SessionKey, SessionPool> cache;
     private AtomicBoolean started = new AtomicBoolean(false);
@@ -53,9 +52,8 @@ public class ConnectionPool {
     private boolean hasExpired;
     private int idleTimeout = 30 * 1000;
 
-    public ConnectionPool(ActiveMQConnection connection, ObjectPoolFactory poolFactory,
-                          TransactionManager transactionManager) {
-        this(connection, new HashMap<SessionKey, SessionPool>(), poolFactory, transactionManager);
+    public ConnectionPool(ActiveMQConnection connection, ObjectPoolFactory poolFactory) {
+        this(connection, new HashMap<SessionKey, SessionPool>(), poolFactory);
         // Add a transport Listener so that we can notice if this connection
         // should be expired due to
         // a connection failure.
@@ -84,12 +82,10 @@ public class ConnectionPool {
         }
     }
 
-    public ConnectionPool(ActiveMQConnection connection, Map<SessionKey, SessionPool> cache, ObjectPoolFactory poolFactory,
-                          TransactionManager transactionManager) {
+    public ConnectionPool(ActiveMQConnection connection, Map<SessionKey, SessionPool> cache, ObjectPoolFactory poolFactory) {
         this.connection = connection;
         this.cache = cache;
         this.poolFactory = poolFactory;
-        this.transactionManager = transactionManager;
     }
 
     public void start() throws JMSException {
@@ -103,35 +99,14 @@ public class ConnectionPool {
     }
 
     public Session createSession(boolean transacted, int ackMode) throws JMSException {
-        try {
-            boolean isXa = transactionManager != null && transactionManager.getStatus() != Status.STATUS_NO_TRANSACTION;
-            if (isXa) {
-                transacted = true;
-                ackMode = Session.SESSION_TRANSACTED;
-            }
-            SessionKey key = new SessionKey(transacted, ackMode);
-            SessionPool pool = cache.get(key);
-            if (pool == null) {
-                pool = new SessionPool(this, key, poolFactory.createPool());
-                cache.put(key, pool);
-            }
-            PooledSession session = pool.borrowSession();
-            if (isXa) {
-                session.setIgnoreClose(true);
-                transactionManager.getTransaction().registerSynchronization(new Synchronization(session));
-                incrementReferenceCount();
-                transactionManager.getTransaction().enlistResource(createXaResource(session));
-            }
-            return session;
-        } catch (RollbackException e) {
-            final JMSException jmsException = new JMSException("Rollback Exception");
-            jmsException.initCause(e);
-            throw jmsException;
-        } catch (SystemException e) {
-            final JMSException jmsException = new JMSException("System Exception");
-            jmsException.initCause(e);
-            throw jmsException;
+        SessionKey key = new SessionKey(transacted, ackMode);
+        SessionPool pool = cache.get(key);
+        if (pool == null) {
+            pool = createSessionPool(key);
+            cache.put(key, pool);
         }
+        PooledSession session = pool.borrowSession();
+        return session;
     }
 
     public synchronized void close() {
@@ -201,29 +176,8 @@ public class ConnectionPool {
         this.idleTimeout = idleTimeout;
     }
 
-    protected XAResource createXaResource(PooledSession session) throws JMSException {
-        return session.getSession().getTransactionContext();
+    protected SessionPool createSessionPool(SessionKey key) {
+        return new SessionPool(this, key, poolFactory.createPool());
     }
 
-    protected class Synchronization implements javax.transaction.Synchronization {
-        private final PooledSession session;
-
-        protected Synchronization(PooledSession session) {
-            this.session = session;
-        }
-
-        public void beforeCompletion() {
-        }
-
-        public void afterCompletion(int status) {
-            try {
-                // This will return session to the pool.
-                session.setIgnoreClose(false);
-                session.close();
-                decrementReferenceCount();
-            } catch (JMSException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
 }

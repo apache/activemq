@@ -52,6 +52,10 @@
     </dependency>
     <dependency>
       <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-pool</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${pom.groupId}</groupId>
       <artifactId>activemq-web</artifactId>
     </dependency>
     <dependency>

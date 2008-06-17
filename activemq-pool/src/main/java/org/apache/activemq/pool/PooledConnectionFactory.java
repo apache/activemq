@@ -51,7 +51,6 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
     private ObjectPoolFactory poolFactory;
     private int maximumActive = 500;
     private int maxConnections = 1;
-    private TransactionManager transactionManager;
     private int idleTimeout = 30 * 1000;
 
     public PooledConnectionFactory() {
@@ -72,14 +71,6 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
 
     public void setConnectionFactory(ConnectionFactory connectionFactory) {
         this.connectionFactory = connectionFactory;
-    }
-
-    public TransactionManager getTransactionManager() {
-        return transactionManager;
-    }
-
-    public void setTransactionManager(TransactionManager transactionManager) {
-        this.transactionManager = transactionManager;
     }
 
     public Connection createConnection() throws JMSException {
@@ -115,7 +106,7 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
     }
 
     protected ConnectionPool createConnectionPool(ActiveMQConnection connection) {
-        ConnectionPool result =  new ConnectionPool(connection, getPoolFactory(), transactionManager);
+        ConnectionPool result =  new ConnectionPool(connection, getPoolFactory());
         result.setIdleTimeout(getIdleTimeout());
         return result;
     }
@@ -124,8 +115,7 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
         if (key.getUserName() == null && key.getPassword() == null) {
             return (ActiveMQConnection)connectionFactory.createConnection();
         } else {
-            return (ActiveMQConnection)connectionFactory.createConnection(key.getUserName(), key
-                .getPassword());
+            return (ActiveMQConnection)connectionFactory.createConnection(key.getUserName(), key.getPassword());
         }
     }
 
@@ -144,7 +134,7 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
         for (Iterator<LinkedList<ConnectionPool>> iter = cache.values().iterator(); iter.hasNext();) {
             LinkedList list = iter.next();
             for (Iterator i = list.iterator(); i.hasNext();) {
-                ConnectionPool connection = (ConnectionPool)i.next();
+                ConnectionPool connection = (ConnectionPool) i.next();
                 connection.close();
             }
         }
