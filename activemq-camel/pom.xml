@@ -79,6 +79,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>${pom.groupId}</groupId>
+      <artifactId>activemq-pool</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-core</artifactId>
       <type>test-jar</type>
