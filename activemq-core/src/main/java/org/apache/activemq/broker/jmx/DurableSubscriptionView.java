@@ -44,7 +44,9 @@ public class DurableSubscriptionView extends SubscriptionView implements Durable
         super(clientId, sub);
         this.broker = broker;
         this.durableSub=(DurableTopicSubscription) sub;
-        this.subscriptionName = sub.getConsumerInfo().getSubscriptionName();
+        if (sub != null) {
+            this.subscriptionName = sub.getConsumerInfo().getSubscriptionName();
+        }
     }
 
     /**

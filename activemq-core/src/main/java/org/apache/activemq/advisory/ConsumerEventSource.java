@@ -27,6 +27,7 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.Session;
 
+import org.apache.activemq.ActiveMQMessageConsumer;
 import org.apache.activemq.Service;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -52,7 +53,7 @@ public class ConsumerEventSource implements Service, MessageListener {
     private AtomicBoolean started = new AtomicBoolean(false);
     private AtomicInteger consumerCount = new AtomicInteger();
     private Session session;
-    private MessageConsumer consumer;
+    private ActiveMQMessageConsumer consumer;
 
     public ConsumerEventSource(Connection connection, Destination destination) throws JMSException {
         this.connection = connection;
@@ -62,12 +63,16 @@ public class ConsumerEventSource implements Service, MessageListener {
     public void setConsumerListener(ConsumerListener listener) {
         this.listener = listener;
     }
+    
+    public String getConsumerId() {
+        return consumer != null ? consumer.getConsumerId().toString() : "NOT_SET";
+    }
 
     public void start() throws Exception {
         if (started.compareAndSet(false, true)) {
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             ActiveMQTopic advisoryTopic = AdvisorySupport.getConsumerAdvisoryTopic(destination);
-            consumer = session.createConsumer(advisoryTopic);
+            consumer = (ActiveMQMessageConsumer) session.createConsumer(advisoryTopic);
             consumer.setMessageListener(this);
         }
     }

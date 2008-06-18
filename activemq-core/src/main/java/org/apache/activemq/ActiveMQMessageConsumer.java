@@ -261,14 +261,14 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     /**
      * @return Returns the value.
      */
-    protected ConsumerId getConsumerId() {
+    public ConsumerId getConsumerId() {
         return info.getConsumerId();
     }
 
     /**
      * @return the consumer name - used for durable consumers
      */
-    protected String getConsumerName() {
+    public String getConsumerName() {
         return this.info.getSubscriptionName();
     }
 
