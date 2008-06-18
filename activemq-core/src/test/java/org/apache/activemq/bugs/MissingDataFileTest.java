@@ -94,12 +94,12 @@ public class MissingDataFileTest extends TestCase {
    
         SystemUsage systemUsage;
         systemUsage = new SystemUsage();
-        systemUsage.getMemoryUsage().setLimit(1024 * 10); // Just a few messags 
+        systemUsage.getMemoryUsage().setLimit(1024 * 1024); // Just a few messags 
         broker.setSystemUsage(systemUsage);
         
         AMQPersistenceAdapterFactory factory = (AMQPersistenceAdapterFactory) broker.getPersistenceFactory();
         factory.setMaxFileLength(2*1024); // ~4 messages
-        factory.setCleanupInterval(5000); // every few second
+        factory.setCleanupInterval(1000); // every few second
         
         broker.start();
         LOG.info("Starting broker..");

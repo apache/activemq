@@ -425,6 +425,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
             }
             Integer lastDataFile = asyncDataManager.getCurrentDataFileId();   
             inProgress.add(lastDataFile);
+            lastDataFile = asyncDataManager.getMark().getDataFileId();
             inProgress.addAll(referenceStoreAdapter.getReferenceFileIdsInUse());
             Location lastActiveTx = transactionStore.checkpoint();
             if (lastActiveTx != null) {
