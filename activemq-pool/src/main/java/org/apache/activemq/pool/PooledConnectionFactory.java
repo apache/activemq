@@ -21,12 +21,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
-import javax.transaction.TransactionManager;
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.Service;
@@ -45,6 +42,8 @@ import org.apache.commons.pool.impl.GenericObjectPoolFactory;
  * messages. It does not deal with pooling of consumers; for that look at a
  * library like <a href="http://jencks.org/">Jencks</a> such as in <a
  * href="http://jencks.org/Message+Driven+POJOs">this example</a>
+ * 
+ * @org.apache.xbean.XBean element="pooledConnectionFactory"
  * 
  * @version $Revision: 1.1 $
  */
