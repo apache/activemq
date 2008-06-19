@@ -99,6 +99,13 @@ public abstract class AbstractTempRegion extends AbstractRegion {
         if (this.doCacheTempDestinations) {
             cachedDestinations.put(new CachedDestination(dest
                     .getActiveMQDestination()), dest);
+        }else {
+            try {
+                dest.dispose(context);
+                dest.stop();
+            } catch (Exception e) {
+                LOG.warn("Failed to dispose of " + dest, e);
+            }
         }
     }
 
