@@ -268,6 +268,8 @@ public class AsyncDataManager {
             String fileName = filePrefix + nextNum;
             File file = new File(directory, fileName);
             DataFile nextWriteFile = new DataFile(file, nextNum, preferedFileLength);
+            //actually allocate the disk space
+            nextWriteFile.closeRandomAccessFile(nextWriteFile.openRandomAccessFile(true));
             fileMap.put(nextWriteFile.getDataFileId(), nextWriteFile);
             fileByFileMap.put(file, nextWriteFile);
             if (currentWriteFile != null) {
