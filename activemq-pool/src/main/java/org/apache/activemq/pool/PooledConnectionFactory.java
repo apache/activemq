@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -30,6 +31,8 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.Service;
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.commons.pool.ObjectPoolFactory;
 import org.apache.commons.pool.impl.GenericObjectPoolFactory;
 
@@ -46,12 +49,14 @@ import org.apache.commons.pool.impl.GenericObjectPoolFactory;
  * @version $Revision: 1.1 $
  */
 public class PooledConnectionFactory implements ConnectionFactory, Service {
+    private static final transient Log LOG = LogFactory.getLog(PooledConnectionFactory.class);
     private ConnectionFactory connectionFactory;
     private Map<ConnectionKey, LinkedList<ConnectionPool>> cache = new HashMap<ConnectionKey, LinkedList<ConnectionPool>>();
     private ObjectPoolFactory poolFactory;
     private int maximumActive = 500;
     private int maxConnections = 1;
     private int idleTimeout = 30 * 1000;
+    private AtomicBoolean stopped = new AtomicBoolean(false);
 
     public PooledConnectionFactory() {
         this(new ActiveMQConnectionFactory());
@@ -78,6 +83,11 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
     }
 
     public synchronized Connection createConnection(String userName, String password) throws JMSException {
+        if (stopped.get()) {
+            LOG.debug("PooledConnectionFactory is stopped, skip create new connection.");
+            return null;
+        }
+        
         ConnectionKey key = new ConnectionKey(userName, password);
         LinkedList<ConnectionPool> pools = cache.get(key);
 
@@ -124,18 +134,26 @@ public class PooledConnectionFactory implements ConnectionFactory, Service {
      */
     public void start() {
         try {
+            stopped.set(false);
             createConnection();
         } catch (JMSException e) {
+            LOG.warn("Create pooled connection during start failed.", e);
             IOExceptionSupport.create(e);
         }
     }
 
-    public void stop() throws Exception {
+    public void stop() {
+        LOG.debug("Stop the PooledConnectionFactory, number of connections in cache: "+cache.size());
+        stopped.set(true);
         for (Iterator<LinkedList<ConnectionPool>> iter = cache.values().iterator(); iter.hasNext();) {
             LinkedList list = iter.next();
             for (Iterator i = list.iterator(); i.hasNext();) {
                 ConnectionPool connection = (ConnectionPool) i.next();
-                connection.close();
+                try {
+                    connection.close();
+                }catch(Exception e) {
+                    LOG.warn("Close connection failed",e);
+                }
             }
         }
         cache.clear();
