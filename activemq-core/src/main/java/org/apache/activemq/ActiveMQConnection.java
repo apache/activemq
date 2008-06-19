@@ -1226,11 +1226,14 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                     if (er.getException() instanceof JMSException) {
                         throw (JMSException)er.getException();
                     } else {
+                        JMSException jmsEx = null;
                         try {
-                        throw JMSExceptionSupport.create(er.getException());
+                         jmsEx = JMSExceptionSupport.create(er.getException());
                         }catch(Throwable e) {
-                            System.err.println(er.getException());
                             LOG.error("Caught an exception trying to create a JMSException for " +er.getException(),e);
+                        }
+                        if(jmsEx !=null) {
+                            throw jmsEx;
                         }
                     }
                 }
