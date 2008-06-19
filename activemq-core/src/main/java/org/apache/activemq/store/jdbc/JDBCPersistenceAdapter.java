@@ -80,6 +80,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     private long lockKeepAlivePeriod = 1000*30;
     private DatabaseLocker databaseLocker;
     private boolean createTablesOnStartup = true;
+    private DataSource lockDataSource;
 
     public JDBCPersistenceAdapter() {
     }
@@ -266,6 +267,24 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
             }
         }
         return databaseLocker;
+    }
+    
+    public DataSource getLockDataSource() throws IOException {
+        if (lockDataSource == null) {
+            lockDataSource = getDataSource();
+            if (lockDataSource == null) {
+                throw new IllegalArgumentException(
+                        "No dataSource property has been configured");
+            }
+        } else {
+            LOG.info("Using a separate dataSource for locking: "
+                    + lockDataSource);
+        }
+        return lockDataSource;
+    }
+    
+    public void setLockDataSource(DataSource dataSource) {
+        this.lockDataSource = dataSource;
     }
 
     /**
@@ -481,7 +500,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     }
 
     protected DatabaseLocker createDatabaseLocker() throws IOException {
-        return new DefaultDatabaseLocker(getDataSource(), getStatements());
+        return new DefaultDatabaseLocker(getLockDataSource(), getStatements());
     }
 
     public void setBrokerName(String brokerName) {
