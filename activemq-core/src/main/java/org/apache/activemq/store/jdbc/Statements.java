@@ -311,7 +311,7 @@ public class Statements {
 
     public String getLockUpdateStatement() {
         if (lockUpdateStatement == null) {
-            lockUpdateStatement = "UPDATE " + getFullLockTableName() + " SET time = ? WHERE ID = 1";
+            lockUpdateStatement = "UPDATE " + getFullLockTableName() + " SET TIME = ? WHERE ID = 1";
         }
         return lockUpdateStatement;
     }
