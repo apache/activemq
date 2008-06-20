@@ -856,7 +856,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                    transport.start();
 
                    active = true;
-                   this.processDispatch(connector.getBrokerInfo());
+                   dispatchAsync(connector.getBrokerInfo());
                    connector.onStarted(this);
                }
         } catch (Exception e) {
