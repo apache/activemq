@@ -19,6 +19,7 @@ package org.apache.activemq.store.amq;
 import java.io.File;
 
 import org.apache.activemq.kaha.impl.async.AsyncDataManager;
+import org.apache.activemq.kaha.impl.index.hash.HashIndex;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.PersistenceAdapterFactory;
 import org.apache.activemq.store.ReferenceStoreAdapter;
@@ -33,7 +34,7 @@ import org.apache.activemq.util.IOHelper;
  * @version $Revision: 1.17 $
  */
 public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
-
+    static final int DEFAULT_MAX_REFERNCE_FILE_LENGTH=2*1024*1024;
     private TaskRunnerFactory taskRunnerFactory;
     private File dataDirectory;
     private int journalThreadPriority = Thread.MAX_PRIORITY;
@@ -45,6 +46,12 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
     private boolean useNio = true;
     private int maxFileLength = AsyncDataManager.DEFAULT_MAX_FILE_LENGTH;
     private long cleanupInterval = AsyncDataManager.DEFAULT_CLEANUP_INTERVAL;
+    private int indexBinSize = HashIndex.DEFAULT_BIN_SIZE;
+    private int indexKeySize = HashIndex.DEFAULT_KEY_SIZE;
+    private int indexPageSize = HashIndex.DEFAULT_PAGE_SIZE;
+    private int indexMaxBinSize = HashIndex.MAXIMUM_CAPACITY;
+    private int indexLoadFactor = HashIndex.DEFAULT_LOAD_FACTOR;
+    private int maxReferenceFileLength=DEFAULT_MAX_REFERNCE_FILE_LENGTH;
 
 
     /**
@@ -62,6 +69,12 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
         result.setUseNio(isUseNio());
         result.setMaxFileLength(getMaxFileLength());
         result.setCleanupInterval(getCleanupInterval());
+        result.setIndexBinSize(getIndexBinSize());
+        result.setIndexKeySize(getIndexKeySize());
+        result.setIndexPageSize(getIndexPageSize());
+        result.setIndexMaxBinSize(getIndexMaxBinSize());
+        result.setIndexLoadFactor(getIndexLoadFactor());
+        result.setMaxReferenceFileLength(getMaxReferenceFileLength());
         return result;
     }
 
@@ -189,4 +202,88 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
 	public void setMaxFileLength(int maxFileLength) {
 		this.maxFileLength = maxFileLength;
 	}
+
+    /**
+     * @return the indexBinSize
+     */
+    public int getIndexBinSize() {
+        return indexBinSize;
+    }
+
+    /**
+     * @param indexBinSize the indexBinSize to set
+     */
+    public void setIndexBinSize(int indexBinSize) {
+        this.indexBinSize = indexBinSize;
+    }
+
+    /**
+     * @return the indexKeySize
+     */
+    public int getIndexKeySize() {
+        return indexKeySize;
+    }
+
+    /**
+     * @param indexKeySize the indexKeySize to set
+     */
+    public void setIndexKeySize(int indexKeySize) {
+        this.indexKeySize = indexKeySize;
+    }
+
+    /**
+     * @return the indexPageSize
+     */
+    public int getIndexPageSize() {
+        return indexPageSize;
+    }
+
+    /**
+     * @param indexPageSize the indexPageSize to set
+     */
+    public void setIndexPageSize(int indexPageSize) {
+        this.indexPageSize = indexPageSize;
+    }
+
+    /**
+     * @return the indexMaxBinSize
+     */
+    public int getIndexMaxBinSize() {
+        return indexMaxBinSize;
+    }
+
+    /**
+     * @param indexMaxBinSize the indexMaxBinSize to set
+     */
+    public void setIndexMaxBinSize(int indexMaxBinSize) {
+        this.indexMaxBinSize = indexMaxBinSize;
+    }
+
+    /**
+     * @return the indexLoadFactor
+     */
+    public int getIndexLoadFactor() {
+        return indexLoadFactor;
+    }
+
+    /**
+     * @param indexLoadFactor the indexLoadFactor to set
+     */
+    public void setIndexLoadFactor(int indexLoadFactor) {
+        this.indexLoadFactor = indexLoadFactor;
+    }
+
+    /**
+     * @return the maxReferenceFileLength
+     */
+    public int getMaxReferenceFileLength() {
+        return maxReferenceFileLength;
+    }
+
+    /**
+     * @param maxReferenceFileLength the maxReferenceFileLength to set
+     */
+    public void setMaxReferenceFileLength(int maxReferenceFileLength) {
+        this.maxReferenceFileLength = maxReferenceFileLength;
+    }
 }

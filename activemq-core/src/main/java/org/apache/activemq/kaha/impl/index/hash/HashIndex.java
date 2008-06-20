@@ -44,6 +44,7 @@ public class HashIndex implements Index, HashIndexMBean {
     public static final int DEFAULT_BIN_SIZE;
     public static final int MAXIMUM_CAPACITY;
     public static final int DEFAULT_LOAD_FACTOR;
+    private static final int LOW_WATER_MARK=1024*16;
     private static final String NAME_PREFIX = "hash-index-";
     private static final Log LOG = LogFactory.getLog(HashIndex.class);
     private final String name;
@@ -67,6 +68,7 @@ public class HashIndex implements Index, HashIndexMBean {
     private boolean enablePageCaching=false;//this is off by default - see AMQ-1667
     private int pageCacheSize = 10;
     private int size;
+    private int highestSize=0;
     private int activeBins;
     private int threshold;
     private int maximumCapacity=MAXIMUM_CAPACITY;
@@ -275,10 +277,13 @@ public class HashIndex implements Index, HashIndexMBean {
         entry.setKey((Comparable)key);
         entry.setIndexOffset(value.getOffset());
         if (!getBin(key).put(entry)) {
-            size++;
+            this.size++;
         }
-        if (size >= threshold) {
+        if (this.size >= this.threshold) {
             resize(2*bins.length);
+        }
+        if(this.size > this.highestSize) {
+            this.highestSize=this.size;
         }
     }
 
@@ -292,14 +297,22 @@ public class HashIndex implements Index, HashIndexMBean {
 
     public synchronized StoreEntry remove(Object key) throws IOException {
         load();
+        StoreEntry result = null;
         HashEntry entry = new HashEntry();
         entry.setKey((Comparable)key);
-        HashEntry result = getBin(key).remove(entry);
-        if (result != null) {
-            size--;
-            return indexManager.getIndex(result.getIndexOffset());
+        HashEntry he = getBin(key).remove(entry);
+        if (he != null) {
+            this.size--;
+            result = this.indexManager.getIndex(he.getIndexOffset());
         }
-        return null;
+        if (this.highestSize > LOW_WATER_MARK &&  this.highestSize > (this.size *2)) {
+            int newSize = this.size/this.keysPerPage;
+            newSize = Math.max(128, newSize);
+            this.highestSize=0;
+            resize(newSize);
+            
+        }
+        return result;
     }
 
     public synchronized boolean containsKey(Object key) throws IOException {
@@ -523,42 +536,53 @@ public class HashIndex implements Index, HashIndexMBean {
     }
     
     private void resize(int newCapacity) throws IOException {
-        if (bins.length == getMaximumCapacity()) {
+        if (bins.length < getMaximumCapacity()) {
+            if (newCapacity != numberOfBins) {
+                int capacity = 1;
+                while (capacity < newCapacity) {
+                    capacity <<= 1;
+                }
+                if (newCapacity != numberOfBins) {
+                    LOG.info("Resize hash bins " + this.name + " from " + numberOfBins + " to " + newCapacity);
+                    
+                    String backFileName = name + "-REISZE";
+                    HashIndex backIndex = new HashIndex(directory,backFileName,indexManager);
+                    backIndex.setKeyMarshaller(keyMarshaller);
+                    backIndex.setKeySize(getKeySize());
+                    backIndex.setNumberOfBins(newCapacity);
+                    backIndex.setPageSize(getPageSize());
+                    backIndex.load();
+                    File backFile = backIndex.file;
+                    long offset = 0;
+                    while ((offset + pageSize) <= indexFile.length()) {
+                        indexFile.seek(offset);
+                        HashPage page = getFullPage(offset);
+                        if (page.isActive()) {
+                            for (HashEntry entry : page.getEntries()) {
+                                backIndex.getBin(entry.getKey()).put(entry);
+                                backIndex.size++;
+                            }
+                        }
+                        page=null;
+                        offset += pageSize;
+                    }
+                    backIndex.unload();
+                  
+                    unload();
+                    IOHelper.deleteFile(file);
+                    IOHelper.copyFile(backFile, file);
+                    IOHelper.deleteFile(backFile);
+                    setNumberOfBins(newCapacity);
+                    bins = new HashBin[newCapacity];
+                    threshold = calculateThreashold();
+                    openIndexFile();
+                    doLoad();
+                }
+            }
+        }else {
             threshold = Integer.MAX_VALUE;
             return;
         }
-        String backFileName = name + "-REISZE";
-        HashIndex backIndex = new HashIndex(directory,backFileName,indexManager);
-        backIndex.setKeyMarshaller(keyMarshaller);
-        backIndex.setKeySize(getKeySize());
-        backIndex.setNumberOfBins(newCapacity);
-        backIndex.setPageSize(getPageSize());
-        backIndex.load();
-        File backFile = backIndex.file;
-        long offset = 0;
-        while ((offset + pageSize) <= indexFile.length()) {
-            indexFile.seek(offset);
-            HashPage page = getFullPage(offset);
-            if (page.isActive()) {
-                for (HashEntry entry : page.getEntries()) {
-                    backIndex.getBin(entry.getKey()).put(entry);
-                    backIndex.size++;
-                }
-            }
-            page=null;
-            offset += pageSize;
-        }
-        backIndex.unload();
-      
-        unload();
-        IOHelper.deleteFile(file);
-        IOHelper.copyFile(backFile, file);
-        IOHelper.deleteFile(backFile);
-        setNumberOfBins(newCapacity);
-        bins = new HashBin[newCapacity];
-        threshold = calculateThreashold();
-        openIndexFile();
-        doLoad();
     }
     
     private int calculateThreashold() {

@@ -49,6 +49,7 @@ public final class IndexManager {
     private IndexItem lastFree;
     private boolean dirty;
     private final AtomicLong storeSize;
+    private int freeSize = 0;
 
     public IndexManager(File directory, String name, String mode, DataManager redoLog, AtomicLong storeSize) throws IOException {
         this.directory = directory;
@@ -64,7 +65,11 @@ public final class IndexManager {
     }
 
     public synchronized IndexItem getIndex(long offset) throws IOException {
-        return reader.readItem(offset);
+        IndexItem result = null;
+        if (offset >= 0) {
+            result = reader.readItem(offset);
+        }
+        return result;
     }
 
     public synchronized IndexItem refreshIndex(IndexItem item) throws IOException {
@@ -80,8 +85,16 @@ public final class IndexManager {
             lastFree = item;
         } else {
             lastFree.setNextItem(item.getOffset());
+            if (lastFree.equals(firstFree)) {
+                firstFree=new IndexItem();
+                firstFree.copyIndex(lastFree);
+                writer.updateIndexes(firstFree);
+            }
+            writer.updateIndexes(lastFree);
+            lastFree=item;
         }
         writer.updateIndexes(item);
+        freeSize++;
         dirty = true;
     }
 
@@ -155,6 +168,8 @@ public final class IndexManager {
                 }
             }
             result.reset();
+            writer.updateIndexes(result);
+            freeSize--;
         }
         return result;
     }
@@ -200,6 +215,7 @@ public final class IndexManager {
                     lastFree = index;
                     firstFree = index;
                 }
+               freeSize++;
             }
             offset += IndexItem.INDEX_SIZE;
         }

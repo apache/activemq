@@ -300,6 +300,13 @@ public class IndexItem implements Item, StoreEntry {
     public void setValueSize(int valueSize) {
         this.valueSize = valueSize;
     }
+    
+    void copyIndex(IndexItem other) {
+        this.offset=other.offset;
+        this.active=other.active;
+        this.previousItem=other.previousItem;
+        this.nextItem=other.nextItem;
+    }
 
     /**
      * @return print of 'this'

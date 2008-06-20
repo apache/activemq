@@ -121,7 +121,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private int indexPageSize = HashIndex.DEFAULT_PAGE_SIZE;
     private int indexMaxBinSize = HashIndex.MAXIMUM_CAPACITY;
     private int indexLoadFactor = HashIndex.DEFAULT_LOAD_FACTOR;
-    private int maxReferenceFileLength=AsyncDataManager.DEFAULT_MAX_FILE_LENGTH;
+    private int maxReferenceFileLength=AMQPersistenceAdapterFactory.DEFAULT_MAX_REFERNCE_FILE_LENGTH;
     private Map<AMQMessageStore,Set<Integer>> dataFilesInProgress = new ConcurrentHashMap<AMQMessageStore,Set<Integer>> ();
     private String directoryPath = "";
     private RandomAccessFile lockFile;
