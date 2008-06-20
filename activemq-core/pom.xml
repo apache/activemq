@@ -408,6 +408,7 @@
             <exclude>**/QuickJournalRecoveryBrokerTest.*</exclude>
             <exclude>**/QuickJournalXARecoveryBrokerTest.*</exclude>
             <exclude>**/RendezvousDiscoverTransportTest.*</exclude>
+            <exclude>**/MissingDataFileTest.*</exclude>
 
             <!-- UDP related tests someimes fail on some platforms -->
             <exclude>**/UdpTransportTest.*</exclude>
