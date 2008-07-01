@@ -1073,7 +1073,7 @@ public class Queue extends BaseDestination implements Task {
     }
     
     public void wakeup() {
-        if (optimizedDispatch) {
+        if (optimizedDispatch || isSlave()) {
             iterate();
         }else {
             try {
@@ -1085,6 +1085,10 @@ public class Queue extends BaseDestination implements Task {
     }
     
   
+    private boolean isSlave() {
+        return broker.getBrokerService().isSlave();
+    }
+
     private List<QueueMessageReference> doPageIn(boolean force) throws Exception {
         List<QueueMessageReference> result = null;
         dispatchLock.lock();

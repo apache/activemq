@@ -197,7 +197,9 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         if (!context.isInTransaction()) {
                             dequeueCounter++;
                             node.getRegionDestination().getDestinationStatistics().getDequeues().increment();
-                            node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
+                            if (!isSlave()) {
+                                node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
+                            }
                             removeList.add(node);
                         } else {
                             // setup a Synchronization to remove nodes from the

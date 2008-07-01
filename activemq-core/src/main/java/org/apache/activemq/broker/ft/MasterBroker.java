@@ -280,11 +280,13 @@ public class MasterBroker extends InsertableMutableBrokerFilter {
     }
 
     /**
-     * Notifiy the Broker that a dispatch has happened
-     * 
+     * Notifiy the Broker that a dispatch will happen
+     * Do in 'pre' so that slave will avoid getting ack before dispatch
+     * similar logic to send() below.
      * @param messageDispatch
      */
-    public void postProcessDispatch(MessageDispatch messageDispatch) {
+    public void preProcessDispatch(MessageDispatch messageDispatch) {
+        super.preProcessDispatch(messageDispatch);
         MessageDispatchNotification mdn = new MessageDispatchNotification();
         mdn.setConsumerId(messageDispatch.getConsumerId());
         mdn.setDeliverySequenceId(messageDispatch.getDeliverySequenceId());
@@ -294,7 +296,6 @@ public class MasterBroker extends InsertableMutableBrokerFilter {
             mdn.setMessageId(msg.getMessageId());
             sendAsyncToSlave(mdn);
         }
-        super.postProcessDispatch(messageDispatch);
     }
 
     /**
