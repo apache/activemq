@@ -542,6 +542,7 @@ public class HashIndex implements Index, HashIndexMBean {
                 while (capacity < newCapacity) {
                     capacity <<= 1;
                 }
+                newCapacity=capacity;
                 if (newCapacity != numberOfBins) {
                     LOG.info("Resize hash bins " + this.name + " from " + numberOfBins + " to " + newCapacity);
                     
