@@ -47,6 +47,7 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
             File file = new File(".");
             System.setProperty("basedir", file.getAbsolutePath());
         }
+        super.messageCount = 500;
         failureCount = super.messageCount / 2;
         super.topic = isTopic();
         createMaster();
