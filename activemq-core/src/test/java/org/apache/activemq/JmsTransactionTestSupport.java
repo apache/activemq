@@ -131,7 +131,7 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
             for (int i = 0; i < batchSize; i++) {
                 producer.send(message);
             }
-
+            messageSent();
             session.commit();
             LOG.info("Consuming bacth " + j + " of " + batchSize + " messages");
 
@@ -143,6 +143,9 @@ public abstract class JmsTransactionTestSupport extends TestSupport implements M
 
             session.commit();
         }
+    }
+
+    protected void messageSent() throws Exception {
     }
 
     /**

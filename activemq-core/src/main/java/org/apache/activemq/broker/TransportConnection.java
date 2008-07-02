@@ -941,7 +941,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
         try {
             transport.stop();
-            LOG.debug("Stopped connection: " + transport.getRemoteAddress());
+            LOG.debug("Stopped transport: " + transport.getRemoteAddress());
         } catch (Exception e) {
             LOG.debug("Could not stop transport: " + e, e);
         }

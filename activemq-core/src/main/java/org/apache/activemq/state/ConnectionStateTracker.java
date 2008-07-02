@@ -383,6 +383,8 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                 ConnectionState cs = connectionStates.get(connectionId);
                 if (cs != null) {
                     cs.addTransactionState(info.getTransactionId());
+                    TransactionState state = cs.getTransactionState(info.getTransactionId());
+                    state.addCommand(info);
                 }
             }
             return TRACKED_RESPONSE_MARKER;
