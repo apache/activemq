@@ -30,6 +30,7 @@ public class TransactedTopicMasterSlaveTest extends JmsTopicTransactionTest {
     protected int inflightMessageCount;
     protected int failureCount = 50;
     protected String uriString = "failover://(tcp://localhost:62001,tcp://localhost:62002)?randomize=false";
+    private boolean stopMaster = false;
 
     protected void setUp() throws Exception {
         failureCount = super.batchCount / 2;
@@ -76,12 +77,22 @@ public class TransactedTopicMasterSlaveTest extends JmsTopicTransactionTest {
         return new ActiveMQConnectionFactory(uriString);
     }
 
+    public void testSendReceiveTransactedBatchesWithMasterStop() throws Exception {
+        try {
+            stopMaster = true;
+            testSendReceiveTransactedBatches();
+        } finally {
+            stopMaster = false;
+        }
+    }
+    
     protected void messageSent() throws Exception {
-
-        if (++inflightMessageCount >= failureCount) {
-            inflightMessageCount = 0;
-            Thread.sleep(1000);
-            broker.stop();
+        if (stopMaster) {
+            if (++inflightMessageCount >= failureCount) {
+                inflightMessageCount = 0;
+                Thread.sleep(1000);
+                broker.stop();
+            }
         }
     }
 }
