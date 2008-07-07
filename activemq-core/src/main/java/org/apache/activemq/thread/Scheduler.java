@@ -51,5 +51,9 @@ public final class Scheduler {
     	TimerTask timerTask = new SchedulerTimerTask(task);
         CLOCK_DAEMON.schedule(timerTask, redeliveryDelay);
     }
+    
+    public static void shutdown() {
+        CLOCK_DAEMON.cancel();
+    }
 
 }
