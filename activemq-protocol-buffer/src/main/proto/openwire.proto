@@ -1,0 +1,149 @@
+// See README.txt for information and build instructions.
+
+package org.apache.activemq.protocolbuffer;
+
+option optimize_for = SPEED;
+option java_package = "org.apache.activemq.protocolbuffer";
+
+option java_outer_classname = "OpenWire";
+
+
+message Command {
+  required int32 command_id = 1;
+  required bool response_required = 2;
+  required int32 command_type = 3;
+  required bytes command_bytes = 4;
+}
+
+
+message Destination {
+  enum DestinationType {
+    QUEUE = 0;
+    TOPIC = 1;
+    TEMP_QUEUE = 2;
+    TEMP_TOPIC = 3;
+  }
+
+  required DestinationType type = 1 [default = QUEUE];
+  required string name = 2;
+}
+
+message LocalTransactionId {
+  // TODO connection ID?
+  required int32 connection_id = 1;
+  required int64 value = 2;
+}
+
+message XATransactionId {
+  required int32 format_id = 1;
+  required bytes branch_qualifier = 2;
+  required bytes global_transaction_id = 3;
+}
+
+// Properties
+message StringProperty {
+  required string name = 1;
+  required string value = 2;
+}   
+
+message BoolProperty {
+  required string name = 1;
+  required bool value = 2;
+}
+
+message ByteProperty {
+  required string name = 1;
+  // TODO no byte?
+  required int32 value = 2;
+}
+
+message ShortProperty {
+  required string name = 1;
+  // TODO no int16?
+  required int32 value = 2;
+}
+
+message IntProperty {
+  required string name = 1;
+  required int32 value = 2;
+}
+
+message LongProperty {
+  required string name = 1;
+  required int32 value = 2;
+}
+
+message FloatProperty {
+  required string name = 1;
+  required float value = 2;
+}
+
+message DoubleProperty {
+  required string name = 1;
+  required double value = 2;
+}
+
+message Properties {
+  repeated StringProperty string_property = 1;
+  repeated IntProperty int_property = 2;
+  repeated BoolProperty bool_property = 3;
+  repeated LongProperty long_property = 4;
+  repeated DoubleProperty double_property = 5;
+  repeated FloatProperty float_property = 6;
+  repeated ShortProperty short_property = 7;
+  repeated ByteProperty byte_property = 8;
+}
+
+// Message
+message Message {
+  required int32 producer_id = 1;
+  required int32 producer_counter = 2;
+
+  // TODO no messageID?
+  
+  required Destination destination = 3;
+  optional Destination original_destination = 4;
+
+  optional string group_id = 5;
+
+  optional bytes property_bytes = 6;
+
+  optional string correlation_id = 7;
+
+  // TODO move this into the 'exchange id'?
+  optional bool persistent = 8;
+
+  optional int64 expiration = 9;
+
+// TODO no byte?
+  optional int32 priority = 10;
+  optional Destination reply_to = 11;
+  optional int64 timestamp = 12;
+  optional string type = 13;
+
+  optional LocalTransactionId local_transaction_id = 14;
+  optional XATransactionId xa_transaction_id = 15;
+
+
+  // TODO why DataStructure and Content?
+  // TODO targetConsumerId?
+
+  optional bool compressed = 16;
+  optional int32 redelivery_counter = 17;
+  repeated string broker_path = 18;
+  repeated string cluster_id = 19;
+
+  optional string user_id = 20;
+
+  optional int64 arrival = 22;
+  optional int64 broker_in_time = 23;
+  optional int64 broker_out_time = 24;
+
+  // TODO required?
+  optional bool droppable = 28;
+  optional bool receivedByDFBridge = 29;
+
+  optional int32 group_sequence = 40;
+
+
+}
