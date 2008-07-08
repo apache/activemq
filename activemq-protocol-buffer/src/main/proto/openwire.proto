@@ -96,8 +96,9 @@ message Properties {
 
 // Message
 message Message {
-  required int32 producer_id = 1;
-  required int32 producer_counter = 2;
+  // TODO these should be required
+  optional int32 producer_id = 1;
+  optional int32 producer_counter = 2;
 
   // TODO no messageID?
   
