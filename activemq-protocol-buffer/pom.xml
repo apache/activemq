@@ -70,6 +70,9 @@
           <forkMode>pertest</forkMode>
           <childDelegation>false</childDelegation>
           <useFile>true</useFile>
+          <excludes>
+            <exclude>**/PerformanceTest.java</exclude>
+          </excludes>
         </configuration>
       </plugin>
 
