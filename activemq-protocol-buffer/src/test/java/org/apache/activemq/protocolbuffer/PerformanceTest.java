@@ -21,8 +21,6 @@ import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.CodedOutputStream;
 import junit.framework.TestCase;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
@@ -35,7 +33,7 @@ public class PerformanceTest extends TestCase {
 
 
     public void testPerformance() throws Exception {
-        BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(fileName));
+        FileOutputStream out = new FileOutputStream(fileName);
         CodedOutputStream cout = CodedOutputStream.newInstance(out);
         OpenWire.Destination destination = OpenWire.Destination.newBuilder().setName("FOO.BAR").setType(OpenWire.Destination.DestinationType.QUEUE).build();
 
@@ -50,20 +48,16 @@ public class PerformanceTest extends TestCase {
 
             System.out.println("Writing message: " + i + " = " + message);
             message.writeTo(cout);
-            //cout.flush();
+            cout.flush();
         }
-        cout.flush();
         out.close();
 
         // now lets try read them!
-        BufferedInputStream in = new BufferedInputStream(new FileInputStream(fileName));
+        FileInputStream in = new FileInputStream(fileName);
         CodedInputStream cin = CodedInputStream.newInstance(in);
         for (int i = 0; i < messageCount; i++) {
             OpenWire.Message message = OpenWire.Message.parseFrom(cin);
-            // todo test its not null or something?
-
             System.out.println("Reading message: " + i + " = " + message);
-
         }
         in.close();
     }
