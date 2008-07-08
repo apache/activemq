@@ -122,6 +122,7 @@
     <module>activemq-all</module>
     <module>activemq-book</module>
     <module>activemq-camel</module>
+    <module>activemq-console</module>
     <module>activemq-core</module>
     <module>activemq-fileserver</module>
     <module>activemq-jaas</module>
