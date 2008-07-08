@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+mkdir -p target/generated-source
+protoc -I=src/main/proto --java_out=src/main/java src/main/proto/openwire.proto
