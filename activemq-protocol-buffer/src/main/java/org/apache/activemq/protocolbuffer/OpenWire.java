@@ -51,8 +51,8 @@ public final class OpenWire {
       "he.activemq.protocolbuffer.ShortProperty" +
       "\022G\n\rbyte_property\030\010 \003(\01320.org.apache.act" +
       "ivemq.protocolbuffer.ByteProperty\"\306\006\n\007Me" +
-      "ssage\022\023\n\013producer_id\030\001 \002(\005\022\030\n\020producer_c" +
-      "ounter\030\002 \002(\005\022D\n\013destination\030\003 \002(\0132/.org." +
+      "ssage\022\023\n\013producer_id\030\001 \001(\005\022\030\n\020producer_c" +
+      "ounter\030\002 \001(\005\022D\n\013destination\030\003 \002(\0132/.org." +
       "apache.activemq.protocolbuffer.Destinati" +
       "on\022M\n\024original_destination\030\004 \001(\0132/.org.a" +
       "pache.activemq.protocolbuffer.Destinatio" +
@@ -4464,13 +4464,13 @@ public final class OpenWire {
       return org.apache.activemq.protocolbuffer.OpenWire.internal_static_org_apache_activemq_protocolbuffer_Message_fieldAccessorTable;
     }
     
-    // required int32 producer_id = 1;
+    // optional int32 producer_id = 1;
     private boolean hasProducerId;
     private int producerId_ = 0;
     public boolean hasProducerId() { return hasProducerId; }
     public int getProducerId() { return producerId_; }
     
-    // required int32 producer_counter = 2;
+    // optional int32 producer_counter = 2;
     private boolean hasProducerCounter;
     private int producerCounter_ = 0;
     public boolean hasProducerCounter() { return hasProducerCounter; }
@@ -4631,8 +4631,6 @@ public final class OpenWire {
     public int getGroupSequence() { return groupSequence_; }
     
     public final boolean isInitialized() {
-      if (!hasProducerId) return false;
-      if (!hasProducerCounter) return false;
       if (!hasDestination) return false;
       if (!getDestination().isInitialized()) return false;
       if (hasOriginalDestination()) {
@@ -5222,7 +5220,7 @@ public final class OpenWire {
       }
       
       
-      // required int32 producer_id = 1;
+      // optional int32 producer_id = 1;
       public boolean hasProducerId() {
         return result.hasProducerId();
       }
@@ -5240,7 +5238,7 @@ public final class OpenWire {
         return this;
       }
       
-      // required int32 producer_counter = 2;
+      // optional int32 producer_counter = 2;
       public boolean hasProducerCounter() {
         return result.hasProducerCounter();
       }

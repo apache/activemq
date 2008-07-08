@@ -17,43 +17,52 @@
  */
 package org.apache.activemq.protocolbuffer;
 
+import org.apache.activemq.command.*;
+import org.apache.activemq.openwire.OpenWireFormat;
+
 import java.io.*;
 
 /**
  * @version $Revision: 1.1 $
  */
-public class Performance2Test extends TestSupport {
+public class OpenWirePerformanceTest extends TestSupport {
 
-    protected String fileName = "target/messages2.openwire";
-    protected OpenWire.Destination destination = OpenWire.Destination.newBuilder().setName("FOO.BAR").setType(OpenWire.Destination.DestinationType.QUEUE).build();
+    protected String fileName = "target/messages3.openwire";
+    protected OpenWireFormat openWireFormat = createOpenWireFormat();
+    protected ActiveMQDestination destination = new ActiveMQQueue("FOO.BAR");
+    protected ProducerId producerId = new ProducerId(new SessionId(new ConnectionId("abc"), 1), 1);
 
     public void testPerformance() throws Exception {
         OutputStream out = new BufferedOutputStream(new FileOutputStream(fileName));
+        DataOutputStream ds = new DataOutputStream(out);
 
         StopWatch watch = createStopWatch("writer");
         for (int i = 0; i < messageCount; i++) {
             watch.start();
-            OpenWire.Message.Builder builder = OpenWire.Message.newBuilder()
-                    .setDestination(destination)
-                    .setPersistent(true)
-                    .setType("type:" + i)
-                    .setCorrelationId("ABCD");
+            Message message = new ActiveMQMessage();
+
+            message.setDestination(destination);
+            message.setPersistent(true);
+            message.setType("type:" + i);
+            message.setCorrelationId("ABCD");
 
             if (useProducerId) {
-                builder = builder.setProducerId(1234)
-                        .setProducerCounter(i);
+                message.setProducerId(producerId);
+                message.setMessageId(new MessageId(producerId, i));
             }
-
-            OpenWire.Message message = builder.build();
 
             if (verbose) {
                 System.out.println("Writing message: " + i + " = " + message);
             }
+/*
             byte[] bytes = message.toByteArray();
             int size = bytes.length;
             out.write(size);
             //System.out.println("writing bytes: " + size);
             out.write(bytes);
+*/
+
+            openWireFormat.marshal(message, ds);
             watch.stop();
         }
         out.flush();
@@ -62,13 +71,17 @@ public class Performance2Test extends TestSupport {
         // now lets try read them!
         StopWatch watch2 = createStopWatch("reader");
         InputStream in = new BufferedInputStream(new FileInputStream(fileName));
+        DataInput dis = new DataInputStream(in);
+
         for (int i = 0; i < messageCount; i++) {
             watch2.start();
 
+            Object message = openWireFormat.unmarshal(dis);
+/*
             int size = in.read();
             byte[] data = new byte[size];
             in.read(data);
-            OpenWire.Message message = OpenWire.Message.parseFrom(data);
+*/
             if (verbose) {
                 System.out.println("Reading message: " + i + " = " + message);
             }
@@ -81,6 +94,15 @@ public class Performance2Test extends TestSupport {
         StopWatch answer = new StopWatch(name);
         answer.setLogFrequency(messageCount / 10);
         return answer;
+    }
+
+
+    protected OpenWireFormat createOpenWireFormat() {
+        OpenWireFormat wf = new OpenWireFormat();
+        wf.setCacheEnabled(true);
+        wf.setStackTraceEnabled(false);
+        wf.setVersion(OpenWireFormat.DEFAULT_VERSION);
+        return wf;
     }
 
 }
