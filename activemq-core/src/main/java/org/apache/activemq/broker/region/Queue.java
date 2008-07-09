@@ -1109,12 +1109,12 @@ public class Queue extends BaseDestination implements Task {
                             MessageReference node = messages.next();
                             node.incrementReferenceCount();
                             messages.remove();
+                            QueueMessageReference ref = createMessageReference(node.getMessage());
                             if (!broker.isExpired(node)) {
-                                QueueMessageReference ref = createMessageReference(node.getMessage());
                                 result.add(ref);
                                 count++;
                             } else {
-                                messageExpired(createConnectionContext(), node);
+                                messageExpired(createConnectionContext(), ref);
                             }
                         }
                     } finally {
