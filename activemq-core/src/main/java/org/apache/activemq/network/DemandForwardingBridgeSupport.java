@@ -28,7 +28,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisorySupport;
+import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTempDestination;
@@ -120,6 +122,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
     
 
     private AtomicBoolean started = new AtomicBoolean();
+    private TransportConnection duplexInitiatingConnection;
 
     public DemandForwardingBridgeSupport(NetworkBridgeConfiguration configuration, Transport localBroker, Transport remoteBroker) {
         this.configuration = configuration;
@@ -127,9 +130,10 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
         this.remoteBroker = remoteBroker;
     }
 
-    public void duplexStart(BrokerInfo localBrokerInfo, BrokerInfo remoteBrokerInfo) throws Exception {
+    public void duplexStart(TransportConnection connection, BrokerInfo localBrokerInfo, BrokerInfo remoteBrokerInfo) throws Exception {
         this.localBrokerInfo = localBrokerInfo;
         this.remoteBrokerInfo = remoteBrokerInfo;
+        this.duplexInitiatingConnection = connection;
         start();
         serviceRemoteCommand(remoteBrokerInfo);
     }
@@ -381,7 +385,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
             LOG.debug("The remote Exception was: " + error, error);
             ASYNC_TASKS.execute(new Runnable() {
                 public void run() {
-                    ServiceSupport.dispose(DemandForwardingBridgeSupport.this);
+                    ServiceSupport.dispose(getControllingService());
                 }
             });
             fireBridgeFailed();
@@ -533,11 +537,15 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
             LOG.debug("The local Exception was:" + error, error);
             ASYNC_TASKS.execute(new Runnable() {
                 public void run() {
-                    ServiceSupport.dispose(DemandForwardingBridgeSupport.this);
+                    ServiceSupport.dispose(getControllingService());
                 }
             });
             fireBridgeFailed();
         }
+    }
+
+    protected Service getControllingService() {
+        return duplexInitiatingConnection != null ? duplexInitiatingConnection : DemandForwardingBridgeSupport.this;
     }
 
     protected void addSubscription(DemandSubscription sub) throws IOException {
