@@ -43,10 +43,12 @@ public class PerformanceTest extends TestCase {
                     .setPersistent(true)
                     .setProducerId(1234)
                     .setProducerCounter(i)
-                    .setType("type:" + i)
                     .build();
+            //.setType("type:" + i)
 
             System.out.println("Writing message: " + i + " = " + message);
+            int size = message.getSerializedSize();
+            cout.writeRawVarint32(size);
             message.writeTo(cout);
             cout.flush();
         }
@@ -56,7 +58,10 @@ public class PerformanceTest extends TestCase {
         FileInputStream in = new FileInputStream(fileName);
         CodedInputStream cin = CodedInputStream.newInstance(in);
         for (int i = 0; i < messageCount; i++) {
+            int size = cin.readRawVarint32();
+            int previous = cin.pushLimit(size);
             OpenWire.Message message = OpenWire.Message.parseFrom(cin);
+            cin.popLimit(previous);
             System.out.println("Reading message: " + i + " = " + message);
         }
         in.close();

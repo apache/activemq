@@ -23,7 +23,7 @@ import junit.framework.TestCase;
  * @version $Revision: 1.1 $
  */
 public class TestSupport extends TestCase {
-    protected int messageCount = 10000000;
+    protected int messageCount = 1000000;
     protected boolean verbose = false;
     protected boolean useProducerId = false;
 }

@@ -17,6 +17,9 @@
  */
 package org.apache.activemq.protocolbuffer;
 
+import com.google.protobuf.CodedOutputStream;
+import com.google.protobuf.CodedInputStream;
+
 import java.io.*;
 
 /**
@@ -29,6 +32,7 @@ public class Performance2Test extends TestSupport {
 
     public void testPerformance() throws Exception {
         OutputStream out = new BufferedOutputStream(new FileOutputStream(fileName));
+        CodedOutputStream cout = CodedOutputStream.newInstance(out);
 
         StopWatch watch = createStopWatch("writer");
         for (int i = 0; i < messageCount; i++) {
@@ -36,7 +40,6 @@ public class Performance2Test extends TestSupport {
             OpenWire.Message.Builder builder = OpenWire.Message.newBuilder()
                     .setDestination(destination)
                     .setPersistent(true)
-                    .setType("type:" + i)
                     .setCorrelationId("ABCD");
 
             if (useProducerId) {
@@ -49,26 +52,29 @@ public class Performance2Test extends TestSupport {
             if (verbose) {
                 System.out.println("Writing message: " + i + " = " + message);
             }
-            byte[] bytes = message.toByteArray();
-            int size = bytes.length;
-            out.write(size);
-            //System.out.println("writing bytes: " + size);
-            out.write(bytes);
+            int size = message.getSerializedSize();
+            cout.writeRawVarint32(size);
+            message.writeTo(cout);
+
             watch.stop();
         }
-        out.flush();
+        cout.flush();
         out.close();
 
         // now lets try read them!
         StopWatch watch2 = createStopWatch("reader");
         InputStream in = new BufferedInputStream(new FileInputStream(fileName));
+        CodedInputStream cin = CodedInputStream.newInstance(in);
+
         for (int i = 0; i < messageCount; i++) {
             watch2.start();
 
-            int size = in.read();
-            byte[] data = new byte[size];
-            in.read(data);
-            OpenWire.Message message = OpenWire.Message.parseFrom(data);
+            int size = cin.readRawVarint32();
+            int previous = cin.pushLimit(size);
+            //cin.setSizeLimit(size + 4);
+            OpenWire.Message message = OpenWire.Message.parseFrom(cin);
+            cin.popLimit(previous);
+
             if (verbose) {
                 System.out.println("Reading message: " + i + " = " + message);
             }
