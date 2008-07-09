@@ -23,7 +23,15 @@ import junit.framework.TestCase;
  * @version $Revision: 1.1 $
  */
 public class TestSupport extends TestCase {
-    protected int messageCount = 1000000;
+    // TODO seems like 4m messages cause Protocol Buffers to barf but 3m is fine :)
+    protected long messageCount = 4 * 1000 * 1000;
     protected boolean verbose = false;
+    protected boolean doAssertions = true;
     protected boolean useProducerId = false;
+
+    protected StopWatch createStopWatch(String name) {
+        StopWatch answer = new StopWatch(name);
+        answer.setLogFrequency((int) messageCount / 10);
+        return answer;
+    }
 }

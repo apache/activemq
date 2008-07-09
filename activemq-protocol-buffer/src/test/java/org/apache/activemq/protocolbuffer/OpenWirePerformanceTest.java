@@ -27,7 +27,7 @@ import java.io.*;
  */
 public class OpenWirePerformanceTest extends TestSupport {
 
-    protected String fileName = "target/messages3.openwire";
+    protected String fileName = "target/openwire.openwire";
     protected OpenWireFormat openWireFormat = createOpenWireFormat();
     protected ActiveMQDestination destination = new ActiveMQQueue("FOO.BAR");
     protected ProducerId producerId = new ProducerId(new SessionId(new ConnectionId("abc"), 1), 1);
@@ -37,7 +37,7 @@ public class OpenWirePerformanceTest extends TestSupport {
         DataOutputStream ds = new DataOutputStream(out);
 
         StopWatch watch = createStopWatch("writer");
-        for (int i = 0; i < messageCount; i++) {
+        for (long i = 0; i < messageCount; i++) {
             watch.start();
             Message message = new ActiveMQMessage();
 
@@ -72,7 +72,7 @@ public class OpenWirePerformanceTest extends TestSupport {
         InputStream in = new BufferedInputStream(new FileInputStream(fileName));
         DataInput dis = new DataInputStream(in);
 
-        for (int i = 0; i < messageCount; i++) {
+        for (long i = 0; i < messageCount; i++) {
             watch2.start();
 
             Object message = openWireFormat.unmarshal(dis);
@@ -88,13 +88,6 @@ public class OpenWirePerformanceTest extends TestSupport {
         }
         in.close();
     }
-
-    private StopWatch createStopWatch(String name) {
-        StopWatch answer = new StopWatch(name);
-        answer.setLogFrequency(messageCount / 10);
-        return answer;
-    }
-
 
     protected OpenWireFormat createOpenWireFormat() {
         OpenWireFormat wf = new OpenWireFormat();
