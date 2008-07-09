@@ -33,6 +33,7 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
+import org.apache.activemq.command.XATransactionId;
 
 /**
  * Used to simulate the recovery that occurs when a broker shuts down.
@@ -235,7 +236,7 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
         Message m = receiveMessage(connection);
         assertNull(m);
     }
-
+    
     public void testTopicDurableConsumerHoldsPersistentMessageAfterRestart() throws Exception {
 
         ActiveMQDestination destination = new ActiveMQTopic("TEST");
@@ -403,6 +404,7 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
 
         assertNoMessagesLeft(connection);
     }
+    
 
     public void testQueuePersistentCommitedAcksNotLostOnRestart() throws Exception {
 
@@ -456,6 +458,8 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
         Message m = receiveMessage(connection);
         assertNull(m);
     }
+    
+    
 
     public void testQueuePersistentUncommitedAcksLostOnRestart() throws Exception {
 
@@ -506,6 +510,62 @@ public class RecoveryBrokerTest extends BrokerRestartTestSupport {
 
         // All messages should be re-delivered.
         for (int i = 0; i < 4; i++) {
+            Message m = receiveMessage(connection);
+            assertNotNull(m);
+        }
+
+        assertNoMessagesLeft(connection);
+    }
+    
+    public void testQueuePersistentXAUncommitedAcksLostOnRestart() throws Exception {
+        int NUMBER = 100;
+        ActiveMQDestination destination = new ActiveMQQueue("TEST");
+
+        // Setup the producer and send the message.
+        StubConnection connection = createConnection();
+        ConnectionInfo connectionInfo = createConnectionInfo();
+        SessionInfo sessionInfo = createSessionInfo(connectionInfo);
+        ProducerInfo producerInfo = createProducerInfo(sessionInfo);
+        connection.send(connectionInfo);
+        connection.send(sessionInfo);
+        connection.send(producerInfo);
+
+        for (int i = 0; i < NUMBER; i++) {
+            Message message = createMessage(producerInfo, destination);
+            message.setPersistent(true);
+            connection.send(message);
+        }
+
+        // Setup the consumer and receive the message.
+        ConsumerInfo consumerInfo = createConsumerInfo(sessionInfo, destination);
+        connection.send(consumerInfo);
+
+        // Begin the transaction.
+        XATransactionId txid = createXATransaction(sessionInfo);
+        connection.send(createBeginTransaction(connectionInfo, txid));
+        for (int i = 0; i < NUMBER; i++) {
+            Message m = receiveMessage(connection);
+            assertNotNull(m);
+            MessageAck ack = createAck(consumerInfo, m, 1, MessageAck.STANDARD_ACK_TYPE);
+            ack.setTransactionId(txid);
+            connection.send(ack);
+        }
+        // Don't commit
+
+        // restart the broker.
+        restartBroker();
+
+        // Setup the consumer and receive the message.
+        connection = createConnection();
+        connectionInfo = createConnectionInfo();
+        sessionInfo = createSessionInfo(connectionInfo);
+        connection.send(connectionInfo);
+        connection.send(sessionInfo);
+        consumerInfo = createConsumerInfo(sessionInfo, destination);
+        connection.send(consumerInfo);
+
+        // All messages should be re-delivered.
+        for (int i = 0; i < NUMBER; i++) {
             Message m = receiveMessage(connection);
             assertNotNull(m);
         }

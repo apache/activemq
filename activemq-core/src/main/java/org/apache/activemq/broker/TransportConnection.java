@@ -18,7 +18,6 @@ package org.apache.activemq.broker;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -32,7 +31,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import org.apache.activemq.broker.ft.MasterBroker;
 import org.apache.activemq.broker.region.ConnectionStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
@@ -1152,7 +1150,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 // now turn duplex off this side
                 info.setDuplexConnection(false);
                 duplexBridge.setCreatedByDuplex(true);
-                duplexBridge.duplexStart(brokerInfo, info);
+                duplexBridge.duplexStart(this,brokerInfo, info);
 
                 LOG.info("Created Duplex Bridge back to " + info.getBrokerName());
                 return null;
