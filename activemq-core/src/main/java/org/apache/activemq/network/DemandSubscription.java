@@ -29,8 +29,8 @@ import org.apache.activemq.command.ConsumerInfo;
  * @version $Revision: 1.1 $
  */
 public class DemandSubscription {
-    private ConsumerInfo remoteInfo;
-    private ConsumerInfo localInfo;
+    private final ConsumerInfo remoteInfo;
+    private final ConsumerInfo localInfo;
     private Set<ConsumerId> remoteSubsIds = new CopyOnWriteArraySet<ConsumerId>();
     private AtomicInteger dispatched = new AtomicInteger(0);
 
@@ -104,25 +104,11 @@ public class DemandSubscription {
         return localInfo;
     }
 
-    /**
-     * @param localInfo The localInfo to set.
-     */
-    public void setLocalInfo(ConsumerInfo localInfo) {
-        this.localInfo = localInfo;
-    }
-
+    
     /**
      * @return Returns the remoteInfo.
      */
     public ConsumerInfo getRemoteInfo() {
         return remoteInfo;
-    }
-
-    /**
-     * @param remoteInfo The remoteInfo to set.
-     */
-    public void setRemoteInfo(ConsumerInfo remoteInfo) {
-        this.remoteInfo = remoteInfo;
-    }
-
+    }    
 }
