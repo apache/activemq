@@ -92,6 +92,9 @@ message Properties {
   repeated FloatProperty float_property = 6;
   repeated ShortProperty short_property = 7;
   repeated ByteProperty byte_property = 8;
+
+  optional int64 timestamp = 10;
+  optional string type = 11;
 }
 
 // Message
@@ -109,30 +112,31 @@ message Message {
 
   optional bytes property_bytes = 6;
 
-  optional string correlation_id = 7;
 
   // TODO move this into the 'exchange id'?
-  optional bool persistent = 8;
+  optional bool persistent = 7;
 
-  optional int64 expiration = 9;
+  optional int64 expiration = 8;
+  optional string correlation_id = 9;
 
-// TODO no byte?
-  optional int32 priority = 10;
-  optional Destination reply_to = 11;
-  optional int64 timestamp = 12;
-  optional string type = 13;
+  optional Destination reply_to = 10;
 
-  optional LocalTransactionId local_transaction_id = 14;
-  optional XATransactionId xa_transaction_id = 15;
+  optional LocalTransactionId local_transaction_id = 11;
+  optional XATransactionId xa_transaction_id = 12;
 
 
   // TODO why DataStructure and Content?
   // TODO targetConsumerId?
 
+  // TODO should we move more stuff into the Properties header?
+  optional int32 redelivery_counter = 13;
+  repeated string broker_path = 14;
+  repeated string cluster_id = 15;
+
   optional bool compressed = 16;
-  optional int32 redelivery_counter = 17;
-  repeated string broker_path = 18;
-  repeated string cluster_id = 19;
+
+  // TODO no byte?
+  optional int32 priority = 17;
 
   optional string user_id = 20;
 
@@ -145,6 +149,9 @@ message Message {
   optional bool receivedByDFBridge = 29;
 
   optional int32 group_sequence = 40;
-
-
 }
+
+// TODO things to ponder
+// should we move more message fields
+// that are set by the sender (and rarely required by the broker
+// into the Properties object?

@@ -43,8 +43,8 @@ public class OpenWirePerformanceTest extends TestSupport {
 
             message.setDestination(destination);
             message.setPersistent(true);
-            message.setType("type:" + i);
             message.setCorrelationId("ABCD");
+            //message.setType("type:" + i);
 
             if (useProducerId) {
                 message.setProducerId(producerId);
@@ -65,7 +65,6 @@ public class OpenWirePerformanceTest extends TestSupport {
             openWireFormat.marshal(message, ds);
             watch.stop();
         }
-        out.flush();
         out.close();
 
         // now lets try read them!
