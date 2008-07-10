@@ -431,10 +431,15 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                                 break;
                             case ConsumerInfo.DATA_STRUCTURE_TYPE:
                             	localStartedLatch.await();
-                                if (!addConsumerInfo((ConsumerInfo)command)) {
-                                    if (LOG.isDebugEnabled()) {
-                                        LOG.debug("Ignoring ConsumerInfo: " + command);
+                                if (started.get()) {
+                                    if (!addConsumerInfo((ConsumerInfo) command)) {
+                                        if (LOG.isDebugEnabled()) {
+                                            LOG.debug("Ignoring ConsumerInfo: "+ command);
+                                        }
                                     }
+                                } else {
+                                    // received a subscription whilst stopping
+                                    LOG.warn("Stopping - ignoring ConsumerInfo: "+ command);
                                 }
                                 break;
                             default:
