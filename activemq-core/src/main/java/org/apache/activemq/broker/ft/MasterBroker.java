@@ -307,9 +307,9 @@ public class MasterBroker extends InsertableMutableBrokerFilter {
         /**
          * A message can be dispatched before the super.send() method returns so -
          * here the order is switched to avoid problems on the slave with
-         * receiving acks for messages not received yey
+         * receiving acks for messages not received yet
          */
-        sendToSlave(message);
+        sendSyncToSlave(message);
         super.send(producerExchange, message);
     }
 
