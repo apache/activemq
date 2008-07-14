@@ -72,6 +72,7 @@ public class AsyncDataManager {
     public static final String DEFAULT_FILE_PREFIX = "data-";
     public static final int DEFAULT_MAX_FILE_LENGTH = 1024 * 1024 * 32;
     public static final int DEFAULT_CLEANUP_INTERVAL = 1000 * 30;
+    public static final int PREFERED_DIFF = 1024 * 512;
 
     private static final Log LOG = LogFactory.getLog(AsyncDataManager.class);
 
@@ -85,7 +86,7 @@ public class AsyncDataManager {
     protected boolean useNio = true;
 
     protected int maxFileLength = DEFAULT_MAX_FILE_LENGTH;
-    protected int preferedFileLength = DEFAULT_MAX_FILE_LENGTH - 1024 * 512;
+    protected int preferedFileLength = DEFAULT_MAX_FILE_LENGTH - PREFERED_DIFF;
 
     protected DataFileAppender appender;
     protected DataFileAccessorPool accessorPool = new DataFileAccessorPool(this);
@@ -115,6 +116,7 @@ public class AsyncDataManager {
         }
 
         started = true;
+        preferedFileLength=Math.max(PREFERED_DIFF, getMaxFileLength()-PREFERED_DIFF);
         lock();
 
         ByteSequence sequence = controlFile.load();
@@ -427,11 +429,13 @@ public class AsyncDataManager {
         List<DataFile> purgeList = new ArrayList<DataFile>();
         for (Integer key : unUsed) {
         	// Only add files less than the lastFile..
+            System.err.println("LAST FILE IS: " + lastFile);
         	if( key.intValue() < lastFile.intValue() ) {
                 DataFile dataFile = (DataFile)fileMap.get(key);
                 purgeList.add(dataFile);
         	}
         }
+        System.err.println("PURGE LIST IS: " + purgeList);
         for (DataFile dataFile : purgeList) {
             forceRemoveDataFile(dataFile);
         }
@@ -468,7 +472,7 @@ public class AsyncDataManager {
         dataFile.unlink();
         if (archiveDataLogs) {
             dataFile.move(getDirectoryArchive());
-            LOG.debug("moved data file " + dataFile + " to "
+            LOG.info("moved data file " + dataFile + " to "
                     + getDirectoryArchive());
         } else {
             boolean result = dataFile.delete();
