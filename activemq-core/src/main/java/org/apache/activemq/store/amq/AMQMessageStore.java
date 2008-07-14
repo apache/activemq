@@ -231,10 +231,10 @@ public class AMQMessageStore implements MessageStore {
                     lock.lock();
                     try {
                         inFlightTxLocations.remove(location);
-                        removeMessage(ack,location);
                     }finally {
                         lock.unlock();
                     }
+                    removeMessage(ack,location);
                 }
 
                 public void afterRollback() throws Exception {
