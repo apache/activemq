@@ -429,13 +429,11 @@ public class AsyncDataManager {
         List<DataFile> purgeList = new ArrayList<DataFile>();
         for (Integer key : unUsed) {
         	// Only add files less than the lastFile..
-            System.err.println("LAST FILE IS: " + lastFile);
         	if( key.intValue() < lastFile.intValue() ) {
                 DataFile dataFile = (DataFile)fileMap.get(key);
                 purgeList.add(dataFile);
         	}
         }
-        System.err.println("PURGE LIST IS: " + purgeList);
         for (DataFile dataFile : purgeList) {
             forceRemoveDataFile(dataFile);
         }
