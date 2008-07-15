@@ -130,6 +130,7 @@
     <module>activemq-openwire-generator</module>
     <module>activemq-optional</module>
     <module>activemq-pool</module>
+    <module>activemq-protocol-buffer</module>
     <module>activemq-ra</module>
     <module>activemq-rar</module>
     <module>activemq-run</module>
@@ -465,10 +466,10 @@
       <!-- Optional Spring Support -->
       <dependency>
         <groupId>org.springframework</groupId>
-        <artifactId>spring-core</artifactId>
+        <artifactId>spring-aop</artifactId>
         <version>${spring-version}</version>
         <optional>true</optional>
-      </dependency>
+      </dependency>      
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-beans</artifactId>
@@ -483,13 +484,19 @@
       </dependency>
       <dependency>
         <groupId>org.springframework</groupId>
-        <artifactId>spring-tx</artifactId>
+        <artifactId>spring-core</artifactId>
+        <version>${spring-version}</version>
+        <optional>true</optional>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-jms</artifactId>
         <version>${spring-version}</version>
         <optional>true</optional>
       </dependency>      
       <dependency>
         <groupId>org.springframework</groupId>
-        <artifactId>spring-jms</artifactId>
+        <artifactId>spring-tx</artifactId>
         <version>${spring-version}</version>
         <optional>true</optional>
       </dependency>      

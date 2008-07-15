@@ -190,12 +190,11 @@
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
-      <artifactId>spring-webmvc</artifactId>
-      <optional>false</optional>
-    </dependency>
+      <artifactId>spring-aop</artifactId>
+    </dependency>      
     <dependency>
       <groupId>org.springframework</groupId>
-      <artifactId>spring-web</artifactId>
+      <artifactId>spring-jms</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
@@ -203,7 +202,12 @@
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
-      <artifactId>spring-jms</artifactId>
+      <artifactId>spring-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-webmvc</artifactId>
+      <optional>false</optional>
     </dependency>
 
     <dependency>
