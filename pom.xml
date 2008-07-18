@@ -130,7 +130,7 @@
     <module>activemq-openwire-generator</module>
     <module>activemq-optional</module>
     <module>activemq-pool</module>
-    <module>activemq-protocol-buffer</module>
+    <!-- <module>activemq-protocol-buffer</module> -->
     <module>activemq-ra</module>
     <module>activemq-rar</module>
     <module>activemq-run</module>
