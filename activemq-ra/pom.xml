@@ -26,8 +26,18 @@
   </parent>
 
   <artifactId>activemq-ra</artifactId>
+  <packaging>bundle</packaging>
   <name>ActiveMQ :: RA</name>
   <description>A JCA Resource Adapter used to integrate ActiveMQ with transactional enterprise containers</description>
+
+  <properties>
+    <activemq.osgi.import.pkg>
+      *
+    </activemq.osgi.import.pkg>
+    <activemq.osgi.export>
+      org.apache.activemq.ra*;version=${project.version},
+    </activemq.osgi.export>
+  </properties>
 
   <dependencies>
 
