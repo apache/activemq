@@ -45,7 +45,7 @@
     <!-- TODO switch to 1.4.0 when its released
       needed for fix for SetHeaderTest
       -->
-    <camel-version>1.4-SNAPSHOT</camel-version>
+    <camel-version>1.4.0</camel-version>
     <cglib-version>2.0</cglib-version>
     <commons-beanutils-version>1.6.1</commons-beanutils-version>
     <commons-collections-version>3.1</commons-collections-version>
