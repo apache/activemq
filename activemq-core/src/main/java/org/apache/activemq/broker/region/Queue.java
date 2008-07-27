@@ -1164,7 +1164,7 @@ public class Queue extends BaseDestination implements Task {
                         // pick the least loaded to add the message too
                         for (Subscription s : targets) {
                             if (target == null
-                                    || target.getInFlightUsage() > s.getInFlightUsage()) {
+                                    || target.getPendingQueueSize() > s.getPendingQueueSize()) {
                                 target = s;
                             }
                         }

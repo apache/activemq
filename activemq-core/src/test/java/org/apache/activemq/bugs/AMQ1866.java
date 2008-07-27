@@ -33,6 +33,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -60,6 +61,9 @@ public class AMQ1866 extends TestCase {
     protected void setUp() throws Exception {
         // Start an embedded broker up.
         brokerService = new BrokerService();
+        AMQPersistenceAdapter adaptor = new AMQPersistenceAdapter();
+        adaptor.setIndexBinSize(4096);
+        brokerService.setPersistenceAdapter(adaptor);
         brokerService.deleteAllMessages();
         
         // A small max page size makes this issue occur faster.
