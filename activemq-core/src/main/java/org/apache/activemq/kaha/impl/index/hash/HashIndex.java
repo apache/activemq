@@ -81,7 +81,6 @@ public class HashIndex implements Index, HashIndexMBean {
      * @param directory
      * @param name
      * @param indexManager
-     * @param numberOfBins
      * @throws IOException
      */
     public HashIndex(File directory, String name, IndexManager indexManager) throws IOException {
@@ -242,6 +241,7 @@ public class HashIndex implements Index, HashIndexMBean {
                 capacity <<= 1;
             }
             this.bins = new HashBin[capacity];
+            this.numberOfBins=capacity;
             threshold = calculateThreashold();
             keysPerPage = pageSize / keySize;
             dataIn = new DataByteArrayInputStream();
@@ -426,10 +426,8 @@ public class HashIndex implements Index, HashIndexMBean {
 
     void addToBin(HashPage page) throws IOException {
         int index = page.getBinId();
-        if (index >= numberOfBins) {
-            HashBin[] newBins = new HashBin[index+1];
-            System.arraycopy(this.bins, 0, newBins, 0, this.bins.length);
-            this.bins=newBins;
+        if (index >= this.bins.length) {
+            resize(index+1);
         }
         HashBin bin = getBin(index);
         bin.addHashPageInfo(page.getId(), page.getPersistedSize());
@@ -545,7 +543,6 @@ public class HashIndex implements Index, HashIndexMBean {
                 newCapacity=capacity;
                 if (newCapacity != numberOfBins) {
                     LOG.info("Resize hash bins " + this.name + " from " + numberOfBins + " to " + newCapacity);
-                    
                     String backFileName = name + "-REISZE";
                     HashIndex backIndex = new HashIndex(directory,backFileName,indexManager);
                     backIndex.setKeyMarshaller(keyMarshaller);
