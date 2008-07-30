@@ -57,7 +57,7 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
 
     public void initCombosForTestPublisherFansout() {
         addCombinationValues("deliveryMode", new Object[] {Integer.valueOf(DeliveryMode.NON_PERSISTENT), Integer.valueOf(DeliveryMode.PERSISTENT)});
-        addCombinationValues("destination", new Object[] {new ActiveMQTopic("TEST")});
+        addCombinationValues("destination", new Object[] {new ActiveMQTopic("TEST"), new ActiveMQQueue("TEST")});
     }
 
     public void testPublisherFansout() throws Exception {
@@ -193,7 +193,7 @@ public class FanoutTransportBrokerTest extends NetworkTestSupport {
     }
 
     protected StubConnection createFanoutConnection() throws Exception {
-        URI fanoutURI = new URI("fanout://static://(" + connector.getServer().getConnectURI() + "," + "mock://" + remoteConnector.getServer().getConnectURI() + ")");
+        URI fanoutURI = new URI("fanout://(static://(" + connector.getServer().getConnectURI() + "," + "mock://" + remoteConnector.getServer().getConnectURI() + "))?fanOutQueues=true");
         Transport transport = TransportFactory.connect(fanoutURI);
         StubConnection connection = new StubConnection(transport);
         connections.add(connection);
