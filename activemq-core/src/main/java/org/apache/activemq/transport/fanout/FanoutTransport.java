@@ -77,7 +77,7 @@ public class FanoutTransport implements CompositeTransport {
     private int maxReconnectAttempts;
     private Exception connectionFailure;
     private FanoutTransportHandler primary;
-    private boolean fanOutQueues;
+    private boolean fanOutQueues = false;
 
     static class RequestCounter {
 
