@@ -143,10 +143,6 @@ public class DestinationSource implements MessageListener {
     }
 
     protected void fireDestinationEvent(DestinationEvent event) {
-        if (listener != null) {
-            listener.onDestinationEvent(event);
-        }
-
         // now lets update the data structures
         ActiveMQDestination destination = event.getDestination();
         boolean add = event.isAddOperation();
@@ -188,6 +184,9 @@ public class DestinationSource implements MessageListener {
         }
         else {
             LOG.warn("Unknown destination type: " + destination);
+        }
+        if (listener != null) {
+            listener.onDestinationEvent(event);
         }
     }
 }
