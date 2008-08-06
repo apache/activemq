@@ -16,47 +16,46 @@
  */
 package org.apache.activemq.group;
 
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Return information about map update
  * 
  */
-public class MapRequest {
-    private final AtomicBoolean done = new AtomicBoolean();
-    private Object response;
-    private RequestCallback callback;
+public class AsyncMapRequest implements RequestCallback{
+    private final Object mutex = new Object();
+    
+    private Set<String> requests = new HashSet<String>();
 
-    Object get(long timeout) {
-        synchronized (this.done) {
-            if (this.done.get() == false && this.response == null) {
-                try {
-                    this.done.wait(timeout);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        }
-        return this.response;
-    }
-
-    void put(String id,Object response) {
-        this.response = response;
-        cancel();
-        RequestCallback callback = this.callback;
-        if (callback != null) {
-            callback.finished(id);
-        }
-    }
-
-    void cancel() {
-        this.done.set(true);
-        synchronized (this.done) {
-            this.done.notifyAll();
-        }
+    public void add(String id, MapRequest request) {
+        request.setCallback(this);
+        this.requests.add(id);
     }
     
-    void setCallback(RequestCallback callback) {
-        this.callback=callback;
+    /**
+     * Wait for requests
+     * @param timeout
+     * @return
+     */
+    public boolean isSuccess(long timeout) {
+        long deadline = System.currentTimeMillis() + timeout;
+        while (!this.requests.isEmpty()) {
+            synchronized (this.mutex) {
+                try {
+                    this.mutex.wait(timeout);
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+            timeout = Math.max(deadline - System.currentTimeMillis(), 0);
+        }
+        return this.requests.isEmpty();
+    }
+
+    
+    public void finished(String id) {
+        this.requests.remove(id);
+        
     }
 }

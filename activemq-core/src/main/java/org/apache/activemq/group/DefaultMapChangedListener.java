@@ -17,34 +17,17 @@
 package org.apache.activemq.group;
 
 /**
- *Get notifications about changes to the state of the map
+ * Default implementation of a MapChangedListener
  *
  */
-public interface MapChangedListener {
-    
-    /**
-     * Called when a key/value pair is inserted into the map
-     * @param owner 
-     * @param key
-     * @param value 
-     */
-    void mapInsert(Member owner,Object key, Object value);
-    
-    /**
-     * Called when a key value is updated in the map
-     * @param owner
-     * @param Key
-     * @param oldValue
-     * @param newValue
-     */
-    void mapUpdate(Member owner,Object Key,Object oldValue,Object newValue);
-    
-    /**
-     * Called when a key value is removed from the map
-     * @param owner
-     * @param key
-     * @param value
-     * @param expired
-     */
-    void mapRemove(Member owner,Object key, Object value,boolean expired);
+public class DefaultMapChangedListener implements MapChangedListener{
+
+    public void mapInsert(Member owner, Object key, Object value) {        
+    }
+
+    public void mapRemove(Member owner, Object key, Object value,boolean expired) {        
+    }
+
+    public void mapUpdate(Member owner, Object Key, Object oldValue,Object newValue) {        
+    }
 }
