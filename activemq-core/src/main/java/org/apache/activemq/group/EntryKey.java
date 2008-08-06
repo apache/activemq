@@ -30,6 +30,7 @@ class EntryKey<K> implements Externalizable {
     private K key;
     private boolean share;
     private boolean removeOnExit;
+    private long expiration;
 
     /**
      * Default constructor - for serialization
@@ -88,6 +89,38 @@ class EntryKey<K> implements Externalizable {
     public void setRemoveOnExit(boolean removeOnExit) {
         this.removeOnExit = removeOnExit;
     }
+    
+    /**
+     * @return the expiration
+     */
+    public long getExpiration() {
+        return expiration;
+    }
+
+    /**
+     * @param expiration the expiration to set
+     */
+    public void setExpiration(long expiration) {
+        this.expiration = expiration;
+    }
+    
+    void setTimeToLive(long ttl) {
+        if (ttl > 0 ) {
+            this.expiration=ttl+System.currentTimeMillis();
+        }else {
+            this.expiration =0l;
+        }
+    }
+    
+    boolean isExpired() {
+        return isExpired(System.currentTimeMillis());
+    }
+    
+    boolean isExpired(long currentTime) {
+        return this.expiration > 0 && this.expiration < currentTime;
+    }
+    
+   
 
     public boolean equals(Object obj) {
         boolean result = false;
@@ -103,6 +136,7 @@ class EntryKey<K> implements Externalizable {
         out.writeObject(this.key);
         out.writeBoolean(isShare());
         out.writeBoolean(isRemoveOnExit());
+        out.writeLong(getExpiration());
     }
 
     public void readExternal(ObjectInput in) throws IOException,
@@ -111,5 +145,10 @@ class EntryKey<K> implements Externalizable {
         this.key = (K) in.readObject();
         this.share = in.readBoolean();
         this.removeOnExit=in.readBoolean();
+        this.expiration=in.readLong();
+    }
+    
+    public String toString() {
+        return "key:"+this.key;
     }
 }

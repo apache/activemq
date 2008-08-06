@@ -45,6 +45,14 @@ class EntryValue<V> {
         return this.value;
     }
     
+    /**
+     * set the value
+     * @param value
+     */
+    public void setValue(V value) {
+        this.value=value;
+    }
+    
     public int hashCode() {
         return this.value != null ? this.value.hashCode() : super.hashCode();
     }

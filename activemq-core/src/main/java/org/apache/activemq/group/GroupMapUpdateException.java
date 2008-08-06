@@ -20,13 +20,13 @@ package org.apache.activemq.group;
  * thrown when updating a key to map that the local client doesn't own
  *
  */
-public class IllegalAccessException extends java.lang.IllegalStateException {
+public class GroupMapUpdateException extends RuntimeException {
     private static final long serialVersionUID = -7584658017201604560L;
     
     /**
      * @param message
      */
-    public IllegalAccessException(String message) {
+    public GroupMapUpdateException(String message) {
         super(message);
     }
 }
