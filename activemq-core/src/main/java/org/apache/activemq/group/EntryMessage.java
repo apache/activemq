@@ -29,9 +29,12 @@ public class EntryMessage implements Externalizable{
     static enum MessageType{INSERT,DELETE,SYNC};
     private EntryKey key;
     private Object value;
+    private Object oldValue;
     private MessageType type;
     private boolean mapUpdate;
     private boolean expired;
+    private boolean lockExpired;
+    private boolean lockUpdate;
     
     /**
      * @return the owner
@@ -56,6 +59,19 @@ public class EntryMessage implements Externalizable{
      */
     public void setValue(Object value) {
         this.value = value;
+    }
+    
+    /**
+     * @return the oldValue
+     */
+    public Object getOldValue() {
+        return this.oldValue;
+    }
+    /**
+     * @param oldValue the oldValue to set
+     */
+    public void setOldValue(Object oldValue) {
+        this.oldValue = oldValue;
     }
     
     /**
@@ -98,6 +114,32 @@ public class EntryMessage implements Externalizable{
     }
     
     /**
+     * @return the lockExpired
+     */
+    public boolean isLockExpired() {
+        return lockExpired;
+    }
+    /**
+     * @param lockExpired the lockExpired to set
+     */
+    public void setLockExpired(boolean lockExpired) {
+        this.lockExpired = lockExpired;
+    }
+    
+    /**
+     * @return the lockUpdate
+     */
+    public boolean isLockUpdate() {
+        return lockUpdate;
+    }
+    /**
+     * @param lockUpdate the lockUpdate to set
+     */
+    public void setLockUpdate(boolean lockUpdate) {
+        this.lockUpdate = lockUpdate;
+    }
+    
+    /**
      * @return if insert message
      */
     public boolean isInsert() {
@@ -115,13 +157,17 @@ public class EntryMessage implements Externalizable{
         return this.type != null && this.type.equals(MessageType.SYNC);
     }
     
+    
     public EntryMessage copy() {
         EntryMessage result = new EntryMessage();
         result.key=this.key;
         result.value=this.value;
+        result.oldValue=this.oldValue;
         result.type=this.type;
         result.mapUpdate=this.mapUpdate;
         result.expired=this.expired;
+        result.lockExpired=this.lockExpired;
+        result.lockUpdate=this.lockUpdate;
         return result;
     }
     
@@ -131,21 +177,28 @@ public class EntryMessage implements Externalizable{
             ClassNotFoundException {
         this.key=(EntryKey) in.readObject();
         this.value=in.readObject();
+        this.oldValue=in.readObject();
         this.type=(MessageType) in.readObject();  
         this.mapUpdate=in.readBoolean();
         this.expired=in.readBoolean();
+        this.lockExpired=in.readBoolean();
+        this.lockUpdate=in.readBoolean();
     }
     
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeObject(this.key);
         out.writeObject(this.value);
+        out.writeObject(this.oldValue);
         out.writeObject(this.type);
         out.writeBoolean(this.mapUpdate);
         out.writeBoolean(this.expired);
+        out.writeBoolean(this.lockExpired);
+        out.writeBoolean(this.lockUpdate);
     }
     
     public String toString() {
         return "EntryMessage: "+this.type + "[" + this.key + "," + this.value +
             "]{update=" + this.mapUpdate + "}";
     }
+    
 }

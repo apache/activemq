@@ -34,12 +34,12 @@ public class GroupMapTest extends TestCase {
 
     /**
      * Test method for
-     * {@link org.apache.activemq.group.GroupMap#addMemberChangedListener(org.apache.activemq.group.MemberChangedListener)}.
+     * {@link org.apache.activemq.group.Group#addMemberChangedListener(org.apache.activemq.group.MemberChangedListener)}.
      * @throws Exception 
      */
     public void testAddMemberChangedListener() throws Exception {
         final AtomicInteger counter = new AtomicInteger();
-        GroupMap map1 = new GroupMap(connection1,"map1");
+        Group map1 = new Group(connection1,"map1");
         map1.addMemberChangedListener(new MemberChangedListener(){
 
             public void memberStarted(Member member) {
@@ -65,7 +65,7 @@ public class GroupMapTest extends TestCase {
             }
         }
         assertEquals(1, counter.get());
-        GroupMap map2 = new GroupMap(connection2,"map2");
+        Group map2 = new Group(connection2,"map2");
         map2.start();
         synchronized(counter) {
             if (counter.get()<2) {
@@ -76,7 +76,7 @@ public class GroupMapTest extends TestCase {
         map2.stop();
         synchronized(counter) {
             if (counter.get()>=2) {
-                counter.wait(GroupMap.DEFAULT_HEART_BEAT_INTERVAL*3);
+                counter.wait(Group.DEFAULT_HEART_BEAT_INTERVAL*3);
             }
         }
         assertEquals(1, counter.get());
@@ -85,14 +85,14 @@ public class GroupMapTest extends TestCase {
 
     /**
      * Test method for
-     * {@link org.apache.activemq.group.GroupMap#addMapChangedListener(org.apache.activemq.group.MapChangedListener)}.
+     * {@link org.apache.activemq.group.Group#addMapChangedListener(org.apache.activemq.group.MapChangedListener)}.
      * @throws Exception 
      */
     public void testAddMapChangedListener() throws Exception {
         final AtomicBoolean called1 = new AtomicBoolean();
         final AtomicBoolean called2 = new AtomicBoolean();
         
-        GroupMap map1 = new GroupMap(connection1,"map1");
+        Group map1 = new Group(connection1,"map1");
         
         map1.addMapChangedListener(new DefaultMapChangedListener() {
             public void mapInsert(Member owner,Object Key, Object Value) {
@@ -104,7 +104,7 @@ public class GroupMapTest extends TestCase {
         });
         map1.start();
         
-        GroupMap map2 = new GroupMap(connection2,"map2");
+        Group map2 = new Group(connection2,"map2");
         
         map2.addMapChangedListener(new DefaultMapChangedListener() {
             public void mapInsert(Member owner,Object Key, Object Value) {
@@ -133,12 +133,13 @@ public class GroupMapTest extends TestCase {
         map1.stop();
         map2.stop();
     }
-    
-    public void testGetWriteLock() throws Exception {
-        GroupMap map1 = new GroupMap(connection1, "map1");
+   
+    public void testGetImplicitWriteLock() throws Exception {
+        Group map1 = new Group(connection1, "map1");
         final AtomicBoolean called = new AtomicBoolean();
         map1.start();
-        GroupMap map2 = new GroupMap(connection2, "map2");
+        Group map2 = new Group(connection2, "map2");
+        map2.setAlwaysLock(true);
         map2.setMinimumGroupSize(2);
         map2.start();
         map2.put("test", "foo");
@@ -150,15 +151,84 @@ public class GroupMapTest extends TestCase {
         map1.stop();
         map2.stop();
     }
-
+    
+    public void testExpireImplicitWriteLock() throws Exception {
+        Group map1 = new Group(connection1, "map1");
+        final AtomicBoolean called = new AtomicBoolean();
+        map1.start();
+        Group map2 = new Group(connection2, "map2");
+        map2.setAlwaysLock(true);
+        map2.setLockTimeToLive(1000);
+        map2.setMinimumGroupSize(2);
+        map2.start();
+        map2.put("test", "foo");
+        try {
+            map1.put("test", "bah");
+            fail("Should have thrown an exception!");
+        } catch (GroupMapUpdateException e) {
+        }
+        Thread.sleep(2000);
+        map1.put("test", "bah");
+        map1.stop();
+        map2.stop();
+    }
+    
+    public void testExpireImplicitLockOnExit() throws Exception {
+        Group map1 = new Group(connection1, "map1");
+        final AtomicBoolean called = new AtomicBoolean();
+        map1.start();
+        Group map2 = new Group(connection2, "map2");
+        map2.setAlwaysLock(true);
+        map2.setMinimumGroupSize(2);
+        map2.start();
+        map2.put("test", "foo");
+        try {
+            map1.put("test", "bah");
+            fail("Should have thrown an exception!");
+        } catch (GroupMapUpdateException e) {
+        }
+        map2.stop();
+        map1.put("test", "bah");
+        map1.stop();
+        
+    }
+    
+    public void testGetExplicitWriteLock() throws Exception {
+        Group map1 = new Group(connection1, "map1");
+        map1.setAlwaysLock(true);
+        final AtomicBoolean called = new AtomicBoolean();
+        map1.start();
+        Group map2 = new Group(connection2, "map2");
+        map2.setAlwaysLock(true);
+        map2.setMinimumGroupSize(2);
+        map2.start();
+        map2.put("test", "foo");
+        map2.lock("test");
+        try {
+            map1.put("test", "bah");
+            fail("Should have thrown an exception!");
+        } catch (GroupMapUpdateException e) {
+        }
+        map2.unlock("test");
+        map1.lock("test");
+        try {
+            map2.lock("test");
+            fail("Should have thrown an exception!");
+        } catch (GroupMapUpdateException e) {
+        }
+        map1.stop();
+        map2.stop();
+    }
+    
+    
 
     /**
-     * Test method for {@link org.apache.activemq.group.GroupMap#clear()}.
+     * Test method for {@link org.apache.activemq.group.Group#clear()}.
      * 
      * @throws Exception
      */
     public void testClear() throws Exception {
-        GroupMap map1 = new GroupMap(connection1,"map1");
+        Group map1 = new Group(connection1,"map1");
         final AtomicBoolean called = new AtomicBoolean();
         map1.addMapChangedListener(new DefaultMapChangedListener() {
             public void mapInsert(Member owner,Object Key, Object Value) {
@@ -176,7 +246,7 @@ public class GroupMapTest extends TestCase {
             }
         });
         map1.start();
-        GroupMap map2 = new GroupMap(connection2,"map2");
+        Group map2 = new Group(connection2,"map2");
         map2.start();
         map2.put("test","foo");
         synchronized(called) {
@@ -202,12 +272,12 @@ public class GroupMapTest extends TestCase {
      * Test a new map is populated for existing values
      */
     public void testMapUpdatedOnStart() throws Exception {
-        GroupMap map1 = new GroupMap(connection1,"map1");
+        Group map1 = new Group(connection1,"map1");
         final AtomicBoolean called = new AtomicBoolean();
         
         map1.start();
         map1.put("test", "foo");
-        GroupMap map2 = new GroupMap(connection2,"map2");
+        Group map2 = new Group(connection2,"map2");
         map2.addMapChangedListener(new DefaultMapChangedListener() {
             public void mapInsert(Member owner,Object Key, Object Value) {
                 synchronized(called) {
@@ -230,9 +300,9 @@ public class GroupMapTest extends TestCase {
         map1.stop();
         map2.stop();
     }
-    
+   
     public void testContainsKey() throws Exception {
-        GroupMap map1 = new GroupMap(connection1,"map1");
+        Group map1 = new Group(connection1,"map1");
         final AtomicBoolean called = new AtomicBoolean();
         map1.addMapChangedListener(new DefaultMapChangedListener() {
             public void mapInsert(Member owner,Object Key, Object Value) {
@@ -243,7 +313,7 @@ public class GroupMapTest extends TestCase {
             }
         });
         map1.start();
-        GroupMap map2 = new GroupMap(connection2,"map2");
+        Group map2 = new Group(connection2,"map2");
         map2.start();
         map2.put("test","foo");
         synchronized(called) {
@@ -261,11 +331,11 @@ public class GroupMapTest extends TestCase {
 
     /**
      * Test method for
-     * {@link org.apache.activemq.group.GroupMap#containsValue(java.lang.Object)}.
+     * {@link org.apache.activemq.group.Group#containsValue(java.lang.Object)}.
      * @throws Exception 
      */
     public void testContainsValue() throws Exception {
-        GroupMap map1 = new GroupMap(connection1,"map1");
+        Group map1 = new Group(connection1,"map1");
         final AtomicBoolean called = new AtomicBoolean();
         map1.addMapChangedListener(new DefaultMapChangedListener() {
             public void mapInsert(Member owner,Object Key, Object Value) {
@@ -276,7 +346,7 @@ public class GroupMapTest extends TestCase {
             }
         });
         map1.start();
-        GroupMap map2 = new GroupMap(connection2,"map2");
+        Group map2 = new Group(connection2,"map2");
         map2.start();
         map2.put("test","foo");
         synchronized(called) {
@@ -299,11 +369,11 @@ public class GroupMapTest extends TestCase {
 
     /**
      * Test method for
-     * {@link org.apache.activemq.group.GroupMap#get(java.lang.Object)}.
+     * {@link org.apache.activemq.group.Group#get(java.lang.Object)}.
      * @throws Exception 
      */
     public void testGet() throws Exception {
-        GroupMap map1 = new GroupMap(connection1,"map1");
+        Group map1 = new Group(connection1,"map1");
         final AtomicBoolean called = new AtomicBoolean();
         map1.addMapChangedListener(new DefaultMapChangedListener() {
             public void mapInsert(Member owner,Object Key, Object Value) {
@@ -314,7 +384,7 @@ public class GroupMapTest extends TestCase {
             }
         });
         map1.start();
-        GroupMap map2 = new GroupMap(connection2,"map2");
+        Group map2 = new Group(connection2,"map2");
         map2.start();
         map2.put("test","foo");
         synchronized(called) {
@@ -327,15 +397,29 @@ public class GroupMapTest extends TestCase {
         map1.stop();
         map2.stop();
     }
+    
+    public void testPut() throws Exception {
+        Group map1 = new Group(connection1,"map1");
+        map1.start();
+        Group map2 = new Group(connection2,"map2");
+        map2.setMinimumGroupSize(2);
+        map2.start();
+        Object value = map1.put("foo", "blob");
+        assertNull(value);
+        value = map1.put("foo", "blah");
+        assertEquals(value, "blob");
+        map1.stop();
+        map2.stop();
+    }
 
     
     
     /**
      * Test method for
-     * {@link org.apache.activemq.group.GroupMap#remove(java.lang.Object)}.
+     * {@link org.apache.activemq.group.Group#remove(java.lang.Object)}.
      */
     public void testRemove() throws Exception{
-        GroupMap map1 = new GroupMap(connection1,"map1");
+        Group map1 = new Group(connection1,"map1");
         final AtomicBoolean called = new AtomicBoolean();
         map1.addMapChangedListener(new DefaultMapChangedListener() {
             public void mapInsert(Member owner,Object Key, Object Value) {
@@ -353,7 +437,7 @@ public class GroupMapTest extends TestCase {
             }
         });
         map1.start();
-        GroupMap map2 = new GroupMap(connection2,"map2");
+        Group map2 = new Group(connection2,"map2");
         map2.start();
         map2.put("test","foo");
         synchronized(called) {
@@ -380,7 +464,7 @@ public class GroupMapTest extends TestCase {
         final AtomicBoolean called1 = new AtomicBoolean();
         final AtomicBoolean called2 = new AtomicBoolean();
         
-        GroupMap map1 = new GroupMap(connection1,"map1");
+        Group map1 = new Group(connection1,"map1");
         map1.setTimeToLive(1000);
         map1.addMapChangedListener(new DefaultMapChangedListener() {
             public void mapRemove(Member owner, Object key, Object value,boolean expired) {        
@@ -392,7 +476,7 @@ public class GroupMapTest extends TestCase {
         });
         map1.start();
         
-        GroupMap map2 = new GroupMap(connection2,"map2");
+        Group map2 = new Group(connection2,"map2");
         
         map2.addMapChangedListener(new DefaultMapChangedListener() {
             public void mapRemove(Member owner, Object key, Object value,boolean expired) {        

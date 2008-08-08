@@ -22,12 +22,12 @@ package org.apache.activemq.group;
  */
 public class DefaultMapChangedListener implements MapChangedListener{
 
-    public void mapInsert(Member owner, Object key, Object value) {        
+    public void mapInsert(Member owner, Object key, Object value) {   
     }
 
-    public void mapRemove(Member owner, Object key, Object value,boolean expired) {        
+    public void mapRemove(Member owner, Object key, Object value,boolean expired) {  
     }
 
-    public void mapUpdate(Member owner, Object Key, Object oldValue,Object newValue) {        
+    public void mapUpdate(Member owner, Object key, Object oldValue,Object newValue) {
     }
 }

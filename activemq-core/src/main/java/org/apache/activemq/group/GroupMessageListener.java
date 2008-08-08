@@ -17,21 +17,18 @@
 
 package org.apache.activemq.group;
 
+
 /**
- * A listener for membership changes to a group
+ * A listener for message communication
  *
  */
-public interface MemberChangedListener {
+public interface GroupMessageListener {
     
     /**
-     * Notification a member has started
-     * @param member
+     * Called when a message is delivered to the <CODE>Group</CODE> from another member
+     * @param sender the member who sent the message
+     * @param replyId the id to use to respond to a message
+     * @param message the message object
      */
-    void memberStarted(Member member);
-    
-    /**
-     * Notification a member has stopped
-     * @param member
-     */
-    void memberStopped(Member member);
+    void messageDelivered(Member sender, String replyId, Object message);
 }

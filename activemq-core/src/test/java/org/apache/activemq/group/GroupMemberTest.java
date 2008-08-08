@@ -26,27 +26,45 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 
 
-public class GroupMapMemberTest extends TestCase {
+public class GroupMemberTest extends TestCase {
     protected BrokerService broker;
     protected String bindAddress = ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL;
 
+    
+    public void testCoordinatorSelection() throws Exception{
+        Group group = new Group(null,"");
+        List<Member>list = new ArrayList<Member>();
+        final int number =10;
+        Member choosen = null;
+        for (int i =0;i< number;i++) {
+            Member m = new Member("group"+i);
+            m.setId(""+i);
+            if (number/2==i) {
+                m.setCoordinatorWeight(10);
+                choosen=m;
+            }
+            list.add(m);
+        }
+        Member c = group.selectCordinator(list);
+        assertEquals(c,choosen);
+    }
     /**
      * Test method for
-     * {@link org.apache.activemq.group.GroupMap#addMemberChangedListener(org.apache.activemq.group.MemberChangedListener)}.
+     * {@link org.apache.activemq.group.Group#addMemberChangedListener(org.apache.activemq.group.MemberChangedListener)}.
      * @throws Exception 
      */
     public void testGroup() throws Exception {
         
-        int number = 20;
+        final int number = 10;
         List<Connection>connections = new ArrayList<Connection>();
-        List<GroupMap>groupMaps = new ArrayList<GroupMap>();
+        List<Group>groupMaps = new ArrayList<Group>();
         ConnectionFactory factory = createConnectionFactory();
         for (int i =0; i < number; i++) {
             Connection connection = factory.createConnection();
             connection.start();
             connections.add(connection);
-            GroupMap map = new GroupMap(connection,"map"+i);
-            map.setHeartBeatInterval(20000);
+            Group map = new Group(connection,"map"+i);
+            map.setHeartBeatInterval(200);
             if(i ==number-1) {
                 map.setMinimumGroupSize(number);
             }
@@ -54,20 +72,56 @@ public class GroupMapMemberTest extends TestCase {
             groupMaps.add(map);
         }
         
+        int coordinatorNumber = 0;
+        for (Group map:groupMaps) {
+            if (map.isCoordinator()) {
+                coordinatorNumber++;
+            }
+        }
+        for(Group map:groupMaps) {
+            map.stop();
+        }
+        for (Connection connection:connections) {
+            connection.stop();
+        }
+        
+    }
+    
+public void XtestWeightedGroup() throws Exception {
+        
+        final int number = 10;
+        List<Connection>connections = new ArrayList<Connection>();
+        List<Group>groupMaps = new ArrayList<Group>();
+        Group last = null;
+        ConnectionFactory factory = createConnectionFactory();
+        for (int i =0; i < number; i++) {
+            Connection connection = factory.createConnection();
+            connection.start();
+            connections.add(connection);
+            Group map = new Group(connection,"map"+i);
+            map.setHeartBeatInterval(200);
+            if(i ==number-1) {
+                map.setMinimumGroupSize(number);
+                map.setCoordinatorWeight(10);
+                last=map;
+            }
+            map.start();
+            groupMaps.add(map);
+        }
+        
         int coordinator = 0;
-        for (GroupMap map:groupMaps) {
+        Group groupCoordinator = null;
+        for (Group map:groupMaps) {
             if (map.isCoordinator()) {
                 coordinator++;
+                groupCoordinator=map;
             }
         }
                
+        assertNotNull(groupCoordinator);
+        assertEquals(groupCoordinator, last);
         assertEquals(1,coordinator);
-        groupMaps.get(0).put("key", "value");
-        Thread.sleep(2000);
-        for (GroupMap map:groupMaps) {
-            assertTrue(map.get("key").equals("value"));
-        }
-        for(GroupMap map:groupMaps) {
+        for(Group map:groupMaps) {
             map.stop();
         }
         for (Connection connection:connections) {
