@@ -22,6 +22,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import javax.jms.Destination;
 import org.apache.activemq.util.IdGenerator;
+import com.sun.jndi.url.corbaname.corbanameURLContextFactory;
 
 /**
  *<P>
@@ -32,9 +33,10 @@ public class Member implements Externalizable {
     private String name;
     private String id;
     private String hostname;
-    private long timeStamp;
     private long startTime;
+    private int coordinatorWeight;
     private Destination inBoxDestination;
+    private transient long timeStamp;
     
 
     /**
@@ -94,12 +96,41 @@ public class Member implements Externalizable {
         this.inBoxDestination=dest;
     }
     
+    /**
+     * @return the timeStamp
+     */
+    long getTimeStamp() {
+        return this.timeStamp;
+    }
+
+    /**
+     * @param timeStamp the timeStamp to set
+     */
+    void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
+    }
+    /**
+     * @return the coordinatorWeight
+     */
+    public int getCoordinatorWeight() {
+        return this.coordinatorWeight;
+    }
+    /**
+     * @param coordinatorWeight the coordinatorWeight to set
+     */
+    public void setCoordinatorWeight(int coordinatorWeight) {
+        this.coordinatorWeight = coordinatorWeight;
+    }
+    
+    
+    
     public String toString() {
         return this.name+"["+this.id+"]@"+this.hostname;
     }
     
      
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        this.coordinatorWeight=in.readInt();;
         this.name = in.readUTF();
         this.id = in.readUTF();
         this.hostname = in.readUTF();
@@ -108,6 +139,7 @@ public class Member implements Externalizable {
     }
 
     public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeInt(this.coordinatorWeight);
         out.writeUTF(this.name != null ? this.name : "");
         out.writeUTF(this.id != null ? this.id : "");
         out.writeUTF(this.hostname != null ? this.hostname : "");
@@ -127,20 +159,4 @@ public class Member implements Externalizable {
         }
         return result;
     }
-
-    /**
-     * @return the timeStamp
-     */
-    long getTimeStamp() {
-        return this.timeStamp;
-    }
-
-    /**
-     * @param timeStamp the timeStamp to set
-     */
-    void setTimeStamp(long timeStamp) {
-        this.timeStamp = timeStamp;
-    }
-    
-    
 }

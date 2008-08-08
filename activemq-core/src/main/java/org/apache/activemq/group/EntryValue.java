@@ -22,20 +22,20 @@ package org.apache.activemq.group;
  *
  */
 class EntryValue<V> {
-    private Member owner;
+    private EntryKey key;
     private V value;
     
     
-    EntryValue(Member owner, V value){
-        this.owner=owner;
+    EntryValue(EntryKey key, V value){
+        this.key=key;
         this.value=value;
     }
     
     /**
      * @return the owner
      */
-    public Member getOwner() {
-        return this.owner;
+    public EntryKey getKey() {
+        return this.key;
     }
 
     /**

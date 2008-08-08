@@ -28,9 +28,11 @@ import java.io.ObjectOutput;
 class EntryKey<K> implements Externalizable {
     private Member owner;
     private K key;
-    private boolean share;
+    private boolean locked;
     private boolean removeOnExit;
+    private boolean releaseLockOnExit;
     private long expiration;
+    private long lockExpiration;
 
     /**
      * Default constructor - for serialization
@@ -53,6 +55,10 @@ class EntryKey<K> implements Externalizable {
     public Member getOwner() {
         return this.owner;
     }
+    
+    public void setOwner(Member member) {
+        this.owner=member;
+    }
 
     /**
      * @return the key
@@ -64,15 +70,15 @@ class EntryKey<K> implements Externalizable {
     /**
      * @return the share
      */
-    public boolean isShare() {
-        return this.share;
+    public boolean isLocked() {
+        return this.locked;
     }
 
     /**
      * @param share the share to set
      */
-    public void setShare(boolean share) {
-        this.share = share;
+    public void setLocked(boolean locked) {
+        this.locked = locked;
     }
 
     /**
@@ -104,11 +110,47 @@ class EntryKey<K> implements Externalizable {
         this.expiration = expiration;
     }
     
+    /**
+     * @return the lockExpiration
+     */
+    public long getLockExpiration() {
+        return lockExpiration;
+    }
+
+    /**
+     * @param lockExpiration the lockExpiration to set
+     */
+    public void setLockExpiration(long lockExpiration) {
+        this.lockExpiration = lockExpiration;
+    }
+
+    /**
+     * @return the releaseLockOnExit
+     */
+    public boolean isReleaseLockOnExit() {
+        return releaseLockOnExit;
+    }
+
+    /**
+     * @param releaseLockOnExit the releaseLockOnExit to set
+     */
+    public void setReleaseLockOnExit(boolean releaseLockOnExit) {
+        this.releaseLockOnExit = releaseLockOnExit;
+    }
+    
     void setTimeToLive(long ttl) {
         if (ttl > 0 ) {
             this.expiration=ttl+System.currentTimeMillis();
         }else {
             this.expiration =0l;
+        }
+    }
+    
+    void setLockTimeToLive(long ttl) {
+        if(ttl > 0) {
+            this.lockExpiration=ttl+System.currentTimeMillis();
+        }else {
+            this.lockExpiration=0l;
         }
     }
     
@@ -118,6 +160,14 @@ class EntryKey<K> implements Externalizable {
     
     boolean isExpired(long currentTime) {
         return this.expiration > 0 && this.expiration < currentTime;
+    }
+    
+    boolean isLockExpired() {
+        return isLockExpired(System.currentTimeMillis());
+    }
+    
+    boolean isLockExpired(long currentTime) {
+        return this.lockExpiration > 0 && this.lockExpiration < currentTime;
     }
     
    
@@ -134,21 +184,27 @@ class EntryKey<K> implements Externalizable {
     public void writeExternal(ObjectOutput out) throws IOException {
         out.writeObject(this.owner);
         out.writeObject(this.key);
-        out.writeBoolean(isShare());
+        out.writeBoolean(isLocked());
         out.writeBoolean(isRemoveOnExit());
+        out.writeBoolean(isReleaseLockOnExit());
         out.writeLong(getExpiration());
+        out.writeLong(getLockExpiration());
     }
 
     public void readExternal(ObjectInput in) throws IOException,
             ClassNotFoundException {
         this.owner = (Member) in.readObject();
         this.key = (K) in.readObject();
-        this.share = in.readBoolean();
+        this.locked = in.readBoolean();
         this.removeOnExit=in.readBoolean();
+        this.releaseLockOnExit=in.readBoolean();
         this.expiration=in.readLong();
+        this.lockExpiration=in.readLong();
     }
     
     public String toString() {
         return "key:"+this.key;
     }
+
+    
 }
