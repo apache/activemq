@@ -241,24 +241,12 @@ public class Queue extends BaseDestination implements Task {
                 ((QueueBrowserSubscription)sub).incrementQueueRef();
             }
             
-//                System.out.println(new Date()+": Locked pagedInMessages: "+sub.getConsumerInfo().getConsumerId());
-//                // Add all the matching messages in the queue to the
-//                // subscription.
-//                
-//                for (QueueMessageReference node:pagedInMessages.values()){
-//                    if (!node.isDropped() && !node.isAcked() && (!node.isDropped() ||sub.getConsumerInfo().isBrowser())) {
-//                        msgContext.setMessageReference(node);
-//                        if (sub.matches(node, msgContext)) {
-//                            sub.add(node);
-//                        }
-//                    }
-//                }
-//                
-//            }
-            wakeup();
         }finally {
             dispatchLock.unlock();
         }
+        // Outside of dispatchLock() to maintain the lock hierarchy of
+        // iteratingMutex -> dispatchLock. - see https://issues.apache.org/activemq/browse/AMQ-1878
+        wakeup();
     }
 
     public void removeSubscription(ConnectionContext context, Subscription sub)
@@ -312,10 +300,12 @@ public class Queue extends BaseDestination implements Task {
             if (consumers.isEmpty()) {
                 messages.gc();
             }
-            wakeup();
         }finally {
             dispatchLock.unlock();
         }
+        // Outside of dispatchLock() to maintain the lock hierarchy of
+        // iteratingMutex -> dispatchLock. - see https://issues.apache.org/activemq/browse/AMQ-1878
+        wakeup();
     }
 
     public void send(final ProducerBrokerExchange producerExchange, final Message message) throws Exception {
