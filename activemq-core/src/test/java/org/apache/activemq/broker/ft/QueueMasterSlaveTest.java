@@ -82,8 +82,7 @@ public class QueueMasterSlaveTest extends JmsTopicSendReceiveWithTwoConnectionsT
     }
 
     protected void messageSent() throws Exception {
-        if (++inflightMessageCount >= failureCount) {
-            inflightMessageCount = 0;
+        if (++inflightMessageCount == failureCount) {
             Thread.sleep(1000);
             LOG.error("MASTER STOPPED!@!!!!");
             master.stop();

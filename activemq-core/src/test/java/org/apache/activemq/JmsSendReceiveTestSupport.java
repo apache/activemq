@@ -85,7 +85,6 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
      */
     public void testSendReceive() throws Exception {
         messages.clear();
-
         for (int i = 0; i < data.length; i++) {
             Message message = session.createTextMessage(data[i]);
             message.setStringProperty("stringProperty", data[i]);
@@ -97,12 +96,24 @@ public class JmsSendReceiveTestSupport extends TestSupport implements MessageLis
                 }
             }
 
-            producer.send(producerDestination, message);
+            sendToProducer(producer, producerDestination, message);
             messageSent();
         }
 
         assertMessagesAreReceived();
         LOG.info("" + data.length + " messages(s) received, closing down connections");
+    }
+
+    /**
+     * Sends a message to a destination using the supplied producer
+     * @param producer
+     * @param producerDestination
+     * @param message
+     * @throws JMSException
+     */
+    protected void sendToProducer(MessageProducer producer,
+            Destination producerDestination, Message message) throws JMSException {
+        producer.send(producerDestination, message);   
     }
 
     /**
