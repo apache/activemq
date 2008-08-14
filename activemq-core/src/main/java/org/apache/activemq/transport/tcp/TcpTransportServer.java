@@ -74,6 +74,11 @@ public class TcpTransportServer extends TransportServerThreadSupport {
      * This parameter is most probably set in Connection or TransportConnector URIs.
      */
     protected boolean trace = false;
+
+    protected int soTimeout = 0;
+    protected int socketBufferSize = 64 * 1024;
+    protected int connectionTimeout =  30000;
+
     /**
      * Name of the LogWriter implementation to use.
      * Names are mapped to classes in the resources/META-INF/services/org/apache/activemq/transport/logwriters directory.
@@ -363,6 +368,9 @@ public class TcpTransportServer extends TransportServerThreadSupport {
             options.put("minmumWireFormatVersion", Integer
                     .valueOf(minmumWireFormatVersion));
             options.put("trace", Boolean.valueOf(trace));
+            options.put("soTimeout", Integer.valueOf(soTimeout));
+            options.put("soTimeout", Integer.valueOf(soTimeout));
+            options.put("connectionTimeout", Integer.valueOf(socketBufferSize));
             options.put("logWriterName", logWriterName);
             options
                     .put("dynamicManagement", Boolean
@@ -386,4 +394,28 @@ public class TcpTransportServer extends TransportServerThreadSupport {
             }
         }
     }    
+
+	public int getSoTimeout() {
+		return soTimeout;
+	}
+
+	public void setSoTimeout(int soTimeout) {
+		this.soTimeout = soTimeout;
+	}
+
+	public int getSocketBufferSize() {
+		return socketBufferSize;
+	}
+
+	public void setSocketBufferSize(int socketBufferSize) {
+		this.socketBufferSize = socketBufferSize;
+	}
+
+	public int getConnectionTimeout() {
+		return connectionTimeout;
+	}
+
+	public void setConnectionTimeout(int connectionTimeout) {
+		this.connectionTimeout = connectionTimeout;
+	}
 }
