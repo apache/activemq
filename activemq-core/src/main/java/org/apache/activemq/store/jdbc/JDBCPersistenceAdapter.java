@@ -134,7 +134,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
 
     public TransactionStore createTransactionStore() throws IOException {
         if (transactionStore == null) {
-            transactionStore = new MemoryTransactionStore();
+            transactionStore = new MemoryTransactionStore(this);
         }
         return this.transactionStore;
     }
