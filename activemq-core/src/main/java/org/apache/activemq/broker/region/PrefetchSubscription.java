@@ -378,9 +378,9 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             }
         }
         if (callDispatchMatched && destination != null) {
-            if (destination.isLazyDispatch()) {
+//            if (destination.isLazyDispatch()) {
                 destination.wakeup();
-            }
+//            }
             dispatchPending();
         } else {
             if (isSlave()) {

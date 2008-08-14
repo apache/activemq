@@ -37,7 +37,7 @@ public abstract class BaseDestination implements Destination {
      * The default number of messages to page in to the destination
      * from persistent storage
      */
-    public static final int DEFAULT_PAGE_SIZE=100;
+    public static final int DEFAULT_PAGE_SIZE=200;
    
     protected final ActiveMQDestination destination;
     protected final Broker broker;
