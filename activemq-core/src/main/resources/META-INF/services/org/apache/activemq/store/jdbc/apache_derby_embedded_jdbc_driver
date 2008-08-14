@@ -14,4 +14,4 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 ## ---------------------------------------------------------------------------
-class=org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter
+class=org.apache.activemq.store.jdbc.adapter.DB2JDBCAdapter

@@ -176,6 +176,13 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
                 LOG.warn("No databaseLocker configured for the JDBC Persistence Adapter");
             } else {
                 service.start();
+                if (lockKeepAlivePeriod > 0) {
+                    getScheduledThreadPoolExecutor().scheduleAtFixedRate(new Runnable() {
+                        public void run() {
+                            databaseLockKeepAlive();
+                        }
+                    }, lockKeepAlivePeriod, lockKeepAlivePeriod, TimeUnit.MILLISECONDS);
+                }
                 if (brokerService != null) {
                     brokerService.getBroker().nowMasterBroker();
                 }
@@ -258,13 +265,6 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     public DatabaseLocker getDatabaseLocker() throws IOException {
         if (databaseLocker == null) {
             databaseLocker = createDatabaseLocker();
-            if (lockKeepAlivePeriod > 0) {
-                getScheduledThreadPoolExecutor().scheduleAtFixedRate(new Runnable() {
-                    public void run() {
-                        databaseLockKeepAlive();
-                    }
-                }, lockKeepAlivePeriod, lockKeepAlivePeriod, TimeUnit.MILLISECONDS);
-            }
         }
         return databaseLocker;
     }

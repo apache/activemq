@@ -122,6 +122,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                 // This will fail usually since the tables will be
                 // created already.
                 try {
+                    LOG.debug("Executing SQL: " + dropStatments[i]);
                     s.execute(dropStatments[i]);
                 } catch (SQLException e) {
                     LOG.warn("Could not drop JDBC tables; they may not exist." + " Failure was: "
@@ -187,7 +188,9 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             }
         } finally {
             if (!batchStatments) {
-                s.close();
+                if (s!=null) {
+                    s.close();
+                }
             }
         }
     }
