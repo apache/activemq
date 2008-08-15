@@ -216,4 +216,9 @@ public interface Subscription extends SubscriptionRecovery {
      * @return true if a browser
      */
     boolean isBrowser();
+    
+    /**
+     * @return the number of messages this subscription can accept before its full
+     */
+    int countBeforeFull();
 }

@@ -34,10 +34,10 @@ import org.apache.activemq.usage.Usage;
  */
 public abstract class BaseDestination implements Destination {
     /**
-     * The default number of messages to page in to the destination
+     * The maximum number of messages to page in to the destination
      * from persistent storage
      */
-    public static final int DEFAULT_PAGE_SIZE=200;
+    public static final int MAX_PAGE_SIZE=200;
    
     protected final ActiveMQDestination destination;
     protected final Broker broker;
@@ -48,7 +48,7 @@ public abstract class BaseDestination implements Destination {
     private int maxProducersToAudit=1024;
     private int maxAuditDepth=2048;
     private boolean enableAudit=true;
-    private int maxPageSize=DEFAULT_PAGE_SIZE;
+    private int maxPageSize=MAX_PAGE_SIZE;
     private boolean useCache=true;
     private int minimumMessageSize=1024;
     private boolean lazyDispatch=false;

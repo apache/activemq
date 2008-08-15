@@ -198,7 +198,7 @@ public abstract class AbstractSubscription implements Subscription {
     public void addDestination(Destination destination) {
         
     }
-    
+       
     
     /**
      * Remove a destination
@@ -206,6 +206,10 @@ public abstract class AbstractSubscription implements Subscription {
      */
     public void removeDestination(Destination destination) {
         
+    }
+    
+    public int countBeforeFull() {
+        return getDispatchedQueueSize() - info.getPrefetchSize();
     }
 
     protected void doAddRecoveredMessage(MessageReference message) throws Exception {

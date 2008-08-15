@@ -58,7 +58,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private boolean enableAudit=true;
     private boolean producerFlowControl = true;
     private boolean optimizedDispatch=false;
-    private int maxPageSize=100;
+    private int maxPageSize=BaseDestination.MAX_PAGE_SIZE;
     private boolean useCache=true;
     private long minimumMessageSize=1024;
     private boolean useConsumerPriority=true;
