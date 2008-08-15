@@ -27,6 +27,15 @@ public class MySqlJDBCAdapter extends DefaultJDBCAdapter {
     public void setStatements(Statements statements) {
         statements.setLockCreateStatement("LOCK TABLE " + statements.getFullLockTableName() + " WRITE");
         statements.setBinaryDataType("LONGBLOB");
+        
+        // Use INNODB table since we need transaction support.
+        String[] s = statements.getCreateSchemaStatements();
+        for (int i = 0; i < s.length; i++) {
+            if( s[i].startsWith("CREATE TABLE")) {
+                s[i] = s[i]+" TYPE=INNODB";
+            }
+        }
+        
         super.setStatements(statements);
     }    
 }
