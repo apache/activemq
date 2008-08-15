@@ -228,7 +228,6 @@ public class Queue extends BaseDestination implements Task {
             // duplicates
             // etc.
             doPageIn(false);
-//            msgContext.setDestination(destination);
 
             synchronized (pagedInMessages) {
                 RecoveryDispatch rd = new RecoveryDispatch();
@@ -240,13 +239,17 @@ public class Queue extends BaseDestination implements Task {
             if( sub instanceof QueueBrowserSubscription ) {
                 ((QueueBrowserSubscription)sub).incrementQueueRef();
             }
-            
+            if (!this.optimizedDispatch) {
+                    wakeup();
+            }
         }finally {
             dispatchLock.unlock();
         }
+        if (this.optimizedDispatch) {
         // Outside of dispatchLock() to maintain the lock hierarchy of
         // iteratingMutex -> dispatchLock. - see https://issues.apache.org/activemq/browse/AMQ-1878
-        wakeup();
+            wakeup();
+        }
     }
 
     public void removeSubscription(ConnectionContext context, Subscription sub)
@@ -300,12 +303,17 @@ public class Queue extends BaseDestination implements Task {
             if (consumers.isEmpty()) {
                 messages.gc();
             }
+            if (!this.optimizedDispatch) {
+                wakeup();
+            }
         }finally {
             dispatchLock.unlock();
         }
-        // Outside of dispatchLock() to maintain the lock hierarchy of
-        // iteratingMutex -> dispatchLock. - see https://issues.apache.org/activemq/browse/AMQ-1878
-        wakeup();
+        if (this.optimizedDispatch) {
+            // Outside of dispatchLock() to maintain the lock hierarchy of
+            // iteratingMutex -> dispatchLock. - see https://issues.apache.org/activemq/browse/AMQ-1878
+            wakeup();
+        }
     }
 
     public void send(final ProducerBrokerExchange producerExchange, final Message message) throws Exception {
@@ -1099,6 +1107,7 @@ public class Queue extends BaseDestination implements Task {
         dispatchLock.lock();
         try{
             int toPageIn = (getMaxPageSize()+(int)destinationStatistics.getInflight().getCount()) - pagedInMessages.size();
+            toPageIn = Math.min(toPageIn,getMaxPageSize());
             if (isLazyDispatch()&& !force) {
              // Only page in the minimum number of messages which can be dispatched immediately.
              toPageIn = Math.min(getConsumerMessageCountBeforeFull(), toPageIn);
@@ -1142,7 +1151,7 @@ public class Queue extends BaseDestination implements Task {
         dispatchLock.lock();
         try {
             if(!pagedInPendingDispatch.isEmpty()) {
-//                System.out.println(getName()+": dispatching from pending: "+pagedInPendingDispatch.size());
+ //              System.out.println(getName()+": dispatching from pending: "+pagedInPendingDispatch.size());
                 // Try to first dispatch anything that had not been dispatched before.
                 pagedInPendingDispatch = doActualDispatch(pagedInPendingDispatch);
 //                System.out.println(getName()+": new pending list1: "+pagedInPendingDispatch.size());
@@ -1237,9 +1246,8 @@ public class Queue extends BaseDestination implements Task {
         boolean zeroPrefetch = false;
         synchronized (consumers) {
             for (Subscription s : consumers) {
-            	PrefetchSubscription ps = (PrefetchSubscription) s;
-            	zeroPrefetch |= ps.getPrefetchSize() == 0;
-            	int countBeforeFull = ps.countBeforeFull();
+            	zeroPrefetch |= s.getPrefetchSize() == 0;
+            	int countBeforeFull = s.countBeforeFull();
                 total += countBeforeFull;
             }
         }

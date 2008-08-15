@@ -220,11 +220,8 @@ public class Topic  extends BaseDestination  implements Task{
                             if (subscription.matches(message, msgContext)) {
                                 subscription.add(message);
                             }
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
                         } catch (IOException e) {
-                            // TODO: Need to handle this better.
-                            e.printStackTrace();
+                           LOG.error("Failed to recover this message " + message);
                         }
                         return true;
                     }
@@ -570,7 +567,6 @@ public class Topic  extends BaseDestination  implements Task{
                     return;
                 }
             }
-            
             MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
             msgContext.setDestination(destination);
             msgContext.setMessageReference(message);
