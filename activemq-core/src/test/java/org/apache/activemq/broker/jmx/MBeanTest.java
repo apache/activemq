@@ -54,7 +54,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
     protected Connection connection;
     protected boolean transacted;
     protected int authMode = Session.AUTO_ACKNOWLEDGE;
-    protected static final int MESSAGE_COUNT = 2*BaseDestination.DEFAULT_PAGE_SIZE;
+    protected static final int MESSAGE_COUNT = 2*BaseDestination.MAX_PAGE_SIZE;
 
     /**
      * When you run this test case from the command line it will pause before
