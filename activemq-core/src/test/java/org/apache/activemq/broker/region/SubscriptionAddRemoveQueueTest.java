@@ -310,5 +310,13 @@ public class SubscriptionAddRemoveQueueTest extends TestCase {
         public void removeDestination(Destination destination) {            
         }
 
+        /* (non-Javadoc)
+         * @see org.apache.activemq.broker.region.Subscription#countBeforeFull()
+         */
+        public int countBeforeFull() {
+            // TODO Auto-generated method stub
+            return 10;
+        }
+
     }
 }
