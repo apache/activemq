@@ -570,13 +570,15 @@ public class Topic  extends BaseDestination  implements Task{
                     return;
                 }
             }
+            
             MessageEvaluationContext msgContext = context.getMessageEvaluationContext();
             msgContext.setDestination(destination);
             msgContext.setMessageReference(message);
-
             if (!dispatchPolicy.dispatch(message, msgContext, consumers)) {
                 onMessageWithNoConsumers(context, message);
             }
+            msgContext.clear();
+            
         } finally {
             dispatchValve.decrement();
         }
