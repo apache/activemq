@@ -130,7 +130,7 @@ public class JPAPersistenceAdapter implements PersistenceAdapter {
 
     public TransactionStore createTransactionStore() throws IOException {
         if (transactionStore == null) {
-            transactionStore = new MemoryTransactionStore();
+            transactionStore = new MemoryTransactionStore(this);
         }
         return this.transactionStore;
     }
