@@ -154,4 +154,20 @@ public interface SubscriptionViewMBean {
      *         consumers.
      */
     String getSubcriptionName();
+
+    /**
+     * Returns true if this subscription (which may be using wildcards) matches the given queue name
+     *
+     * @param queueName the JMS queue name to match against
+     * @return true if this subscription matches the given queue or false if not
+     */
+    boolean isMatchingQueue(String queueName);
+
+    /**
+     * Returns true if this subscription (which may be using wildcards) matches the given topic name
+     *
+     * @param topicName the JMS topic name to match against
+     * @return true if this subscription matches the given topic or false if not
+     */
+    boolean isMatchingTopic(String topicName);
 }
