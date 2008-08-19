@@ -75,6 +75,7 @@ public class PerformanceTest extends TestSupport {
             int previous = cin.pushLimit(size);
             //cin.setSizeLimit(size + 4);
             OpenWire.Message message = OpenWire.Message.parseFrom(cin);
+            cin.resetBytesReadCounter();
             cin.popLimit(previous);
 
             if (verbose) {
