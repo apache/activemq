@@ -19,6 +19,8 @@ package org.apache.activemq.broker.region;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.List;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
@@ -98,6 +100,10 @@ public class DestinationFilter implements Destination {
 
     public void stop() throws Exception {
         next.stop();
+    }
+
+    public List<Subscription> getConsumers() {
+        return next.getConsumers();
     }
 
     /**

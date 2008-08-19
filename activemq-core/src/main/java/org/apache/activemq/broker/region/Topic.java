@@ -19,6 +19,8 @@ package org.apache.activemq.broker.region;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -103,6 +105,12 @@ public class Topic  extends BaseDestination  implements Task{
         if (store != null) {
             int messageCount = store.getMessageCount();
             destinationStatistics.getMessages().setCount(messageCount);
+        }
+    }
+
+    public List<Subscription> getConsumers() {
+        synchronized (consumers) {
+            return new ArrayList<Subscription>(consumers);
         }
     }
 

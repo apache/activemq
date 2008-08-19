@@ -18,11 +18,14 @@ package org.apache.activemq.broker.jmx;
 
 import java.util.List;
 import java.util.Map;
+import java.io.IOException;
 
 import javax.jms.InvalidSelectorException;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.TabularData;
+import javax.management.ObjectName;
+import javax.management.MalformedObjectNameException;
 
 public interface DestinationViewMBean {
 
@@ -258,5 +261,12 @@ public interface DestinationViewMBean {
      * enable/disable caching on the destination
      */
     public void setUseCache(boolean value);
+
+    /**
+     * Returns all the current subscription MBeans matching this destination
+     * 
+     * @return the names of the subscriptions for this destination
+     */
+    ObjectName[] getSubscriptions() throws IOException, MalformedObjectNameException;
 
 }

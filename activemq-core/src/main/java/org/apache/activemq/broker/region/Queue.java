@@ -115,7 +115,13 @@ public class Queue extends BaseDestination implements Task {
         this.taskFactory=taskFactory;       
         this.dispatchSelector=new QueueDispatchSelector(destination);
     }
-        
+
+    public List<Subscription> getConsumers() {
+        synchronized (consumers) {
+            return new ArrayList<Subscription>(consumers);
+        }
+    }
+
     public void initialize() throws Exception {
         if (this.messages == null) {
             if (destination.isTemporary() || broker == null || store == null) {
