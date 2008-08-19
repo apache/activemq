@@ -21,45 +21,27 @@
        xsi:schemaLocation="
        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
        http://activemq.apache.org/camel/schema/spring http://activemq.apache.org/camel/schema/spring/camel-spring.xsd
-       http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd
+       http://activemq.org/config/1.0 http://activemq.apache.org/schema/core/activemq-core-5.0.0.xsd
     ">
 
   <camelContext xmlns="http://activemq.apache.org/camel/schema/spring">
 
     <route>
-      <from uri="dataset:myDataSet?preloadSize=50000"/>
-
-      <to uri="activemq:foo.example.A"/>
-      <!-- lets use concurrency -->
-<!--
-      <to uri="activemq:foo.example.A"/>
-      <thread coreSize="10" maxSize="20">
-      </thread>
--->
-
-    </route>
-
-    <route>
-      <from uri="activemq:foo.example.A?concurrentConsumers=20"/>
-      <to uri="mock:results?expectedMessageCount=100000&amp;reportGroup=5000&amp;resultWaitTime=400000"/>
+      <from uri="activemq:TEST?concurrentConsumers=1"/>
+      <process ref="counter"/>
+      <!--<to uri="mock:results?expectedMessageCount=100000&amp;reportGroup=5000&amp;resultWaitTime=400000"/>-->
     </route>
 
   </camelContext>
 
-  <bean id="myDataSet" class="org.apache.camel.component.dataset.SimpleDataSet">
-    <property name="size" value="100000"/>
-    <property name="reportCount" value="5000"/>
-  </bean>
-
+  <bean id="counter" class="org.apache.activemq.soaktest.localBroker.CounterBean"/>
+  
   <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">
-    <!--<property name="brokerURL" value="tcp://localhost:61616?wireFormat.tightEncodingEnabled=false"/>-->
-    <property name="brokerURL" value="tcp://localhost:61616?wireFormat.tightEncodingEnabled=false&amp;jms.dispatchAsync=true"/>
-    <property name="deliveryPersistent" value="false"/>
-    <property name="acknowledgementModeName" value="DUPS_OK_ACKNOWLEDGE"/>
-    <!--<property name="transacted" value="true"/>-->
-    <property name="transacted" value="true"/>
-<!--
--->
+    <property name="brokerURL" value="tcp://localhost:61616"/>
+    <property name="usePooledConnection" value="false"/>
+    <property name="useSingleConnection" value="false"/>
+    <property name="acknowledgementModeName" value="AUTO_ACKNOWLEDGE"/>
+    <property name="transacted" value="false"/>
   </bean>
 </beans>
 <!-- END SNIPPET: example -->
