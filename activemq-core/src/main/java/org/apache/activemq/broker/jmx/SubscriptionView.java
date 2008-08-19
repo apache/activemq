@@ -21,6 +21,9 @@ import javax.jms.InvalidSelectorException;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.filter.DestinationFilter;
 
 /**
  * @version $Revision: 1.5 $
@@ -274,6 +277,32 @@ public class SubscriptionView implements SubscriptionViewMBean {
      */
     public int getPrefetchSize() {
         return subscription != null ? subscription.getPrefetchSize() : 0;
+    }
+
+    public boolean isMatchingQueue(String queueName) {
+        if (isDestinationQueue()) {
+            return matchesDestination(new ActiveMQQueue(queueName));
+        }
+        return false;
+    }
+
+    public boolean isMatchingTopic(String topicName) {
+        if (isDestinationTopic()) {
+            return matchesDestination(new ActiveMQTopic(topicName));
+        }
+        return false;
+    }
+
+    /**
+     * Return true if this subscription matches the given destination
+     *
+     * @param destination the destination to compare against
+     * @return true if this subscription matches the given destination
+     */
+    public boolean matchesDestination(ActiveMQDestination destination) {
+        ActiveMQDestination subscriptionDestination = subscription.getActiveMQDestination();
+        DestinationFilter filter = DestinationFilter.parseFilter(subscriptionDestination);
+        return filter.matches(destination);
     }
 
 }
