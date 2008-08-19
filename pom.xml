@@ -35,16 +35,13 @@
     <!-- base url for site deployment.  See distribution management for full url.  Override this in settings.xml for staging -->
     <staging.siteURL>scp://people.apache.org/x1/www/activemq.apache.org</staging.siteURL>
     <activemq-version>5.2-SNAPSHOT</activemq-version>
-    <spring-version>2.5.1</spring-version>
+    <spring-version>2.5.5</spring-version>
     <activesoap-version>1.3</activesoap-version>
     <annogen-version>0.1.0</annogen-version>
     <ant-version>1.6.2</ant-version>
     <aopalliance-version>1.0</aopalliance-version>
     <axion-version>1.0-M3-dev</axion-version>
     <axis-version>1.2-RC1</axis-version>
-    <!-- TODO switch to 1.4.0 when its released
-      needed for fix for SetHeaderTest
-      -->
     <camel-version>1.4.0</camel-version>
     <cglib-version>2.0</cglib-version>
     <commons-beanutils-version>1.6.1</commons-beanutils-version>
