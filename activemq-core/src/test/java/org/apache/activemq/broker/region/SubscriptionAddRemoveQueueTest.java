@@ -140,6 +140,11 @@ public class SubscriptionAddRemoveQueueTest extends TestCase {
             dispatched.add(qmr);
         }
 
+        public ConnectionContext getContext() {
+            // TODO
+            return null;
+        }
+
         public void add(ConnectionContext context, Destination destination)
                 throws Exception {
             // TODO Auto-generated method stub

@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
@@ -168,4 +169,5 @@ public interface Destination extends Service, Task {
      */
      void isFull(ConnectionContext context,Usage usage);
 
+    List<Subscription> getConsumers();
 }

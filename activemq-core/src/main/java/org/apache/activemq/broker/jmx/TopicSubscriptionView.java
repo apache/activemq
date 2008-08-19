@@ -57,4 +57,6 @@ public class TopicSubscriptionView extends SubscriptionView implements TopicSubs
             topicSubscription.setMaximumPendingMessages(max);
         }
     }
+
+
 }

@@ -221,4 +221,6 @@ public interface Subscription extends SubscriptionRecovery {
      * @return the number of messages this subscription can accept before its full
      */
     int countBeforeFull();
+
+    ConnectionContext getContext();
 }

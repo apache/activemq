@@ -168,27 +168,11 @@ public class ManagedRegionBroker extends RegionBroker {
     }
 
     public ObjectName registerSubscription(ConnectionContext context, Subscription sub) {
-        Hashtable map = brokerObjectName.getKeyPropertyList();
-        String objectNameStr = brokerObjectName.getDomain() + ":" + "BrokerName=" + map.get("BrokerName") + ",Type=Subscription,";
-        String destinationType = "destinationType=" + sub.getConsumerInfo().getDestination().getDestinationTypeAsString();
-        String destinationName = "destinationName=" + JMXSupport.encodeObjectNamePart(sub.getConsumerInfo().getDestination().getPhysicalName());
-        String clientId = "clientId=" + JMXSupport.encodeObjectNamePart(context.getClientId());
-        String persistentMode = "persistentMode=";
-        String consumerId = "";
+        String connectionClientId = context.getClientId();
+        ObjectName brokerJmxObjectName = brokerObjectName;
+        String objectNameStr = getSubscriptionObjectName(sub, connectionClientId, brokerJmxObjectName);
+
         SubscriptionKey key = new SubscriptionKey(context.getClientId(), sub.getConsumerInfo().getSubscriptionName());
-        if (sub.getConsumerInfo().isDurable()) {
-            persistentMode += "Durable, subscriptionID=" + JMXSupport.encodeObjectNamePart(sub.getConsumerInfo().getSubscriptionName());
-        } else {
-            persistentMode += "Non-Durable";
-            if (sub.getConsumerInfo() != null && sub.getConsumerInfo().getConsumerId() != null) {
-                consumerId = ",consumerId=" + JMXSupport.encodeObjectNamePart(sub.getConsumerInfo().getConsumerId().toString());
-            }
-        }
-        objectNameStr += persistentMode + ",";
-        objectNameStr += destinationType + ",";
-        objectNameStr += destinationName + ",";
-        objectNameStr += clientId;
-        objectNameStr += consumerId;
         try {
             ObjectName objectName = new ObjectName(objectNameStr);
             SubscriptionView view;
@@ -208,6 +192,31 @@ public class ManagedRegionBroker extends RegionBroker {
             LOG.error("Failed to register subscription " + sub, e);
             return null;
         }
+    }
+
+    public static String getSubscriptionObjectName(Subscription sub, String connectionClientId, ObjectName brokerJmxObjectName) {
+        Hashtable map = brokerJmxObjectName.getKeyPropertyList();
+        String brokerDomain = brokerJmxObjectName.getDomain();
+        String objectNameStr = brokerDomain + ":" + "BrokerName=" + map.get("BrokerName") + ",Type=Subscription,";
+        String destinationType = "destinationType=" + sub.getConsumerInfo().getDestination().getDestinationTypeAsString();
+        String destinationName = "destinationName=" + JMXSupport.encodeObjectNamePart(sub.getConsumerInfo().getDestination().getPhysicalName());
+        String clientId = "clientId=" + JMXSupport.encodeObjectNamePart(connectionClientId);
+        String persistentMode = "persistentMode=";
+        String consumerId = "";
+        if (sub.getConsumerInfo().isDurable()) {
+            persistentMode += "Durable, subscriptionID=" + JMXSupport.encodeObjectNamePart(sub.getConsumerInfo().getSubscriptionName());
+        } else {
+            persistentMode += "Non-Durable";
+            if (sub.getConsumerInfo() != null && sub.getConsumerInfo().getConsumerId() != null) {
+                consumerId = ",consumerId=" + JMXSupport.encodeObjectNamePart(sub.getConsumerInfo().getConsumerId().toString());
+            }
+        }
+        objectNameStr += persistentMode + ",";
+        objectNameStr += destinationType + ",";
+        objectNameStr += destinationName + ",";
+        objectNameStr += clientId;
+        objectNameStr += consumerId;
+        return objectNameStr;
     }
 
     public void unregisterSubscription(Subscription sub) {
