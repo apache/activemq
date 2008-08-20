@@ -113,6 +113,10 @@
     **
     ** http://activemq.apache.org/enterprise-integration-patterns.html
     -->
+    <!-- configure the camel activemq component to use the current broker -->
+    <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent" >
+        <property name="brokerURL" value="vm://localhost?create=false&amp;waitForStart=10000" />
+    </bean>
     <camelContext id="camel" xmlns="http://activemq.apache.org/camel/schema/spring">
 
         <!-- You can use a <package> element for each root package to search for Java routes -->

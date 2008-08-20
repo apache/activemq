@@ -78,6 +78,7 @@ public class BrokerRegistry {
     public void bind(String brokerName, BrokerService broker) {
         synchronized (mutex) {
             brokers.put(brokerName, broker);
+            mutex.notifyAll();
         }
     }
 

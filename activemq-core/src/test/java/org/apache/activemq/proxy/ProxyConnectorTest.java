@@ -79,7 +79,7 @@ public class ProxyConnectorTest extends ProxyTestSupport {
         // Give broker enough time to receive and register the consumer info
         // Either that or make consumer retroactive
         try {
-            Thread.sleep(1000);
+            Thread.sleep(2000);
         } catch (Exception e) {
             e.printStackTrace();
         }
