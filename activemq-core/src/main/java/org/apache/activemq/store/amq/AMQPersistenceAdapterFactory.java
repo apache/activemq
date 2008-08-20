@@ -52,6 +52,9 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
     private int indexMaxBinSize = HashIndex.MAXIMUM_CAPACITY;
     private int indexLoadFactor = HashIndex.DEFAULT_LOAD_FACTOR;
     private int maxReferenceFileLength=DEFAULT_MAX_REFERNCE_FILE_LENGTH;
+    private boolean recoverReferenceStore=true;
+    private boolean forceRecoverReferenceStore=false;
+    private long checkpointInterval = 1000 * 20;
 
 
     /**
@@ -75,6 +78,8 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
         result.setIndexMaxBinSize(getIndexMaxBinSize());
         result.setIndexLoadFactor(getIndexLoadFactor());
         result.setMaxReferenceFileLength(getMaxReferenceFileLength());
+        result.setForceRecoverReferenceStore(isForceRecoverReferenceStore());
+        result.setRecoverReferenceStore(isRecoverReferenceStore());
         return result;
     }
 
@@ -285,5 +290,47 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
      */
     public void setMaxReferenceFileLength(int maxReferenceFileLength) {
         this.maxReferenceFileLength = maxReferenceFileLength;
+    }
+
+    /**
+     * @return the recoverReferenceStore
+     */
+    public boolean isRecoverReferenceStore() {
+        return recoverReferenceStore;
+    }
+
+    /**
+     * @param recoverReferenceStore the recoverReferenceStore to set
+     */
+    public void setRecoverReferenceStore(boolean recoverReferenceStore) {
+        this.recoverReferenceStore = recoverReferenceStore;
+    }
+
+    /**
+     * @return the forceRecoverReferenceStore
+     */
+    public boolean isForceRecoverReferenceStore() {
+        return forceRecoverReferenceStore;
+    }
+
+    /**
+     * @param forceRecoverReferenceStore the forceRecoverReferenceStore to set
+     */
+    public void setForceRecoverReferenceStore(boolean forceRecoverReferenceStore) {
+        this.forceRecoverReferenceStore = forceRecoverReferenceStore;
+    }
+
+    /**
+     * @return the checkpointInterval
+     */
+    public long getCheckpointInterval() {
+        return checkpointInterval;
+    }
+
+    /**
+     * @param checkpointInterval the checkpointInterval to set
+     */
+    public void setCheckpointInterval(long checkpointInterval) {
+        this.checkpointInterval = checkpointInterval;
     }
 }
