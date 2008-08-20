@@ -325,6 +325,21 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
                 ((ActiveMQMessage) message).setJMSCorrelationID(rc);
             }
         });
+        JMS_PROPERTY_SETERS.put("JMSDeliveryMode", new PropertySetter() {
+            public void set(Message message, Object value) throws MessageFormatException {
+                Integer rc = (Integer) TypeConversionSupport.convert(value, Integer.class);
+                if (rc == null) {
+                    Boolean bool = (Boolean) TypeConversionSupport.convert(value, Boolean.class);
+                    if (bool == null) {
+                        throw new MessageFormatException("Property JMSDeliveryMode cannot be set from a " + value.getClass().getName() + ".");
+                    }
+                    else {
+                        rc = bool.booleanValue() ? DeliveryMode.PERSISTENT : DeliveryMode.NON_PERSISTENT;
+                    }
+                }
+                ((ActiveMQMessage) message).setJMSDeliveryMode(rc);
+            }
+        });
         JMS_PROPERTY_SETERS.put("JMSExpiration", new PropertySetter() {
             public void set(Message message, Object value) throws MessageFormatException {
                 Long rc = (Long) TypeConversionSupport.convert(value, Long.class);
