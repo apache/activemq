@@ -58,6 +58,7 @@ public class VMTransportFactory extends TransportFactory {
         String host;
         Map<String, String> options;
         boolean create = true;
+        int waitForStart = -1;
         CompositeData data = URISupport.parseComposite(location);
         if (data.getComponents().length == 1 && "broker".equals(data.getComponents()[0].getScheme())) {
             brokerURI = data.getComponents()[0];
@@ -88,6 +89,10 @@ public class VMTransportFactory extends TransportFactory {
                 if ("false".equals(options.remove("create"))) {
                     create = false;
                 }
+                String waitForStartString = options.remove("waitForStart");
+                if (waitForStartString != null) {
+                    waitForStart = Integer.parseInt(waitForStartString);
+                }
             } catch (URISyntaxException e1) {
                 throw IOExceptionSupport.create(e1);
             }
@@ -102,10 +107,9 @@ public class VMTransportFactory extends TransportFactory {
             BrokerService broker = null;
             // Synchronize on the registry so that multiple concurrent threads
             // doing this do not think that the broker has not been created and
-            // cause multiple
-            // brokers to be started.
+            // cause multiple brokers to be started.
             synchronized (BrokerRegistry.getInstance().getRegistryMutext()) {
-                broker = BrokerRegistry.getInstance().lookup(host);
+                broker = lookupBroker(BrokerRegistry.getInstance(), host, waitForStart);
                 if (broker == null) {
                     if (!create) {
                         throw new IOException("Broker named '" + host + "' does not exist.");
@@ -121,6 +125,7 @@ public class VMTransportFactory extends TransportFactory {
                         throw IOExceptionSupport.create(e);
                     }
                     BROKERS.put(host, broker);
+                    BrokerRegistry.getInstance().getRegistryMutext().notifyAll();
                 }
 
                 server = SERVERS.get(host);
@@ -150,6 +155,32 @@ public class VMTransportFactory extends TransportFactory {
             throw new IllegalArgumentException("Invalid connect parameters: " + options);
         }
         return transport;
+    }
+
+   /**
+    * @param registry
+    * @param brokerName
+    * @param waitForStart - time in milliseconds to wait for a broker to appear
+    * @return
+    */
+    private BrokerService lookupBroker(final BrokerRegistry registry, final String brokerName, int waitForStart) {
+        BrokerService broker = null;
+        synchronized(registry.getRegistryMutext()) {
+            broker = registry.lookup(brokerName);
+            if (broker == null && waitForStart > 0) {
+                final long expiry = System.currentTimeMillis() + waitForStart;
+                while (broker == null  && expiry > System.currentTimeMillis()) {
+                    long timeout = Math.max(0, expiry - System.currentTimeMillis());
+                    try {
+                        LOG.debug("waiting for broker named: " + brokerName + " to start");
+                        registry.getRegistryMutext().wait(timeout);
+                    } catch (InterruptedException ignored) {
+                    }
+                    broker = registry.lookup(brokerName);
+                }
+            }
+        }
+        return broker;
     }
 
     public TransportServer doBind(URI location) throws IOException {

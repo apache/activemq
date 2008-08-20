@@ -445,7 +445,6 @@ public class BrokerService implements Service {
             
             processHelperProperties();
 
-            BrokerRegistry.getInstance().bind(getBrokerName(), this);
 
             
             getPersistenceAdapter().setUsageManager(getProducerSystemUsage());
@@ -465,7 +464,8 @@ public class BrokerService implements Service {
             }
             
             getBroker().start();
-
+            BrokerRegistry.getInstance().bind(getBrokerName(), this);
+            
            // see if there is a MasterBroker service and if so, configure
             // it and start it.
             for (Service service : services) {

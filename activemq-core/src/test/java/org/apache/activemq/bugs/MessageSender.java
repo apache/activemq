@@ -38,4 +38,8 @@ public class MessageSender {
             session.commit();
         }
     }
+    
+    public MessageProducer getProducer() {
+        return producer;
+    }
 }
