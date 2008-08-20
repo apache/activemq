@@ -130,6 +130,8 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 	private boolean failIfJournalIsLocked;
     private boolean lockLogged;
     private boolean lockAquired;
+    private boolean recoverReferenceStore=true;
+    private boolean forceRecoverReferenceStore=false;
 
     public String getBrokerName() {
         return this.brokerName;
@@ -247,15 +249,19 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         // store, but they still
         // need to be recovered when the broker starts up.
 
-        if (!referenceStoreAdapter.isStoreValid()) {
+        if (isForceRecoverReferenceStore()
+                || (isRecoverReferenceStore() && !referenceStoreAdapter
+                        .isStoreValid())) {
             LOG.warn("The ReferenceStore is not valid - recovering ...");
             recover();
             LOG.info("Finished recovering the ReferenceStore");
         } else {
-            Location location = writeTraceMessage("RECOVERED " + new Date(), true);
+            Location location = writeTraceMessage("RECOVERED " + new Date(),
+                    true);
             asyncDataManager.setMark(location, true);
             // recover transactions
-            getTransactionStore().setPreparedTransactions(referenceStoreAdapter.retrievePreparedState());
+            getTransactionStore().setPreparedTransactions(
+                    referenceStoreAdapter.retrievePreparedState());
         }
 
         // Do a checkpoint periodically.
@@ -929,6 +935,34 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 
     public void setDisableLocking(boolean disableLocking) {
         this.disableLocking = disableLocking;
+    }
+    
+    /**
+     * @return the recoverReferenceStore
+     */
+    public boolean isRecoverReferenceStore() {
+        return recoverReferenceStore;
+    }
+
+    /**
+     * @param recoverReferenceStore the recoverReferenceStore to set
+     */
+    public void setRecoverReferenceStore(boolean recoverReferenceStore) {
+        this.recoverReferenceStore = recoverReferenceStore;
+    }
+
+    /**
+     * @return the forceRecoverReferenceStore
+     */
+    public boolean isForceRecoverReferenceStore() {
+        return forceRecoverReferenceStore;
+    }
+
+    /**
+     * @param forceRecoverReferenceStore the forceRecoverReferenceStore to set
+     */
+    public void setForceRecoverReferenceStore(boolean forceRecoverReferenceStore) {
+        this.forceRecoverReferenceStore = forceRecoverReferenceStore;
     }
 
 	
