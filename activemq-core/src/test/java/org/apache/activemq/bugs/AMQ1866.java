@@ -21,13 +21,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.jms.Connection;
-import javax.jms.Destination;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -89,19 +89,16 @@ public class AMQ1866 extends TestCase {
         brokerService.stop();
     }
 
-    // Failing
     public void testConsumerSlowDownPrefetch0() throws Exception {
         ACTIVEMQ_BROKER_URI = "tcp://localhost:61616?jms.prefetchPolicy.queuePrefetch=0";
         doTestConsumerSlowDown();
     }
 
-    // Failing
     public void testConsumerSlowDownPrefetch10() throws Exception {
         ACTIVEMQ_BROKER_URI = "tcp://localhost:61616?jms.prefetchPolicy.queuePrefetch=10";
         doTestConsumerSlowDown();
     }
     
-    // Passing
     public void testConsumerSlowDownDefaultPrefetch() throws Exception {
         ACTIVEMQ_BROKER_URI = "tcp://localhost:61616";
         doTestConsumerSlowDown();
@@ -137,15 +134,18 @@ public class AMQ1866 extends TestCase {
         threads.add(c2);
         c2.start();
 
+        int totalReceived = 0;
         for ( int i=0; i < 30; i++) {
             Thread.sleep(1000);
             long c1Counter = c1.counter.getAndSet(0);
             long c2Counter = c2.counter.getAndSet(0);
             System.out.println("c1: "+c1Counter+", c2: "+c2Counter);
+            totalReceived += c1Counter;
+            totalReceived += c2Counter;
             
             // Once message have been flowing for a few seconds, start asserting that c2 always gets messages.  It should be receiving about 100 / sec
-            if( i > 3 ) {
-                assertTrue("Consumer 2 should be receiving new messages every second.", c2Counter > 0);
+            if( i > 10 ) {
+                assertTrue("Total received=" + totalReceived + ", Consumer 2 should be receiving new messages every second.", c2Counter > 0);
             }
         }
     }    
@@ -204,8 +204,8 @@ public class AMQ1866 extends TestCase {
                         } else {
                             sleepingTime = 1; 
                         }
-                        Thread.sleep(sleepingTime);
                         counter.incrementAndGet();
+                        Thread.sleep(sleepingTime);
                     }
                 }
                 

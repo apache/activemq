@@ -23,6 +23,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
@@ -31,19 +32,24 @@ import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+
+import junit.framework.Test;
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerTest;
+import org.apache.activemq.broker.region.Queue;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision: 1.3 $
  */
-public abstract class CursorSupport extends TestCase {
+public abstract class CursorSupport extends CombinationTestSupport {
 
-    protected static final int MESSAGE_COUNT = 500;
-    protected static final int PREFETCH_SIZE = 50;
+    public int MESSAGE_COUNT = 500;
+    public int PREFETCH_SIZE = 50;
     private static final Log LOG = LogFactory.getLog(CursorSupport.class);
 
     protected BrokerService broker;
@@ -55,7 +61,7 @@ public abstract class CursorSupport extends TestCase {
 
     protected abstract void configureBroker(BrokerService answer) throws Exception;
 
-    public void XtestSendFirstThenConsume() throws Exception {
+    public void testSendFirstThenConsume() throws Exception {
         ConnectionFactory factory = createConnectionFactory();
         Connection consumerConnection = getConsumerConnection(factory);
         MessageConsumer consumer = getConsumer(consumerConnection);
@@ -85,7 +91,15 @@ public abstract class CursorSupport extends TestCase {
         consumerConnection.close();
     }
 
-    public void testSendWhilstConaume() throws Exception {
+
+    public void initCombosForTestSendWhilstConsume() {
+        addCombinationValues("MESSAGE_COUNT", new Object[] {Integer.valueOf(400),
+                                                           Integer.valueOf(500)});
+        addCombinationValues("PREFETCH_SIZE", new Object[] {Integer.valueOf(100),
+                Integer.valueOf(50)});
+    }
+
+    public void testSendWhilstConsume() throws Exception {
         ConnectionFactory factory = createConnectionFactory();
         Connection consumerConnection = getConsumerConnection(factory);
         // create durable subs
@@ -150,7 +164,7 @@ public abstract class CursorSupport extends TestCase {
             assertEquals("This should be the same at pos " + i + " in the list", sent.getJMSMessageID(), consumed.getJMSMessageID());
         }
     }
-
+    
     protected Connection getConsumerConnection(ConnectionFactory fac) throws JMSException {
         Connection connection = fac.createConnection();
         connection.setClientID("testConsumer");

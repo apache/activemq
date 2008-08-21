@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -1166,19 +1167,24 @@ public class Queue extends BaseDestination implements Task {
             // list anything that does not actually get dispatched.
             if (list != null && !list.isEmpty()) {
 //                System.out.println(getName()+": dispatching from paged in: "+list.size());
-                pagedInPendingDispatch.addAll(doActualDispatch(list));
+                if (pagedInPendingDispatch.isEmpty()) {
+                    pagedInPendingDispatch.addAll(doActualDispatch(list));
+                } else {
+                    pagedInPendingDispatch.addAll(list);
+                }
 //                System.out.println(getName()+": new pending list2: "+pagedInPendingDispatch.size());
             }
         } finally {
             dispatchLock.unlock();
         }
     }
-
+    
     /**
      * @return list of messages that could get dispatched to consumers if they were not full.
      */
     private List<QueueMessageReference> doActualDispatch(List<QueueMessageReference> list) throws Exception {
         List<QueueMessageReference> rc = new ArrayList<QueueMessageReference>(list.size());
+        Set<Subscription> fullConsumers = new HashSet<Subscription>(this.consumers.size());
         List<Subscription> consumers;
         
         synchronized (this.consumers) {
@@ -1190,13 +1196,18 @@ public class Queue extends BaseDestination implements Task {
             int interestCount=0;
             for (Subscription s : consumers) {
                 if (dispatchSelector.canSelect(s, node)) {
-                    if (!s.isFull()) {
-                        // Dispatch it.
-                        s.add(node);
-//                        System.out.println(getName()+" Dispatched to "+s.getConsumerInfo().getConsumerId()+", "+node.getMessageId());
-                        target = s;
-                        break;
-                    } 
+                    if (!fullConsumers.contains(s)) {
+                        if (!s.isFull()) {
+                            // Dispatch it.
+                            s.add(node);
+                            //System.err.println(getName()+" Dispatched to "+s.getConsumerInfo().getConsumerId()+", "+node.getMessageId());
+                            target = s;
+                            break;
+                        } else {
+                            // no further dispatch of list to a full consumer to avoid out of order message receipt 
+                            fullConsumers.add(s);
+                        }
+                    }
                     interestCount++;
                 }
             }

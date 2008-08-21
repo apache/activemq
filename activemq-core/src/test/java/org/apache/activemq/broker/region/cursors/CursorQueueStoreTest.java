@@ -23,6 +23,8 @@ import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.Session;
 
+import junit.framework.Test;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
@@ -61,5 +63,13 @@ public class CursorQueueStoreTest extends CursorSupport {
         answer.setDeleteAllMessagesOnStartup(true);
         answer.addConnector(bindAddress);
         answer.setDeleteAllMessagesOnStartup(true);
+    }
+    
+    public static Test suite() {
+        return suite(CursorQueueStoreTest.class);
+    }
+
+    public static void main(String[] args) {
+        junit.textui.TestRunner.run(suite());
     }
 }
