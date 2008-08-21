@@ -188,6 +188,11 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
             assertEquals("stringProperties size()", 1, stringProperties.size());
             assertEquals("stringProperties.MyHeader", "StringHeader" + i, stringProperties.get("MyStringHeader"));
 
+            Map properties = CompositeDataHelper.getMessageUserProperties(cdata);
+            assertEquals("properties size()", 2, properties.size());
+            assertEquals("properties.MyHeader", i, properties.get("MyHeader"));
+            assertEquals("properties.MyHeader", "StringHeader" + i, properties.get("MyStringHeader"));
+
             assertComplexData(cdata, "JMSXGroupSeq", 1234);
             assertComplexData(cdata, "JMSXGroupID", "MyGroupID");
             assertComplexData(cdata, "Text", "message:" + i);
