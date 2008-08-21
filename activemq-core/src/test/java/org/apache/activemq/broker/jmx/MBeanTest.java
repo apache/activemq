@@ -18,6 +18,8 @@ package org.apache.activemq.broker.jmx;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.Map;
+import java.util.HashMap;
 import javax.jms.Connection;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
@@ -30,6 +32,7 @@ import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
 import junit.textui.TestRunner;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.commons.logging.Log;
@@ -72,6 +75,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         // test all the various MBeans now we have a producer, consumer and
         // messages on a queue
+        assertSendViaMBean();
         assertQueueBrowseWorks();
         assertCreateAndDestroyDurableSubscriptions();
         assertConsumerCounts();
@@ -125,6 +129,77 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         assertEquals("Should have no more messages in the queue: " + queueViewMBeanName, 0, queue.getQueueSize());
     }
+
+
+    protected void assertSendViaMBean() throws Exception {
+        String queueName = getDestinationString() + ".SendMBBean";
+
+        ObjectName brokerName = assertRegisteredObjectName(domain + ":Type=Broker,BrokerName=localhost");
+        echo("Create QueueView MBean...");
+        BrokerViewMBean broker = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
+        broker.addQueue(queueName);
+
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + queueName + ",BrokerName=localhost");
+
+        echo("Create QueueView MBean...");
+        QueueViewMBean proxy = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
+        int count = 5;
+        for (int i = 0; i < count; i++) {
+            String body = "message:" + i;
+
+            Map headers = new HashMap();
+            headers.put("JMSCorrelationID", "MyCorrId");
+            headers.put("JMSDeliveryMode", Boolean.TRUE);
+            headers.put("JMSXGroupID", "MyGroupID");
+            headers.put("JMSXGroupSeq", 1234);
+            headers.put("JMSPriority", i);
+            headers.put("JMSType", "MyType");
+            headers.put("MyHeader", i);
+            headers.put("MyStringHeader", "StringHeader" + i);
+
+            proxy.sendTextMessage(headers, body);
+        }
+        
+        CompositeData[] compdatalist = proxy.browse();
+        if (compdatalist.length == 0) {
+            fail("There is no message in the queue:");
+        }
+        String[] messageIDs = new String[compdatalist.length];
+
+        for (int i = 0; i < compdatalist.length; i++) {
+            CompositeData cdata = compdatalist[i];
+
+            if (i == 0) {
+                echo("Columns: " + cdata.getCompositeType().keySet());
+            }
+
+            assertComplexData(cdata, "JMSCorrelationID", "MyCorrId");
+            assertComplexData(cdata, "JMSPriority", i);
+            assertComplexData(cdata, "JMSType", "MyType");
+            assertComplexData(cdata, "JMSCorrelationID", "MyCorrId");
+            assertComplexData(cdata, "PropertiesText", "{MyStringHeader=StringHeader" + i + ", MyHeader=" + i + "}");
+
+            Map intProperties = CompositeDataHelper.getTabularMap(cdata, CompositeDataConstants.INT_PROPERTIES);
+            assertEquals("intProperties size()", 1, intProperties.size());
+            assertEquals("intProperties.MyHeader", i, intProperties.get("MyHeader"));
+
+            Map stringProperties = CompositeDataHelper.getTabularMap(cdata, CompositeDataConstants.STRING_PROPERTIES);
+            assertEquals("stringProperties size()", 1, stringProperties.size());
+            assertEquals("stringProperties.MyHeader", "StringHeader" + i, stringProperties.get("MyStringHeader"));
+
+            assertComplexData(cdata, "JMSXGroupSeq", 1234);
+            assertComplexData(cdata, "JMSXGroupID", "MyGroupID");
+            assertComplexData(cdata, "Text", "message:" + i);
+
+        }
+    }
+
+    protected void assertComplexData(CompositeData cdata, String name, Object expected) {
+        Object value = cdata.get(name);
+        assertEquals("CData field: " + name, expected, value);
+    }
+
 
     protected void assertQueueBrowseWorks() throws Exception {
         Integer mbeancnt = mbeanServer.getMBeanCount();
@@ -309,6 +384,10 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         for (int i = 0; i < MESSAGE_COUNT; i++) {
             Message message = session.createTextMessage("Message: " + i);
             message.setIntProperty("counter", i);
+            message.setJMSCorrelationID("MyCorrelationID");
+            message.setJMSReplyTo(new ActiveMQQueue("MyReplyTo"));
+            message.setJMSType("MyType");
+            message.setJMSPriority(5);
             producer.send(message);
         }
         Thread.sleep(1000);

@@ -156,6 +156,10 @@ public class DestinationView implements DestinationViewMBean {
                 }
 
             } catch (Throwable e) {
+                // TODO DELETE ME
+                System.out.println(e);
+                e.printStackTrace();
+                // TODO DELETE ME
                 LOG.warn("exception browsing destination", e);
             }
         }
