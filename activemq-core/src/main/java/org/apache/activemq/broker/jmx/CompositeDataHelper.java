@@ -34,6 +34,11 @@ public class CompositeDataHelper {
      */
     public static Map getTabularMap(CompositeData cdata, String fieldName) {
         Map map = new HashMap();
+        appendTabularMap(map, cdata, fieldName);
+        return map;
+    }
+
+    public static void appendTabularMap(Map map, CompositeData cdata, String fieldName) {
         Object tabularObject = cdata.get(fieldName);
         if (tabularObject instanceof TabularData) {
             TabularData tabularData = (TabularData) tabularObject;
@@ -44,6 +49,25 @@ public class CompositeDataHelper {
                 map.put(key, value);
             }
         }
+    }
+
+    /**
+     * Returns a map of all the user properties in the given message {@link javax.management.openmbean.CompositeData}
+     * object
+     *
+     * @param cdata
+     * @return
+     */
+    public static Map getMessageUserProperties(CompositeData cdata) {
+        Map map = new HashMap();
+        appendTabularMap(map, cdata, CompositeDataConstants.STRING_PROPERTIES);
+        appendTabularMap(map, cdata, CompositeDataConstants.BOOLEAN_PROPERTIES);
+        appendTabularMap(map, cdata, CompositeDataConstants.BYTE_PROPERTIES);
+        appendTabularMap(map, cdata, CompositeDataConstants.SHORT_PROPERTIES);
+        appendTabularMap(map, cdata, CompositeDataConstants.INT_PROPERTIES);
+        appendTabularMap(map, cdata, CompositeDataConstants.LONG_PROPERTIES);
+        appendTabularMap(map, cdata, CompositeDataConstants.FLOAT_PROPERTIES);
+        appendTabularMap(map, cdata, CompositeDataConstants.DOUBLE_PROPERTIES);
         return map;
     }
 }
