@@ -22,6 +22,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
@@ -32,6 +33,8 @@ import javax.management.openmbean.CompositeType;
 import javax.management.openmbean.OpenDataException;
 import javax.management.openmbean.OpenType;
 import javax.management.openmbean.SimpleType;
+import javax.management.openmbean.TabularType;
+import javax.management.openmbean.TabularDataSupport;
 
 import org.apache.activemq.command.ActiveMQBytesMessage;
 import org.apache.activemq.command.ActiveMQMapMessage;
@@ -40,6 +43,7 @@ import org.apache.activemq.command.ActiveMQObjectMessage;
 import org.apache.activemq.command.ActiveMQStreamMessage;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.Message;
+import static org.apache.activemq.broker.jmx.CompositeDataConstants.*;
 
 public final class OpenTypeSupport {
 
@@ -95,6 +99,14 @@ public final class OpenTypeSupport {
     }
 
     static class MessageOpenTypeFactory extends AbstractOpenTypeFactory {
+        protected TabularType stringPropertyTabularType;
+        protected TabularType booleanPropertyTabularType;
+        protected TabularType bytePropertyTabularType;
+        protected TabularType shortPropertyTabularType;
+        protected TabularType intPropertyTabularType;
+        protected TabularType longPropertyTabularType;
+        protected TabularType floatPropertyTabularType;
+        protected TabularType doublePropertyTabularType;
 
         protected String getTypeName() {
             return ActiveMQMessage.class.getName();
@@ -112,7 +124,28 @@ public final class OpenTypeSupport {
             addItem("JMSPriority", "JMSPriority", SimpleType.INTEGER);
             addItem("JMSRedelivered", "JMSRedelivered", SimpleType.BOOLEAN);
             addItem("JMSTimestamp", "JMSTimestamp", SimpleType.DATE);
-            addItem("Properties", "Properties", SimpleType.STRING);
+            addItem(JMSXGROUP_ID, "Message Group ID", SimpleType.STRING);
+            addItem(JMSXGROUP_SEQ, "Message Group Sequence Number", SimpleType.INTEGER);
+            addItem(CompositeDataConstants.PROPERTIES, "User Properties Text", SimpleType.STRING);
+
+            // now lets expose the type safe properties
+            stringPropertyTabularType = createTabularType(String.class, SimpleType.STRING);
+            booleanPropertyTabularType = createTabularType(Boolean.class, SimpleType.BOOLEAN);
+            bytePropertyTabularType = createTabularType(Byte.class, SimpleType.BYTE);
+            shortPropertyTabularType = createTabularType(Short.class, SimpleType.SHORT);
+            intPropertyTabularType = createTabularType(Integer.class, SimpleType.INTEGER);
+            longPropertyTabularType = createTabularType(Long.class, SimpleType.LONG);
+            floatPropertyTabularType = createTabularType(Float.class, SimpleType.FLOAT);
+            doublePropertyTabularType = createTabularType(Double.class, SimpleType.DOUBLE);
+
+            addItem(CompositeDataConstants.STRING_PROPERTIES, "User String Properties", stringPropertyTabularType);
+            addItem(CompositeDataConstants.BOOLEAN_PROPERTIES, "User Boolean Properties", booleanPropertyTabularType);
+            addItem(CompositeDataConstants.BYTE_PROPERTIES, "User Byte Properties", bytePropertyTabularType);
+            addItem(CompositeDataConstants.SHORT_PROPERTIES, "User Short Properties", shortPropertyTabularType);
+            addItem(CompositeDataConstants.INT_PROPERTIES, "User Integer Properties", intPropertyTabularType);
+            addItem(CompositeDataConstants.LONG_PROPERTIES, "User Long Properties", longPropertyTabularType);
+            addItem(CompositeDataConstants.FLOAT_PROPERTIES, "User Float Properties", floatPropertyTabularType);
+            addItem(CompositeDataConstants.DOUBLE_PROPERTIES, "User Double Properties", doublePropertyTabularType);
         }
 
         public Map<String, Object> getFields(Object o) throws OpenDataException {
@@ -128,16 +161,89 @@ public final class OpenTypeSupport {
             rc.put("JMSPriority", Integer.valueOf(m.getJMSPriority()));
             rc.put("JMSRedelivered", Boolean.valueOf(m.getJMSRedelivered()));
             rc.put("JMSTimestamp", new Date(m.getJMSTimestamp()));
+            rc.put(JMSXGROUP_ID, m.getGroupID());
+            rc.put(JMSXGROUP_SEQ, m.getGroupSequence());
             try {
-                rc.put("Properties", "" + m.getProperties());
+                rc.put(CompositeDataConstants.PROPERTIES, "" + m.getProperties());
             } catch (IOException e) {
-                rc.put("Properties", "");
+                rc.put(CompositeDataConstants.PROPERTIES, "");
+            }
+
+            try {
+                rc.put(CompositeDataConstants.STRING_PROPERTIES, createTabularData(m, stringPropertyTabularType, String.class));
+            } catch (IOException e) {
+                rc.put(CompositeDataConstants.STRING_PROPERTIES, new TabularDataSupport(stringPropertyTabularType));
+            }
+            try {
+                rc.put(CompositeDataConstants.BOOLEAN_PROPERTIES, createTabularData(m, booleanPropertyTabularType, Boolean.class));
+            } catch (IOException e) {
+                rc.put(CompositeDataConstants.BOOLEAN_PROPERTIES, new TabularDataSupport(booleanPropertyTabularType));
+            }
+            try {
+                rc.put(CompositeDataConstants.BYTE_PROPERTIES, createTabularData(m, bytePropertyTabularType, Byte.class));
+            } catch (IOException e) {
+                rc.put(CompositeDataConstants.BYTE_PROPERTIES, new TabularDataSupport(bytePropertyTabularType));
+            }
+            try {
+                rc.put(CompositeDataConstants.SHORT_PROPERTIES, createTabularData(m, shortPropertyTabularType, Short.class));
+            } catch (IOException e) {
+                rc.put(CompositeDataConstants.SHORT_PROPERTIES, new TabularDataSupport(shortPropertyTabularType));
+            }
+            try {
+                rc.put(CompositeDataConstants.INT_PROPERTIES, createTabularData(m, intPropertyTabularType, Integer.class));
+            } catch (IOException e) {
+                rc.put(CompositeDataConstants.INT_PROPERTIES, new TabularDataSupport(intPropertyTabularType));
+            }
+            try {
+                rc.put(CompositeDataConstants.LONG_PROPERTIES, createTabularData(m, longPropertyTabularType, Long.class));
+            } catch (IOException e) {
+                rc.put(CompositeDataConstants.LONG_PROPERTIES, new TabularDataSupport(longPropertyTabularType));
+            }
+            try {
+                rc.put(CompositeDataConstants.FLOAT_PROPERTIES, createTabularData(m, floatPropertyTabularType, Float.class));
+            } catch (IOException e) {
+                rc.put(CompositeDataConstants.FLOAT_PROPERTIES, new TabularDataSupport(floatPropertyTabularType));
+            }
+            try {
+                rc.put(CompositeDataConstants.DOUBLE_PROPERTIES, createTabularData(m, doublePropertyTabularType, Double.class));
+            } catch (IOException e) {
+                rc.put(CompositeDataConstants.DOUBLE_PROPERTIES, new TabularDataSupport(doublePropertyTabularType));
             }
             return rc;
+        }
+
+
+        protected <T> TabularType createTabularType(Class<T> type, OpenType openType) throws OpenDataException {
+            String typeName = "java.util.Map<java.lang.String, " + type.getName() + ">";
+            String[] keyValue = new String[]{"key", "value"};
+            OpenType[] openTypes = new OpenType[]{SimpleType.STRING, openType};
+            CompositeType rowType = new CompositeType(typeName, typeName, keyValue, keyValue, openTypes);
+            return new TabularType(typeName, typeName, rowType, new String[]{"key"});
+        }
+
+        protected TabularDataSupport createTabularData(ActiveMQMessage m, TabularType type, Class valueType) throws IOException, OpenDataException {
+            TabularDataSupport answer = new TabularDataSupport(type);
+            Set<Map.Entry<String,Object>> entries = m.getProperties().entrySet();
+            for (Map.Entry<String, Object> entry : entries) {
+                Object value = entry.getValue();
+                if (valueType.isInstance(value)) {
+                    CompositeDataSupport compositeData = createTabularRowValue(type, entry.getKey(), value);
+                    answer.put(compositeData);
+                }
+            }
+            return answer;
+        }
+
+        protected CompositeDataSupport createTabularRowValue(TabularType type, String key, Object value) throws OpenDataException {
+            Map<String,Object> fields = new HashMap<String, Object>();
+            fields.put("key", key);
+            fields.put("value", value);
+            return new CompositeDataSupport(type.getRowType(), fields);
         }
     }
 
     static class ByteMessageOpenTypeFactory extends MessageOpenTypeFactory {
+
 
         protected String getTypeName() {
             return ActiveMQBytesMessage.class.getName();
@@ -145,8 +251,8 @@ public final class OpenTypeSupport {
 
         protected void init() throws OpenDataException {
             super.init();
-            addItem("BodyLength", "Body length", SimpleType.LONG);
-            addItem("BodyPreview", "Body preview", new ArrayType(1, SimpleType.BYTE));
+            addItem(BODY_LENGTH, "Body length", SimpleType.LONG);
+            addItem(BODY_PREVIEW, "Body preview", new ArrayType(1, SimpleType.BYTE));
         }
 
         public Map<String, Object> getFields(Object o) throws OpenDataException {
@@ -155,9 +261,9 @@ public final class OpenTypeSupport {
             long length = 0;
             try {
                 length = m.getBodyLength();
-                rc.put("BodyLength", Long.valueOf(length));
+                rc.put(BODY_LENGTH, Long.valueOf(length));
             } catch (JMSException e) {
-                rc.put("BodyLength", Long.valueOf(0));
+                rc.put(BODY_LENGTH, Long.valueOf(0));
             }
             try {
                 byte preview[] = new byte[(int)Math.min(length, 255)];
@@ -171,9 +277,9 @@ public final class OpenTypeSupport {
                     data[i] = new Byte(preview[i]);
                 }
 
-                rc.put("BodyPreview", data);
+                rc.put(BODY_PREVIEW, data);
             } catch (JMSException e) {
-                rc.put("BodyPreview", new byte[] {});
+                rc.put(BODY_PREVIEW, new byte[] {});
             }
             return rc;
         }
@@ -181,22 +287,23 @@ public final class OpenTypeSupport {
     }
 
     static class MapMessageOpenTypeFactory extends MessageOpenTypeFactory {
+
         protected String getTypeName() {
             return ActiveMQMapMessage.class.getName();
         }
 
         protected void init() throws OpenDataException {
             super.init();
-            addItem("ContentMap", "Content map", SimpleType.STRING);
+            addItem(CONTENT_MAP, "Content map", SimpleType.STRING);
         }
 
         public Map<String, Object> getFields(Object o) throws OpenDataException {
             ActiveMQMapMessage m = (ActiveMQMapMessage)o;
             Map<String, Object> rc = super.getFields(o);
             try {
-                rc.put("ContentMap", "" + m.getContentMap());
+                rc.put(CONTENT_MAP, "" + m.getContentMap());
             } catch (JMSException e) {
-                rc.put("ContentMap", "");
+                rc.put(CONTENT_MAP, "");
             }
             return rc;
         }
@@ -233,22 +340,23 @@ public final class OpenTypeSupport {
     }
 
     static class TextMessageOpenTypeFactory extends MessageOpenTypeFactory {
+
         protected String getTypeName() {
             return ActiveMQTextMessage.class.getName();
         }
 
         protected void init() throws OpenDataException {
             super.init();
-            addItem("Text", "Text", SimpleType.STRING);
+            addItem(MESSAGE_TEXT, MESSAGE_TEXT, SimpleType.STRING);
         }
 
         public Map<String, Object> getFields(Object o) throws OpenDataException {
             ActiveMQTextMessage m = (ActiveMQTextMessage)o;
             Map<String, Object> rc = super.getFields(o);
             try {
-                rc.put("Text", "" + m.getText());
+                rc.put(MESSAGE_TEXT, "" + m.getText());
             } catch (JMSException e) {
-                rc.put("Text", "");
+                rc.put(MESSAGE_TEXT, "");
             }
             return rc;
         }
