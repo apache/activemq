@@ -92,6 +92,21 @@ public class QueueView extends DestinationView implements QueueViewMBean {
         return ((Queue)destination).moveMatchingMessagesTo(context, selector, toDestination, maximumMessages);
     }
 
+    /**
+     * Moves a message back to its original destination
+     */
+    public boolean retryMessage(String messageId) throws Exception {
+        Queue queue = (Queue) destination;
+        Message rc = queue.getMessage(messageId);
+        if (rc != null) {
+            ActiveMQDestination originalDestination = rc.getOriginalDestination();
+            if (originalDestination != null) {
+                ConnectionContext context = BrokerView.getConnectionContext(broker.getContextBroker());
+                return queue.moveMessageTo(context, messageId, originalDestination);
+            }
+        }
+        return false;
+    }
     
     public int cursorSize() {
         Queue queue = (Queue) destination;
