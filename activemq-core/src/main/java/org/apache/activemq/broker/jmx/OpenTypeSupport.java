@@ -26,6 +26,7 @@ import java.util.Set;
 
 import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
+import javax.jms.Destination;
 import javax.management.openmbean.ArrayType;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.CompositeDataSupport;
@@ -154,7 +155,7 @@ public final class OpenTypeSupport {
             rc.put("JMSCorrelationID", m.getJMSCorrelationID());
             rc.put("JMSDestination", "" + m.getJMSDestination());
             rc.put("JMSMessageID", m.getJMSMessageID());
-            rc.put("JMSReplyTo", "" + m.getJMSReplyTo());
+            rc.put("JMSReplyTo",toString(m.getJMSReplyTo()));
             rc.put("JMSType", m.getJMSType());
             rc.put("JMSDeliveryMode", m.getJMSDeliveryMode() == DeliveryMode.PERSISTENT ? "PERSISTENT" : "NON-PERSISTENT");
             rc.put("JMSExpiration", Long.valueOf(m.getJMSExpiration()));
@@ -210,6 +211,13 @@ public final class OpenTypeSupport {
                 rc.put(CompositeDataConstants.DOUBLE_PROPERTIES, new TabularDataSupport(doublePropertyTabularType));
             }
             return rc;
+        }
+
+        protected String toString(Object value) {
+            if (value == null) {
+                return null;
+            }
+            return value.toString();
         }
 
 
