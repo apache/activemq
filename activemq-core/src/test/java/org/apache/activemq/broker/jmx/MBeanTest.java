@@ -144,16 +144,18 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         echo("Create QueueView MBean...");
         QueueViewMBean proxy = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
 
+        proxy.purge();
+        
         int count = 5;
         for (int i = 0; i < count; i++) {
             String body = "message:" + i;
 
             Map headers = new HashMap();
             headers.put("JMSCorrelationID", "MyCorrId");
-            headers.put("JMSDeliveryMode", Boolean.TRUE);
+            headers.put("JMSDeliveryMode", Boolean.FALSE);
             headers.put("JMSXGroupID", "MyGroupID");
             headers.put("JMSXGroupSeq", 1234);
-            headers.put("JMSPriority", i);
+            headers.put("JMSPriority", i + 1);
             headers.put("JMSType", "MyType");
             headers.put("MyHeader", i);
             headers.put("MyStringHeader", "StringHeader" + i);
@@ -174,11 +176,12 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
                 echo("Columns: " + cdata.getCompositeType().keySet());
             }
 
-            assertComplexData(cdata, "JMSCorrelationID", "MyCorrId");
-            assertComplexData(cdata, "JMSPriority", i);
-            assertComplexData(cdata, "JMSType", "MyType");
-            assertComplexData(cdata, "JMSCorrelationID", "MyCorrId");
-            assertComplexData(cdata, "PropertiesText", "{MyStringHeader=StringHeader" + i + ", MyHeader=" + i + "}");
+            assertComplexData(i, cdata, "JMSCorrelationID", "MyCorrId");
+            assertComplexData(i, cdata, "JMSPriority", i + 1);
+            assertComplexData(i, cdata, "JMSType", "MyType");
+            assertComplexData(i, cdata, "JMSCorrelationID", "MyCorrId");
+            assertComplexData(i, cdata, "JMSDeliveryMode", "NON-PERSISTENT");
+            assertComplexData(i, cdata, "PropertiesText", "{MyStringHeader=StringHeader" + i + ", MyHeader=" + i + "}");
 
             Map intProperties = CompositeDataHelper.getTabularMap(cdata, CompositeDataConstants.INT_PROPERTIES);
             assertEquals("intProperties size()", 1, intProperties.size());
@@ -193,16 +196,16 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
             assertEquals("properties.MyHeader", i, properties.get("MyHeader"));
             assertEquals("properties.MyHeader", "StringHeader" + i, properties.get("MyStringHeader"));
 
-            assertComplexData(cdata, "JMSXGroupSeq", 1234);
-            assertComplexData(cdata, "JMSXGroupID", "MyGroupID");
-            assertComplexData(cdata, "Text", "message:" + i);
+            assertComplexData(i, cdata, "JMSXGroupSeq", 1234);
+            assertComplexData(i, cdata, "JMSXGroupID", "MyGroupID");
+            assertComplexData(i, cdata, "Text", "message:" + i);
 
         }
     }
 
-    protected void assertComplexData(CompositeData cdata, String name, Object expected) {
+    protected void assertComplexData(int messageIndex, CompositeData cdata, String name, Object expected) {
         Object value = cdata.get(name);
-        assertEquals("CData field: " + name, expected, value);
+        assertEquals("Message " + messageIndex + " CData field: " + name, expected, value);
     }
 
 
