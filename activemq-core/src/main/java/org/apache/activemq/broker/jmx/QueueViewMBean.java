@@ -101,6 +101,11 @@ public interface QueueViewMBean extends DestinationViewMBean {
     boolean moveMessageTo(String messageId, String destinationName) throws Exception;
 
     /**
+     * Moves a message back to its original destination
+     */
+    boolean retryMessage(String messageId) throws Exception;
+    
+    /**
      * Moves the messages matching the given selector
      * 
      * @return the number of messages removed
@@ -145,5 +150,5 @@ public interface QueueViewMBean extends DestinationViewMBean {
      * by the cursor
      */
     public int cursorSize();
-    
+
 }
