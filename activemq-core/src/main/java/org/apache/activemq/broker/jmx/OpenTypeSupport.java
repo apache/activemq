@@ -127,6 +127,7 @@ public final class OpenTypeSupport {
             addItem("JMSTimestamp", "JMSTimestamp", SimpleType.DATE);
             addItem(JMSXGROUP_ID, "Message Group ID", SimpleType.STRING);
             addItem(JMSXGROUP_SEQ, "Message Group Sequence Number", SimpleType.INTEGER);
+            addItem(ORIGINAL_DESTINATION, "Original Destination Before Senting To DLQ", SimpleType.STRING);
             addItem(CompositeDataConstants.PROPERTIES, "User Properties Text", SimpleType.STRING);
 
             // now lets expose the type safe properties
@@ -164,6 +165,7 @@ public final class OpenTypeSupport {
             rc.put("JMSTimestamp", new Date(m.getJMSTimestamp()));
             rc.put(JMSXGROUP_ID, m.getGroupID());
             rc.put(JMSXGROUP_SEQ, m.getGroupSequence());
+            rc.put(ORIGINAL_DESTINATION, toString(m.getOriginalDestination()));
             try {
                 rc.put(CompositeDataConstants.PROPERTIES, "" + m.getProperties());
             } catch (IOException e) {
