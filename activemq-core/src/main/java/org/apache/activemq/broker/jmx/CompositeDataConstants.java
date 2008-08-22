@@ -28,6 +28,7 @@ public interface CompositeDataConstants {
     String BODY_PREVIEW = "BodyPreview";
     String CONTENT_MAP = "ContentMap";
     String MESSAGE_TEXT = "Text";
+    String ORIGINAL_DESTINATION = "OriginalDestination";
 
     // User properties
     String STRING_PROPERTIES = "StringProperties";
