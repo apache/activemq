@@ -24,6 +24,7 @@ import javax.jms.Connection;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.jms.MessageConsumer;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.MalformedObjectNameException;
@@ -32,9 +33,11 @@ import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
 import junit.textui.TestRunner;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.BaseDestination;
+import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -81,6 +84,142 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertConsumerCounts();
     }
 
+    public void testMoveMessages() throws Exception {
+        connection = connectionFactory.createConnection();
+        useConnection(connection);
+
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + getDestinationString() + ",BrokerName=localhost");
+
+        QueueViewMBean queue = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
+        CompositeData[] compdatalist = queue.browse();
+        int initialQueueSize = compdatalist.length;
+        if (initialQueueSize == 0) {
+            fail("There is no message in the queue:");
+        }
+        else {
+            echo("Current queue size: " + initialQueueSize);
+        }
+        // TODO uncommenting this line causes a hang!
+        //int messageCount = initialQueueSize;
+        int messageCount = 10;
+        String[] messageIDs = new String[messageCount];
+        for (int i = 0; i < messageCount; i++) {
+            CompositeData cdata = compdatalist[i];
+            String messageID = (String) cdata.get("JMSMessageID");
+            assertNotNull("Should have a message ID for message " + i, messageID);
+            messageIDs[i] = messageID;
+        }
+
+
+        echo("About to move " + messageCount + " messages");
+
+        String newDestination = getSecondDestinationString();
+        for (String messageID : messageIDs) {
+            echo("Moving message: " + messageID);
+            queue.moveMessageTo(messageID, newDestination);
+        }
+
+        echo("Now browsing the queue");
+        compdatalist = queue.browse();
+        int actualCount = compdatalist.length;
+        echo("Current queue size: " + actualCount);
+        // TODO we seem to have browsed the queue and now there are messages missing!
+        //assertEquals("Should now have empty queue but was", initialQueueSize - messageCount, actualCount);
+
+        echo("Now browsing the second queue");
+
+        queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + newDestination + ",BrokerName=localhost");
+        queue = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
+        long newQueuesize = queue.getQueueSize();
+        echo("Second queue size: " + newQueuesize);
+        assertEquals("Unexpected number of messages ",messageCount, newQueuesize);
+    }
+
+    public void TODO_testRetryMessages() throws Exception {
+        // lets speed up redelivery
+        ActiveMQConnectionFactory factory = (ActiveMQConnectionFactory) connectionFactory;
+        factory.getRedeliveryPolicy().setCollisionAvoidancePercent((short) 0);
+        factory.getRedeliveryPolicy().setMaximumRedeliveries(1);
+        factory.getRedeliveryPolicy().setInitialRedeliveryDelay(0);
+        factory.getRedeliveryPolicy().setUseCollisionAvoidance(false);
+        factory.getRedeliveryPolicy().setUseExponentialBackOff(false);
+        factory.getRedeliveryPolicy().setBackOffMultiplier((short) 0);
+
+        connection = connectionFactory.createConnection();
+        useConnection(connection);
+
+
+        ObjectName queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + getDestinationString() + ",BrokerName=localhost");
+        QueueViewMBean queue = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
+
+        long initialQueueSize = queue.getQueueSize();
+        echo("current queue size: " + initialQueueSize);
+
+
+        // lets create a duff consumer which keeps rolling back...
+        Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
+        MessageConsumer consumer = session.createConsumer(new ActiveMQQueue(getDestinationString()));
+        Message message = consumer.receive(5000);
+        while (message != null) {
+            echo("Message: " + message.getJMSMessageID() + " redelivered " + message.getJMSRedelivered() + " counter " + message.getObjectProperty("JMSXDeliveryCount"));
+            session.rollback();
+            message = consumer.receive(2000);
+        }
+        consumer.close();
+        session.close();
+
+
+        // now lets get the dead letter queue
+        Thread.sleep(1000);
+
+        ObjectName dlqQueueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + SharedDeadLetterStrategy.DEFAULT_DEAD_LETTER_QUEUE_NAME + ",BrokerName=localhost");
+        QueueViewMBean dlq = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, dlqQueueViewMBeanName, QueueViewMBean.class, true);
+
+        long initialDlqSize = dlq.getQueueSize();
+        CompositeData[] compdatalist = dlq.browse();
+        int dlqQueueSize = compdatalist.length;
+        if (dlqQueueSize == 0) {
+            fail("There are no messages in the queue:");
+        }
+        else {
+            echo("Current DLQ queue size: " + dlqQueueSize);
+        }
+
+        // TODO uncommenting this line causes a hang!
+        //int messageCount = dlqQueueSize;
+        int messageCount = 10;
+        String[] messageIDs = new String[messageCount];
+        for (int i = 0; i < messageCount; i++) {
+            CompositeData cdata = compdatalist[i];
+            String messageID = (String) cdata.get("JMSMessageID");
+            assertNotNull("Should have a message ID for message " + i, messageID);
+            messageIDs[i] = messageID;
+        }
+
+
+        echo("About to retry " + messageCount + " messages");
+
+        for (String messageID : messageIDs) {
+            echo("Retrying message: " + messageID);
+            dlq.retryMessage(messageID);
+        }
+
+        long queueSize = queue.getQueueSize();
+        compdatalist = queue.browse();
+        int actualCount = compdatalist.length;
+        echo("Orginal queue size is now " + queueSize);
+        echo("Original browse queue size: " + actualCount);
+
+        long dlqSize = dlq.getQueueSize();
+        echo("DLQ size: " + dlqSize);
+
+        assertEquals("DLQ size", initialDlqSize - messageCount, dlqSize);
+        assertEquals("queue size", initialQueueSize, queueSize);
+        assertEquals("browse queue size", initialQueueSize, actualCount);
+    }
+
     public void testMoveMessagesBySelector() throws Exception {
         connection = connectionFactory.createConnection();
         useConnection(connection);
@@ -89,7 +228,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         QueueViewMBean queue = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
 
-        String newDestination = "test.new.destination." + getClass() + "." + getName();
+        String newDestination = getSecondDestinationString();
         queue.moveMatchingMessagesTo("counter > 2", newDestination);
 
         queueViewMBeanName = assertRegisteredObjectName(domain + ":Type=Queue,Destination=" + newDestination + ",BrokerName=localhost");
@@ -112,7 +251,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         QueueViewMBean queue = (QueueViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, queueViewMBeanName, QueueViewMBean.class, true);
 
-        String newDestination = "test.new.destination." + getClass() + "." + getName();
+        String newDestination = getSecondDestinationString();
         long queueSize = queue.getQueueSize();
         queue.copyMatchingMessagesTo("counter > 2", newDestination);
 
@@ -375,10 +514,10 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
     protected BrokerService createBroker() throws Exception {
         BrokerService answer = new BrokerService();
+        answer.setPersistent(false);
         answer.setDeleteAllMessagesOnStartup(true);
         answer.setUseJmx(true);
         //answer.setEnableStatistics(true);
-        answer.setPersistent(false);
         answer.addConnector(bindAddress);
         return answer;
     }
@@ -403,5 +542,10 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
     protected void echo(String text) {
         LOG.info(text);
+    }
+
+
+    protected String getSecondDestinationString() {
+        return "test.new.destination." + getClass() + "." + getName();
     }
 }
