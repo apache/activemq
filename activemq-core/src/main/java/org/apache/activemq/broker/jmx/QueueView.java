@@ -18,6 +18,7 @@ package org.apache.activemq.broker.jmx;
 
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.OpenDataException;
+import javax.jms.JMSException;
 
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Queue;
@@ -104,8 +105,13 @@ public class QueueView extends DestinationView implements QueueViewMBean {
                 ConnectionContext context = BrokerView.getConnectionContext(broker.getContextBroker());
                 return queue.moveMessageTo(context, messageId, originalDestination);
             }
+            else {
+                throw new JMSException("No original destination for message: "+ messageId);
+            }
         }
-        return false;
+        else {
+            throw new JMSException("Could not find message: "+ messageId);
+        }
     }
     
     public int cursorSize() {
