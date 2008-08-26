@@ -30,7 +30,9 @@ import org.apache.activemq.command.ActiveMQQueue;
  */
 public class SharedDeadLetterStrategy extends AbstractDeadLetterStrategy {
 
-    private ActiveMQDestination deadLetterQueue = new ActiveMQQueue("ActiveMQ.DLQ");
+    public static final String DEFAULT_DEAD_LETTER_QUEUE_NAME = "ActiveMQ.DLQ";
+
+    private ActiveMQDestination deadLetterQueue = new ActiveMQQueue(DEFAULT_DEAD_LETTER_QUEUE_NAME);
 
     public ActiveMQDestination getDeadLetterQueueFor(ActiveMQDestination originalDestination) {
         return deadLetterQueue;
