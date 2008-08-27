@@ -111,6 +111,7 @@
         <!-- camel -->
         <include>org.apache.camel:camel-core</include>
         <include>org.apache.camel:camel-spring</include>
+        <include>org.apache.camel:camel-jetty</include>
         <include>org.apache.camel:camel-jms</include>
         <include>org.apache.activemq:activemq-camel</include>
 				<!-- Java 5 only -->
