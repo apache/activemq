@@ -42,7 +42,7 @@ public class CompositeDataHelper {
         Object tabularObject = cdata.get(fieldName);
         if (tabularObject instanceof TabularData) {
             TabularData tabularData = (TabularData) tabularObject;
-            Collection<CompositeData> values = tabularData.values();
+            Collection<CompositeData> values = (Collection<CompositeData>) tabularData.values();
             for (CompositeData compositeData : values) {
                 Object key = compositeData.get("key");
                 Object value = compositeData.get("value");
