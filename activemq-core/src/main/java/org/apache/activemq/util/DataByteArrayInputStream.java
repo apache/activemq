@@ -282,7 +282,7 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
             case 12:
             case 13:
                 pos += 2;
-                if (pos > length) {
+                if (pos > total) {
                     throw new UTFDataFormatException("bad string");
                 }
                 c2 = (int)buf[pos - 1];
@@ -293,7 +293,7 @@ public final class DataByteArrayInputStream extends InputStream implements DataI
                 break;
             case 14:
                 pos += 3;
-                if (pos > length) {
+                if (pos > total) {
                     throw new UTFDataFormatException("bad string");
                 }
                 c2 = (int)buf[pos - 2];
