@@ -210,11 +210,13 @@ public class Queue extends BaseDestination implements Task {
     LinkedList<RecoveryDispatch> recoveries = new LinkedList<RecoveryDispatch>();
 
     public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
+        // synchronize with dispatch method so that no new messages are sent
+        // while setting up a subscription. avoid out of order messages,
+        // duplicates, etc.
         dispatchLock.lock();
         try {
             sub.add(context, this);
             destinationStatistics.getConsumers().increment();
-//            MessageEvaluationContext msgContext = new NonCachedMessageEvaluationContext();
 
             // needs to be synchronized - so no contention with dispatching
             synchronized (consumers) {
@@ -229,32 +231,28 @@ public class Queue extends BaseDestination implements Task {
                     dispatchSelector.setExclusiveConsumer(exclusiveConsumer);
                 }
             }
-            // synchronize with dispatch method so that no new messages are sent
-            // while
-            // setting up a subscription. avoid out of order messages,
-            // duplicates
-            // etc.
+            
+            // any newly paged in messages that are not dispatched are added to pagedInPending in iterate()
             doPageIn(false);
-
+            
             synchronized (pagedInMessages) {
                 RecoveryDispatch rd = new RecoveryDispatch();
                 rd.messages =  new ArrayList<QueueMessageReference>(pagedInMessages.values());
                 rd.subscription = sub;
                 recoveries.addLast(rd);
             }
-            
             if( sub instanceof QueueBrowserSubscription ) {
                 ((QueueBrowserSubscription)sub).incrementQueueRef();
             }
             if (!this.optimizedDispatch) {
-                    wakeup();
+                wakeup();
             }
         }finally {
             dispatchLock.unlock();
         }
         if (this.optimizedDispatch) {
-        // Outside of dispatchLock() to maintain the lock hierarchy of
-        // iteratingMutex -> dispatchLock. - see https://issues.apache.org/activemq/browse/AMQ-1878
+            // Outside of dispatchLock() to maintain the lock hierarchy of
+            // iteratingMutex -> dispatchLock. - see https://issues.apache.org/activemq/browse/AMQ-1878
             wakeup();
         }
     }
@@ -262,11 +260,10 @@ public class Queue extends BaseDestination implements Task {
     public void removeSubscription(ConnectionContext context, Subscription sub)
             throws Exception {
         destinationStatistics.getConsumers().decrement();
+        // synchronize with dispatch method so that no new messages are sent
+        // while removing up a subscription.
         dispatchLock.lock();
         try {
-            // synchronize with dispatch method so that no new messages are sent
-            // while
-            // removing up a subscription.
             synchronized (consumers) {
                 removeFromConsumerList(sub);
                 if (sub.getConsumerInfo().isExclusive()) {
@@ -324,7 +321,6 @@ public class Queue extends BaseDestination implements Task {
     }
 
     public void send(final ProducerBrokerExchange producerExchange, final Message message) throws Exception {
-//        System.out.println(getName()+" send "+message.getMessageId());
         final ConnectionContext context = producerExchange.getConnectionContext();
         // There is delay between the client sending it and it arriving at the
         // destination.. it may have expired.
@@ -934,9 +930,17 @@ public class Queue extends BaseDestination implements Task {
 	                for (QueueMessageReference node : rd.messages) {
 	                    if (!node.isDropped() && !node.isAcked() && (!node.isDropped() || rd.subscription.getConsumerInfo().isBrowser())) {
 	                        msgContext.setMessageReference(node);
-	                            if (rd.subscription.matches(node, msgContext)) {
-	                                rd.subscription.add(node);
+	                        if (rd.subscription.matches(node, msgContext)) {
+	                            rd.subscription.add(node);
+	                        } else {
+	                            // make sure it gets queued for dispatched again
+	                            dispatchLock.lock();
+	                            try {
+	                                pagedInPendingDispatch.add(node);
+	                            } finally {
+	                                dispatchLock.unlock();
 	                            }
+	                        }
 	                    }
 	                }
 	                
@@ -949,24 +953,24 @@ public class Queue extends BaseDestination implements Task {
 	            }
 	        }
 	
-	        boolean result = false;
+	        boolean pageInMoreMessages = false;
 	        synchronized (messages) {
-	            result = !messages.isEmpty();
+	            pageInMoreMessages = !messages.isEmpty();
 	        }               
 	        
 	        // Kinda ugly.. but I think dispatchLock is the only mutex protecting the 
 	        // pagedInPendingDispatch variable. 	        
 	        dispatchLock.lock();
 	        try {
-	            result |= !pagedInPendingDispatch.isEmpty();
+	            pageInMoreMessages |= !pagedInPendingDispatch.isEmpty();
 	        } finally {
 	            dispatchLock.unlock();
 	        }
 	        
 	        // Perhaps we should page always into the pagedInPendingDispatch list is 
-                // !messages.isEmpty(), and then if !pagedInPendingDispatch.isEmpty()
-                // then we do a dispatch.
-	        if (result) {
+	        // !messages.isEmpty(), and then if !pagedInPendingDispatch.isEmpty()
+	        // then we do a dispatch.
+	        if (pageInMoreMessages) {
 	            try {
 	               pageInMessages(false);
 	               
@@ -1116,8 +1120,8 @@ public class Queue extends BaseDestination implements Task {
             int toPageIn = (getMaxPageSize()+(int)destinationStatistics.getInflight().getCount()) - pagedInMessages.size();
             toPageIn = Math.min(toPageIn,getMaxPageSize());
             if (isLazyDispatch()&& !force) {
-             // Only page in the minimum number of messages which can be dispatched immediately.
-             toPageIn = Math.min(getConsumerMessageCountBeforeFull(), toPageIn);
+                // Only page in the minimum number of messages which can be dispatched immediately.
+                toPageIn = Math.min(getConsumerMessageCountBeforeFull(), toPageIn);
             }
             if ((force || !consumers.isEmpty()) && toPageIn > 0) {
                 messages.setMaxBatchSize(toPageIn);
@@ -1158,21 +1162,17 @@ public class Queue extends BaseDestination implements Task {
         dispatchLock.lock();
         try {
             if(!pagedInPendingDispatch.isEmpty()) {
- //              System.out.println(getName()+": dispatching from pending: "+pagedInPendingDispatch.size());
                 // Try to first dispatch anything that had not been dispatched before.
                 pagedInPendingDispatch = doActualDispatch(pagedInPendingDispatch);
-//                System.out.println(getName()+": new pending list1: "+pagedInPendingDispatch.size());
             }
             // and now see if we can dispatch the new stuff.. and append to the pending 
             // list anything that does not actually get dispatched.
             if (list != null && !list.isEmpty()) {
-//                System.out.println(getName()+": dispatching from paged in: "+list.size());
                 if (pagedInPendingDispatch.isEmpty()) {
                     pagedInPendingDispatch.addAll(doActualDispatch(list));
                 } else {
                     pagedInPendingDispatch.addAll(list);
                 }
-//                System.out.println(getName()+": new pending list2: "+pagedInPendingDispatch.size());
             }
         } finally {
             dispatchLock.unlock();
@@ -1200,7 +1200,6 @@ public class Queue extends BaseDestination implements Task {
                         if (!s.isFull()) {
                             // Dispatch it.
                             s.add(node);
-                            //System.err.println(getName()+" Dispatched to "+s.getConsumerInfo().getConsumerId()+", "+node.getMessageId());
                             target = s;
                             break;
                         } else {
