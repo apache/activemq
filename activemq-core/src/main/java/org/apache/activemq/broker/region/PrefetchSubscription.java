@@ -218,6 +218,13 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                                         .getDestinationStatistics()
                                                         .getDequeues()
                                                         .increment();
+
+                                                node
+                                                        .getRegionDestination()
+                                                        .getDestinationStatistics()
+                                                        .getInflight()
+                                                        .decrement();
+
                                                 prefetchExtension--;
                                             }
                                         }
@@ -354,6 +361,10 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         sendToDLQ(context, node);
                         node.getRegionDestination().getDestinationStatistics()
                                 .getDequeues().increment();
+
+                        node.getRegionDestination().getDestinationStatistics()
+                                .getInflight().increment();
+
                         removeList.add(node);
                         dequeueCounter++;
                         index++;
