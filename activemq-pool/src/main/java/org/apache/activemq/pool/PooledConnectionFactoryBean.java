@@ -49,8 +49,8 @@ public class PooledConnectionFactoryBean implements FactoryBean, InitializingBea
 
     private ConnectionFactory pooledConnectionFactory;
     private ConnectionFactory connectionFactory;
-    private int maxConnections;
-    private int maximumActive;
+    private int maxConnections = 1;
+    private int maximumActive = 500;
     private Object transactionManager;
     private String resourceName;
     private ObjectPoolFactory poolFactory;
