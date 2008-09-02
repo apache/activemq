@@ -16,12 +16,10 @@
  */
 package org.apache.activemq.broker.region.cursors;
 
-import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.Message;
-import org.apache.activemq.kaha.Store;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -163,6 +161,12 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         nonPersistent.reset();
         persistent.reset();
     }
+    
+    public void release() {
+        nonPersistent.release();
+        persistent.release();
+    }
+
 
     public synchronized int size() {
         return pendingCount;

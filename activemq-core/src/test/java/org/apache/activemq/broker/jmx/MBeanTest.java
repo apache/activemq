@@ -100,9 +100,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         else {
             echo("Current queue size: " + initialQueueSize);
         }
-        // TODO uncommenting this line causes a hang!
-        //int messageCount = initialQueueSize;
-        int messageCount = 10;
+        int messageCount = initialQueueSize;
         String[] messageIDs = new String[messageCount];
         for (int i = 0; i < messageCount; i++) {
             CompositeData cdata = compdatalist[i];
@@ -124,8 +122,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         compdatalist = queue.browse();
         int actualCount = compdatalist.length;
         echo("Current queue size: " + actualCount);
-        // TODO we seem to have browsed the queue and now there are messages missing!
-        //assertEquals("Should now have empty queue but was", initialQueueSize - messageCount, actualCount);
+        assertEquals("Should now have empty queue but was", initialQueueSize - messageCount, actualCount);
 
         echo("Now browsing the second queue");
 
@@ -137,7 +134,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertEquals("Unexpected number of messages ",messageCount, newQueuesize);
     }
 
-    public void TODO_testRetryMessages() throws Exception {
+    public void testRetryMessages() throws Exception {
         // lets speed up redelivery
         ActiveMQConnectionFactory factory = (ActiveMQConnectionFactory) connectionFactory;
         factory.getRedeliveryPolicy().setCollisionAvoidancePercent((short) 0);
@@ -186,10 +183,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         else {
             echo("Current DLQ queue size: " + dlqQueueSize);
         }
-
-        // TODO uncommenting this line causes a hang!
-        //int messageCount = dlqQueueSize;
-        int messageCount = 10;
+        int messageCount = dlqQueueSize;
         String[] messageIDs = new String[messageCount];
         for (int i = 0; i < messageCount; i++) {
             CompositeData cdata = compdatalist[i];

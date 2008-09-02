@@ -38,7 +38,7 @@ public abstract class BaseDestination implements Destination {
      * from persistent storage
      */
     public static final int MAX_PAGE_SIZE=200;
-   
+    public static final int MAX_BROWSE_PAGE_SIZE=MAX_PAGE_SIZE*2;
     protected final ActiveMQDestination destination;
     protected final Broker broker;
     protected final MessageStore store;
@@ -49,6 +49,7 @@ public abstract class BaseDestination implements Destination {
     private int maxAuditDepth=2048;
     private boolean enableAudit=true;
     private int maxPageSize=MAX_PAGE_SIZE;
+    private int maxBrowsePageSize=MAX_BROWSE_PAGE_SIZE;
     private boolean useCache=true;
     private int minimumMessageSize=1024;
     private boolean lazyDispatch=false;
@@ -187,6 +188,14 @@ public abstract class BaseDestination implements Destination {
     public void setMaxPageSize(int maxPageSize) {
         this.maxPageSize = maxPageSize;
     }
+    
+    public int getMaxBrowsePageSize() {
+        return this.maxBrowsePageSize;
+    }
+
+    public void setMaxBrowsePageSize(int maxPageSize) {
+        this.maxBrowsePageSize = maxPageSize;
+    } 
 
     public boolean isUseCache() {
         return useCache;

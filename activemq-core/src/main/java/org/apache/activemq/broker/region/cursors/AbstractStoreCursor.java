@@ -41,6 +41,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     protected boolean cacheEnabled=false;
     protected boolean batchResetNeeded = true;
     protected boolean storeHasMessages = false;
+    protected Iterator<Entry<MessageId, Message>> iterator = null;
     protected int size;
     
     protected AbstractStoreCursor(Destination destination) {
@@ -93,12 +94,6 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
     
     public final void reset() {
-    }
-
-    public final void finished() {
-    }
-        
-    public final synchronized boolean hasNext() {
         if (batchList.isEmpty()) {
             try {
                 fillBatch();
@@ -107,17 +102,39 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
                 throw new RuntimeException(e);
             }
         }
-        boolean result= !batchList.isEmpty();
-        return result;
+        this.iterator = this.batchList.entrySet().iterator();
+    }
+    
+    public void release() {
+        this.iterator=null;
+    }
+
+
+    public final void finished() {
+    }
+        
+    public final synchronized boolean hasNext() {
+        if (batchList.isEmpty()) {
+            try {
+                fillBatch();
+                this.iterator = this.batchList.entrySet().iterator();
+            } catch (Exception e) {
+                LOG.error("Failed to fill batch", e);
+                throw new RuntimeException(e);
+            }
+        }else {
+            if (this.iterator==null) {
+                this.iterator=this.batchList.entrySet().iterator();
+            }
+        }
+        return this.iterator.hasNext();
     }
     
     public final synchronized MessageReference next() {
         Message result = null;
-        if (!this.batchList.isEmpty()) {
-            Iterator<Entry<MessageId, Message>> i = this.batchList.entrySet().iterator();
-            result = i.next().getValue();
+        if (!this.batchList.isEmpty()&&this.iterator.hasNext()) {
+            result = this.iterator.next().getValue();
             result.decrementReferenceCount();
-            i.remove();
         }
         return result;
     }
@@ -140,6 +157,9 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         size--;
         if (size==0 && isStarted() && cacheEnabled) {
             cacheEnabled=true;
+        }
+        if (iterator!=null) {
+            iterator.remove();
         }
     }
 

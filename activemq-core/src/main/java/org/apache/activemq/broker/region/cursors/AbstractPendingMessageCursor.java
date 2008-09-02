@@ -21,6 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.command.MessageId;
@@ -34,7 +35,7 @@ import org.apache.activemq.usage.SystemUsage;
  */
 public class AbstractPendingMessageCursor implements PendingMessageCursor {
     protected int memoryUsageHighWaterMark = 70;
-    protected int maxBatchSize = 100;
+    protected int maxBatchSize = BaseDestination.MAX_PAGE_SIZE;
     protected SystemUsage systemUsage;
     protected int maxProducersToAudit=1024;
     protected int maxAuditDepth=1000;
@@ -285,7 +286,7 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
         return this.audit.isDuplicate(messageId);
     }
     
-    protected synchronized void rollback(MessageId id) {
+    public synchronized void rollback(MessageId id) {
         if (this.audit != null) {
             audit.rollback(id);
         }
