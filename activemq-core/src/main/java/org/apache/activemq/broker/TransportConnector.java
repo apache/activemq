@@ -394,4 +394,8 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     public Broker getBroker() {
         return broker;
     }
+
+	public BrokerService getBrokerService() {
+		return brokerService;
+	}
 }

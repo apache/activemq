@@ -87,6 +87,7 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.MarshallingSupport;
+import org.apache.activemq.util.ServiceSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -208,6 +209,20 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     }
 
     public void serviceTransportException(IOException e) {
+    	BrokerService bService=connector.getBrokerService();
+    	if(bService.isShutdownOnSlaveFailure()){
+	    	if(brokerInfo!=null){
+		    	if(brokerInfo.isSlaveBroker()){
+		        	LOG.error("Slave has exception: " + e.getMessage()+" shutting down master now.", e);
+		            try {
+		                broker.stop();
+		                bService.stop();
+		        	}catch(Exception ex){
+		                LOG.warn("Failed to stop the master",ex);
+		            }
+		        }
+	    	}
+    	}
         if (!stopping.get()) {
             transportException.set(e);
             if (TRANSPORTLOG.isDebugEnabled()) {
@@ -601,7 +616,11 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     }
 
     public Response processAddConnection(ConnectionInfo info) throws Exception {
-        
+    	//if the broker service has slave attached, wait for the slave to be attached to allow client connection. slave connection is fine
+    	if(!info.isBrokerMasterConnector()&&connector.getBrokerService().isWaitForSlave()&&connector.getBrokerService().getSlaveStartSignal().getCount()==1){
+    			ServiceSupport.dispose(transport);
+    			return new ExceptionResponse(new Exception("Master's slave not attached yet."));
+    	}
         // Older clients should have been defaulting this field to true.. but they were not. 
         if( wireFormatInfo!=null && wireFormatInfo.getVersion() <= 2 ) {
             info.setClientMaster(true);
@@ -1129,6 +1148,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             masterBroker = new MasterBroker(parent, transport);
             masterBroker.startProcessing();
             LOG.info("Slave Broker " + info.getBrokerName() + " is attached");
+            BrokerService bService=connector.getBrokerService();
+            bService.slaveConnectionEstablished();
+            
         } else if (info.isNetworkConnection() && info.isDuplexConnection()) {
             // so this TransportConnection is the rear end of a network bridge
             // We have been requested to create a two way pipe ...

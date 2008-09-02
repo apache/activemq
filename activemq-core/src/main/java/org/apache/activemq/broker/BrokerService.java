@@ -102,7 +102,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1 $
  */
 public class BrokerService implements Service {
-
+	protected CountDownLatch slaveStartSignal = new CountDownLatch(1);
     public static final String DEFAULT_PORT = "61616";
     public static final String LOCAL_HOST_NAME;
     public static final String DEFAULT_BROKER_NAME = "localhost";
@@ -117,6 +117,8 @@ public class BrokerService implements Service {
     private boolean useShutdownHook = true;
     private boolean useLoggingForShutdownErrors;
     private boolean shutdownOnMasterFailure;
+    private boolean shutdownOnSlaveFailure;
+    private boolean waitForSlave;
     private String brokerName = DEFAULT_BROKER_NAME;
     private File dataDirectoryFile;
     private File tmpDataDirectory;
@@ -1820,6 +1822,19 @@ public class BrokerService implements Service {
         return context;
     }
 
+    protected void waitForSlave(){
+        try {
+        	slaveStartSignal.await();
+        }catch(InterruptedException e){
+        	LOG.error("Exception waiting for slave:"+e);
+        }
+    }
+    
+    protected void slaveConnectionEstablished(){
+    	slaveStartSignal.countDown();
+    }
+    
+    
     /**
      * Start all transport and network connections, proxies and bridges
      * 
@@ -1847,7 +1862,9 @@ public class BrokerService implements Service {
             map.put("network", "true");
             map.put("async", "false");
             uri = URISupport.createURIWithQuery(uri, URISupport.createQueryString(map));
-
+            if(isWaitForSlave()){
+            	waitForSlave();
+            }
             for (Iterator<NetworkConnector> iter = getNetworkConnectors().iterator(); iter.hasNext();) {
                 NetworkConnector connector = iter.next();
                 connector.setLocalUri(uri);
@@ -1983,5 +2000,25 @@ public class BrokerService implements Service {
     public void setSslContext(SslContext sslContext) {
         this.sslContext = sslContext;
     }
+
+	public boolean isShutdownOnSlaveFailure() {
+		return shutdownOnSlaveFailure;
+	}
+
+	public void setShutdownOnSlaveFailure(boolean shutdownOnSlaveFailure) {
+		this.shutdownOnSlaveFailure = shutdownOnSlaveFailure;
+	}
+
+	public boolean isWaitForSlave() {
+		return waitForSlave;
+	}
+
+	public void setWaitForSlave(boolean waitForSlave) {
+		this.waitForSlave = waitForSlave;
+	}
+
+	public CountDownLatch getSlaveStartSignal() {
+		return slaveStartSignal;
+	}
 
 }
