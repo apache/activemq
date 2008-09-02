@@ -299,6 +299,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setAlwaysSessionAsync(isAlwaysSessionAsync());
         connection.setOptimizeAcknowledge(isOptimizeAcknowledge());
         connection.setUseRetroactiveConsumer(isUseRetroactiveConsumer());
+        connection.setExclusiveConsumer(isExclusiveConsumer());
         connection.setRedeliveryPolicy(getRedeliveryPolicy());
         connection.setTransformer(getTransformer());
         connection.setBlobTransferPolicy(getBlobTransferPolicy().copy());
