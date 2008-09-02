@@ -369,8 +369,8 @@ public class TcpTransportServer extends TransportServerThreadSupport {
                     .valueOf(minmumWireFormatVersion));
             options.put("trace", Boolean.valueOf(trace));
             options.put("soTimeout", Integer.valueOf(soTimeout));
-            options.put("soTimeout", Integer.valueOf(soTimeout));
-            options.put("connectionTimeout", Integer.valueOf(socketBufferSize));
+            options.put("socketBufferSize", Integer.valueOf(socketBufferSize));
+            options.put("connectionTimeout", Integer.valueOf(connectionTimeout));
             options.put("logWriterName", logWriterName);
             options
                     .put("dynamicManagement", Boolean
