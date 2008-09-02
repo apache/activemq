@@ -100,10 +100,12 @@ public class QueueView extends DestinationView implements QueueViewMBean {
         Queue queue = (Queue) destination;
         Message rc = queue.getMessage(messageId);
         if (rc != null) {
+            rc = rc.copy();
+            rc.getMessage().setRedeliveryCounter(0);
             ActiveMQDestination originalDestination = rc.getOriginalDestination();
             if (originalDestination != null) {
                 ConnectionContext context = BrokerView.getConnectionContext(broker.getContextBroker());
-                return queue.moveMessageTo(context, messageId, originalDestination);
+                return queue.moveMessageTo(context, rc, originalDestination);
             }
             else {
                 throw new JMSException("No original destination for message: "+ messageId);

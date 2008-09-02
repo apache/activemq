@@ -850,6 +850,20 @@ public class Queue extends BaseDestination implements Task {
         } while (count < this.destinationStatistics.getMessages().getCount());
         return movedCounter;
     }
+    
+    /**
+     * Move a message
+     * @param context
+     * @param r
+     * @param dest
+     * @throws Exception
+     */
+    public boolean moveMessageTo(ConnectionContext context,Message m,ActiveMQDestination dest) throws Exception {
+        QueueMessageReference r = createMessageReference(m);
+        BrokerSupport.resend(context, m, dest);
+        removeMessage(context, r);
+        return true;
+    }
 
     /**
      * Moves the message matching the given messageId
