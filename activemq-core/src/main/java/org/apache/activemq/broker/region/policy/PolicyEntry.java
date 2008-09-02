@@ -59,6 +59,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private boolean producerFlowControl = true;
     private boolean optimizedDispatch=false;
     private int maxPageSize=BaseDestination.MAX_PAGE_SIZE;
+    private int maxBrowsePageSize=BaseDestination.MAX_BROWSE_PAGE_SIZE;
     private boolean useCache=true;
     private long minimumMessageSize=1024;
     private boolean useConsumerPriority=true;
@@ -119,6 +120,7 @@ public class PolicyEntry extends DestinationMapEntry {
         destination.setMaxAuditDepth(getMaxQueueAuditDepth());
         destination.setMaxProducersToAudit(getMaxProducersToAudit());
         destination.setMaxPageSize(getMaxPageSize());
+        destination.setMaxBrowsePageSize(getMaxBrowsePageSize());
         destination.setUseCache(isUseCache());
         destination.setMinimumMessageSize((int) getMinimumMessageSize());
         destination.setAdvisoryForConsumed(isAdvisoryForConsumed());
@@ -387,7 +389,15 @@ public class PolicyEntry extends DestinationMapEntry {
 
     public void setMaxPageSize(int maxPageSize) {
         this.maxPageSize = maxPageSize;
-    }    
+    } 
+    
+    public int getMaxBrowsePageSize() {
+        return maxBrowsePageSize;
+    }
+
+    public void setMaxBrowsePageSize(int maxPageSize) {
+        this.maxBrowsePageSize = maxPageSize;
+    } 
     
     public boolean isUseCache() {
         return useCache;

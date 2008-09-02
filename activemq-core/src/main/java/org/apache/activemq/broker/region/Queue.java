@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -616,80 +617,91 @@ public class Queue extends BaseDestination implements Task {
     }
 
     public Message[] browse() {
+        int count = 0;
         List<Message> l = new ArrayList<Message>();
         try {
-            doPageIn(true);
-        } catch (Exception e) {
-            LOG.error("caught an exception browsing " + this, e);
-        }
-        synchronized (pagedInMessages) {
-            for (QueueMessageReference node:pagedInMessages.values()){
-                node.incrementReferenceCount();
-                try {
-                    Message m = node.getMessage();
-                    if (m != null) {
-                        l.add(m);
-                    }
-                } catch (IOException e) {
-                    LOG.error("caught an exception browsing " + this, e);
-                } finally {
-                    node.decrementReferenceCount();
+            synchronized (this.pagedInPendingDispatch) {
+                for (Iterator<QueueMessageReference> i = this.pagedInPendingDispatch
+                        .iterator(); i.hasNext()
+                        && count < getMaxBrowsePageSize();) {
+                    l.add(i.next().getMessage());
+                    count++;
                 }
             }
-        }
-        synchronized (messages) {
-            try {
-                messages.reset();
-                while (messages.hasNext()) {
-                    try {
-                        MessageReference r = messages.next();
-                        r.incrementReferenceCount();
-                        try {
-                            Message m = r.getMessage();
-                            if (m != null) {
-                                l.add(m);
-                            }
-                        } finally {
-                            r.decrementReferenceCount();
+            if (count < getMaxBrowsePageSize()) {
+                synchronized (pagedInMessages) {
+                    for (Iterator<QueueMessageReference> i = this.pagedInMessages
+                            .values().iterator(); i.hasNext()
+                            && count < getMaxBrowsePageSize();) {
+                        Message m = i.next().getMessage();
+                        if (l.contains(m) == false) {
+                            l.add(m);
+                            count++;
                         }
-                    } catch (IOException e) {
-                        LOG.error("caught an exception brwsing " + this, e);
                     }
                 }
-            } finally {
-                messages.release();
             }
+            if (count < getMaxBrowsePageSize()) {
+                synchronized (messages) {
+                    try {
+                        messages.reset();
+                        while (messages.hasNext()
+                                && count < getMaxBrowsePageSize()) {
+                            MessageReference node = messages.next();
+                            messages.rollback(node.getMessageId());
+                            if (node != null) {
+                                Message m = node.getMessage();
+                                if (l.contains(m) == false) {
+                                    l.add(m);
+                                    count++;
+                                }
+                            }
+                        }
+                    } finally {
+                        messages.release();
+                    }
+                }
+            }
+        } catch (IOException e) {
+            LOG.error("Problem retrieving message in browse() ", e);
         }
-
         return l.toArray(new Message[l.size()]);
     }
 
-    public Message getMessage(String messageId) {
-        synchronized (messages) {
-            try {
-                messages.reset();
-                while (messages.hasNext()) {
-                    try {
-                        MessageReference r = messages.next();
-                        if (messageId.equals(r.getMessageId().toString())) {
-                            r.incrementReferenceCount();
-                            try {
+    public Message getMessage(String id) {
+        MessageId msgId = new MessageId(id);
+        try {
+            synchronized (pagedInMessages) {
+                QueueMessageReference r = this.pagedInMessages.get(msgId);
+                if (r != null) {
+                    return r.getMessage();
+                }
+            }
+            synchronized (messages) {
+                try {
+                    messages.reset();
+                    while (messages.hasNext()) {
+                        try {
+                            MessageReference r = messages.next();
+                            messages.rollback(r.getMessageId());
+                            if (msgId.equals(r.getMessageId())) {
                                 Message m = r.getMessage();
                                 if (m != null) {
                                     return m;
                                 }
-                            } finally {
-                                r.decrementReferenceCount();
+                                break;
                             }
-                            break;
+                        } catch (IOException e) {
+                            LOG.error("got an exception retrieving message "
+                                    + id);
                         }
-                    } catch (IOException e) {
-                        LOG.error("got an exception retrieving message " + messageId);
                     }
+                } finally {
+                    messages.release();
                 }
-            } finally {
-                messages.release();
             }
+        } catch (IOException e) {
+            LOG.error("got an exception retrieving message " + id);
         }
         return null;
     }
@@ -852,7 +864,7 @@ public class Queue extends BaseDestination implements Task {
      * @return the number of messages removed
      */
     public int moveMatchingMessagesTo(ConnectionContext context, String selector, ActiveMQDestination dest) throws Exception {
-        return moveMatchingMessagesTo(context, selector, dest, -1);
+        return moveMatchingMessagesTo(context, selector, dest,Integer.MAX_VALUE);
     }
 
     /**
@@ -867,7 +879,9 @@ public class Queue extends BaseDestination implements Task {
      * Moves the messages matching the given filter up to the maximum number of
      * matched messages
      */
-    public int moveMatchingMessagesTo(ConnectionContext context,MessageReferenceFilter filter, ActiveMQDestination dest,int maximumMessages) throws Exception {
+    public int moveMatchingMessagesTo(ConnectionContext context,
+            MessageReferenceFilter filter, ActiveMQDestination dest,
+            int maximumMessages) throws Exception {
         int movedCounter = 0;
         Set<MessageReference> set = new CopyOnWriteArraySet<MessageReference>();
         do {
@@ -875,28 +889,27 @@ public class Queue extends BaseDestination implements Task {
             synchronized (pagedInMessages) {
                 set.addAll(pagedInMessages.values());
             }
-            List <MessageReference>list = new ArrayList<MessageReference>(set);
-            for (MessageReference ref:list) {
+            List<MessageReference> list = new ArrayList<MessageReference>(set);
+            for (MessageReference ref : list) {
                 IndirectMessageReference r = (IndirectMessageReference) ref;
                 if (filter.evaluate(context, r)) {
                     // We should only move messages that can be locked.
-                    r.incrementReferenceCount();
-                    try {
-                        Message m = r.getMessage();
-                        BrokerSupport.resend(context, m, dest);
-                        removeMessage(context, r);
-                        set.remove(r);
-                        if (++movedCounter >= maximumMessages
-                                && maximumMessages > 0) {
-                            return movedCounter;
-                        }
-                    } finally {
-                        r.decrementReferenceCount();
+                    Message m = r.getMessage();
+                    BrokerSupport.resend(context, m, dest);
+                    removeMessage(context, r);
+                    set.remove(r);
+                    if (++movedCounter >= maximumMessages
+                            && maximumMessages > 0) {
+                        return movedCounter;
+                    }
+                } else {
+                    synchronized (messages) {
+                        messages.rollback(r.getMessageId());
                     }
                 }
-                
             }
-        } while (set.size() < this.destinationStatistics.getMessages().getCount());
+        } while (set.size() < this.destinationStatistics.getMessages().getCount()
+                && set.size() < maximumMessages);
         return movedCounter;
     }
     
@@ -936,7 +949,9 @@ public class Queue extends BaseDestination implements Task {
 	                            // make sure it gets queued for dispatched again
 	                            dispatchLock.lock();
 	                            try {
-	                                pagedInPendingDispatch.add(node);
+	                                synchronized(pagedInPendingDispatch) {
+	                                    pagedInPendingDispatch.add(node);
+	                                }
 	                            } finally {
 	                                dispatchLock.unlock();
 	                            }
@@ -993,6 +1008,9 @@ public class Queue extends BaseDestination implements Task {
             public boolean evaluate(ConnectionContext context, MessageReference r) {
                 return messageId.equals(r.getMessageId().toString());
             }
+            public String toString() {
+                return "MessageIdFilter: "+messageId;
+            }
         };
     }
 
@@ -1031,21 +1049,13 @@ public class Queue extends BaseDestination implements Task {
         acknowledge(context, sub, ack, reference);
 
         if (!ack.isInTransaction()) {
-            reference.drop();
-            destinationStatistics.getMessages().decrement();
-            synchronized(pagedInMessages) {
-                pagedInMessages.remove(reference.getMessageId());
-            }
+            dropMessage(reference);
             wakeup();
         } else {
             context.getTransaction().addSynchronization(new Synchronization() {
                 
                 public void afterCommit() throws Exception {
-                    reference.drop();
-                    destinationStatistics.getMessages().decrement();
-                    synchronized(pagedInMessages) {
-                        pagedInMessages.remove(reference.getMessageId());
-                    }
+                    dropMessage(reference);
                     wakeup();
                 }
                 
@@ -1055,6 +1065,17 @@ public class Queue extends BaseDestination implements Task {
             });
         }
 
+    }
+    
+    private void dropMessage(QueueMessageReference reference) {
+        reference.drop();
+        destinationStatistics.getMessages().decrement();
+        synchronized(pagedInMessages) {
+            pagedInMessages.remove(reference.getMessageId());
+        }
+        synchronized(messages) {
+            messages.rollback(reference.getMessageId());
+        }
     }
     
     public void messageExpired(ConnectionContext context,MessageReference reference) {
@@ -1117,8 +1138,16 @@ public class Queue extends BaseDestination implements Task {
         List<QueueMessageReference> result = null;
         dispatchLock.lock();
         try{
-            int toPageIn = (getMaxPageSize()+(int)destinationStatistics.getInflight().getCount()) - pagedInMessages.size();
-            toPageIn = Math.min(toPageIn,getMaxPageSize());
+           
+            int toPageIn = 0;
+            if (force) {
+                toPageIn = getMaxPageSize();
+            } else {
+                toPageIn = (getMaxPageSize() + (int) destinationStatistics
+                        .getInflight().getCount())
+                        - pagedInMessages.size();
+                toPageIn = Math.min(toPageIn, getMaxPageSize());
+            }
             if (isLazyDispatch()&& !force) {
                 // Only page in the minimum number of messages which can be dispatched immediately.
                 toPageIn = Math.min(getConsumerMessageCountBeforeFull(), toPageIn);
@@ -1129,6 +1158,7 @@ public class Queue extends BaseDestination implements Task {
                 result = new ArrayList<QueueMessageReference>(toPageIn);
                 synchronized (messages) {
                     try {
+                      
                         messages.reset();
                         while (messages.hasNext() && count < toPageIn) {
                             MessageReference node = messages.next();
@@ -1161,17 +1191,19 @@ public class Queue extends BaseDestination implements Task {
     private void doDispatch(List<QueueMessageReference> list) throws Exception {
         dispatchLock.lock();
         try {
-            if(!pagedInPendingDispatch.isEmpty()) {
-                // Try to first dispatch anything that had not been dispatched before.
-                pagedInPendingDispatch = doActualDispatch(pagedInPendingDispatch);
-            }
-            // and now see if we can dispatch the new stuff.. and append to the pending 
-            // list anything that does not actually get dispatched.
-            if (list != null && !list.isEmpty()) {
-                if (pagedInPendingDispatch.isEmpty()) {
-                    pagedInPendingDispatch.addAll(doActualDispatch(list));
-                } else {
-                    pagedInPendingDispatch.addAll(list);
+            synchronized(pagedInPendingDispatch) {
+                if(!pagedInPendingDispatch.isEmpty()) {
+                    // Try to first dispatch anything that had not been dispatched before.
+                    pagedInPendingDispatch = doActualDispatch(pagedInPendingDispatch);
+                }
+                // and now see if we can dispatch the new stuff.. and append to the pending 
+                // list anything that does not actually get dispatched.
+                if (list != null && !list.isEmpty()) {
+                    if (pagedInPendingDispatch.isEmpty()) {
+                        pagedInPendingDispatch.addAll(doActualDispatch(list));
+                    } else {
+                        pagedInPendingDispatch.addAll(list);
+                    }
                 }
             }
         } finally {

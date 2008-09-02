@@ -24,6 +24,7 @@ import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.usage.SystemUsage;
 
 /**
@@ -282,5 +283,11 @@ public interface PendingMessageCursor extends Service {
      * @return true if a cache is being used
      */
     public boolean isUseCache();
+    
+    /**
+     * remove from auditing the message id
+     * @param id
+     */
+    public void rollback(MessageId id);
    
 }

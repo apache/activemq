@@ -249,4 +249,12 @@ public class DestinationFilter implements Destination {
     public void messageExpired(ConnectionContext context, Subscription subs,MessageReference node) {
        next.messageExpired(context,subs, node);    
     }
+
+    public int getMaxBrowsePageSize() {
+       return next.getMaxBrowsePageSize();
+    }
+
+    public void setMaxBrowsePageSize(int maxPageSize) {
+        next.setMaxBrowsePageSize(maxPageSize);
+    }
 }

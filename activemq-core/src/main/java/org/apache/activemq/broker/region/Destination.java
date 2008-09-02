@@ -91,6 +91,10 @@ public interface Destination extends Service, Task {
     
     public void setMaxPageSize(int maxPageSize);
     
+    public int getMaxBrowsePageSize();
+
+    public void setMaxBrowsePageSize(int maxPageSize);
+    
     public boolean isUseCache();
     
     public void setUseCache(boolean useCache);
