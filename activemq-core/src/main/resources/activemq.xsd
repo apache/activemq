@@ -813,6 +813,8 @@ consume a given message
       <xs:attribute name='producerSystemUsagePortion' type='xs:integer'/>
       <xs:attribute name='regionBroker' type='xs:string'/>
       <xs:attribute name='shutdownOnMasterFailure' type='xs:boolean'/>
+      <xs:attribute name='shutdownOnSlaveFailure' type='xs:boolean'/>
+      <xs:attribute name='waitForSlave' type='xs:boolean'/>
       <xs:attribute name='splitSystemUsageForProducersConsumers' type='xs:boolean'/>
       <xs:attribute name='sslContext' type='xs:string'/>
       <xs:attribute name='start' type='xs:boolean'>

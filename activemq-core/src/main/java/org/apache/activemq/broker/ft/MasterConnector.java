@@ -139,7 +139,7 @@ public class MasterConnector implements Service, BrokerServiceAware {
         } catch (Exception e) {
             masterActive.set(false);
             LOG.error("Failed to start network bridge: " + e, e);
-        }    
+        }   
     }
 
     protected void startBridge() throws Exception {
@@ -148,10 +148,8 @@ public class MasterConnector implements Service, BrokerServiceAware {
         connectionInfo.setClientId(idGenerator.generateId());
         connectionInfo.setUserName(userName);
         connectionInfo.setPassword(password);
+        connectionInfo.setBrokerMasterConnector(true);
         localBroker.oneway(connectionInfo);
-        ConnectionInfo remoteInfo = new ConnectionInfo();
-        connectionInfo.copy(remoteInfo);
-        remoteInfo.setBrokerMasterConnector(true);
         remoteBroker.oneway(connectionInfo);
         sessionInfo = new SessionInfo(connectionInfo, 1);
         localBroker.oneway(sessionInfo);
