@@ -93,10 +93,10 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
         super.setUp();
         serverConnection = createConnection();
         serverConnection.start();
-        serverSession = serverConnection.createSession(false, 0);
+        serverSession = serverConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         clientConnection = createConnection();
         clientConnection.start();
-        clientSession = clientConnection.createSession(false, 0);
+        clientSession = clientConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         serverDestination = createDestination();
     }
 
