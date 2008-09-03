@@ -434,6 +434,9 @@ public class AsyncDataManager {
                 purgeList.add(dataFile);
         	}
         }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("lastFileId=" + lastFile + ", purgeList: (" + purgeList.size() + ") " + purgeList);
+        }
         for (DataFile dataFile : purgeList) {
             forceRemoveDataFile(dataFile);
         }
@@ -465,17 +468,17 @@ public class AsyncDataManager {
             throws IOException {
         accessorPool.disposeDataFileAccessors(dataFile);
         fileByFileMap.remove(dataFile.getFile());
-        DataFile removed = fileMap.remove(dataFile.getDataFileId());
         storeSize.addAndGet(-dataFile.getLength());
         dataFile.unlink();
         if (archiveDataLogs) {
             dataFile.move(getDirectoryArchive());
-            LOG.info("moved data file " + dataFile + " to "
+            LOG.debug("moved data file " + dataFile + " to "
                     + getDirectoryArchive());
         } else {
             boolean result = dataFile.delete();
-            LOG.info("discarding data file " + dataFile
-                    + (result ? "successful " : "failed"));
+            if (!result) {
+                LOG.info("Failed to discard data file " + dataFile);
+            }
         }
     }
 
