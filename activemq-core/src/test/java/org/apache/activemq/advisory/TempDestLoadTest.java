@@ -89,7 +89,7 @@ public class TempDestLoadTest extends EmbeddedBrokerTestSupport {
         super.setUp();
         connection = createConnection();
         connection.start();
-        session = connection.createSession(false, 0);
+        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
     }
 

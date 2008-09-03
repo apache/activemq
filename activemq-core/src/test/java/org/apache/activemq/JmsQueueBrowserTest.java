@@ -43,7 +43,7 @@ public class JmsQueueBrowserTest extends JmsTestSupport {
      * @throws Exception
      */
     public void testReceiveBrowseReceive() throws Exception {
-        Session session = connection.createSession(false, 0);
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         ActiveMQQueue destination = new ActiveMQQueue("TEST");
         MessageProducer producer = session.createProducer(destination);
         MessageConsumer consumer = session.createConsumer(destination);

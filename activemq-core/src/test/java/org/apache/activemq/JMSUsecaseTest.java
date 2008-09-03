@@ -57,7 +57,7 @@ public class JMSUsecaseTest extends JmsTestSupport {
 
         // Send a message to the broker.
         connection.start();
-        Session session = connection.createSession(false, Session.SESSION_TRANSACTED);
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         destination = createDestination(session, destinationType);
         sendMessages(session, destination, 5);
 
