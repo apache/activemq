@@ -26,9 +26,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activeio.journal.Journal;
@@ -122,7 +122,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     private int indexMaxBinSize = HashIndex.MAXIMUM_CAPACITY;
     private int indexLoadFactor = HashIndex.DEFAULT_LOAD_FACTOR;
     private int maxReferenceFileLength=AMQPersistenceAdapterFactory.DEFAULT_MAX_REFERNCE_FILE_LENGTH;
-    private Map<AMQMessageStore,Set<Integer>> dataFilesInProgress = new ConcurrentHashMap<AMQMessageStore,Set<Integer>> ();
+    private Map<AMQMessageStore,Map<Integer, AtomicInteger>> dataFilesInProgress = new ConcurrentHashMap<AMQMessageStore,Map<Integer, AtomicInteger>> ();
     private String directoryPath = "";
     private RandomAccessFile lockFile;
     private FileLock lock;
@@ -271,14 +271,14 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
                 checkpoint(false);
             }
         };
-        Scheduler.executePeriodically(periodicCheckpointTask, checkpointInterval);
+        Scheduler.executePeriodically(periodicCheckpointTask, getCheckpointInterval());
         periodicCleanupTask = new Runnable() {
 
             public void run() {
                 cleanup();
             }
         };
-        Scheduler.executePeriodically(periodicCleanupTask, cleanupInterval);
+        Scheduler.executePeriodically(periodicCleanupTask, getCleanupInterval());
         
         if (lockAquired && lockLogged) {
             LOG.info("Aquired lock for AMQ Store" + getDirectory());
@@ -426,8 +426,11 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
     public void cleanup() {
         try {
             Set<Integer>inProgress = new HashSet<Integer>();
-            for (Set<Integer> set: dataFilesInProgress.values()) {
-                inProgress.addAll(set);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("dataFilesInProgress.values: (" + dataFilesInProgress.values().size() + ") " + dataFilesInProgress.values());
+            }      
+            for (Map<Integer, AtomicInteger> set: dataFilesInProgress.values()) {
+                inProgress.addAll(set.keySet());
             }
             Integer lastDataFile = asyncDataManager.getCurrentDataFileId();   
             inProgress.add(lastDataFile);
@@ -437,6 +440,7 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
             if (lastActiveTx != null) {
                 lastDataFile = Math.min(lastDataFile, lastActiveTx.getDataFileId());
             }
+            LOG.debug("lastDataFile: " + lastDataFile);
             asyncDataManager.consolidateDataFilesNotIn(inProgress, lastDataFile - 1);
         } catch (IOException e) {
             LOG.error("Could not cleanup data files: " + e, e);
@@ -967,18 +971,32 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
 
 	
 	protected void addInProgressDataFile(AMQMessageStore store,int dataFileId) {
-	    Set<Integer>set = dataFilesInProgress.get(store);
-	    if (set == null) {
-	        set = new CopyOnWriteArraySet<Integer>();
-	        dataFilesInProgress.put(store, set);
+	    Map<Integer, AtomicInteger> map = dataFilesInProgress.get(store);
+	    if (map == null) {
+	        map = new ConcurrentHashMap<Integer, AtomicInteger>();
+	        dataFilesInProgress.put(store, map);
 	    }
-	    set.add(dataFileId);
+	    AtomicInteger count = map.get(dataFileId);
+	    if (count == null) {
+	        count = new AtomicInteger(0);
+	        map.put(dataFileId, count);
+	    }
+	    count.incrementAndGet();
 	}
 	
 	protected void removeInProgressDataFile(AMQMessageStore store,int dataFileId) {
-        Set<Integer>set = dataFilesInProgress.get(store);
-        if (set != null) {
-            set.remove(dataFileId);
+        Map<Integer, AtomicInteger> map = dataFilesInProgress.get(store);
+        if (map != null) {
+            AtomicInteger count = map.get(dataFileId);
+            if (count != null) {
+                int newCount = count.decrementAndGet(); 
+                if (newCount <=0) {
+                    map.remove(dataFileId);
+                }
+            }
+            if (map.isEmpty()) {
+                dataFilesInProgress.remove(store);
+            }
         }
     }
 	

@@ -261,6 +261,9 @@ public class AMQMessageStore implements MessageStore {
             data = messages.remove(id);
             if (data == null) {
                 messageAcks.add(ack);
+            } else {
+                // message never got written so datafileReference will still exist
+                AMQMessageStore.this.peristenceAdapter.removeInProgressDataFile(AMQMessageStore.this, data.getFileId());
             }
         }finally {
             lock.unlock();

@@ -72,6 +72,7 @@ public class AMQPersistenceAdapterFactory implements PersistenceAdapterFactory {
         result.setUseNio(isUseNio());
         result.setMaxFileLength(getMaxFileLength());
         result.setCleanupInterval(getCleanupInterval());
+        result.setCheckpointInterval(getCheckpointInterval());
         result.setIndexBinSize(getIndexBinSize());
         result.setIndexKeySize(getIndexKeySize());
         result.setIndexPageSize(getIndexPageSize());
