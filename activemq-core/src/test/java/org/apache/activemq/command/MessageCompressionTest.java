@@ -86,7 +86,7 @@ public class MessageCompressionTest extends TestCase {
 
     private void sendTestMessage(ActiveMQConnectionFactory factory, String message) throws JMSException {
         ActiveMQConnection connection = (ActiveMQConnection)factory.createConnection();
-        Session session = connection.createSession(false, 0);
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = session.createProducer(queue);
         producer.send(session.createTextMessage(message));
         connection.close();
@@ -95,7 +95,7 @@ public class MessageCompressionTest extends TestCase {
     private ActiveMQTextMessage receiveTestMessage(ActiveMQConnectionFactory factory) throws JMSException {
         ActiveMQConnection connection = (ActiveMQConnection)factory.createConnection();
         connection.start();
-        Session session = connection.createSession(false, 0);
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = session.createConsumer(queue);
         ActiveMQTextMessage rc = (ActiveMQTextMessage)consumer.receive();
         connection.close();
