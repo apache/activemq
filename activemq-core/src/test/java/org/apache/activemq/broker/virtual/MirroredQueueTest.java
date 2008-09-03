@@ -80,7 +80,7 @@ public class MirroredQueueTest extends EmbeddedBrokerTestSupport {
             connection = createConnection();
         }
         connection.start();
-        Session session = connection.createSession(false, 0);
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         TemporaryQueue tempQueue = session.createTemporaryQueue();
         RegionBroker rb = (RegionBroker) broker.getBroker().getAdaptor(
                 RegionBroker.class);
