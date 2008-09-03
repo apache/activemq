@@ -468,6 +468,7 @@ public class AsyncDataManager {
             throws IOException {
         accessorPool.disposeDataFileAccessors(dataFile);
         fileByFileMap.remove(dataFile.getFile());
+        fileMap.remove(dataFile.getFile());
         storeSize.addAndGet(-dataFile.getLength());
         dataFile.unlink();
         if (archiveDataLogs) {
