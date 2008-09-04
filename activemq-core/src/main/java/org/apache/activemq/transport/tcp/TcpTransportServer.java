@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ServerSocketFactory;
 
+import org.apache.activemq.Service;
 import org.apache.activemq.ThreadPriorities;
 import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.openwire.OpenWireFormatFactory;
@@ -41,7 +42,9 @@ import org.apache.activemq.transport.TransportLoggerFactory;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.TransportServerThreadSupport;
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.ServiceListener;
 import org.apache.activemq.util.ServiceStopper;
+import org.apache.activemq.util.ServiceSupport;
 import org.apache.activemq.wireformat.WireFormat;
 import org.apache.activemq.wireformat.WireFormatFactory;
 import org.apache.commons.logging.Log;
@@ -54,7 +57,7 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: 1.1 $
  */
 
-public class TcpTransportServer extends TransportServerThreadSupport {
+public class TcpTransportServer extends TransportServerThreadSupport implements ServiceListener{
 
     private static final Log LOG = LogFactory.getLog(TcpTransportServer.class);
     protected ServerSocket serverSocket;
@@ -64,7 +67,7 @@ public class TcpTransportServer extends TransportServerThreadSupport {
     protected long maxInactivityDuration = 30000;
     protected int minmumWireFormatVersion;
     protected boolean useQueueForAccept=true;
-   
+       
     /**
      * trace=true -> the Transport stack where this TcpTransport
      * object will be, will have a TransportLogger layer
@@ -104,6 +107,11 @@ public class TcpTransportServer extends TransportServerThreadSupport {
     protected final ServerSocketFactory serverSocketFactory;
     protected BlockingQueue<Socket> socketQueue = new LinkedBlockingQueue<Socket>();
     protected Thread socketHandlerThread;
+    /**
+     * The maximum number of sockets allowed for this server
+     */
+    protected int maximumConnections = Integer.MAX_VALUE;
+    protected int currentTransportCount=0;
   
     public TcpTransportServer(TcpTransportFactory transportFactory, URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
         super(location);
@@ -287,7 +295,7 @@ public class TcpTransportServer extends TransportServerThreadSupport {
      * @return
      * @throws IOException
      */
-    protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
+    protected  Transport createTransport(Socket socket, WireFormat format) throws IOException {
         return new TcpTransport(format, socket);
     }
 
@@ -360,8 +368,11 @@ public class TcpTransportServer extends TransportServerThreadSupport {
         this.transportOptions = transportOptions;
     }
     
-    protected void handleSocket(Socket socket) {
+    protected final void handleSocket(Socket socket) {
         try {
+            if (this.currentTransportCount >= this.maximumConnections) {
+                
+            }else {
             HashMap<String, Object> options = new HashMap<String, Object>();
             options.put("maxInactivityDuration", Long
                     .valueOf(maxInactivityDuration));
@@ -380,9 +391,13 @@ public class TcpTransportServer extends TransportServerThreadSupport {
             options.putAll(transportOptions);
             WireFormat format = wireFormatFactory.createWireFormat();
             Transport transport = createTransport(socket, format);
+            if (transport instanceof ServiceSupport) {
+                ((ServiceSupport) transport).addServiceListener(this);
+            }
             Transport configuredTransport = transportFactory.serverConfigure(
                     transport, format, options);
             getAcceptListener().onAccept(configuredTransport);
+            }
         } catch (SocketTimeoutException ste) {
             // expect this to happen
         } catch (Exception e) {
@@ -393,6 +408,7 @@ public class TcpTransportServer extends TransportServerThreadSupport {
                 onAcceptError(e);
             }
         }
+        
     }    
 
 	public int getSoTimeout() {
@@ -418,4 +434,27 @@ public class TcpTransportServer extends TransportServerThreadSupport {
 	public void setConnectionTimeout(int connectionTimeout) {
 		this.connectionTimeout = connectionTimeout;
 	}
+
+    /**
+     * @return the maximumConnections
+     */
+    public int getMaximumConnections() {
+        return maximumConnections;
+    }
+
+    /**
+     * @param maximumConnections the maximumConnections to set
+     */
+    public void setMaximumConnections(int maximumConnections) {
+        this.maximumConnections = maximumConnections;
+    }
+
+    
+    public void started(Service service) {
+       this.currentTransportCount++;
+    }
+
+    public void stopped(Service service) {
+        this.currentTransportCount--;
+    }
 }
