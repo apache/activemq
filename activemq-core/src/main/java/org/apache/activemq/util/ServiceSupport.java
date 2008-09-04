@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.util;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.Service;
@@ -34,6 +36,7 @@ public abstract class ServiceSupport implements Service {
     private AtomicBoolean started = new AtomicBoolean(false);
     private AtomicBoolean stopping = new AtomicBoolean(false);
     private AtomicBoolean stopped = new AtomicBoolean(false);
+    private List<ServiceListener>serviceListeners = new CopyOnWriteArrayList<ServiceListener>();
 
     public static void dispose(Service service) {
         try {
@@ -52,6 +55,9 @@ public abstract class ServiceSupport implements Service {
             } finally {
                 started.set(success);
             }
+            for(ServiceListener l:this.serviceListeners) {
+                l.started(this);
+            }
         }
     }
 
@@ -67,6 +73,9 @@ public abstract class ServiceSupport implements Service {
             stopped.set(true);
             started.set(false);
             stopping.set(false);
+            for(ServiceListener l:this.serviceListeners) {
+                l.stopped(this);
+            }
             stopper.throwFirstException();
         }
     }
@@ -90,6 +99,14 @@ public abstract class ServiceSupport implements Service {
      */
     public boolean isStopped() {
         return stopped.get();
+    }
+    
+    public void addServiceListener(ServiceListener l) {
+        this.serviceListeners.add(l);
+    }
+    
+    public void removeServiceListener(ServiceListener l) {
+        this.serviceListeners.remove(l);
     }
 
     protected abstract void doStop(ServiceStopper stopper) throws Exception;
