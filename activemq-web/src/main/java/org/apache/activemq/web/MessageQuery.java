@@ -24,6 +24,7 @@ import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.jms.Message;
 import javax.jms.ObjectMessage;
+import javax.jms.QueueBrowser;
 import javax.jms.TextMessage;
 
 /**
@@ -55,7 +56,8 @@ public class MessageQuery extends QueueBrowseQuery {
     public Message getMessage() throws JMSException {
         if (message == null) {
             if (id != null) {
-                Enumeration iter = getBrowser().getEnumeration();
+                QueueBrowser tempBrowser=getBrowser();
+                Enumeration iter = tempBrowser.getEnumeration();
                 while (iter.hasMoreElements()) {
                     Message item = (Message) iter.nextElement();
                     if (id.equals(item.getJMSMessageID())) {
@@ -63,6 +65,7 @@ public class MessageQuery extends QueueBrowseQuery {
                         break;
                     }
                 }
+                tempBrowser.close();
             }
 
         }
