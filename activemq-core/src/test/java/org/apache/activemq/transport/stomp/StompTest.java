@@ -35,11 +35,15 @@ import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+import javax.management.MBeanServer;
+import javax.management.MBeanServerInvocationHandler;
+import javax.management.ObjectName;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.commons.logging.Log;
@@ -855,6 +859,58 @@ public class StompTest extends CombinationTestSupport {
         
         frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
         stompConnection.sendFrame(frame);    	
+    }
+    
+    public void testDurableUnsub() throws Exception {
+    	// get broker JMX view
+        MBeanServer mbeanServer = broker.getManagementContext().getMBeanServer();
+        
+        String domain = "org.apache.activemq";
+        ObjectName brokerName = new ObjectName(domain + ":Type=Broker,BrokerName=localhost");
+        
+    	BrokerViewMBean view = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);    	
+    	
+    	// connect
+        String frame = "CONNECT\n" + "login: system\n" + "passcode: manager\nclient-id:test\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+        assertEquals(view.getDurableTopicSubscribers().length, 0);
+        
+        // subscribe
+        frame = "SUBSCRIBE\n" + "destination:/topic/" + getQueueName() + "\n" + "ack:auto\nactivemq.subscriptionName:test\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+        // wait a bit for MBean to get refreshed
+        try {
+        	Thread.sleep(100);
+        } catch (InterruptedException e){}
+        
+        assertEquals(view.getDurableTopicSubscribers().length, 1);
+        // disconnect
+        frame = "DISCONNECT\nclient-id:test\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+        try {
+        	Thread.sleep(100);
+        } catch (InterruptedException e){}
+        
+        //reconnect
+        stompConnect();
+    	// connect
+        frame = "CONNECT\n" + "login: system\n" + "passcode: manager\nclient-id:test\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);      
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+        
+        // unsubscribe
+        frame = "UNSUBSCRIBE\n" + "destination:/topic/" + getQueueName() + "\n" + "ack:auto\nactivemq.subscriptionName:test\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+        frame = "DISCONNECT\n" + "\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);   
+        try {
+        	Thread.sleep(100);
+        } catch (InterruptedException e){}
+        assertEquals(view.getDurableTopicSubscribers().length, 0);
     }
     
     protected void assertClients(int expected) throws Exception {
