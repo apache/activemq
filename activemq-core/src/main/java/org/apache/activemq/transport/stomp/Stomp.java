@@ -87,6 +87,7 @@ public interface Stomp {
             public interface AckModeValues {
                 String AUTO = "auto";
                 String CLIENT = "client";
+                String INDIVIDUAL = "client-individual";
             }
         }
 
