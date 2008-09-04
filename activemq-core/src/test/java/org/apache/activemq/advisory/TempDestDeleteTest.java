@@ -103,7 +103,7 @@ public class TempDestDeleteTest extends EmbeddedBrokerTestSupport implements Con
         connection = createConnection();
         connection.start();
 
-        session = connection.createSession(false, 0);
+        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
         tempTopic = (ActiveMQTempTopic)session.createTemporaryTopic();
         topicConsumerEventSource = new ConsumerEventSource(connection, tempTopic);
