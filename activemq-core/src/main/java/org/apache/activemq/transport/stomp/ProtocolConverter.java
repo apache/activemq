@@ -45,6 +45,7 @@ import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.command.SessionInfo;
@@ -412,6 +413,17 @@ public class ProtocolConverter {
         if (subscriptionId == null && destination == null) {
             throw new ProtocolException("Must specify the subscriptionId or the destination you are unsubscribing from");
         }
+       
+        // check if it is a durable subscription
+        String durable = command.getHeaders().get("activemq.subscriptionName"); 
+        if (durable != null) {
+            RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
+            info.setClientId(durable);
+            info.setSubscriptionName(durable);
+            info.setConnectionId(connectionId);
+            sendToActiveMQ(info, createResponseHandler(command));
+            return;
+        }
 
         // TODO: Unsubscribing using a destination is a bit wierd if multiple
         // subscriptions
@@ -426,7 +438,7 @@ public class ProtocolConverter {
                 return;
             }
         }
-
+       
         throw new ProtocolException("No subscription matched.");
     }
 
