@@ -122,12 +122,12 @@ public class MemoryMonitoringTool implements Runnable {
                 nonHeapMB = memoryBean.getNonHeapMemoryUsage().getUsed() / oneMB;
                 heapMB = memoryBean.getHeapMemoryUsage().getUsed() / oneMB;
 
-                reportGenerator.writeWithIndent(6, "<memory_usage index=" + resultIndex 
-                                                + " non_heap_mb=" + nonHeapMB 
-                                                + " non_heap_bytes=" 
-                                                + memoryBean.getNonHeapMemoryUsage().getUsed() 
-                                                + " heap_mb=" + heapMB 
-                                                + " heap_bytes=" + memoryBean.getHeapMemoryUsage().getUsed() + "/>");
+                reportGenerator.writeWithIndent(6, "<memory_usage index='" + resultIndex
+                                                + "' non_heap_mb='" + nonHeapMB
+                                                + "' non_heap_bytes='"
+                                                + memoryBean.getNonHeapMemoryUsage().getUsed()
+                                                + "' heap_mb='" + heapMB
+                                                + "' heap_bytes='" + memoryBean.getHeapMemoryUsage().getUsed() + "'/>");
 
                 resultIndex++;
 

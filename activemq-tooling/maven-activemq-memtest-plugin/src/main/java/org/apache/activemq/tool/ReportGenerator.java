@@ -28,7 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class ReportGenerator {
-    
+
     private static final Log LOG = LogFactory.getLog(ReportGenerator.class);
     private String reportDirectory;
     private String reportName;
@@ -106,7 +106,7 @@ public class ReportGenerator {
 
     protected void startTestResult(long checkpointInterval) {
         long intervalInSec = checkpointInterval / 1000;
-        writeWithIndent(2, "<test-result checkpoint_interval_in_sec=" + intervalInSec + " >");
+        writeWithIndent(2, "<test-result checkpoint_interval_in_sec='" + intervalInSec + "' >");
     }
 
     protected void endTestResult() {
