@@ -196,7 +196,9 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         // Don't remove the nodes until we are committed.
                         if (!context.isInTransaction()) {
                             dequeueCounter++;
-                            node.getRegionDestination().getDestinationStatistics().getDequeues().increment();
+                            if (this.getConsumerInfo().isBrowser()) {
+                                node.getRegionDestination().getDestinationStatistics().getDequeues().increment();
+                            }
                             if (!isSlave()) {
                                 node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
                             }
