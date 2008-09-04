@@ -389,6 +389,8 @@ public class ProtocolConverter {
         String ackMode = headers.get(Stomp.Headers.Subscribe.ACK_MODE);
         if (Stomp.Headers.Subscribe.AckModeValues.CLIENT.equals(ackMode)) {
             stompSubscription.setAckMode(StompSubscription.CLIENT_ACK);
+        } else if (Stomp.Headers.Subscribe.AckModeValues.INDIVIDUAL.equals(ackMode)) {
+            stompSubscription.setAckMode(StompSubscription.INDIVIDUAL_ACK);
         } else {
             stompSubscription.setAckMode(StompSubscription.AUTO_ACK);
         }

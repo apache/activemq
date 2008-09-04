@@ -40,6 +40,7 @@ public class StompSubscription {
 
     public static final String AUTO_ACK = Stomp.Headers.Subscribe.AckModeValues.AUTO;
     public static final String CLIENT_ACK = Stomp.Headers.Subscribe.AckModeValues.CLIENT;
+    public static final String INDIVIDUAL_ACK = Stomp.Headers.Subscribe.AckModeValues.INDIVIDUAL;
 
     private final ProtocolConverter protocolConverter;
     private final String subscriptionId;
@@ -63,6 +64,10 @@ public class StompSubscription {
         ActiveMQMessage message = (ActiveMQMessage)md.getMessage();
 
         if (ackMode == CLIENT_ACK) {
+            synchronized (this) {
+                dispatchedMessage.put(message.getJMSMessageID(), message.getMessageId());
+            }
+        } else if (ackMode == INDIVIDUAL_ACK) {
             synchronized (this) {
                 dispatchedMessage.put(message.getJMSMessageID(), message.getMessageId());
             }
@@ -99,31 +104,38 @@ public class StompSubscription {
 
         MessageAck ack = new MessageAck();
         ack.setDestination(consumerInfo.getDestination());
-        ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
         ack.setConsumerId(consumerInfo.getConsumerId());
 
-        int count = 0;
-        for (Iterator iter = dispatchedMessage.entrySet().iterator(); iter.hasNext();) {
+        if (ackMode == CLIENT_ACK) {
+            ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
+            int count = 0;
+            for (Iterator iter = dispatchedMessage.entrySet().iterator(); iter.hasNext();) {
 
-            Map.Entry entry = (Entry)iter.next();
-            String id = (String)entry.getKey();
-            MessageId msgid = (MessageId)entry.getValue();
+                Map.Entry entry = (Entry)iter.next();
+                String id = (String)entry.getKey();
+                MessageId msgid = (MessageId)entry.getValue();
 
-            if (ack.getFirstMessageId() == null) {
-                ack.setFirstMessageId(msgid);
+                if (ack.getFirstMessageId() == null) {
+                    ack.setFirstMessageId(msgid);
+                }
+
+                iter.remove();
+                count++;
+
+                if (id.equals(messageId)) {
+                    ack.setLastMessageId(msgid);
+                    break;
+                }
+
             }
-
-            iter.remove();
-            count++;
-
-            if (id.equals(messageId)) {
-                ack.setLastMessageId(msgid);
-                break;
-            }
-
+            ack.setMessageCount(count);
         }
-
-        ack.setMessageCount(count);
+        else if (ackMode == INDIVIDUAL_ACK) {
+            ack.setAckType(MessageAck.INDIVIDUAL_ACK_TYPE);
+            MessageId msgid = (MessageId)dispatchedMessage.get(messageId);
+            ack.setMessageID(msgid);
+            dispatchedMessage.remove(messageId);
+        }
         return ack;
     }
 
