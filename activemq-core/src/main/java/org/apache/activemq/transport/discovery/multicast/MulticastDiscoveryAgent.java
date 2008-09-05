@@ -49,6 +49,11 @@ import org.apache.commons.logging.LogFactory;
 public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
 
     public static final String DEFAULT_DISCOVERY_URI_STRING = "multicast://239.255.2.3:6155";
+    public static final String DEFAULT_HOST_STR = "default"; 
+    public static final String DEFAULT_HOST_IP  = "239.255.2.3"; 
+    public static final int    DEFAULT_PORT  = 6155; 
+    
+    
     private static final Log LOG = LogFactory.getLog(MulticastDiscoveryAgent.class);
     private static final String TYPE_SUFFIX = "ActiveMQ-4.";
     private static final String ALIVE = "alive.";
@@ -257,7 +262,9 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
      * @throws Exception
      */
     public void start() throws Exception {
-        if (started.compareAndSet(false, true)) {
+    	
+        if (started.compareAndSet(false, true)) {        	
+        	         	
             if (group == null || group.length() == 0) {
                 throw new IOException("You must specify a group to discover");
             }
@@ -266,12 +273,33 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
                 LOG.warn("The type '" + type + "' should end with '.' to be a valid Discovery type");
                 type += ".";
             }
+            
             if (discoveryURI == null) {
                 discoveryURI = new URI(DEFAULT_DISCOVERY_URI_STRING);
             }
-            this.inetAddress = InetAddress.getByName(discoveryURI.getHost());
-            this.sockAddress = new InetSocketAddress(this.inetAddress, discoveryURI.getPort());
-            mcast = new MulticastSocket(discoveryURI.getPort());
+            
+            if (LOG.isTraceEnabled()) 
+        	  	LOG.trace("start - discoveryURI = " + discoveryURI);        	  	        	  
+        	  
+        	  String myHost = discoveryURI.getHost();
+        	  int    myPort = discoveryURI.getPort(); 
+        	     
+        	  if( DEFAULT_HOST_STR.equals(myHost) ) 
+        	  	myHost = DEFAULT_HOST_IP;       	      	  
+        	  
+        	  if(myPort < 0 )
+        	    myPort = DEFAULT_PORT;        	    
+        	  
+        	  if (LOG.isTraceEnabled()) {
+        	  	LOG.trace("start - myHost = " + myHost); 
+        	  	LOG.trace("start - myPort = " + myPort);   	
+        	  	LOG.trace("start - myHost = " + myHost); 
+        	  	LOG.trace("start - group  = " + group );   		       	  	
+        	  }	
+        	  
+            this.inetAddress = InetAddress.getByName(myHost);
+            this.sockAddress = new InetSocketAddress(this.inetAddress, myPort);
+            mcast = new MulticastSocket(myPort);
             mcast.setLoopbackMode(loopBackMode);
             mcast.setTimeToLive(getTimeToLive());
             mcast.joinGroup(inetAddress);

@@ -25,25 +25,31 @@ import org.apache.activemq.transport.discovery.DiscoveryAgentFactory;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class MulticastDiscoveryAgentFactory extends DiscoveryAgentFactory {
+	
+	  private static final Log LOG = LogFactory.getLog(MulticastDiscoveryAgentFactory.class); 
 
-    //See AMQ-1489. There's something wrong here but it is difficult to tell what.
-    //It looks like to actually set the discovery URI you have to use something like
-    //<transportConnector uri="..." discoveryUri="multicast://239.3.7.0:37000?discoveryURI=multicast://239.3.7.0:37000" />
-    // or
-    //<networkConnector name="..." uri="multicast://239.3.7.0:37000?discoveryURI=multicast://239.3.7.0:37000">
+    
     protected DiscoveryAgent doCreateDiscoveryAgent(URI uri) throws IOException {
         try {
+        	
+        	  if (LOG.isTraceEnabled()) {      
+               LOG.trace("doCreateDiscoveryAgent: uri = " + uri.toString());               
+            }
             
-            Map options = URISupport.parseParamters(uri);
-            MulticastDiscoveryAgent rc = new MulticastDiscoveryAgent();
-            rc.setGroup(uri.getHost());
-
-            // allow the discoveryURI to be set via a query argument on the URI
-            // ?discoveryURI=someURI
-            IntrospectionSupport.setProperties(rc, options);
-            return rc;
+            MulticastDiscoveryAgent mda = new MulticastDiscoveryAgent();          
+            
+            mda.setDiscoveryURI(uri);            
+                        
+            // allow MDA's params to be set via query arguments  
+            // (e.g., multicast://default?group=foo             
+            Map options = URISupport.parseParamters(uri);         
+            IntrospectionSupport.setProperties(mda, options);
+            
+            return mda;
             
         } catch (Throwable e) {
             throw IOExceptionSupport.create("Could not create discovery agent: " + uri, e);
