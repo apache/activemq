@@ -140,6 +140,11 @@ public abstract class JmsConnector implements Service {
             LOG.info("JMS Connector " + getName() + " Stopped");
         }
     }
+    
+    public void clearBridges() {
+        inboundBridges.clear();
+        outboundBridges.clear();
+    }
 
     protected abstract Destination createReplyToBridge(Destination destination, Connection consumerConnection, Connection producerConnection);
 
@@ -318,11 +323,11 @@ public abstract class JmsConnector implements Service {
     }
 
     protected void removeInboundBridge(DestinationBridge bridge) {
-        inboundBridges.add(bridge);
+        inboundBridges.remove(bridge);
     }
 
     protected void removeOutboundBridge(DestinationBridge bridge) {
-        outboundBridges.add(bridge);
+        outboundBridges.remove(bridge);
     }
 
     public String getName() {
