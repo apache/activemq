@@ -28,6 +28,7 @@ import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
@@ -176,7 +177,7 @@ public class MasterBroker extends InsertableMutableBrokerFilter {
     /**
      * Removes a producer.
      * 
-     * @param context the enviorment the operation is being executed under.
+     * @param context the environment the operation is being executed under.
      * @param info
      * @throws Exception
      */
@@ -190,7 +191,7 @@ public class MasterBroker extends InsertableMutableBrokerFilter {
      * 
      * @param context
      * @param info
-     * @return the assocated subscription
+     * @return the associated subscription
      * @throws Exception
      */
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
@@ -211,6 +212,13 @@ public class MasterBroker extends InsertableMutableBrokerFilter {
         sendAsyncToSlave(info);
     }
 
+    public void removeDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
+        super.removeDestinationInfo(context, info);
+        if (info.getDestination().isTemporary()) {
+            sendAsyncToSlave(info);
+        }
+
+    }
     /**
      * begin a transaction
      * 
