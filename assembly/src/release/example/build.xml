@@ -52,17 +52,25 @@
 
 	<target name="help">
 		<echo>
-		This script requires Ant 1.6 or higher
-NOTE: All options should be specified as system properties 
-      on the command line, e.g.:
-      ant consumer -Durl=tcp://hostname:1234 -Dtopic=true
-      
-		 Usage:
-            --------------------------------------------------------
-            
-            --------------------------------------------------------
+            This script requires Ant 1.6 or higher
 
-            Options: 
+            NOTE: All options should be specified as system properties 
+               on the command line, e.g.:
+
+               ant consumer -Durl=tcp://hostname:1234 -Dtopic=true
+
+                 OR 
+
+               ant producer -Durl=tcp://hostname:61616 -Dmax=1000
+      
+            Usage:
+              ant &lt;ant-task> &lt;options>
+
+            --------------------------------------------------------
+            ant consumer &lt;options> - Creates a consumer which waits until a specific number 
+                                     of messages have been received
+	
+            Consumer Options: 
                               url - Used to specify acustom URL for the 
                                     broker, e.g., tcp://hostname:1234
                             topic - A boolean to determine whether to use
@@ -85,16 +93,33 @@ NOTE: All options should be specified as system properties
                  receive-time-out - An integer to specify the time to wait for
                                     message consumption
  
-            --------------------------------------------------------
-		   ant -help		     		display ant help screen
-		   ant help						display this message
-		   ant clean		     		delete the built directory
+				
+            --------------------------------------------------------				
+            ant producer &lt;options&gt; - Creates a producer publishing a number of messages
 
-		   ant consumer        creates a consumer which waits until a specific number of messages have been received
-		   ant producer        creates a producer publishing a number of messages
-		   ant embedBroker     runs an embedded broker inside Java code
-
-       ant war      				creates a WAR deployment unit of the ActiveMQ Broker
+            Producer Options: 
+                            url - Used to specify acustom URL for the broker,
+                                  e.g., tcp://hostname:1234
+                          topic - A boolean to determine whether to use topics 
+		                        or queues
+                        subject - Used to specify a custom destination name, 
+                                  e.g. MyDestination
+                        durable - A boolean to specify that you want to create 
+                                  a durable topic subscriber? 
+                           max - The maximum number of messages to wait for 
+                                 before shutting down 
+                     sleepTime - The time to sleep between message consumptions
+                    transacted - A boolean to specify that you want to use 
+                                 transactions? 
+                       verbose - Used to print out more info; the default is true
+		   
+           --------------------------------------------------------
+		
+                   ant -help  - Display ant help screen
+                    ant help  - Display this message
+                   ant clean  - Delete the built directory
+             ant embedBroker  - Runs an embedded broker inside Java code
+                     ant war  - Creates a WAR deployment unit of the ActiveMQ Broker
     </echo>
 	</target>
 
