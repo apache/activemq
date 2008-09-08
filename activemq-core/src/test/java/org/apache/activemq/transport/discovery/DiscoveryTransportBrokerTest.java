@@ -134,7 +134,7 @@ public class DiscoveryTransportBrokerTest extends NetworkTestSupport {
     	if ( groupName == null ) {
     		groupName = "group-"+System.currentTimeMillis();
     	}
-        return "multicast://"+groupName;
+        return "multicast://default?group="+groupName;
     }
 
     protected TransportConnector createRemoteConnector() throws Exception, IOException, URISyntaxException {

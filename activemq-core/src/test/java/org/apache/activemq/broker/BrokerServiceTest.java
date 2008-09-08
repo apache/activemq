@@ -54,7 +54,7 @@ public class BrokerServiceTest extends TestCase {
         BrokerService service = new BrokerService();
         service.setPersistent(false);
         service.setUseJmx(true);
-        NetworkConnector connector = service.addNetworkConnector("multicast://group-"+System.currentTimeMillis());
+        NetworkConnector connector = service.addNetworkConnector("multicast://default?group=group-"+System.currentTimeMillis());
         service.start();
 
         service.removeNetworkConnector(connector);
@@ -66,7 +66,7 @@ public class BrokerServiceTest extends TestCase {
         BrokerService service = new BrokerService();
         service.setPersistent(false);
         service.setUseJmx(false);
-        NetworkConnector connector = service.addNetworkConnector("multicast://group-"+System.currentTimeMillis());
+        NetworkConnector connector = service.addNetworkConnector("multicast://default?group=group-"+System.currentTimeMillis());
         service.start();
 
         service.removeNetworkConnector(connector);

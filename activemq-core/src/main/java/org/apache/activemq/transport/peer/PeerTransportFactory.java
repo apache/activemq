@@ -92,8 +92,8 @@ public class PeerTransportFactory extends TransportFactory {
                     IntrospectionSupport.setProperties(service, brokerOptions);
                     service.setBrokerName(finalBroker);
                     TransportConnector c = service.addConnector("tcp://localhost:0");
-                    c.setDiscoveryUri(new URI("multicast://" + finalGroup));
-                    service.addNetworkConnector("multicast://" + finalGroup);
+                    c.setDiscoveryUri(new URI("multicast://default?group=" + finalGroup));
+                    service.addNetworkConnector("multicast://default?group=" + finalGroup);
                     return service;
                 }
             });
