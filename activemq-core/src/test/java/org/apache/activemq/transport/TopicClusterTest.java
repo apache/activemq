@@ -112,8 +112,8 @@ public class TopicClusterTest extends TestCase implements MessageListener {
 
         String url = "tcp://localhost:0";
         TransportConnector connector = container.addConnector(url);
-        connector.setDiscoveryUri(new URI("multicast://"+groupId));
-        container.addNetworkConnector("multicast://"+groupId);
+        connector.setDiscoveryUri(new URI("multicast://default?group="+groupId));
+        container.addNetworkConnector("multicast://default?group="+groupId);
         container.start();
 
         services.add(container);

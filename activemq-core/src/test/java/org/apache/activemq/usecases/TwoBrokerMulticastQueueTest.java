@@ -140,43 +140,43 @@ public class TwoBrokerMulticastQueueTest extends CombinationTestSupport {
     }
 
     public void testSendReceiveUsingDiscovery() throws Exception {
-        sendUri = "discovery:multicast://"+groupId;
-        recvUri = "discovery:multicast://"+groupId;
+        sendUri = "discovery:multicast://default?group="+groupId;
+        recvUri = "discovery:multicast://default?group="+groupId;
         createMulticastBrokerNetwork();
         doSendReceiveTest();
     }
 
     public void testMultipleConsumersConnectUsingDiscovery() throws Exception {
-        sendUri = "discovery:multicast://"+groupId;
-        recvUri = "discovery:multicast://"+groupId;
+        sendUri = "discovery:multicast://default?group="+groupId;
+        recvUri = "discovery:multicast://default?group="+groupId;
         createMulticastBrokerNetwork();
         doMultipleConsumersConnectTest();
     }
 
     public void testSendReceiveUsingAutoAssignFailover() throws Exception {
-        sendUri = "failover:(discovery:multicast://"+groupId+")";
-        recvUri = "failover:(discovery:multicast://"+groupId+")";
+        sendUri = "failover:(discovery:multicast:default?group=//"+groupId+")";
+        recvUri = "failover:(discovery:multicast:default?group=//"+groupId+")";
         createAutoAssignMulticastBrokerNetwork();
         doSendReceiveTest();
     }
 
     public void testMultipleConsumersConnectUsingAutoAssignFailover() throws Exception {
-        sendUri = "failover:(discovery:multicast://"+groupId+")";
-        recvUri = "failover:(discovery:multicast://"+groupId+")";
+        sendUri = "failover:(discovery:multicast:default?group=//"+groupId+")";
+        recvUri = "failover:(discovery:multicast:default?group=//"+groupId+")";
         createAutoAssignMulticastBrokerNetwork();
         doMultipleConsumersConnectTest();
     }
 
     public void testSendReceiveUsingAutoAssignDiscovery() throws Exception {
-        sendUri = "discovery:multicast://"+groupId;
-        recvUri = "discovery:multicast://"+groupId;
+        sendUri = "discovery:multicast://default?group="+groupId;
+        recvUri = "discovery:multicast://default?group="+groupId;
         createAutoAssignMulticastBrokerNetwork();
         doSendReceiveTest();
     }
 
     public void testMultipleConsumersConnectUsingAutoAssignDiscovery() throws Exception {
-        sendUri = "discovery:multicast://"+groupId;
-        recvUri = "discovery:multicast://"+groupId;
+        sendUri = "discovery:multicast://default?group="+groupId;
+        recvUri = "discovery:multicast://default?group="+groupId;
         createAutoAssignMulticastBrokerNetwork();
         doMultipleConsumersConnectTest();
     }

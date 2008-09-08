@@ -21,11 +21,11 @@
 
   <broker brokerName="BrokerB" persistent="false" useJmx="false" xmlns="http://activemq.apache.org/schema/core">
     <transportConnectors>
-      <transportConnector uri="tcp://localhost:0" discoveryUri="multicast://${groupId}"/>
+      <transportConnector uri="tcp://localhost:0" discoveryUri="multicast://default?group=${groupId}"/>
     </transportConnectors>
 
     <networkConnectors>
-      <networkConnector uri="multicast://${groupId}"/>
+      <networkConnector uri="multicast://default?group=${groupId}"/>
     </networkConnectors>
 
     <persistenceAdapter>

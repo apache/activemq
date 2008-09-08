@@ -129,8 +129,8 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
             }
 
             TransportConnector transport = (TransportConnector)transportConnectors.get(0);
-            transport.setDiscoveryUri(new URI("multicast://" + groupName));
-            broker.addNetworkConnector("multicast://" + groupName);
+            transport.setDiscoveryUri(new URI("multicast://default?group=" + groupName));
+            broker.addNetworkConnector("multicast://default?group=" + groupName);
         }
 
         // Multicasting may take longer to setup
