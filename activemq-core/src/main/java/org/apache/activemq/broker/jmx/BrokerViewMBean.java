@@ -80,6 +80,8 @@ public interface BrokerViewMBean extends Service {
     void setTempLimit(long limit);
     
     boolean isPersistent();
+    
+    boolean isSlave();
 
     /**
      * Shuts down the JVM.
