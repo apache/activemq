@@ -25,6 +25,7 @@ public class JDBCQueueMasterSlaveTest extends QueueMasterSlaveTest {
         JDBCPersistenceAdapter persistenceAdapter = new JDBCPersistenceAdapter();
         persistenceAdapter.setDataSource(getExistingDataSource());
         persistenceAdapter.setLockKeepAlivePeriod(500);
+        persistenceAdapter.setLockAcquireSleepInterval(500);
         master.setPersistenceAdapter(persistenceAdapter);
         master.start();
     }

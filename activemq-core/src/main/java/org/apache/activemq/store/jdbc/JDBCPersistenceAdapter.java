@@ -78,6 +78,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     private boolean useExternalMessageReferences;
     private boolean useDatabaseLock = true;
     private long lockKeepAlivePeriod = 1000*30;
+    private long lockAcquireSleepInterval = DefaultDatabaseLocker.DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL;
     private DatabaseLocker databaseLocker;
     private boolean createTablesOnStartup = true;
     private DataSource lockDataSource;
@@ -500,7 +501,9 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     }
 
     protected DatabaseLocker createDatabaseLocker() throws IOException {
-        return new DefaultDatabaseLocker(getLockDataSource(), getStatements());
+        DefaultDatabaseLocker locker = new DefaultDatabaseLocker(this);
+        locker.setLockAcquireSleepInterval(getLockAcquireSleepInterval());
+        return locker;
     }
 
     public void setBrokerName(String brokerName) {
@@ -526,5 +529,17 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
 
     public void setLockKeepAlivePeriod(long lockKeepAlivePeriod) {
         this.lockKeepAlivePeriod = lockKeepAlivePeriod;
+    }
+
+    public long getLockAcquireSleepInterval() {
+        return lockAcquireSleepInterval;
+    }
+
+    /*
+     * millisecond interval between lock acquire attempts, applied to newly created DefaultDatabaseLocker
+     * not applied if DataBaseLocker is injected.
+     */
+    public void setLockAcquireSleepInterval(long lockAcquireSleepInterval) {
+        this.lockAcquireSleepInterval = lockAcquireSleepInterval;
     }
 }
