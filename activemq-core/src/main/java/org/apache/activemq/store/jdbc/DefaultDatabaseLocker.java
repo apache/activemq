@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.store.jdbc;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -32,12 +33,18 @@ import org.apache.commons.logging.LogFactory;
  * @version $Revision: $
  */
 public class DefaultDatabaseLocker implements DatabaseLocker {
+    public static final long DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL = 1000;
     private static final Log LOG = LogFactory.getLog(DefaultDatabaseLocker.class);
     private final DataSource dataSource;
     private final Statements statements;
-    private long sleepTime = 1000;
+    private long lockAcquireSleepInterval = DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL;
+
     private Connection connection;
     private boolean stopping;
+
+    public DefaultDatabaseLocker(JDBCPersistenceAdapter persistenceAdapter) throws IOException {
+        this(persistenceAdapter.getLockDataSource(), persistenceAdapter.getStatements());
+    }
 
     public DefaultDatabaseLocker(DataSource dataSource, Statements statements) {
         this.dataSource = dataSource;
@@ -80,8 +87,8 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
                 }
             }
 
-            LOG.debug("Sleeping for " + sleepTime + " milli(s) before trying again to get the lock...");
-            Thread.sleep(sleepTime);
+            LOG.debug("Sleeping for " + lockAcquireSleepInterval + " milli(s) before trying again to get the lock...");
+            Thread.sleep(lockAcquireSleepInterval);
         }
 
         LOG.info("Becoming the master on dataSource: " + dataSource);
@@ -117,5 +124,13 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
             }
         }
         return result;
+    }
+ 
+    public long getLockAcquireSleepInterval() {
+        return lockAcquireSleepInterval;
+    }
+
+    public void setLockAcquireSleepInterval(long lockAcquireSleepInterval) {
+        this.lockAcquireSleepInterval = lockAcquireSleepInterval;
     }
 }
