@@ -1217,7 +1217,6 @@
               <goals>deploy</goals>
               <arguments>-Prelease</arguments>
               <autoVersionSubmodules>true</autoVersionSubmodules>
-	      <preparationGoals>clean verify install</preparationGoals>
             </configuration>
           </plugin>
 
