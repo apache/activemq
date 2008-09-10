@@ -31,12 +31,14 @@ public class SimpleQueueTest extends SimpleTopicTest {
     }
     
     protected void setUp() throws Exception {
-      
+        numberOfConsumers = 1;
         super.setUp();
     }
     
     protected PerfConsumer createConsumer(ConnectionFactory fac, Destination dest, int number) throws JMSException {
         PerfConsumer consumer =  new PerfConsumer(fac, dest);
+        //consumer.setInitialDelay(2000);
+        //consumer.setSleepDuration(10);
         boolean enableAudit = numberOfConsumers <= 1;
         System.out.println("Enable Audit = " + enableAudit);
         consumer.setEnableAudit(enableAudit);

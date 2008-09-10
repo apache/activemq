@@ -180,9 +180,12 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         Destination destination = null;
         synchronized(dispatchLock) {
             if (ack.isStandardAck()) {
+            	// First check if the ack matches the dispatched. When using failover this might
+            	// not be the case. We don't ever want to ack the wrong messages.
+            	assertAckMatchesDispatched(ack);
+            	
                 // Acknowledge all dispatched messages up till the message id of
-                // the
-                // acknowledgment.
+                // the acknowledgment.
                 int index = 0;
                 boolean inAckRange = false;
                 List<MessageReference> removeList = new ArrayList<MessageReference>();
@@ -263,11 +266,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 // this only happens after a reconnect - get an ack which is not
                 // valid
                 if (!callDispatchMatched) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG
-                                .debug("Could not correlate acknowledgment with dispatched message: "
-                                        + ack);
-                    }
+                        LOG.error("Could not correlate acknowledgment with dispatched message: "
+                                  + ack);
                 }
             } else if (ack.isIndividualAck()) {
                 // Message was delivered and acknowledge - but only delete the
@@ -410,6 +410,45 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     }
 
     /**
+     * Checks an ack versus the contents of the dispatched list.
+     * 
+     * @param ack
+     * @param firstAckedMsg
+     * @param lastAckedMsg
+     * @throws JMSException if it does not match
+     */
+	protected void assertAckMatchesDispatched(MessageAck ack)
+			throws JMSException {
+        MessageId firstAckedMsg = ack.getFirstMessageId();
+		MessageId lastAckedMsg = ack.getLastMessageId();
+
+		int checkCount = 0;
+		boolean checkFoundStart = false;
+		boolean checkFoundEnd = false;
+		for (MessageReference node : dispatched) {
+			if (!checkFoundStart && firstAckedMsg != null && firstAckedMsg.equals(node.getMessageId())) {
+				checkFoundStart = true;
+			}
+
+			if (checkFoundStart || firstAckedMsg == null)
+				checkCount++;
+
+			if (lastAckedMsg != null && lastAckedMsg.equals(node.getMessageId())) {
+				checkFoundEnd = true;
+				break;
+			}
+		}
+		if (!checkFoundStart && firstAckedMsg != null)
+			throw new JMSException("Unmatched acknowledege: Could not find Message-ID "+firstAckedMsg+" in dispatched-list (start of ack)");
+		if (!checkFoundEnd && lastAckedMsg != null)
+			throw new JMSException("Unmatched acknowledege: Could not find Message-ID "+firstAckedMsg+" in dispatched-list (end of ack)");
+		if (ack.getMessageCount() != checkCount) {
+			throw new JMSException("Unmatched acknowledege: Expected message count ("+ack.getMessageCount()+
+					") differs from count in dispatched-list ("+checkCount+")");
+		}
+	}
+
+    /**
      * @param context
      * @param node
      * @throws IOException
@@ -429,7 +468,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
      * @return
      */
     public boolean isFull() {
-        return dispatched.size() - prefetchExtension >= info.getPrefetchSize();
+        return isSlave() || dispatched.size() - prefetchExtension >= info.getPrefetchSize();
     }
 
     /**
