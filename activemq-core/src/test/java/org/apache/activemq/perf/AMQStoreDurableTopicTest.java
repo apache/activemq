@@ -19,7 +19,6 @@ package org.apache.activemq.perf;
 import java.io.File;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.amq.AMQPersistenceAdapter;
-import org.apache.kahadb.store.KahaDBPersistenceAdaptor;
 
 /**
  * @version $Revision: 1.3 $
@@ -30,13 +29,9 @@ public class AMQStoreDurableTopicTest extends SimpleDurableTopicTest {
         File dataFileDir = new File("target/test-amq-data/perfTest/amqdb");
         dataFileDir.mkdirs();
         answer.setDeleteAllMessagesOnStartup(true);
-        //AMQPersistenceAdapter adaptor = new AMQPersistenceAdapter();
-        //adaptor.setArchiveDataLogs(true);
-        //adaptor.setMaxFileLength(1024 * 64);
-        
-         KahaDBPersistenceAdaptor adaptor = new KahaDBPersistenceAdaptor();
-        //adaptor.setDirectory(dataFileDir);
-         
+        AMQPersistenceAdapter adaptor = new AMQPersistenceAdapter();
+        adaptor.setArchiveDataLogs(true);
+        adaptor.setMaxFileLength(1024 * 64);       
         
         answer.setDataDirectoryFile(dataFileDir);
         answer.setPersistenceAdapter(adaptor);
