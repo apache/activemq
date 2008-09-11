@@ -208,7 +208,6 @@ public class MessageServlet extends MessageServletSupport {
                     // send a response for each available message (up to max
                     // messages)
                     while ((maxMessages < 0 || messages < maxMessages) && message != null) {
-                        // System.err.println("message["+messages+"]="+message);
                         if (ajax) {
                             writer.print("<response type='object' id='");
                             writer.print(request.getParameter("id"));
@@ -302,7 +301,6 @@ public class MessageServlet extends MessageServletSupport {
                         // max
                         // messages)
                         while ((maxMessages < 0 || messages < maxMessages) && message != null) {
-                            // System.err.println("message["+messages+"]="+message);
                             if (ajax) {
                                 writer.print("<response type='object' id='");
                                 writer.print(request.getParameter("id"));
