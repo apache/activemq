@@ -40,9 +40,6 @@ public class SessionFilter implements Filter {
 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         ((HttpServletRequest)request).getSession(true);
-        // if (session.isNew())
-        // System.err.println("NEW SESSION "+session.getId()+" for
-        // "+((HttpServletRequest)request).getRequestURI());
         chain.doFilter(request, response);
     }
 

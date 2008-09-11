@@ -278,7 +278,7 @@ public abstract class MessageServletSupport extends HttpServlet {
         }
 
         uri = uri.replace('/', '.');
-        System.err.println("destination uri=" + uri);
+        LOG.debug("destination uri=" + uri);
         return getDestination(client, request, uri);
     }
 
@@ -303,7 +303,7 @@ public abstract class MessageServletSupport extends HttpServlet {
         if (destinationOptions != null) {
             destinationName += "?" + destinationOptions;
         }
-
+        LOG.debug(destinationName + " (" + (isTopic ? "topic" : "queue") + ")");
         if (isTopic) {
             return client.getSession().createTopic(destinationName);
         } else {
