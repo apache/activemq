@@ -41,7 +41,7 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
     protected int maxAuditDepth=1000;
     protected boolean enableAudit=true;
     protected ActiveMQMessageAudit audit;
-    protected boolean useCache=false;
+    protected boolean useCache=true;
     private boolean started=false;
   
 

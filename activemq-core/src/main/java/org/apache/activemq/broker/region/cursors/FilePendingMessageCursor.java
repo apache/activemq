@@ -65,6 +65,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
      * @param store
      */
     public FilePendingMessageCursor(Broker broker,String name) {
+        this.useCache=false;
         this.broker = broker;
         //the store can be null if the BrokerService has persistence 
         //turned off
