@@ -468,7 +468,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
      * @return
      */
     public boolean isFull() {
-        return isSlave() || dispatched.size() - prefetchExtension >= info.getPrefetchSize();
+        return dispatched.size() - prefetchExtension >= info.getPrefetchSize();
     }
 
     /**

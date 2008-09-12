@@ -49,6 +49,13 @@ public class MasterSlaveTempQueueMemoryTest extends TempQueueMemoryTest {
     }
 
     @Override
+    protected void tearDown() throws Exception {
+        slave.stop();
+        super.tearDown();
+        
+    }
+
+    @Override
     public void testLoadRequestReply() throws Exception {
         super.testLoadRequestReply();
         
@@ -62,7 +69,25 @@ public class MasterSlaveTempQueueMemoryTest extends TempQueueMemoryTest {
                 RegionBroker.class); 
                
         //serverDestination + 
-        assertEquals(6, rb.getDestinationMap().size());          
+        assertEquals(6, rb.getDestinationMap().size());     
+        
+        RegionBroker masterRb = (RegionBroker) broker.getBroker().getAdaptor(
+                RegionBroker.class);
+
+        // REVISIT the following two are not dependable at the moment, off by a small number
+        // for some reason? The work for a COUNT < ~500
+        //
+        //assertEquals("inflight match", rb.getDestinationStatistics().getInflight().getCount(), masterRb.getDestinationStatistics().getInflight().getCount());
+        //assertEquals("enqueues match", rb.getDestinationStatistics().getEnqueues().getCount(), masterRb.getDestinationStatistics().getEnqueues().getCount());
+        
+        assertEquals("dequeues match",
+                rb.getDestinationStatistics().getDequeues().getCount(),
+                masterRb.getDestinationStatistics().getDequeues().getCount());
+        
+        // slave does not actually dispatch any messages, so no request/reply(2) pair per iteration(COUNT)
+        assertEquals("dispatched match",
+                rb.getDestinationStatistics().getDispatched().getCount() + 2*COUNT, 
+                masterRb.getDestinationStatistics().getDispatched().getCount());
     }
     
 }
