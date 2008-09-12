@@ -37,7 +37,7 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
     private Connection clientConnection;
     private Session clientSession;
     private Destination serverDestination;
-    private static final int COUNT = 1000;
+    protected static final int COUNT = 2000;
 
     public void testLoadRequestReply() throws Exception {
         MessageConsumer serverConsumer = serverSession.createConsumer(serverDestination);
