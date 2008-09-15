@@ -44,6 +44,8 @@ public class CommandAgent implements Service, InitializingBean, DisposableBean, 
     private static final Log LOG = LogFactory.getLog(CommandAgent.class);
 
     private String brokerUrl = "vm://localhost";
+    private String username;
+    private String password;
     private ConnectionFactory connectionFactory;
     private Connection connection;
     private Destination commandDestination;
@@ -122,9 +124,25 @@ public class CommandAgent implements Service, InitializingBean, DisposableBean, 
 
     public void setBrokerUrl(String brokerUrl) {
         this.brokerUrl = brokerUrl;
-    }
+    }    
 
-    public ConnectionFactory getConnectionFactory() {
+    public String getUsername() {
+		return username;
+	}
+
+	public void setUsername(String username) {
+		this.username = username;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	public ConnectionFactory getConnectionFactory() {
         if (connectionFactory == null) {
             connectionFactory = new ActiveMQConnectionFactory(brokerUrl);
         }
@@ -160,7 +178,7 @@ public class CommandAgent implements Service, InitializingBean, DisposableBean, 
     }
 
     protected Connection createConnection() throws JMSException {
-        return getConnectionFactory().createConnection();
+        return getConnectionFactory().createConnection(username, password);
     }
 
     protected Destination createCommandDestination() {
