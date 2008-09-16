@@ -24,6 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.pool.ObjectPoolFactory;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.DisposableBean;
 
 /**
  * Simple factory bean used to create a jencks connection pool.
@@ -43,11 +44,11 @@ import org.springframework.beans.factory.InitializingBean;
  * maps correctly the connection factory to the recovery process.
  *
  */
-public class PooledConnectionFactoryBean implements FactoryBean, InitializingBean {
+public class PooledConnectionFactoryBean implements FactoryBean, InitializingBean, DisposableBean {
 
     private static final Log LOGGER = LogFactory.getLog(PooledConnectionFactoryBean.class);
 
-    private ConnectionFactory pooledConnectionFactory;
+    private PooledConnectionFactory pooledConnectionFactory;
     private ConnectionFactory connectionFactory;
     private int maxConnections = 1;
     private int maximumActive = 500;
@@ -160,6 +161,13 @@ public class PooledConnectionFactoryBean implements FactoryBean, InitializingBea
         }
         if (pooledConnectionFactory == null) {
             throw new IllegalStateException("Unable to create pooled connection factory.  Enable DEBUG log level for more informations");
+        }
+    }
+
+    public void destroy() throws Exception {
+        if (pooledConnectionFactory != null) {
+            pooledConnectionFactory.stop();
+            pooledConnectionFactory = null;
         }
     }
 }
