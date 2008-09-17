@@ -197,6 +197,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     }
                     if (inAckRange) {
                         // Don't remove the nodes until we are committed.
+                        removeList.add(node);
                         if (!context.isInTransaction()) {
                             dequeueCounter++;
                             if (!this.getConsumerInfo().isBrowser()) {
@@ -205,7 +206,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                             if (!isSlave()) {
                                 node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
                             }
-                            removeList.add(node);
                         } else {
                             // setup a Synchronization to remove nodes from the
                             // dispatched list.
@@ -215,9 +215,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                         public void afterCommit()
                                                 throws Exception {
                                             synchronized(dispatchLock) {
-                                            
                                                 dequeueCounter++;
-                                                dispatched.remove(node);
                                                 node
                                                         .getRegionDestination()
                                                         .getDestinationStatistics()
@@ -234,9 +232,11 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                             }
                                         }
 
-                                        public void afterRollback()
-                                                throws Exception {
-                                            super.afterRollback();
+                                        public void afterRollback() throws Exception {
+                                        	// Need to put it back in the front.
+                                            synchronized(dispatchLock) {
+                                        	    dispatched.add(0, node);
+                                            }
                                         }
                                     });
                         }
@@ -426,12 +426,16 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 		boolean checkFoundStart = false;
 		boolean checkFoundEnd = false;
 		for (MessageReference node : dispatched) {
-			if (!checkFoundStart && firstAckedMsg != null && firstAckedMsg.equals(node.getMessageId())) {
+			
+			if( firstAckedMsg == null ) {
+				checkFoundStart=true;
+			} else if (!checkFoundStart && firstAckedMsg.equals(node.getMessageId())) {
 				checkFoundStart = true;
 			}
 
-			if (checkFoundStart || firstAckedMsg == null)
+			if (checkFoundStart) {
 				checkCount++;
+			}
 
 			if (lastAckedMsg != null && lastAckedMsg.equals(node.getMessageId())) {
 				checkFoundEnd = true;
