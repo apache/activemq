@@ -837,7 +837,11 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         deliveredCounter++;
         if ((0.5 * info.getPrefetchSize()) <= (deliveredCounter - additionalWindowSize)) {
             MessageAck ack = new MessageAck(md, ackType, deliveredCounter);
-            ack.setFirstMessageId(deliveredMessages.getLast().getMessage().getMessageId());
+            if( deliveredMessages.isEmpty() ) {
+            	ack.setFirstMessageId(ack.getLastMessageId());
+            } else {
+            	ack.setFirstMessageId(deliveredMessages.getLast().getMessage().getMessageId());
+            }
             ack.setTransactionId(session.getTransactionContext().getTransactionId());
             session.sendAck(ack);
             additionalWindowSize = deliveredCounter;
