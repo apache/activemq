@@ -39,9 +39,13 @@ import org.apache.activemq.memory.list.SimpleMessageList;
 public class FixedSizedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy {
 
     private MessageList buffer;
-    private int maximumSize = 100 * 64 * 1024;
+    private int maximumSize =  64 * 1024;
     private boolean useSharedBuffer = true;
 
+    public FixedSizedSubscriptionRecoveryPolicy() {
+        
+    }
+    
     public SubscriptionRecoveryPolicy copy() {
         FixedSizedSubscriptionRecoveryPolicy rc = new FixedSizedSubscriptionRecoveryPolicy();
         rc.setMaximumSize(maximumSize);
