@@ -44,8 +44,10 @@ public class CountStatisticImpl extends StatisticImpl implements CountStatistic 
     }
 
     public void reset() {
-        super.reset();
-        counter.set(0);
+        if (isDoReset()) {
+            super.reset();
+            counter.set(0);
+        }
     }
 
     public long getCount() {

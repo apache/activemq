@@ -32,10 +32,12 @@ public class RangeStatisticImpl extends StatisticImpl {
     }
 
     public void reset() {
-        super.reset();
-        current = 0;
-        lowWaterMark = 0;
-        highWaterMark = 0;
+        if (isDoReset()) {
+            super.reset();
+            current = 0;
+            lowWaterMark = 0;
+            highWaterMark = 0;
+        }
     }
 
     public long getHighWaterMark() {
