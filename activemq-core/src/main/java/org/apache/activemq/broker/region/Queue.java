@@ -724,6 +724,8 @@ public class Queue extends BaseDestination implements Task {
             }
         } while (!pagedInMessages.isEmpty() || this.destinationStatistics.getMessages().getCount() > 0);
         gc();
+        this.destinationStatistics.getMessages().setCount(0);
+        getMessages().clear();
     }
 
     /**
@@ -1205,18 +1207,24 @@ public class Queue extends BaseDestination implements Task {
     private void doDispatch(List<QueueMessageReference> list) throws Exception {
         dispatchLock.lock();
         try {
-            synchronized(pagedInPendingDispatch) {
-                if(!pagedInPendingDispatch.isEmpty()) {
-                    // Try to first dispatch anything that had not been dispatched before.
+            synchronized (pagedInPendingDispatch) {
+                if (!pagedInPendingDispatch.isEmpty()) {
+                    // Try to first dispatch anything that had not been
+                    // dispatched before.
                     pagedInPendingDispatch = doActualDispatch(pagedInPendingDispatch);
                 }
-                // and now see if we can dispatch the new stuff.. and append to the pending 
+                // and now see if we can dispatch the new stuff.. and append to
+                // the pending
                 // list anything that does not actually get dispatched.
                 if (list != null && !list.isEmpty()) {
                     if (pagedInPendingDispatch.isEmpty()) {
                         pagedInPendingDispatch.addAll(doActualDispatch(list));
                     } else {
-                        pagedInPendingDispatch.addAll(list);
+                        for (QueueMessageReference qmr : list) {
+                            if (!pagedInPendingDispatch.contains(qmr)) {
+                                pagedInPendingDispatch.add(qmr);
+                            }
+                        }
                     }
                 }
             }
@@ -1226,7 +1234,8 @@ public class Queue extends BaseDestination implements Task {
     }
     
     /**
-     * @return list of messages that could get dispatched to consumers if they were not full.
+     * @return list of messages that could get dispatched to consumers if they
+     *         were not full.
      */
     private List<QueueMessageReference> doActualDispatch(List<QueueMessageReference> list) throws Exception {
         List<QueueMessageReference> rc = new ArrayList<QueueMessageReference>(list.size());

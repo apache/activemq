@@ -194,6 +194,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         batchList.clear();
         batchResetNeeded = true;
         this.cacheEnabled=false;
+        size=0;
     }
     
     protected final synchronized void fillBatch() {
