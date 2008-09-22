@@ -32,22 +32,25 @@ public class StatisticImpl implements Statistic, Resettable {
     private String description;
     private long startTime;
     private long lastSampleTime;
+    private boolean doReset = true;
 
     public StatisticImpl(String name, String unit, String description) {
         this.name = name;
         this.unit = unit;
         this.description = description;
-        startTime = System.currentTimeMillis();
-        lastSampleTime = startTime;
+        this.startTime = System.currentTimeMillis();
+        this.lastSampleTime = this.startTime;
     }
 
     public synchronized void reset() {
-        startTime = System.currentTimeMillis();
-        lastSampleTime = startTime;
+        if(isDoReset()) {
+            this.startTime = System.currentTimeMillis();
+            this.lastSampleTime = this.startTime;
+        }
     }
 
     protected synchronized void updateSampleTime() {
-        lastSampleTime = System.currentTimeMillis();
+        this.lastSampleTime = System.currentTimeMillis();
     }
 
     public synchronized String toString() {
@@ -60,23 +63,23 @@ public class StatisticImpl implements Statistic, Resettable {
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public String getUnit() {
-        return unit;
+        return this.unit;
     }
 
     public String getDescription() {
-        return description;
+        return this.description;
     }
 
     public synchronized long getStartTime() {
-        return startTime;
+        return this.startTime;
     }
 
     public synchronized long getLastSampleTime() {
-        return lastSampleTime;
+        return this.lastSampleTime;
     }
 
     /**
@@ -92,18 +95,32 @@ public class StatisticImpl implements Statistic, Resettable {
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
+    
+    /**
+     * @return the doReset
+     */
+    public boolean isDoReset() {
+        return this.doReset;
+    }
+
+    /**
+     * @param doReset the doReset to set
+     */
+    public void setDoReset(boolean doReset) {
+        this.doReset = doReset;
+    }
+
 
     protected synchronized void appendFieldDescription(StringBuffer buffer) {
         buffer.append(" unit: ");
-        buffer.append(unit);
+        buffer.append(this.unit);
         buffer.append(" startTime: ");
         // buffer.append(new Date(startTime));
-        buffer.append(startTime);
+        buffer.append(this.startTime);
         buffer.append(" lastSampleTime: ");
         // buffer.append(new Date(lastSampleTime));
-        buffer.append(lastSampleTime);
+        buffer.append(this.lastSampleTime);
         buffer.append(" description: ");
-        buffer.append(description);
+        buffer.append(this.description);
     }
-
 }
