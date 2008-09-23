@@ -23,6 +23,7 @@ import javax.jms.JMSException;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
+import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -39,10 +40,6 @@ import org.springframework.context.ApplicationContext;
 public class StompTransportFilter extends TransportFilter {
     private static final Log LOG = LogFactory.getLog(StompTransportFilter.class);
     private final ProtocolConverter protocolConverter;
-
-    private final Object sendToActiveMQMutex = new Object();
-    private final Object sendToStompMutex = new Object();
-
     private final FrameTranslator frameTranslator;
 
     private boolean trace;
@@ -76,8 +73,9 @@ public class StompTransportFilter extends TransportFilter {
     }
 
     public void sendToActiveMQ(Command command) {
-        synchronized (sendToActiveMQMutex) {
-            transportListener.onCommand(command);
+        TransportListener l = transportListener;
+        if (l!=null) {
+            l.onCommand(command);
         }
     }
 
@@ -85,8 +83,9 @@ public class StompTransportFilter extends TransportFilter {
         if (trace) {
             LOG.trace("Sending: \n" + command);
         }
-        synchronized (sendToStompMutex) {
-            next.oneway(command);
+        Transport n = next;
+        if (n!=null) {
+            n.oneway(command);
         }
     }
 
