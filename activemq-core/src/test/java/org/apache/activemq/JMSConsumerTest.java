@@ -598,4 +598,29 @@ public class JMSConsumerTest extends JmsTestSupport {
         assertNull(consumer.receiveNoWait());
     }
 
+    
+    public void testDupsOkConsumer() throws Exception {
+
+        // Receive a message with the JMS API
+        connection.start();
+        Session session = connection.createSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+        destination = createDestination(session, ActiveMQDestination.QUEUE_TYPE);
+        MessageConsumer consumer = session.createConsumer(destination);
+
+        // Send the messages
+        sendMessages(session, destination, 4);
+
+        // Make sure only 4 message are delivered.
+        for( int i=0; i < 4; i++){
+            Message m = consumer.receive(1000);
+            assertNotNull(m);
+        }
+        assertNull(consumer.receive(1000));
+        
+        // Close out the consumer.. no other messages should be left on the queue.
+        consumer.close();
+        
+        consumer = session.createConsumer(destination);
+        assertNull(consumer.receive(1000));
+    }
 }
