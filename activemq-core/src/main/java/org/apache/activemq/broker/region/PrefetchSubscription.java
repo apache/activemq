@@ -216,18 +216,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                                 throws Exception {
                                             synchronized(dispatchLock) {
                                                 dequeueCounter++;
-                                                node
-                                                        .getRegionDestination()
-                                                        .getDestinationStatistics()
-                                                        .getDequeues()
-                                                        .increment();
-
-                                                node
-                                                        .getRegionDestination()
-                                                        .getDestinationStatistics()
-                                                        .getInflight()
-                                                        .decrement();
-
+                                                node.getRegionDestination().getDestinationStatistics().getDequeues().increment();
+                                                node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
                                                 prefetchExtension--;
                                             }
                                         }
@@ -236,6 +226,9 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                         	// Need to put it back in the front.
                                             synchronized(dispatchLock) {
                                         	    dispatched.add(0, node);
+                                            	// ActiveMQ workaround for AMQ-1730 - Please Ignore next line
+                                                node.incrementRedeliveryCounter();
+                                                node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
                                             }
                                         }
                                     });

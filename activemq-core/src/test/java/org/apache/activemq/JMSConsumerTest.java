@@ -509,22 +509,21 @@ public class JMSConsumerTest extends JmsTestSupport {
         sendMessages(session, destination, 2);
         session.commit();
 
-        // Only pick up the first message.
-        Message message1 = consumer.receive(1000);
-        assertNotNull(message1);
-
-        // Don't acknowledge yet. This should keep our prefetch full.
+        // The prefetch should fill up with 1 message.
         // Since prefetch is still full, the 2nd message should get dispatched
-        // to
-        // another consumer.. lets create the 2nd consumer test that it does
+        // to another consumer.. lets create the 2nd consumer test that it does
         // make sure it does.
         ActiveMQConnection connection2 = (ActiveMQConnection)factory.createConnection();
         connections.add(connection2);
         Session session2 = connection2.createSession(true, 0);
-        session2.createConsumer(destination);
+        MessageConsumer consumer2 = session2.createConsumer(destination);
 
-        // Only pick up the 2nd messages.
-        Message message2 = consumer.receive(1000);
+        // Pick up the first message.
+        Message message1 = consumer.receive(1000);
+        assertNotNull(message1);
+
+        // Pick up the 2nd messages.
+        Message message2 = consumer2.receive(1000);
         assertNotNull(message2);
 
         session.commit();

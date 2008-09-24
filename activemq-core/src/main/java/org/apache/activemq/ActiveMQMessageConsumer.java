@@ -125,6 +125,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private MessageTransformer transformer;
     private boolean clearDispatchList;
 
+    private MessageAck pendingAck;
+
     /**
      * Create a MessageConsumer
      * 
@@ -615,6 +617,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             			ackCounter = 0;
             		}
             	}
+            } else {
+                ack = pendingAck;
             }
             if (ack != null) {
                 final MessageAck ackToSend = ack;
@@ -835,13 +839,19 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         // The delivered message list is only needed for the recover method
         // which is only used with client ack.
         deliveredCounter++;
+        
+        MessageAck oldPendingAck = pendingAck;
+        pendingAck = new MessageAck(md, ackType, deliveredCounter);
+        if( oldPendingAck==null ) {
+            pendingAck.setFirstMessageId(pendingAck.getLastMessageId());
+        } else {
+            pendingAck.setFirstMessageId(oldPendingAck.getFirstMessageId());
+        }
+        pendingAck.setTransactionId(session.getTransactionContext().getTransactionId());
+
         if ((0.5 * info.getPrefetchSize()) <= (deliveredCounter - additionalWindowSize)) {
-            MessageAck ack = new MessageAck(md, ackType, deliveredCounter);
-            if( !deliveredMessages.isEmpty() ) {
-            	ack.setFirstMessageId(deliveredMessages.getLast().getMessage().getMessageId());
-            }
-            ack.setTransactionId(session.getTransactionContext().getTransactionId());
-            session.sendAck(ack);
+            session.sendAck(pendingAck);
+            pendingAck=null;
             additionalWindowSize = deliveredCounter;
 
             // When using DUPS ok, we do a real ack.
