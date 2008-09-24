@@ -292,7 +292,6 @@ public class Queue extends BaseDestination implements Task {
                 List<QueueMessageReference> list = new ArrayList<QueueMessageReference>();
                 for (MessageReference ref : sub.remove(context, this)) {
                     QueueMessageReference qmr = (QueueMessageReference)ref;
-                    qmr.incrementRedeliveryCounter();
                     if( qmr.getLockOwner()==sub ) {
                         qmr.unlock();
                         qmr.incrementRedeliveryCounter();
