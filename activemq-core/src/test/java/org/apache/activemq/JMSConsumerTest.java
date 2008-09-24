@@ -514,6 +514,7 @@ public class JMSConsumerTest extends JmsTestSupport {
         // to another consumer.. lets create the 2nd consumer test that it does
         // make sure it does.
         ActiveMQConnection connection2 = (ActiveMQConnection)factory.createConnection();
+        connection2.start();
         connections.add(connection2);
         Session session2 = connection2.createSession(true, 0);
         MessageConsumer consumer2 = session2.createConsumer(destination);
