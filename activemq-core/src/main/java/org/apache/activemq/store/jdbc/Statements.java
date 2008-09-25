@@ -94,7 +94,8 @@ public class Statements {
     public String[] getDropSchemaStatements() {
         if (dropSchemaStatements == null) {
             dropSchemaStatements = new String[] {"DROP TABLE " + getFullAckTableName() + "",
-                                                 "DROP TABLE " + getFullMessageTableName() + ""};
+                                                 "DROP TABLE " + getFullMessageTableName() + "",
+                                                 "DROP TABLE " + getFullLockTableName() + ""};
         }
         return dropSchemaStatements;
     }
