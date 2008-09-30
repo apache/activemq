@@ -28,13 +28,17 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.Controller;
 
 /**
+ * Copies a message from one to another queue
+ * 
+ * @author <a href="http://www.nighttale.net">Dejan Bosanac</a>
  * @version $Revision$
  */
-public class DeleteMessage extends DestinationFacade implements Controller {
+public class CopyMessage extends DestinationFacade implements Controller {
     private String messageId;
-    private static final Log log = LogFactory.getLog(DeleteMessage.class);
+    private String destination;
+    private static final Log log = LogFactory.getLog(CopyMessage.class);
 
-    public DeleteMessage(BrokerFacade brokerFacade) {
+    public CopyMessage(BrokerFacade brokerFacade) {
         super(brokerFacade);
     }
 
@@ -42,8 +46,8 @@ public class DeleteMessage extends DestinationFacade implements Controller {
         if (messageId != null) {
             QueueViewMBean queueView = getQueueView();
             if (queueView != null) {
-                log.info("Removing message " + getJMSDestination() + "(" + messageId + ")");
-                queueView.removeMessage(messageId);
+            	log.info(getJMSDestination() + "(" + messageId + ")" + " copy to " + destination);
+                queueView.copyMessageTo(messageId, destination);
             } else {
             	log.warn("No queue named: " + getPhysicalDestinationName());
             }
@@ -58,5 +62,15 @@ public class DeleteMessage extends DestinationFacade implements Controller {
     public void setMessageId(String messageId) {
         this.messageId = messageId;
     }
+    
+    
+
+    public String getDestination() {
+		return destination;
+	}
+
+	public void setDestination(String destination) {
+		this.destination = destination;
+	}
 
 }

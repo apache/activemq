@@ -136,6 +136,41 @@ No message could be found for ID ${requestContext.messageQuery.JMSMessageID}
 			</table>
 		</td>
 	</tr>
+	<tr>
+		<td class="layout" colspan="2">
+			<table id="body" width="100%">
+				<thead>
+					<tr>
+						<th colspan="2">
+						    Message Actions
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td colspan="2"><a href="deleteMessage.action?JMSDestination=${row.JMSDestination}&messageId=${row.JMSMessageID}">Delete</a></td>
+					</tr>
+					<tr class="odd">
+					<td><a href="javascript:confirmAction('queue', 'copyMessage.action?destination=%target%&JMSDestination=${row.JMSDestination}&messageId=${row.JMSMessageID}&JMSDestinationType=queue')">Copy</a></td>
+						<td rowspan="2">
+							<select id="queue">
+								<option value=""> -- Please select --</option>
+						    	<c:forEach items="${requestContext.brokerQuery.queues}" var="queues">
+						    		<c:if test="${queues.name != requestContext.messageQuery.JMSDestination}">
+						    		<option value="${queues.name}">${queues.name}</option>
+						    		</c:if>
+						    	</c:forEach>
+						    </select>
+						</td>
+						
+					</tr>
+					<tr class="odd">
+						<td><a href="javascript:confirmAction('queue', 'moveMessage.action?destination=%target%&JMSDestination=${row.JMSDestination}&messageId=${row.JMSMessageID}&JMSDestinationType=queue')">Move</a></td>
+					</tr>
+				</tbody>
+			</table>
+		</td>
+	</tr>	
 </table>
 
 
