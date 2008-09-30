@@ -19,6 +19,7 @@ package org.apache.activemq.web;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
+import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -109,10 +110,14 @@ public class DestinationFacade {
         }
         return jmsDestination;
     }
+    
+    protected QueueViewMBean getQueueView() throws Exception {
+        String name = getPhysicalDestinationName();
+        return getBrokerFacade().getQueue(name);
+    }    
 
     protected ModelAndView redirectToRequest(HttpServletRequest request) {
         String view = "redirect:" + request.getRequestURI();
-        // System.out.println("Redirecting to: " + view);
         return new ModelAndView(view);
     }
 
