@@ -21,22 +21,22 @@ import javax.jms.JMSException;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.CombinationTestSupport;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
 
+    private static final Log LOG = LogFactory.getLog(DiscoveryTransportNoBrokerTest.class);
+    
     public void testMaxReconnectAttempts() throws JMSException {
-        long start = System.currentTimeMillis();
         try {
-            ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("discovery:(multicast://doesNOTexist)?maxReconnectAttempts=1");
-            System.out.println("Connecting.");
+            ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("discovery:(multicast://doesNOTexist)");
+            LOG.info("Connecting.");
             Connection connection = factory.createConnection();
             connection.setClientID("test");
             fail("Did not fail to connect as expected.");
-        } catch ( JMSException expected ) {       
-            long duration = System.currentTimeMillis() - start;
-            // Should have failed fairly quickly since we are only giving it 1 reconnect attempt.
-            assertTrue(duration < 1000*5 );
+        } catch ( JMSException expected ) {  
+            assertTrue("reason is  java.net.UnknownHostException", expected.getCause() instanceof  java.net.UnknownHostException);
         }
     }
-
 }
