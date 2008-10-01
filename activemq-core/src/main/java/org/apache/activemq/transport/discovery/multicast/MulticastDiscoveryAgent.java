@@ -320,7 +320,9 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
     public void stop() throws Exception {
         if (started.compareAndSet(true, false)) {
             doAdvertizeSelf();
-            mcast.close();
+            if (mcast != null) {
+                mcast.close();
+            }
         }
     }
 
