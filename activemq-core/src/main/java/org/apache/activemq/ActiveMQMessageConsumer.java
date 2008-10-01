@@ -880,6 +880,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 ack.setTransactionId(session.getTransactionContext().getTransactionId());
             }
             session.sendAck(ack);
+            pendingAck = null;
     
             // Adjust the counters
             deliveredCounter -= deliveredMessages.size();
