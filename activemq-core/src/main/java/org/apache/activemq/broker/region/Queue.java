@@ -245,13 +245,13 @@ public class Queue extends BaseDestination implements Task {
             if( sub instanceof QueueBrowserSubscription ) {
                 ((QueueBrowserSubscription)sub).incrementQueueRef();
             }
-            if (!this.optimizedDispatch) {
+            if (!(this.optimizedDispatch || isSlave())) {
                 wakeup();
             }
         }finally {
             dispatchLock.unlock();
         }
-        if (this.optimizedDispatch) {
+        if (this.optimizedDispatch || isSlave()) {
             // Outside of dispatchLock() to maintain the lock hierarchy of
             // iteratingMutex -> dispatchLock. - see https://issues.apache.org/activemq/browse/AMQ-1878
             wakeup();
@@ -307,13 +307,13 @@ public class Queue extends BaseDestination implements Task {
             if (consumers.isEmpty()) {
                 messages.gc();
             }
-            if (!this.optimizedDispatch) {
+            if (!(this.optimizedDispatch || isSlave())) {
                 wakeup();
             }
         }finally {
             dispatchLock.unlock();
         }
-        if (this.optimizedDispatch) {
+        if (this.optimizedDispatch || isSlave()) {
             // Outside of dispatchLock() to maintain the lock hierarchy of
             // iteratingMutex -> dispatchLock. - see https://issues.apache.org/activemq/browse/AMQ-1878
             wakeup();
