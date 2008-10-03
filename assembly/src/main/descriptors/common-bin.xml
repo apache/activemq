@@ -179,8 +179,6 @@
 
         <!-- JSTL and other web stuff -->
         <include>opensymphony:sitemesh</include>
-        <include>javax.servlet:jstl</include>
-        <include>taglibs:standard</include>
 
         <!-- Atom/RSS support -->
         <include>rome:rome</include>
