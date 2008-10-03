@@ -34,12 +34,12 @@ import org.apache.commons.logging.LogFactory;
 public class DuplexNetworkMBeanTest extends TestCase {
 
     protected static final Log LOG = LogFactory.getLog(DuplexNetworkMBeanTest.class);
-    protected final int numRestarts = 10;
+    protected final int numRestarts = 5;
 
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = new BrokerService();
         broker.setBrokerName("broker");
-        broker.addConnector("tcp://localhost:61617");
+        broker.addConnector("tcp://localhost:61617?transport.reuseAddress=true");
         
         return broker;
     }
@@ -47,8 +47,8 @@ public class DuplexNetworkMBeanTest extends TestCase {
     protected BrokerService createNetworkedBroker() throws Exception {
         BrokerService broker = new BrokerService();
         broker.setBrokerName("networkedBroker");
-        broker.addConnector("tcp://localhost:62617");
-        NetworkConnector networkConnector = broker.addNetworkConnector("static:(tcp://localhost:61617)?maxReconnectDelay=1000&useExponentialBackOff=false");
+        broker.addConnector("tcp://localhost:62617?transport.reuseAddress=true");
+        NetworkConnector networkConnector = broker.addNetworkConnector("static:(tcp://localhost:61617?wireFormat.maxInactivityDuration=500)?useExponentialBackOff=false");
         networkConnector.setDuplex(true);
         return broker;
     }
@@ -87,11 +87,12 @@ public class DuplexNetworkMBeanTest extends TestCase {
         for (int i=0; i<numRestarts; i++) {
             broker = createBroker();
             broker.start();
-            assertEquals(1, countMbeans(networkedBroker, "NetworkBridge", 10000));
-            assertEquals(1, countMbeans(broker, "Connection"));
+            assertEquals(1, countMbeans(networkedBroker, "NetworkBridge", 5000));
+            assertEquals("restart number: " + i, 1, countMbeans(broker, "Connection", 10000));
             
             broker.stop();
             broker.waitUntilStopped();
+            assertEquals(0, countMbeans(broker, "stopped"));
         }
         
         assertEquals(0, countMbeans(networkedBroker, "NetworkBridge"));
