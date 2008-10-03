@@ -21,6 +21,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -42,6 +43,7 @@ import org.apache.activemq.transport.TransportLoggerFactory;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.TransportServerThreadSupport;
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceListener;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
@@ -133,7 +135,8 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
             } else {
                 this.serverSocket = serverSocketFactory.createServerSocket(bind.getPort(), backlog, addr);
             }
-            this.serverSocket.setSoTimeout(2000);
+            configureServerSocket(this.serverSocket);
+            
         } catch (IOException e) {
             throw IOExceptionSupport.create("Failed to bind to server socket: " + bind + " due to: " + e, e);
         }
@@ -151,6 +154,11 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
                 throw IOExceptionSupport.create(e2);
             }
         }
+    }
+
+    private void configureServerSocket(ServerSocket socket) throws SocketException {
+        socket.setSoTimeout(2000);
+        IntrospectionSupport.setProperties(socket, transportOptions);
     }
 
     /**
