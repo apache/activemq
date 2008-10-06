@@ -959,6 +959,10 @@ public class Queue extends BaseDestination implements Task {
 	                    if (!node.isDropped() && !node.isAcked() && (!node.isDropped() || rd.subscription.getConsumerInfo().isBrowser())) {
 	                        msgContext.setMessageReference(node);
 	                        if (rd.subscription.matches(node, msgContext)) {
+ 	                            // Log showing message dispatching
+ 	                            if (LOG.isDebugEnabled()) {
+ 	                                LOG.debug(destination.getQualifiedName() + " - Recovery - Message pushed '" + node.hashCode() + " - " + node + "' to subscription: '" + rd.subscription + "'");
+ 	                            }
 	                            rd.subscription.add(node);
 	                        } else {
 	                            // make sure it gets queued for dispatched again
@@ -1063,23 +1067,26 @@ public class Queue extends BaseDestination implements Task {
     protected void removeMessage(ConnectionContext context,Subscription sub,final QueueMessageReference reference,MessageAck ack) throws IOException {
         reference.setAcked(true);
         // This sends the ack the the journal..
-        acknowledge(context, sub, ack, reference);
-
         if (!ack.isInTransaction()) {
+            acknowledge(context, sub, ack, reference);
             dropMessage(reference);
             wakeup();
         } else {
-            context.getTransaction().addSynchronization(new Synchronization() {
+            try {
+                acknowledge(context, sub, ack, reference);
+            } finally {
+                context.getTransaction().addSynchronization(new Synchronization() {
                 
-                public void afterCommit() throws Exception {
-                    dropMessage(reference);
-                    wakeup();
-                }
+                    public void afterCommit() throws Exception {
+                        dropMessage(reference);
+                        wakeup();
+                    }
                 
-                public void afterRollback() throws Exception {
-                    reference.setAcked(false);
-                }
-            });
+                    public void afterRollback() throws Exception {
+                        reference.setAcked(false);
+                    }
+                });
+            }
         }
 
     }
@@ -1153,18 +1160,11 @@ public class Queue extends BaseDestination implements Task {
 
     private List<QueueMessageReference> doPageIn(boolean force) throws Exception {
         List<QueueMessageReference> result = null;
+        List<QueueMessageReference> resultList = null;
         dispatchLock.lock();
         try{
-           
-            int toPageIn = 0;
-            if (force) {
-                toPageIn = getMaxPageSize();
-            } else {
-                toPageIn = (getMaxPageSize() + (int) destinationStatistics
-                        .getInflight().getCount())
-                        - pagedInMessages.size();
-                toPageIn = Math.min(toPageIn, getMaxPageSize());
-            }
+            int toPageIn = getMaxPageSize() + Math.max(0, (int)destinationStatistics.getInflight().getCount()) - pagedInMessages.size();
+            toPageIn = Math.max(0, Math.min(toPageIn, getMaxPageSize()));
             if (isLazyDispatch()&& !force) {
                 // Only page in the minimum number of messages which can be dispatched immediately.
                 toPageIn = Math.min(getConsumerMessageCountBeforeFull(), toPageIn);
@@ -1193,16 +1193,24 @@ public class Queue extends BaseDestination implements Task {
                         messages.release();
                     }
                 }
+                // Only add new messages, not already pagedIn to avoid multiple dispatch attempts
                 synchronized (pagedInMessages) {
-                    for(QueueMessageReference ref:result) {
-                        pagedInMessages.put(ref.getMessageId(), ref);
+                    resultList = new ArrayList<QueueMessageReference>(result.size());
+                    for(QueueMessageReference ref : result) {
+                        if (!pagedInMessages.containsKey(ref.getMessageId())) {
+                            pagedInMessages.put(ref.getMessageId(), ref);
+                            resultList.add(ref);
+                        }
                     }
                 }
+            } else {
+                // Avoid return null list, if condition is not validated
+                resultList = new ArrayList<QueueMessageReference>();
             }
         }finally {
             dispatchLock.unlock();
         }
-        return result;
+        return resultList;
     }
     
     private void doDispatch(List<QueueMessageReference> list) throws Exception {
