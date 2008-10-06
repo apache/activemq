@@ -51,7 +51,7 @@ No message could be found for ID ${requestContext.messageQuery.JMSMessageID}
 					</tr>
 					<tr>
 						<td class="label">Destination</td>
-						<td>${row.JMSDestination}</td>
+						<td><form:tooltip text="${row.JMSDestination}"/></td>
 					</tr>
 					<tr>
 						<td class="label" title="The ID used to correlate messages together in a conversation">Correlation ID</td>
@@ -87,7 +87,7 @@ No message could be found for ID ${requestContext.messageQuery.JMSMessageID}
 					</tr>
 					<tr>
 						<td class="label">Timestamp</td>
-						<td>${row.JMSTimestamp}</td>
+						<td><jms:formatTimestamp timestamp="${row.JMSTimestamp}"/></td>
 					</tr>
 					<tr>
 						<td class="label">Type</td>
@@ -130,7 +130,7 @@ No message could be found for ID ${requestContext.messageQuery.JMSMessageID}
 				</thead>
 				<tbody>
 					<tr>
-						<td><c:out value="${requestContext.messageQuery.body}" escapeXml="true" /></td>
+						<td><form:tooltip text="${requestContext.messageQuery.body}" length="78"/></td>
 					</tr>
 				</tbody>
 			</table>
@@ -157,7 +157,7 @@ No message could be found for ID ${requestContext.messageQuery.JMSMessageID}
 								<option value=""> -- Please select --</option>
 						    	<c:forEach items="${requestContext.brokerQuery.queues}" var="queues">
 						    		<c:if test="${queues.name != requestContext.messageQuery.JMSDestination}">
-						    		<option value="${queues.name}">${queues.name}</option>
+						    		<option value="${queues.name}"><form:short text="${queues.name}"/></option>
 						    		</c:if>
 						    	</c:forEach>
 						    </select>
