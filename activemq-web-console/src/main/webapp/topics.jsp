@@ -46,7 +46,7 @@
 <tbody>
 <c:forEach items="${requestContext.brokerQuery.topics}" var="row">
 <tr>
-<td><a href="send.jsp?JMSDestination=${row.name}&JMSDestinationType=topic">${row.name}</a></td>
+<td><a href="send.jsp?JMSDestination=${row.name}&JMSDestinationType=topic"><form:tooltip text="${row.name}" length="50"/></a></td>
 <td>${row.consumerCount}</td>
 <td>${row.enqueueCount}</td>
 <td>${row.dequeueCount}</td>

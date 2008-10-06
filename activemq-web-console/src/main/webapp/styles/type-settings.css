@@ -21,7 +21,7 @@ body, p, ul, ol {
     font-style: normal;
     font-font-variant: normal;
     font-weight: normal;
-    line-height: 140% 
+    line-height: 140%;
     color: #000000;
 }
 
@@ -36,7 +36,7 @@ td, table, tr {
     font-style: normal;
     font-font-variant: normal;
     font-weight: normal;
-    line-height: normal% 
+    line-height: normal; 
     color: #000000;
 }
 
@@ -75,7 +75,7 @@ pre {
 }
 
 hr {
-    color: 3c78b5;
+    color: #3c78b5;
     height: 1;
 }
 
@@ -152,3 +152,20 @@ blockquote {
     border-left: 1px solid #3c78b5;
 }
 
+.tooltip {  position: relative;
+    text-decoration: none;
+}
+
+.tooltip span {
+    display: none;
+}
+
+.tooltip:hover span {
+    position: absolute;
+    top: 10px;
+    left: 25px;
+    display: block;
+    background: #ccc;
+    color: #880055;
+    border: 1px solid #880055;
+}
