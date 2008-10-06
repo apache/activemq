@@ -157,9 +157,11 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 while (pending.hasNext()) {
                     MessageReference node = pending.next();
                     if (node.getMessageId().equals(mdn.getMessageId())) {
-                        pending.remove();
-                        createMessageDispatch(node, node.getMessage());
+                        // Synchronize between dispatched list and removal of messages from pending list
+                        // related to remove subscription action
                         synchronized(dispatchLock) {
+                            pending.remove();
+                            createMessageDispatch(node, node.getMessage());
                             dispatched.add(node);
                         }
                         return;
@@ -532,11 +534,18 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         List<MessageReference> rc = new ArrayList<MessageReference>();
         synchronized(pendingLock) {
             super.remove(context, destination);
-            for (MessageReference r : dispatched) {
-                if( r.getRegionDestination() == destination ) {
-                    rc.add((QueueMessageReference)r);
-                }
+            // Synchronized to DispatchLock
+            synchronized(dispatchLock) {
+	            for (MessageReference r : dispatched) {
+	                if( r.getRegionDestination() == destination) {
+	                	rc.add((QueueMessageReference)r);
+	                }
+	            }
             }
+            // TODO Dispatched messages should be decremented from Inflight stat 
+            // Here is a potential problem concerning Inflight stat:
+            // Messages not already committed or rolled back may not be removed from dispatched list at the moment
+            // Except if each commit or rollback callback action comes before remove of subscriber.
             rc.addAll(pending.remove(context, destination));
         }
         return rc;
@@ -559,19 +568,23 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                 break;
                             }
                             
-                            pending.remove();
-                            if( !isDropped(node) && canDispatch(node)) {
+                            // Synchronize between dispatched list and remove of messageg from pending list
+                            // related to remove subscription action
+                            synchronized(dispatchLock) {
+                                pending.remove();
+                                if( !isDropped(node) && canDispatch(node)) {
 
-                                // Message may have been sitting in the pending
-                                // list a while waiting for the consumer to ak the message.
-                                if (node!=QueueMessageReference.NULL_MESSAGE && node.isExpired()) {
-                                    //increment number to dispatch
-                                    numberToDispatch++;
-                                    node.getRegionDestination().messageExpired(context, this, node);
-                                    continue;
+                                    // Message may have been sitting in the pending
+                                    // list a while waiting for the consumer to ak the message.
+                                    if (node!=QueueMessageReference.NULL_MESSAGE && node.isExpired()) {
+                                        //increment number to dispatch
+                                        numberToDispatch++;
+                                        node.getRegionDestination().messageExpired(context, this, node);
+                                        continue;
+                                    }
+                                    dispatch(node);
+                                    count++;
                                 }
-                                dispatch(node);
-                                count++;
                             }
                         }
                     }else {
@@ -596,10 +609,10 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         final Message message = node.getMessage();
         if (message == null) {
             return false;
-        }         
-        // Make sure we can dispatch a message.
-        if (canDispatch(node) && !isSlave()) {
-            
+        }
+        // No reentrant lock - Patch needed to IndirectMessageReference on method lock
+        if (!isSlave()) {
+
             MessageDispatch md = createMessageDispatch(node, message);
             // NULL messages don't count... they don't get Acked.
             if (node != QueueMessageReference.NULL_MESSAGE) {
