@@ -18,6 +18,7 @@ package org.apache.activemq.transaction;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 
 import javax.transaction.xa.XAException;
@@ -88,6 +89,7 @@ public abstract class Transaction {
     }
 
     public void fireAfterRollback() throws Exception {
+    	Collections.reverse(synchronizations);
         for (Iterator<Synchronization> iter = synchronizations.iterator(); iter.hasNext();) {
             Synchronization s = iter.next();
             s.afterRollback();

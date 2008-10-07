@@ -65,8 +65,8 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     public final synchronized void stop() throws Exception {
         getSystemUsage().getMemoryUsage().removeUsageListener(this);
         resetBatch();
-        gc();
         super.stop();
+        gc();
     }
 
     
@@ -194,6 +194,11 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         batchList.clear();
         batchResetNeeded = true;
         this.cacheEnabled=false;
+        if (isStarted()) { 
+            size = getStoreSize();
+        } else {
+            size = 0;
+        }
     }
     
     protected final synchronized void fillBatch() {

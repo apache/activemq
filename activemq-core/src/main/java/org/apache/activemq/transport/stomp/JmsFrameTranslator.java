@@ -190,7 +190,6 @@ public class JmsFrameTranslator extends LegacyFrameTranslator implements
 		}
 
 		if (xstream == null) {
-			System.out.println("is null");
 			xstream = new XStream();
 		}
 		return xstream;

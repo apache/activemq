@@ -77,13 +77,13 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
 
     public synchronized void stop() throws Exception {
         started = false;
-        super.stop();
         if (nonPersistent != null) {
             nonPersistent.stop();
             nonPersistent.gc();
         }
         persistent.stop();
         persistent.gc();
+        super.stop();
         pendingCount = 0;
     }
 

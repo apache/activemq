@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.view;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.HashMap;
@@ -61,12 +62,12 @@ public class ConnectionDotFileInterceptor extends DotFileInterceptorSupport {
     private Map<ProducerId, Set<ActiveMQDestination>> producerDestinations = new HashMap<ProducerId, Set<ActiveMQDestination>>();
     private Object lock = new Object();
 
-    public ConnectionDotFileInterceptor(Broker next, String file, boolean redrawOnRemove) throws MalformedObjectNameException {
+    public ConnectionDotFileInterceptor(Broker next, String file, boolean redrawOnRemove) throws IOException {
         super(next, file);
         this.redrawOnRemove = redrawOnRemove;
 
         mbeanServer = new ManagementContext().getMBeanServer();
-        ObjectName brokerName = new ObjectName(domain + ":Type=Broker,BrokerName=localhost");
+        ObjectName brokerName = next.getBrokerService().getBrokerObjectName();
         brokerView = (BrokerViewMBean)MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
     }
 

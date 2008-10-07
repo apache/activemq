@@ -18,3 +18,4 @@
 <%@ taglib prefix="form" tagdir="/WEB-INF/tags/form" %>
 <%@ taglib prefix="jms" tagdir="/WEB-INF/tags/jms" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>

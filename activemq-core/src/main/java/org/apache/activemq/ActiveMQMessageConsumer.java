@@ -40,6 +40,7 @@ import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.MessagePull;
 import org.apache.activemq.management.JMSConsumerStatsImpl;
 import org.apache.activemq.management.StatsCapable;
@@ -123,6 +124,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private ExecutorService executorService;
     private MessageTransformer transformer;
     private boolean clearDispatchList;
+
+    private MessageAck pendingAck;
 
     /**
      * Create a MessageConsumer
@@ -607,14 +610,15 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         MessageAck ack = null;
         if (deliveryingAcknowledgements.compareAndSet(false, true)) {
             if (this.optimizeAcknowledge) {
-                synchronized(deliveredMessages) {
-                    if (!deliveredMessages.isEmpty()) {
-                        MessageDispatch md = deliveredMessages.getFirst();
-                        ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, deliveredMessages.size());
-                        deliveredMessages.clear();
-                        ackCounter = 0;
-                    }
-                }
+            	synchronized(deliveredMessages) {
+            		ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
+            		if (ack != null) {
+            			deliveredMessages.clear();
+            			ackCounter = 0;
+            		}
+            	}
+            } else {
+                ack = pendingAck;
             }
             if (ack != null) {
                 final MessageAck ackToSend = ack;
@@ -756,17 +760,21 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                                 ackCounter++;
                                 if (ackCounter >= (info
                                         .getCurrentPrefetchSize() * .65)) {
-                                    MessageAck ack = new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,deliveredMessages.size());
-                                    session.sendAck(ack);
-                                    ackCounter = 0;
-                                    deliveredMessages.clear();
+                                	MessageAck ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
+                                	if (ack != null) {
+                            		    deliveredMessages.clear();
+                            		    ackCounter = 0;
+                            		    session.sendAck(ack);
+                                	}
                                 }
                                 deliveryingAcknowledgements.set(false);
                             }
                         } else {
-                            MessageAck ack = new MessageAck(md,MessageAck.STANDARD_ACK_TYPE,deliveredMessages.size());
-                            session.sendAck(ack);
-                            deliveredMessages.clear();
+                            MessageAck ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
+                            if (ack!=null) {
+                            	deliveredMessages.clear();
+                            	session.sendAck(ack);
+                            }
                         }
                     }
                 }
@@ -780,6 +788,25 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             }
         }
     }
+
+    /**
+     * Creates a MessageAck for all messages contained in deliveredMessages.
+     * Caller should hold the lock for deliveredMessages.
+     * 
+     * @param type Ack-Type (i.e. MessageAck.STANDARD_ACK_TYPE) 
+     * @return <code>null</code> if nothing to ack.
+     */
+	private MessageAck makeAckForAllDeliveredMessages(byte type) {
+		synchronized (deliveredMessages) {
+			if (deliveredMessages.isEmpty())
+				return null;
+			    
+			MessageDispatch md = deliveredMessages.getFirst();
+		    MessageAck ack = new MessageAck(md, type, deliveredMessages.size());
+		    ack.setFirstMessageId(deliveredMessages.getLast().getMessage().getMessageId());
+		    return ack;
+		}
+	}
 
     private void ackLater(MessageDispatch md, byte ackType) throws JMSException {
 
@@ -812,10 +839,19 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         // The delivered message list is only needed for the recover method
         // which is only used with client ack.
         deliveredCounter++;
+        
+        MessageAck oldPendingAck = pendingAck;
+        pendingAck = new MessageAck(md, ackType, deliveredCounter);
+        if( oldPendingAck==null ) {
+            pendingAck.setFirstMessageId(pendingAck.getLastMessageId());
+        } else {
+            pendingAck.setFirstMessageId(oldPendingAck.getFirstMessageId());
+        }
+        pendingAck.setTransactionId(session.getTransactionContext().getTransactionId());
+
         if ((0.5 * info.getPrefetchSize()) <= (deliveredCounter - additionalWindowSize)) {
-            MessageAck ack = new MessageAck(md, ackType, deliveredCounter);
-            ack.setTransactionId(session.getTransactionContext().getTransactionId());
-            session.sendAck(ack);
+            session.sendAck(pendingAck);
+            pendingAck=null;
             additionalWindowSize = deliveredCounter;
 
             // When using DUPS ok, we do a real ack.
@@ -834,18 +870,17 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      */
     public void acknowledge() throws JMSException {
         synchronized(deliveredMessages) {
-            if (deliveredMessages.isEmpty()) {
-                return;
-            }
-    
-            // Acknowledge the last message.
-            MessageDispatch lastMd = deliveredMessages.get(0);
-            MessageAck ack = new MessageAck(lastMd, MessageAck.STANDARD_ACK_TYPE, deliveredMessages.size());
+            // Acknowledge all messages so far.
+            MessageAck ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
+            if (ack == null)
+            	return; // no msgs
+            
             if (session.isTransacted()) {
                 session.doStartTransaction();
                 ack.setTransactionId(session.getTransactionContext().getTransactionId());
             }
             session.sendAck(ack);
+            pendingAck = null;
     
             // Adjust the counters
             deliveredCounter -= deliveredMessages.size();
@@ -897,6 +932,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 if (lastMd.getMessage().getRedeliveryCounter() > 0) {
                     redeliveryDelay = redeliveryPolicy.getRedeliveryDelay(redeliveryDelay);
                 }
+                MessageId firstMsgId = deliveredMessages.getLast().getMessage().getMessageId();
     
                 for (Iterator iter = deliveredMessages.iterator(); iter.hasNext();) {
                     MessageDispatch md = (MessageDispatch)iter.next();
@@ -910,6 +946,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     // Acknowledge the last message.
                     
                     MessageAck ack = new MessageAck(lastMd, MessageAck.POSION_ACK_TYPE, deliveredMessages.size());
+					ack.setFirstMessageId(firstMsgId);
                     session.sendAck(ack,true);
                     // ensure we don't filter this as a duplicate
                     session.connection.rollbackDuplicate(this, lastMd.getMessage());
@@ -919,6 +956,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                 } else {
                     
                     MessageAck ack = new MessageAck(lastMd, MessageAck.REDELIVERED_ACK_TYPE, deliveredMessages.size());
+                    ack.setFirstMessageId(firstMsgId);
                     session.sendAck(ack,true);
     
                     // stop the delivery of messages.

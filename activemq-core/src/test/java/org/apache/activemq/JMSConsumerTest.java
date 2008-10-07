@@ -509,22 +509,22 @@ public class JMSConsumerTest extends JmsTestSupport {
         sendMessages(session, destination, 2);
         session.commit();
 
-        // Only pick up the first message.
+        // The prefetch should fill up with 1 message.
+        // Since prefetch is still full, the 2nd message should get dispatched
+        // to another consumer.. lets create the 2nd consumer test that it does
+        // make sure it does.
+        ActiveMQConnection connection2 = (ActiveMQConnection)factory.createConnection();
+        connection2.start();
+        connections.add(connection2);
+        Session session2 = connection2.createSession(true, 0);
+        MessageConsumer consumer2 = session2.createConsumer(destination);
+
+        // Pick up the first message.
         Message message1 = consumer.receive(1000);
         assertNotNull(message1);
 
-        // Don't acknowledge yet. This should keep our prefetch full.
-        // Since prefetch is still full, the 2nd message should get dispatched
-        // to
-        // another consumer.. lets create the 2nd consumer test that it does
-        // make sure it does.
-        ActiveMQConnection connection2 = (ActiveMQConnection)factory.createConnection();
-        connections.add(connection2);
-        Session session2 = connection2.createSession(true, 0);
-        session2.createConsumer(destination);
-
-        // Only pick up the 2nd messages.
-        Message message2 = consumer.receive(1000);
+        // Pick up the 2nd messages.
+        Message message2 = consumer2.receive(1000);
         assertNotNull(message2);
 
         session.commit();
@@ -598,4 +598,29 @@ public class JMSConsumerTest extends JmsTestSupport {
         assertNull(consumer.receiveNoWait());
     }
 
+    
+    public void testDupsOkConsumer() throws Exception {
+
+        // Receive a message with the JMS API
+        connection.start();
+        Session session = connection.createSession(false, Session.DUPS_OK_ACKNOWLEDGE);
+        destination = createDestination(session, ActiveMQDestination.QUEUE_TYPE);
+        MessageConsumer consumer = session.createConsumer(destination);
+
+        // Send the messages
+        sendMessages(session, destination, 4);
+
+        // Make sure only 4 message are delivered.
+        for( int i=0; i < 4; i++){
+            Message m = consumer.receive(1000);
+            assertNotNull(m);
+        }
+        assertNull(consumer.receive(1000));
+        
+        // Close out the consumer.. no other messages should be left on the queue.
+        consumer.close();
+        
+        consumer = session.createConsumer(destination);
+        assertNull(consumer.receive(1000));
+    }
 }

@@ -157,9 +157,11 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 while (pending.hasNext()) {
                     MessageReference node = pending.next();
                     if (node.getMessageId().equals(mdn.getMessageId())) {
-                        pending.remove();
-                        createMessageDispatch(node, node.getMessage());
+                        // Synchronize between dispatched list and removal of messages from pending list
+                        // related to remove subscription action
                         synchronized(dispatchLock) {
+                            pending.remove();
+                            createMessageDispatch(node, node.getMessage());
                             dispatched.add(node);
                         }
                         return;
@@ -180,9 +182,12 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         Destination destination = null;
         synchronized(dispatchLock) {
             if (ack.isStandardAck()) {
+            	// First check if the ack matches the dispatched. When using failover this might
+            	// not be the case. We don't ever want to ack the wrong messages.
+            	assertAckMatchesDispatched(ack);
+            	
                 // Acknowledge all dispatched messages up till the message id of
-                // the
-                // acknowledgment.
+                // the acknowledgment.
                 int index = 0;
                 boolean inAckRange = false;
                 List<MessageReference> removeList = new ArrayList<MessageReference>();
@@ -194,6 +199,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     }
                     if (inAckRange) {
                         // Don't remove the nodes until we are committed.
+                        removeList.add(node);
                         if (!context.isInTransaction()) {
                             dequeueCounter++;
                             if (!this.getConsumerInfo().isBrowser()) {
@@ -202,7 +208,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                             if (!isSlave()) {
                                 node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
                             }
-                            removeList.add(node);
                         } else {
                             // setup a Synchronization to remove nodes from the
                             // dispatched list.
@@ -212,28 +217,21 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                         public void afterCommit()
                                                 throws Exception {
                                             synchronized(dispatchLock) {
-                                            
                                                 dequeueCounter++;
-                                                dispatched.remove(node);
-                                                node
-                                                        .getRegionDestination()
-                                                        .getDestinationStatistics()
-                                                        .getDequeues()
-                                                        .increment();
-
-                                                node
-                                                        .getRegionDestination()
-                                                        .getDestinationStatistics()
-                                                        .getInflight()
-                                                        .decrement();
-
+                                                node.getRegionDestination().getDestinationStatistics().getDequeues().increment();
+                                                node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
                                                 prefetchExtension--;
                                             }
                                         }
 
-                                        public void afterRollback()
-                                                throws Exception {
-                                            super.afterRollback();
+                                        public void afterRollback() throws Exception {
+                                        	// Need to put it back in the front.
+                                            synchronized(dispatchLock) {
+                                        	    dispatched.add(0, node);
+                                            	// ActiveMQ workaround for AMQ-1730 - Please Ignore next line
+                                                node.incrementRedeliveryCounter();
+                                                node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
+                                            }
                                         }
                                     });
                         }
@@ -263,11 +261,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 // this only happens after a reconnect - get an ack which is not
                 // valid
                 if (!callDispatchMatched) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG
-                                .debug("Could not correlate acknowledgment with dispatched message: "
-                                        + ack);
-                    }
+                        LOG.error("Could not correlate acknowledgment with dispatched message: "
+                                  + ack);
                 }
             } else if (ack.isIndividualAck()) {
                 // Message was delivered and acknowledge - but only delete the
@@ -410,6 +405,49 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     }
 
     /**
+     * Checks an ack versus the contents of the dispatched list.
+     * 
+     * @param ack
+     * @param firstAckedMsg
+     * @param lastAckedMsg
+     * @throws JMSException if it does not match
+     */
+	protected void assertAckMatchesDispatched(MessageAck ack)
+			throws JMSException {
+        MessageId firstAckedMsg = ack.getFirstMessageId();
+		MessageId lastAckedMsg = ack.getLastMessageId();
+
+		int checkCount = 0;
+		boolean checkFoundStart = false;
+		boolean checkFoundEnd = false;
+		for (MessageReference node : dispatched) {
+			
+			if( firstAckedMsg == null ) {
+				checkFoundStart=true;
+			} else if (!checkFoundStart && firstAckedMsg.equals(node.getMessageId())) {
+				checkFoundStart = true;
+			}
+
+			if (checkFoundStart) {
+				checkCount++;
+			}
+
+			if (lastAckedMsg != null && lastAckedMsg.equals(node.getMessageId())) {
+				checkFoundEnd = true;
+				break;
+			}
+		}
+		if (!checkFoundStart && firstAckedMsg != null)
+			throw new JMSException("Unmatched acknowledege: Could not find Message-ID "+firstAckedMsg+" in dispatched-list (start of ack)");
+		if (!checkFoundEnd && lastAckedMsg != null)
+			throw new JMSException("Unmatched acknowledege: Could not find Message-ID "+firstAckedMsg+" in dispatched-list (end of ack)");
+		if (ack.getMessageCount() != checkCount) {
+			throw new JMSException("Unmatched acknowledege: Expected message count ("+ack.getMessageCount()+
+					") differs from count in dispatched-list ("+checkCount+")");
+		}
+	}
+
+    /**
      * @param context
      * @param node
      * @throws IOException
@@ -496,11 +534,18 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         List<MessageReference> rc = new ArrayList<MessageReference>();
         synchronized(pendingLock) {
             super.remove(context, destination);
-            for (MessageReference r : dispatched) {
-                if( r.getRegionDestination() == destination ) {
-                    rc.add((QueueMessageReference)r);
-                }
+            // Synchronized to DispatchLock
+            synchronized(dispatchLock) {
+	            for (MessageReference r : dispatched) {
+	                if( r.getRegionDestination() == destination) {
+	                	rc.add((QueueMessageReference)r);
+	                }
+	            }
             }
+            // TODO Dispatched messages should be decremented from Inflight stat 
+            // Here is a potential problem concerning Inflight stat:
+            // Messages not already committed or rolled back may not be removed from dispatched list at the moment
+            // Except if each commit or rollback callback action comes before remove of subscriber.
             rc.addAll(pending.remove(context, destination));
         }
         return rc;
@@ -523,19 +568,23 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                 break;
                             }
                             
-                            pending.remove();
-                            if( !isDropped(node) && canDispatch(node)) {
+                            // Synchronize between dispatched list and remove of messageg from pending list
+                            // related to remove subscription action
+                            synchronized(dispatchLock) {
+                                pending.remove();
+                                if( !isDropped(node) && canDispatch(node)) {
 
-                                // Message may have been sitting in the pending
-                                // list a while waiting for the consumer to ak the message.
-                                if (node!=QueueMessageReference.NULL_MESSAGE && node.isExpired()) {
-                                    //increment number to dispatch
-                                    numberToDispatch++;
-                                    node.getRegionDestination().messageExpired(context, this, node);
-                                    continue;
+                                    // Message may have been sitting in the pending
+                                    // list a while waiting for the consumer to ak the message.
+                                    if (node!=QueueMessageReference.NULL_MESSAGE && node.isExpired()) {
+                                        //increment number to dispatch
+                                        numberToDispatch++;
+                                        node.getRegionDestination().messageExpired(context, this, node);
+                                        continue;
+                                    }
+                                    dispatch(node);
+                                    count++;
                                 }
-                                dispatch(node);
-                                count++;
                             }
                         }
                     }else {
@@ -560,10 +609,10 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         final Message message = node.getMessage();
         if (message == null) {
             return false;
-        }         
-        // Make sure we can dispatch a message.
-        if (canDispatch(node) && !isSlave()) {
-            
+        }
+        // No reentrant lock - Patch needed to IndirectMessageReference on method lock
+        if (!isSlave()) {
+
             MessageDispatch md = createMessageDispatch(node, message);
             // NULL messages don't count... they don't get Acked.
             if (node != QueueMessageReference.NULL_MESSAGE) {

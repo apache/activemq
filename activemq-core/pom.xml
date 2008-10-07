@@ -449,8 +449,10 @@
              <exclude>**/NetworkConnectionsCleanedupTest.*/**</exclude>
              
              <exclude>**/amq1490/*</exclude>
+             <exclude>**/AMQ1925/*</exclude>
              <exclude>**/archive/*</exclude>
              <exclude>**/NetworkFailoverTest.*/**</exclude>
+             
 
             <exclude>**/AMQDeadlockTest3.*</exclude>
           </excludes>

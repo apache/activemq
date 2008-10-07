@@ -36,6 +36,10 @@ public class VMPendingMessageCursor extends AbstractPendingMessageCursor {
     private LinkedList<MessageReference> list = new LinkedList<MessageReference>();
     private Iterator<MessageReference> iter;
     private MessageReference last;
+    
+    public VMPendingMessageCursor(){
+        this.useCache=false;
+    }
 
     
     @Override

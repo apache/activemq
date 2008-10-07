@@ -22,6 +22,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.web.BrokerFacade;
 import org.apache.activemq.web.DestinationFacade;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.Controller;
 
@@ -30,6 +32,7 @@ import org.springframework.web.servlet.mvc.Controller;
  */
 public class DeleteMessage extends DestinationFacade implements Controller {
     private String messageId;
+    private static final Log log = LogFactory.getLog(DeleteMessage.class);
 
     public DeleteMessage(BrokerFacade brokerFacade) {
         super(brokerFacade);
@@ -37,12 +40,12 @@ public class DeleteMessage extends DestinationFacade implements Controller {
 
     public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
         if (messageId != null) {
-            QueueViewMBean queueView = getQueue();
+            QueueViewMBean queueView = getQueueView();
             if (queueView != null) {
-                System.out.println("#### removing message: " + messageId);
+                log.info("Removing message " + getJMSDestination() + "(" + messageId + ")");
                 queueView.removeMessage(messageId);
             } else {
-                System.out.println("#### NO QUEUE!");
+            	log.warn("No queue named: " + getPhysicalDestinationName());
             }
         }
         return redirectToBrowseView();
@@ -56,9 +59,4 @@ public class DeleteMessage extends DestinationFacade implements Controller {
         this.messageId = messageId;
     }
 
-    protected QueueViewMBean getQueue() throws Exception {
-        String name = getPhysicalDestinationName();
-        System.out.println("####Êlooking up queue: " + name);
-        return getBrokerFacade().getQueue(name);
-    }
 }

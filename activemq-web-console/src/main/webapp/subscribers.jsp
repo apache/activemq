@@ -91,10 +91,10 @@
 <tbody>
 <c:forEach items="${requestContext.brokerQuery.durableTopicSubscribers}" var="row">
 <tr>
-<td>${row.clientId}</td>
-<td>${row.subscriptionName}</td>
-<td>${row.connectionId}</td>
-<td>${row.destinationName}</td>
+<td><form:tooltip text="${row.clientId}" length="10"/></td>
+<td><form:tooltip text="${row.subscriptionName}" length="10"/></td>
+<td><form:tooltip text="${row.connectionId}" length="10"/></td>
+<td><form:tooltip text="${row.destinationName}" length="10"/></td>
 <td>${row.selector}</td>
 <td>${row.pendingQueueSize}</td>
 <td>${row.dispatchedQueueSize}</td>
