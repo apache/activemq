@@ -24,7 +24,11 @@
   http://activemq.apache.org/camel/schema/spring http://activemq.apache.org/camel/schema/spring/camel-spring.xsd">
 
     <!-- Allows us to use system properties as variables in this configuration file -->
-    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+         <property name="locations">
+            <value>file://${activemq.base}/conf/credentials.properties</value>
+         </property>      
+    </bean>
 
     <broker xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" dataDirectory="${activemq.base}/data">
 
@@ -133,14 +137,20 @@
 
     <!-- configure the camel activemq component to use the current broker -->
     <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent" >
-        <property name="brokerURL" value="vm://localhost?create=false&amp;waitForStart=10000" />
+        <property name="connectionFactory">
+          <bean class="org.apache.activemq.ActiveMQConnectionFactory">
+            <property name="brokerURL" value="vm://localhost?create=false&amp;waitForStart=10000" />
+            <property name="userName" value="${activemq.username}"/>
+            <property name="password" value="${activemq.password}"/>
+          </bean>
+        </property>
     </bean>
 
 
 
     <!-- Uncomment to create a command agent to respond to message based admin commands on the ActiveMQ.Agent topic -->
     <!--
-    <commandAgent xmlns="http://activemq.apache.org/schema/core" brokerUrl="vm://localhost"/>
+    <commandAgent xmlns="http://activemq.apache.org/schema/core" brokerUrl="vm://localhost" username="${activemq.username}" password="${activemq.password}"/>
     -->
 
 

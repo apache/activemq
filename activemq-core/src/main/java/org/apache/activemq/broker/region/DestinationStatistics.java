@@ -21,6 +21,7 @@ import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.management.PollCountStatisticImpl;
 import org.apache.activemq.management.StatsImpl;
 import org.apache.activemq.management.TimeStatisticImpl;
+import org.apache.tools.ant.taskdefs.condition.IsReference;
 
 /**
  * The J2EE Statistics for the a Destination.
@@ -46,7 +47,9 @@ public class DestinationStatistics extends StatsImpl {
         dequeues = new CountStatisticImpl("dequeues", "The number of messages that have been acknowledged from the destination");
         inflight = new CountStatisticImpl("inflight", "The number of messages dispatched but awaiting acknowledgement");
         consumers = new CountStatisticImpl("consumers", "The number of consumers that that are subscribing to messages from the destination");
+        consumers.setDoReset(false);
         producers = new CountStatisticImpl("producers", "The number of producers that that are publishing messages to the destination");
+        producers.setDoReset(false);
         messages = new CountStatisticImpl("messages", "The number of messages that that are being held by the destination");
         messagesCached = new PollCountStatisticImpl("messagesCached", "The number of messages that are held in the destination's memory cache");
         processTime = new TimeStatisticImpl("processTime", "information around length of time messages are held by a destination");
@@ -55,7 +58,7 @@ public class DestinationStatistics extends StatsImpl {
         addStatistic("dequeues", dequeues);
         addStatistic("inflight", inflight);
         addStatistic("consumers", consumers);
-        addStatistic("prodcuers", producers);
+        addStatistic("producers", producers);
         addStatistic("messages", messages);
         addStatistic("messagesCached", messagesCached);
         addStatistic("processTime", processTime);
@@ -102,11 +105,13 @@ public class DestinationStatistics extends StatsImpl {
     }
 
     public void reset() {
-        super.reset();
-        enqueues.reset();
-        dequeues.reset();
-        dispatched.reset();
-        inflight.reset();
+        if (this.isDoReset()) {
+            super.reset();
+            enqueues.reset();
+            dequeues.reset();
+            dispatched.reset();
+            inflight.reset();
+        }
     }
 
     public void setEnabled(boolean enabled) {

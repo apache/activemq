@@ -264,7 +264,7 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
     }
 
     public DatabaseLocker getDatabaseLocker() throws IOException {
-        if (databaseLocker == null) {
+        if (databaseLocker == null && isUseDatabaseLock()) {
             databaseLocker = createDatabaseLocker();
         }
         return databaseLocker;

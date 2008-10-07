@@ -217,16 +217,6 @@
       <artifactId>sitemesh</artifactId>
     </dependency>
 
-    <!-- JSTL support -->
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>jstl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>taglibs</groupId>
-      <artifactId>standard</artifactId>
-    </dependency>
-
 
     <!-- XStream marshalling -->
     <dependency>

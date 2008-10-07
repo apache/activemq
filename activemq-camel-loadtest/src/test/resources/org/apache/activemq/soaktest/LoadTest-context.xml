@@ -27,13 +27,14 @@
   <camelContext xmlns="http://activemq.apache.org/camel/schema/spring">
 
     <route>
-      <from uri="dataset:myDataSet"/>
+      <!-- sends messages every 10 milliseconds -->
+      <from uri="dataset:myDataSet?produceDelay=10"/>
       <to uri="activemq:test.queue"/>
     </route>
 
     <route>
       <from uri="activemq:test.queue"/>
-      <to uri="dataset:myDataSet"/>
+      <to uri="dataset:myDataSet?produceDelay=10"/>
     </route>
 
   </camelContext>
@@ -51,5 +52,12 @@
     </transportConnectors>
 
   </broker>
+
+  <!-- Lets connect the Camel ActiveMQ component to the embedded broker.
+    See http://activemq.apache.org/camel/activemq.html for more information.
+  -->
+  <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">
+    <property name="brokerURL" value="tcp://localhost:61616" />
+  </bean>
 </beans>
 <!-- END SNIPPET: example -->

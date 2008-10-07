@@ -153,7 +153,7 @@
         <include>org.springframework:spring-context</include>
         <include>org.springframework:spring-tx</include>
         <include>org.springframework:spring-jms</include>
-        <include>xstream:xstream</include>
+        <include>com.thoughtworks.xstream:xstream</include>
         <include>xmlpull:xmlpull</include>
       </includes>
     </dependencySet>
@@ -179,8 +179,6 @@
 
         <!-- JSTL and other web stuff -->
         <include>opensymphony:sitemesh</include>
-        <include>javax.servlet:jstl</include>
-        <include>taglibs:standard</include>
 
         <!-- Atom/RSS support -->
         <include>rome:rome</include>

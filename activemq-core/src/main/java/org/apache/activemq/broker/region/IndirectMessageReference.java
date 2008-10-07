@@ -88,7 +88,7 @@ public class IndirectMessageReference implements QueueMessageReference {
 
     public boolean lock(LockOwner subscription) {
         synchronized (this) {
-            if (dropped || (lockOwner != null && lockOwner != subscription)) {
+            if (dropped || lockOwner != null) {
                 return false;
             }
             lockOwner = subscription;

@@ -30,8 +30,9 @@ public class AMQStoreDurableTopicTest extends SimpleDurableTopicTest {
         dataFileDir.mkdirs();
         answer.setDeleteAllMessagesOnStartup(true);
         AMQPersistenceAdapter adaptor = new AMQPersistenceAdapter();
-        adaptor.setArchiveDataLogs(true);
-        //adaptor.setMaxFileLength(1024 * 64);
+        //adaptor.setArchiveDataLogs(true);
+        //adaptor.setMaxFileLength(1024 * 64);       
+        
         answer.setDataDirectoryFile(dataFileDir);
         answer.setPersistenceAdapter(adaptor);
         answer.addConnector(uri);

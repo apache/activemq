@@ -245,13 +245,13 @@ public class Queue extends BaseDestination implements Task {
             if( sub instanceof QueueBrowserSubscription ) {
                 ((QueueBrowserSubscription)sub).incrementQueueRef();
             }
-            if (!this.optimizedDispatch) {
+            if (!(this.optimizedDispatch || isSlave())) {
                 wakeup();
             }
         }finally {
             dispatchLock.unlock();
         }
-        if (this.optimizedDispatch) {
+        if (this.optimizedDispatch || isSlave()) {
             // Outside of dispatchLock() to maintain the lock hierarchy of
             // iteratingMutex -> dispatchLock. - see https://issues.apache.org/activemq/browse/AMQ-1878
             wakeup();
@@ -292,7 +292,6 @@ public class Queue extends BaseDestination implements Task {
                 List<QueueMessageReference> list = new ArrayList<QueueMessageReference>();
                 for (MessageReference ref : sub.remove(context, this)) {
                     QueueMessageReference qmr = (QueueMessageReference)ref;
-                    qmr.incrementRedeliveryCounter();
                     if( qmr.getLockOwner()==sub ) {
                         qmr.unlock();
                         qmr.incrementRedeliveryCounter();
@@ -308,13 +307,13 @@ public class Queue extends BaseDestination implements Task {
             if (consumers.isEmpty()) {
                 messages.gc();
             }
-            if (!this.optimizedDispatch) {
+            if (!(this.optimizedDispatch || isSlave())) {
                 wakeup();
             }
         }finally {
             dispatchLock.unlock();
         }
-        if (this.optimizedDispatch) {
+        if (this.optimizedDispatch || isSlave()) {
             // Outside of dispatchLock() to maintain the lock hierarchy of
             // iteratingMutex -> dispatchLock. - see https://issues.apache.org/activemq/browse/AMQ-1878
             wakeup();
@@ -724,6 +723,8 @@ public class Queue extends BaseDestination implements Task {
             }
         } while (!pagedInMessages.isEmpty() || this.destinationStatistics.getMessages().getCount() > 0);
         gc();
+        this.destinationStatistics.getMessages().setCount(0);
+        getMessages().clear();
     }
 
     /**
@@ -958,13 +959,19 @@ public class Queue extends BaseDestination implements Task {
 	                    if (!node.isDropped() && !node.isAcked() && (!node.isDropped() || rd.subscription.getConsumerInfo().isBrowser())) {
 	                        msgContext.setMessageReference(node);
 	                        if (rd.subscription.matches(node, msgContext)) {
+ 	                            // Log showing message dispatching
+ 	                            if (LOG.isDebugEnabled()) {
+ 	                                LOG.debug(destination.getQualifiedName() + " - Recovery - Message pushed '" + node.hashCode() + " - " + node + "' to subscription: '" + rd.subscription + "'");
+ 	                            }
 	                            rd.subscription.add(node);
 	                        } else {
 	                            // make sure it gets queued for dispatched again
 	                            dispatchLock.lock();
 	                            try {
 	                                synchronized(pagedInPendingDispatch) {
-	                                    pagedInPendingDispatch.add(node);
+	                                    if (!pagedInPendingDispatch.contains(node)) {
+	                                        pagedInPendingDispatch.add(node);
+	                                    }
 	                                }
 	                            } finally {
 	                                dispatchLock.unlock();
@@ -1060,23 +1067,26 @@ public class Queue extends BaseDestination implements Task {
     protected void removeMessage(ConnectionContext context,Subscription sub,final QueueMessageReference reference,MessageAck ack) throws IOException {
         reference.setAcked(true);
         // This sends the ack the the journal..
-        acknowledge(context, sub, ack, reference);
-
         if (!ack.isInTransaction()) {
+            acknowledge(context, sub, ack, reference);
             dropMessage(reference);
             wakeup();
         } else {
-            context.getTransaction().addSynchronization(new Synchronization() {
+            try {
+                acknowledge(context, sub, ack, reference);
+            } finally {
+                context.getTransaction().addSynchronization(new Synchronization() {
                 
-                public void afterCommit() throws Exception {
-                    dropMessage(reference);
-                    wakeup();
-                }
+                    public void afterCommit() throws Exception {
+                        dropMessage(reference);
+                        wakeup();
+                    }
                 
-                public void afterRollback() throws Exception {
-                    reference.setAcked(false);
-                }
-            });
+                    public void afterRollback() throws Exception {
+                        reference.setAcked(false);
+                    }
+                });
+            }
         }
 
     }
@@ -1150,18 +1160,11 @@ public class Queue extends BaseDestination implements Task {
 
     private List<QueueMessageReference> doPageIn(boolean force) throws Exception {
         List<QueueMessageReference> result = null;
+        List<QueueMessageReference> resultList = null;
         dispatchLock.lock();
         try{
-           
-            int toPageIn = 0;
-            if (force) {
-                toPageIn = getMaxPageSize();
-            } else {
-                toPageIn = (getMaxPageSize() + (int) destinationStatistics
-                        .getInflight().getCount())
-                        - pagedInMessages.size();
-                toPageIn = Math.min(toPageIn, getMaxPageSize());
-            }
+            int toPageIn = getMaxPageSize() + Math.max(0, (int)destinationStatistics.getInflight().getCount()) - pagedInMessages.size();
+            toPageIn = Math.max(0, Math.min(toPageIn, getMaxPageSize()));
             if (isLazyDispatch()&& !force) {
                 // Only page in the minimum number of messages which can be dispatched immediately.
                 toPageIn = Math.min(getConsumerMessageCountBeforeFull(), toPageIn);
@@ -1190,33 +1193,47 @@ public class Queue extends BaseDestination implements Task {
                         messages.release();
                     }
                 }
+                // Only add new messages, not already pagedIn to avoid multiple dispatch attempts
                 synchronized (pagedInMessages) {
-                    for(QueueMessageReference ref:result) {
-                        pagedInMessages.put(ref.getMessageId(), ref);
+                    resultList = new ArrayList<QueueMessageReference>(result.size());
+                    for(QueueMessageReference ref : result) {
+                        if (!pagedInMessages.containsKey(ref.getMessageId())) {
+                            pagedInMessages.put(ref.getMessageId(), ref);
+                            resultList.add(ref);
+                        }
                     }
                 }
+            } else {
+                // Avoid return null list, if condition is not validated
+                resultList = new ArrayList<QueueMessageReference>();
             }
         }finally {
             dispatchLock.unlock();
         }
-        return result;
+        return resultList;
     }
     
     private void doDispatch(List<QueueMessageReference> list) throws Exception {
         dispatchLock.lock();
         try {
-            synchronized(pagedInPendingDispatch) {
-                if(!pagedInPendingDispatch.isEmpty()) {
-                    // Try to first dispatch anything that had not been dispatched before.
+            synchronized (pagedInPendingDispatch) {
+                if (!pagedInPendingDispatch.isEmpty()) {
+                    // Try to first dispatch anything that had not been
+                    // dispatched before.
                     pagedInPendingDispatch = doActualDispatch(pagedInPendingDispatch);
                 }
-                // and now see if we can dispatch the new stuff.. and append to the pending 
+                // and now see if we can dispatch the new stuff.. and append to
+                // the pending
                 // list anything that does not actually get dispatched.
                 if (list != null && !list.isEmpty()) {
                     if (pagedInPendingDispatch.isEmpty()) {
                         pagedInPendingDispatch.addAll(doActualDispatch(list));
                     } else {
-                        pagedInPendingDispatch.addAll(list);
+                        for (QueueMessageReference qmr : list) {
+                            if (!pagedInPendingDispatch.contains(qmr)) {
+                                pagedInPendingDispatch.add(qmr);
+                            }
+                        }
                     }
                 }
             }
@@ -1226,7 +1243,8 @@ public class Queue extends BaseDestination implements Task {
     }
     
     /**
-     * @return list of messages that could get dispatched to consumers if they were not full.
+     * @return list of messages that could get dispatched to consumers if they
+     *         were not full.
      */
     private List<QueueMessageReference> doActualDispatch(List<QueueMessageReference> list) throws Exception {
         List<QueueMessageReference> rc = new ArrayList<QueueMessageReference>(list.size());

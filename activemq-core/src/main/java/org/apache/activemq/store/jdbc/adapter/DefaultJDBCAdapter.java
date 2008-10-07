@@ -714,6 +714,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                         count++;
                     } else {
                         LOG.debug("Stopped recover next messages");
+                        break;
                     }
                 }
             } else {
@@ -722,6 +723,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
                         count++;
                     } else {
                         LOG.debug("Stopped recover next messages");
+                        break;
                     }
                 }
             }

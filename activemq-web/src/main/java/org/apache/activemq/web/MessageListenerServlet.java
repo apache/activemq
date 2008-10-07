@@ -366,7 +366,6 @@ public class MessageListenerServlet extends MessageServletSupport {
 
             writer.flush();
             String m = swriter.toString();
-            // System.err.println(m);
             response.getWriter().println(m);
         }
 

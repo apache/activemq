@@ -16,11 +16,11 @@
 --%>
 <html>
 <head>
-<title>Browse ${requestContext.queueBrowser.JMSDestination}</title>
+<title>Browse <form:short text="${requestContext.queueBrowser.JMSDestination}"/></title>
 </head>
 <body>
 
-<h2>Browse ${requestContext.queueBrowser.JMSDestination}</h2>
+<h2>Browse <form:tooltip text="${requestContext.queueBrowser.JMSDestination}"/></h2>
 
 <table id="messages" class="sortable autostripe">
 <thead>

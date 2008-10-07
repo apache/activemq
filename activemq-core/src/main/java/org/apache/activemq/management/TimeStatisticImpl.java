@@ -43,11 +43,13 @@ public class TimeStatisticImpl extends StatisticImpl {
     }
 
     public synchronized void reset() {
-        super.reset();
-        count = 0;
-        maxTime = 0;
-        minTime = 0;
-        totalTime = 0;
+        if(isDoReset()) {
+            super.reset();
+            count = 0;
+            maxTime = 0;
+            minTime = 0;
+            totalTime = 0;
+        }
     }
 
     public synchronized long getCount() {

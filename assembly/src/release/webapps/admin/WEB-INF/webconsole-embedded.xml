@@ -18,7 +18,11 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
 
-  <bean id="placeholderConfig" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" />
+  <bean id="placeholderConfig" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+                <value>file://${activemq.base}/conf/credentials.properties</value>
+        </property>  
+  </bean>
   
   <!-- use the following bean for a local in-JVM broker -->
   <bean id="brokerQuery" class="org.apache.activemq.web.SingletonBrokerFacade" autowire='constructor' singleton="false"/>
@@ -30,6 +34,8 @@
 
   <bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
     <property name="brokerURL" value="vm://localhost"/>
+    <property name="userName" value="${activemq.username}"/>
+    <property name="password" value="${activemq.password}"/>    
   </bean>
 
   <bean id="queueBrowser" class="org.apache.activemq.web.QueueBrowseQuery" autowire='constructor' singleton="false"/>
