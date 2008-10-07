@@ -158,7 +158,9 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
 
     private void configureServerSocket(ServerSocket socket) throws SocketException {
         socket.setSoTimeout(2000);
-        IntrospectionSupport.setProperties(socket, transportOptions);
+        if (transportOptions != null) {
+            IntrospectionSupport.setProperties(socket, transportOptions);
+        }
     }
 
     /**
