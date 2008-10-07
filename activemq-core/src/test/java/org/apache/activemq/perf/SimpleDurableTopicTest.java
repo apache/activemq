@@ -30,8 +30,8 @@ import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
 public class SimpleDurableTopicTest extends SimpleTopicTest {
     
     protected void setUp() throws Exception {
-        numberOfDestinations=1;
-        numberOfConsumers = 2;
+        numberOfDestinations=10;
+        numberOfConsumers = 10;
         numberofProducers = 2;
         sampleCount=1000;
         playloadSize = 1024;
@@ -44,7 +44,7 @@ public class SimpleDurableTopicTest extends SimpleTopicTest {
         persistenceFactory.setPersistentIndex(true);
         persistenceFactory.setCleanupInterval(10000);
         answer.setPersistenceFactory(persistenceFactory);
-        answer.setDeleteAllMessagesOnStartup(true);
+        //answer.setDeleteAllMessagesOnStartup(true);
         answer.addConnector(uri);
         answer.setUseShutdownHook(false);
     }
@@ -63,7 +63,7 @@ public class SimpleDurableTopicTest extends SimpleTopicTest {
     
     protected ActiveMQConnectionFactory createConnectionFactory(String uri) throws Exception {
         ActiveMQConnectionFactory result = super.createConnectionFactory(uri);
-        result.setSendAcksAsync(false);
+        //result.setSendAcksAsync(false);
         return result;
     }
 
