@@ -23,6 +23,7 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
+import org.apache.activemq.util.Handler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -41,7 +42,8 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
 
     private Connection connection;
     private boolean stopping;
-
+    private Handler<Exception> exceptionHandler;
+    
     public DefaultDatabaseLocker(JDBCPersistenceAdapter persistenceAdapter) throws IOException {
         this(persistenceAdapter.getLockDataSource(), persistenceAdapter.getStatements());
     }
@@ -68,7 +70,20 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
                 if (stopping) {
                     throw new Exception("Cannot start broker as being asked to shut down. Interrupted attempt to acquire lock: " + e, e);
                 }
-                LOG.error("Failed to acquire lock: " + e, e);
+
+                if (exceptionHandler != null) {
+                    try {
+                        exceptionHandler.handle(e);
+                    } catch (Throwable handlerException) {
+                        LOG.error("The exception handler " + exceptionHandler.getClass().getCanonicalName() + " threw this exception: " + handlerException
+                                + " while trying to handle this excpetion: " + e, handlerException);
+                    }
+
+                } else {
+                    LOG.error("Failed to acquire lock: " + e, e);
+                }
+            } finally {
+
                 if (null != statement) {
                     try {
                         statement.close();
@@ -133,4 +148,13 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
     public void setLockAcquireSleepInterval(long lockAcquireSleepInterval) {
         this.lockAcquireSleepInterval = lockAcquireSleepInterval;
     }
+    
+    public Handler getExceptionHandler() {
+		return exceptionHandler;
+	}
+
+	public void setExceptionHandler(Handler exceptionHandler) {
+		this.exceptionHandler = exceptionHandler;
+	}
+
 }
