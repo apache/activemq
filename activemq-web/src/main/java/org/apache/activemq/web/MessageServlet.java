@@ -19,6 +19,7 @@ package org.apache.activemq.web;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -29,12 +30,20 @@ import javax.jms.MessageConsumer;
 import javax.jms.ObjectMessage;
 import javax.jms.TextMessage;
 import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.activemq.MessageAvailableConsumer;
 import org.apache.activemq.MessageAvailableListener;
+import org.apache.activemq.camel.converter.ActiveMQMessageConverter;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.camel.Endpoint;
+import org.apache.camel.Exchange;
+import org.apache.camel.ExchangePattern;
+import org.apache.camel.Producer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.mortbay.util.ajax.Continuation;
@@ -56,6 +65,9 @@ public class MessageServlet extends MessageServletSupport {
     private String readTimeoutParameter = "readTimeout";
     private long defaultReadTimeout = -1;
     private long maximumReadTimeout = 20000;
+    private long requestTimeout = 1000;
+    
+    private HashMap<String, WebClient> clients = new HashMap<String, WebClient>();
 
     public void init() throws ServletException {
         ServletConfig servletConfig = getServletConfig();
@@ -67,6 +79,10 @@ public class MessageServlet extends MessageServletSupport {
         if (name != null) {
             maximumReadTimeout = asLong(name);
         }
+        name = servletConfig.getInitParameter("replyTimeout");
+        if (name != null) {
+        	requestTimeout = asLong(name);
+        }        
     }
 
     /**
@@ -80,7 +96,7 @@ public class MessageServlet extends MessageServletSupport {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // lets turn the HTTP post into a JMS Message
         try {
-            WebClient client = WebClient.getWebClient(request);
+            WebClient client = getWebClient(request);
 
             String text = getPostedMessageBody(request);
 
@@ -94,12 +110,28 @@ public class MessageServlet extends MessageServletSupport {
                 LOG.debug("Sending message to: " + destination + " with text: " + text);
             }
 
+            boolean sync = isSync(request);
             TextMessage message = client.getSession().createTextMessage(text);
-            appendParametersToMessage(request, message);
-            boolean persistent = isSendPersistent(request);
-            int priority = getSendPriority(request);
-            long timeToLive = getSendTimeToLive(request);
-            client.send(destination, message, persistent, priority, timeToLive);
+
+            if (sync) {
+               String point = "activemq:" 
+            	   + ((ActiveMQDestination)destination).getPhysicalName().replace("//", "")
+            	   + "?requestTimeout=" + requestTimeout;
+               try {
+            	   String body = (String)client.getProducerTemplate().requestBody(point, text);
+                   ActiveMQTextMessage answer = new ActiveMQTextMessage();
+                   answer.setText(body);
+            	   writeMessageResponse(response.getWriter(), answer);
+               } catch (Exception e) {
+            	   throw new IOException(e);
+               }
+            } else {
+                appendParametersToMessage(request, message);
+                boolean persistent = isSendPersistent(request);
+                int priority = getSendPriority(request);
+                long timeToLive = getSendTimeToLive(request);            	
+                client.send(destination, message, persistent, priority, timeToLive);
+            }
 
             // lets return a unique URI for reliable messaging
             response.setHeader("messageID", message.getJMSMessageID());
@@ -137,7 +169,7 @@ public class MessageServlet extends MessageServletSupport {
 
         int messages = 0;
         try {
-            WebClient client = WebClient.getWebClient(request);
+            WebClient client = getWebClient(request);
             Destination destination = getDestination(client, request);
             if (destination == null) {
                 throw new NoDestinationSuppliedException();
@@ -224,8 +256,10 @@ public class MessageServlet extends MessageServletSupport {
                         }
 
                         // look for next message
-                        message = consumer.receiveNoWait();
                         messages++;
+                        if(maxMessages < 0 || messages < maxMessages) {
+                        	message = consumer.receiveNoWait();
+                        }
                     }
                 }
 
@@ -255,7 +289,7 @@ public class MessageServlet extends MessageServletSupport {
 
         int messages = 0;
         try {
-            WebClient client = WebClient.getWebClient(request);
+            WebClient client = getWebClient(request);
             Destination destination = getDestination(client, request);
             long timeout = getReadTimeout(request);
             boolean ajax = isRicoAjax(request);
@@ -317,8 +351,11 @@ public class MessageServlet extends MessageServletSupport {
                             }
 
                             // look for next message
-                            message = consumer.receiveNoWait();
                             messages++;
+                            if(maxMessages < 0 || messages < maxMessages) {
+                            	message = consumer.receiveNoWait();
+                            }
+
                         }
                     }
                 } finally {
@@ -362,6 +399,25 @@ public class MessageServlet extends MessageServletSupport {
         String rico = request.getParameter("rico");
         return rico != null && rico.equals("true");
     }
+    
+    public WebClient getWebClient(HttpServletRequest request) {
+    	String clientId = request.getParameter("clientId");
+    	if (clientId != null) {
+    		synchronized(this) {
+    			LOG.debug("Getting local client [" + clientId + "]");
+    			WebClient client = clients.get(clientId);
+    			if (client == null) {
+    				LOG.debug("Creating new client [" + clientId + "]");
+    				client = new WebClient();
+    				clients.put(clientId, client);
+    			}
+    			return client;
+    		}
+    		
+    	} else {
+    		return WebClient.getWebClient(request);
+    	}
+    }    
 
     protected String getContentType(HttpServletRequest request) {
         /*

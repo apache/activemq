@@ -47,8 +47,16 @@ import javax.servlet.http.HttpSessionEvent;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.MessageAvailableConsumer;
+import org.apache.activemq.camel.component.ActiveMQComponent;
+import org.apache.activemq.camel.component.ActiveMQConfiguration;
+import org.apache.activemq.pool.PooledConnectionFactory;
+import org.apache.camel.CamelContext;
+import org.apache.camel.ProducerTemplate;
+import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import sun.util.logging.resources.logging;
 
 /**
  * Represents a messaging client used from inside a web container typically
@@ -76,6 +84,9 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
     private int deliveryMode = DeliveryMode.NON_PERSISTENT;
 
     private final Semaphore semaphore = new Semaphore(1);
+
+    private CamelContext camelContext;
+    private ProducerTemplate producerTemplate;
 
     public WebClient() {
         if (factory == null) {
@@ -111,6 +122,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
 
     public static void initContext(ServletContext context) {
         initConnectionFactory(context);
+        context.setAttribute("webClients", new HashMap<String, WebClient>());
     }
 
     public int getDeliveryMode() {
@@ -143,12 +155,16 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
             if (connection != null) {
                 connection.close();
             }
-        } catch (JMSException e) {
+            if (producerTemplate != null) {
+            	producerTemplate.stop();
+            }
+        } catch (Exception e) {
             LOG.debug("caught exception closing consumer", e);
         } finally {
             producer = null;
             session = null;
             connection = null;
+            producerTemplate = null;
             if (consumers != null) {
                 consumers.clear();
             }
@@ -255,6 +271,27 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
 
             servletContext.setAttribute(CONNECTION_FACTORY_ATTRIBUTE, factory);
         }
+    }
+    
+    public synchronized CamelContext getCamelContext() {
+    	if (camelContext == null) {
+    		LOG.debug("Creating camel context");
+    		camelContext = new DefaultCamelContext();
+    		ActiveMQConfiguration conf = new ActiveMQConfiguration();
+    		conf.setConnectionFactory(new PooledConnectionFactory((ActiveMQConnectionFactory)factory));
+    		ActiveMQComponent component = new ActiveMQComponent(conf);
+    		camelContext.addComponent("activemq", component);
+    	}
+    	return camelContext;
+    }
+    
+    public synchronized ProducerTemplate getProducerTemplate() throws Exception {
+    	if (producerTemplate == null) {
+    		LOG.debug("Creating producer template");
+    		producerTemplate = getCamelContext().createProducerTemplate();
+    		producerTemplate.start();
+    	}
+    	return producerTemplate;
     }
 
     public synchronized MessageProducer getProducer() throws JMSException {
