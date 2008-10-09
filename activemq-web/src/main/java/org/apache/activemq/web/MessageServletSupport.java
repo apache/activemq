@@ -179,6 +179,14 @@ public abstract class MessageServletSupport extends HttpServlet {
         return defaultMessagePersistent;
     }
 
+    protected boolean isSync(HttpServletRequest request) {
+        String text = request.getParameter("sync");
+        if (text != null) {
+            return true;
+        }
+        return false;
+    }    
+
     protected Destination asDestination(Object value) {
         if (value instanceof Destination) {
             return (Destination)value;
