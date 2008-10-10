@@ -269,12 +269,16 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         for (int i = 0; i < count; i++) {
             TextMessage msg = createTextMessage(sess, conn.getClientID() + ": Message-" + i);
             producer.send(msg);
+            onSend(i, msg);
         }
 
         producer.close();
         sess.close();
         conn.close();
         brokerItem.connections.remove(conn);
+    }
+
+    protected void onSend(int i, TextMessage msg) {
     }
 
     protected TextMessage createTextMessage(Session session, String initText) throws Exception {

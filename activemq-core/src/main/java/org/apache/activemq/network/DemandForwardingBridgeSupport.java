@@ -420,7 +420,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                             if (AdvisorySupport.isConsumerAdvisoryTopic(message.getDestination())) {
                                 serviceRemoteConsumerAdvisory(message.getDataStructure());
                             } else {
-                                localBroker.oneway(message);
+                                if (message.isResponseRequired()) {
+                                    Response reply = new Response();
+                                    reply.setCorrelationId(message.getCommandId());
+                                    localBroker.oneway(message);
+                                    remoteBroker.oneway(reply);
+                                } else {
+                                    localBroker.oneway(message);
+                                }
                             }
                         } else {
                             switch (command.getDataStructureType()) {
@@ -435,6 +442,10 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                                     if (!addConsumerInfo((ConsumerInfo) command)) {
                                         if (LOG.isDebugEnabled()) {
                                             LOG.debug("Ignoring ConsumerInfo: "+ command);
+                                        }
+                                    } else {
+                                        if (LOG.isTraceEnabled()) {
+                                            LOG.trace("Adding ConsumerInfo: "+ command);
                                         }
                                     }
                                 } else {
@@ -606,10 +617,10 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                         Message message = configureMessage(md);
                         if (trace) {
                             LOG.trace("bridging " + configuration.getBrokerName() + " -> " + remoteBrokerName + ": " + message);
-                            LOG.trace("cameFromRemote = "+cameFromRemote);    
+                            LOG.trace("cameFromRemote = "+cameFromRemote + ", repsonseRequired = " + message.isResponseRequired());    
                         }
 
-                        if (!message.isResponseRequired() || isDuplex()) {
+                        if (!message.isResponseRequired()) {
 
                             // If the message was originally sent using async
                             // send, we will preserve that QOS
