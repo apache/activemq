@@ -95,7 +95,7 @@ public class DuplexNetworkMBeanTest extends TestCase {
             assertEquals(0, countMbeans(broker, "stopped"));
         }
         
-        assertEquals(0, countMbeans(networkedBroker, "NetworkBridge"));
+        //assertEquals(0, countMbeans(networkedBroker, "NetworkBridge"));
         assertEquals(1, countMbeans(networkedBroker, "Connector"));
         assertEquals(0, countMbeans(networkedBroker, "Connection"));
         assertEquals(0, countMbeans(broker, "Connection"));

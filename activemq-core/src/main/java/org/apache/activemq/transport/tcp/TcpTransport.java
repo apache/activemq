@@ -177,7 +177,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      * reads packets from a Socket
      */
     public void run() {
-        LOG.trace("TCP consumer thread starting");
+        LOG.trace("TCP consumer thread for " + this + " starting");
         this.runnerThread=Thread.currentThread();
         try {
             while (!isStopped()) {
