@@ -92,14 +92,6 @@ public class DefaultDatabaseLocker implements DatabaseLocker {
                     }
                     statement = null;
                 }
-                if (null != connection) {
-                    try {
-                        connection.close();
-                    } catch (SQLException e1) {
-                        LOG.warn("Caught while closing connection: " + e1, e1);
-                    }
-                    connection = null;
-                }
             }
 
             LOG.debug("Sleeping for " + lockAcquireSleepInterval + " milli(s) before trying again to get the lock...");
