@@ -123,7 +123,9 @@ public class MessageServlet extends MessageServletSupport {
                    answer.setText(body);
             	   writeMessageResponse(response.getWriter(), answer);
                } catch (Exception e) {
-            	   throw new IOException(e);
+            	   IOException ex = new IOException();
+            	   ex.initCause(e);
+            	   throw ex;
                }
             } else {
                 appendParametersToMessage(request, message);
