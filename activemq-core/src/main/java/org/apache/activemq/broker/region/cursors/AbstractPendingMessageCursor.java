@@ -246,15 +246,7 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
         return false;
     }
     
-    /**
-     * Mark a message as already dispatched
-     * @param message
-     */
-    public void dispatched(MessageReference message) {
-    	//add it to the audit
-    	isDuplicate(message.getMessageId());
-    }
-    
+       
     /**
      * set the audit
      * @param audit

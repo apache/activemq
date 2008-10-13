@@ -255,11 +255,6 @@ public interface PendingMessageCursor extends Service {
      */
     public boolean isTransient();
     
-    /**
-     * Mark a message as already dispatched
-     * @param message
-     */
-    public void dispatched(MessageReference message);
     
     /**
      * set the audit

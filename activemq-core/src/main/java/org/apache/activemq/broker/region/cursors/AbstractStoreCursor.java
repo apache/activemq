@@ -37,11 +37,11 @@ import org.apache.commons.logging.LogFactory;
 public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor implements MessageRecoveryListener, UsageListener {
     private static final Log LOG = LogFactory.getLog(AbstractStoreCursor.class);
     protected final Destination regionDestination;
-    protected final LinkedHashMap<MessageId,Message> batchList = new LinkedHashMap<MessageId,Message> ();
+    private final LinkedHashMap<MessageId,Message> batchList = new LinkedHashMap<MessageId,Message> ();
+    private Iterator<Entry<MessageId, Message>> iterator = null;
     protected boolean cacheEnabled=false;
     protected boolean batchResetNeeded = true;
     protected boolean storeHasMessages = false;
-    protected Iterator<Entry<MessageId, Message>> iterator = null;
     protected int size;
     
     protected AbstractStoreCursor(Destination destination) {
@@ -84,6 +84,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             }
             message.incrementReferenceCount();
             batchList.put(message.getMessageId(), message);
+            clearIterator(true);
         } else {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Ignoring batched duplicated from store: " + message);
@@ -102,11 +103,25 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
                 throw new RuntimeException(e);
             }
         }
-        this.iterator = this.batchList.entrySet().iterator();
+        clearIterator(true);
     }
     
-    public void release() {
+    public synchronized void release() {
+        clearIterator(false);
+    }
+    
+    private synchronized void clearIterator(boolean ensureIterator) {
+        boolean haveIterator = this.iterator != null;
         this.iterator=null;
+        if(haveIterator&&ensureIterator) {
+            ensureIterator();
+        }
+    }
+    
+    private synchronized void ensureIterator() {
+        if(this.iterator==null) {
+            this.iterator=this.batchList.entrySet().iterator();
+        }
     }
 
 
@@ -117,16 +132,12 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         if (batchList.isEmpty()) {
             try {
                 fillBatch();
-                this.iterator = this.batchList.entrySet().iterator();
             } catch (Exception e) {
                 LOG.error("Failed to fill batch", e);
                 throw new RuntimeException(e);
             }
-        }else {
-            if (this.iterator==null) {
-                this.iterator=this.batchList.entrySet().iterator();
-            }
         }
+        ensureIterator();
         return this.iterator.hasNext();
     }
     
@@ -192,6 +203,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             msg.decrementReferenceCount();
         }
         batchList.clear();
+        clearIterator(false);
         batchResetNeeded = true;
         this.cacheEnabled=false;
         if (isStarted()) { 
