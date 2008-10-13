@@ -163,6 +163,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                             pending.remove();
                             createMessageDispatch(node, node.getMessage());
                             dispatched.add(node);
+                            onDispatch(node, node.getMessage());
                         }
                         return;
                     }
@@ -173,7 +174,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
         }
         throw new JMSException(
                 "Slave broker out of sync with master: Dispatched message ("
-                        + mdn.getMessageId() + ") was not in the pending list");
+                        + mdn.getMessageId() + ") was not in the pending list for " + mdn.getDestination().getPhysicalName());
     }
 
     public final void acknowledge(final ConnectionContext context,final MessageAck ack) throws Exception {
@@ -205,9 +206,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                             if (!this.getConsumerInfo().isBrowser()) {
                                 node.getRegionDestination().getDestinationStatistics().getDequeues().increment();
                             }
-                            if (!isSlave()) {
-                                node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
-                            }
+                            node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
                         } else {
                             // setup a Synchronization to remove nodes from the
                             // dispatched list.

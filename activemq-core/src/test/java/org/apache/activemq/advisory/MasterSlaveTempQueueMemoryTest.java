@@ -16,14 +16,26 @@
  */
 package org.apache.activemq.advisory;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+
+import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.RegionBroker;
+
 
 public class MasterSlaveTempQueueMemoryTest extends TempQueueMemoryTest {
     String masterBindAddress = "tcp://localhost:61616";
     String slaveBindAddress = "tcp://localhost:62616";
     BrokerService slave;
-    
+
     /*
      * add a slave broker
      * @see org.apache.activemq.EmbeddedBrokerTestSupport#createBroker()
@@ -93,4 +105,46 @@ public class MasterSlaveTempQueueMemoryTest extends TempQueueMemoryTest {
                 masterRb.getDestinationStatistics().getDispatched().getCount());
     }
     
+    public void testMoreThanPageSizeUnacked() throws Exception {
+        
+        final int messageCount = Queue.MAX_PAGE_SIZE + 10;
+        final CountDownLatch latch = new CountDownLatch(1);
+        
+        serverSession = serverConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        ActiveMQSession s = (ActiveMQSession) serverSession;
+        s.setSessionAsyncDispatch(true);
+        
+        MessageConsumer serverConsumer = serverSession.createConsumer(serverDestination);
+        serverConsumer.setMessageListener(new MessageListener() {
+           
+            public void onMessage(Message msg) {
+                try {
+                    latch.await(30L, TimeUnit.SECONDS);
+                } catch (Exception e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        });
+            
+        MessageProducer producer = clientSession.createProducer(serverDestination);
+        for (int i =0; i< messageCount; i++) {
+            Message msg = clientSession.createMessage();
+            producer.send(msg);
+        }
+        
+        RegionBroker slaveRb = (RegionBroker) slave.getBroker().getAdaptor(
+                RegionBroker.class);
+        RegionBroker masterRb = (RegionBroker) broker.getBroker().getAdaptor(
+                RegionBroker.class);
+        
+        Thread.sleep(4000);
+        assertEquals("inflight match expected", messageCount, masterRb.getDestinationStatistics().getInflight().getCount());        
+        assertEquals("inflight match on slave and master", slaveRb.getDestinationStatistics().getInflight().getCount(), masterRb.getDestinationStatistics().getInflight().getCount());
+        
+        latch.countDown();
+        Thread.sleep(4000);
+        assertEquals("inflight match expected", 0, masterRb.getDestinationStatistics().getInflight().getCount());        
+        assertEquals("inflight match on slave and master", slaveRb.getDestinationStatistics().getInflight().getCount(), masterRb.getDestinationStatistics().getInflight().getCount());
+    }
 }

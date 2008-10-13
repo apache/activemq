@@ -32,11 +32,11 @@ import org.apache.activemq.command.ActiveMQQueue;
  * @version $Revision: 397249 $
  */
 public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
-    private Connection serverConnection;
-    private Session serverSession;
-    private Connection clientConnection;
-    private Session clientSession;
-    private Destination serverDestination;
+    protected Connection serverConnection;
+    protected Session serverSession;
+    protected Connection clientConnection;
+    protected Session clientSession;
+    protected Destination serverDestination;
     protected static final int COUNT = 2000;
 
     public void testLoadRequestReply() throws Exception {
