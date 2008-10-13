@@ -49,7 +49,7 @@
 <tbody>
 <c:forEach items="${requestContext.brokerQuery.queues}" var="row">
 <tr>
-<td><a href="browse.jsp?JMSDestination=${row.name}"><form:tooltip text="${row.name}" length="8"/></a></td>
+<td><a href="browse.jsp?JMSDestination=${row.name}"><form:tooltip text="${row.name}" length="50"/></a></td>
 <td>${row.queueSize}</td>
 <td>${row.consumerCount}</td>
 <td>${row.enqueueCount}</td>
