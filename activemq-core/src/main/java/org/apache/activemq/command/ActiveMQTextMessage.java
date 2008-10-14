@@ -146,4 +146,12 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
         }
         return super.getSize();
     }
+    
+    public String toString() {
+        try {
+            getText();
+        } catch (JMSException e) {
+        }
+        return super.toString();
+    }
 }
