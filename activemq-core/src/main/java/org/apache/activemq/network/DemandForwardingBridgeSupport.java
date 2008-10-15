@@ -214,6 +214,10 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
 
             localBroker.start();
             remoteBroker.start();
+            if (configuration.isDuplex() && duplexInitiatingConnection == null) {
+                // initiator side of duplex network
+                remoteBrokerNameKnownLatch.await();
+            }
             try {
                 triggerRemoteStartBridge();
             } catch (IOException e) {
@@ -229,10 +233,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
     protected void triggerLocalStartBridge() throws IOException {
         ASYNC_TASKS.execute(new Runnable() {
             public void run() {
+                final String originalName = Thread.currentThread().getName();
+                Thread.currentThread().setName("StartLocalBridge: localBroker=" + localBroker);
                 try {
                     startLocalBridge();
                 } catch (Exception e) {
                     serviceLocalException(e);
+                } finally {
+                    Thread.currentThread().setName(originalName);
                 }
             }
         });
@@ -241,10 +249,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
     protected void triggerRemoteStartBridge() throws IOException {
         ASYNC_TASKS.execute(new Runnable() {
             public void run() {
+                final String originalName = Thread.currentThread().getName();
+                Thread.currentThread().setName("StartRemotelBridge: localBroker=" + localBroker);
                 try {
                     startRemoteBridge();
                 } catch (Exception e) {
                     serviceRemoteException(e);
+                } finally {
+                    Thread.currentThread().setName(originalName);
                 }
             }
         });
@@ -253,7 +265,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
     protected void startLocalBridge() throws Exception {
         if (localBridgeStarted.compareAndSet(false, true)) {
             synchronized (this) {
-
+                LOG.debug("starting local Bridge, localBroker=" + localBroker);
                 remoteBrokerNameKnownLatch.await();
 
                 localConnectionInfo = new ConnectionInfo();
@@ -278,6 +290,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
 
     protected void startRemoteBridge() throws Exception {
         if (remoteBridgeStarted.compareAndSet(false, true)) {
+            LOG.debug("starting remote Bridge, localBroker=" + localBroker);
             synchronized (this) {
                 if (!isCreatedByDuplex()) {
                     BrokerInfo brokerInfo = new BrokerInfo();
@@ -1025,7 +1038,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
     static {
         ASYNC_TASKS =   new ThreadPoolExecutor(0, Integer.MAX_VALUE, 30, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
             public Thread newThread(Runnable runnable) {
-                Thread thread = new Thread(runnable, "NetworkBridge: "+runnable);
+                Thread thread = new Thread(runnable, "NetworkBridge");
                 thread.setDaemon(true);
                 return thread;
             }

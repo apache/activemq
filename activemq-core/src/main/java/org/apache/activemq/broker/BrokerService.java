@@ -1606,13 +1606,6 @@ public class BrokerService implements Service {
      * @throws Exception
      */
     protected Broker createRegionBroker() throws Exception {
-        // we must start the persistence adaptor before we can create the region
-        // broker
-        if (this.deleteAllMessagesOnStartup) {
-            getPersistenceAdapter().deleteAllMessages();
-        }
-//        getPersistenceAdapter().start();
-
         if (destinationInterceptors == null) {
             destinationInterceptors = createDefaultDestinationInterceptor();
         }

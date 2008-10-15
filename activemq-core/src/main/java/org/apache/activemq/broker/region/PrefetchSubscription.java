@@ -439,7 +439,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 		if (!checkFoundStart && firstAckedMsg != null)
 			throw new JMSException("Unmatched acknowledege: Could not find Message-ID "+firstAckedMsg+" in dispatched-list (start of ack)");
 		if (!checkFoundEnd && lastAckedMsg != null)
-			throw new JMSException("Unmatched acknowledege: Could not find Message-ID "+firstAckedMsg+" in dispatched-list (end of ack)");
+			throw new JMSException("Unmatched acknowledege: Could not find Message-ID "+lastAckedMsg+" in dispatched-list (end of ack)");
 		if (ack.getMessageCount() != checkCount) {
 			throw new JMSException("Unmatched acknowledege: Expected message count ("+ack.getMessageCount()+
 					") differs from count in dispatched-list ("+checkCount+")");
