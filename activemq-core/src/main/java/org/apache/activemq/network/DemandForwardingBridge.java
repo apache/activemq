@@ -60,6 +60,7 @@ public class DemandForwardingBridge extends DemandForwardingBridgeSupport {
                     ServiceSupport.dispose(this);
                 }
             }
+            LOG.debug("counting down remoteBrokerNameKnownLatch with: " + command);
             remoteBrokerNameKnownLatch.countDown();
         }
     }

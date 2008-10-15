@@ -34,7 +34,7 @@ import org.apache.commons.logging.LogFactory;
 public class DuplexNetworkMBeanTest extends TestCase {
 
     protected static final Log LOG = LogFactory.getLog(DuplexNetworkMBeanTest.class);
-    protected final int numRestarts = 5;
+    protected final int numRestarts = 3;
 
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = new BrokerService();
@@ -93,6 +93,7 @@ public class DuplexNetworkMBeanTest extends TestCase {
             broker.stop();
             broker.waitUntilStopped();
             assertEquals(0, countMbeans(broker, "stopped"));
+            Thread.sleep(1000);
         }
         
         //assertEquals(0, countMbeans(networkedBroker, "NetworkBridge"));
