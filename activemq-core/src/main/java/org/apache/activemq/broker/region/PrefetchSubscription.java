@@ -411,40 +411,44 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
      * @param lastAckedMsg
      * @throws JMSException if it does not match
      */
-	protected void assertAckMatchesDispatched(MessageAck ack)
-			throws JMSException {
+	protected void assertAckMatchesDispatched(MessageAck ack) throws JMSException {
         MessageId firstAckedMsg = ack.getFirstMessageId();
-		MessageId lastAckedMsg = ack.getLastMessageId();
+        MessageId lastAckedMsg = ack.getLastMessageId();
+        int checkCount = 0;
+        boolean checkFoundStart = false;
+        boolean checkFoundEnd = false;
+        for (MessageReference node : dispatched) {
 
-		int checkCount = 0;
-		boolean checkFoundStart = false;
-		boolean checkFoundEnd = false;
-		for (MessageReference node : dispatched) {
-			
-			if( firstAckedMsg == null ) {
-				checkFoundStart=true;
-			} else if (!checkFoundStart && firstAckedMsg.equals(node.getMessageId())) {
-				checkFoundStart = true;
-			}
+            if (firstAckedMsg == null) {
+                checkFoundStart = true;
+            } else if (!checkFoundStart && firstAckedMsg.equals(node.getMessageId())) {
+                checkFoundStart = true;
+            }
 
-			if (checkFoundStart) {
-				checkCount++;
-			}
+            if (checkFoundStart) {
+                checkCount++;
+            }
 
-			if (lastAckedMsg != null && lastAckedMsg.equals(node.getMessageId())) {
-				checkFoundEnd = true;
-				break;
-			}
-		}
-		if (!checkFoundStart && firstAckedMsg != null)
-			throw new JMSException("Unmatched acknowledege: Could not find Message-ID "+firstAckedMsg+" in dispatched-list (start of ack)");
-		if (!checkFoundEnd && lastAckedMsg != null)
-			throw new JMSException("Unmatched acknowledege: Could not find Message-ID "+lastAckedMsg+" in dispatched-list (end of ack)");
-		if (ack.getMessageCount() != checkCount) {
-			throw new JMSException("Unmatched acknowledege: Expected message count ("+ack.getMessageCount()+
-					") differs from count in dispatched-list ("+checkCount+")");
-		}
-	}
+            if (lastAckedMsg != null && lastAckedMsg.equals(node.getMessageId())) {
+                checkFoundEnd = true;
+                break;
+            }
+        }
+        if (!checkFoundStart && firstAckedMsg != null)
+            throw new JMSException("Unmatched acknowledege: " + ack
+                    + "; Could not find Message-ID " + firstAckedMsg
+                    + " in dispatched-list (start of ack)");
+        if (!checkFoundEnd && lastAckedMsg != null)
+            throw new JMSException("Unmatched acknowledege: " + ack
+                    + "; Could not find Message-ID " + lastAckedMsg
+                    + " in dispatched-list (end of ack)");
+        if (ack.getMessageCount() != checkCount && ack.isStandardAck()) {
+            throw new JMSException("Unmatched acknowledege: " + ack
+                    + "; Expected message count (" + ack.getMessageCount()
+                    + ") differs from count in dispatched-list (" + checkCount
+                    + ")");
+        }
+    }
 
     /**
      * @param context

@@ -39,7 +39,6 @@ public class QueueMemoryFullMultiBrokersTest extends JmsMultipleBrokersTestSuppo
     public static final int MESSAGE_COUNT = 2000;
    
     public void testQueueNetworkWithConsumerFull() throws Exception {
-        if (true) return;
         
         bridgeAllBrokers();
         startAllBrokers();
@@ -67,8 +66,6 @@ public class QueueMemoryFullMultiBrokersTest extends JmsMultipleBrokersTestSuppo
         assertTrue("All messages are consumed and acked from source:" + internalQueue, internalQueue.getMessages().isEmpty());
         assertEquals("messages source:" + internalQueue, 0, internalQueue.getDestinationStatistics().getMessages().getCount());
         assertEquals("inflight source:" + internalQueue, 0, internalQueue.getDestinationStatistics().getInflight().getCount());
-        
-
     }
 
     public void setUp() throws Exception {
@@ -82,7 +79,6 @@ public class QueueMemoryFullMultiBrokersTest extends JmsMultipleBrokersTestSuppo
         }
         BrokerService broker2 = brokers.get("Broker2").broker;
         applyMemoryLimitPolicy(broker2);
-        
     }
 
     private void applyMemoryLimitPolicy(BrokerService broker) {
