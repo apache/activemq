@@ -647,7 +647,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                             else{
                               LOG.info("Message not forwarded on to remote, because message came from remote");                               
                             }
-                            localBroker.oneway(new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1));
+                            localBroker.oneway(new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1));
                             dequeueCounter.incrementAndGet();                          
 
                         } else {
@@ -664,7 +664,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                                             ExceptionResponse er = (ExceptionResponse)response;
                                             serviceLocalException(er.getException());
                                         } else {
-                                            localBroker.oneway(new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1));
+                                            localBroker.oneway(new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1));
                                             dequeueCounter.incrementAndGet();
                                         }
                                     } catch (IOException e) {
