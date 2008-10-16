@@ -101,14 +101,13 @@ public class MessageIdList extends Assert implements MessageListener {
     public void onMessage(Message message) {
         String id = null;
         try {
-            if (countDownLatch != null) {
-                countDownLatch.countDown();
-            }
-
             id = message.getJMSMessageID();
             synchronized (semaphore) {
                 messageIds.add(id);
                 semaphore.notifyAll();
+            }
+            if (countDownLatch != null) {
+                countDownLatch.countDown();
             }
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Received message: " + message);
