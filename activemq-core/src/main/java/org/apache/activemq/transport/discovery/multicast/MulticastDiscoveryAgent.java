@@ -50,7 +50,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
 
     public static final String DEFAULT_DISCOVERY_URI_STRING = "multicast://239.255.2.3:6155";
     public static final String DEFAULT_HOST_STR = "default"; 
-    public static final String DEFAULT_HOST_IP  = "239.255.2.3"; 
+    public static final String DEFAULT_HOST_IP  = System.getProperty("activemq.partition.discovery", "239.255.2.3"); 
     public static final int    DEFAULT_PORT  = 6155; 
     
     
@@ -293,7 +293,6 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
         	  if (LOG.isTraceEnabled()) {
         	  	LOG.trace("start - myHost = " + myHost); 
         	  	LOG.trace("start - myPort = " + myPort);   	
-        	  	LOG.trace("start - myHost = " + myHost); 
         	  	LOG.trace("start - group  = " + group );   		       	  	
         	  }	
         	  
