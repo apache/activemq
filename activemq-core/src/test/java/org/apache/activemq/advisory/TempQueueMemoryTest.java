@@ -37,7 +37,8 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
     protected Connection clientConnection;
     protected Session clientSession;
     protected Destination serverDestination;
-    protected static final int COUNT = 2000;
+    protected int messagesToSend = 2000;
+    protected boolean deleteTempQueue = true;
 
     public void testLoadRequestReply() throws Exception {
         MessageConsumer serverConsumer = serverSession.createConsumer(serverDestination);
@@ -56,7 +57,7 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
         });
         
         MessageProducer producer = clientSession.createProducer(serverDestination);
-        for (int i =0; i< COUNT; i++) {
+        for (int i =0; i< messagesToSend; i++) {
             TemporaryQueue replyTo = clientSession.createTemporaryQueue();
             MessageConsumer consumer = clientSession.createConsumer(replyTo);
             Message msg = clientSession.createMessage();
@@ -64,7 +65,11 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
             producer.send(msg);
             Message reply = consumer.receive();
             consumer.close();
-            replyTo.delete();
+            if (deleteTempQueue) {
+                replyTo.delete();
+            } else {
+                // temp queue will be cleaned up on clientConnection.close
+            }
         }
         
         clientSession.close();
