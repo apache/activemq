@@ -124,7 +124,7 @@ public class DuplexNetworkMBeanTest extends TestCase {
             if (mbsc != null) {
                 mbeans = mbsc.queryMBeans(beanName, null);
             }
-        } while (mbeans == null || mbeans.isEmpty() && expiryTime > System.currentTimeMillis());
+        } while ((mbeans == null || mbeans.isEmpty()) && expiryTime > System.currentTimeMillis());
         return mbeans.size();
     }
 
