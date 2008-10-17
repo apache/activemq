@@ -31,10 +31,12 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URL;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.BrokerId;
@@ -103,9 +105,9 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
         DataInputStream dis = new DataInputStream(in);
         Object actual = openWireformat.unmarshal(dis);
 
-        LOG.info("Parsed: " + actual);
 
         assertBeansEqual("", new HashSet<Object>(), expected, actual);
+        LOG.info("Parsed: " + actual);
     }
 
     protected void assertBeansEqual(String message, Set<Object> comparedObjects, Object expected, Object actual) throws Exception {
@@ -151,6 +153,8 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
                 assertByteSequencesEqual(message, (ByteSequence)expectedValue, actualValue);
             } else if (expectedValue instanceof DataStructure) {
                 assertBeansEqual(message + name, comparedObjects, expectedValue, actualValue);
+            } else if (expectedValue instanceof Enumeration) {
+            	assertEnumerationEqual(message + name, comparedObjects, (Enumeration)expectedValue, (Enumeration)actualValue);
             } else {
                 assertEquals(message, expectedValue, actualValue);
             }
@@ -162,6 +166,14 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
         assertEquals(message + ". Array length", expected.length, actual.length);
         for (int i = 0; i < expected.length; i++) {
             assertPropertyValuesEqual(message + ". element: " + i, comparedObjects, expected[i], actual[i]);
+        }
+    }
+    
+    protected void assertEnumerationEqual(String message, Set<Object> comparedObjects, Enumeration expected, Enumeration actual) throws Exception {
+        while (expected.hasMoreElements()) {
+        	Object expectedElem = expected.nextElement();
+        	Object actualElem = actual.nextElement();
+        	assertPropertyValuesEqual(message + ". element: " + expectedElem, comparedObjects, expectedElem, actualElem);
         }
     }
 
