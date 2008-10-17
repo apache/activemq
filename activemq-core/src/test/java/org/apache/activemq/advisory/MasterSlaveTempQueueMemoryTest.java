@@ -75,6 +75,10 @@ public class MasterSlaveTempQueueMemoryTest extends TempQueueMemoryTest {
         AdvisoryBroker ab = (AdvisoryBroker) slave.getBroker().getAdaptor(
                 AdvisoryBroker.class);
         
+        if (!deleteTempQueue) {
+            // give temp destination removes a chance to perculate on connection.close
+            Thread.sleep(2000);
+        }
         assertEquals("the temp queues should not be visible as they are removed", 1, ab.getAdvisoryDestinations().size());
                        
         RegionBroker rb = (RegionBroker) slave.getBroker().getAdaptor(
@@ -101,7 +105,7 @@ public class MasterSlaveTempQueueMemoryTest extends TempQueueMemoryTest {
         // master does not always reach expected total, should be assertEquals.., why?
         assertTrue("dispatched to slave is as good as master, master=" 
                 + masterRb.getDestinationStatistics().getDispatched().getCount(),
-                rb.getDestinationStatistics().getDispatched().getCount() + 2*COUNT >= 
+                rb.getDestinationStatistics().getDispatched().getCount() + 2*messagesToSend >= 
                 masterRb.getDestinationStatistics().getDispatched().getCount());
     }
     
@@ -121,7 +125,6 @@ public class MasterSlaveTempQueueMemoryTest extends TempQueueMemoryTest {
                 try {
                     latch.await(30L, TimeUnit.SECONDS);
                 } catch (Exception e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             }
@@ -147,4 +150,11 @@ public class MasterSlaveTempQueueMemoryTest extends TempQueueMemoryTest {
         assertEquals("inflight match expected", 0, masterRb.getDestinationStatistics().getInflight().getCount());        
         assertEquals("inflight match on slave and master", slaveRb.getDestinationStatistics().getInflight().getCount(), masterRb.getDestinationStatistics().getInflight().getCount());
     }
+    
+    public void testLoadRequestReplyWithNoTempQueueDelete() throws Exception {
+        deleteTempQueue = false;
+        messagesToSend = 10;
+        testLoadRequestReply();
+    }
+
 }

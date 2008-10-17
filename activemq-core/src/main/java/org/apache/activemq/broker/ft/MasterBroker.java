@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.ft;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.apache.activemq.broker.Connection;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ConsumerBrokerExchange;
@@ -211,14 +212,24 @@ public class MasterBroker extends InsertableMutableBrokerFilter {
         super.removeSubscription(context, info);
         sendAsyncToSlave(info);
     }
+    
+    @Override
+    public void addDestinationInfo(ConnectionContext context,
+            DestinationInfo info) throws Exception {
+        super.addDestinationInfo(context, info);
+        if (info.getDestination().isTemporary()) {
+            sendAsyncToSlave(info);
+        }
+    }
 
+    @Override
     public void removeDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
         super.removeDestinationInfo(context, info);
         if (info.getDestination().isTemporary()) {
             sendAsyncToSlave(info);
         }
-
     }
+    
     /**
      * begin a transaction
      * 
