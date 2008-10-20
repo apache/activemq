@@ -26,7 +26,7 @@
     <!-- Allows us to use system properties as variables in this configuration file -->
     <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
          <property name="locations">
-            <value>file://${activemq.base}/conf/credentials.properties</value>
+            <value>file:///${activemq.base}/conf/credentials.properties</value>
          </property>      
     </bean>
 
