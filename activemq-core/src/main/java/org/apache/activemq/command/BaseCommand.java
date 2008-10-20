@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.command;
 
+import java.util.Map;
+
 import org.apache.activemq.util.IntrospectionSupport;
 
 
@@ -60,7 +62,11 @@ public abstract class BaseCommand implements Command {
     }
 
     public String toString() {
-        return IntrospectionSupport.toString(this, BaseCommand.class);
+        return toString(null);
+    }
+    
+    public String toString(Map<String, Object>overrideFields) {
+    	return IntrospectionSupport.toString(this, BaseCommand.class, overrideFields);
     }
     
     public boolean isWireFormatInfo() {
