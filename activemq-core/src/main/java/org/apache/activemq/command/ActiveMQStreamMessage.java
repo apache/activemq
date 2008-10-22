@@ -1089,7 +1089,9 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
             writeBytes((byte[])value);
         }else if (value instanceof Long) {
             writeLong(((Long)value).longValue());
-        } 
+        }else {
+            throw new MessageFormatException("Unsupported Object type: " + value.getClass());
+        }
     }
 
     /**
