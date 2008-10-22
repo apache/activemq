@@ -1087,7 +1087,9 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
             writeDouble(((Double)value).doubleValue());
         } else if (value instanceof byte[]) {
             writeBytes((byte[])value);
-        }
+        }else if (value instanceof Long) {
+            writeLong(((Long)value).longValue());
+        } 
     }
 
     /**

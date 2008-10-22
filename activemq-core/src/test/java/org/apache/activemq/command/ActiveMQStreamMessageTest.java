@@ -409,6 +409,11 @@ public class ActiveMQStreamMessageTest extends TestCase {
                 fail("Should have thrown exception");
             } catch (MessageFormatException mfe) {
             }
+            msg = new ActiveMQStreamMessage();
+            msg.writeObject(new Long("1"));
+            // reset so it's readable now
+            msg.reset();
+            assertEquals(new Long("1"), msg.readObject());
         } catch (JMSException jmsEx) {
             jmsEx.printStackTrace();
             assertTrue(false);
@@ -474,7 +479,7 @@ public class ActiveMQStreamMessageTest extends TestCase {
         }
     }
 
-    public void testReadDouble() {
+    public void testReadDouble()  {
         ActiveMQStreamMessage msg = new ActiveMQStreamMessage();
         try {
             double test = 4.4d;
@@ -535,6 +540,7 @@ public class ActiveMQStreamMessageTest extends TestCase {
             jmsEx.printStackTrace();
             assertTrue(false);
         }
+      
     }
 
     public void testReadString() {
