@@ -61,7 +61,6 @@ public class QueueMemoryFullMultiBrokersTest extends JmsMultipleBrokersTestSuppo
         // give the acks a chance to flow
         Thread.sleep(2000);
         Queue internalQueue = (Queue) regionBroker.getDestinations(ActiveMQDestination.transform(dest)).iterator().next(); 
-        System.err.println(internalQueue);
         
         assertTrue("All messages are consumed and acked from source:" + internalQueue, internalQueue.getMessages().isEmpty());
         assertEquals("messages source:" + internalQueue, 0, internalQueue.getDestinationStatistics().getMessages().getCount());
