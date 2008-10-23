@@ -133,8 +133,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
 
                 public void onException(IOException error) {
                     if (!ignoreClientError.get()) {
-                        LOG.info("Server transport error:");
-                        error.printStackTrace();
+                        LOG.info("Server transport error:", error);
                         serverErrorCount.incrementAndGet();
                     }
                 }
@@ -152,7 +151,7 @@ public class InactivityMonitorTest extends CombinationTestSupport implements Tra
     }
 
     public void onAcceptError(Exception error) {
-        error.printStackTrace();
+        LOG.trace(error);
     }
 
     public void testClientHang() throws Exception {
