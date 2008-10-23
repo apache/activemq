@@ -122,18 +122,13 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
     }
 
     public synchronized boolean hasNext() {
-
-        boolean result = true;//pendingCount > 0;
-        if (result) {
-            try {
-                currentCursor = getNextCursor();
-            } catch (Exception e) {
-                LOG.error("Failed to get current cursor ", e);
-                throw new RuntimeException(e);
-            }
-            result = currentCursor != null ? currentCursor.hasNext() : false;
-        }
-        return result;
+        try {
+            getNextCursor();
+        } catch (Exception e) {
+            LOG.error("Failed to get current cursor ", e);
+            throw new RuntimeException(e);
+       }
+       return currentCursor != null ? currentCursor.hasNext() : false;
     }
 
     public synchronized MessageReference next() {
@@ -160,6 +155,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
     public synchronized void reset() {
         nonPersistent.reset();
         persistent.reset();
+        pendingCount = persistent.size() + nonPersistent.size();        
     }
     
     public void release() {
@@ -169,11 +165,15 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
 
 
     public synchronized int size() {
+        if (pendingCount < 0) {
+            pendingCount = persistent.size() + nonPersistent.size();
+        }
         return pendingCount;
     }
 
     public synchronized boolean isEmpty() {
-        return pendingCount <= 0;
+        // if negative, more messages arrived in store since last reset so non empty
+        return pendingCount == 0;
     }
 
     /**
@@ -259,6 +259,7 @@ public class StoreQueueCursor extends AbstractPendingMessageCursor {
         if (nonPersistent != null) {
             nonPersistent.gc();
         }
+        pendingCount = persistent.size() + nonPersistent.size();
     }
 
     public void setSystemUsage(SystemUsage usageManager) {

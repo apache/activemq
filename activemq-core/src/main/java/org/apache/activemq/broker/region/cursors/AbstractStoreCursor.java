@@ -104,6 +104,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             }
         }
         clearIterator(true);
+        size();
     }
     
     public synchronized void release() {
@@ -166,7 +167,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
 
     public final synchronized void remove() {
         size--;
-        if (size==0 && isStarted() && cacheEnabled) {
+        if (size==0 && isStarted() && useCache) {
             cacheEnabled=true;
         }
         if (iterator!=null) {
@@ -177,6 +178,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     public final synchronized void remove(MessageReference node) {
         size--;
         cacheEnabled=false;
+        batchList.remove(node.getMessageId());
     }
     
            
@@ -234,7 +236,8 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
     
     public final synchronized boolean isEmpty() {
-        return size <= 0;
+        // negative means more messages added to store through queue.send since last reset
+        return size == 0;
     }
 
     public final synchronized boolean hasMessagesBufferedToDeliver() {
@@ -242,12 +245,10 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     }
 
     public final synchronized int size() {
-        if (isStarted()) {
-            return size;
+        if (size < 0) {
+            this.size = getStoreSize();
         }
-        this.size = getStoreSize();
         return size;
-        
     }
     
     
