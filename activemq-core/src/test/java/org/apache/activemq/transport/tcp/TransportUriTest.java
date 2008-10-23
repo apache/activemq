@@ -61,7 +61,6 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
             connection.start();
             fail("Should have thrown an exception!");
         } catch (Exception expected) {
-            expected.printStackTrace();
         }
     }
 
