@@ -36,7 +36,7 @@ public class PooledTaskRunnerTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        executor = Executors.newCachedThreadPool();
+        executor = Executors.newCachedThreadPool(new IgnoreUncaughtExceptionThreadFactory());
     }
 
     @Override
@@ -148,5 +148,18 @@ public class PooledTaskRunnerTest extends TestCase {
         } catch( TimeoutException e ) {
             fail( "TaskRunner did not shut down cleanly" );
         }
+    }
+    
+    class IgnoreUncaughtExceptionThreadFactory implements ThreadFactory, Thread.UncaughtExceptionHandler {
+        ThreadFactory threadFactory = Executors.defaultThreadFactory();
+        public Thread newThread(Runnable r) {
+            Thread thread = threadFactory.newThread(r);
+            thread.setUncaughtExceptionHandler(this);
+            return thread;
+        }
+        
+        public void uncaughtException(Thread t, Throwable e) {
+            // ignore ie: no printStackTrace that would sully the test console
+         }
     }
 }
