@@ -484,7 +484,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                     }
                 }
             } catch (Throwable e) {
-            	e.printStackTrace();
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Exception processing remote command: " + command, e);
+                }
                 serviceRemoteException(e);
             }
         }
