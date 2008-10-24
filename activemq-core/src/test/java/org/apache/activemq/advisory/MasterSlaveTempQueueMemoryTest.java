@@ -19,6 +19,7 @@ package org.apache.activemq.advisory;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
@@ -156,5 +157,29 @@ public class MasterSlaveTempQueueMemoryTest extends TempQueueMemoryTest {
         messagesToSend = 10;
         testLoadRequestReply();
     }
+    
+    public void testLoadRequestReplyWithTransactions() throws Exception {
+        serverTransactional = clientTransactional = true;
+        messagesToSend = 100;
+        reInitialiseSessions();
+        testLoadRequestReply();
+    }
+    
+    public void testConcurrentConsumerLoadRequestReplyWithTransactions() throws Exception {
+        serverTransactional = true;
+        numConsumers = numProducers = 10;
+        messagesToSend = 100;
+        reInitialiseSessions();
+        testLoadRequestReply();
+    }
 
+    protected void reInitialiseSessions() throws Exception {
+        // reinitialize so they can respect the transactional flags 
+        serverSession.close();
+        clientSession.close();
+        serverSession = serverConnection.createSession(serverTransactional, 
+                serverTransactional ? Session.SESSION_TRANSACTED : Session.AUTO_ACKNOWLEDGE);
+        clientSession = clientConnection.createSession(clientTransactional,
+                clientTransactional ? Session.SESSION_TRANSACTED : Session.AUTO_ACKNOWLEDGE);
+    }
 }
