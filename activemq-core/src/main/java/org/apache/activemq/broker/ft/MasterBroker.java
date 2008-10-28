@@ -253,7 +253,7 @@ public class MasterBroker extends InsertableMutableBrokerFilter {
      */
     public int prepareTransaction(ConnectionContext context, TransactionId xid) throws Exception {
         TransactionInfo info = new TransactionInfo(context.getConnectionId(), xid, TransactionInfo.PREPARE);
-        sendAsyncToSlave(info);
+        sendSyncToSlave(info);
         int result = super.prepareTransaction(context, xid);
         return result;
     }
