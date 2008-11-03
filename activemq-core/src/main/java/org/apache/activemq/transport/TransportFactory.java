@@ -44,6 +44,8 @@ public abstract class TransportFactory {
     private static final FactoryFinder WIREFORMAT_FACTORY_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/wireformat/");
     private static final ConcurrentHashMap<String, TransportFactory> TRANSPORT_FACTORYS = new ConcurrentHashMap<String, TransportFactory>();
 
+    private static final String THREAD_NAME_FILTER = "threadName";
+    
     public abstract TransportServer doBind(URI location) throws IOException;
 
     public Transport doConnect(URI location, Executor ex) throws Exception {
@@ -263,6 +265,9 @@ public abstract class TransportFactory {
      * @throws Exception
      */
     public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
+        if (options.containsKey(THREAD_NAME_FILTER)) {
+            transport = new ThreadNameFilter(transport);
+        }
         transport = compositeConfigure(transport, format, options);
         transport = new MutexTransport(transport);
         return transport;
