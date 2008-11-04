@@ -95,7 +95,7 @@ public class TcpBufferedOutputStream extends FilterOutputStream {
                     writeTimestamp = System.currentTimeMillis();
                     out.write(b, off, len);
                 } finally {
-                    writeTimestamp = System.currentTimeMillis();
+                    writeTimestamp = -1;
                 }
             }
         }
