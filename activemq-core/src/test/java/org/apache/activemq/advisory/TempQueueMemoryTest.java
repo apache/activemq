@@ -98,6 +98,7 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
                             // temp queue will be cleaned up on clientConnection.close
                         }
                     }
+                } catch (IllegalStateException IgnoredAsCanOcurrDuringShutdown) {
                 } catch (JMSException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
