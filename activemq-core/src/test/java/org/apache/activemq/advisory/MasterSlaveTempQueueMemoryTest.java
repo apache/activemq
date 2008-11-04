@@ -61,7 +61,7 @@ public class MasterSlaveTempQueueMemoryTest extends TempQueueMemoryTest {
         
         // because master will wait for slave to connect it needs 
         // to be in a separate thread
-        new Thread() { 
+        Thread starterThread = new Thread() { 
             public void run() {
                 try {
                     broker.setWaitForSlave(true);
@@ -71,9 +71,11 @@ public class MasterSlaveTempQueueMemoryTest extends TempQueueMemoryTest {
                     e.printStackTrace();
                 }
             }
-        }.start();
+        };
+        starterThread.start();
         
         slave.start();
+        starterThread.join(60*1000);
         assertTrue("slave is indeed a slave", slave.isSlave());
     }
 
@@ -92,10 +94,10 @@ public class MasterSlaveTempQueueMemoryTest extends TempQueueMemoryTest {
         AdvisoryBroker ab = (AdvisoryBroker) slave.getBroker().getAdaptor(
                 AdvisoryBroker.class);
         
-        if (!deleteTempQueue) {
+        if (!deleteTempQueue || serverTransactional) {
             // give temp destination removes a chance to perculate on connection.close
             Thread.sleep(2000);
-        }
+        } 
         assertEquals("the temp queues should not be visible as they are removed", 1, ab.getAdvisoryDestinations().size());
                        
         RegionBroker rb = (RegionBroker) slave.getBroker().getAdaptor(
