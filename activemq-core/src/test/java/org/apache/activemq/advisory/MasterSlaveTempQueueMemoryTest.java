@@ -19,7 +19,6 @@ package org.apache.activemq.advisory;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
@@ -47,18 +46,35 @@ public class MasterSlaveTempQueueMemoryTest extends TempQueueMemoryTest {
         bindAddress = masterBindAddress;
         BrokerService master = super.createBroker();
         master.setBrokerName("master");
+        master.setUseJmx(false);
         bindAddress = slaveBindAddress;
         slave = super.createBroker();
         slave.setBrokerName("slave");
         slave.setMasterConnectorURI(masterBindAddress);
+        slave.setUseJmx(false);
         bindAddress = masterBindAddress;
         return master;
     }
 
     @Override
     protected void startBroker() throws Exception {
-        super.startBroker();
+        
+        // because master will wait for slave to connect it needs 
+        // to be in a separate thread
+        new Thread() { 
+            public void run() {
+                try {
+                    broker.setWaitForSlave(true);
+                    broker.start();
+                } catch (Exception e) {
+                    fail("failed to start broker, reason:" + e);
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+        
         slave.start();
+        assertTrue("slave is indeed a slave", slave.isSlave());
     }
 
     @Override
@@ -136,18 +152,18 @@ public class MasterSlaveTempQueueMemoryTest extends TempQueueMemoryTest {
             Message msg = clientSession.createMessage();
             producer.send(msg);
         }
+        Thread.sleep(5000);
         
         RegionBroker slaveRb = (RegionBroker) slave.getBroker().getAdaptor(
                 RegionBroker.class);
         RegionBroker masterRb = (RegionBroker) broker.getBroker().getAdaptor(
                 RegionBroker.class);
         
-        Thread.sleep(4000);
         assertEquals("inflight match expected", messageCount, masterRb.getDestinationStatistics().getInflight().getCount());        
         assertEquals("inflight match on slave and master", slaveRb.getDestinationStatistics().getInflight().getCount(), masterRb.getDestinationStatistics().getInflight().getCount());
         
         latch.countDown();
-        Thread.sleep(4000);
+        Thread.sleep(5000);
         assertEquals("inflight match expected", 0, masterRb.getDestinationStatistics().getInflight().getCount());        
         assertEquals("inflight match on slave and master", slaveRb.getDestinationStatistics().getInflight().getCount(), masterRb.getDestinationStatistics().getInflight().getCount());
     }
