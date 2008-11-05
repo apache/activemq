@@ -48,6 +48,11 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
     protected int numProducers = 1;
     
 
+    public void testConcurrentProducerRequestReply() throws Exception {
+        numProducers = 10;
+        testLoadRequestReply();
+    }
+    
     public void testLoadRequestReply() throws Exception {
         for (int i=0; i< numConsumers; i++) {
             serverSession.createConsumer(serverDestination).setMessageListener(new MessageListener() {
@@ -73,23 +78,24 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
             public Producer(int numToSend) {
                 this.numToSend = numToSend;
             }
-            public void run() {
-                MessageProducer producer;
+            public void run() {     
                 try {
-                    producer = clientSession.createProducer(serverDestination);
+                    Session session = clientConnection.createSession(clientTransactional, 
+                            clientTransactional ? Session.SESSION_TRANSACTED : Session.AUTO_ACKNOWLEDGE);
+                    MessageProducer producer = session.createProducer(serverDestination);
                
                     for (int i =0; i< numToSend; i++) {
-                        TemporaryQueue replyTo = clientSession.createTemporaryQueue();
-                        MessageConsumer consumer = clientSession.createConsumer(replyTo);
-                        Message msg = clientSession.createMessage();
+                        TemporaryQueue replyTo = session.createTemporaryQueue();
+                        MessageConsumer consumer = session.createConsumer(replyTo);
+                        Message msg = session.createMessage();
                         msg.setJMSReplyTo(replyTo);
                         producer.send(msg);
                         if (clientTransactional) {
-                            clientSession.commit();
+                            session.commit();
                         }
-                        Message reply = consumer.receive();
+                        consumer.receive();
                         if (clientTransactional) {
-                            clientSession.commit();
+                            session.commit();
                         }
                         consumer.close();
                         if (deleteTempQueue) {
@@ -98,7 +104,6 @@ public class TempQueueMemoryTest extends EmbeddedBrokerTestSupport {
                             // temp queue will be cleaned up on clientConnection.close
                         }
                     }
-                } catch (IllegalStateException IgnoredAsCanOcurrDuringShutdown) {
                 } catch (JMSException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
