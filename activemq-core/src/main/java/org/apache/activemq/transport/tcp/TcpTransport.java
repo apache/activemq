@@ -69,6 +69,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     protected Socket socket;
     protected DataOutputStream dataOut;
     protected DataInputStream dataIn;
+    protected TcpBufferedOutputStream buffOut = null;
     /**
      * trace=true -> the Transport stack where this TcpTransport
      * object will be, will have a TransportLogger layer
@@ -177,7 +178,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      * reads packets from a Socket
      */
     public void run() {
-        LOG.trace("TCP consumer thread starting");
+        LOG.trace("TCP consumer thread for " + this + " starting");
         this.runnerThread=Thread.currentThread();
         try {
             while (!isStopped()) {
@@ -505,7 +506,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     protected void initializeStreams() throws Exception {
         TcpBufferedInputStream buffIn = new TcpBufferedInputStream(socket.getInputStream(), ioBufferSize);
         this.dataIn = new DataInputStream(buffIn);
-        TcpBufferedOutputStream buffOut = new TcpBufferedOutputStream(socket.getOutputStream(), ioBufferSize);
+        buffOut = new TcpBufferedOutputStream(socket.getOutputStream(), ioBufferSize);
         this.dataOut = new DataOutputStream(buffOut);
     }
 
@@ -533,9 +534,12 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     public <T> T narrow(Class<T> target) {
         if (target == Socket.class) {
             return target.cast(socket);
+        } else if ( target == TcpBufferedOutputStream.class) {
+            return target.cast(buffOut);
         }
         return super.narrow(target);
     }
+    
 
     static {
         SOCKET_CLOSE =   new ThreadPoolExecutor(0, Integer.MAX_VALUE, 10, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {

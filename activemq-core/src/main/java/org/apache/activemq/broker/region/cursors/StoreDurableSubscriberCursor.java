@@ -300,17 +300,6 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         }
     }
     
-    /**
-     * Mark a message as already dispatched
-     * @param message
-     */
-    public synchronized void dispatched(MessageReference message) {
-        super.dispatched(message);
-        for (PendingMessageCursor cursor : storePrefetches) {
-            cursor.dispatched(message);
-        }
-    }
-
     protected synchronized PendingMessageCursor getNextCursor() throws Exception {
         if (currentCursor == null || currentCursor.isEmpty()) {
             currentCursor = null;

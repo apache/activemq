@@ -32,6 +32,8 @@ public class TcpBufferedOutputStream extends FilterOutputStream {
     private byte[] buffer;
     private int bufferlen;
     private int count;
+    private volatile long writeTimestamp = -1;//concurrent reads of this value
+    
 
     /**
      * Constructor
@@ -89,7 +91,12 @@ public class TcpBufferedOutputStream extends FilterOutputStream {
                 System.arraycopy(b, off, buffer, count, len);
                 count += len;
             } else {
-                out.write(b, off, len);
+                try {
+                    writeTimestamp = System.currentTimeMillis();
+                    out.write(b, off, len);
+                } finally {
+                    writeTimestamp = -1;
+                }
             }
         }
     }
@@ -103,7 +110,12 @@ public class TcpBufferedOutputStream extends FilterOutputStream {
      */
     public void flush() throws IOException {
         if (count > 0 && out != null) {
-            out.write(buffer, 0, count);
+            try {
+                writeTimestamp = System.currentTimeMillis();
+                out.write(buffer, 0, count);
+            } finally {
+            	writeTimestamp = -1;
+            }
             count = 0;
         }
     }
@@ -115,6 +127,14 @@ public class TcpBufferedOutputStream extends FilterOutputStream {
      */
     public void close() throws IOException {
         super.close();
+    }
+
+    public boolean isWriting() {
+        return writeTimestamp > 0;
+    }
+    
+    public long getWriteTimestamp() {
+    	return writeTimestamp;
     }
 
 }

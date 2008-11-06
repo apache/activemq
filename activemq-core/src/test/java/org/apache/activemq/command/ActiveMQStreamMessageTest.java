@@ -409,6 +409,11 @@ public class ActiveMQStreamMessageTest extends TestCase {
                 fail("Should have thrown exception");
             } catch (MessageFormatException mfe) {
             }
+            msg = new ActiveMQStreamMessage();
+            msg.writeObject(new Long("1"));
+            // reset so it's readable now
+            msg.reset();
+            assertEquals(new Long("1"), msg.readObject());
         } catch (JMSException jmsEx) {
             jmsEx.printStackTrace();
             assertTrue(false);
@@ -474,7 +479,7 @@ public class ActiveMQStreamMessageTest extends TestCase {
         }
     }
 
-    public void testReadDouble() {
+    public void testReadDouble()  {
         ActiveMQStreamMessage msg = new ActiveMQStreamMessage();
         try {
             double test = 4.4d;
@@ -535,6 +540,7 @@ public class ActiveMQStreamMessageTest extends TestCase {
             jmsEx.printStackTrace();
             assertTrue(false);
         }
+      
     }
 
     public void testReadString() {
@@ -748,14 +754,10 @@ public class ActiveMQStreamMessageTest extends TestCase {
     public void testClearBody() throws JMSException {
         ActiveMQStreamMessage streamMessage = new ActiveMQStreamMessage();
         try {
-            streamMessage.writeObject(new Serializable() {
-                private static final long serialVersionUID = -5181896809607968727L;
-            });
+            streamMessage.writeObject(new Long(2));
             streamMessage.clearBody();
             assertFalse(streamMessage.isReadOnlyBody());
-            streamMessage.writeObject(new Serializable() {
-                private static final long serialVersionUID = 5074177640797561141L;
-            });
+            streamMessage.writeObject(new Long(2));
             streamMessage.readObject();
             fail("should throw exception");
         } catch (MessageNotReadableException mnwe) {
@@ -964,6 +966,34 @@ public class ActiveMQStreamMessageTest extends TestCase {
             message.readString();
             fail("Should have thrown exception");
         } catch (MessageNotReadableException e) {
+        }
+    }
+    
+    public void testWriteObject() {
+        try {
+            ActiveMQStreamMessage message = new ActiveMQStreamMessage();
+            message.clearBody();
+            message.writeObject("test");
+            message.writeObject(new Character('a'));
+            message.writeObject(new Boolean(false));
+            message.writeObject(new Byte((byte) 2));
+            message.writeObject(new Short((short) 2));
+            message.writeObject(new Integer(2));
+            message.writeObject(new Long(2l));
+            message.writeObject(new Float(2.0f));
+            message.writeObject(new Double(2.0d));
+        }catch(Exception e) {
+            fail(e.getMessage());
+        }
+        try {
+            ActiveMQStreamMessage message = new ActiveMQStreamMessage();
+            message.clearBody();
+            message.writeObject(new Object());
+            fail("should throw an exception");
+        }catch(MessageFormatException e) {
+            
+        }catch(Exception e) {
+            fail(e.getMessage());
         }
     }
 

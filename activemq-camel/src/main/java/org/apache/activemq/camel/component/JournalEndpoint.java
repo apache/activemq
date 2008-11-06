@@ -27,6 +27,7 @@ import org.apache.activemq.util.ByteSequence;
 import org.apache.camel.CamelExchangeException;
 import org.apache.camel.Consumer;
 import org.apache.camel.Exchange;
+import org.apache.camel.NoTypeConversionAvailableException;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.RuntimeCamelException;
@@ -188,9 +189,10 @@ public class JournalEndpoint extends DefaultEndpoint<Exchange> {
             public void process(Exchange exchange) throws Exception {
                 incrementReference();
                 try {
-
-                    ByteSequence body = exchange.getIn().getBody(ByteSequence.class);
-                    if (body == null) {
+                    ByteSequence body = null;
+                    try {
+                        body = exchange.getIn().getBody(ByteSequence.class);
+                    } catch(NoTypeConversionAvailableException e) {
                         byte[] bytes = exchange.getIn().getBody(byte[].class);
                         if (bytes != null) {
                             body = new ByteSequence(bytes);

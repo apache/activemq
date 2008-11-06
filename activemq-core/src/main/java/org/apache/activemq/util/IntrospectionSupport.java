@@ -28,8 +28,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import org.apache.activemq.command.ActiveMQDestination;
 
@@ -229,12 +229,23 @@ public final class IntrospectionSupport {
     }
 
     public static String toString(Object target) {
-        return toString(target, Object.class);
+        return toString(target, Object.class, null);
+    }
+    
+    public static String toString(Object target, Class stopClass) {
+    	return toString(target, stopClass, null);
     }
 
-    public static String toString(Object target, Class stopClass) {
+    public static String toString(Object target, Class stopClass, Map<String, Object> overrideFields) {
         LinkedHashMap<String, Object> map = new LinkedHashMap<String, Object>();
         addFields(target, target.getClass(), stopClass, map);
+        if (overrideFields != null) {
+        	for(String key : overrideFields.keySet()) {
+        	    Object value = overrideFields.get(key);
+        	    map.put(key, value);
+        	}
+
+        }
         StringBuffer buffer = new StringBuffer(simpleName(target.getClass()));
         buffer.append(" {");
         Set entrySet = map.entrySet();

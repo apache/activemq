@@ -357,7 +357,7 @@ public class JMSConsumerTest extends JmsTestSupport {
                         done2.countDown();
                     }
                 } catch (Throwable e) {
-                    e.printStackTrace();
+                    LOG.info("unexpected ex onMessage: ", e);
                 }
             }
         });

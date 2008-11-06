@@ -21,6 +21,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
@@ -145,5 +146,19 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
             size = text.length() * 2;
         }
         return super.getSize();
+    }
+    
+    public String toString() {
+        try {
+            String text = getText();
+        	if (text.length() > 63) {
+        		text = text.substring(0, 45) + "..." + text.substring(text.length() - 12);
+        		HashMap<String, Object> overrideFields = new HashMap<String, Object>();
+        		overrideFields.put("text", text);
+        		return super.toString(overrideFields);
+        	}
+        } catch (JMSException e) {
+        }
+        return super.toString();
     }
 }

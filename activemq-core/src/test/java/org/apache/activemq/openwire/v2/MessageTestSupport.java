@@ -16,8 +16,14 @@
  */
 package org.apache.activemq.openwire.v2;
 
+import java.io.DataOutputStream;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.activemq.command.BrokerId;
 import org.apache.activemq.command.Message;
+import org.apache.activemq.util.ByteArrayOutputStream;
+import org.apache.activemq.util.MarshallingSupport;
 
 /**
  * Test case for the OpenWire marshalling for Message NOTE!: This file is auto
@@ -49,12 +55,20 @@ public abstract class MessageTestSupport extends BaseCommandTestSupport {
         info.setTimestamp(2);
         info.setType("Type:10");
         {
-            byte data[] = "Content:11".getBytes();
-            info.setContent(new org.apache.activemq.util.ByteSequence(data, 0, data.length));
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            DataOutputStream dataOut = new DataOutputStream(baos);
+            MarshallingSupport.writeUTF8(dataOut, "Content:11");
+            dataOut.close();
+            info.setContent(baos.toByteSequence());
         }
         {
-            byte data[] = "MarshalledProperties:12".getBytes();
-            info.setMarshalledProperties(new org.apache.activemq.util.ByteSequence(data, 0, data.length));
+        	Map map = new HashMap();
+        	map.put("MarshalledProperties", 12);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            DataOutputStream os = new DataOutputStream(baos);
+            MarshallingSupport.marshalPrimitiveMap(map, os);
+            os.close();
+            info.setMarshalledProperties(baos.toByteSequence());
         }
         info.setDataStructure(createDataStructure("DataStructure:13"));
         info.setTargetConsumerId(createConsumerId("TargetConsumerId:14"));
