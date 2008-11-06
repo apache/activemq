@@ -26,7 +26,7 @@
     <!-- Allows us to use system properties as variables in this configuration file -->
     <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
          <property name="locations">
-            <value>file://${activemq.base}/conf/credentials.properties</value>
+            <value>file:///${activemq.base}/conf/credentials.properties</value>
          </property>      
     </bean>
 
@@ -38,12 +38,14 @@
                 <policyEntries>
                     <policyEntry queue=">" memoryLimit="5mb"/>
                     <policyEntry topic=">" memoryLimit="5mb">
+                      <!-- you can add other policies too such as these
                         <dispatchPolicy>
                             <strictOrderDispatchPolicy/>
                         </dispatchPolicy>
                         <subscriptionRecoveryPolicy>
                             <lastImageSubscriptionRecoveryPolicy/>
                         </subscriptionRecoveryPolicy>
+                      -->
                     </policyEntry>
                 </policyEntries>
             </policyMap>

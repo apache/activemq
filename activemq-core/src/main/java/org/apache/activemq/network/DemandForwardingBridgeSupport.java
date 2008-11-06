@@ -214,6 +214,10 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
 
             localBroker.start();
             remoteBroker.start();
+            if (configuration.isDuplex() && duplexInitiatingConnection == null) {
+                // initiator side of duplex network
+                remoteBrokerNameKnownLatch.await();
+            }
             try {
                 triggerRemoteStartBridge();
             } catch (IOException e) {
@@ -229,10 +233,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
     protected void triggerLocalStartBridge() throws IOException {
         ASYNC_TASKS.execute(new Runnable() {
             public void run() {
+                final String originalName = Thread.currentThread().getName();
+                Thread.currentThread().setName("StartLocalBridge: localBroker=" + localBroker);
                 try {
                     startLocalBridge();
                 } catch (Exception e) {
                     serviceLocalException(e);
+                } finally {
+                    Thread.currentThread().setName(originalName);
                 }
             }
         });
@@ -241,10 +249,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
     protected void triggerRemoteStartBridge() throws IOException {
         ASYNC_TASKS.execute(new Runnable() {
             public void run() {
+                final String originalName = Thread.currentThread().getName();
+                Thread.currentThread().setName("StartRemotelBridge: localBroker=" + localBroker);
                 try {
                     startRemoteBridge();
                 } catch (Exception e) {
                     serviceRemoteException(e);
+                } finally {
+                    Thread.currentThread().setName(originalName);
                 }
             }
         });
@@ -253,7 +265,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
     protected void startLocalBridge() throws Exception {
         if (localBridgeStarted.compareAndSet(false, true)) {
             synchronized (this) {
-
+                LOG.debug("starting local Bridge, localBroker=" + localBroker);
                 remoteBrokerNameKnownLatch.await();
 
                 localConnectionInfo = new ConnectionInfo();
@@ -278,6 +290,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
 
     protected void startRemoteBridge() throws Exception {
         if (remoteBridgeStarted.compareAndSet(false, true)) {
+            LOG.debug("starting remote Bridge, localBroker=" + localBroker);
             synchronized (this) {
                 if (!isCreatedByDuplex()) {
                     BrokerInfo brokerInfo = new BrokerInfo();
@@ -420,7 +433,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                             if (AdvisorySupport.isConsumerAdvisoryTopic(message.getDestination())) {
                                 serviceRemoteConsumerAdvisory(message.getDataStructure());
                             } else {
-                                localBroker.oneway(message);
+                                if (message.isResponseRequired()) {
+                                    Response reply = new Response();
+                                    reply.setCorrelationId(message.getCommandId());
+                                    localBroker.oneway(message);
+                                    remoteBroker.oneway(reply);
+                                } else {
+                                    localBroker.oneway(message);
+                                }
                             }
                         } else {
                             switch (command.getDataStructureType()) {
@@ -435,6 +455,10 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                                     if (!addConsumerInfo((ConsumerInfo) command)) {
                                         if (LOG.isDebugEnabled()) {
                                             LOG.debug("Ignoring ConsumerInfo: "+ command);
+                                        }
+                                    } else {
+                                        if (LOG.isTraceEnabled()) {
+                                            LOG.trace("Adding ConsumerInfo: "+ command);
                                         }
                                     }
                                 } else {
@@ -460,7 +484,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                     }
                 }
             } catch (Throwable e) {
-            	e.printStackTrace();
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Exception processing remote command: " + command, e);
+                }
                 serviceRemoteException(e);
             }
         }
@@ -606,10 +632,10 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                         Message message = configureMessage(md);
                         if (trace) {
                             LOG.trace("bridging " + configuration.getBrokerName() + " -> " + remoteBrokerName + ": " + message);
-                            LOG.trace("cameFromRemote = "+cameFromRemote);    
+                            LOG.trace("cameFromRemote = "+cameFromRemote + ", repsonseRequired = " + message.isResponseRequired());    
                         }
 
-                        if (!message.isResponseRequired() || isDuplex()) {
+                        if (!message.isResponseRequired()) {
 
                             // If the message was originally sent using async
                             // send, we will preserve that QOS
@@ -623,7 +649,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                             else{
                               LOG.info("Message not forwarded on to remote, because message came from remote");                               
                             }
-                            localBroker.oneway(new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1));
+                            localBroker.oneway(new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1));
                             dequeueCounter.incrementAndGet();                          
 
                         } else {
@@ -640,7 +666,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                                             ExceptionResponse er = (ExceptionResponse)response;
                                             serviceLocalException(er.getException());
                                         } else {
-                                            localBroker.oneway(new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1));
+                                            localBroker.oneway(new MessageAck(md, MessageAck.INDIVIDUAL_ACK_TYPE, 1));
                                             dequeueCounter.incrementAndGet();
                                         }
                                     } catch (IOException e) {
@@ -1014,7 +1040,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
     static {
         ASYNC_TASKS =   new ThreadPoolExecutor(0, Integer.MAX_VALUE, 30, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
             public Thread newThread(Runnable runnable) {
-                Thread thread = new Thread(runnable, "NetworkBridge: "+runnable);
+                Thread thread = new Thread(runnable, "NetworkBridge");
                 thread.setDaemon(true);
                 return thread;
             }

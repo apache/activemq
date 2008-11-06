@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.command;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 
 import javax.jms.JMSException;
@@ -25,7 +26,9 @@ import javax.jms.MessageNotWriteableException;
 import junit.framework.TestCase;
 import junit.textui.TestRunner;
 
+import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.MarshallingSupport;
 
 /**
  * @version $Revision$
@@ -123,5 +126,28 @@ public class ActiveMQTextMessageTest extends TestCase {
             fail("should be readable");
         } catch (MessageNotWriteableException mnwe) {
         }
+    }
+    
+    public void testShortText() throws Exception {
+        String shortText = "Content";
+    	ActiveMQTextMessage shortMessage = new ActiveMQTextMessage();
+        setContent(shortMessage, shortText);
+        assertTrue(shortMessage.toString().contains("text = " + shortText));
+        assertTrue(shortMessage.getText().equals(shortText));
+        
+        String longText = "Very very very very veeeeeeery loooooooooooooooooooooooooooooooooong text";
+        String longExpectedText = "Very very very very veeeeeeery looooooooooooo...ooooong text";
+        ActiveMQTextMessage longMessage = new ActiveMQTextMessage();
+        setContent(longMessage, longText);
+        assertTrue(longMessage.toString().contains("text = " + longExpectedText));
+        assertTrue(longMessage.getText().equals(longText));         
+    }
+    
+    protected void setContent(Message message, String text) throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream dataOut = new DataOutputStream(baos);
+        MarshallingSupport.writeUTF8(dataOut, text);
+        dataOut.close();
+        message.setContent(baos.toByteSequence());
     }
 }

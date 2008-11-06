@@ -131,7 +131,7 @@ public class MDBTest extends TestCase {
 
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
         Connection connection = factory.createConnection();
-        Session session = connection.createSession(false, 0);
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
         ActiveMQResourceAdapter adapter = new ActiveMQResourceAdapter();
         adapter.setServerUrl("vm://localhost?broker.persistent=false");

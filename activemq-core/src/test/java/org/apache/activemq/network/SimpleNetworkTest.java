@@ -105,7 +105,7 @@ public class SimpleNetworkTest extends TestCase {
         assertNotNull(includedConsumer.receive(1000));
     }
 
-    public void xtestConduitBridge() throws Exception {
+    public void testConduitBridge() throws Exception {
         MessageConsumer consumer1 = remoteSession.createConsumer(included);
         MessageConsumer consumer2 = remoteSession.createConsumer(included);
         MessageProducer producer = localSession.createProducer(included);
@@ -122,7 +122,7 @@ public class SimpleNetworkTest extends TestCase {
         assertNull(consumer2.receive(500));
     }
 
-    public void xtestDurableStoreAndForward() throws Exception {
+    public void testDurableStoreAndForward() throws Exception {
         // create a remote durable consumer
         MessageConsumer remoteConsumer = remoteSession.createDurableSubscriber(included, consumerName);
         Thread.sleep(1000);

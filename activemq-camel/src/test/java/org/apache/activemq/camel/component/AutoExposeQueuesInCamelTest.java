@@ -16,15 +16,17 @@
  */
 package org.apache.activemq.camel.component;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
-import org.apache.activemq.EmbeddedBrokerTestSupport;
-import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.EmbeddedBrokerTestSupport;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.camel.CamelContext;
-import org.apache.camel.CamelTemplate;
+import org.apache.camel.Endpoint;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.spi.BrowsableEndpoint;
 import org.apache.camel.util.CamelContextHelper;
@@ -44,18 +46,31 @@ public class AutoExposeQueuesInCamelTest extends EmbeddedBrokerTestSupport {
     protected ActiveMQTopic sampleTopic = new ActiveMQTopic("cheese");
 
     protected CamelContext camelContext = new DefaultCamelContext();
-    protected CamelTemplate template;
 
     public void testWorks() throws Exception {
         Thread.sleep(2000);
         LOG.debug("Looking for endpoints...");
-        List<BrowsableEndpoint> endpoints = CamelContextHelper.getSingletonEndpoints(camelContext, BrowsableEndpoint.class);
+        // Changed from using CamelContextHelper.getSingletonEndpoints here because JMS Endpoints in Camel
+        // are always non-singleton
+        List<BrowsableEndpoint> endpoints = getEndpoints(camelContext, BrowsableEndpoint.class);
         for (BrowsableEndpoint endpoint : endpoints) {
             LOG.debug("Endpoint: " + endpoint);
         }
         assertEquals("Should have found an endpoint: "+ endpoints, 1, endpoints.size());
     }
 
+    public <T> List<T> getEndpoints(CamelContext camelContext, Class<T> type) {
+        List<T> answer = new ArrayList<T>();
+        Collection<Endpoint> endpoints = camelContext.getEndpoints();
+        for (Endpoint endpoint : endpoints) {
+            if (type.isInstance(endpoint)) {
+                T value = type.cast(endpoint);
+                answer.add(value);
+            }
+        }
+        return answer;
+    }    
+    
     @Override
     protected void setUp() throws Exception {
         super.setUp();

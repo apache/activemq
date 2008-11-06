@@ -64,20 +64,7 @@ class TopicStorePrefetch extends AbstractStoreCursor {
         throw new RuntimeException("Not supported");
     }
     
-    /**
-     * Mark a message as already dispatched
-     * @param message
-     */  
-    public synchronized void dispatched(MessageReference message) {
-        if (this.audit != null) {
-            isDuplicate(message.getMessageId());
-            Message removed = this.batchList.remove(message.getMessageId());
-            if (removed != null) {
-                removed.decrementReferenceCount();
-            }
-        }
-    }
-    
+        
     public synchronized boolean recoverMessage(Message message, boolean cached) throws Exception {
         MessageEvaluationContext messageEvaluationContext = new NonCachedMessageEvaluationContext();
         messageEvaluationContext.setMessageReference(message);

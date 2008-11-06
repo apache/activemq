@@ -719,4 +719,16 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     public boolean isDropped() {
         return false;
     }
+    
+    public String toString() {
+        return toString(null);
+    }
+    
+    public String toString(Map<String, Object>overrideFields) {
+        try {
+            getProperties();
+        } catch (IOException e) {
+        }
+        return super.toString(overrideFields);
+    }    
 }

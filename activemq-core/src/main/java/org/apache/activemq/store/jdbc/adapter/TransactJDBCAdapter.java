@@ -30,7 +30,7 @@ public class TransactJDBCAdapter extends ImageBasedJDBCAdaptor {
         if (statements.isUseLockCreateWhereClause()) {
             lockCreateStatement += " WHERE ID = 1";
         }
-        lockCreateStatement += " WITH XLOCK";
+        lockCreateStatement += " WITH (UPDLOCK, ROWLOCK)";
         statements.setLockCreateStatement(lockCreateStatement);
 
         super.setStatements(statements);
