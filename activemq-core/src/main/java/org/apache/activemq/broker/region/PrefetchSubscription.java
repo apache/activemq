@@ -200,13 +200,13 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                     }
                     if (inAckRange) {
                         // Don't remove the nodes until we are committed.
-                        removeList.add(node);
                         if (!context.isInTransaction()) {
                             dequeueCounter++;
                             if (!this.getConsumerInfo().isBrowser()) {
                                 node.getRegionDestination().getDestinationStatistics().getDequeues().increment();
                             }
                             node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
+                            removeList.add(node);
                         } else {
                             // setup a Synchronization to remove nodes from the
                             // dispatched list.
@@ -217,6 +217,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                                 throws Exception {
                                             synchronized(dispatchLock) {
                                                 dequeueCounter++;
+                                                dispatched.remove(node);
                                                 node.getRegionDestination().getDestinationStatistics().getDequeues().increment();
                                                 node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
                                                 prefetchExtension--;
@@ -224,9 +225,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                         }
 
                                         public void afterRollback() throws Exception {
-                                        	// Need to put it back in the front.
                                             synchronized(dispatchLock) {
-                                        	    dispatched.add(0, node);
                                             	// ActiveMQ workaround for AMQ-1730 - Please Ignore next line
                                                 node.incrementRedeliveryCounter();
                                                 node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
@@ -307,11 +306,9 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 }
             } else if (ack.isRedeliveredAck()) {
                 // Message was re-delivered but it was not yet considered to be
-                // a
-                // DLQ message.
+                // a DLQ message.
                 // Acknowledge all dispatched messages up till the message id of
-                // the
-                // acknowledgment.
+                // the ack.
                 boolean inAckRange = false;
                 for (final MessageReference node : dispatched) {
                     MessageId messageId = node.getMessageId();
@@ -396,9 +393,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                 + ack + ") was not in the dispatch list: "
                                 + dispatched);
             } else {
-                LOG
-                        .debug("Acknowledgment out of sync (Normally occurs when failover connection reconnects): "
-                                + ack);
+                LOG.debug("Acknowledgment out of sync (Normally occurs when failover connection reconnects): "
+                        + ack);
             }
         }
     }
@@ -442,7 +438,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             throw new JMSException("Unmatched acknowledege: " + ack
                     + "; Could not find Message-ID " + lastAckedMsg
                     + " in dispatched-list (end of ack)");
-        if (ack.getMessageCount() != checkCount && ack.isStandardAck()) {
+        if (ack.getMessageCount() != checkCount && !ack.isInTransaction()) {
             throw new JMSException("Unmatched acknowledege: " + ack
                     + "; Expected message count (" + ack.getMessageCount()
                     + ") differs from count in dispatched-list (" + checkCount
@@ -571,7 +567,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                 break;
                             }
                             
-                            // Synchronize between dispatched list and remove of messageg from pending list
+                            // Synchronize between dispatched list and remove of message from pending list
                             // related to remove subscription action
                             synchronized(dispatchLock) {
                                 pending.remove();
