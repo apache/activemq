@@ -623,4 +623,30 @@ public class JMSConsumerTest extends JmsTestSupport {
         consumer = session.createConsumer(destination);
         assertNull(consumer.receive(1000));
     }
+
+    public void testRedispatchOfUncommittedTx() throws Exception {
+
+        connection.start();
+        Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
+        destination = createDestination(session, ActiveMQDestination.QUEUE_TYPE);
+        
+        sendMessages(connection, destination, 1);
+        
+        MessageConsumer consumer = session.createConsumer(destination);
+        assertNotNull(consumer.receive(1000));
+        
+        // install another consumer while message dispatch is unacked/uncommitted
+        Session redispatchSession = connection.createSession(true, Session.SESSION_TRANSACTED);
+        MessageConsumer redispatchConsumer = redispatchSession.createConsumer(destination);
+
+        // no commit so will auto rollback and get redispatched to redisptachConsumer
+        session.close();
+                
+        assertNotNull(redispatchConsumer.receive(1000));
+        redispatchSession.commit();
+        
+        assertNull(redispatchConsumer.receive(500));
+        redispatchSession.close();
+    }
+    
 }
