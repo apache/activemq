@@ -35,8 +35,8 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
             Connection connection = factory.createConnection();
             connection.setClientID("test");
             fail("Did not fail to connect as expected.");
-        } catch ( JMSException expected ) {  
-            assertTrue("reason is  java.net.UnknownHostException", expected.getCause() instanceof  java.net.UnknownHostException);
+        } catch ( JMSException expected ) { 
+            assertTrue("reason is java.io.IOException, was: " + expected.getCause(), expected.getCause() instanceof java.io.IOException);
         }
     }
 }

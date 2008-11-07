@@ -639,10 +639,14 @@ public class JMSConsumerTest extends JmsTestSupport {
         Session redispatchSession = connection.createSession(true, Session.SESSION_TRANSACTED);
         MessageConsumer redispatchConsumer = redispatchSession.createConsumer(destination);
 
-        // no commit so will auto rollback and get redispatched to redisptachConsumer
+        // no commit so will auto rollback and get re-dispatched to redisptachConsumer
         session.close();
                 
-        assertNotNull(redispatchConsumer.receive(1000));
+        Message msg = redispatchConsumer.receive(1000);
+        assertNotNull(msg);
+        assertTrue(msg.getJMSRedelivered());
+        // should have re-delivery of 2, one for re-dispatch, one for rollback which is a little too much!
+        assertEquals(3, msg.getLongProperty("JMSXDeliveryCount"));
         redispatchSession.commit();
         
         assertNull(redispatchConsumer.receive(500));
