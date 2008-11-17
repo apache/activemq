@@ -617,7 +617,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             			ackCounter = 0;
             		}
             	}
-            } else {
+            } else if (pendingAck != null && pendingAck.isStandardAck()) {
                 ack = pendingAck;
             }
             if (ack != null) {

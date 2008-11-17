@@ -24,6 +24,7 @@ import java.util.Set;
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
+import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -49,7 +50,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.atomic.AtomicBoolean;
  * 
  * @version $Revision: 1.1 $
  */
-public class AMQ1925Test extends TestCase {
+public class AMQ1925Test extends TestCase implements ExceptionListener {
 	private static final Logger log = Logger.getLogger(AMQ1925Test.class);
 
 	private static final String QUEUE_NAME = "test.amq1925";
@@ -59,6 +60,8 @@ public class AMQ1925Test extends TestCase {
 	private BrokerService bs;
 	private URI tcpUri;
 	private ActiveMQConnectionFactory cf;
+
+    private JMSException exception;
 
 	public void XtestAMQ1925_TXInProgress() throws Exception {
 		Connection connection = cf.createConnection();
@@ -255,6 +258,7 @@ public class AMQ1925Test extends TestCase {
 	public void testAMQ1925_TXBegin() throws Exception {
 		Connection connection = cf.createConnection();
 		connection.start();
+		connection.setExceptionListener(this);
 		Session session = connection.createSession(true,
 				Session.SESSION_TRANSACTED);
 		MessageConsumer consumer = session.createConsumer(session
@@ -284,6 +288,7 @@ public class AMQ1925Test extends TestCase {
 		connection.close();
 
 		assertQueueEmpty();
+		assertNull("no exception on connection listener: " + exception, exception);
 	}
 
 	public void testAMQ1925_TXCommited() throws Exception {
@@ -371,6 +376,7 @@ public class AMQ1925Test extends TestCase {
 	}
 
 	protected void setUp() throws Exception {
+	    exception = null;
 		bs = new BrokerService();
 		bs.setDeleteAllMessagesOnStartup(true);
 		bs.setPersistent(true);
@@ -387,5 +393,9 @@ public class AMQ1925Test extends TestCase {
 	protected void tearDown() throws Exception {
 		new ServiceStopper().stop(bs);
 	}
+
+    public void onException(JMSException exception) {
+        this.exception = exception;    
+    }
 
 }
