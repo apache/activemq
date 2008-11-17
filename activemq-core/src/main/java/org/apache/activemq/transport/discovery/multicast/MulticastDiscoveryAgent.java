@@ -176,14 +176,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
     private long lastAdvertizeTime;
     private AtomicBoolean started = new AtomicBoolean(false);
     private boolean reportAdvertizeFailed = true;
-
-    private final Executor executor = new ThreadPoolExecutor(1, 1, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
-        public Thread newThread(Runnable runable) {
-            Thread t = new Thread(runable, "Multicast Discovery Agent Notifier");
-            t.setDaemon(true);
-            return t;
-        }
-    });
+    private Executor executor = null;
 
     /**
      * Set the discovery listener
@@ -304,7 +297,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
             mcast.joinGroup(inetAddress);
             mcast.setSoTimeout((int)keepAliveInterval);
             runner = new Thread(this);
-            runner.setName("MulticastDiscovery: " + selfService);
+            runner.setName(this.toString() + ":" + runner.getName());
             runner.setDaemon(true);
             runner.start();
             doAdvertizeSelf();
@@ -409,11 +402,9 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
             RemoteBrokerData data = brokersByService.get(service);
             if (data == null) {
                 data = new RemoteBrokerData(brokerName, service);
-                brokersByService.put(service, data);
-
+                brokersByService.put(service, data);      
                 fireServiceAddEvent(data);
                 doAdvertizeSelf();
-
             } else {
                 data.updateHeartBeat();
                 if (data.doRecovery()) {
@@ -433,7 +424,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
     }
 
     private void doExpireOldServices() {
-        long expireTime = System.currentTimeMillis() - (keepAliveInterval * HEARTBEAT_MISS_BEFORE_DEATH);
+        long expireTime = System.currentTimeMillis() - (keepAliveInterval * HEARTBEAT_MISS_BEFORE_DEATH); 
         for (Iterator<RemoteBrokerData> i = brokersByService.values().iterator(); i.hasNext();) {
             RemoteBrokerData data = i.next();
             if (data.getLastHeartBeat() < expireTime) {
@@ -467,7 +458,7 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
             // Have the listener process the event async so that
             // he does not block this thread since we are doing time sensitive
             // processing of events.
-            executor.execute(new Runnable() {
+            getExecutor().execute(new Runnable() {
                 public void run() {
                     DiscoveryListener discoveryListener = MulticastDiscoveryAgent.this.discoveryListener;
                     if (discoveryListener != null) {
@@ -482,11 +473,11 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
         if (discoveryListener != null) {
             final DiscoveryEvent event = new DiscoveryEvent(data.service);
             event.setBrokerName(data.brokerName);
-
+            
             // Have the listener process the event async so that
             // he does not block this thread since we are doing time sensitive
             // processing of events.
-            executor.execute(new Runnable() {
+            getExecutor().execute(new Runnable() {
                 public void run() {
                     DiscoveryListener discoveryListener = MulticastDiscoveryAgent.this.discoveryListener;
                     if (discoveryListener != null) {
@@ -495,6 +486,20 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
                 }
             });
         }
+    }
+
+    private Executor getExecutor() {
+        if (executor == null) {
+            final String threadName = "Notifier-" + this.toString();
+            executor = new ThreadPoolExecutor(1, 1, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
+                public Thread newThread(Runnable runable) {
+                    Thread t = new Thread(runable,  threadName);
+                    t.setDaemon(true);
+                    return t;
+                }
+            });
+        }
+        return executor;
     }
 
     public long getBackOffMultiplier() {
@@ -539,5 +544,11 @@ public class MulticastDiscoveryAgent implements DiscoveryAgent, Runnable {
 
     public void setGroup(String group) {
         this.group = group;
+    }
+    
+    @Override
+    public String toString() {
+        return  "MulticastDiscoveryAgent-"
+            + (selfService != null ? "advertise:" + selfService : "listener:" + this.discoveryListener);
     }
 }

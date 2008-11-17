@@ -79,10 +79,11 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
                 return;
             }
             if ( localURI.equals(uri) || (connectionFilter != null && !connectionFilter.connectTo(uri))) {
+                LOG.debug("not connecting loopback: " + uri);
                 return;
             }
             URI connectUri = uri;
-            LOG.info("Establishing network connection between from " + localURIName + " to " + connectUri);
+            LOG.info("Establishing network connection from " + localURIName + " to " + connectUri);
 
             Transport remoteTransport;
             Transport localTransport;
@@ -213,10 +214,13 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
         String name = super.getName();
         if (name == null) {
             name = discoveryAgent.toString();
-            ;
             super.setName(name);
         }
         return name;
     }
 
+    @Override
+    public String toString() {
+        return "DiscoveryNetworkConnector:" + getName() + ":" + getBrokerService();
+    }
 }

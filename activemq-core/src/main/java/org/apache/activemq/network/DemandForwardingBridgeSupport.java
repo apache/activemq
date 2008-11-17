@@ -500,7 +500,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
             BrokerId[] path = info.getBrokerPath();
             if (path != null && path.length >= networkTTL) {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug(configuration.getBrokerName() + " Ignoring Subscription " + info + " restricted to " + networkTTL + " network hops only");
+                    LOG.debug(configuration.getBrokerName() + " Ignoring sub  from " + remoteBrokerName + ", restricted to " + networkTTL + " network hops only : " + info);
                 }
                 return;
             }
@@ -508,24 +508,24 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                 // Ignore this consumer as it's a consumer we locally sent to
                 // the broker.
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug(configuration.getBrokerName() + " Ignoring sub " + info + " already routed through this broker once");
+                    LOG.debug(configuration.getBrokerName() + " Ignoring sub from " + remoteBrokerName + ", already routed through this broker once : " + info);
                 }
                 return;
             }
             if (!isPermissableDestination(info.getDestination())) {
-                // ignore if not in the permited or in the excluded list
+                // ignore if not in the permitted or in the excluded list
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug(configuration.getBrokerName() + " Ignoring sub " + info + " destination " + info.getDestination() + " is not permiited");
+                    LOG.debug(configuration.getBrokerName() + " Ignoring sub from " + remoteBrokerName + ", destination " + info.getDestination() + " is not permiited :" + info);
                 }
                 return;
             }
             if (addConsumerInfo(info)) {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug(configuration.getBrokerName() + " Forwarding sub on " + localBroker + " from " + remoteBrokerName + " :  " + info);
+                    LOG.debug(configuration.getBrokerName() + " Forwarding sub on " + localBroker + " from " + remoteBrokerName + " : " + info);
                 }
             } else {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug(configuration.getBrokerName() + " Ignoring sub " + info + " already subscribed to matching destination");
+                    LOG.debug(configuration.getBrokerName() + " Ignoring sub from " + remoteBrokerName + " as already subscribed to matching destination : " + info);
                 }
             }
         } else if (data.getClass() == DestinationInfo.class) {
