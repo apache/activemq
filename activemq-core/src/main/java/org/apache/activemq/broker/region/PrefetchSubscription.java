@@ -199,7 +199,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         inAckRange = true;
                     }
                     if (inAckRange) {
-                        // Don't remove the nodes until we are committed.
+                        // Don't remove the nodes until we are committed.  
                         if (!context.isInTransaction()) {
                             dequeueCounter++;
                             if (!this.getConsumerInfo().isBrowser()) {
@@ -282,9 +282,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             }else if (ack.isDeliveredAck()) {
                 // Message was delivered but not acknowledged: update pre-fetch
                 // counters.
-                // Acknowledge all dispatched messages up till the message id of
-                // the
-                // acknowledgment.
                 int index = 0;
                 for (Iterator<MessageReference> iter = dispatched.iterator(); iter.hasNext(); index++) {
                     final MessageReference node = iter.next();

@@ -1739,7 +1739,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     /**
      * Handles async client internal exceptions.
      * A client internal exception is usually one that has been thrown
-     * by a container runtie component during asynchronous processing of a
+     * by a container runtime component during asynchronous processing of a
      * message that does not affect the connection itself.
      * This method notifies the <code>ClientInternalExceptionListener</code> by invoking
      * its <code>onException</code> method, if one has been registered with this connection.
