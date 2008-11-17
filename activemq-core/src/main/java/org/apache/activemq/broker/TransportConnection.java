@@ -304,10 +304,12 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         try {
             response = command.visit(this);
         } catch (Throwable e) {
+            if (SERVICELOG.isDebugEnabled() && e.getClass() != BrokerStoppedException.class) {
+                SERVICELOG.debug("Error occured while processing "
+                        + (responseRequired ? "sync": "async")
+                        + " command: " + command + ", exception: " + e, e);
+            }
             if (responseRequired) {
-                if (SERVICELOG.isDebugEnabled() && e.getClass() != BrokerStoppedException.class) {
-                    SERVICELOG.debug("Error occured while processing sync command: " + e, e);
-                }
                 response = new ExceptionResponse(e);
             } else {
                 serviceException(e);
