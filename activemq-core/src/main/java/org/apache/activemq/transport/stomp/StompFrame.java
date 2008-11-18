@@ -40,12 +40,22 @@ public class StompFrame implements Command {
     private Map<String, String> headers = new HashMap<String, String>();
     private byte[] content = NO_DATA;
 
+    public StompFrame(String command) {
+    	this(command, null, null);
+    }
+    
+    public StompFrame(String command, Map<String, String> headers) {
+    	this(command, headers, null);
+    }    
+    
     public StompFrame(String command, Map<String, String> headers, byte[] data) {
         this.action = command;
-        this.headers = headers;
-        this.content = data;
+        if (headers != null)
+        	this.headers = headers;
+        if (data != null)
+        	this.content = data;
     }
-
+    
     public StompFrame() {
     }
 
@@ -59,6 +69,10 @@ public class StompFrame implements Command {
 
     public byte[] getContent() {
         return content;
+    }
+    
+    public String getBody() {
+    	return new String(content);
     }
 
     public void setContent(byte[] data) {
