@@ -290,4 +290,12 @@
 		</java>
 	</target>	
 	
+	<target name="stomp" depends="compile" description="Runs a Stomp example">
+		<echo>Running a Stomp example</echo>
+		<java classname="StompExample" fork="yes" maxmemory="100M">
+			<classpath refid="javac.classpath" />
+			<jvmarg value="-server" />
+		</java>
+	</target>
+	
 </project>
