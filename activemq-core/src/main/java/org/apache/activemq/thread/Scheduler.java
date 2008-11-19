@@ -21,25 +21,33 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 /**
+ * Singelton, references maintained by users
  * @version $Revision$
  */
-public final class Scheduler {
+public final class Scheduler { 
 
+	private final Timer CLOCK_DAEMON = new Timer("ActiveMQ Scheduler", true);
+    private final HashMap<Runnable, TimerTask> TIMER_TASKS = new HashMap<Runnable, TimerTask>();
+    private static Scheduler instance;
     
-
-	public static final Timer CLOCK_DAEMON = new Timer("ActiveMQ Scheduler", true);
-    private static final HashMap<Runnable, TimerTask> TIMER_TASKS = new HashMap<Runnable, TimerTask>();
-
+    static {
+        instance = new Scheduler();
+    }
+    
     private Scheduler() {
     }
 
-    public static synchronized void executePeriodically(final Runnable task, long period) {
+    public static Scheduler getInstance() {
+        return instance;
+    }
+    
+    public synchronized void executePeriodically(final Runnable task, long period) {
     	TimerTask timerTask = new SchedulerTimerTask(task);
         CLOCK_DAEMON.scheduleAtFixedRate(timerTask, period, period);
         TIMER_TASKS.put(task, timerTask);
     }
 
-    public static synchronized void cancel(Runnable task) {
+    public synchronized void cancel(Runnable task) {
     	TimerTask ticket = TIMER_TASKS.remove(task);
         if (ticket != null) {
             ticket.cancel();
@@ -47,13 +55,12 @@ public final class Scheduler {
         }
     }
 
-    public static void executeAfterDelay(final Runnable task, long redeliveryDelay) {
+    public void executeAfterDelay(final Runnable task, long redeliveryDelay) {
     	TimerTask timerTask = new SchedulerTimerTask(task);
         CLOCK_DAEMON.schedule(timerTask, redeliveryDelay);
     }
     
-    public static void shutdown() {
+    public void shutdown() {
         CLOCK_DAEMON.cancel();
     }
-
 }

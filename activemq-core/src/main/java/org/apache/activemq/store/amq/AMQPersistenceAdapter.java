@@ -84,6 +84,7 @@ import org.apache.commons.logging.LogFactory;
 public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener, BrokerServiceAware {
 
     private static final Log LOG = LogFactory.getLog(AMQPersistenceAdapter.class);
+    private static final Scheduler scheduler = Scheduler.getInstance();
     private final ConcurrentHashMap<ActiveMQQueue, AMQMessageStore> queues = new ConcurrentHashMap<ActiveMQQueue, AMQMessageStore>();
     private final ConcurrentHashMap<ActiveMQTopic, AMQTopicMessageStore> topics = new ConcurrentHashMap<ActiveMQTopic, AMQTopicMessageStore>();
     private static final String PROPERTY_PREFIX = "org.apache.activemq.store.amq";
@@ -271,14 +272,14 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
                 checkpoint(false);
             }
         };
-        Scheduler.executePeriodically(periodicCheckpointTask, getCheckpointInterval());
+        scheduler.executePeriodically(periodicCheckpointTask, getCheckpointInterval());
         periodicCleanupTask = new Runnable() {
 
             public void run() {
                 cleanup();
             }
         };
-        Scheduler.executePeriodically(periodicCleanupTask, getCleanupInterval());
+        scheduler.executePeriodically(periodicCleanupTask, getCleanupInterval());
         
         if (lockAquired && lockLogged) {
             LOG.info("Aquired lock for AMQ Store" + getDirectory());
@@ -301,8 +302,8 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         }
         this.usageManager.getMemoryUsage().removeUsageListener(this);
         synchronized (this) {
-            Scheduler.cancel(periodicCheckpointTask);
-            Scheduler.cancel(periodicCleanupTask);
+            scheduler.cancel(periodicCheckpointTask);
+            scheduler.cancel(periodicCleanupTask);
         }
         Iterator<AMQMessageStore> queueIterator = queues.values().iterator();
         while (queueIterator.hasNext()) {

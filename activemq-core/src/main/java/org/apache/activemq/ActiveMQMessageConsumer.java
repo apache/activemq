@@ -93,7 +93,7 @@ import org.apache.commons.logging.LogFactory;
 public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsCapable, ActiveMQDispatcher {
 
     private static final Log LOG = LogFactory.getLog(ActiveMQMessageConsumer.class);
-
+    protected static final Scheduler scheduler = Scheduler.getInstance();
     protected final ActiveMQSession session;
     protected final ConsumerInfo info;
 
@@ -969,7 +969,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     
                     if (redeliveryDelay > 0) {
                         // Start up the delivery again a little later.
-                        Scheduler.executeAfterDelay(new Runnable() {
+                        scheduler.executeAfterDelay(new Runnable() {
                             public void run() {
                                 try {
                                     if (started.get()) {

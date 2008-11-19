@@ -148,6 +148,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
 
     private static final Log LOG = LogFactory.getLog(ActiveMQSession.class);
+    protected static final Scheduler scheduler = Scheduler.getInstance();
 
     protected int acknowledgementMode;
     protected final ActiveMQConnection connection;
@@ -779,7 +780,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                                 for (int i = 0; i < redeliveryCounter; i++) {
                                     redeliveryDelay = redeliveryPolicy.getRedeliveryDelay(redeliveryDelay);
                                 }
-                                Scheduler.executeAfterDelay(new Runnable() {
+                                scheduler.executeAfterDelay(new Runnable() {
 
                                     public void run() {
                                         ((ActiveMQDispatcher)md.getConsumer()).dispatch(md);
