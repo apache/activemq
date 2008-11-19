@@ -42,7 +42,8 @@ import org.apache.activemq.thread.Scheduler;
 public class TimedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPolicy {
 
     private static final int GC_INTERVAL = 1000;
-
+    protected static final Scheduler scheduler = Scheduler.getInstance();
+    
     // TODO: need to get a better synchronized linked list that has little
     // contention between enqueuing and dequeuing
     private final List<TimestampWrapper> buffer = Collections.synchronizedList(new LinkedList<TimestampWrapper>());
@@ -90,11 +91,11 @@ public class TimedSubscriptionRecoveryPolicy implements SubscriptionRecoveryPoli
     }
 
     public void start() throws Exception {
-        Scheduler.executePeriodically(gcTask, GC_INTERVAL);
+        scheduler.executePeriodically(gcTask, GC_INTERVAL);
     }
 
     public void stop() throws Exception {
-        Scheduler.cancel(gcTask);
+        scheduler.cancel(gcTask);
     }
 
     public void gc() {

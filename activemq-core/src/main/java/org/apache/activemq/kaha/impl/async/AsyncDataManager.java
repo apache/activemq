@@ -75,6 +75,7 @@ public class AsyncDataManager {
     public static final int PREFERED_DIFF = 1024 * 512;
 
     private static final Log LOG = LogFactory.getLog(AsyncDataManager.class);
+    protected static Scheduler scheduler  = Scheduler.getInstance();
 
     protected final Map<WriteKey, WriteCommand> inflightWrites = new ConcurrentHashMap<WriteKey, WriteCommand>();
 
@@ -191,7 +192,7 @@ public class AsyncDataManager {
                 cleanup();
             }
         };
-        Scheduler.executePeriodically(cleanupTask, DEFAULT_CLEANUP_INTERVAL);
+        scheduler.executePeriodically(cleanupTask, DEFAULT_CLEANUP_INTERVAL);
     }
 
     public void lock() throws IOException {
@@ -326,7 +327,7 @@ public class AsyncDataManager {
         if (!started) {
             return;
         }
-        Scheduler.cancel(cleanupTask);
+        scheduler.cancel(cleanupTask);
         accessorPool.close();
         storeState(false);
         appender.close();

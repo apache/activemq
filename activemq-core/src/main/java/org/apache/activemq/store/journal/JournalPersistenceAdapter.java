@@ -83,6 +83,7 @@ import org.apache.commons.logging.LogFactory;
  */
 public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEventListener, UsageListener, BrokerServiceAware {
 
+    protected static final Scheduler scheduler = Scheduler.getInstance();
     private static final Log LOG = LogFactory.getLog(JournalPersistenceAdapter.class);
 
     private final Journal journal;
@@ -230,7 +231,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         recover();
 
         // Do a checkpoint periodically.
-        Scheduler.executePeriodically(periodicCheckpointTask, checkpointInterval / 10);
+        scheduler.executePeriodically(periodicCheckpointTask, checkpointInterval / 10);
 
     }
 
@@ -241,7 +242,7 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
             return;
         }
 
-        Scheduler.cancel(periodicCheckpointTask);
+        scheduler.cancel(periodicCheckpointTask);
 
         // Take one final checkpoint and stop checkpoint processing.
         checkpoint(true, true);

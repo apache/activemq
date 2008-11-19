@@ -53,6 +53,8 @@ import org.apache.commons.logging.LogFactory;
 public abstract class PrefetchSubscription extends AbstractSubscription {
 
     private static final Log LOG = LogFactory.getLog(PrefetchSubscription.class);
+    protected static final Scheduler scheduler = Scheduler.getInstance();
+    
     protected PendingMessageCursor pending;
     protected final List<MessageReference> dispatched = new CopyOnWriteArrayList<MessageReference>();
     protected int prefetchExtension;
@@ -109,7 +111,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 	                    dispatchPending();
 	                }
 	                if (pull.getTimeout() > 0) {
-	                    Scheduler.executeAfterDelay(new Runnable() {
+	                    scheduler.executeAfterDelay(new Runnable() {
 	
 	                        public void run() {
 	                            pullTimeout(dispatchCounterBeforePull);
