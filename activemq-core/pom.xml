@@ -114,7 +114,6 @@
     <dependency>
       <groupId>com.thoughtworks.xstream</groupId>
       <artifactId>xstream</artifactId>
-      <version>1.2.2</version>
       <optional>true</optional>
     </dependency>        
 
@@ -182,7 +181,6 @@
 	<dependency>
 		<groupId>stax</groupId>
 		<artifactId>stax-api</artifactId>
-		<version>1.0.1</version>
 		<scope>test</scope>
 	</dependency>
 
