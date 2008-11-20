@@ -498,7 +498,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             throw new javax.jms.IllegalStateException("Not a transacted session");
         }
         if (LOG.isDebugEnabled()) {
-            LOG.debug(getSessionId() + " Transaction Commit");
+            LOG.debug(getSessionId() + " Transaction Commit :" + transactionContext.getTransactionId());
         }
         transactionContext.commit();
     }
