@@ -1,0 +1,149 @@
+//
+// Licensed to the Apache Software Foundation (ASF) under one or more
+// contributor license agreements.  See the NOTICE file distributed with
+// this work for additional information regarding copyright ownership.
+// The ASF licenses this file to You under the Apache License, Version 2.0
+// (the "License"); you may not use this file except in compliance with
+// the License.  You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+package org.apache.kahadb.store.data;
+
+option java_multiple_files = true;
+option java_outer_classname = "JournalData";
+
+enum KahaEntryType {
+  //| option java_create_message="true";
+  KAHA_TRACE_COMMAND = 0;
+  KAHA_ADD_MESSAGE_COMMAND = 1;
+  KAHA_REMOVE_MESSAGE_COMMAND = 2;
+  KAHA_PREPARE_COMMAND = 3;
+  KAHA_COMMIT_COMMAND = 4;
+  KAHA_ROLLBACK_COMMAND = 5;
+  KAHA_REMOVE_DESTINATION_COMMAND = 6;
+  KAHA_SUBSCRIPTION_COMMAND = 7;
+}
+
+message KahaTraceCommand {
+  // We make use of the wonky comment style bellow because the following options
+  // are not valid for protoc, but they are valid for the ActiveMQ proto compiler.
+  // In the ActiveMQ proto compiler, comments terminate with the pipe character: |
+
+  //| option java_implments = "org.apache.kahadb.store.JournalCommand<KahaTraceCommand>";
+  //| option java_visitor = "org.apache.kahadb.store.Visitor:void:java.io.IOException";
+  //| option java_type_method = "KahaEntryType";
+  
+  required string message = 1;
+}
+
+message KahaAddMessageCommand {
+  //| option java_implments = "org.apache.kahadb.store.JournalCommand<KahaAddMessageCommand>";
+  //| option java_visitor = "org.apache.kahadb.store.Visitor:void:java.io.IOException";
+  //| option java_type_method = "KahaEntryType";
+  
+  optional KahaTransactionInfo transaction_info=1;
+  required KahaDestination destination = 2;
+  required string messageId = 3;
+  required bytes message = 4;
+}
+
+message KahaRemoveMessageCommand {
+  //| option java_implments = "org.apache.kahadb.store.JournalCommand<KahaRemoveMessageCommand>";
+  //| option java_visitor = "org.apache.kahadb.store.Visitor:void:java.io.IOException";
+  //| option java_type_method = "KahaEntryType";
+
+  optional KahaTransactionInfo transaction_info=1;
+  required KahaDestination destination = 2;
+  required string messageId = 3;
+  optional bytes ack = 4;
+  optional string subscriptionKey = 5;  // Set if it is a topic ack.
+}
+
+message KahaPrepareCommand {
+  //| option java_implments = "org.apache.kahadb.store.JournalCommand<KahaPrepareCommand>";
+  //| option java_visitor = "org.apache.kahadb.store.Visitor:void:java.io.IOException";
+  //| option java_type_method = "KahaEntryType";
+
+  required KahaTransactionInfo transaction_info=1;
+}
+
+message KahaCommitCommand {
+  //| option java_implments = "org.apache.kahadb.store.JournalCommand<KahaCommitCommand>";
+  //| option java_visitor = "org.apache.kahadb.store.Visitor:void:java.io.IOException";
+  //| option java_type_method = "KahaEntryType";
+
+  required KahaTransactionInfo transaction_info=1;
+}
+
+message KahaRollbackCommand {
+  //| option java_implments = "org.apache.kahadb.store.JournalCommand<KahaRollbackCommand>";
+  //| option java_visitor = "org.apache.kahadb.store.Visitor:void:java.io.IOException";
+  //| option java_type_method = "KahaEntryType";
+
+  required KahaTransactionInfo transaction_info=1;
+}
+
+message KahaRemoveDestinationCommand {
+  //| option java_implments = "org.apache.kahadb.store.JournalCommand<KahaRemoveDestinationCommand>";
+  //| option java_visitor = "org.apache.kahadb.store.Visitor:void:java.io.IOException";
+  //| option java_type_method = "KahaEntryType";
+
+  required KahaDestination destination = 1;
+}
+
+message KahaSubscriptionCommand {
+  //| option java_implments = "org.apache.kahadb.store.JournalCommand<KahaSubscriptionCommand>";
+  //| option java_visitor = "org.apache.kahadb.store.Visitor:void:java.io.IOException";
+  //| option java_type_method = "KahaEntryType";
+
+  required KahaDestination destination = 1;
+  required string subscriptionKey = 2;
+  optional bool retroactive = 3;
+  optional bytes subscriptionInfo = 4;
+}
+
+message KahaDestination {
+  enum DestinationType {
+    QUEUE = 0;
+    TOPIC = 1;
+    TEMP_QUEUE = 2;
+    TEMP_TOPIC = 3;
+  }
+
+  required DestinationType type = 1 [default = QUEUE];
+  required string name = 2;
+}
+
+message KahaTransactionInfo {
+  optional KahaLocalTransactionId local_transaciton_id=1;
+  optional KahaXATransactionId xa_transaciton_id=2;
+  optional KahaLocation previous_entry=3;
+}
+
+message KahaLocalTransactionId {
+  required string connection_id=1;
+  required int64 transaciton_id=1;
+}
+
+message KahaXATransactionId {
+  required int32 format_id = 1;
+  required bytes branch_qualifier = 2;
+  required bytes global_transaction_id = 3;
+}
+
+message KahaLocation {
+  required int32 log_id = 1;  
+  required int32 offset = 2;  
+}
+
+// TODO things to ponder
+// should we move more message fields
+// that are set by the sender (and rarely required by the broker
+// into the Properties object?
