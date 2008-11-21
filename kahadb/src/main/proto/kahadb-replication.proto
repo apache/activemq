@@ -1,0 +1,147 @@
+//
+// Licensed to the Apache Software Foundation (ASF) under one or more
+// contributor license agreements.  See the NOTICE file distributed with
+// this work for additional information regarding copyright ownership.
+// The ASF licenses this file to You under the Apache License, Version 2.0
+// (the "License"); you may not use this file except in compliance with
+// the License.  You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+package org.apache.kahadb.replication.pb;
+
+option java_multiple_files = true;
+option java_outer_classname = "PB";
+
+//
+// 
+//
+message PBHeader {
+    required PBType type=1;
+    optional int64 payload_size=2;    
+}
+
+enum PBType {
+
+	// Sent from the slave to the master when the slave first starts.  It lets the master
+	// know about the slave's synchronization state.  This allows the master decide how to best synchronize
+	// the slave.
+	//    
+	// @followed-by PBSlaveInit	
+	SLAVE_INIT = 0;
+	
+	// The Master will send this response back to the slave, letting it know what it needs to do to get
+	// it's data files synchronized with the master.
+	//    
+	// @followed-by PBSlaveInitResponse	
+	SLAVE_INIT_RESPONSE = 1;
+  
+  	// The Slave will send this this command to the master once he has completed 
+  	// all his bulk synchronizations and he is ready to take over as being a master. 
+	//    
+	// @followed-by null	
+  	SLAVE_ONLINE=2;
+  	
+	// Sent from the Master to the slave to replicate a Journal update.
+	//    
+	// @followed-by PBJournalUpdate	
+	JOURNAL_UPDATE=3;	
+	
+	// An ack sent back to the master in response to to a received 
+	// JOURNAL_UPDATE
+	//    
+	// @followed-by PBJournalLocation	
+	JOURNAL_UPDATE_ACK=4;
+	
+	// A Request for a bulk file transfer.  Sent from a slave to a Master
+	//    
+	// @followed-by PBFileInfo	
+	FILE_TRANSFER=5;
+
+	// A bulk file transfer response
+	//    
+	// @followed-by the bytes of the requested file. 	
+	FILE_TRANSFER_RESPONSE=6;
+}
+
+message PBFileInfo {
+    required string name=1;
+    optional int32 snapshot_id=2;
+    optional sfixed64 checksum=3;    
+    optional int64 start=4;    
+    optional int64 end=5;    
+}
+
+message PBJournalLocation {
+	required int32 file_id=1;
+	required int32 offset=2; 
+}
+
+message PBSlaveInit {
+    // The id of the slave node that is being initialized
+    required string node_id=1;
+    // The files that the slave node currently has
+	repeated PBFileInfo current_files=2;	
+}
+
+message PBSlaveInitResponse {
+	// The files that the slave should bulk copy from the master..
+	repeated PBFileInfo copy_files=1;
+	// The files that the slave should delete
+	repeated string delete_files=2;
+}
+
+message PBJournalUpdate {
+    // Journal location of the update.
+    required PBJournalLocation location=1;
+    // The data that will be written at that location.
+    required bytes data=2;
+    // Should the slave send back an ack for this update.
+    optional bool send_ack=3;
+    // If true, then the slave should do a disk sync before returning a
+    // JOURNAL_UPDATE_ACK
+    optional bool disk_sync=4;
+}
+
+// 
+// This hold 
+//
+message PBClusterConfiguration {
+    // Would be nice if the configuration of the broker was setup cluster wide.  We could
+    // stuff the spring config in here.. That way pushing out changes to the rest of the 
+    // cluster would be very easy.
+    optional bytes broker_configuration=1;
+    // Who are the nodes that have joined the cluster.  They may not all be online.
+    // Comes in handy to see if there are enough online members to form a quorum.
+    repeated string members=2;
+    // Who was the last elected master.
+    optional string master=3;
+}
+
+message PBClusterNodeStatus {
+
+	enum State {
+		// When the slave initially starts up it 
+		// is not connected to a master.
+		SLAVE_UNCONNECTED = 0;
+		// When the slave first attaches to a master, it must first 
+		// synchronize with the master to get any data updates
+		// that were missed while he was offline.
+		SLAVE_SYNCRONIZING = 1;
+		// The slave is caught up and is only actively applying
+		// real time updates from the master.
+		SLAVE_ONLINE = 3;
+		// This node is the master.
+		MASTER = 4;
+	}
+
+    required State state=1;
+    optional string connect_uri=2;
+    optional PBJournalLocation last_update=3;
+}

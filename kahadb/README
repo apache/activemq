@@ -1,0 +1,24 @@
+=======================================================================
+ KahaDB : An Embedded Lightweight Non-Relational Database
+=======================================================================
+
+Goals:
+  * Provide a simple collections based interface for storing persistent
+    data.
+  * Provide a lower level key value interface for storing data. Secondary
+    keys should be supported.
+  * Fast recovery
+
+Status:
+  * Moved the org.apache.activemq.kaha package into this module
+    and renamed it as org.apache.kahadb
+  * Moved a refactored version of the low level indexing logic
+    used by Apache xindice to the org.apache.kahadb.xindice page.
+  
+TODO:
+  * None of our current index support fast recovery.  They suffer
+    from partial page write failures so on a crash, they have
+    to be fully rebuilt from the data logs.
+  * Indexes should know what the last transaction id that updated
+    it, so that missing operations can be replayed. 
+  * Investigate implementing data log replication for HA.
