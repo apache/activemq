@@ -139,6 +139,7 @@
     <module>activemq-xmpp</module>
     <module>assembly</module>
     <module>activemq-jmdns_1.0</module>
+    <module>kahadb</module>
   </modules>
 
   <scm>
@@ -276,6 +277,16 @@
         <artifactId>activemq-openwire-generator</artifactId>
         <version>${activemq-version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>kahadb</artifactId>
+        <version>${activemq-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq.protobuf</groupId>
+        <artifactId>activemq-protobuf</artifactId>
+        <version>1.0-SNAPSHOT</version>
+      </dependency>
 
       <!-- =============================== -->
       <!-- Required dependencies -->
@@ -375,6 +386,13 @@
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-jms</artifactId>
         <version>${camel-version}</version>
+      </dependency>
+      
+      <dependency>
+        <groupId>org.apache.hadoop.zookeeper</groupId>
+        <artifactId>zookeeper</artifactId>
+        <version>3.0.0</version>
+        <optional>true</optional>
       </dependency>
 
       <!-- for the XML parsing -->
@@ -925,6 +943,11 @@
   <build>
     <pluginManagement>
       <plugins>
+        <plugin>
+          <groupId>org.apache.activemq.protobuf</groupId>
+          <artifactId>activemq-protobuf</artifactId>
+          <version>1.0-SNAPSHOT</version>
+        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-antrun-plugin</artifactId>
