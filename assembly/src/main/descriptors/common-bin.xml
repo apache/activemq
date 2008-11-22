@@ -102,6 +102,8 @@
         <include>${pom.groupId}:activemq-core</include>
         <include>${pom.groupId}:activemq-console</include>
         <include>${pom.groupId}:activemq-jaas</include>
+        <include>${pom.groupId}:kahadb</include>
+        <include>org.apache.activemq.protobuf:activemq-protobuf</include>
         <include>mx4j:mx4j</include>
         <include>org.apache.geronimo.specs:geronimo-j2ee-management_1.0_spec</include>
         <include>org.apache.geronimo.specs:geronimo-jms_1.1_spec</include>
@@ -155,6 +157,7 @@
         <include>org.springframework:spring-jms</include>
         <include>com.thoughtworks.xstream:xstream</include>
         <include>xmlpull:xmlpull</include>
+        <include>org.apache.hadoop.zookeeper:zookeeper</include>
       </includes>
     </dependencySet>
     <dependencySet>

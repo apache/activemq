@@ -20,14 +20,13 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>5.1.0</version>
+    <version>5.3-SNAPSHOT</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>kahadb</artifactId>
-  <version>1.0-SNAPSHOT</version>
 
   <dependencies>
     <dependency>
@@ -63,55 +62,46 @@
     <dependency>
       <groupId>org.apache.activemq.protobuf</groupId>
       <artifactId>activemq-protobuf</artifactId>
-      <version>1.0-SNAPSHOT</version>
     </dependency>        
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-core</artifactId>
-      <version>5.3-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.apache.xbean</groupId>
       <artifactId>xbean-spring</artifactId>
       <optional>true</optional>
-      <version>3.3</version>
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>
-      <version>2.5.5</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-beans</artifactId>
-      <version>2.5.5</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
-      <version>2.5.5</version>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop.zookeeper</groupId>
       <artifactId>zookeeper</artifactId>
-      <version>3.0.0</version>
       <optional>true</optional>
     </dependency>
         
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-core</artifactId>
-      <version>5.3-SNAPSHOT</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.1</version>
       <scope>test</scope>
     </dependency>
         
@@ -124,17 +114,6 @@
       <url>http://people.apache.org/~chirino/zk-repo/</url>
     </repository>
   </repositories>
-
-  <pluginRepositories>
-    <pluginRepository>
-      <id>apache.snapshots</id>
-      <name>Apache Development Snapshot Repository</name>
-      <url>http://people.apache.org/repo/m2-snapshot-repository</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-    </pluginRepository>
-  </pluginRepositories>
 
   <build>
     <plugins>
@@ -164,7 +143,6 @@
       <plugin>
         <groupId>org.apache.activemq.protobuf</groupId>
         <artifactId>activemq-protobuf</artifactId>
-        <version>1.0-SNAPSHOT</version>
          <executions>
           <execution>
             <goals>
