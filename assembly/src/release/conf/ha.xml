@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 <!--
     Licensed to the Apache Software Foundation (ASF) under one or more
     contributor license agreements.  See the NOTICE file distributed with
@@ -15,38 +16,38 @@
     limitations under the License.
 -->
 <!-- START SNIPPET: example -->
-<beans
-  xmlns="http://www.springframework.org/schema/beans"
-  xmlns:amq="http://activemq.apache.org/schema/core"
-  xmlns:kdb="http://activemq.apache.org/schema/kahadb"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
-  http://activ	emq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd   
-  http://activemq.apache.org/camel/schema/spring http://activemq.apache.org/camel/schema/spring/camel-spring.xsd
-  http://activemq.apache.org/schema/kahadb http://activemq.apache.org/schema/kahadb/kahadb.xsd">
-
-
-    <!-- Allows us to use system properties as variables in this configuration file -->
-    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-         <property name="locations">
-            <value>file:///${activemq.base}/conf/credentials.properties</value>
-         </property>      
-    </bean>
-
-  <kahadb-replication-broker xmlns="http://activemq.apache.org/schema/kahadb">
-  	<replicationService>
-	  <kahadb-replication
-    	directory="${activemq.base}/data/kahadb" 
-    	brokerURI="xbean:ha-broker.xml" 
-    	uri="kdbr://localhost:60001">
-    	
-    	<cluster>
-    		<zookeeper-cluster uri="zk://localhost:2181/activemq/default-ha-group" userid="activemq" password=""/>
-    	</cluster>
-    	
-      </kahadb-replication>
-  	</replicationService>
-  </kahadb-replication-broker>
+<beans xmlns="http://www.springframework.org/schema/beans" 
+       xmlns:amq="http://activemq.apache.org/schema/core" 
+       xmlns:kdb="http://activemq.apache.org/schema/kahadb" 
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+       xsi:schemaLocation="http://www.springframework.org/schema/beans 
+                           http://www.springframework.org/schema/beans/spring-beans-2.0.xsd   
+                           http://activ emq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd      
+                           http://activemq.apache.org/camel/schema/spring http://activemq.apache.org/camel/schema/spring/camel-spring.xsd   
+                           http://activemq.apache.org/schema/kahadb http://activemq.apache.org/schema/kahadb/kahadb.xsd">
+                          
+  <!-- Allows us to use system properties as variables in this configuration file -->
+  <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+    <property name="locations">
+      <value>file:///${activemq.base}/conf/credentials.properties</value>
+    </property>
+  </bean>
+  
+  <kahadbReplicationBroker xmlns="http://activemq.apache.org/schema/kahadb">
+    <replicationService>
+      <kahadbReplication 
+        directory="${activemq.base}/data/kahadb" 
+        brokerURI="xbean:ha-broker.xml" 
+        uri="kdbr://localhost:60001"
+        minimumReplicas="1">
+        
+        <cluster>
+          <zookeeperCluster uri="zk://localhost:2181/activemq/default-ha-group" userid="activemq" password=""/>
+        </cluster>
+        
+      </kahadbReplication>
+    </replicationService>
+  </kahadbReplicationBroker>
   
 </beans>
 <!-- END SNIPPET: example -->
