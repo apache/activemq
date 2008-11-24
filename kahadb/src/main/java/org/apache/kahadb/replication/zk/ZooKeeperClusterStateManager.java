@@ -48,7 +48,7 @@ import org.apache.zookeeper.data.Stat;
 /**
  * 
  * @author chirino
- * @org.apache.xbean.XBean element="zookeeper-cluster"
+ * @org.apache.xbean.XBean element="zookeeperCluster"
  */
 public class ZooKeeperClusterStateManager implements ClusterStateManager, Watcher {
     private static final Log LOG = LogFactory.getLog(ZooKeeperClusterStateManager.class);

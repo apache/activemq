@@ -49,7 +49,7 @@ public class ReplicationTest extends TestCase {
 		StaticClusterStateManager cluster = new StaticClusterStateManager();
 		
 		ReplicationService rs1 = new ReplicationService();
-		rs1.setAsyncReplication(true);
+		rs1.setMinimumReplicas(0);
 		rs1.setUri(BROKER1_REPLICATION_ID);
 		rs1.setCluster(cluster);
 		rs1.setDirectory(new File("target/replication-test/broker1"));
@@ -57,7 +57,7 @@ public class ReplicationTest extends TestCase {
 		rs1.start();
 
         ReplicationService rs2 = new ReplicationService();
-        rs2.setAsyncReplication(true);
+        rs2.setMinimumReplicas(0);
         rs2.setUri(BROKER2_REPLICATION_ID);
         rs2.setCluster(cluster);
         rs2.setDirectory(new File("target/replication-test/broker2"));

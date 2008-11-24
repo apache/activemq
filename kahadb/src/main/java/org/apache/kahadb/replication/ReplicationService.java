@@ -34,7 +34,7 @@ import org.apache.kahadb.store.KahaDBStore;
  * slave or master facets of the broker.
  * 
  * @author chirino
- * @org.apache.xbean.XBean element="kahadb-replication"
+ * @org.apache.xbean.XBean element="kahadbReplication"
  */
 public class ReplicationService implements Service, ClusterListener {
 
@@ -47,7 +47,7 @@ public class ReplicationService implements Service, ClusterListener {
     private File tempReplicationDir;
     private String uri;
     private ClusterStateManager cluster;
-    private boolean asyncReplication=false;
+    private int minimumReplicas=1;
     
     private KahaDBStore store;
 
@@ -279,12 +279,12 @@ public class ReplicationService implements Service, ClusterListener {
         this.cluster = cluster;
     }
 
-    public void setAsyncReplication(boolean asyncReplication) {
-        this.asyncReplication = asyncReplication;
+    public int getMinimumReplicas() {
+        return minimumReplicas;
     }
 
-    public boolean isAsyncReplication() {
-        return asyncReplication;
+    public void setMinimumReplicas(int minimumReplicas) {
+        this.minimumReplicas = minimumReplicas;
     }
 
 
