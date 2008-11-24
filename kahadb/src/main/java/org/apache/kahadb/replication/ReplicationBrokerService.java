@@ -26,7 +26,7 @@ import org.apache.activemq.broker.BrokerService;
  * he will create the actual BrokerService
  * 
  * @author chirino
- * @org.apache.xbean.XBean element="kahadb-replication-broker"
+ * @org.apache.xbean.XBean element="kahadbReplicationBroker"
  */
 public class ReplicationBrokerService extends BrokerService {
 

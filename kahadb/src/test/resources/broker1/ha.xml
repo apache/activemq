@@ -27,21 +27,21 @@
 
   <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
 
-  <kahadb-replication-broker xmlns="http://activemq.apache.org/schema/kahadb">
+  <kahadbReplicationBroker xmlns="http://activemq.apache.org/schema/kahadb">
   	<replicationService>
-	  <kahadb-replication
+	  <kahadbReplication
     	directory="target/kaha-data/broker1" 
     	brokerURI="xbean:broker1/ha-broker.xml" 
     	uri="kdbr://localhost:6001"
-    	asyncReplication="true">
+    	minimumReplicas="0">
     	
     	<cluster>
-    		<zookeeper-cluster uri="zk://localhost:2181/activemq/ha-cluster/mygroup" userid="activemq" password=""/>
+    		<zookeeperCluster uri="zk://localhost:2181/activemq/ha-cluster/mygroup" userid="activemq" password=""/>
     	</cluster>
     	
-      </kahadb-replication>
+      </kahadbReplication>
   	</replicationService>
-  </kahadb-replication-broker>
+  </kahadbReplicationBroker>
   
 </beans>
 <!-- END SNIPPET: example -->
