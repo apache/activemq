@@ -148,6 +148,14 @@
     <url>http://svn.apache.org/viewvc/activemq/trunk/</url>
   </scm>
 
+  <!-- This is only here since the activemq-protobuf plugin has not been released yet -->
+  <pluginRepositories>
+    <pluginRepository>
+      <id>apache.snapshots</id>
+      <url>http://people.apache.org/repo/m2-snapshot-repository/</url>
+    </pluginRepository>
+  </pluginRepositories>
+
   <dependencyManagement>
     <dependencies>
       <!-- =============================== -->
