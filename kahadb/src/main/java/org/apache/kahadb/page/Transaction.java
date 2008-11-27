@@ -16,8 +16,6 @@
  */
 package org.apache.kahadb.page;
 
-import com.sun.org.apache.bcel.internal.generic.AllocationInstruction;
-
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.io.IOException;
