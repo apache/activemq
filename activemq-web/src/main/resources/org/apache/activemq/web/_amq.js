@@ -180,7 +180,7 @@ var amq =
   _startPolling : function()
   {
    if (amq.poll)
-      new Ajax.Request(amq.uri, { method: 'get', parameters: 'timeout=0', onSuccess: amq._pollHandler });
+      new Ajax.Request(amq.uri, { method: 'get', parameters: 'timeout=10', onSuccess: amq._pollHandler });
   }
 };
 
