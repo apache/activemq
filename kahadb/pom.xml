@@ -105,7 +105,13 @@
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
-        
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activeblaze</artifactId>
+      <version>1.0-SNAPSHOT</version>
+      <optional>true</optional>
+    </dependency>
+     
   </dependencies>
   
   <repositories>
