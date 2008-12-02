@@ -382,30 +382,32 @@ public abstract class AbstractRegion implements Region {
     }
 
     protected Destination lookup(ConnectionContext context, ActiveMQDestination destination) throws Exception {
+        Destination dest = null;
         synchronized (destinationsMutex) {
-            Destination dest = destinations.get(destination);
-            if (dest == null) {
-                if (autoCreateDestinations) {
-                    // Try to auto create the destination... re-invoke broker
-                    // from the
-                    // top so that the proper security checks are performed.
-                    try {
-
-                        context.getBroker().addDestination(context, destination);
-                        dest = addDestination(context, destination);
-                    } catch (DestinationAlreadyExistsException e) {
-                        // if the destination already exists then lets ignore
-                        // this error
-                    }
-                    // We should now have the dest created.
+            dest = destinations.get(destination);
+        }
+        if (dest == null) {
+            if (autoCreateDestinations) {
+                // Try to auto create the destination... re-invoke broker
+                // from the
+                // top so that the proper security checks are performed.
+                try {
+                    context.getBroker().addDestination(context, destination);
+                    dest = addDestination(context, destination);
+                } catch (DestinationAlreadyExistsException e) {
+                    // if the destination already exists then lets ignore
+                    // this error
+                }
+                // We should now have the dest created.
+                synchronized (destinationsMutex) {
                     dest = destinations.get(destination);
                 }
-                if (dest == null) {
-                    throw new JMSException("The destination " + destination + " does not exist.");
-                }
             }
-            return dest;
+            if (dest == null) {
+                throw new JMSException("The destination " + destination + " does not exist.");
+            }
         }
+        return dest;
     }
 
     public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
