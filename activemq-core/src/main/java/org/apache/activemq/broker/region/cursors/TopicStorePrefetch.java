@@ -17,9 +17,7 @@
 package org.apache.activemq.broker.region.cursors;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
 
-import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.Topic;
 import org.apache.activemq.command.Message;
@@ -39,7 +37,6 @@ import org.apache.commons.logging.LogFactory;
 class TopicStorePrefetch extends AbstractStoreCursor {
     private static final Log LOG = LogFactory.getLog(TopicStorePrefetch.class);
     private TopicMessageStore store;
-    private final LinkedHashMap<MessageId,Message> batchList = new LinkedHashMap<MessageId,Message> ();
     private String clientId;
     private String subscriberName;
     private Subscription subscription;

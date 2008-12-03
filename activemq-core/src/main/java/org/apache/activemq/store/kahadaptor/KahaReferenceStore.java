@@ -193,7 +193,7 @@ public class KahaReferenceStore implements ReferenceStore {
     public void removeAllMessages(ConnectionContext context) throws IOException {
         lock.lock();
         try {
-            Set<MessageId> tmpSet = new HashSet(messageContainer.keySet());
+            Set<MessageId> tmpSet = new HashSet<MessageId>(messageContainer.keySet());
             for (MessageId id:tmpSet) {
                 removeMessage(id);
             }
@@ -255,5 +255,11 @@ public class KahaReferenceStore implements ReferenceStore {
      * @see org.apache.activemq.store.ReferenceStore#setBatch(org.apache.activemq.command.MessageId)
      */
     public void setBatch(MessageId startAfter) {
+        lock.lock();
+        try {
+            batchEntry = messageContainer.getEntry(startAfter);
+        } finally {
+            lock.unlock();
+        }
     }
 }

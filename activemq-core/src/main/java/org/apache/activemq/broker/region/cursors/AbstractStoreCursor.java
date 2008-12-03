@@ -43,6 +43,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     protected boolean batchResetNeeded = true;
     protected boolean storeHasMessages = false;
     protected int size;
+    private MessageId lastCachedId;
     
     protected AbstractStoreCursor(Destination destination) {
         this.regionDestination=destination;
@@ -154,10 +155,18 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
     public final synchronized void addMessageLast(MessageReference node) throws Exception {
         if (cacheEnabled && hasSpace()) {
             recoverMessage(node.getMessage(),true);
-        }else {
+            lastCachedId = node.getMessageId();
+        } else {
+            if (cacheEnabled) {
+                // sync with store on disabling the cache
+                setBatch(lastCachedId);
+            }
             cacheEnabled=false;
         }
         size++;
+    }
+
+    protected void setBatch(MessageId messageId) {
     }
 
     public final synchronized void addMessageFirst(MessageReference node) throws Exception {

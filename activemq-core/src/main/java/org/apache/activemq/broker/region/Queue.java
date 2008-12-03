@@ -863,6 +863,9 @@ public class Queue extends BaseDestination implements Task {
         QueueMessageReference r = createMessageReference(m);
         BrokerSupport.resend(context, m, dest);
         removeMessage(context, r);
+        synchronized (messages) {
+            messages.rollback(r.getMessageId());
+        }
         return true;
     }
 
@@ -909,17 +912,11 @@ public class Queue extends BaseDestination implements Task {
                 IndirectMessageReference r = (IndirectMessageReference) ref;
                 if (filter.evaluate(context, r)) {
                     // We should only move messages that can be locked.
-                    Message m = r.getMessage();
-                    BrokerSupport.resend(context, m, dest);
-                    removeMessage(context, r);
+                    moveMessageTo(context, ref.getMessage(), dest);
                     set.remove(r);
                     if (++movedCounter >= maximumMessages
                             && maximumMessages > 0) {
                         return movedCounter;
-                    }
-                } else {
-                    synchronized (messages) {
-                        messages.rollback(r.getMessageId());
                     }
                 }
             }
@@ -1088,6 +1085,12 @@ public class Queue extends BaseDestination implements Task {
                 });
             }
         }
+        if (ack.isPoisonAck()) {
+            // message gone to DLQ, is ok to allow redelivery
+            synchronized(messages) {
+                messages.rollback(reference.getMessageId());
+            }
+        }
 
     }
     
@@ -1096,9 +1099,6 @@ public class Queue extends BaseDestination implements Task {
         destinationStatistics.getMessages().decrement();
         synchronized(pagedInMessages) {
             pagedInMessages.remove(reference.getMessageId());
-        }
-        synchronized(messages) {
-            messages.rollback(reference.getMessageId());
         }
     }
     
