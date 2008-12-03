@@ -114,7 +114,7 @@
       <artifactId>geronimo-servlet_2.5_spec</artifactId>
       <scope>provided</scope>
     </dependency>
-
+    
     <!-- j2ee jars -->
     <dependency>
       <groupId>org.apache.geronimo.specs</groupId>
@@ -215,6 +215,16 @@
     <dependency>
       <groupId>opensymphony</groupId>
       <artifactId>sitemesh</artifactId>
+    </dependency>
+    
+    <!-- JSTL support -->
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>jstl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>taglibs</groupId>
+      <artifactId>standard</artifactId>
     </dependency>
 
 
