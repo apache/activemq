@@ -17,11 +17,14 @@
 package org.apache.activemq.broker.region.cursors;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.amq.AMQMessageStore;
+import org.apache.activemq.store.kahadaptor.KahaReferenceStore;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -70,6 +73,20 @@ class QueueStorePrefetch extends AbstractStoreCursor {
     protected void resetBatch() {
         this.store.resetBatching();
     }
+    
+    protected void setBatch(MessageId messageId) {
+        AMQMessageStore amqStore = (AMQMessageStore) store;
+        try {
+            amqStore.flush();
+        } catch (InterruptedIOException e) {
+            LOG.debug("flush on setBatch resulted in exception", e);        
+        }
+        KahaReferenceStore kahaStore = 
+            (KahaReferenceStore) amqStore.getReferenceStore();
+        kahaStore.setBatch(messageId);
+        batchResetNeeded = false;
+    }
+
     
     protected void doFillBatch() throws Exception {
         this.store.recoverNextMessages(this.maxBatchSize, this);

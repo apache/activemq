@@ -29,6 +29,7 @@ import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.command.ActiveMQDestination;
 
 
 public class MasterSlaveTempQueueMemoryTest extends TempQueueMemoryTest {
@@ -89,15 +90,13 @@ public class MasterSlaveTempQueueMemoryTest extends TempQueueMemoryTest {
     @Override
     public void testLoadRequestReply() throws Exception {
         super.testLoadRequestReply();
+
+        Thread.sleep(2000);
         
         // some checks on the slave
         AdvisoryBroker ab = (AdvisoryBroker) slave.getBroker().getAdaptor(
                 AdvisoryBroker.class);
         
-        if (!deleteTempQueue || serverTransactional) {
-            // give temp destination removes a chance to perculate on connection.close
-            Thread.sleep(2000);
-        } 
         assertEquals("the temp queues should not be visible as they are removed", 1, ab.getAdvisoryDestinations().size());
                        
         RegionBroker rb = (RegionBroker) slave.getBroker().getAdaptor(
