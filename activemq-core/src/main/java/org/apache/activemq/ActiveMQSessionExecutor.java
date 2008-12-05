@@ -19,6 +19,7 @@ package org.apache.activemq;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.JMSException;
 
@@ -45,6 +46,7 @@ public class ActiveMQSessionExecutor implements Task {
     private boolean dispatchedBySessionPool;
     private TaskRunner taskRunner;
     private boolean startedOrWarnedThatNotStarted;
+    private AtomicBoolean taskRunnerCreated = new AtomicBoolean();
 
     ActiveMQSessionExecutor(ActiveMQSession session) {
         this.session = session;
@@ -88,15 +90,18 @@ public class ActiveMQSessionExecutor implements Task {
         if (!dispatchedBySessionPool) {
             if (session.isSessionAsyncDispatch()) {
                 try {
-                    if (taskRunner == null) {
-                        taskRunner = session.connection.getSessionTaskRunner().createTaskRunner(this, "ActiveMQ Session: " + session.getSessionId());
+                    if (taskRunnerCreated.compareAndSet(false, true)) {
+                        if (taskRunner == null) {
+                            taskRunner = session.connection.getSessionTaskRunner().createTaskRunner(this,
+                                    "ActiveMQ Session: " + session.getSessionId());
+                        }
                     }
                     taskRunner.wakeup();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
             } else {
-                while (iterate()) {                    
+                while (iterate()) {
                 }
             }
         }
@@ -141,6 +146,7 @@ public class ActiveMQSessionExecutor implements Task {
                 if (taskRunner != null) {
                     taskRunner.shutdown();
                     taskRunner = null;
+                    taskRunnerCreated.set(false);
                 }
             }
         } catch (InterruptedException e) {
