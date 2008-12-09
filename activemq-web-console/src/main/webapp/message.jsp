@@ -130,7 +130,7 @@ No message could be found for ID ${requestContext.messageQuery.JMSMessageID}
 				</thead>
 				<tbody>
 					<tr>
-						<td><form:tooltip text="${requestContext.messageQuery.body}" length="78"/></td>
+						<td><div class="message"><c:out value="${requestContext.messageQuery.body}" escapeXml="true" /></div></td>
 					</tr>
 				</tbody>
 			</table>

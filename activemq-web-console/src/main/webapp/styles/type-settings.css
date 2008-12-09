@@ -169,3 +169,9 @@ blockquote {
     color: #880055;
     border: 1px solid #880055;
 }
+
+div.message {
+    width: 500px;
+    height: 100px;
+    overflow : auto;
+}
