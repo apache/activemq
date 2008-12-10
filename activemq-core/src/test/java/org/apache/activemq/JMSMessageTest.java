@@ -465,7 +465,23 @@ public class JMSMessageTest extends JmsTestSupport {
             ForeignMessage message = new ForeignMessage();
             message.text = "Hello";
             message.setStringProperty("test", "value");
-            producer.send(message);
+            long timeToLive = 10000L;
+            long start = System.currentTimeMillis();
+            producer.send(message, Session.AUTO_ACKNOWLEDGE, 7, timeToLive);
+            long end = System.currentTimeMillis();
+
+
+            //validate jms spec 1.1 section 3.4.11 table 3.1
+            // JMSDestination, JMSDeliveryMode,  JMSExpiration, JMSPriority, JMSMessageID, and JMSTimestamp
+            //must be set by sending a message.
+            assertEquals(destination, message.getJMSDestination());
+            assertEquals(Session.AUTO_ACKNOWLEDGE, message.getJMSDeliveryMode());
+            assertTrue(start  + timeToLive <= message.getJMSExpiration());
+            assertTrue(end + timeToLive >= message.getJMSExpiration());
+            assertEquals(7, message.getJMSPriority());
+            assertNotNull(message.getJMSMessageID());
+            assertTrue(start <= message.getJMSTimestamp());
+            assertTrue(end >= message.getJMSTimestamp());
         }
 
         // Validate message is OK.

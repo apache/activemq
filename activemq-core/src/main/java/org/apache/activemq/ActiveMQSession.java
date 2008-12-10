@@ -1603,6 +1603,21 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             TransactionId txid = transactionContext.getTransactionId();
             long sequenceNumber = producer.getMessageSequence();
 
+            //Set the "JMS" header fields on the orriginal message, see 1.1 spec section 3.4.11
+            message.setJMSDestination(destination);
+            message.setJMSDeliveryMode(deliveryMode);
+            long expiration = 0L;
+            if (!producer.getDisableMessageTimestamp()) {
+                long timeStamp = System.currentTimeMillis();
+                message.setJMSTimestamp(timeStamp);
+                if (timeToLive > 0) {
+                    expiration = timeToLive + timeStamp;
+                }
+            }
+            message.setJMSExpiration(expiration);
+            message.setJMSPriority(priority);
+            message.setJMSRedelivered(false);
+
             // transform to our own message format here
             ActiveMQMessage msg = ActiveMQMessageTransformation.transformMessage(message, connection);
 
@@ -1616,19 +1631,6 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             //clear the brokerPath in case we are re-sending this message
             msg.setBrokerPath(null);
 
-            msg.setJMSDestination(destination);
-            msg.setJMSDeliveryMode(deliveryMode);
-            long expiration = 0L;
-            if (!producer.getDisableMessageTimestamp()) {
-                long timeStamp = System.currentTimeMillis();
-                msg.setJMSTimestamp(timeStamp);
-                if (timeToLive > 0) {
-                    expiration = timeToLive + timeStamp;
-                }
-            }
-            msg.setJMSExpiration(expiration);
-            msg.setJMSPriority(priority);
-            msg.setJMSRedelivered(false);
 
             msg.setTransactionId(txid);
             if (connection.isCopyMessageOnSend()) {
