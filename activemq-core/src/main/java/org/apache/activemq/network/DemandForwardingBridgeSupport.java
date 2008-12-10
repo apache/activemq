@@ -18,6 +18,8 @@ package org.apache.activemq.network;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Collection;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -30,7 +32,12 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.advisory.AdvisorySupport;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.TransportConnection;
+import org.apache.activemq.broker.region.AbstractRegion;
+import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTempDestination;
@@ -78,7 +85,7 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision$
  */
-public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
+public abstract class DemandForwardingBridgeSupport implements NetworkBridge, BrokerServiceAware {
     
     private static final Log LOG = LogFactory.getLog(DemandForwardingBridge.class);
     private static final ThreadPoolExecutor ASYNC_TASKS;
@@ -123,6 +130,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
 
     private AtomicBoolean started = new AtomicBoolean();
     private TransportConnection duplexInitiatingConnection;
+    private BrokerService brokerService = null;
 
     public DemandForwardingBridgeSupport(NetworkBridgeConfiguration configuration, Transport localBroker, Transport remoteBroker) {
         this.configuration = configuration;
@@ -498,20 +506,20 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
             // Create a new local subscription
             ConsumerInfo info = (ConsumerInfo)data;
             BrokerId[] path = info.getBrokerPath();
+            
             if (path != null && path.length >= networkTTL) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug(configuration.getBrokerName() + " Ignoring sub  from " + remoteBrokerName + ", restricted to " + networkTTL + " network hops only : " + info);
                 }
                 return;
             }
-            if (contains(info.getBrokerPath(), localBrokerPath[0])) {
-                // Ignore this consumer as it's a consumer we locally sent to
-                // the broker.
+            if (contains(path, localBrokerPath[0])) {
+                // Ignore this consumer as it's a consumer we locally sent to the broker.
                 if (LOG.isDebugEnabled()) {
                     LOG.debug(configuration.getBrokerName() + " Ignoring sub from " + remoteBrokerName + ", already routed through this broker once : " + info);
                 }
                 return;
-            }
+            }            
             if (!isPermissableDestination(info.getDestination())) {
                 // ignore if not in the permitted or in the excluded list
                 if (LOG.isDebugEnabled()) {
@@ -519,13 +527,25 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
                 }
                 return;
             }
-            if (addConsumerInfo(info)) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(configuration.getBrokerName() + " Forwarding sub on " + localBroker + " from " + remoteBrokerName + " : " + info);
+            
+            // in a cyclic network there can be multiple bridges per broker that can propagate
+            // a network subscription so there is a need to synchronise on a shared entity
+            synchronized(brokerService) {
+                if (isDuplicateNetworkSubscription(info)) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug(configuration.getBrokerName() + " Ignoring sub from " + remoteBrokerName + ", destination " + info.getDestination() 
+                                + ", for " + info.getConsumerId() + " as a duplicate. Already subscribed via network subscription :"  + info);
+                    }
+                    return;
                 }
-            } else {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug(configuration.getBrokerName() + " Ignoring sub from " + remoteBrokerName + " as already subscribed to matching destination : " + info);
+                if (addConsumerInfo(info)) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug(configuration.getBrokerName() + " Forwarding sub on " + localBroker + " from " + remoteBrokerName + " : " + info);
+                    }
+                } else {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug(configuration.getBrokerName() + " Ignoring sub from " + remoteBrokerName + " as already subscribed to matching destination : " + info);
+                    }
                 }
             }
         } else if (data.getClass() == DestinationInfo.class) {
@@ -875,7 +895,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
     }
 
     /**
-     * Subscriptions for these desitnations are always created
+     * Subscriptions for these destinations are always created
      */
     protected void setupStaticDestinations() {
         ActiveMQDestination[] dests = staticallyIncludedDestinations;
@@ -907,6 +927,52 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
         return result;
     }
     
+    /*
+     * check our existing subs networkConsumerIds against the list of network ids in this subscription
+     * a match means a duplicate which we suppress for topics
+     */
+    private boolean isDuplicateNetworkSubscription(ConsumerInfo consumerInfo) {
+        boolean isDuplicate = false;
+        if (consumerInfo.getDestination().isTopic()) {
+            List<ConsumerId> candidateConsumers = consumerInfo.getNetworkConsumerIds();
+            if (candidateConsumers.isEmpty()) {
+                candidateConsumers.add(consumerInfo.getConsumerId());
+            }
+            Collection<Subscription> currentSubs = getTopicRegionSubscriptions();
+            for (Subscription sub : currentSubs) {
+                List<ConsumerId> networkConsumers =  sub.getConsumerInfo().getNetworkConsumerIds();
+                if (!networkConsumers.isEmpty()) {
+                    if (matchFound(candidateConsumers, networkConsumers)) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("subscription: " + consumerInfo + " is duplicated by network subscription: " 
+                                    + sub.getConsumerInfo()  + ", networkComsumerIds: " + networkConsumers);
+                        }
+                        isDuplicate = true;
+                        break;
+                    }
+                }
+            }
+        }
+        return isDuplicate;
+    }
+
+    private boolean matchFound(List<ConsumerId> candidateConsumers, List<ConsumerId> networkConsumers) {
+        boolean found = false;
+        for (ConsumerId aliasConsumer : networkConsumers) {        
+            if (candidateConsumers.contains(aliasConsumer)) {
+                found = true;
+                break;
+            }
+        }
+        return found;
+    }
+
+    private final Collection<Subscription> getTopicRegionSubscriptions() {
+        RegionBroker region = (RegionBroker) brokerService.getRegionBroker();
+        AbstractRegion topicRegion = (AbstractRegion) region.getTopicRegion();
+        return topicRegion.getSubscriptions().values();
+    }
+
     protected DemandSubscription createDemandSubscription(ConsumerInfo info) throws IOException {
         //add our original id to ourselves
         info.addNetworkConsumerId(info.getConsumerId());
@@ -1035,6 +1101,10 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge {
     
     protected boolean isDuplex() {
         return configuration.isDuplex() || createdByDuplex;
+    }
+    
+    public void setBrokerService(BrokerService brokerService) {
+        this.brokerService = brokerService;
     }
     
     static {

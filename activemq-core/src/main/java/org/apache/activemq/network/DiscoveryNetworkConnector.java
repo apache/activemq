@@ -207,6 +207,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
 
         };
         DemandForwardingBridge result = NetworkBridgeFactory.createBridge(this, localTransport, remoteTransport, listener);
+        result.setBrokerService(getBrokerService());
         return configureBridge(result);
     }
 
