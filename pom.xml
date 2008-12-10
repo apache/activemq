@@ -1083,6 +1083,11 @@
           <artifactId>maven-jetty-plugin</artifactId>
           <version>${jetty-version}</version>
         </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>1.2</version>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
