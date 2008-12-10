@@ -132,6 +132,10 @@ public abstract class AbstractRegion implements Region {
         }
     }
 
+    public Map<ConsumerId, Subscription> getSubscriptions() {
+        return subscriptions;
+    }
+    
     protected List<Subscription> addSubscriptionsForDestination(ConnectionContext context, Destination dest) throws Exception {
 
         List<Subscription> rc = new ArrayList<Subscription>();

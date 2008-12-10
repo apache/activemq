@@ -127,6 +127,7 @@ public class DemandForwardingBridgeTest extends NetworkTestSupport {
         config.setBrokerName("local");
         config.setDispatchAsync(false);
         bridge = new DemandForwardingBridge(config, createTransport(), createRemoteTransport());
+        bridge.setBrokerService(broker);
         bridge.start();
     }
 

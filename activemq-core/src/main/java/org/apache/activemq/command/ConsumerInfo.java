@@ -432,4 +432,28 @@ public class ConsumerInfo extends BaseCommand {
         return result;
     }
 
+    /**
+     * Tracks the original subscription id that causes a subscription to 
+     * percolate through a network when networkTTL > 1. Tracking the original
+     * subscription allows duplicate suppression.
+     * 
+     * @return array of the current subscription path
+     * @openwire:property version=4
+     */
+    public ConsumerId[] getNetworkConsumerPath() {
+        ConsumerId[] result = null;
+        if (networkConsumerIds != null) {
+            result = networkConsumerIds.toArray(new ConsumerId[0]);
+        }
+        return result;
+    }
+    
+    public void setNetworkConsumerPath(ConsumerId[] consumerPath) {
+        if (consumerPath != null) {
+            for (int i=0; i<consumerPath.length; i++) {
+                addNetworkConsumerId(consumerPath[i]);
+            }
+        }
+    }
+
 }

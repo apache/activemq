@@ -43,7 +43,7 @@ public class NoDuplicateOnTopicNetworkTest extends TestCase {
     // when > 1, subscriptions perculate around resulting in duplicates as there is no
     // memory of the original subscription.
     // solution for 6.0 using org.apache.activemq.command.ConsumerInfo.getNetworkConsumerIds()
-    private int ttl = 1;
+    private int ttl = 3;
 
     @Override
     protected void setUp() throws Exception {
@@ -113,8 +113,12 @@ public class NoDuplicateOnTopicNetworkTest extends TestCase {
         });
 
         consumerThread.start();
-        Thread.sleep(1000);
+        LOG.info("Started Consumer");
+        
+        // ensure subscription has percolated though the network
+        Thread.sleep(2000);
         producerThread.start();
+        LOG.info("Started Producer");
         producerThread.join();
         consumerThread.join();
 

@@ -1171,6 +1171,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 Transport remoteBridgeTransport = new ResponseCorrelator(transport);
                 duplexBridge = NetworkBridgeFactory.createBridge(config, localTransport,
                                                                  remoteBridgeTransport);
+                duplexBridge.setBrokerService(broker.getBrokerService());
                 // now turn duplex off this side
                 info.setDuplexConnection(false);
                 duplexBridge.setCreatedByDuplex(true);

@@ -151,7 +151,9 @@ public class MulticastNetworkConnector extends NetworkConnector {
     }
 
     protected DemandForwardingBridgeSupport createBridge(Transport local, Transport remote) {
-        return new CompositeDemandForwardingBridge(this, local, remote);
+        CompositeDemandForwardingBridge bridge = new CompositeDemandForwardingBridge(this, local, remote);
+        bridge.setBrokerService(getBrokerService());
+        return bridge;
     }
 
 }

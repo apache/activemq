@@ -47,6 +47,7 @@ public class ThreeBrokerQueueNetworkUsingTcpTest extends ThreeBrokerQueueNetwork
                 NetworkBridgeConfiguration config = new NetworkBridgeConfiguration();
                 config.setBrokerName(localBroker.getBrokerName());
                 DemandForwardingBridge bridge = new DemandForwardingBridge(config, TransportFactory.connect(localURI), TransportFactory.connect(remoteURI));
+                bridge.setBrokerService(localBroker);
                 bridges.add(bridge);
 
                 bridge.start();
