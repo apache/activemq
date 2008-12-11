@@ -676,8 +676,10 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     }
                 }
             }
-            synchronized(deliveredMessages) {
-                deliveredMessages.clear();
+            if (!session.isTransacted()) {
+                synchronized(deliveredMessages) {
+                    deliveredMessages.clear();
+                }
             }
             List<MessageDispatch> list = unconsumedMessages.removeAll();
             if (!this.info.isBrowser()) {
@@ -927,16 +929,19 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     return;
                 }
     
-                // Only increase the redlivery delay after the first redelivery..
+                // Only increase the redelivery delay after the first redelivery..
                 MessageDispatch lastMd = deliveredMessages.getFirst();
-                if (lastMd.getMessage().getRedeliveryCounter() > 0) {
+                final int currentRedeliveryCount = lastMd.getMessage().getRedeliveryCounter();
+                if (currentRedeliveryCount > 0) {
                     redeliveryDelay = redeliveryPolicy.getRedeliveryDelay(redeliveryDelay);
                 }
                 MessageId firstMsgId = deliveredMessages.getLast().getMessage().getMessageId();
     
-                for (Iterator iter = deliveredMessages.iterator(); iter.hasNext();) {
-                    MessageDispatch md = (MessageDispatch)iter.next();
+                for (Iterator<MessageDispatch> iter = deliveredMessages.iterator(); iter.hasNext();) {
+                    MessageDispatch md = iter.next();
                     md.getMessage().onMessageRolledBack();
+                    // ensure we don't filter this as a duplicate
+                    session.connection.rollbackDuplicate(this, md.getMessage());
                 }
     
                 if (redeliveryPolicy.getMaximumRedeliveries() != RedeliveryPolicy.NO_MAXIMUM_REDELIVERIES
@@ -948,26 +953,27 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     MessageAck ack = new MessageAck(lastMd, MessageAck.POSION_ACK_TYPE, deliveredMessages.size());
 					ack.setFirstMessageId(firstMsgId);
                     session.sendAck(ack,true);
-                    // ensure we don't filter this as a duplicate
-                    session.connection.rollbackDuplicate(this, lastMd.getMessage());
                     // Adjust the window size.
                     additionalWindowSize = Math.max(0, additionalWindowSize - deliveredMessages.size());
                     redeliveryDelay = 0;
                 } else {
                     
-                    MessageAck ack = new MessageAck(lastMd, MessageAck.REDELIVERED_ACK_TYPE, deliveredMessages.size());
-                    ack.setFirstMessageId(firstMsgId);
-                    session.sendAck(ack,true);
+                    // only redelivery_ack after first delivery
+                    if (currentRedeliveryCount > 0) {
+                        MessageAck ack = new MessageAck(lastMd, MessageAck.REDELIVERED_ACK_TYPE, deliveredMessages.size());
+                        ack.setFirstMessageId(firstMsgId);
+                        session.sendAck(ack,true);
+                    }
     
                     // stop the delivery of messages.
                     unconsumedMessages.stop();
     
-                    for (Iterator iter = deliveredMessages.iterator(); iter.hasNext();) {
-                        MessageDispatch md = (MessageDispatch)iter.next();
+                    for (Iterator<MessageDispatch> iter = deliveredMessages.iterator(); iter.hasNext();) {
+                        MessageDispatch md = iter.next();
                         unconsumedMessages.enqueueFirst(md);
                     }
     
-                    if (redeliveryDelay > 0) {
+                    if (redeliveryDelay > 0 && !unconsumedMessages.isClosed()) {
                         // Start up the delivery again a little later.
                         scheduler.executeAfterDelay(new Runnable() {
                             public void run() {
