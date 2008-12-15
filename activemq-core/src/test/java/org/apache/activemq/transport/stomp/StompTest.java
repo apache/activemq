@@ -22,6 +22,7 @@ import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,7 +30,6 @@ import javax.jms.BytesMessage;
 import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
-import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.ObjectMessage;
@@ -46,6 +46,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
+import org.apache.activemq.transport.stomp.Stomp.Headers.Subscribe;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -911,6 +912,23 @@ public class StompTest extends CombinationTestSupport {
         	Thread.sleep(100);
         } catch (InterruptedException e){}
         assertEquals(view.getDurableTopicSubscribers().length, 0);
+    }
+    
+    public void testMessageIdHeader() throws Exception {  
+        stompConnection.connect("system", "manager");
+        
+        stompConnection.begin("tx1");
+        stompConnection.send("/queue/" + getQueueName(), "msg", "tx1", null);
+        stompConnection.commit("tx1");
+    	
+        StompFrame connect = stompConnection.receive();
+        if (!connect.getAction().equals(Stomp.Responses.CONNECTED)) {
+        	throw new Exception ("Not connected");
+        }
+        
+        stompConnection.subscribe("/queue/" + getQueueName());
+        StompFrame stompMessage = stompConnection.receive();
+        assertNull(stompMessage.getHeaders().get("transaction"));      
     }
     
     protected void assertClients(int expected) throws Exception {
