@@ -109,7 +109,7 @@ public class StompConnection {
     public void connect(String username, String password) throws Exception {
     	HashMap<String, String> headers = new HashMap();
     	headers.put("login", username);
-    	headers.put("password", password);
+    	headers.put("passcode", password);
     	StompFrame frame = new StompFrame("CONNECT", headers);
         sendFrame(frame.toString());
     }
@@ -120,14 +120,17 @@ public class StompConnection {
     }
     
     public void send(String destination, String message) throws Exception {
-    	send(destination, message, null);
+    	send(destination, message, null, null);
     }
-	
-    public void send(String destination, String message, HashMap<String, String> headers) throws Exception {
+    
+    public void send(String destination, String message, String transaction, HashMap<String, String> headers) throws Exception {
     	if (headers == null) {
     		headers = new HashMap<String, String>();
     	}
     	headers.put("destination", destination);
+    	if (transaction != null) {
+    		headers.put("transaction", transaction);
+    	}
     	StompFrame frame = new StompFrame("SEND", headers, message.getBytes());
         sendFrame(frame.toString());    	
     }

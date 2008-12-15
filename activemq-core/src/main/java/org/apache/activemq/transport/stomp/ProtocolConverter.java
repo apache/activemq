@@ -226,6 +226,7 @@ public class ProtocolConverter {
 
         Map<String, String> headers = command.getHeaders();
         String stompTx = headers.get(Stomp.Headers.TRANSACTION);
+        headers.remove("transaction");
 
         ActiveMQMessage message = convertMessage(command);
 
