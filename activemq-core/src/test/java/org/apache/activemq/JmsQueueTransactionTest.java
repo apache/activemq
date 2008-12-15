@@ -157,7 +157,8 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
         // Get the first.
         assertEquals(outbound[0], consumer.receive(1000));
         consumer.close();
-
+        session.commit();
+        
         QueueBrowser browser = session.createBrowser((Queue)destination);
         Enumeration enumeration = browser.getEnumeration();
 

@@ -590,11 +590,27 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      */
     public void close() throws JMSException {
         if (!unconsumedMessages.isClosed()) {
-            dispose();
-            this.session.asyncSendPacket(info.createRemoveCommand());
+            if (session.isTransacted() && session.getTransactionContext().getTransactionId() != null) {
+                session.getTransactionContext().addSynchronization(new Synchronization() {
+                    public void afterCommit() throws Exception {
+                        doClose();
+                    }
+
+                    public void afterRollback() throws Exception {
+                        doClose();
+                    }
+                });
+            } else {
+                doClose();
+            } 
         }
     }
 
+    void doClose() throws JMSException {
+        dispose();
+        this.session.asyncSendPacket(info.createRemoveCommand());
+    }
+    
     void clearMessagesInProgress() {
         // we are called from inside the transport reconnection logic
         // which involves us clearing all the connections' consumers
@@ -653,10 +669,14 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 //            }
 
             // Do we have any acks we need to send out before closing?
-            // Ack any delivered messages now. (session may still
-            // commit/rollback the acks).
+            // Ack any delivered messages now.
             // only processes optimized acknowledgements
-            deliverAcks();
+            if (!session.isTransacted()) { 
+                deliverAcks();
+                if (session.isDupsOkAcknowledge()) {
+                    acknowledge();
+                }
+            }
             if (executorService != null) {
                 executorService.shutdown();
                 try {
@@ -665,9 +685,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     Thread.currentThread().interrupt();
                 }
             }
-            if (session.isTransacted() || session.isDupsOkAcknowledge()) {
-                acknowledge();
-            }
+            
             if (session.isClientAcknowledge()) {
                 if (!this.info.isBrowser()) {
                     // rollback duplicates that aren't acknowledged

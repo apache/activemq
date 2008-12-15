@@ -25,7 +25,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import javax.jms.Connection;
+import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
@@ -180,6 +182,94 @@ public class MDBTest extends TestCase {
 
         // Wait for the message to be delivered.
         assertTrue(messageDelivered.await(5000, TimeUnit.MILLISECONDS));
+
+        // Shut the Endpoint down.
+        adapter.endpointDeactivation(messageEndpointFactory, activationSpec);
+        adapter.stop();
+
+    }
+
+
+    public void testMessageExceptionReDelivery() throws Exception {
+
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
+        Connection connection = factory.createConnection();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        ActiveMQResourceAdapter adapter = new ActiveMQResourceAdapter();
+        adapter.setServerUrl("vm://localhost?broker.persistent=false");
+        adapter.start(new StubBootstrapContext());
+
+        final CountDownLatch messageDelivered = new CountDownLatch(2);
+
+        final StubMessageEndpoint endpoint = new StubMessageEndpoint() {
+            public void onMessage(Message message) {
+                super.onMessage(message);
+                try {
+                    messageDelivered.countDown();
+                    if (!messageDelivered.await(1, TimeUnit.MILLISECONDS)) {
+                        throw new RuntimeException(getName() + " ex on first delivery");
+                    } else {
+                        try {
+                            assertTrue(message.getJMSRedelivered());
+                        } catch (JMSException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } catch (InterruptedException ignored) {
+                }
+            };
+            
+            public void afterDelivery() throws ResourceException {
+                try {
+                    if (!messageDelivered.await(1, TimeUnit.MILLISECONDS)) {
+                        xaresource.end(xid, XAResource.TMFAIL);
+                        xaresource.rollback(xid);
+                    } else {
+                        xaresource.end(xid, XAResource.TMSUCCESS);
+                        xaresource.prepare(xid);
+                        xaresource.commit(xid, false);
+                    }
+                } catch (Throwable e) {
+                    throw new ResourceException(e);
+                }
+            }
+        };
+
+        ActiveMQActivationSpec activationSpec = new ActiveMQActivationSpec();
+        activationSpec.setDestinationType(Queue.class.getName());
+        activationSpec.setDestination("TEST");
+        activationSpec.setResourceAdapter(adapter);
+        activationSpec.validate();
+
+        MessageEndpointFactory messageEndpointFactory = new MessageEndpointFactory() {
+            public MessageEndpoint createEndpoint(XAResource resource) throws UnavailableException {
+                endpoint.xaresource = resource;
+                return endpoint;
+            }
+
+            public boolean isDeliveryTransacted(Method method) throws NoSuchMethodException {
+                return true;
+            }
+        };
+
+        // Activate an Endpoint
+        adapter.endpointActivation(messageEndpointFactory, activationSpec);
+
+        // Give endpoint a chance to setup and register its listeners
+        try {
+            Thread.sleep(1000);
+        } catch (Exception e) {
+
+        }
+
+        // Send the broker a message to that endpoint
+        MessageProducer producer = session.createProducer(new ActiveMQQueue("TEST"));
+        producer.send(session.createTextMessage("Hello!"));
+        connection.close();
+
+        // Wait for the message to be delivered twice.
+        assertTrue(messageDelivered.await(10000, TimeUnit.MILLISECONDS));
 
         // Shut the Endpoint down.
         adapter.endpointDeactivation(messageEndpointFactory, activationSpec);

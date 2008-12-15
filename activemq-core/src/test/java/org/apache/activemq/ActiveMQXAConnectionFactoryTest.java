@@ -16,27 +16,39 @@
  */
 package org.apache.activemq;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 import javax.jms.Connection;
+import javax.jms.Destination;
 import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.TextMessage;
 import javax.jms.XAConnection;
 import javax.jms.XAQueueConnection;
 import javax.jms.XASession;
 import javax.jms.XATopicConnection;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
 
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.transport.stomp.StompTransportFilter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
     private static final Log LOG = LogFactory.getLog(ActiveMQXAConnectionFactoryTest.class);
+    long txGenerator = System.currentTimeMillis();
 
     public void testCopy() throws URISyntaxException, JMSException {
         ActiveMQXAConnectionFactory cf = new ActiveMQXAConnectionFactory("vm://localhost?");
@@ -117,6 +129,126 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         connection2.close();
     }
 
+    public void testVanilaTransactionalProduceReceive() throws Exception {
+        
+        ActiveMQXAConnectionFactory cf1 = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false");
+        XAConnection connection1 = (XAConnection)cf1.createConnection();
+        connection1.start();
+        XASession session = connection1.createXASession();
+        XAResource resource = session.getXAResource();
+        Destination dest = new ActiveMQQueue(getName());
+        
+        // publish a message
+        Xid tid = createXid();
+        resource.start(tid, XAResource.TMNOFLAGS);
+        MessageProducer producer = session.createProducer(dest);
+        ActiveMQTextMessage message  = new ActiveMQTextMessage();
+        message.setText(getName());
+        producer.send(message);
+        resource.end(tid, XAResource.TMSUCCESS);
+        resource.commit(tid, true);
+        session.close();
+        
+        session = connection1.createXASession();
+        MessageConsumer consumer = session.createConsumer(dest);
+        tid = createXid();
+        resource = session.getXAResource();
+        resource.start(tid, XAResource.TMNOFLAGS);
+        TextMessage receivedMessage = (TextMessage) consumer.receive(1000);
+        assertNotNull(receivedMessage);
+        assertEquals(getName(), receivedMessage.getText());
+        resource.end(tid, XAResource.TMSUCCESS);
+        resource.commit(tid, true);
+    }
+    
+    public void testConsumerCloseTransactionalSendReceive() throws Exception {
+        
+        ActiveMQXAConnectionFactory cf1 = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false");
+        XAConnection connection1 = (XAConnection)cf1.createConnection();
+        connection1.start();
+        XASession session = connection1.createXASession();
+        XAResource resource = session.getXAResource();
+        Destination dest = new ActiveMQQueue(getName());
+        
+        // publish a message
+        Xid tid = createXid();
+        resource.start(tid, XAResource.TMNOFLAGS);
+        MessageProducer producer = session.createProducer(dest);
+        ActiveMQTextMessage message  = new ActiveMQTextMessage();
+        message.setText(getName());
+        producer.send(message);
+        producer.close();
+        resource.end(tid, XAResource.TMSUCCESS);
+        resource.commit(tid, true);
+        session.close();
+        
+        session = connection1.createXASession();
+        MessageConsumer consumer = session.createConsumer(dest);
+        tid = createXid();
+        resource = session.getXAResource();
+        resource.start(tid, XAResource.TMNOFLAGS);
+        TextMessage receivedMessage = (TextMessage) consumer.receive(1000);
+        consumer.close();
+        assertNotNull(receivedMessage);
+        assertEquals(getName(), receivedMessage.getText());
+        resource.end(tid, XAResource.TMSUCCESS);
+        resource.commit(tid, true);
+        
+        session = connection1.createXASession();
+        consumer = session.createConsumer(dest);
+        tid = createXid();
+        resource = session.getXAResource();
+        resource.start(tid, XAResource.TMNOFLAGS);
+        assertNull(consumer.receive(1000));
+        resource.end(tid, XAResource.TMSUCCESS);
+        resource.commit(tid, true);
+        
+    }
+
+    public void testSessionCloseTransactionalSendReceive() throws Exception {
+        
+        ActiveMQXAConnectionFactory cf1 = new ActiveMQXAConnectionFactory("vm://localhost?broker.persistent=false");
+        XAConnection connection1 = (XAConnection)cf1.createConnection();
+        connection1.start();
+        XASession session = connection1.createXASession();
+        XAResource resource = session.getXAResource();
+        Destination dest = new ActiveMQQueue(getName());
+        
+        // publish a message
+        Xid tid = createXid();
+        resource.start(tid, XAResource.TMNOFLAGS);
+        MessageProducer producer = session.createProducer(dest);
+        ActiveMQTextMessage message  = new ActiveMQTextMessage();
+        message.setText(getName());
+        producer.send(message);
+        session.close();
+        resource.end(tid, XAResource.TMSUCCESS);
+        resource.commit(tid, true);
+        
+        
+        session = connection1.createXASession();
+        MessageConsumer consumer = session.createConsumer(dest);
+        tid = createXid();
+        resource = session.getXAResource();
+        resource.start(tid, XAResource.TMNOFLAGS);
+        TextMessage receivedMessage = (TextMessage) consumer.receive(1000);
+        session.close();
+        assertNotNull(receivedMessage);
+        assertEquals(getName(), receivedMessage.getText());
+        resource.end(tid, XAResource.TMSUCCESS);
+        resource.commit(tid, true);
+        
+        session = connection1.createXASession();
+        consumer = session.createConsumer(dest);
+        tid = createXid();
+        resource = session.getXAResource();
+        resource.start(tid, XAResource.TMNOFLAGS);
+        assertNull(consumer.receive(1000));
+        resource.end(tid, XAResource.TMSUCCESS);
+        resource.commit(tid, true);        
+    }
+
+    
     protected void assertCreateConnection(String uri) throws Exception {
         // Start up a broker with a tcp connector.
         BrokerService broker = new BrokerService();
@@ -160,6 +292,30 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         assertTrue("Should be an XAConnection", connection instanceof XAConnection);
         assertTrue("Should be an XATopicConnection", connection instanceof XATopicConnection);
         assertTrue("Should be an XAQueueConnection", connection instanceof XAQueueConnection);
+    }
+    
+    public Xid createXid() throws IOException {
+        
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DataOutputStream os = new DataOutputStream(baos);
+        os.writeLong(++txGenerator);
+        os.close();
+        final byte[] bs = baos.toByteArray();
+
+        return new Xid() {
+            public int getFormatId() {
+                return 86;
+            }
+
+            public byte[] getGlobalTransactionId() {
+                return bs;
+            }
+
+            public byte[] getBranchQualifier() {
+                return bs;
+            }
+        };
+
     }
 
 }
