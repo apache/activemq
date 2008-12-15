@@ -652,5 +652,35 @@ public class JMSConsumerTest extends JmsTestSupport {
         assertNull(redispatchConsumer.receive(500));
         redispatchSession.close();
     }
+
     
+    public void testRedispatchOfRolledbackTx() throws Exception {
+
+        connection.start();
+        Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
+        destination = createDestination(session, ActiveMQDestination.QUEUE_TYPE);
+        
+        sendMessages(connection, destination, 1);
+        
+        MessageConsumer consumer = session.createConsumer(destination);
+        assertNotNull(consumer.receive(1000));
+        
+        // install another consumer while message dispatch is unacked/uncommitted
+        Session redispatchSession = connection.createSession(true, Session.SESSION_TRANSACTED);
+        MessageConsumer redispatchConsumer = redispatchSession.createConsumer(destination);
+
+        session.rollback();
+        session.close();
+                
+        Message msg = redispatchConsumer.receive(1000);
+        assertNotNull(msg);
+        assertTrue(msg.getJMSRedelivered());
+        // should have re-delivery of 2, one for re-dispatch, one for rollback which is a little too much!
+        assertEquals(3, msg.getLongProperty("JMSXDeliveryCount"));
+        redispatchSession.commit();
+        
+        assertNull(redispatchConsumer.receive(500));
+        redispatchSession.close();
+    }
+
 }

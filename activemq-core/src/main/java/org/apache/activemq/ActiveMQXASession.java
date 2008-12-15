@@ -27,6 +27,7 @@ import javax.jms.XATopicSession;
 import javax.transaction.xa.XAResource;
 
 import org.apache.activemq.command.SessionId;
+import org.apache.activemq.transaction.Synchronization;
 
 /**
  * The XASession interface extends the capability of Session by adding access
@@ -96,6 +97,24 @@ public class ActiveMQXASession extends ActiveMQSession implements QueueSession, 
         return new ActiveMQTopicSession(this);
     }
 
+    @Override
+    public void close() throws JMSException {
+        if (getTransactionContext().isInXATransaction()) {
+            getTransactionContext().addSynchronization(new Synchronization() {
+                public void afterCommit() throws Exception {
+                    doClose();
+                }
+                
+                public void afterRollback() throws Exception {
+                    doClose();
+                }
+            });
+        }
+    }
+
+    void doClose() throws JMSException {
+        super.close();
+    }
     /**
      * This is called before transacted work is done by
      * the session.  XA Work can only be done when this

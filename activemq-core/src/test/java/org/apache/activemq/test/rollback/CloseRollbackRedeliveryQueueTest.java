@@ -37,7 +37,7 @@ public class CloseRollbackRedeliveryQueueTest extends EmbeddedBrokerTestSupport 
     protected int numberOfMessagesOnQueue = 1;
     private Connection connection;
    
-    public void testVerifyCloseRedeliveryWithFailoverTransport() throws Throwable {
+    public void testVerifySessionCloseRedeliveryWithFailoverTransport() throws Throwable {
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
         MessageConsumer consumer = session.createConsumer(destination);
 
@@ -57,7 +57,46 @@ public class CloseRollbackRedeliveryQueueTest extends EmbeddedBrokerTestSupport 
         assertEquals("redelivered message", id, message.getJMSMessageID());
         assertEquals(3, message.getLongProperty("JMSXDeliveryCount"));
     }
+    
+    public void testVerifyConsumerAndSessionCloseRedeliveryWithFailoverTransport() throws Throwable {
+        Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
+        MessageConsumer consumer = session.createConsumer(destination);
 
+        Message message = consumer.receive(1000);
+        String id = message.getJMSMessageID();
+        assertNotNull(message);
+        LOG.info("got message " + message);
+        consumer.close();
+        session.close();
+        session = connection.createSession(true, Session.SESSION_TRANSACTED);
+        consumer = session.createConsumer(destination);
+
+        message = consumer.receive(1000);
+        session.commit();
+        assertNotNull(message);
+        assertEquals("redelivered message", id, message.getJMSMessageID());
+        assertEquals(3, message.getLongProperty("JMSXDeliveryCount"));
+    }
+
+    public void testVerifyConsumerCloseSessionRollbackRedeliveryWithFailoverTransport() throws Throwable {
+        Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
+        MessageConsumer consumer = session.createConsumer(destination);
+
+        Message message = consumer.receive(1000);
+        String id = message.getJMSMessageID();
+        assertNotNull(message);
+        LOG.info("got message " + message);
+        consumer.close();
+        session.rollback();
+        
+        consumer = session.createConsumer(destination);
+        message = consumer.receive(1000);
+        session.commit();
+        assertNotNull(message);
+        assertEquals("redelivered message", id, message.getJMSMessageID());
+        assertEquals(3, message.getLongProperty("JMSXDeliveryCount"));
+    }
+    
     protected void setUp() throws Exception {
         super.setUp();
 

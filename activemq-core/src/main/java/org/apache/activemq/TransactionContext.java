@@ -224,6 +224,7 @@ public class TransactionContext implements XAResource {
             throw new TransactionInProgressException("Cannot rollback() if an XA transaction is already in progress ");
         }
         
+        beforeEnd();
         if (transactionId != null) {
             TransactionInfo info = new TransactionInfo(getConnectionId(), transactionId, TransactionInfo.ROLLBACK);
             this.transactionId = null;
