@@ -243,11 +243,11 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                                 // consumer
                                 if (getPrefetchSize() != 0) {
                                     prefetchExtension = Math.max(
-                                            prefetchExtension, index + 1);
+                                            prefetchExtension, index );
                                 }
                             } else {
                                 prefetchExtension = Math.max(0,
-                                        prefetchExtension - (index + 1));
+                                        prefetchExtension - index);
                             }
                             destination = node.getRegionDestination();
                             callDispatchMatched = true;

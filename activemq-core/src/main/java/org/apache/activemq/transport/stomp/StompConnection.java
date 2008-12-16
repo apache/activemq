@@ -112,6 +112,11 @@ public class StompConnection {
     	headers.put("passcode", password);
     	StompFrame frame = new StompFrame("CONNECT", headers);
         sendFrame(frame.toString());
+        
+        StompFrame connect = receive();
+        if (!connect.getAction().equals(Stomp.Responses.CONNECTED)) {
+        	throw new Exception ("Not connected: " + connect.getBody());
+        }
     }
     
     public void disconnect() throws Exception {
