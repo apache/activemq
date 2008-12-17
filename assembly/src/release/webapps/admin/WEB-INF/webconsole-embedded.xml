@@ -20,7 +20,7 @@
 
   <bean id="placeholderConfig" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
         <property name="locations">
-                <value>file:///${activemq.base}/conf/credentials.properties</value>
+                <value>file:${activemq.base}/conf/credentials.properties</value>
         </property>  
   </bean>
   
