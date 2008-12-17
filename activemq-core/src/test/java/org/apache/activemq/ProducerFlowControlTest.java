@@ -76,6 +76,54 @@ public class ProducerFlowControlTest extends JmsTestSupport {
         msg.acknowledge();
     }
 
+    public void testPubisherRecoverAfterBlock() throws Exception {
+        ActiveMQConnectionFactory factory = (ActiveMQConnectionFactory)createConnectionFactory();
+        factory.setProducerWindowSize(1024 * 64);
+        factory.setUseAsyncSend(true);
+        connection = (ActiveMQConnection)factory.createConnection();
+        connections.add(connection);
+        connection.start();
+
+        final Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        final MessageProducer producer = session.createProducer(queueA);
+        
+        final AtomicBoolean done = new AtomicBoolean(true);
+        final AtomicBoolean keepGoing = new AtomicBoolean(true);
+		Thread thread = new Thread("Filler") {
+			@Override
+			public void run() {
+                while (keepGoing.get()) {
+                    done.set(false);
+                    try {
+						producer.send(session.createTextMessage("Test message"));
+					} catch (JMSException e) {
+					}
+                }
+			}
+		};
+		thread.start();
+        while (true) {
+            Thread.sleep(1000);
+            // the producer is blocked once the done flag stays true.
+            if (done.get()) {
+                break;
+            }
+            done.set(true);
+        }
+
+        // after receiveing messges, producer should continue sending messages 
+        // (done == false)
+        MessageConsumer consumer = session.createConsumer(queueA);
+        TextMessage msg;
+        for (int idx = 0; idx < 5; ++idx) {
+        	msg = (TextMessage) consumer.receive(1000);
+        	msg.acknowledge();
+        }
+        Thread.sleep(1000);
+        keepGoing.set(false);
+    	
+		assertFalse(done.get());
+    }
     public void test2ndPubisherWithSyncSendConnectionThatIsBlocked() throws Exception {
         ActiveMQConnectionFactory factory = (ActiveMQConnectionFactory)createConnectionFactory();
         factory.setAlwaysSyncSend(true);
