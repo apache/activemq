@@ -94,6 +94,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         if (session.connection.getProtocolVersion() >= 3 && this.info.getWindowSize() > 0) {
             producerWindow = new MemoryUsage("Producer Window: " + producerId);
             producerWindow.setLimit(this.info.getWindowSize());
+            producerWindow.start();
         }
 
         this.defaultDeliveryMode = Message.DEFAULT_DELIVERY_MODE;
@@ -151,6 +152,9 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     public void dispose() {
         if (!closed) {
             this.session.removeProducer(this);
+            if (producerWindow != null) {
+                producerWindow.stop();
+            }
             closed = true;
         }
     }
