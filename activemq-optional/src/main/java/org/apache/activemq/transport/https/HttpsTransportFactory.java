@@ -35,6 +35,10 @@ public class HttpsTransportFactory extends HttpTransportFactory {
     public TransportServer doBind(String brokerId, URI location) throws IOException {
         return new HttpsTransportServer(location);
     }
+    
+    public TransportServer doBind(URI location) throws IOException {
+        return new HttpsTransportServer(location);
+    }
 
     protected Transport createTransport(URI location, WireFormat wf) throws MalformedURLException {
         return new HttpsClientTransport(asTextWireFormat(wf), location);
