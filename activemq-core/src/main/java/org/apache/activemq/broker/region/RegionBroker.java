@@ -677,18 +677,21 @@ public class RegionBroker extends EmptyBroker {
 					        .getRegionDestination().getDeadLetterStrategy();
 					if(deadLetterStrategy!=null){
 						if(deadLetterStrategy.isSendToDeadLetterQueue(message)){
+						    if (node.getRegionDestination().getActiveMQDestination().isTopic()) {
+						        // message may be inflight to other subscriptions so do not modify
+						        message = message.copy();
+						    }
 							long expiration=message.getExpiration();
 							message.setExpiration(0);
 							message.setProperty("originalExpiration",new Long(
 							        expiration));
 							if(!message.isPersistent()){
-								message.setPersistent(true);
-								message.setProperty("originalDeliveryMode",
+							    message.setPersistent(true);
+							    message.setProperty("originalDeliveryMode",
 								        "NON_PERSISTENT");
 							}
 							// The original destination and transaction id do
-							// not get filled when the message is first
-							// sent,
+							// not get filled when the message is first sent,
 							// it is only populated if the message is routed to
 							// another destination like the DLQ
 							ActiveMQDestination deadLetterDestination=deadLetterStrategy
