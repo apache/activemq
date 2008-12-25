@@ -99,7 +99,7 @@ public class ActiveMQConnectionSupport {
     /**
      * Sets the connection request information as a whole.
      * 
-     * @param the connection request information
+     * @param connectionRequestInfo the connection request information
      */
     protected void setInfo(ActiveMQConnectionRequestInfo connectionRequestInfo){
         info = connectionRequestInfo;
