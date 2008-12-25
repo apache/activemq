@@ -18,7 +18,6 @@ package org.apache.activemq;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -70,7 +69,7 @@ public class TransactionContext implements XAResource {
     private final ActiveMQConnection connection;
     private final LongSequenceGenerator localTransactionIdGenerator;
     private final ConnectionId connectionId;
-    private List<Synchronization> synchornizations;
+    private List<Synchronization> synchronizations;
 
     // To track XA transactions.
     private Xid associatedXid;
@@ -116,59 +115,59 @@ public class TransactionContext implements XAResource {
     // ///////////////////////////////////////////////////////////
 
     public void addSynchronization(Synchronization s) {
-        if (synchornizations == null) {
-            synchornizations = new ArrayList<Synchronization>(10);
+        if (synchronizations == null) {
+            synchronizations = new ArrayList<Synchronization>(10);
         }
-        synchornizations.add(s);
+        synchronizations.add(s);
     }
 
     private void afterRollback() throws JMSException {
-        if (synchornizations == null) {
+        if (synchronizations == null) {
             return;
         }
 
-        int size = synchornizations.size();
+        int size = synchronizations.size();
         try {
             for (int i = 0; i < size; i++) {
-                synchornizations.get(i).afterRollback();
+                synchronizations.get(i).afterRollback();
             }
         } catch (JMSException e) {
             throw e;
         } catch (Throwable e) {
             throw JMSExceptionSupport.create(e);
         } finally {
-            synchornizations = null;
+            synchronizations = null;
         }
     }
 
     private void afterCommit() throws JMSException {
-        if (synchornizations == null) {
+        if (synchronizations == null) {
             return;
         }
 
-        int size = synchornizations.size();
+        int size = synchronizations.size();
         try {
             for (int i = 0; i < size; i++) {
-                synchornizations.get(i).afterCommit();
+                synchronizations.get(i).afterCommit();
             }
         } catch (JMSException e) {
             throw e;
         } catch (Throwable e) {
             throw JMSExceptionSupport.create(e);
         } finally {
-        	synchornizations = null;
+        	synchronizations = null;
         }
     }
 
     private void beforeEnd() throws JMSException {
-        if (synchornizations == null) {
+        if (synchronizations == null) {
             return;
         }
 
-        int size = synchornizations.size();
+        int size = synchronizations.size();
         try {
             for (int i = 0; i < size; i++) {
-                synchornizations.get(i).beforeEnd();
+                synchronizations.get(i).beforeEnd();
             }
         } catch (JMSException e) {
             throw e;
@@ -189,6 +188,7 @@ public class TransactionContext implements XAResource {
 
     /**
      * Start a local transaction.
+     * @throws javax.jms.JMSException on internal error
      */
     public void begin() throws JMSException {
 
@@ -197,7 +197,7 @@ public class TransactionContext implements XAResource {
         }
         
         if (transactionId == null) {
-            synchornizations = null;
+            synchronizations = null;
             this.transactionId = new LocalTransactionId(connectionId, localTransactionIdGenerator.getNextSequenceId());
             TransactionInfo info = new TransactionInfo(getConnectionId(), transactionId, TransactionInfo.BEGIN);
             this.connection.ensureConnectionInfoSent();
@@ -244,8 +244,6 @@ public class TransactionContext implements XAResource {
      * 
      * @throws JMSException if the JMS provider fails to commit the transaction
      *                 due to some internal error.
-     * @throws TransactionRolledBackException if the transaction is rolled back
-     *                 due to some internal error during commit.
      * @throws javax.jms.IllegalStateException if the method is not called by a
      *                 transacted session.
      */
@@ -298,12 +296,12 @@ public class TransactionContext implements XAResource {
         // }
 
         // associate
-        synchornizations = null;
+        synchronizations = null;
         setXid(xid);
     }
 
     /**
-     * @return
+     * @return connectionId for connection
      */
     private ConnectionId getConnectionId() {
         return connection.getConnectionInfo().getConnectionId();
@@ -418,8 +416,7 @@ public class TransactionContext implements XAResource {
 
             List<TransactionContext> l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
             if (l != null && !l.isEmpty()) {
-                for (Iterator<TransactionContext> iter = l.iterator(); iter.hasNext();) {
-                    TransactionContext ctx = iter.next();
+                for (TransactionContext ctx : l) {
                     ctx.afterRollback();
                 }
             }
@@ -458,8 +455,7 @@ public class TransactionContext implements XAResource {
 
             List<TransactionContext> l = ENDED_XA_TRANSACTION_CONTEXTS.remove(x);
             if (l != null && !l.isEmpty()) {
-                for (Iterator iter = l.iterator(); iter.hasNext();) {
-                    TransactionContext ctx = (TransactionContext)iter.next();
+                for (TransactionContext ctx : l) {
                     ctx.afterCommit();
                 }
             }
@@ -525,7 +521,7 @@ public class TransactionContext implements XAResource {
 
             DataArrayResponse receipt = (DataArrayResponse)this.connection.syncSendPacket(info);
             DataStructure[] data = receipt.getData();
-            XATransactionId[] answer = null;
+            XATransactionId[] answer;
             if (data instanceof XATransactionId[]) {
                 answer = (XATransactionId[])data;
             } else {
@@ -614,8 +610,8 @@ public class TransactionContext implements XAResource {
      * Converts a JMSException from the server to an XAException. if the
      * JMSException contained a linked XAException that is returned instead.
      * 
-     * @param e
-     * @return
+     * @param e JMSException to convert
+     * @return XAException wrapping original exception or its message
      */
     private XAException toXAException(JMSException e) {
         if (e.getCause() != null && e.getCause() instanceof XAException) {
