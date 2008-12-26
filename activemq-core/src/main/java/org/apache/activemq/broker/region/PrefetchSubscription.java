@@ -104,7 +104,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             synchronized(this) {
 	            // If there was nothing dispatched.. we may need to setup a timeout.
 	            if (dispatchCounterBeforePull == dispatchCounter) {
-	                // imediate timeout used by receiveNoWait()
+	                // immediate timeout used by receiveNoWait()
 	                if (pull.getTimeout() == -1) {
 	                    // Send a NULL message.
 	                    add(QueueMessageReference.NULL_MESSAGE);
@@ -128,13 +128,15 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
      * Occurs when a pull times out. If nothing has been dispatched since the
      * timeout was setup, then send the NULL message.
      */
-    final synchronized void pullTimeout(long dispatchCounterBeforePull) {
+    final void pullTimeout(long dispatchCounterBeforePull) {
         if (dispatchCounterBeforePull == dispatchCounter) {
-            try {
-                add(QueueMessageReference.NULL_MESSAGE);
-                dispatchPending();
-            } catch (Exception e) {
-                context.getConnection().serviceException(e);
+            synchronized (pendingLock) {
+                try {
+                    add(QueueMessageReference.NULL_MESSAGE);
+                    dispatchPending();
+                } catch (Exception e) {
+                    context.getConnection().serviceException(e);
+                }
             }
         }
     }
