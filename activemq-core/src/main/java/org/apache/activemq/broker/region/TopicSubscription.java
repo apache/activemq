@@ -218,7 +218,9 @@ public class TopicSubscription extends AbstractSubscription {
             // Message was delivered but not acknowledged: update pre-fetch
             // counters.
             dequeueCounter.addAndGet(ack.getMessageCount());
-            destination.getDestinationStatistics().getInflight().subtract(ack.getMessageCount());
+            if (destination != null) {
+                destination.getDestinationStatistics().getInflight().subtract(ack.getMessageCount());
+            }
             dispatchMatched();
             return;
         }
@@ -436,8 +438,10 @@ public class TopicSubscription extends AbstractSubscription {
         matched.remove(message);
         discarded++;
         dequeueCounter.incrementAndGet();
-        destination.getDestinationStatistics().getDequeues().increment();
-        destination.getDestinationStatistics().getInflight().decrement();
+        if(destination != null) {
+            destination.getDestinationStatistics().getDequeues().increment();
+            destination.getDestinationStatistics().getInflight().decrement();
+        }
         if (LOG.isDebugEnabled()) {
             LOG.debug("Discarding message " + message);
         }
