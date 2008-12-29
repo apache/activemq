@@ -133,6 +133,12 @@
       <scope>compile</scope>
       <optional>true</optional>
     </dependency>
+    <dependency>
+      <groupId>org.codehaus.jettison</groupId>
+      <artifactId>jettison</artifactId>
+      <version>1.0</version>
+      <scope>test</scope>
+    </dependency>     
   </dependencies>
 
   <build>
