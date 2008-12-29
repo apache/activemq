@@ -32,34 +32,30 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.ReferenceStore;
+import org.apache.activemq.store.AbstractMessageStore;
 import org.apache.activemq.store.jpa.model.StoredMessageReference;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 
-public class JPAReferenceStore implements ReferenceStore {
+public class JPAReferenceStore extends AbstractMessageStore implements ReferenceStore {
 
     protected final JPAPersistenceAdapter adapter;
     protected final WireFormat wireFormat;
-    protected final ActiveMQDestination destination;
     protected final String destinationName;
     protected AtomicLong lastMessageId = new AtomicLong(-1);
     protected final Lock lock = new ReentrantLock();
     
     public JPAReferenceStore(JPAPersistenceAdapter adapter, ActiveMQDestination destination) {
+        super(destination);
         this.adapter = adapter;
-        this.destination = destination;
         this.destinationName = destination.getQualifiedName();
         this.wireFormat = this.adapter.getWireFormat();
     }
     
     public Lock getStoreLock() {
         return lock;
-    }
-
-    public ActiveMQDestination getDestination() {
-        return destination;
     }
 
     public void addMessage(ConnectionContext context, Message message) throws IOException {
@@ -204,15 +200,6 @@ public class JPAReferenceStore implements ReferenceStore {
 
     public void resetBatching() {
         lastMessageId.set(-1);
-    }
-
-    public void setMemoryUsage(MemoryUsage memoeyUSage){
-    }
-
-    public void start() throws Exception {
-    }
-
-    public void stop() throws Exception {
     }
 
     public void setBatch(MessageId startAfter) {

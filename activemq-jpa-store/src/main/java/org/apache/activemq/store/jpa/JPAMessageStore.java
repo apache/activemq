@@ -30,6 +30,7 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.AbstractMessageStore;
 import org.apache.activemq.store.jpa.model.StoredMessage;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
@@ -37,17 +38,16 @@ import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 
-public class JPAMessageStore implements MessageStore {
+public class JPAMessageStore extends AbstractMessageStore {
 
     protected final JPAPersistenceAdapter adapter;
     protected final WireFormat wireFormat;
-    protected final ActiveMQDestination destination;
     protected final String destinationName;
     protected AtomicLong lastMessageId = new AtomicLong(-1);
 
     public JPAMessageStore(JPAPersistenceAdapter adapter, ActiveMQDestination destination) {
+        super(destination);
         this.adapter = adapter;
-        this.destination = destination;
         this.destinationName = destination.getQualifiedName();
         this.wireFormat = this.adapter.getWireFormat();
     }
@@ -74,10 +74,6 @@ public class JPAMessageStore implements MessageStore {
             throw IOExceptionSupport.create(e);
         }
         adapter.commitEntityManager(context, manager);
-    }
-
-    public ActiveMQDestination getDestination() {
-        return destination;
     }
 
     public Message getMessage(MessageId identity) throws IOException {
@@ -189,14 +185,5 @@ public class JPAMessageStore implements MessageStore {
 
     public void resetBatching() {
         lastMessageId.set(-1);
-    }
-
-    public void setMemoryUsage(MemoryUsage memoeyUSage){
-    }
-
-    public void start() throws Exception {
-    }
-
-    public void stop() throws Exception {
     }
 }
