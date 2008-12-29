@@ -40,6 +40,7 @@ import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.protobuf.Buffer;
+import org.apache.activemq.store.AbstractMessageStore;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
@@ -118,12 +119,11 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
         };
     }
 
-    public class KahaDBMessageStore implements MessageStore {
-        private final ActiveMQDestination destination;
+    public class KahaDBMessageStore extends AbstractMessageStore {
         protected KahaDestination dest;
 
         public KahaDBMessageStore(ActiveMQDestination destination) {
-            this.destination = destination;
+            super(destination);
             this.dest = convert( destination );
         }
 
