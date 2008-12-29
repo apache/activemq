@@ -80,7 +80,7 @@ public class RegionBroker extends EmptyBroker {
     private final Region topicRegion;
     private final Region tempQueueRegion;
     private final Region tempTopicRegion;
-    protected BrokerService brokerService;
+    protected final BrokerService brokerService;
     private boolean started;
     private boolean keepDurableSubsActive;
 
@@ -91,7 +91,7 @@ public class RegionBroker extends EmptyBroker {
     private final LongSequenceGenerator sequenceGenerator = new LongSequenceGenerator();
     private BrokerId brokerId;
     private String brokerName;
-    private Map<String, ConnectionContext> clientIdSet = new HashMap<String, ConnectionContext>(); 
+    private final Map<String, ConnectionContext> clientIdSet = new HashMap<String, ConnectionContext>();
     private final DestinationInterceptor destinationInterceptor;
     private ConnectionContext adminConnectionContext;
 
@@ -127,7 +127,7 @@ public class RegionBroker extends EmptyBroker {
         case ActiveMQDestination.TEMP_TOPIC_TYPE:
             return tempTopicRegion.getDestinations(destination);
         default:
-            return Collections.EMPTY_SET;
+            return Collections.emptySet();
         }
     }
 
@@ -415,7 +415,7 @@ public class RegionBroker extends EmptyBroker {
             ActiveMQDestination destination = message.getDestination();
             // ensure the destination is registered with the RegionBroker
             producerExchange.getConnectionContext().getBroker().addDestination(producerExchange.getConnectionContext(), destination);
-            Region region = null;
+            Region region;
             switch (destination.getDestinationType()) {
             case ActiveMQDestination.QUEUE_TYPE:
                 region = queueRegion;
@@ -440,7 +440,7 @@ public class RegionBroker extends EmptyBroker {
     public void acknowledge(ConsumerBrokerExchange consumerExchange, MessageAck ack) throws Exception {
         if (consumerExchange.isWildcard() || consumerExchange.getRegion() == null) {
             ActiveMQDestination destination = ack.getDestination();
-            Region region = null;
+            Region region;
             switch (destination.getDestinationType()) {
             case ActiveMQDestination.QUEUE_TYPE:
                 region = queueRegion;
