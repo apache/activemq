@@ -94,7 +94,6 @@ public class VMTransport implements Transport, Task {
                 } else {
                     transportListener = peer.transportListener;
                 }
-                enqueueValve.decrement();
             } else {
                 peer.getMessageQueue().put(command);
             }

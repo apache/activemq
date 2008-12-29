@@ -36,7 +36,7 @@ public final class Valve {
     /**
      * Turns the valve on. This method blocks until the valve is off.
      * 
-     * @throws InterruptedException
+     * @throws InterruptedException if wait is interrupted
      */
     public void turnOn() throws InterruptedException {
         synchronized (mutex) {
@@ -58,10 +58,13 @@ public final class Valve {
      * Turns the valve off. This method blocks until the valve is on and the
      * valve is not in use.
      * 
-     * @throws InterruptedException
+     * @throws InterruptedException if wait is interrupted
      */
     public void turnOff() throws InterruptedException {
         synchronized (mutex) {
+            if (turningOff < 0) {
+                throw new IllegalStateException("Unbalanced turningOff: " + turningOff);
+            }
             try {
                 ++turningOff;
                 while (usage > 0 || !on) {
@@ -79,10 +82,16 @@ public final class Valve {
      * Increments the use counter of the valve. This method blocks if the valve
      * is off, or is being turned off.
      * 
-     * @throws InterruptedException
+     * @throws InterruptedException  if wait is interrupted
      */
     public void increment() throws InterruptedException {
         synchronized (mutex) {
+            if (turningOff < 0) {
+                throw new IllegalStateException("Unbalanced turningOff: " + turningOff);
+            }
+            if (usage < 0) {
+                throw new IllegalStateException("Unbalanced usage: " + usage);
+            }
             // Do we have to wait for the value to be on?
             while (turningOff > 0 || !on) {
                 mutex.wait();
@@ -97,6 +106,12 @@ public final class Valve {
     public void decrement() {
         synchronized (mutex) {
             usage--;
+            if (turningOff < 0) {
+                throw new IllegalStateException("Unbalanced turningOff: " + turningOff);
+            }
+            if (usage < 0) {
+                throw new IllegalStateException("Unbalanced usage: " + usage);
+            }
             if (turningOff > 0 && usage < 1) {
                 mutex.notifyAll();
             }
