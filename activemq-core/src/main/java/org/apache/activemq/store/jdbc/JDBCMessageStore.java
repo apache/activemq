@@ -27,8 +27,8 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.AbstractMessageStore;
 import org.apache.activemq.usage.MemoryUsage;
-import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.ByteSequenceData;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -37,19 +37,18 @@ import org.apache.activemq.wireformat.WireFormat;
 /**
  * @version $Revision: 1.10 $
  */
-public class JDBCMessageStore implements MessageStore {
+public class JDBCMessageStore extends AbstractMessageStore {
 
     protected final WireFormat wireFormat;
-    protected final ActiveMQDestination destination;
     protected final JDBCAdapter adapter;
     protected final JDBCPersistenceAdapter persistenceAdapter;
     protected AtomicLong lastMessageId = new AtomicLong(-1);
 
     public JDBCMessageStore(JDBCPersistenceAdapter persistenceAdapter, JDBCAdapter adapter, WireFormat wireFormat, ActiveMQDestination destination) {
+        super(destination);
         this.persistenceAdapter = persistenceAdapter;
         this.adapter = adapter;
         this.wireFormat = wireFormat;
-        this.destination = destination;
     }
 
     public void addMessage(ConnectionContext context, Message message) throws IOException {
@@ -169,12 +168,6 @@ public class JDBCMessageStore implements MessageStore {
         }
     }
 
-    public void start() {
-    }
-
-    public void stop() {
-    }
-
     /**
      * @see org.apache.activemq.store.MessageStore#removeAllMessages(ConnectionContext)
      */
@@ -190,15 +183,6 @@ public class JDBCMessageStore implements MessageStore {
             c.close();
         }
     }
-
-    public ActiveMQDestination getDestination() {
-        return destination;
-    }
-
-    public void setMemoryUsage(MemoryUsage memoryUsage) {
-       //can ignore as messages aren't buffered
-    }
-   
 
     public int getMessageCount() throws IOException {
         int result = 0;

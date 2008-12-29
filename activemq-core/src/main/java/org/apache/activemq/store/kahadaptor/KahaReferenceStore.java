@@ -31,15 +31,15 @@ import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.ReferenceStore;
+import org.apache.activemq.store.AbstractMessageStore;
 import org.apache.activemq.usage.MemoryUsage;
 
 /**
  * @author rajdavies
  *
  */
-public class KahaReferenceStore implements ReferenceStore {
+public class KahaReferenceStore extends AbstractMessageStore implements ReferenceStore {
 
-    protected final ActiveMQDestination destination;
     protected final MapContainer<MessageId, ReferenceRecord> messageContainer;
     protected KahaReferenceStoreAdapter adapter;
     private StoreEntry batchEntry;
@@ -48,19 +48,19 @@ public class KahaReferenceStore implements ReferenceStore {
 
     public KahaReferenceStore(KahaReferenceStoreAdapter adapter, MapContainer<MessageId, ReferenceRecord> container,
                               ActiveMQDestination destination) throws IOException {
+        super(destination);
         this.adapter = adapter;
         this.messageContainer = container;
-        this.destination = destination;
     }
     
     public Lock getStoreLock() {
         return lock;
     }
 
-    public void start() {
-    }
-
-    public void stop() {
+    public void dispose(ConnectionContext context) {
+        super.dispose(context);
+        this.messageContainer.delete();
+        this.adapter.removeReferenceStore(this);
     }
 
     protected MessageId getMessageId(Object object) {
@@ -204,10 +204,6 @@ public class KahaReferenceStore implements ReferenceStore {
         }
     }
 
-    public ActiveMQDestination getDestination() {
-        return destination;
-    }
-
     public void delete() {
         lock.lock();
         try {
@@ -231,9 +227,6 @@ public class KahaReferenceStore implements ReferenceStore {
         return messageContainer.size();
     }
 
-    public void setMemoryUsage(MemoryUsage memoryUsage) {
-    }
-    
     public boolean isSupportForCursors() {
         return true;
     }

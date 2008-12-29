@@ -67,6 +67,10 @@ public class ProxyMessageStore implements MessageStore {
         delegate.stop();
     }
 
+    public void dispose(ConnectionContext context) {
+        delegate.dispose(context);
+    }
+
     public ActiveMQDestination getDestination() {
         return delegate.getDestination();
     }

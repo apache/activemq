@@ -28,31 +28,29 @@ import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.usage.Usage;
 
-
 /**
  * @version $Revision: 1.12 $
  */
 public abstract class BaseDestination implements Destination {
     /**
-     * The maximum number of messages to page in to the destination
-     * from persistent storage
+     * The maximum number of messages to page in to the destination from persistent storage
      */
-    public static final int MAX_PAGE_SIZE=200;
-    public static final int MAX_BROWSE_PAGE_SIZE=MAX_PAGE_SIZE*2;
+    public static final int MAX_PAGE_SIZE = 200;
+    public static final int MAX_BROWSE_PAGE_SIZE = MAX_PAGE_SIZE * 2;
     protected final ActiveMQDestination destination;
     protected final Broker broker;
     protected final MessageStore store;
     protected SystemUsage systemUsage;
     protected MemoryUsage memoryUsage;
     private boolean producerFlowControl = true;
-    private int maxProducersToAudit=1024;
-    private int maxAuditDepth=2048;
-    private boolean enableAudit=true;
-    private int maxPageSize=MAX_PAGE_SIZE;
-    private int maxBrowsePageSize=MAX_BROWSE_PAGE_SIZE;
-    private boolean useCache=true;
-    private int minimumMessageSize=1024;
-    private boolean lazyDispatch=false;
+    private int maxProducersToAudit = 1024;
+    private int maxAuditDepth = 2048;
+    private boolean enableAudit = true;
+    private int maxPageSize = MAX_PAGE_SIZE;
+    private int maxBrowsePageSize = MAX_BROWSE_PAGE_SIZE;
+    private boolean useCache = true;
+    private int minimumMessageSize = 1024;
+    private boolean lazyDispatch = false;
     private boolean advisoryForSlowConsumers;
     private boolean advisdoryForFastProducers;
     private boolean advisoryForDiscardingMessages;
@@ -63,31 +61,32 @@ public abstract class BaseDestination implements Destination {
     protected final BrokerService brokerService;
     protected final Broker regionBroker;
     protected DeadLetterStrategy deadLetterStrategy = DEFAULT_DEAD_LETTER_STRATEGY;
-    
+
     /**
-     * @param broker 
-     * @param store 
+     * @param broker
+     * @param store
      * @param destination
      * @param parentStats
-     * @throws Exception 
+     * @throws Exception
      */
-    public BaseDestination(BrokerService brokerService,MessageStore store, ActiveMQDestination destination, DestinationStatistics parentStats) throws Exception {
+    public BaseDestination(BrokerService brokerService, MessageStore store, ActiveMQDestination destination,
+            DestinationStatistics parentStats) throws Exception {
         this.brokerService = brokerService;
-        this.broker=brokerService.getBroker();
-        this.store=store;
-        this.destination=destination;
+        this.broker = brokerService.getBroker();
+        this.store = store;
+        this.destination = destination;
         // let's copy the enabled property from the parent DestinationStatistics
         this.destinationStatistics.setEnabled(parentStats.isEnabled());
-        this.destinationStatistics.setParent(parentStats);        
-
+        this.destinationStatistics.setParent(parentStats);
         this.systemUsage = brokerService.getProducerSystemUsage();
         this.memoryUsage = new MemoryUsage(systemUsage.getMemoryUsage(), destination.toString());
         this.memoryUsage.setUsagePortion(1.0f);
         this.regionBroker = brokerService.getRegionBroker();
     }
-    
+
     /**
      * initialize the destination
+     * 
      * @throws Exception
      */
     public void initialize() throws Exception {
@@ -95,66 +94,77 @@ public abstract class BaseDestination implements Destination {
         // flush messages to disk when usage gets high.
         if (store != null) {
             store.setMemoryUsage(this.memoryUsage);
-        } 
+        }
     }
-    
+
     /**
      * @return the producerFlowControl
      */
     public boolean isProducerFlowControl() {
         return producerFlowControl;
     }
+
     /**
-     * @param producerFlowControl the producerFlowControl to set
+     * @param producerFlowControl
+     *            the producerFlowControl to set
      */
     public void setProducerFlowControl(boolean producerFlowControl) {
         this.producerFlowControl = producerFlowControl;
     }
+
     /**
      * @return the maxProducersToAudit
      */
     public int getMaxProducersToAudit() {
         return maxProducersToAudit;
     }
+
     /**
-     * @param maxProducersToAudit the maxProducersToAudit to set
+     * @param maxProducersToAudit
+     *            the maxProducersToAudit to set
      */
     public void setMaxProducersToAudit(int maxProducersToAudit) {
         this.maxProducersToAudit = maxProducersToAudit;
     }
+
     /**
      * @return the maxAuditDepth
      */
     public int getMaxAuditDepth() {
         return maxAuditDepth;
     }
+
     /**
-     * @param maxAuditDepth the maxAuditDepth to set
+     * @param maxAuditDepth
+     *            the maxAuditDepth to set
      */
     public void setMaxAuditDepth(int maxAuditDepth) {
         this.maxAuditDepth = maxAuditDepth;
     }
+
     /**
      * @return the enableAudit
      */
     public boolean isEnableAudit() {
         return enableAudit;
     }
+
     /**
-     * @param enableAudit the enableAudit to set
+     * @param enableAudit
+     *            the enableAudit to set
      */
     public void setEnableAudit(boolean enableAudit) {
         this.enableAudit = enableAudit;
     }
-    
-    public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception{
+
+    public void addProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         destinationStatistics.getProducers().increment();
     }
 
-    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception{
+    public void removeProducer(ConnectionContext context, ProducerInfo info) throws Exception {
         destinationStatistics.getProducers().decrement();
     }
-    
+
     public final MemoryUsage getMemoryUsage() {
         return memoryUsage;
     }
@@ -167,20 +177,19 @@ public abstract class BaseDestination implements Destination {
         return destination;
     }
 
-        
     public final String getName() {
         return getActiveMQDestination().getPhysicalName();
     }
-    
+
     public final MessageStore getMessageStore() {
         return store;
     }
-    
+
     public final boolean isActive() {
-        return destinationStatistics.getConsumers().getCount() != 0 ||
-            destinationStatistics.getProducers().getCount() != 0;
+        return destinationStatistics.getConsumers().getCount() != 0
+                || destinationStatistics.getProducers().getCount() != 0;
     }
-    
+
     public int getMaxPageSize() {
         return maxPageSize;
     }
@@ -188,14 +197,14 @@ public abstract class BaseDestination implements Destination {
     public void setMaxPageSize(int maxPageSize) {
         this.maxPageSize = maxPageSize;
     }
-    
+
     public int getMaxBrowsePageSize() {
         return this.maxBrowsePageSize;
     }
 
     public void setMaxBrowsePageSize(int maxPageSize) {
         this.maxBrowsePageSize = maxPageSize;
-    } 
+    }
 
     public boolean isUseCache() {
         return useCache;
@@ -219,8 +228,8 @@ public abstract class BaseDestination implements Destination {
 
     public void setLazyDispatch(boolean lazyDispatch) {
         this.lazyDispatch = lazyDispatch;
-    } 
-    
+    }
+
     protected long getDestinationSequenceId() {
         return regionBroker.getBrokerSequenceId();
     }
@@ -233,7 +242,8 @@ public abstract class BaseDestination implements Destination {
     }
 
     /**
-     * @param advisoryForSlowConsumers the advisoryForSlowConsumers to set
+     * @param advisoryForSlowConsumers
+     *            the advisoryForSlowConsumers to set
      */
     public void setAdvisoryForSlowConsumers(boolean advisoryForSlowConsumers) {
         this.advisoryForSlowConsumers = advisoryForSlowConsumers;
@@ -247,10 +257,10 @@ public abstract class BaseDestination implements Destination {
     }
 
     /**
-     * @param advisoryForDiscardingMessages the advisoryForDiscardingMessages to set
+     * @param advisoryForDiscardingMessages
+     *            the advisoryForDiscardingMessages to set
      */
-    public void setAdvisoryForDiscardingMessages(
-            boolean advisoryForDiscardingMessages) {
+    public void setAdvisoryForDiscardingMessages(boolean advisoryForDiscardingMessages) {
         this.advisoryForDiscardingMessages = advisoryForDiscardingMessages;
     }
 
@@ -262,7 +272,8 @@ public abstract class BaseDestination implements Destination {
     }
 
     /**
-     * @param advisoryWhenFull the advisoryWhenFull to set
+     * @param advisoryWhenFull
+     *            the advisoryWhenFull to set
      */
     public void setAdvisoryWhenFull(boolean advisoryWhenFull) {
         this.advisoryWhenFull = advisoryWhenFull;
@@ -276,7 +287,8 @@ public abstract class BaseDestination implements Destination {
     }
 
     /**
-     * @param advisoryForDelivery the advisoryForDelivery to set
+     * @param advisoryForDelivery
+     *            the advisoryForDelivery to set
      */
     public void setAdvisoryForDelivery(boolean advisoryForDelivery) {
         this.advisoryForDelivery = advisoryForDelivery;
@@ -290,7 +302,8 @@ public abstract class BaseDestination implements Destination {
     }
 
     /**
-     * @param advisoryForConsumed the advisoryForConsumed to set
+     * @param advisoryForConsumed
+     *            the advisoryForConsumed to set
      */
     public void setAdvisoryForConsumed(boolean advisoryForConsumed) {
         this.advisoryForConsumed = advisoryForConsumed;
@@ -304,12 +317,13 @@ public abstract class BaseDestination implements Destination {
     }
 
     /**
-     * @param advisdoryForFastProducers the advisdoryForFastProducers to set
+     * @param advisdoryForFastProducers
+     *            the advisdoryForFastProducers to set
      */
     public void setAdvisdoryForFastProducers(boolean advisdoryForFastProducers) {
         this.advisdoryForFastProducers = advisdoryForFastProducers;
     }
-    
+
     /**
      * @return the dead letter strategy
      */
@@ -319,13 +333,16 @@ public abstract class BaseDestination implements Destination {
 
     /**
      * set the dead letter strategy
+     * 
      * @param deadLetterStrategy
      */
     public void setDeadLetterStrategy(DeadLetterStrategy deadLetterStrategy) {
         this.deadLetterStrategy = deadLetterStrategy;
     }
+
     /**
      * called when message is consumed
+     * 
      * @param context
      * @param messageReference
      */
@@ -334,21 +351,23 @@ public abstract class BaseDestination implements Destination {
             broker.messageConsumed(context, messageReference);
         }
     }
-    
+
     /**
      * Called when message is delivered to the broker
+     * 
      * @param context
      * @param messageReference
      */
     public void messageDelivered(ConnectionContext context, MessageReference messageReference) {
-        if(advisoryForDelivery) {
+        if (advisoryForDelivery) {
             broker.messageDelivered(context, messageReference);
         }
     }
-    
+
     /**
-     * Called when a message is discarded - e.g. running low on memory
-     * This will happen only if the policy is enabled - e.g. non durable topics
+     * Called when a message is discarded - e.g. running low on memory This will happen only if the policy is enabled -
+     * e.g. non durable topics
+     * 
      * @param context
      * @param messageReference
      */
@@ -357,43 +376,48 @@ public abstract class BaseDestination implements Destination {
             broker.messageDiscarded(context, messageReference);
         }
     }
-    
+
     /**
      * Called when there is a slow consumer
+     * 
      * @param context
      * @param subs
      */
     public void slowConsumer(ConnectionContext context, Subscription subs) {
-        if(advisoryForSlowConsumers) {
+        if (advisoryForSlowConsumers) {
             broker.slowConsumer(context, this, subs);
         }
     }
-    
+
     /**
      * Called to notify a producer is too fast
+     * 
      * @param context
      * @param producerInfo
      */
-    public void fastProducer(ConnectionContext context,ProducerInfo producerInfo) {
-        if(advisdoryForFastProducers) {
+    public void fastProducer(ConnectionContext context, ProducerInfo producerInfo) {
+        if (advisdoryForFastProducers) {
             broker.fastProducer(context, producerInfo);
         }
     }
-    
+
     /**
      * Called when a Usage reaches a limit
+     * 
      * @param context
      * @param usage
      */
-    public void isFull(ConnectionContext context,Usage usage) {
-        if(advisoryWhenFull) {
-            broker.isFull(context,this, usage);
+    public void isFull(ConnectionContext context, Usage usage) {
+        if (advisoryWhenFull) {
+            broker.isFull(context, this, usage);
         }
     }
-    
+
     public void dispose(ConnectionContext context) throws IOException {
-        destinationStatistics.setParent(null);
+        if (this.store != null) {
+            this.store.dispose(context);
+        }
+        this.destinationStatistics.setParent(null);
         this.memoryUsage.stop();
     }
-
 }

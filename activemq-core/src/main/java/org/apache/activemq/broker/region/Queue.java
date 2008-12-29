@@ -475,13 +475,6 @@ public class Queue extends BaseDestination implements Task {
         }
     }
 
-    public void dispose(ConnectionContext context) throws IOException {
-        super.dispose(context);
-        if (store != null) {
-            store.removeAllMessages(context);
-        }
-    }
-
 	public void gc(){
 	}
     
@@ -542,6 +535,9 @@ public class Queue extends BaseDestination implements Task {
         }
         if (memoryUsage != null) {
             memoryUsage.stop();
+        }
+        if (store!=null) {
+            store.stop();
         }
     }
 

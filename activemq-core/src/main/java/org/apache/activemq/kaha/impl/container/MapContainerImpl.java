@@ -142,6 +142,16 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
         }
     }
 
+    public synchronized void delete() {
+        unload();
+        try {
+            index.delete();
+        } catch (IOException e) {
+            LOG.warn("Failed to unload the index", e);
+        }
+    }
+
+
     public synchronized void setKeyMarshaller(Marshaller keyMarshaller) {
         checkClosed();
         this.keyMarshaller = keyMarshaller;
@@ -578,7 +588,6 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
     public IndexMBean getIndexMBean() {
       return (IndexMBean) index;
     }
-  
     public int getIndexMaxBinSize() {
         return indexMaxBinSize;
     }

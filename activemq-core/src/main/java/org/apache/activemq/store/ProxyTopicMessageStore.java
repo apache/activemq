@@ -126,6 +126,10 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
 
     }
 
+    public void dispose(ConnectionContext context) {
+        delegate.dispose(context);
+    }
+
     public void resetBatching() {
         delegate.resetBatching();
 

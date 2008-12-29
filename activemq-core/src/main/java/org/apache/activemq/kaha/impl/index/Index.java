@@ -96,4 +96,11 @@ public interface Index {
      * @return
      */
     int getSize();
+
+    /**
+     * delete all state associated with the index
+     *
+     * @throws IOException
+     */
+    void delete() throws IOException;
 }
