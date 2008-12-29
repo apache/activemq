@@ -42,28 +42,32 @@ public class SlowConsumerTopicTest extends SimpleTopicTest {
    
 
     protected PerfConsumer createConsumer(ConnectionFactory fac, Destination dest, int number) throws JMSException {
-        return new SlowConsumer(fac, dest);
+        PerfConsumer result = new SlowConsumer(fac, dest);
+        return result;
     }
 
     protected PerfProducer createProducer(ConnectionFactory fac, Destination dest, int number, byte[] payload) throws JMSException {
         PerfProducer result = super.createProducer(fac, dest, number, payload);
         result.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        result.setSleep(10);
         return result;
     }
 
-    protected BrokerService createBroker() throws Exception {
+    protected BrokerService createBroker(String url) throws Exception {
         Resource resource = new ClassPathResource("org/apache/activemq/perf/slowConsumerBroker.xml");
+        System.err.println("CREATE BROKER FROM " + resource);
         BrokerFactoryBean factory = new BrokerFactoryBean(resource);
         factory.afterPropertiesSet();
         BrokerService broker = factory.getBroker();
+        
         broker.start();
         return broker;
     }
 
-    protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
-        ActiveMQConnectionFactory result = super.createConnectionFactory(bindAddress);
+    protected ActiveMQConnectionFactory createConnectionFactory(String uri) throws Exception {
+        ActiveMQConnectionFactory result = super.createConnectionFactory(uri);
         ActiveMQPrefetchPolicy policy = new ActiveMQPrefetchPolicy();
-        policy.setTopicPrefetch(1000);
+        policy.setTopicPrefetch(10);
         result.setPrefetchPolicy(policy);
         return result;
     }

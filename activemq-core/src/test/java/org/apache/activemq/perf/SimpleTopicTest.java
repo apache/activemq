@@ -35,9 +35,9 @@ public class SimpleTopicTest extends TestCase {
     private static final Log LOG = LogFactory.getLog(SimpleTopicTest.class);
     
     protected BrokerService broker;
-    protected String clientURI="tcp://localhost:61616?wireFormat.cacheEnabled=true&wireFormat.tightEncodingEnabled=true&jms.useAsyncSend=false&wireFormat.maxInactivityDuration=50000";
+    protected String clientURI="tcp://localhost:61616?wireFormat.cacheEnabled=true&wireFormat.tightEncodingEnabled=true&jms.useAsyncSend=false&wireFormat.maxInactivityDuration=0";
     //protected String clientURI="tcp://localhost:61616";
-    protected String bindAddress="tcp://localhost:61616";
+    protected String bindAddress="tcp://localhost:61616?wireFormat.maxInactivityDuration=0";
     //protected String bindAddress = "tcp://localhost:61616";
     //protected String bindAddress="vm://localhost?marshal=true";
     //protected String bindAddress="vm://localhost";
@@ -51,7 +51,7 @@ public class SimpleTopicTest extends TestCase {
     protected int numberofProducers = 1;
     protected int totalNumberOfProducers;
     protected int totalNumberOfConsumers;
-    protected int playloadSize = 1024;
+    protected int playloadSize = 12;
     protected byte[] array;
     protected ConnectionFactory factory;
     

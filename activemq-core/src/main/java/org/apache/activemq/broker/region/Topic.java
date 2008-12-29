@@ -449,13 +449,7 @@ public class Topic  extends BaseDestination  implements Task{
         messageConsumed(context, node);
     }
 
-    public void dispose(ConnectionContext context) throws IOException {
-        super.dispose(context);
-        if (topicStore != null) {
-            topicStore.removeAllMessages(context);
-        }
-    }
-
+    
     public void gc() {
     }
 
@@ -478,6 +472,9 @@ public class Topic  extends BaseDestination  implements Task{
         this.subscriptionRecoveryPolicy.stop();
         if (memoryUsage != null) {
             memoryUsage.stop();
+        }
+        if(this.topicStore != null) {
+            this.topicStore.stop();
         }
     }
 

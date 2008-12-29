@@ -37,6 +37,7 @@ import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.AbstractMessageStore;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
@@ -50,14 +51,13 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @version $Revision: 1.14 $
  */
-public class JournalMessageStore implements MessageStore {
+public class JournalMessageStore extends AbstractMessageStore {
 
     private static final Log LOG = LogFactory.getLog(JournalMessageStore.class);
 
     protected final JournalPersistenceAdapter peristenceAdapter;
     protected final JournalTransactionStore transactionStore;
     protected final MessageStore longTermStore;
-    protected final ActiveMQDestination destination;
     protected final TransactionTemplate transactionTemplate;
     protected RecordLocation lastLocation;
     protected Set<RecordLocation> inFlightTxLocations = new HashSet<RecordLocation>();
@@ -72,10 +72,10 @@ public class JournalMessageStore implements MessageStore {
     private MemoryUsage memoryUsage;
 
     public JournalMessageStore(JournalPersistenceAdapter adapter, MessageStore checkpointStore, ActiveMQDestination destination) {
+        super(destination);
         this.peristenceAdapter = adapter;
         this.transactionStore = adapter.getTransactionStore();
         this.longTermStore = checkpointStore;
-        this.destination = destination;
         this.transactionTemplate = new TransactionTemplate(adapter, new ConnectionContext(new NonCachedMessageEvaluationContext()));
     }
 
@@ -380,10 +380,6 @@ public class JournalMessageStore implements MessageStore {
     public void removeAllMessages(ConnectionContext context) throws IOException {
         peristenceAdapter.checkpoint(true, true);
         longTermStore.removeAllMessages(context);
-    }
-
-    public ActiveMQDestination getDestination() {
-        return destination;
     }
 
     public void addMessageReference(ConnectionContext context, MessageId messageId, long expirationTime, String messageRef) throws IOException {

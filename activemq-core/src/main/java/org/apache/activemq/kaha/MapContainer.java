@@ -283,4 +283,9 @@ public interface MapContainer<K, V> extends Map<K, V> {
      * @return the Index MBean
      */
     IndexMBean getIndexMBean();
+
+    /**
+     * Clean up all state associated with this container.
+     */
+    void delete();
 }

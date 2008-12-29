@@ -30,6 +30,7 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.AbstractMessageStore;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
 
@@ -39,9 +40,8 @@ import org.apache.activemq.usage.SystemUsage;
  * 
  * @version $Revision: 1.7 $
  */
-public class MemoryMessageStore implements MessageStore {
+public class MemoryMessageStore extends AbstractMessageStore {
 
-    protected final ActiveMQDestination destination;
     protected final Map<MessageId, Message> messageTable;
     protected MessageId lastBatchId;
 
@@ -50,7 +50,7 @@ public class MemoryMessageStore implements MessageStore {
     }
 
     public MemoryMessageStore(ActiveMQDestination destination, Map<MessageId, Message> messageTable) {
-        this.destination = destination;
+        super(destination);
         this.messageTable = Collections.synchronizedMap(messageTable);
     }
 
@@ -108,20 +108,10 @@ public class MemoryMessageStore implements MessageStore {
         }
     }
 
-    public void start() {
-    }
-
-    public void stop() {
-    }
-
     public void removeAllMessages(ConnectionContext context) throws IOException {
         synchronized (messageTable) {
             messageTable.clear();
         }
-    }
-
-    public ActiveMQDestination getDestination() {
-        return destination;
     }
 
     public void delete() {
@@ -159,14 +149,5 @@ public class MemoryMessageStore implements MessageStore {
 
     public void resetBatching() {
         lastBatchId = null;
-    }
-
-    /**
-     * @param memoeyUSage
-     * @see org.apache.activemq.store.MessageStore#setMemoryUsage(org.apache.activemq.usage.MemoryUsage)
-     */
-    public void setMemoryUsage(MemoryUsage memoeyUSage){
-        // TODO Auto-generated method stub
-        
     }
 }

@@ -109,4 +109,5 @@ public interface MessageStore extends Service {
 
     void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception;
 
+    void dispose(ConnectionContext context);
 }

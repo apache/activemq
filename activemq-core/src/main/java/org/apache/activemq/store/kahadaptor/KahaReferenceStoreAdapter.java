@@ -33,6 +33,7 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.command.TransactionId;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.kaha.CommandMarshaller;
 import org.apache.activemq.kaha.ListContainer;
 import org.apache.activemq.kaha.MapContainer;
@@ -179,6 +180,16 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
         }
         return rc;
     }
+
+    public void removeReferenceStore(KahaReferenceStore store) {
+        ActiveMQDestination destination = store.getDestination();
+        if (destination.isQueue()) {
+            queues.remove(destination);
+        } else {
+            topics.remove(destination);
+        }
+        messageStores.remove(destination);
+    }
 /*
     public void buildReferenceFileIdsInUse() throws IOException {
         recordReferences = new HashMap<Integer, AtomicInteger>();
@@ -239,7 +250,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     }
 
     /**
-     * 
+     *
      * @throws IOException
      * @see org.apache.activemq.store.ReferenceStoreAdapter#clearMessages()
      */
@@ -250,13 +261,13 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     }
 
     /**
-     * 
+     *
      * @throws IOException
      * @see org.apache.activemq.store.ReferenceStoreAdapter#recoverState()
      */
-   
+
     public void recoverState() throws IOException {
-        Set<SubscriptionInfo> set = new HashSet<SubscriptionInfo>(this.durableSubscribers);   
+        Set<SubscriptionInfo> set = new HashSet<SubscriptionInfo>(this.durableSubscribers);
         for (SubscriptionInfo info:set) {
             LOG.info("Recovering subscriber state for durable subscriber: " + info);
             TopicReferenceStore ts = createTopicReferenceStore((ActiveMQTopic)info.getDestination());
@@ -312,7 +323,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
             StoreFactory.delete(stateDirectory);
         }
     }
-    
+
     public boolean isPersistentIndex() {
 		return persistentIndex;
 	}
@@ -363,7 +374,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     public void setIndexPageSize(int indexPageSize) {
         this.indexPageSize = indexPageSize;
     }
-    
+
     public int getIndexMaxBinSize() {
         return indexMaxBinSize;
     }
@@ -371,7 +382,7 @@ public class KahaReferenceStoreAdapter extends KahaPersistenceAdapter implements
     public void setIndexMaxBinSize(int maxBinSize) {
         this.indexMaxBinSize = maxBinSize;
     }
-    
+
     /**
      * @return the loadFactor
      */

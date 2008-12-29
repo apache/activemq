@@ -39,7 +39,7 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
 
     protected ListContainer<TopicSubAck> ackContainer;
     protected Map<String, TopicSubContainer> subscriberMessages = new ConcurrentHashMap<String, TopicSubContainer>();
-    private Map<String, SubscriptionInfo> subscriberContainer;
+    private MapContainer<String, SubscriptionInfo> subscriberContainer;
     private Store store;
     private static final String TOPIC_SUB_NAME = "tsn";
 
@@ -56,6 +56,11 @@ public class KahaTopicReferenceStore extends KahaReferenceStore implements Topic
             SubscriptionInfo info = i.next();
             addSubscriberMessageContainer(info.getClientId(), info.getSubscriptionName());
         }
+    }
+
+    public void dispose(ConnectionContext context) {
+        super.dispose(context);
+        subscriberContainer.delete();
     }
 
     protected MessageId getMessageId(Object object) {

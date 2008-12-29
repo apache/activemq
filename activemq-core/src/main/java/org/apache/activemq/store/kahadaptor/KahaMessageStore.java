@@ -26,6 +26,7 @@ import org.apache.activemq.kaha.MapContainer;
 import org.apache.activemq.kaha.StoreEntry;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.AbstractMessageStore;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
 
@@ -35,16 +36,15 @@ import org.apache.activemq.usage.SystemUsage;
  * 
  * @version $Revision: 1.7 $
  */
-public class KahaMessageStore implements MessageStore {
+public class KahaMessageStore extends AbstractMessageStore {
 
-    protected final ActiveMQDestination destination;
     protected final MapContainer<MessageId, Message> messageContainer;
     protected StoreEntry batchEntry;
 
     public KahaMessageStore(MapContainer<MessageId, Message> container, ActiveMQDestination destination)
         throws IOException {
+        super(destination);
         this.messageContainer = container;
-        this.destination = destination;
     }
 
     protected MessageId getMessageId(Object object) {
@@ -101,25 +101,12 @@ public class KahaMessageStore implements MessageStore {
         }
     }
 
-    public void start() {
-    }
-
-    public void stop() {
-    }
-
     public synchronized void removeAllMessages(ConnectionContext context) throws IOException {
         messageContainer.clear();
     }
 
-    public ActiveMQDestination getDestination() {
-        return destination;
-    }
-
     public synchronized void delete() {
         messageContainer.clear();
-    }
-
-    public void setMemoryUsage(MemoryUsage memoryUsage) {
     }
 
     /**

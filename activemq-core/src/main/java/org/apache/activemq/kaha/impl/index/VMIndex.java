@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * Index implementation using a HashMap
- * 
+ *
  * @version $Revision: 1.2 $
  */
 public class VMIndex implements Index, IndexMBean {
@@ -41,7 +41,7 @@ public class VMIndex implements Index, IndexMBean {
     }
 
     /**
-     * 
+     *
      * @see org.apache.activemq.kaha.impl.index.Index#clear()
      */
     public void clear() {
@@ -122,9 +122,13 @@ public class VMIndex implements Index, IndexMBean {
         map.clear();
     }
 
+    public void delete() throws IOException {
+        unload();
+    }
+
     public void setKeyMarshaller(Marshaller marshaller) {
     }
-    
+
     public int getSize() {
         return map.size();
     }

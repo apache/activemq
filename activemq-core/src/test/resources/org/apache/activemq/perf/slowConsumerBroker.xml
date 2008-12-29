@@ -25,10 +25,10 @@
      <destinationPolicy>
       <policyMap>
         <policyEntries>
-          <policyEntry topic="blob">            
+          <policyEntry topic=">" producerFlowControl="false">            
             <!-- lets force old messages to be discarded for slow consumers -->
             <pendingMessageLimitStrategy>
-              <constantPendingMessageLimitStrategy limit="10"/>
+              <constantPendingMessageLimitStrategy limit="0"/>
             </pendingMessageLimitStrategy>
           </policyEntry>
         </policyEntries>
