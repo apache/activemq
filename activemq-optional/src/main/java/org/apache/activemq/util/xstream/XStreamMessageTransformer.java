@@ -29,6 +29,7 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.HierarchicalStreamDriver;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.thoughtworks.xstream.io.xml.PrettyPrintWriter;
@@ -46,6 +47,11 @@ public class XStreamMessageTransformer extends MessageTransformerSupport {
 
     protected MessageTransform transformType;
     private XStream xStream;
+    
+    /**
+     * Specialized driver to be used with stream readers and writers
+     */
+    private HierarchicalStreamDriver streamDriver;
 
     /**
      * Defines the type of transformation. If XML (default), - producer
@@ -109,7 +115,15 @@ public class XStreamMessageTransformer extends MessageTransformerSupport {
         this.xStream = xStream;
     }
 
-    // Implementation methods
+    public HierarchicalStreamDriver getStreamDriver() {
+		return streamDriver;
+    }
+
+	public void setStreamDriver(HierarchicalStreamDriver streamDriver) {
+		this.streamDriver = streamDriver;
+    }
+
+	// Implementation methods
     // -------------------------------------------------------------------------
     protected XStream createXStream() {
         return new XStream();
@@ -165,7 +179,12 @@ public class XStreamMessageTransformer extends MessageTransformerSupport {
     protected String marshall(Session session, ObjectMessage objectMessage) throws JMSException {
         Serializable object = objectMessage.getObject();
         StringWriter buffer = new StringWriter();
-        HierarchicalStreamWriter out = new PrettyPrintWriter(buffer);
+        HierarchicalStreamWriter out;
+        if (streamDriver != null) {
+        	out = streamDriver.createWriter(buffer);
+        } else {
+        	out = new PrettyPrintWriter(buffer);
+        }
         getXStream().marshal(object, out);
         return buffer.toString();
     }
@@ -175,7 +194,12 @@ public class XStreamMessageTransformer extends MessageTransformerSupport {
      * Object
      */
     protected Object unmarshall(Session session, TextMessage textMessage) throws JMSException {
-        HierarchicalStreamReader in = new XppReader(new StringReader(textMessage.getText()));
+        HierarchicalStreamReader in;
+        if (streamDriver != null) {
+        	in = streamDriver.createReader(new StringReader(textMessage.getText()));
+        } else {
+        	in = new XppReader(new StringReader(textMessage.getText()));
+        }
         return getXStream().unmarshal(in);
     }
 

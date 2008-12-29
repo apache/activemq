@@ -30,6 +30,8 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQMessageConsumer;
 
+import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
+
 import static org.apache.activemq.util.xstream.XStreamMessageTransformer.MessageTransform.*;
 
 /**
@@ -213,6 +215,87 @@ public class XStreamTransformTest extends TestCase {
         text = textMessage.getText();
         assertTrue("Text should be non-empty!", text != null && text.length() > 0);
         System.out.println("Received XML...");
+        System.out.println(text);
+
+    }
+    
+    public void testStreamDriverTransform() throws Exception {
+    	XStreamMessageTransformer transformer = new XStreamMessageTransformer(ADAPTIVE);
+    	transformer.setStreamDriver(new JettisonMappedXmlDriver());
+        connectionFactory.setTransformer(transformer);
+        connection = connectionFactory.createConnection();
+        connection.start();
+
+        // lets create the consumers
+        Session adaptiveSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Destination destination = adaptiveSession.createTopic(getClass().getName());
+        MessageConsumer adaptiveConsumer = adaptiveSession.createConsumer(destination);
+
+        Session origSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer origConsumer = origSession.createConsumer(destination);
+        // lets clear the transformer on this consumer so we see the message as
+        // it really is
+        ((ActiveMQMessageConsumer)origConsumer).setTransformer(null);
+
+        // Create producer
+        Session producerSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageProducer producer = producerSession.createProducer(destination);
+
+        Message message;
+        ObjectMessage objectMessage;
+        TextMessage textMessage;
+        SamplePojo body;
+        Object object;
+        String text;
+
+        // Send a text message
+        String xmlText = "{\"org.apache.activemq.util.xstream.SamplePojo\":{\"name\":\"James\",\"city\":\"London\"}}";
+
+        TextMessage txtRequest = producerSession.createTextMessage(xmlText);
+        producer.send(txtRequest);
+
+        // lets consume it as a text message
+        message = adaptiveConsumer.receive(timeout);
+        assertNotNull("Should have received a message!", message);
+        assertTrue("Should be a TextMessage but was: " + message, message instanceof TextMessage);
+        textMessage = (TextMessage)message;
+        text = textMessage.getText();
+        assertTrue("Text should be non-empty!", text != null && text.length() > 0);
+
+        // lets consume it as an object message
+        message = origConsumer.receive(timeout);
+        assertNotNull("Should have received a message!", message);
+        assertTrue("Should be an ObjectMessage but was: " + message, message instanceof ObjectMessage);
+        objectMessage = (ObjectMessage)message;
+        object = objectMessage.getObject();
+        assertTrue("object payload of wrong type: " + object, object instanceof SamplePojo);
+        body = (SamplePojo)object;
+        assertEquals("name", "James", body.getName());
+        assertEquals("city", "London", body.getCity());
+        
+        // Send object message
+        ObjectMessage objRequest = producerSession.createObjectMessage(new SamplePojo("James", "London"));
+        producer.send(objRequest);
+
+        // lets consume it as an object message
+        message = adaptiveConsumer.receive(timeout);
+        assertNotNull("Should have received a message!", message);
+        assertTrue("Should be an ObjectMessage but was: " + message, message instanceof ObjectMessage);
+        objectMessage = (ObjectMessage)message;
+        object = objectMessage.getObject();
+        assertTrue("object payload of wrong type: " + object, object instanceof SamplePojo);
+        body = (SamplePojo)object;
+        assertEquals("name", "James", body.getName());
+        assertEquals("city", "London", body.getCity());
+
+        // lets consume it as a text message
+        message = origConsumer.receive(timeout);
+        assertNotNull("Should have received a message!", message);
+        assertTrue("Should be a TextMessage but was: " + message, message instanceof TextMessage);
+        textMessage = (TextMessage)message;
+        text = textMessage.getText();
+        assertTrue("Text should be non-empty!", text != null && text.length() > 0);
+        System.out.println("Received JSON...");
         System.out.println(text);
 
     }
