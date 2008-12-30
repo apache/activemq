@@ -151,7 +151,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     public String toString() {
         try {
             String text = getText();
-        	if (text.length() > 63) {
+        	if (text != null && text.length() > 63) {
         		text = text.substring(0, 45) + "..." + text.substring(text.length() - 12);
         		HashMap<String, Object> overrideFields = new HashMap<String, Object>();
         		overrideFields.put("text", text);

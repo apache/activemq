@@ -143,6 +143,12 @@ public class ActiveMQTextMessageTest extends TestCase {
         assertTrue(longMessage.getText().equals(longText));         
     }
     
+    public void testNullText() throws Exception {
+    	ActiveMQTextMessage nullMessage = new ActiveMQTextMessage();
+    	setContent(nullMessage, null);
+    	assertTrue(nullMessage.toString().contains("text = null"));
+    }
+    
     protected void setContent(Message message, String text) throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dataOut = new DataOutputStream(baos);
