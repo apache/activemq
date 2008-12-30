@@ -48,14 +48,23 @@ public class ConnectionInfo extends BaseCommand {
         return DATA_STRUCTURE_TYPE;
     }
 
-    public void copy(ConnectionInfo copy) {
+    public ConnectionInfo copy() {
+        ConnectionInfo copy = new ConnectionInfo();
+        copy(copy);
+        return copy;
+    }
+
+    private void copy(ConnectionInfo copy) {
         super.copy(copy);
+        copy.connectionId = connectionId;
         copy.clientId = clientId;
         copy.userName = userName;
         copy.password = password;
         copy.brokerPath = brokerPath;
         copy.brokerMasterConnector = brokerMasterConnector;
         copy.manageable = manageable;
+        copy.clientMaster = clientMaster;
+        copy.transportContext = transportContext;
     }
 
     /**
@@ -133,7 +142,7 @@ public class ConnectionInfo extends BaseCommand {
     }
 
     /**
-     * @param brokerMasterConnector The brokerMasterConnector to set.
+     * @param slaveBroker The brokerMasterConnector to set.
      */
     public void setBrokerMasterConnector(boolean slaveBroker) {
         this.brokerMasterConnector = slaveBroker;

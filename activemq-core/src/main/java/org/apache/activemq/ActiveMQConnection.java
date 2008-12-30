@@ -51,6 +51,7 @@ import javax.jms.Topic;
 import javax.jms.TopicConnection;
 import javax.jms.TopicSession;
 import javax.jms.XAConnection;
+import javax.jms.InvalidDestinationException;
 
 import org.apache.activemq.blob.BlobTransferPolicy;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -1332,11 +1333,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             if (isConnectionInfoSentToBroker || closed.get()) {
                 return;
             }
-    
+            //TODO shouldn't this check be on userSpecifiedClientID rather than the value of clientID?
             if (info.getClientId() == null || info.getClientId().trim().length() == 0) {
                 info.setClientId(clientIdGenerator.generateId());
             }
-            syncSendPacket(info);
+            syncSendPacket(info.copy());
     
             this.isConnectionInfoSentToBroker = true;
             // Add a temp destination advisory consumer so that
@@ -2043,7 +2044,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      *                 specified.
      * @since 1.1
      */
-    public void unsubscribe(String name) throws JMSException {
+    public void unsubscribe(String name) throws InvalidDestinationException, JMSException {
         checkClosedOrFailed();
         RemoveSubscriptionInfo rsi = new RemoveSubscriptionInfo();
         rsi.setConnectionId(getConnectionInfo().getConnectionId());
