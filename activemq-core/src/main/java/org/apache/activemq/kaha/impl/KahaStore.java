@@ -198,9 +198,7 @@ public class KahaStore implements Store {
 
     public synchronized boolean doesMapContainerExist(Object id, String containerName) throws IOException {
         initialize();
-        ContainerId containerId = new ContainerId();
-        containerId.setKey(id);
-        containerId.setDataContainerName(containerName);
+        ContainerId containerId = new ContainerId(id, containerName);
         return maps.containsKey(containerId) || mapsContainer.doesRootExist(containerId);
     }
 
@@ -212,17 +210,16 @@ public class KahaStore implements Store {
         return getMapContainer(id, containerName, persistentIndex);
     }
 
-    public synchronized MapContainer getMapContainer(Object id, String originalContainerName, boolean persistentIndex)
+    public synchronized MapContainer getMapContainer(Object id, String containerName, boolean persistentIndex)
         throws IOException {
         initialize();
-        String containerName = IOHelper.toFileSystemSafeName(originalContainerName);
-        ContainerId containerId = new ContainerId();
-        containerId.setKey(id);
-        containerId.setDataContainerName(containerName);
+        ContainerId containerId = new ContainerId(id, containerName);
         MapContainerImpl result = maps.get(containerId);
         if (result == null) {
-            DataManager dm = getDataManager(containerName);
-            IndexManager im = getIndexManager(dm, containerName);
+            String fileSystemSafeContainerName = containerId.getFileSystemSafeContainerName();
+            DataManager dm = getDataManager(fileSystemSafeContainerName);
+            IndexManager im = getIndexManager(dm, fileSystemSafeContainerName);
+
             IndexItem root = mapsContainer.getRoot(im, containerId);
             if (root == null) {
                 root = mapsContainer.addRoot(im, containerId);
@@ -268,9 +265,7 @@ public class KahaStore implements Store {
 
     public synchronized boolean doesListContainerExist(Object id, String containerName) throws IOException {
         initialize();
-        ContainerId containerId = new ContainerId();
-        containerId.setKey(id);
-        containerId.setDataContainerName(containerName);
+        ContainerId containerId = new ContainerId(id, containerName);
         return lists.containsKey(containerId) || listsContainer.doesRootExist(containerId);
     }
 
@@ -282,17 +277,15 @@ public class KahaStore implements Store {
         return getListContainer(id, containerName, persistentIndex);
     }
 
-    public synchronized ListContainer getListContainer(Object id, String originalContainerName,
+    public synchronized ListContainer getListContainer(Object id, String containerName,
                                                        boolean persistentIndex) throws IOException {
         initialize();
-        String containerName = IOHelper.toFileSystemSafeName(originalContainerName);
-        ContainerId containerId = new ContainerId();
-        containerId.setKey(id);
-        containerId.setDataContainerName(containerName);
+        ContainerId containerId = new ContainerId(id, containerName);
         ListContainerImpl result = lists.get(containerId);
         if (result == null) {
-            DataManager dm = getDataManager(containerName);
-            IndexManager im = getIndexManager(dm, containerName);
+            String fileSystemSafeContainerName = containerId.getFileSystemSafeContainerName();
+            DataManager dm = getDataManager(fileSystemSafeContainerName);
+            IndexManager im = getIndexManager(dm, fileSystemSafeContainerName);
 
             IndexItem root = listsContainer.getRoot(im, containerId);
             if (root == null) {
