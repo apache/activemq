@@ -55,9 +55,8 @@ final class RecoveryListenerAdapter implements MessageRecoveryListener {
         if (message != null) {
             return recoverMessage(message);
         } else {
-            LOG.error("Message id " + ref + " could not be recovered from the data store - already dispatched");
+            throw new IllegalStateException("Message id " + ref + " could not be recovered from the data store - already dispatched");
         }
-        return false;
     }
 
     MessageId getLastRecoveredMessageId() {
