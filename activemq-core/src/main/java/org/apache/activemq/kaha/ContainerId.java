@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import org.apache.activemq.util.IOHelper;
+
 /**
  * Used by RootContainers
  * 
@@ -47,24 +49,10 @@ public class ContainerId implements Externalizable {
     }
 
     /**
-     * @param dataContainerName The dataContainerPrefix to set.
-     */
-    public void setDataContainerName(String dataContainerName) {
-        this.dataContainerName = dataContainerName;
-    }
-
-    /**
      * @return Returns the key.
      */
     public Object getKey() {
         return key;
-    }
-
-    /**
-     * @param key The key to set.
-     */
-    public void setKey(Object key) {
-        this.key = key;
     }
 
     public int hashCode() {
@@ -91,5 +79,9 @@ public class ContainerId implements Externalizable {
 
     public String toString() {
         return "CID{" + dataContainerName + ":" + key + "}";
+    }
+
+    public String getFileSystemSafeContainerName() {
+        return IOHelper.toFileSystemSafeName(dataContainerName);
     }
 }
