@@ -679,7 +679,7 @@ public class AsyncDataManager {
     }
 
     public void setFilePrefix(String filePrefix) {
-        this.filePrefix = filePrefix;
+        this.filePrefix = IOHelper.toFileSystemSafeName(filePrefix);
     }
 
     public Map<WriteKey, WriteCommand> getInflightWrites() {

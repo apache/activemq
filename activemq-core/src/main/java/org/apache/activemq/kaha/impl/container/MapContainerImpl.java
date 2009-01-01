@@ -72,7 +72,6 @@ public final class MapContainerImpl extends BaseContainerImpl implements MapCont
         if (index == null) {
             if (persistentIndex) {
                 String name = containerId.getDataContainerName() + "_" + containerId.getKey();
-                name=IOHelper.toFileSystemSafeName(name);
                 try {
                     HashIndex hashIndex = new HashIndex(directory, name, indexManager);
                     hashIndex.setNumberOfBins(getIndexBinSize());

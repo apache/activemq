@@ -80,8 +80,4 @@ public class ContainerId implements Externalizable {
     public String toString() {
         return "CID{" + dataContainerName + ":" + key + "}";
     }
-
-    public String getFileSystemSafeContainerName() {
-        return IOHelper.toFileSystemSafeName(dataContainerName);
-    }
 }
