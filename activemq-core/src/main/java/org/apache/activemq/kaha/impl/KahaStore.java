@@ -70,11 +70,10 @@ public class KahaStore implements Store {
     private final String mode;
     private IndexRootContainer mapsContainer;
     private IndexRootContainer listsContainer;
-    private Map<ContainerId, ListContainerImpl> lists = new ConcurrentHashMap<ContainerId, ListContainerImpl>();
-    private Map<ContainerId, MapContainerImpl> maps = new ConcurrentHashMap<ContainerId, MapContainerImpl>();
-    private Map<String, DataManager> dataManagers = new ConcurrentHashMap<String, DataManager>();
-    private Map<String, IndexManager> indexManagers = new ConcurrentHashMap<String, IndexManager>();
-    private IndexManager rootIndexManager; // contains all the root indexes
+    private final Map<ContainerId, ListContainerImpl> lists = new ConcurrentHashMap<ContainerId, ListContainerImpl>();
+    private final Map<ContainerId, MapContainerImpl> maps = new ConcurrentHashMap<ContainerId, MapContainerImpl>();
+    private final Map<String, DataManager> dataManagers = new ConcurrentHashMap<String, DataManager>();
+    private final Map<String, IndexManager> indexManagers = new ConcurrentHashMap<String, IndexManager>();
     private boolean closed;
     private boolean initialized;
     private boolean logIndexChanges;
@@ -216,9 +215,8 @@ public class KahaStore implements Store {
         ContainerId containerId = new ContainerId(id, containerName);
         MapContainerImpl result = maps.get(containerId);
         if (result == null) {
-            String fileSystemSafeContainerName = containerId.getFileSystemSafeContainerName();
-            DataManager dm = getDataManager(fileSystemSafeContainerName);
-            IndexManager im = getIndexManager(dm, fileSystemSafeContainerName);
+            DataManager dm = getDataManager(containerName);
+            IndexManager im = getIndexManager(dm, containerName);
 
             IndexItem root = mapsContainer.getRoot(im, containerId);
             if (root == null) {
@@ -283,9 +281,8 @@ public class KahaStore implements Store {
         ContainerId containerId = new ContainerId(id, containerName);
         ListContainerImpl result = lists.get(containerId);
         if (result == null) {
-            String fileSystemSafeContainerName = containerId.getFileSystemSafeContainerName();
-            DataManager dm = getDataManager(fileSystemSafeContainerName);
-            IndexManager im = getIndexManager(dm, fileSystemSafeContainerName);
+            DataManager dm = getDataManager(containerName);
+            IndexManager im = getIndexManager(dm, containerName);
 
             IndexItem root = listsContainer.getRoot(im, containerId);
             if (root == null) {
@@ -406,7 +403,6 @@ public class KahaStore implements Store {
     }
 
     /**
-     * @see org.apache.activemq.kaha.IndexTypes
      * @return the default index type
      */
     public synchronized String getIndexTypeAsString() {
@@ -416,8 +412,7 @@ public class KahaStore implements Store {
     /**
      * Set the default index type
      * 
-     * @param type
-     * @see org.apache.activemq.kaha.IndexTypes
+     * @param type "PERSISTENT" or "VM"
      */
     public synchronized void setIndexTypeAsString(String type) {
         if (type.equalsIgnoreCase("VM")) {
@@ -445,7 +440,7 @@ public class KahaStore implements Store {
     }
 
     /**
-     * @return
+     * @return size of store
      * @see org.apache.activemq.kaha.Store#size()
      */
     public long size(){
@@ -469,7 +464,7 @@ public class KahaStore implements Store {
             lockFile = new RandomAccessFile(new File(directory, "lock"), "rw");
             lock();
             DataManager defaultDM = getDataManager(defaultContainerName);
-            rootIndexManager = getIndexManager(defaultDM, defaultContainerName);
+            IndexManager rootIndexManager = getIndexManager(defaultDM, defaultContainerName);
             IndexItem mapRoot = new IndexItem();
             IndexItem listRoot = new IndexItem();
             if (rootIndexManager.isEmpty()) {
@@ -537,7 +532,7 @@ public class KahaStore implements Store {
     /**
      * scans the directory and builds up the IndexManager and DataManager
      * 
-     * @throws IOException
+     * @throws IOException if there is a problem accessing an index or data file
      */
     private void generateInterestInListDataFiles() throws IOException {
         for (Iterator i = listsContainer.getKeys().iterator(); i.hasNext();) {
@@ -559,7 +554,7 @@ public class KahaStore implements Store {
     /**
      * scans the directory and builds up the IndexManager and DataManager
      * 
-     * @throws IOException
+     * @throws IOException if there is a problem accessing an index or data file
      */
     private void generateInterestInMapDataFiles() throws IOException {
         for (Iterator i = mapsContainer.getKeys().iterator(); i.hasNext();) {
