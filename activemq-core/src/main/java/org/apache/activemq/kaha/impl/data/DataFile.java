@@ -28,8 +28,8 @@ import java.io.RandomAccessFile;
  */
 class DataFile {
 
-    private File file;
-    private Integer number;
+    private final File file;
+    private final Integer number;
     private int referenceCount;
     private RandomAccessFile randomAcessFile;
     private Object writerData;
