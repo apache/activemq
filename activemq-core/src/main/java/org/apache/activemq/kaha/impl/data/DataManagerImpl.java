@@ -31,6 +31,7 @@ import org.apache.activemq.kaha.StoreLocation;
 import org.apache.activemq.kaha.impl.DataManager;
 import org.apache.activemq.kaha.impl.index.RedoStoreIndexItem;
 import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.IOHelper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -65,7 +66,7 @@ public final class DataManagerImpl implements DataManager {
         this.name = name;
         this.storeSize=storeSize;
 
-        dataFilePrefix = NAME_PREFIX + name + "-";
+        dataFilePrefix = IOHelper.toFileSystemSafeName(NAME_PREFIX + name + "-");
         // build up list of current dataFiles
         File[] files = dir.listFiles(new FilenameFilter() {
             public boolean accept(File dir, String n) {
