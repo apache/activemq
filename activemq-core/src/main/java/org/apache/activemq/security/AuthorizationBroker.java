@@ -54,11 +54,9 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         
         Destination existing = this.getDestinationMap().get(destination);
         if (existing != null) {
-        	return existing;
+        	return super.addDestination(context, destination);
         }
         
-        // if(!((ActiveMQTempDestination)destination).getConnectionId().equals(context.getConnectionId().getValue())
-        // ) {
         if (!securityContext.isBrokerContext()) {
             Set<?> allowedACLs = null;
             if (!destination.isTemporary()) {
@@ -72,7 +70,6 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
             }
 
         }
-        // }
 
         return super.addDestination(context, destination);
     }
