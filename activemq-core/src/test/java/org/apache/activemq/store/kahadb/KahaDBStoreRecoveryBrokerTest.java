@@ -14,13 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kahadb.store;
+package org.apache.activemq.store.kahadb;
 
 import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 
 import junit.framework.Test;
 
+import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.RecoveryBrokerTest;
 import org.apache.activemq.broker.StubConnection;
@@ -37,7 +39,7 @@ import org.apache.activemq.command.SessionInfo;
 /**
  * Used to verify that recovery works correctly against 
  * 
- * @version $Revision$
+ * @version $Revision: 712224 $
  */
 public class KahaDBStoreRecoveryBrokerTest extends RecoveryBrokerTest {
 

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kahadb.store;
+package org.apache.activemq.store.kahadb;
 
 import java.io.IOException;
 
@@ -22,10 +22,10 @@ import junit.framework.TestCase;
 
 import org.apache.activemq.protobuf.Buffer;
 import org.apache.kahadb.journal.Location;
-import org.apache.kahadb.store.data.KahaAddMessageCommand;
-import org.apache.kahadb.store.data.KahaDestination;
-import org.apache.kahadb.store.data.KahaEntryType;
-import org.apache.kahadb.store.data.KahaDestination.DestinationType;
+import org.apache.activemq.store.kahadb.data.KahaAddMessageCommand;
+import org.apache.activemq.store.kahadb.data.KahaDestination;
+import org.apache.activemq.store.kahadb.data.KahaEntryType;
+import org.apache.activemq.store.kahadb.data.KahaDestination.DestinationType;
 import org.apache.kahadb.util.ByteSequence;
 import org.apache.kahadb.util.DataByteArrayInputStream;
 import org.apache.kahadb.util.DataByteArrayOutputStream;

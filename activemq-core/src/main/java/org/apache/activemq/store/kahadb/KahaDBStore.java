@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kahadb.store;
+package org.apache.activemq.store.kahadb;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -47,24 +47,24 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.store.TransactionRecoveryListener;
 import org.apache.activemq.store.TransactionStore;
+import org.apache.activemq.store.kahadb.data.KahaAddMessageCommand;
+import org.apache.activemq.store.kahadb.data.KahaCommitCommand;
+import org.apache.activemq.store.kahadb.data.KahaDestination;
+import org.apache.activemq.store.kahadb.data.KahaLocalTransactionId;
+import org.apache.activemq.store.kahadb.data.KahaLocation;
+import org.apache.activemq.store.kahadb.data.KahaPrepareCommand;
+import org.apache.activemq.store.kahadb.data.KahaRemoveDestinationCommand;
+import org.apache.activemq.store.kahadb.data.KahaRemoveMessageCommand;
+import org.apache.activemq.store.kahadb.data.KahaRollbackCommand;
+import org.apache.activemq.store.kahadb.data.KahaSubscriptionCommand;
+import org.apache.activemq.store.kahadb.data.KahaTransactionInfo;
+import org.apache.activemq.store.kahadb.data.KahaXATransactionId;
+import org.apache.activemq.store.kahadb.data.KahaDestination.DestinationType;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.wireformat.WireFormat;
 import org.apache.kahadb.journal.Location;
 import org.apache.kahadb.page.Transaction;
-import org.apache.kahadb.store.data.KahaAddMessageCommand;
-import org.apache.kahadb.store.data.KahaCommitCommand;
-import org.apache.kahadb.store.data.KahaDestination;
-import org.apache.kahadb.store.data.KahaLocalTransactionId;
-import org.apache.kahadb.store.data.KahaLocation;
-import org.apache.kahadb.store.data.KahaPrepareCommand;
-import org.apache.kahadb.store.data.KahaRemoveDestinationCommand;
-import org.apache.kahadb.store.data.KahaRemoveMessageCommand;
-import org.apache.kahadb.store.data.KahaRollbackCommand;
-import org.apache.kahadb.store.data.KahaSubscriptionCommand;
-import org.apache.kahadb.store.data.KahaTransactionInfo;
-import org.apache.kahadb.store.data.KahaXATransactionId;
-import org.apache.kahadb.store.data.KahaDestination.DestinationType;
 
 public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
