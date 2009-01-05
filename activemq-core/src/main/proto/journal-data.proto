@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-package org.apache.kahadb.store.data;
+package org.apache.activemq.store.kahadb.data;
 
 option java_multiple_files = true;
 option java_outer_classname = "JournalData";
@@ -36,16 +36,16 @@ message KahaTraceCommand {
   // are not valid for protoc, but they are valid for the ActiveMQ proto compiler.
   // In the ActiveMQ proto compiler, comments terminate with the pipe character: |
 
-  //| option java_implments = "org.apache.kahadb.store.JournalCommand<KahaTraceCommand>";
-  //| option java_visitor = "org.apache.kahadb.store.Visitor:void:java.io.IOException";
+  //| option java_implments = "org.apache.activemq.store.kahadb.JournalCommand<KahaTraceCommand>";
+  //| option java_visitor = "org.apache.activemq.store.kahadb.Visitor:void:java.io.IOException";
   //| option java_type_method = "KahaEntryType";
   
   required string message = 1;
 }
 
 message KahaAddMessageCommand {
-  //| option java_implments = "org.apache.kahadb.store.JournalCommand<KahaAddMessageCommand>";
-  //| option java_visitor = "org.apache.kahadb.store.Visitor:void:java.io.IOException";
+  //| option java_implments = "org.apache.activemq.store.kahadb.JournalCommand<KahaAddMessageCommand>";
+  //| option java_visitor = "org.apache.activemq.store.kahadb.Visitor:void:java.io.IOException";
   //| option java_type_method = "KahaEntryType";
   
   optional KahaTransactionInfo transaction_info=1;
@@ -55,8 +55,8 @@ message KahaAddMessageCommand {
 }
 
 message KahaRemoveMessageCommand {
-  //| option java_implments = "org.apache.kahadb.store.JournalCommand<KahaRemoveMessageCommand>";
-  //| option java_visitor = "org.apache.kahadb.store.Visitor:void:java.io.IOException";
+  //| option java_implments = "org.apache.activemq.store.kahadb.JournalCommand<KahaRemoveMessageCommand>";
+  //| option java_visitor = "org.apache.activemq.store.kahadb.Visitor:void:java.io.IOException";
   //| option java_type_method = "KahaEntryType";
 
   optional KahaTransactionInfo transaction_info=1;
@@ -67,40 +67,40 @@ message KahaRemoveMessageCommand {
 }
 
 message KahaPrepareCommand {
-  //| option java_implments = "org.apache.kahadb.store.JournalCommand<KahaPrepareCommand>";
-  //| option java_visitor = "org.apache.kahadb.store.Visitor:void:java.io.IOException";
+  //| option java_implments = "org.apache.activemq.store.kahadb.JournalCommand<KahaPrepareCommand>";
+  //| option java_visitor = "org.apache.activemq.store.kahadb.Visitor:void:java.io.IOException";
   //| option java_type_method = "KahaEntryType";
 
   required KahaTransactionInfo transaction_info=1;
 }
 
 message KahaCommitCommand {
-  //| option java_implments = "org.apache.kahadb.store.JournalCommand<KahaCommitCommand>";
-  //| option java_visitor = "org.apache.kahadb.store.Visitor:void:java.io.IOException";
+  //| option java_implments = "org.apache.activemq.store.kahadb.JournalCommand<KahaCommitCommand>";
+  //| option java_visitor = "org.apache.activemq.store.kahadb.Visitor:void:java.io.IOException";
   //| option java_type_method = "KahaEntryType";
 
   required KahaTransactionInfo transaction_info=1;
 }
 
 message KahaRollbackCommand {
-  //| option java_implments = "org.apache.kahadb.store.JournalCommand<KahaRollbackCommand>";
-  //| option java_visitor = "org.apache.kahadb.store.Visitor:void:java.io.IOException";
+  //| option java_implments = "org.apache.activemq.store.kahadb.JournalCommand<KahaRollbackCommand>";
+  //| option java_visitor = "org.apache.activemq.store.kahadb.Visitor:void:java.io.IOException";
   //| option java_type_method = "KahaEntryType";
 
   required KahaTransactionInfo transaction_info=1;
 }
 
 message KahaRemoveDestinationCommand {
-  //| option java_implments = "org.apache.kahadb.store.JournalCommand<KahaRemoveDestinationCommand>";
-  //| option java_visitor = "org.apache.kahadb.store.Visitor:void:java.io.IOException";
+  //| option java_implments = "org.apache.activemq.store.kahadb.JournalCommand<KahaRemoveDestinationCommand>";
+  //| option java_visitor = "org.apache.activemq.store.kahadb.Visitor:void:java.io.IOException";
   //| option java_type_method = "KahaEntryType";
 
   required KahaDestination destination = 1;
 }
 
 message KahaSubscriptionCommand {
-  //| option java_implments = "org.apache.kahadb.store.JournalCommand<KahaSubscriptionCommand>";
-  //| option java_visitor = "org.apache.kahadb.store.Visitor:void:java.io.IOException";
+  //| option java_implments = "org.apache.activemq.store.kahadb.JournalCommand<KahaSubscriptionCommand>";
+  //| option java_visitor = "org.apache.activemq.store.kahadb.Visitor:void:java.io.IOException";
   //| option java_type_method = "KahaEntryType";
 
   required KahaDestination destination = 1;

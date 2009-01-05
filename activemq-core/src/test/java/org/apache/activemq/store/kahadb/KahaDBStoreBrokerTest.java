@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kahadb.store;
+package org.apache.activemq.store.kahadb;
 
 import java.io.File;
 import java.net.URI;
@@ -23,22 +23,14 @@ import junit.framework.Test;
 
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.XARecoveryBrokerTest;
+import org.apache.activemq.broker.BrokerTest;
 
 /**
- * Used to verify that recovery works correctly against 
+ * Once the wire format is completed we can test against real persistence storage.
  * 
- * @version $Revision$
+ * @version $Revision: 712224 $
  */
-public class KahaDBStoreXARecoveryBrokerTest extends XARecoveryBrokerTest {
-
-    public static Test suite() {
-        return suite(KahaDBStoreXARecoveryBrokerTest.class);
-    }
-    
-    public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
-    }
+public class KahaDBStoreBrokerTest extends BrokerTest {
 
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = new BrokerService();
@@ -57,4 +49,13 @@ public class KahaDBStoreXARecoveryBrokerTest extends XARecoveryBrokerTest {
         return broker;
     }
     
+    
+    public static Test suite() {
+        return suite(KahaDBStoreBrokerTest.class);
+    }
+    
+    public static void main(String[] args) {
+        junit.textui.TestRunner.run(suite());
+    }
+
 }

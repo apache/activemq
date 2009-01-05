@@ -14,15 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kahadb.store.perf;
+package org.apache.activemq.store.kahadb.perf;
 
 import java.io.File;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.perf.SimpleQueueTest;
-import org.apache.kahadb.store.KahaDBStore;
+import org.apache.activemq.store.kahadb.KahaDBStore;
 
 /**
- * @version $Revision$
+ * @version $Revision: 712224 $
  */
 public class KahaStoreQueueTest extends SimpleQueueTest {
 

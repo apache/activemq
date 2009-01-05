@@ -14,27 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kahadb.replication;
+package org.apache.activemq.store.kahadb;
 
-import org.apache.kahadb.replication.pb.PBHeader;
+import java.io.IOException;
 
-public class ReplicationFrame {
-	
-	PBHeader header;
-	Object payload;
-	
-	public PBHeader getHeader() {
-		return header;
-	}
-	public void setHeader(PBHeader header) {
-		this.header = header;
-	}
-	
-	public Object getPayload() {
-		return payload;
-	}
-	public void setPayload(Object payload) {
-		this.payload = payload;
-	}
-	
+import org.apache.activemq.store.kahadb.data.KahaEntryType;
+
+public interface JournalCommand<T> extends org.apache.activemq.protobuf.Message<T> {
+
+    public void visit(Visitor visitor) throws IOException;
+
+    public KahaEntryType type();
+
 }

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kahadb.store;
+package org.apache.activemq.store.kahadb;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -38,6 +38,19 @@ import org.apache.activemq.command.LocalTransactionId;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.command.TransactionId;
 import org.apache.activemq.command.XATransactionId;
+import org.apache.activemq.store.kahadb.data.KahaAddMessageCommand;
+import org.apache.activemq.store.kahadb.data.KahaCommitCommand;
+import org.apache.activemq.store.kahadb.data.KahaDestination;
+import org.apache.activemq.store.kahadb.data.KahaEntryType;
+import org.apache.activemq.store.kahadb.data.KahaLocalTransactionId;
+import org.apache.activemq.store.kahadb.data.KahaPrepareCommand;
+import org.apache.activemq.store.kahadb.data.KahaRemoveDestinationCommand;
+import org.apache.activemq.store.kahadb.data.KahaRemoveMessageCommand;
+import org.apache.activemq.store.kahadb.data.KahaRollbackCommand;
+import org.apache.activemq.store.kahadb.data.KahaSubscriptionCommand;
+import org.apache.activemq.store.kahadb.data.KahaTraceCommand;
+import org.apache.activemq.store.kahadb.data.KahaTransactionInfo;
+import org.apache.activemq.store.kahadb.data.KahaXATransactionId;
 import org.apache.activemq.util.Callback;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -48,19 +61,6 @@ import org.apache.kahadb.journal.Location;
 import org.apache.kahadb.page.Page;
 import org.apache.kahadb.page.PageFile;
 import org.apache.kahadb.page.Transaction;
-import org.apache.kahadb.store.data.KahaAddMessageCommand;
-import org.apache.kahadb.store.data.KahaCommitCommand;
-import org.apache.kahadb.store.data.KahaDestination;
-import org.apache.kahadb.store.data.KahaEntryType;
-import org.apache.kahadb.store.data.KahaLocalTransactionId;
-import org.apache.kahadb.store.data.KahaPrepareCommand;
-import org.apache.kahadb.store.data.KahaRemoveDestinationCommand;
-import org.apache.kahadb.store.data.KahaRemoveMessageCommand;
-import org.apache.kahadb.store.data.KahaRollbackCommand;
-import org.apache.kahadb.store.data.KahaSubscriptionCommand;
-import org.apache.kahadb.store.data.KahaTraceCommand;
-import org.apache.kahadb.store.data.KahaTransactionInfo;
-import org.apache.kahadb.store.data.KahaXATransactionId;
 import org.apache.kahadb.util.ByteSequence;
 import org.apache.kahadb.util.DataByteArrayInputStream;
 import org.apache.kahadb.util.DataByteArrayOutputStream;

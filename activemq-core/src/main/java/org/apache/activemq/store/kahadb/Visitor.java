@@ -14,18 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.kahadb.store;
+package org.apache.activemq.store.kahadb;
 
 import java.io.IOException;
 
-import org.apache.kahadb.store.data.KahaAddMessageCommand;
-import org.apache.kahadb.store.data.KahaCommitCommand;
-import org.apache.kahadb.store.data.KahaPrepareCommand;
-import org.apache.kahadb.store.data.KahaRemoveDestinationCommand;
-import org.apache.kahadb.store.data.KahaRemoveMessageCommand;
-import org.apache.kahadb.store.data.KahaRollbackCommand;
-import org.apache.kahadb.store.data.KahaTraceCommand;
-import org.apache.kahadb.store.data.KahaSubscriptionCommand;
+import org.apache.activemq.store.kahadb.data.KahaAddMessageCommand;
+import org.apache.activemq.store.kahadb.data.KahaCommitCommand;
+import org.apache.activemq.store.kahadb.data.KahaPrepareCommand;
+import org.apache.activemq.store.kahadb.data.KahaRemoveDestinationCommand;
+import org.apache.activemq.store.kahadb.data.KahaRemoveMessageCommand;
+import org.apache.activemq.store.kahadb.data.KahaRollbackCommand;
+import org.apache.activemq.store.kahadb.data.KahaSubscriptionCommand;
+import org.apache.activemq.store.kahadb.data.KahaTraceCommand;
 
 public class Visitor {
 
