@@ -17,9 +17,8 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.Set;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
@@ -108,14 +107,17 @@ public class DestinationFilter implements Destination {
 
     /**
      * Sends a message to the given destination which may be a wildcard
+     * @param context broker context
+     * @param message message to send
+     * @param destination possibly wildcard destination to send the message to
+     * @throws Exception on error
      */
     protected void send(ProducerBrokerExchange context, Message message, ActiveMQDestination destination)
         throws Exception {
         Broker broker = context.getConnectionContext().getBroker();
-        Set destinations = broker.getDestinations(destination);
+        Set<Destination> destinations = broker.getDestinations(destination);
 
-        for (Iterator iter = destinations.iterator(); iter.hasNext();) {
-            Destination dest = (Destination)iter.next();
+        for (Destination dest : destinations) {
             dest.send(context, message.copy());
         }
     }
