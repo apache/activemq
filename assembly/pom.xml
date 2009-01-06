@@ -240,11 +240,6 @@
       <artifactId>derbynet</artifactId>
       <optional>true</optional>
     </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop.zookeeper</groupId>
-      <artifactId>zookeeper</artifactId>
-      <optional>true</optional>
-    </dependency>
     
     <!-- copied dependencies from activemq-web-console -->
     <!-- enable commons-logging when inside jetty6:run -->
