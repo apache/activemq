@@ -153,7 +153,7 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
      * @return the memoryUsageHighWaterMark
      */
     public int getMemoryUsageHighWaterMark() {
-        return this.memoryUsageHighWaterMark;
+        return memoryUsageHighWaterMark;
     }
 
     /**
@@ -182,10 +182,10 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
     /**
      * Page in a restricted number of messages
      * 
-     * @param maxItems
+     * @param maxItems maximum number of messages to return
      * @return a list of paged in messages
      */
-    public LinkedList pageInList(int maxItems) {
+    public LinkedList<MessageReference> pageInList(int maxItems) {
         throw new RuntimeException("Not supported");
     }
 
@@ -202,7 +202,7 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
     public synchronized void setMaxProducersToAudit(int maxProducersToAudit) {
         this.maxProducersToAudit = maxProducersToAudit;
         if (audit != null) {
-            this.audit.setMaximumNumberOfProducersToTrack(maxProducersToAudit);
+            audit.setMaximumNumberOfProducersToTrack(maxProducersToAudit);
         }
     }
 
@@ -210,7 +210,7 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
      * @return the maxAuditDepth
      */
     public int getMaxAuditDepth() {
-        return this.maxAuditDepth;
+        return maxAuditDepth;
     }
     
 
@@ -220,7 +220,7 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
     public synchronized void setMaxAuditDepth(int maxAuditDepth) {
         this.maxAuditDepth = maxAuditDepth;
         if (audit != null) {
-            this.audit.setAuditDepth(maxAuditDepth);
+            audit.setAuditDepth(maxAuditDepth);
         }
     }
     
@@ -229,7 +229,7 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
      * @return the enableAudit
      */
     public boolean isEnableAudit() {
-        return this.enableAudit;
+        return enableAudit;
     }
 
     /**
@@ -237,7 +237,7 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
      */
     public synchronized void setEnableAudit(boolean enableAudit) {
         this.enableAudit = enableAudit;
-        if (this.enableAudit && started && audit==null) {
+        if (enableAudit && started && audit==null) {
             audit= new ActiveMQMessageAudit(maxAuditDepth,maxProducersToAudit);
         }
     }
@@ -249,7 +249,7 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
        
     /**
      * set the audit
-     * @param audit
+     * @param audit new audit component
      */
     public void setMessageAudit(ActiveMQMessageAudit audit) {
     	this.audit=audit;
@@ -272,14 +272,14 @@ public class AbstractPendingMessageCursor implements PendingMessageCursor {
     }
 
     protected synchronized boolean  isDuplicate(MessageId messageId) {
-        if (!this.enableAudit || this.audit==null) {
+        if (!enableAudit || audit==null) {
             return false;
         }
-        return this.audit.isDuplicate(messageId);
+        return audit.isDuplicate(messageId);
     }
     
     public synchronized void rollback(MessageId id) {
-        if (this.audit != null) {
+        if (audit != null) {
             audit.rollback(id);
         }
     }
