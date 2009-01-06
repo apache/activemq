@@ -93,7 +93,7 @@ public class DurableConsumerCloseAndReconnectTest extends TestSupport {
 
         closeConsumer();
 
-        LOG.info("Now lets create the consumer again and because we didn't ack, we should get it again");
+        LOG.info("Now lets create the consumer again and because we did ack, we should not get it again");
         makeConsumer();
 
         message = consumer.receive(2000);
