@@ -139,7 +139,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 	 * acknowledges all messages consumed by a session at when acknowledge()
 	 * is called
 	 */
-	public static final int INDIVIDUAL_ACKNOWLEDGE=4;
+    public static final int INDIVIDUAL_ACKNOWLEDGE = 4;
 
     public static interface DeliveryListener {
         void beforeDelivery(ActiveMQSession session, Message msg);
@@ -163,6 +163,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     protected final CopyOnWriteArrayList<ActiveMQMessageProducer> producers = new CopyOnWriteArrayList<ActiveMQMessageProducer>();
 
     protected boolean closed;
+    private volatile boolean synchronizationRegistered;
     protected boolean asyncDispatch;
     protected boolean sessionAsyncDispatch;
     protected final boolean debug;
@@ -553,9 +554,32 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     public void close() throws JMSException {
         if (!closed) {
-            dispose();
-            connection.asyncSendPacket(info.createRemoveCommand());
+            if (getTransacted()) {
+                if (!synchronizationRegistered) {
+                    synchronizationRegistered = true;
+                    getTransactionContext().addSynchronization(new Synchronization() {
+
+                                        public void afterCommit() throws Exception {
+                                            doClose();
+                                            synchronizationRegistered = false;
+                                        }
+
+                                        public void afterRollback() throws Exception {
+                                            doClose();
+                                            synchronizationRegistered = false;
+                                        }
+                                    });
+                }
+
+            } else {
+                doClose();
+            }
         }
+    }
+
+    private void doClose() throws JMSException {
+        dispose();
+        connection.asyncSendPacket(info.createRemoveCommand());
     }
 
     void clearMessagesInProgress() {
