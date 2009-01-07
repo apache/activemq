@@ -186,6 +186,24 @@ public class JournalPersistenceAdapter implements PersistenceAdapter, JournalEve
         return store;
     }
 
+    /**
+     * Cleanup method to remove any state associated with the given destination
+     *
+     * @param destination Destination to forget
+     */
+    public void removeQueueMessageStore(ActiveMQQueue destination) {
+        queues.remove(destination);
+    }
+
+    /**
+     * Cleanup method to remove any state associated with the given destination
+     *
+     * @param destination Destination to forget
+     */
+    public void removeTopicMessageStore(ActiveMQTopic destination) {
+        topics.remove(destination);
+    }
+
     public TransactionStore createTransactionStore() throws IOException {
         return transactionStore;
     }

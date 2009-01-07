@@ -203,7 +203,7 @@ public abstract class AbstractRegion implements Region {
      * 
      * @return a set of matching destination objects.
      */
-    public Set getDestinations(ActiveMQDestination destination) {
+    public Set<Destination> getDestinations(ActiveMQDestination destination) {
         synchronized (destinationsMutex) {
             return destinationMap.get(destination);
         }
@@ -474,5 +474,6 @@ public abstract class AbstractRegion implements Region {
     protected void dispose(ConnectionContext context,Destination dest) throws Exception {
         dest.dispose(context);
         dest.stop();
+        destinationFactory.removeDestination(dest);
     }
 }

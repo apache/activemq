@@ -37,6 +37,8 @@ public abstract class DestinationFactory {
      */
     public abstract Destination createDestination(ConnectionContext context, ActiveMQDestination destination, DestinationStatistics destinationStatistics) throws Exception;
 
+    public abstract void removeDestination(Destination dest);
+
     /**
      * Returns a set of all the {@link org.apache.activemq.command.ActiveMQDestination}
      * objects that the persistence store is aware exist.
