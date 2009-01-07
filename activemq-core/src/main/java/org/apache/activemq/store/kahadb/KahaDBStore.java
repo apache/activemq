@@ -425,7 +425,25 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
     public TopicMessageStore createTopicMessageStore(ActiveMQTopic destination) throws IOException {
         return new KahaDBTopicMessageStore(destination);
     }
-    
+
+    /**
+     * Cleanup method to remove any state associated with the given destination.
+     * This method does not stop the message store (it might not be cached).
+     *
+     * @param destination Destination to forget
+     */
+    public void removeQueueMessageStore(ActiveMQQueue destination) {
+    }
+
+    /**
+     * Cleanup method to remove any state associated with the given destination
+     * This method does not stop the message store (it might not be cached).
+     *
+     * @param destination Destination to forget
+     */
+    public void removeTopicMessageStore(ActiveMQTopic destination) {
+    }
+
     public void deleteAllMessages() throws IOException {
         deleteAllMessages=true;
     }

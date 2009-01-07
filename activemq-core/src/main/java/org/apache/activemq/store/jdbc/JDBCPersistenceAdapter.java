@@ -133,6 +133,24 @@ public class JDBCPersistenceAdapter extends DataSourceSupport implements Persist
         return rc;
     }
 
+    /**
+     * Cleanup method to remove any state associated with the given destination
+     * No state retained.... nothing to do
+     *
+     * @param destination Destination to forget
+     */
+    public void removeQueueMessageStore(ActiveMQQueue destination) {
+    }
+
+    /**
+     * Cleanup method to remove any state associated with the given destination
+     * No state retained.... nothing to do
+     *
+     * @param destination Destination to forget
+     */
+    public void removeTopicMessageStore(ActiveMQTopic destination) {
+    }
+
     public TransactionStore createTransactionStore() throws IOException {
         if (transactionStore == null) {
             transactionStore = new MemoryTransactionStore(this);

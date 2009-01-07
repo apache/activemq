@@ -128,6 +128,22 @@ public class JPAPersistenceAdapter implements PersistenceAdapter {
         return rc;
     }
 
+    /**
+     * Cleanup method to remove any state associated with the given destination
+     *
+     * @param destination Destination to forget
+     */
+    public void removeQueueMessageStore(ActiveMQQueue destination) {
+    }
+
+    /**
+     * Cleanup method to remove any state associated with the given destination
+     *
+     * @param destination Destination to forget
+     */
+    public void removeTopicMessageStore(ActiveMQTopic destination) {
+    }
+
     public TransactionStore createTransactionStore() throws IOException {
         if (transactionStore == null) {
             transactionStore = new MemoryTransactionStore(this);

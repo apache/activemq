@@ -850,9 +850,9 @@ public class Queue extends BaseDestination implements Task {
     
     /**
      * Move a message
-     * @param context
-     * @param r
-     * @param dest
+     * @param context connection context
+     * @param m message
+     * @param dest ActiveMQDestination
      * @throws Exception
      */
     public boolean moveMessageTo(ConnectionContext context,Message m,ActiveMQDestination dest) throws Exception {

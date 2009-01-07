@@ -22,6 +22,7 @@ import java.util.Set;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -57,6 +58,20 @@ public interface PersistenceAdapter extends Service {
      * @throws IOException 
      */
     TopicMessageStore createTopicMessageStore(ActiveMQTopic destination) throws IOException;
+
+    /**
+     * Cleanup method to remove any state associated with the given destination.
+     * This method does not stop the message store (it might not be cached).
+     * @param destination Destination to forget
+     */
+    void removeQueueMessageStore(ActiveMQQueue destination);
+
+    /**
+     * Cleanup method to remove any state associated with the given destination
+     * This method does not stop the message store (it might not be cached).
+     * @param destination Destination to forget
+     */
+    void removeTopicMessageStore(ActiveMQTopic destination);
 
     /**
      * Factory method to create a new persistent prepared transaction store for XA recovery

@@ -100,6 +100,18 @@ public class DestinationFactoryImpl extends DestinationFactory {
         }
     }
 
+    public void removeDestination(Destination dest) {
+        ActiveMQDestination destination = dest.getActiveMQDestination();
+        if (!destination.isTemporary()) {
+            if (destination.isQueue()) {
+                persistenceAdapter.removeQueueMessageStore((ActiveMQQueue) destination);
+            }
+            else if (!AdvisorySupport.isAdvisoryTopic(destination)) {
+                persistenceAdapter.removeTopicMessageStore((ActiveMQTopic) destination);
+            }
+        }
+    }
+
     protected void configureQueue(Queue queue, ActiveMQDestination destination) {
         if (broker == null) {
             throw new IllegalStateException("broker property is not set");

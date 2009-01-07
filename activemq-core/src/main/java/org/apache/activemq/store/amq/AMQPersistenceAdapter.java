@@ -493,6 +493,24 @@ public class AMQPersistenceAdapter implements PersistenceAdapter, UsageListener,
         return store;
     }
 
+    /**
+     * Cleanup method to remove any state associated with the given destination
+     *
+     * @param destination
+     */
+    public void removeQueueMessageStore(ActiveMQQueue destination) {
+        queues.remove(destination);
+    }
+
+    /**
+     * Cleanup method to remove any state associated with the given destination
+     *
+     * @param destination
+     */
+    public void removeTopicMessageStore(ActiveMQTopic destination) {
+        topics.remove(destination);
+    }
+
     public TransactionStore createTransactionStore() throws IOException {
         return transactionStore;
     }
