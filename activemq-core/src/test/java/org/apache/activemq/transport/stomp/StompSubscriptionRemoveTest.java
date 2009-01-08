@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.net.Socket;
 
 import javax.jms.Connection;
 import javax.jms.Message;
@@ -27,6 +28,7 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 
 import junit.framework.TestCase;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -66,7 +68,7 @@ public class StompSubscriptionRemoveTest extends TestCase {
         session.close();
         connection.close();
 
-        stompConnection.open("localhost", STOMP_PORT);
+        stompConnection.open(new Socket("localhost", STOMP_PORT));
 
         String connectFrame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n" + "\n";
         stompConnection.sendFrame(connectFrame);
@@ -93,7 +95,7 @@ public class StompSubscriptionRemoveTest extends TestCase {
         Thread.sleep(1000);
         stompConnection.close();
 
-        stompConnection.open("localhost", STOMP_PORT);
+        stompConnection.open(new Socket("localhost", STOMP_PORT));
 
         connectFrame = "CONNECT\n" + "login: brianm\n" + "passcode: wombats\n" + "\n";
         stompConnection.sendFrame(connectFrame);

@@ -29,7 +29,14 @@ import javax.net.ssl.SSLSocketFactory;
 public class StompSslTest extends StompTest {
 
     protected void setUp() throws Exception {
-        bindAddress = "stomp+ssl://localhost:0";
+        bindAddress = "stomp+ssl://localhost:61612";
+        confUri = "xbean:org/apache/activemq/transport/stomp/sslstomp-auth-broker.xml";
+        System.setProperty("javax.net.ssl.trustStore", "src/test/resources/client.keystore");
+        System.setProperty("javax.net.ssl.trustStorePassword", "password");
+        System.setProperty("javax.net.ssl.trustStoreType", "jks");
+        System.setProperty("javax.net.ssl.keyStore", "src/test/resources/server.keystore");
+        System.setProperty("javax.net.ssl.keyStorePassword", "password");
+        System.setProperty("javax.net.ssl.keyStoreType", "jks");  
         super.setUp();
     }
 
