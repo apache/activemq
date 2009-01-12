@@ -27,6 +27,7 @@ import java.util.concurrent.ThreadFactory;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
+import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.QueueConnection;
 import javax.jms.QueueConnectionFactory;
@@ -110,6 +111,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private int sendTimeout =0;
     private boolean sendAcksAsync=true;
     private TransportListener transportListener;
+	private ExceptionListener exceptionListener;
 
     // /////////////////////////////////////////////
     //
@@ -286,7 +288,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         return connection;
     }
 
-    protected void configureConnection(ActiveMQConnection connection) {
+    protected void configureConnection(ActiveMQConnection connection) throws JMSException {
         connection.setPrefetchPolicy(getPrefetchPolicy());
         connection.setDisableTimeStampsByDefault(isDisableTimeStampsByDefault());
         connection.setOptimizedMessageDispatch(isOptimizedMessageDispatch());
@@ -310,6 +312,9 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setSendAcksAsync(isSendAcksAsync());
         if (transportListener != null) {
             connection.addTransportListener(transportListener);
+        }
+        if (exceptionListener != null) {
+        	connection.setExceptionListener(exceptionListener);
         }
     }
 
@@ -858,5 +863,23 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     public void setTransportListener(TransportListener transportListener) {
         this.transportListener = transportListener;
+    }
+    
+    
+    public ExceptionListener getExceptionListener() {
+        return exceptionListener;
+    }
+    
+    /**
+     * Allows an {@link ExceptionListener} to be configured on the ConnectionFactory so that when this factory
+     * is used by frameworks which don't expose the Connection such as Spring JmsTemplate, you can register
+     * an exception listener.
+     * <p> Note: access to this exceptionLinstener will <b>not</b> be serialized if it is associated with more than
+     * on connection (as it will be if more than one connection is subsequently created by this connection factory)
+     * @param exceptionListener sets the exception listener to be registered on all connections
+     * created by this factory
+     */
+    public void setExceptionListener(ExceptionListener exceptionListener) {
+    	this.exceptionListener = exceptionListener;
     }
 }
