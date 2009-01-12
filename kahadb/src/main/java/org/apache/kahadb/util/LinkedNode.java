@@ -117,7 +117,6 @@ public class LinkedNode<T extends LinkedNode<T>> {
         rightTail.next = next; // link list->next
         next.prev = rightTail; // link list<-next
         next = rightHead; // this->list
-        list.size++;
     }
 
     /**
