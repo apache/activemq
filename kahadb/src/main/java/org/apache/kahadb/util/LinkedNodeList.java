@@ -99,7 +99,7 @@ public class LinkedNodeList<T extends LinkedNode<T>> {
      * @return
      */
     public T rotate() {
-        return head = head.getNext();
+        return head = head.getNextCircular();
     }
 
     public int size() {
