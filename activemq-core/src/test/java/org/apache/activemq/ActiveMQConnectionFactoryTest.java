@@ -23,6 +23,7 @@ import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.Session;
 
@@ -156,6 +157,28 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         ObjectInputStream objectsIn = new ObjectInputStream(bytesIn);
         cf = (ActiveMQConnectionFactory)objectsIn.readObject();
         assertEquals(cf.getClientID(), clientID);
+    }
+    
+    public void testSetExceptionListener() throws Exception {
+        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
+        connection = (ActiveMQConnection)cf.createConnection();
+        assertNull(connection.getExceptionListener());
+        
+        ExceptionListener exListener = new ExceptionListener() {
+			public void onException(JMSException arg0) {
+			}
+        };
+        cf.setExceptionListener(exListener);
+        
+        connection = (ActiveMQConnection)cf.createConnection();
+        assertNotNull(connection.getExceptionListener());
+        assertEquals(exListener, connection.getExceptionListener());
+        
+        connection = (ActiveMQConnection)cf.createConnection();
+        assertEquals(exListener, connection.getExceptionListener());
+        
+        assertEquals(exListener, cf.getExceptionListener());
+        
     }
 
     protected void assertCreateConnection(String uri) throws Exception {
