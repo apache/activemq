@@ -16,6 +16,8 @@
  */
 package org.apache.kahadb.util;
 
+import java.util.ArrayList;
+
 /**
  * Provides a list of LinkedNode objects. 
  * 
@@ -60,9 +62,8 @@ public class LinkedNodeList<T extends LinkedNode<T>> {
             return;
         }
         if (head == null) {
-            reparent(list);
             head = list.head;
-            list.head = null;
+            reparent(list);
         } else {
             getTail().linkAfter(list);
         }
@@ -124,4 +125,17 @@ public class LinkedNodeList<T extends LinkedNode<T>> {
         return sb.toString();
     }
     
+    /**
+     * Copies the nodes of the LinkedNodeList to an ArrayList.
+     * @return
+     */
+    public ArrayList<T> toArrayList() {
+    	ArrayList<T> rc = new ArrayList<T>(size);
+    	T cur = head;
+    	while( cur!=null ) {
+    		rc.add(cur);
+    		cur = cur.getNext();
+    	}
+    	return rc;
+    }
 }
