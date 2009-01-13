@@ -75,6 +75,9 @@ public class MemoryPropertyTest extends TestCase {
         assertEquals(1024, broker.getSystemUsage().getMemoryUsage().getLimit());
         assertEquals(34, broker.getSystemUsage().getMemoryUsage().getPercentUsageMinDelta());
         
+        assertNotNull(broker.getSystemUsage().getStoreUsage().getStore());
+        // non persistent broker so no temp storage
+        assertNull(broker.getSystemUsage().getTempUsage().getStore());
     }
 
 }
