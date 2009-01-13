@@ -55,7 +55,7 @@ public abstract class Usage<T extends Usage> implements Service {
     private List<T> children = new CopyOnWriteArrayList<T>();
     private final List<Runnable> callbacks = new LinkedList<Runnable>();
     private int pollingTime = 100;
-    private ThreadPoolExecutor executor;
+    private volatile ThreadPoolExecutor executor;
     private AtomicBoolean started=new AtomicBoolean();
 
     public Usage(T parent, String name, float portion) {
@@ -281,7 +281,7 @@ public abstract class Usage<T extends Usage> implements Service {
     }
 
     @SuppressWarnings("unchecked")
-    public synchronized void start() {
+    public void start() {
         if (started.compareAndSet(false, true)){
             if (parent != null) {
                 parent.addChild(this);
@@ -293,7 +293,7 @@ public abstract class Usage<T extends Usage> implements Service {
     }
 
     @SuppressWarnings("unchecked")
-    public synchronized void stop() {
+    public void stop() {
         if (started.compareAndSet(true, false)){
             if (parent != null) {
                 parent.removeChild(this);
@@ -400,19 +400,22 @@ public abstract class Usage<T extends Usage> implements Service {
         this.parent = parent;
     }
     
-    protected synchronized Executor getExecutor() {
+    protected Executor getExecutor() {
         if (this.executor == null) {
-            this.executor = new ThreadPoolExecutor(1, 1, 0,
-                    TimeUnit.NANOSECONDS,
-                    new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
-                        public Thread newThread(Runnable runnable) {
-                            Thread thread = new Thread(runnable, getName()
-                                    + " Usage Thread Pool");
-                            thread.setDaemon(true);
-                            return thread;
-                        }
-                    });
-
+        	synchronized(usageMutex) {
+        		if (this.executor == null) {
+		            this.executor = new ThreadPoolExecutor(1, 1, 0,
+		                    TimeUnit.NANOSECONDS,
+		                    new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
+		                        public Thread newThread(Runnable runnable) {
+		                            Thread thread = new Thread(runnable, getName()
+		                                    + " Usage Thread Pool");
+		                            thread.setDaemon(true);
+		                            return thread;
+		                        }
+		                    });
+        		}
+        	}
         }
         return this.executor;
     }
