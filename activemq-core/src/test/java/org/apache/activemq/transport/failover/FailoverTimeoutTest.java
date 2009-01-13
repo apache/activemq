@@ -40,7 +40,6 @@ public class FailoverTimeoutTest extends TestCase {
 		try {
 			producer.send(message);
 		} catch (JMSException jmse) {
-			jmse.printStackTrace();
 			assertEquals("Failover timeout of " + timeout + " ms reached.", jmse.getMessage());
 		}
 		

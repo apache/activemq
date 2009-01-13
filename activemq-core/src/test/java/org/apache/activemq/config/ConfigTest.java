@@ -104,6 +104,8 @@ public class ConfigTest extends TestCase {
             // System.out.print("Checking persistence adapter factory
             // settings... ");
             broker.getPersistenceAdapter();
+            
+            assertTrue(broker.getSystemUsage().getStoreUsage().getStore() instanceof JournalPersistenceAdapter);
 
             LOG.info("Success");
         } finally {
@@ -240,6 +242,9 @@ public class ConfigTest extends TestCase {
             assertEquals("SystemUsage Config Error (TempUsage.limit)", 1024 * 1024 * 100, systemUsage.getTempUsage().getLimit());
             assertEquals("SystemUsage Config Error (StoreUsage.limit)", 1024 * 1024 * 1024, systemUsage.getStoreUsage().getLimit());
             assertEquals("SystemUsage Config Error (StoreUsage.name)", "foo", systemUsage.getStoreUsage().getName());
+            
+            assertNotNull(systemUsage.getStoreUsage().getStore());
+            assertTrue(systemUsage.getStoreUsage().getStore() instanceof MemoryPersistenceAdapter);
                         
             LOG.info("Success");
 
