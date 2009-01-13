@@ -42,8 +42,10 @@ public class ProducerFlowControlTest extends JmsTestSupport {
 
     ActiveMQQueue queueA = new ActiveMQQueue("QUEUE.A");
     ActiveMQQueue queueB = new ActiveMQQueue("QUEUE.B");
-    private TransportConnector connector;
-    private ActiveMQConnection connection;
+    protected TransportConnector connector;
+    protected ActiveMQConnection connection;
+    // used to test sendFailIfNoSpace on SystemUsage 
+    protected final AtomicBoolean gotResourceException = new AtomicBoolean(false);
 
     public void test2ndPubisherWithProducerWindowSendConnectionThatIsBlocked() throws Exception {
         ActiveMQConnectionFactory factory = (ActiveMQConnectionFactory)createConnectionFactory();
@@ -89,6 +91,8 @@ public class ProducerFlowControlTest extends JmsTestSupport {
         
         final AtomicBoolean done = new AtomicBoolean(true);
         final AtomicBoolean keepGoing = new AtomicBoolean(true);
+        
+   
 		Thread thread = new Thread("Filler") {
 			@Override
 			public void run() {
@@ -102,14 +106,7 @@ public class ProducerFlowControlTest extends JmsTestSupport {
 			}
 		};
 		thread.start();
-        while (true) {
-            Thread.sleep(1000);
-            // the producer is blocked once the done flag stays true.
-            if (done.get()) {
-                break;
-            }
-            done.set(true);
-        }
+        waitForBlockedOrResourceLimit(done);
 
         // after receiveing messges, producer should continue sending messages 
         // (done == false)
@@ -124,6 +121,7 @@ public class ProducerFlowControlTest extends JmsTestSupport {
     	
 		assertFalse(done.get());
     }
+    
     public void test2ndPubisherWithSyncSendConnectionThatIsBlocked() throws Exception {
         ActiveMQConnectionFactory factory = (ActiveMQConnectionFactory)createConnectionFactory();
         factory.setAlwaysSyncSend(true);
@@ -224,15 +222,20 @@ public class ProducerFlowControlTest extends JmsTestSupport {
             }
         }.start();
 
+        waitForBlockedOrResourceLimit(done);
+        keepGoing.set(false);
+    }
+
+    protected void waitForBlockedOrResourceLimit(final AtomicBoolean done)
+            throws InterruptedException {
         while (true) {
             Thread.sleep(1000);
-            // the producer is blocked once the done flag stays true.
-            if (done.get()) {
+            // the producer is blocked once the done flag stays true or there is a resource exception
+            if (done.get() || gotResourceException.get()) {
                 break;
             }
             done.set(true);
         }
-        keepGoing.set(false);
     }
 
     private CountDownLatch asyncSendTo(final ActiveMQQueue queue, final String message) throws JMSException {
@@ -274,10 +277,12 @@ public class ProducerFlowControlTest extends JmsTestSupport {
     }
 
     protected void tearDown() throws Exception {
-        TcpTransport t = (TcpTransport)connection.getTransport().narrow(TcpTransport.class);
-        t.getTransportListener().onException(new IOException("Disposed."));
-        connection.getTransport().stop();
-        super.tearDown();
+        if (connection != null) {
+            TcpTransport t = (TcpTransport)connection.getTransport().narrow(TcpTransport.class);
+            t.getTransportListener().onException(new IOException("Disposed."));
+            connection.getTransport().stop();
+            super.tearDown();
+        }
     }
 
     protected ConnectionFactory createConnectionFactory() throws Exception {
