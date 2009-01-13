@@ -439,8 +439,6 @@
 
             <!-- This test only works on machines which have ssh propertly configured -->
             <exclude>**/SSHTunnelNetworkReconnectTest.*</exclude>
-            <!-- TODO need to get the JUnit test configured to create SSL sockets nicely via system properties -->
-            <exclude>**/StompSslTest.*</exclude>
 
             <!--  see  http://issues.apache.org/activemq/browse/AMQ-826 -->
             <!--  have not yet figured out the way to configure ApacheDS via Spring  -->
@@ -457,9 +455,12 @@
              <exclude>**/NetworkConnectionsCleanedupTest.*/**</exclude>
              
              <exclude>**/amq1490/*</exclude>
-             <exclude>**/AMQ1925/*</exclude>
+             <exclude>**/AMQ1925*</exclude>
              <exclude>**/archive/*</exclude>
              <exclude>**/NetworkFailoverTest.*/**</exclude>
+             
+             <exclude>**/vm/VMTransportBrokerTest.*</exclude>
+             <exclude>**/broker/MarshallingBrokerTest.*</exclude>
              
 
             <exclude>**/AMQDeadlockTest3.*</exclude>
