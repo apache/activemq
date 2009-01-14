@@ -23,7 +23,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.test.JmsResourceProvider;
 
 /**
- * Test failover for Queues
+ * Test failover for Topics
  */
 public class TransactedTopicMasterSlaveTest extends JmsTopicTransactionTest {
     protected BrokerService slave;
