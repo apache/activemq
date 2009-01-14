@@ -280,7 +280,7 @@ public class RegionBroker extends EmptyBroker {
 
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
 
-        if (destinations.remove(destination) != null) {
+        if (destinations.containsKey(destination)) {
             switch (destination.getDestinationType()) {
             case ActiveMQDestination.QUEUE_TYPE:
                 queueRegion.removeDestination(context, destination, timeout);
@@ -297,6 +297,7 @@ public class RegionBroker extends EmptyBroker {
             default:
                 throw createUnknownDestinationTypeException(destination);
             }
+            destinations.remove(destination);
         }
 
     }
