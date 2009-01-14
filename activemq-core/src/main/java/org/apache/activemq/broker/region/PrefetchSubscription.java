@@ -129,8 +129,8 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
      * timeout was setup, then send the NULL message.
      */
     final void pullTimeout(long dispatchCounterBeforePull) {
-        if (dispatchCounterBeforePull == dispatchCounter) {
-            synchronized (pendingLock) {
+    	synchronized (pendingLock) {
+    		if (dispatchCounterBeforePull == dispatchCounter) {
                 try {
                     add(QueueMessageReference.NULL_MESSAGE);
                     dispatchPending();
