@@ -554,7 +554,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     public void close() throws JMSException {
         if (!closed) {
-            if (getTransacted()) {
+            if (getTransactionContext().isInXATransaction()) {
                 if (!synchronizationRegistered) {
                     synchronizationRegistered = true;
                     getTransactionContext().addSynchronization(new Synchronization() {
