@@ -204,16 +204,16 @@ public class FanoutTransport implements CompositeTransport {
                             LOG.debug("Stopped: " + this);
                             LOG.debug("Attempting connect to: " + uri);
                             Transport t = TransportFactory.compositeConnect(uri);
-                            LOG.debug("Connection established");
                             fanoutHandler.transport = t;
-                            fanoutHandler.reconnectDelay = 10;
-                            fanoutHandler.connectFailures = 0;
-                            if (primary == null) {
-                                primary = fanoutHandler;
-                            }
                             t.setTransportListener(fanoutHandler);
                             if (started) {
                                 restoreTransport(fanoutHandler);
+                            }
+                            LOG.debug("Connection established");
+                            fanoutHandler.reconnectDelay = initialReconnectDelay;
+                            fanoutHandler.connectFailures = 0;
+                            if (primary == null) {
+                                primary = fanoutHandler;
                             }
                             connectedCount++;
                         } catch (Exception e) {
