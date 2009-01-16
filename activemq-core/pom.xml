@@ -38,6 +38,7 @@
       org.apache.commons.pool*;resolution:=optional,
       org.apache.derby*;resolution:=optional,
       org.apache.tools.ant*;resolution:=optional,
+      org.apache.maven*;resolution:=optional,
       org.apache.xbean*;resolution:=optional,
       '=org.apache.xbean.spring.context.v2;resolution:=optional',
       org.apache.xpath*;resolution:=optional,
