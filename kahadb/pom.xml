@@ -27,8 +27,18 @@
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>kahadb</artifactId>
+  <packaging>bundle</packaging>
   <name>ActiveMQ :: KahaDB</name>
   <description>An Embedded Lightweight Non-Relational Database</description>
+
+  <properties>
+    <activemq.osgi.import.pkg>
+      *
+    </activemq.osgi.import.pkg>
+    <activemq.osgi.export>
+      org.apache.kahadb*;version=${project.version}
+    </activemq.osgi.export>
+  </properties>
 
   <dependencies>
     <dependency>
