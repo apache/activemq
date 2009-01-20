@@ -140,6 +140,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 	 * is called
 	 */
     public static final int INDIVIDUAL_ACKNOWLEDGE = 4;
+    public static final int MAX_ACK_CONSTANT = INDIVIDUAL_ACKNOWLEDGE;
 
     public static interface DeliveryListener {
         void beforeDelivery(ActiveMQSession session, Message msg);
