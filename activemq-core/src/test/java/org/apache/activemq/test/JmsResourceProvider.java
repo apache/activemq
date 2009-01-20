@@ -197,6 +197,9 @@ public class JmsResourceProvider {
      */
     public void setTransacted(boolean transacted) {
         this.transacted = transacted;
+        if (transacted) {
+            setAckMode(Session.SESSION_TRANSACTED);
+        }
     }
 
     /**

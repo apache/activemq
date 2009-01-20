@@ -56,18 +56,21 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
         Message[] outbound = new Message[] {session.createTextMessage("First Message"), session.createTextMessage("Second Message")};
 
         // lets consume any outstanding messages from previous test runs
+        beginTx();
         while (consumer.receive(1000) != null) {
         }
-        session.commit();
+        commitTx();
 
+        beginTx();
         producer.send(outbound[0]);
         producer.send(outbound[1]);
-        session.commit();
+        commitTx();
 
         LOG.info("Sent 0: " + outbound[0]);
         LOG.info("Sent 1: " + outbound[1]);
 
         ArrayList<Message> messages = new ArrayList<Message>();
+        beginTx();
         Message message = consumer.receive(1000);
         assertEquals(outbound[0], message);
 
@@ -80,6 +83,7 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
 
         // Consume again.. the previous message should
         // get redelivered.
+        beginTx();
         message = consumer.receive(5000);
         assertNotNull("Should have re-received the first message again!", message);
         messages.add(message);
@@ -89,7 +93,7 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
         assertNotNull("Should have re-received the second message again!", message);
         messages.add(message);
         assertEquals(outbound[1], message);
-        session.commit();
+        commitTx();
 
         Message inbound[] = new Message[messages.size()];
         messages.toArray(inbound);
@@ -111,24 +115,28 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
             // Session that sends messages
             {
                 Session session = resourceProvider.createSession(connection);
+                this.session = session;
                 MessageProducer producer = resourceProvider.createProducer(session, destination);
                 // consumer = resourceProvider.createConsumer(session,
                 // destination);
+                beginTx();
                 producer.send(session.createTextMessage("Test Message: " + i));
-                session.commit();
+                commitTx();
                 session.close();
             }
 
             // Session that consumes messages
             {
                 Session session = resourceProvider.createSession(connection);
+                this.session = session;
                 MessageConsumer consumer = resourceProvider.createConsumer(session, destination);
 
+                beginTx();
                 TextMessage message = (TextMessage)consumer.receive(1000 * 5);
                 assertNotNull("Received only " + i + " messages in batch ", message);
                 assertEquals("Test Message: " + i, message.getText());
 
-                session.commit();
+                commitTx();
                 session.close();
             }
         }
@@ -145,20 +153,24 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
         Message[] outbound = new Message[] {session.createTextMessage("First Message"), session.createTextMessage("Second Message"), session.createTextMessage("Third Message")};
 
         // lets consume any outstanding messages from previous test runs
+        beginTx();
         while (consumer.receive(1000) != null) {
         }
-        session.commit();
+        commitTx();
 
+        beginTx();
         producer.send(outbound[0]);
         producer.send(outbound[1]);
         producer.send(outbound[2]);
-        session.commit();
+        commitTx();
 
         // Get the first.
+        beginTx();
         assertEquals(outbound[0], consumer.receive(1000));
         consumer.close();
-        session.commit();
+        commitTx();
         
+        beginTx();
         QueueBrowser browser = session.createBrowser((Queue)destination);
         Enumeration enumeration = browser.getEnumeration();
 
@@ -187,7 +199,7 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
         assertEquals(outbound[2], consumer.receive(1000));
         consumer.close();
 
-        session.commit();
+        commitTx();
     }
 
 }
