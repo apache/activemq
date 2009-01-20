@@ -58,6 +58,13 @@
     </dependency>
 -->
     <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-core</artifactId>
+      <version>${pom.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>jmock</groupId>
       <artifactId>jmock</artifactId>
       <version>1.2.0</version>
