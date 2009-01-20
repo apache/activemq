@@ -84,7 +84,9 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
     }
 
     /**
-     * 
+     *
+     * @return "physical" underlying activemq connection, if proxy is associated with a managed connection
+     * @throws javax.jms.JMSException if managed connection is null
      */
     private Connection getConnection() throws JMSException {
         if (managedConnection == null) {
@@ -94,22 +96,26 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
     }
 
     /**
-     * @param transacted
-     * @param acknowledgeMode
-     * @return
-     * @throws JMSException
+     * @param transacted Whether session is transacted
+     * @param acknowledgeMode session acknowledge mode
+     * @return session proxy
+     * @throws JMSException on error
      */
     public Session createSession(boolean transacted, int acknowledgeMode) throws JMSException {
         return createSessionProxy(transacted, acknowledgeMode);
     }
 
     /**
-     * @param acknowledgeMode
-     * @param transacted
-     * @return
-     * @throws JMSException
+     * @param transacted Whether session is transacted
+     * @param acknowledgeMode session acknowledge mode
+     * @return session proxy
+     * @throws JMSException on error
      */
     private ManagedSessionProxy createSessionProxy(boolean transacted, int acknowledgeMode) throws JMSException {
+        if (!transacted && acknowledgeMode == Session.SESSION_TRANSACTED) {
+            acknowledgeMode = Session.AUTO_ACKNOWLEDGE;
+        }
+//        ActiveMQSession session = (ActiveMQSession)getConnection().createSession(true, acknowledgeMode);
         ActiveMQSession session = (ActiveMQSession)getConnection().createSession(transacted, acknowledgeMode);
         ManagedTransactionContext txContext = new ManagedTransactionContext(managedConnection.getTransactionContext());
         session.setTransactionContext(txContext);
@@ -120,27 +126,26 @@ public class ManagedConnectionProxy implements Connection, QueueConnection, Topi
     }
 
     public void setUseSharedTxContext(boolean enable) throws JMSException {
-        for (Iterator<ManagedSessionProxy> iter = sessions.iterator(); iter.hasNext();) {
-            ManagedSessionProxy p = iter.next();
+        for (ManagedSessionProxy p : sessions) {
             p.setUseSharedTxContext(enable);
         }
     }
 
     /**
-     * @param transacted
-     * @param acknowledgeMode
-     * @return
-     * @throws JMSException
+     * @param transacted Whether session is transacted
+     * @param acknowledgeMode session acknowledge mode
+     * @return session proxy
+     * @throws JMSException on error
      */
     public QueueSession createQueueSession(boolean transacted, int acknowledgeMode) throws JMSException {
         return new ActiveMQQueueSession(createSessionProxy(transacted, acknowledgeMode));
     }
 
     /**
-     * @param transacted
-     * @param acknowledgeMode
-     * @return
-     * @throws JMSException
+     * @param transacted Whether session is transacted
+     * @param acknowledgeMode session acknowledge mode
+     * @return session proxy
+     * @throws JMSException on error
      */
     public TopicSession createTopicSession(boolean transacted, int acknowledgeMode) throws JMSException {
         return new ActiveMQTopicSession(createSessionProxy(transacted, acknowledgeMode));
