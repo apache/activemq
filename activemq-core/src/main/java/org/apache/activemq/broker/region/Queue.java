@@ -233,16 +233,18 @@ public class Queue extends BaseDestination implements Task {
                 }
             }
             
-            // any newly paged in messages that are not dispatched are added to pagedInPending in iterate()
-            doPageIn(false);
+            // do recovery dispatch only if it is a browser subscription
+            if(sub instanceof QueueBrowserSubscription ) { 
+            	// any newly paged in messages that are not dispatched are added to pagedInPending in iterate()
+            	doPageIn(false);
             
-            synchronized (pagedInMessages) {
-                RecoveryDispatch rd = new RecoveryDispatch();
-                rd.messages =  new ArrayList<QueueMessageReference>(pagedInMessages.values());
-                rd.subscription = sub;
-                recoveries.addLast(rd);
-            }
-            if( sub instanceof QueueBrowserSubscription ) {
+            	synchronized (pagedInMessages) {
+            		RecoveryDispatch rd = new RecoveryDispatch();
+            		rd.messages =  new ArrayList<QueueMessageReference>(pagedInMessages.values());
+            		rd.subscription = sub;
+            		recoveries.addLast(rd);
+            	}
+            
                 ((QueueBrowserSubscription)sub).incrementQueueRef();
             }
             if (!(this.optimizedDispatch || isSlave())) {
@@ -303,9 +305,14 @@ public class Queue extends BaseDestination implements Task {
                     doDispatch(list);
                 }
             }
-
-            if (consumers.isEmpty()) {
-                messages.gc();
+            //if it is a last consumer (and not a browser) dispatch all pagedIn messages
+            if (consumers.isEmpty() && !(sub instanceof QueueBrowserSubscription)) {
+            		List<QueueMessageReference> list = new ArrayList<QueueMessageReference>();
+            		for (QueueMessageReference ref : pagedInMessages.values()) {
+            			list.add(ref);
+            		}
+            		pagedInPendingDispatch.clear();
+            		doDispatch(list);
             }
             if (!(this.optimizedDispatch || isSlave())) {
                 wakeup();
@@ -615,6 +622,7 @@ public class Queue extends BaseDestination implements Task {
         int count = 0;
         List<Message> l = new ArrayList<Message>();
         try {
+            pageInMessages(false);
             synchronized (this.pagedInPendingDispatch) {
                 for (Iterator<QueueMessageReference> i = this.pagedInPendingDispatch
                         .iterator(); i.hasNext()
@@ -657,7 +665,7 @@ public class Queue extends BaseDestination implements Task {
                     }
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOG.error("Problem retrieving message in browse() ", e);
         }
         return l.toArray(new Message[l.size()]);
@@ -899,7 +907,7 @@ public class Queue extends BaseDestination implements Task {
         int movedCounter = 0;
         Set<MessageReference> set = new CopyOnWriteArraySet<MessageReference>();
         do {
-            pageInMessages();
+            doPageIn(true);
             synchronized (pagedInMessages) {
                 set.addAll(pagedInMessages.values());
             }
@@ -981,7 +989,7 @@ public class Queue extends BaseDestination implements Task {
 	                e.printStackTrace();
 	            }
 	        }
-	
+	        
 	        boolean pageInMoreMessages = false;
 	        synchronized (messages) {
 	            pageInMoreMessages = !messages.isEmpty();
@@ -1230,6 +1238,7 @@ public class Queue extends BaseDestination implements Task {
                                 pagedInPendingDispatch.add(qmr);
                             }
                         }
+                        wakeup();
                     }
                 }
             }
@@ -1268,11 +1277,16 @@ public class Queue extends BaseDestination implements Task {
                         }
                     }
                     interestCount++;
+                } else {
+                	// makes sure it gets dispatched again
+                	if (!node.isDropped() && !((QueueMessageReference)node).isAcked() && (!node.isDropped() || s.getConsumerInfo().isBrowser())) {
+                		interestCount++;
+                	}
                 }
             }
             
-            if (target == null && interestCount>0) {
-                // This means all subs were full...
+            if ((target == null && interestCount>0) || consumers.size() == 0) {
+                // This means all subs were full or that there are no consumers...
                 rc.add((QueueMessageReference)node);
             }
 
@@ -1288,10 +1302,6 @@ public class Queue extends BaseDestination implements Task {
             }
         }
 
-        //LOG.info(getName()+" Pending messages:");
-        //for (MessageReference n : rc) {
-       //     LOG.info(getName()+"  - " + n.getMessageId());
-       // }
         
         return rc;
     }
