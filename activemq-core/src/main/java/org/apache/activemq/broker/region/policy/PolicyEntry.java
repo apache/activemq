@@ -65,6 +65,8 @@ public class PolicyEntry extends DestinationMapEntry {
     private boolean useConsumerPriority=true;
     private boolean strictOrderDispatch=false;
     private boolean lazyDispatch=false;
+    private int timeBeforeDispatchStarts = 0;
+    private int consumersBeforeDispatchStarts = 0;
     private boolean advisoryForSlowConsumers;
     private boolean advisdoryForFastProducers;
     private boolean advisoryForDiscardingMessages;
@@ -93,7 +95,8 @@ public class PolicyEntry extends DestinationMapEntry {
         queue.setStrictOrderDispatch(isStrictOrderDispatch());
         queue.setOptimizedDispatch(isOptimizedDispatch());
         queue.setLazyDispatch(isLazyDispatch());
-        
+        queue.setTimeBeforeDispatchStarts(getTimeBeforeDispatchStarts());
+        queue.setConsumersBeforeDispatchStarts(getConsumersBeforeDispatchStarts());
     }
 
     public void configure(Topic topic) {
@@ -437,6 +440,22 @@ public class PolicyEntry extends DestinationMapEntry {
 
     public void setLazyDispatch(boolean lazyDispatch) {
         this.lazyDispatch = lazyDispatch;
+    }
+
+    public int getTimeBeforeDispatchStarts() {
+        return timeBeforeDispatchStarts;
+    }
+
+    public void setTimeBeforeDispatchStarts(int timeBeforeDispatchStarts) {
+        this.timeBeforeDispatchStarts = timeBeforeDispatchStarts;
+    }
+
+    public int getConsumersBeforeDispatchStarts() {
+        return consumersBeforeDispatchStarts;
+    }
+
+    public void setConsumersBeforeDispatchStarts(int consumersBeforeDispatchStarts) {
+        this.consumersBeforeDispatchStarts = consumersBeforeDispatchStarts;
     }
 
     /**
