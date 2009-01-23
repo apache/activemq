@@ -70,7 +70,7 @@ public class QueueDispatchSelector extends SimpleDispatchSelector {
         if (result) {
             result = exclusiveConsumer == null
                     || exclusiveConsumer == subscription;
-            if (result && !subscription.isFull()) {
+            if (result) {
                 QueueMessageReference node = (QueueMessageReference) m;
                 // Keep message groups together.
                 String groupId = node.getGroupID();
