@@ -27,12 +27,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+
 import javax.jms.InvalidSelectorException;
 import javax.jms.JMSException;
+
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.ProducerBrokerExchange;
@@ -96,6 +100,10 @@ public class Queue extends BaseDestination implements Task {
     private boolean strictOrderDispatch=false;
     private QueueDispatchSelector  dispatchSelector;
     private boolean optimizedDispatch=false;
+    private boolean firstConsumer = false;
+    private int timeBeforeDispatchStarts = 0;
+    private int consumersBeforeDispatchStarts = 0;
+    private CountDownLatch consumersBeforeStartsLatch;
     private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
         public void run() {
             wakeup();
@@ -134,7 +142,7 @@ public class Queue extends BaseDestination implements Task {
         }
         // If a VMPendingMessageCursor don't use the default Producer System Usage
         // since it turns into a shared blocking queue which can lead to a network deadlock.  
-        // If we are ccursoring to disk..it's not and issue because it does not block due 
+        // If we are cursoring to disk..it's not and issue because it does not block due 
         // to large disk sizes.
         if( messages instanceof VMPendingMessageCursor ) {
             this.systemUsage = brokerService.getSystemUsage();
@@ -221,6 +229,18 @@ public class Queue extends BaseDestination implements Task {
 
             // needs to be synchronized - so no contention with dispatching
             synchronized (consumers) {
+            	
+            	// set a flag if this is a first consumer
+            	if (consumers.size() == 0) {
+            		firstConsumer = true;
+            	} else {
+            		firstConsumer = false;
+            	}
+            	
+            	if (consumersBeforeStartsLatch != null) {
+            		consumersBeforeStartsLatch.countDown();
+            	}
+            	
                 addToConsumerList(sub);
                 if (sub.getConsumerInfo().isExclusive()) {
                     Subscription exclusiveConsumer = dispatchSelector.getExclusiveConsumer();
@@ -610,6 +630,22 @@ public class Queue extends BaseDestination implements Task {
     public void setOptimizedDispatch(boolean optimizedDispatch) {
         this.optimizedDispatch = optimizedDispatch;
     }
+	public int getTimeBeforeDispatchStarts() {
+		return timeBeforeDispatchStarts;
+	}
+
+	public void setTimeBeforeDispatchStarts(int timeBeforeDispatchStarts) {
+		this.timeBeforeDispatchStarts = timeBeforeDispatchStarts;
+	}
+
+	public int getConsumersBeforeDispatchStarts() {
+		return consumersBeforeDispatchStarts;
+	}
+
+	public void setConsumersBeforeDispatchStarts(int consumersBeforeDispatchStarts) {
+		this.consumersBeforeDispatchStarts = consumersBeforeDispatchStarts;
+		consumersBeforeStartsLatch = new CountDownLatch(consumersBeforeDispatchStarts);
+	}
 
     // Implementation methods
     // -------------------------------------------------------------------------
@@ -988,6 +1024,35 @@ public class Queue extends BaseDestination implements Task {
 	            } catch (Exception e) {
 	                e.printStackTrace();
 	            }
+	        }
+	        
+	        if (firstConsumer) {
+	        	firstConsumer = false;
+	        	try {
+	        		if (consumersBeforeDispatchStarts > 0) {
+	        			int timeout = 1000; // wait one second by default if consumer count isn't reached  
+	        			if (timeBeforeDispatchStarts > 0) {
+	        				timeout = timeBeforeDispatchStarts;
+	        			}
+	        			if (consumersBeforeStartsLatch.await(timeout, TimeUnit.MILLISECONDS)) {
+	        				if (LOG.isDebugEnabled()) {
+	        					LOG.debug(consumers.size() + " consumers subscribed. Starting dispatch.");
+	        				}
+	        			} else {
+	        				if (LOG.isDebugEnabled()) {
+	        					LOG.debug(timeout + " ms elapsed and " +  consumers.size() + " consumers subscribed. Starting dispatch.");
+	        				}
+	        			}
+	        		}	        		
+	        		if (timeBeforeDispatchStarts > 0 && consumersBeforeDispatchStarts <= 0) {
+	        			iteratingMutex.wait(timeBeforeDispatchStarts);
+	        			if (LOG.isDebugEnabled()) {
+	        				LOG.debug(timeBeforeDispatchStarts + " ms elapsed. Starting dispatch.");
+	        			}
+	        		}
+	        	} catch (Exception e) {
+	        		LOG.error(e);
+	        	}
 	        }
 	        
 	        boolean pageInMoreMessages = false;
