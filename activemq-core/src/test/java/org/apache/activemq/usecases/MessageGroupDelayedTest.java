@@ -54,8 +54,7 @@ public class MessageGroupDelayedTest extends JmsTestSupport {
   public void setUp() throws Exception {
 	broker = createBroker();  
 	broker.start();
-    ActiveMQConnectionFactory connFactory = new ActiveMQConnectionFactory(connector.getConnectUri());
-	//ActiveMQConnectionFactory connFactory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");  
+    ActiveMQConnectionFactory connFactory = new ActiveMQConnectionFactory(connector.getConnectUri() + "?jms.prefetchPolicy.all=1");
     connection = connFactory.createConnection();
     session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
     destination = new ActiveMQQueue("test-queue2");

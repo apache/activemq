@@ -38,7 +38,7 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
 
 /**
- * Test cases used to test the JMS message comsumer.
+ * Test cases used to test the JMS message consumer.
  * 
  * @version $Revision$
  */
