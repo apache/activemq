@@ -35,8 +35,32 @@ public class DiscoveryTransportNoBrokerTest extends CombinationTestSupport {
             Connection connection = factory.createConnection();
             connection.setClientID("test");
             fail("Did not fail to connect as expected.");
+        }
+        catch ( JMSException expected ) { 
+            assertTrue("reason is java.io.IOException, was: " + expected.getCause(), expected.getCause() instanceof java.io.IOException);
+        }
+    }
+    
+    public void testInitialConnectDelayWithNoBroker() throws Exception {
+        // the initialReconnectDelay only kicks in once a set of connect URL have
+        // been returned from the discovery agent.
+        // Up to that point the reconnectDelay is used which has a default value of 10
+        //
+        long initialReconnectDelay = 4000;
+        long startT = System.currentTimeMillis();
+        String groupId = "WillNotMatch" + startT;
+        try {
+            String urlStr = "discovery:(multicast://default?group=" + groupId + 
+                ")?useExponentialBackOff=false&maxReconnectAttempts=2&reconnectDelay=" + initialReconnectDelay;          
+            ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(urlStr);
+            LOG.info("Connecting.");
+            Connection connection = factory.createConnection();
+            connection.setClientID("test");
+            fail("Did not fail to connect as expected.");
         } catch ( JMSException expected ) { 
             assertTrue("reason is java.io.IOException, was: " + expected.getCause(), expected.getCause() instanceof java.io.IOException);
+            long duration = System.currentTimeMillis() - startT;
+            assertTrue("took at least initialReconnectDelay time: " + duration, duration >= initialReconnectDelay);
         }
     }
 }
