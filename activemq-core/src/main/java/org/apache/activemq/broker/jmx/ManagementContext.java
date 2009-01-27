@@ -288,10 +288,6 @@ public class ManagementContext implements Service {
             if (result == null && createMBeanServer) {
                 result = createMBeanServer();
             }
-
-            if (result != null && createConnector) {
-                createConnector(result);
-            }
         } catch (NoClassDefFoundError e) {
             LOG.error("Could not load MBeanServer", e);
         } catch (Throwable e) {
