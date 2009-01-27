@@ -441,6 +441,9 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                             if (AdvisorySupport.isConsumerAdvisoryTopic(message.getDestination())) {
                                 serviceRemoteConsumerAdvisory(message.getDataStructure());
                             } else {
+                            	if (!isPermissableDestination(message.getDestination())) {
+                            		return;
+                            	}
                                 if (message.isResponseRequired()) {
                                     Response reply = new Response();
                                     reply.setCorrelationId(message.getCommandId());
