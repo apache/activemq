@@ -441,7 +441,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                             if (AdvisorySupport.isConsumerAdvisoryTopic(message.getDestination())) {
                                 serviceRemoteConsumerAdvisory(message.getDataStructure());
                             } else {
-                            	if (!isPermissableDestination(message.getDestination())) {
+                            	if (!isPermissableDestination(message.getDestination(), true)) {
                             		return;
                             	}
                                 if (message.isResponseRequired()) {
@@ -853,12 +853,20 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         rc[brokerPath.length] = idToAppend;
         return rc;
     }
-
+    
     protected boolean isPermissableDestination(ActiveMQDestination destination) {
+    	return isPermissableDestination(destination, false);
+    }
+
+    protected boolean isPermissableDestination(ActiveMQDestination destination, boolean allowTemporary) {
         // Are we not bridging temp destinations?
-        if (destination.isTemporary() && !configuration.isBridgeTempDestinations()) {
-            return false;
-        }
+        if (destination.isTemporary()) {
+        	if (allowTemporary) {
+        		return true;
+        	} else {
+        		return configuration.isBridgeTempDestinations();
+        	}
+        } 
 
         DestinationFilter filter = DestinationFilter.parseFilter(destination);
         ActiveMQDestination[] dests = excludedDestinations;
