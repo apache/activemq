@@ -59,6 +59,10 @@ public class ConsumerInfo extends BaseCommand {
     protected transient boolean networkSubscription; // this subscription
     protected transient List<ConsumerId> networkConsumerIds; // the original consumerId
 
+    // not marshalled, populated from RemoveInfo, the last message delivered, used
+    // to suppress redelivery on prefetched messages after close
+    private transient long lastDeliveredSequenceId;
+
     // originated from a
     // network connection
 
@@ -454,6 +458,14 @@ public class ConsumerInfo extends BaseCommand {
                 addNetworkConsumerId(consumerPath[i]);
             }
         }
+    }
+
+    public void setLastDeliveredSequenceId(long lastDeliveredSequenceId) {
+        this.lastDeliveredSequenceId  = lastDeliveredSequenceId;
+    }
+    
+    public long getLastDeliveredSequenceId() {
+        return lastDeliveredSequenceId;
     }
 
 }

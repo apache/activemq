@@ -85,8 +85,8 @@ public class DestinationFilter implements Destination {
         return next.getMemoryUsage();
     }
 
-    public void removeSubscription(ConnectionContext context, Subscription sub) throws Exception {
-        next.removeSubscription(context, sub);
+    public void removeSubscription(ConnectionContext context, Subscription sub, long lastDeliveredSequenceId) throws Exception {
+        next.removeSubscription(context, sub, lastDeliveredSequenceId);
     }
 
     public void send(ProducerBrokerExchange context, Message messageSend) throws Exception {

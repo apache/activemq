@@ -550,7 +550,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
-    public Response processRemoveConsumer(ConsumerId id) throws Exception {
+    public Response processRemoveConsumer(ConsumerId id, long lastDeliveredSequenceId) throws Exception {
         SessionId sessionId = id.getParentId();
         ConnectionId connectionId = sessionId.getParentId();
         TransportConnectionState cs = lookupConnectionState(connectionId);
@@ -564,6 +564,8 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         if (consumerState == null) {
             throw new IllegalStateException("Cannot remove a consumer that had not been registered: " + id);
         }
+        ConsumerInfo info = consumerState.getInfo();
+        info.setLastDeliveredSequenceId(lastDeliveredSequenceId);
         broker.removeConsumer(cs.getContext(), consumerState.getInfo());
         removeConsumerBrokerExchange(id);
         return null;
@@ -585,7 +587,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
-    public Response processRemoveSession(SessionId id) throws Exception {
+    public Response processRemoveSession(SessionId id, long lastDeliveredSequenceId) throws Exception {
         ConnectionId connectionId = id.getParentId();
         TransportConnectionState cs = lookupConnectionState(connectionId);
         SessionState session = cs.getSessionState(id);
@@ -599,7 +601,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         for (Iterator iter = session.getConsumerIds().iterator(); iter.hasNext();) {
             ConsumerId consumerId = (ConsumerId)iter.next();
             try {
-                processRemoveConsumer(consumerId);
+                processRemoveConsumer(consumerId, lastDeliveredSequenceId);
             } catch (Throwable e) {
                 LOG.warn("Failed to remove consumer: " + consumerId + ". Reason: " + e, e);
             }
@@ -693,7 +695,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return null;
     }
 
-    public synchronized Response processRemoveConnection(ConnectionId id) throws InterruptedException {
+    public synchronized Response processRemoveConnection(ConnectionId id, long lastDeliveredSequenceId) throws InterruptedException {
         TransportConnectionState cs = lookupConnectionState(id);
         if (cs != null) {
             // Don't allow things to be added to the connection state while we are
@@ -704,7 +706,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             for (Iterator iter = cs.getSessionIds().iterator(); iter.hasNext();) {
                 SessionId sessionId = (SessionId)iter.next();
                 try {
-                    processRemoveSession(sessionId);
+                    processRemoveSession(sessionId, lastDeliveredSequenceId);
                 } catch (Throwable e) {
                     SERVICELOG.warn("Failed to remove session " + sessionId, e);
                 }
@@ -999,7 +1001,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 cs.getContext().getStopping().set(true);
                 try {
                     LOG.debug("Cleaning up connection resources: " + getRemoteAddress());
-                    processRemoveConnection(cs.getInfo().getConnectionId());
+                    processRemoveConnection(cs.getInfo().getConnectionId(), 0l);
                 } catch (Throwable ignore) {
                     ignore.printStackTrace();
                 }

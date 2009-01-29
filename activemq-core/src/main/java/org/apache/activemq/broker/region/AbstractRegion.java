@@ -182,7 +182,7 @@ public abstract class AbstractRegion implements Region {
                 for (Iterator<Subscription> iter = subscriptions.values().iterator(); iter.hasNext();) {
                     Subscription sub = iter.next();
                     if (sub.matches(destination)) {
-                        dest.removeSubscription(context, sub);
+                        dest.removeSubscription(context, sub, 0l);
                     }
                 }
                 destinationMap.removeAll(destination);
@@ -325,7 +325,7 @@ public abstract class AbstractRegion implements Region {
                 }
             }
             for(Destination dest:removeList) {
-              dest.removeSubscription(context, sub);
+              dest.removeSubscription(context, sub, info.getLastDeliveredSequenceId());
             }
 
             destroySubscription(sub);

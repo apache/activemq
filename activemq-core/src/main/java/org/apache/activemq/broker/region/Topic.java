@@ -153,7 +153,7 @@ public class Topic  extends BaseDestination  implements Task{
         }
     }
 
-    public void removeSubscription(ConnectionContext context, Subscription sub) throws Exception {
+    public void removeSubscription(ConnectionContext context, Subscription sub, long lastDeliveredSequenceId) throws Exception {
         if (!sub.getConsumerInfo().isDurable()) {
             destinationStatistics.getConsumers().decrement();
             synchronized (consumers) {

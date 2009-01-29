@@ -25,6 +25,7 @@ import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.ProducerInfo;
@@ -41,7 +42,7 @@ public interface Destination extends Service, Task {
     public static final DeadLetterStrategy DEFAULT_DEAD_LETTER_STRATEGY = new SharedDeadLetterStrategy();
     void addSubscription(ConnectionContext context, Subscription sub) throws Exception;
 
-    void removeSubscription(ConnectionContext context, Subscription sub) throws Exception;
+    void removeSubscription(ConnectionContext context, Subscription sub, long lastDeliveredSequenceId) throws Exception;
     
     void addProducer(ConnectionContext context, ProducerInfo info) throws Exception;
 

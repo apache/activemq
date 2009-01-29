@@ -54,13 +54,13 @@ public interface CommandVisitor {
 
     Response processAddConsumer(ConsumerInfo info) throws Exception;
 
-    Response processRemoveConnection(ConnectionId id) throws Exception;
+    Response processRemoveConnection(ConnectionId id, long lastDeliveredSequenceId) throws Exception;
 
-    Response processRemoveSession(SessionId id) throws Exception;
+    Response processRemoveSession(SessionId id, long lastDeliveredSequenceId) throws Exception;
 
     Response processRemoveProducer(ProducerId id) throws Exception;
 
-    Response processRemoveConsumer(ConsumerId id) throws Exception;
+    Response processRemoveConsumer(ConsumerId id, long lastDeliveredSequenceId) throws Exception;
 
     Response processAddDestination(DestinationInfo info) throws Exception;
 

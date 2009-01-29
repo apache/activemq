@@ -105,6 +105,47 @@ public class JmsRedeliveredTest extends TestCase {
         session.close();
     }
 
+    
+
+    public void testQueueSessionCloseMarksUnAckedMessageRedelivered() throws JMSException {
+        connection.start();
+
+        Session session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+        Queue queue = session.createQueue("queue-" + getName());
+        MessageProducer producer = createProducer(session, queue);
+        producer.send(createTextMessage(session, "1"));
+        producer.send(createTextMessage(session, "2"));
+
+        // Consume the message...
+        MessageConsumer consumer = session.createConsumer(queue);
+        Message msg = consumer.receive(1000);
+        assertNotNull(msg);
+        assertFalse("Message should not be redelivered.", msg.getJMSRedelivered());
+        assertEquals("1", ((TextMessage)msg).getText());
+        msg.acknowledge();
+        
+        // Don't ack the message.
+        msg = consumer.receive(1000);
+        assertNotNull(msg);
+        assertFalse("Message should not be redelivered.", msg.getJMSRedelivered());
+        assertEquals("2", ((TextMessage)msg).getText());
+        
+        // Reset the session. This should cause the Unacked message to be
+        // redelivered.
+        session.close();
+        session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+
+        // Attempt to Consume the message...
+        consumer = session.createConsumer(queue);
+        msg = consumer.receive(2000);
+        assertNotNull(msg);
+        assertEquals("2", ((TextMessage)msg).getText());
+        assertTrue("Message should be redelivered.", msg.getJMSRedelivered());
+        msg.acknowledge();
+
+        session.close();
+    }
+
     /**
      * Tests session recovery and that the redelivered message is marked as
      * such. Session uses client acknowledgement, the destination is a queue.
@@ -367,9 +408,13 @@ public class JmsRedeliveredTest extends TestCase {
      * @throws JMSException
      */
     private TextMessage createTextMessage(Session session) throws JMSException {
-        return session.createTextMessage("Hello");
+        return createTextMessage(session, "Hello");
     }
 
+    private TextMessage createTextMessage(Session session, String txt) throws JMSException {
+        return session.createTextMessage(txt);
+    }
+    
     /**
      * Creates a producer.
      * 
