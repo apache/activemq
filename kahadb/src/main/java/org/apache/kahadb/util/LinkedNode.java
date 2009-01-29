@@ -212,11 +212,11 @@ public class LinkedNode<T extends LinkedNode<T>> {
     /**
      * Removes this node out of the linked list it is chained in.
      */
-    public void unlink() {
+    public boolean unlink() {
 
         // If we are allready unlinked...
         if (list == null) {
-            return;
+            return false;
         }
 
         if (getThis() == prev) {
@@ -233,6 +233,7 @@ public class LinkedNode<T extends LinkedNode<T>> {
         }
         list.size--;
         list = null;
+        return true;
     }
 
     /**
@@ -315,5 +316,9 @@ public class LinkedNode<T extends LinkedNode<T>> {
     public boolean isLinked() {
         return list != null;
     }
+
+	public LinkedNodeList<T> getList() {
+		return list;
+	}
 
 }
