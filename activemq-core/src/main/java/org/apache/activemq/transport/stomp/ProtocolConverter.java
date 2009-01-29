@@ -275,7 +275,7 @@ public class ProtocolConverter {
         boolean acked = false;
         for (Iterator<StompSubscription> iter = subscriptionsByConsumerId.values().iterator(); iter.hasNext();) {
             StompSubscription sub = iter.next();
-            MessageAck ack = sub.onStompMessageAck(messageId);
+            MessageAck ack = sub.onStompMessageAck(messageId, activemqTx);
             if (ack != null) {
                 ack.setTransactionId(activemqTx);
                 sendToActiveMQ(ack, createResponseHandler(command));
@@ -331,6 +331,11 @@ public class ProtocolConverter {
         if (activemqTx == null) {
             throw new ProtocolException("Invalid transaction id: " + stompTx);
         }
+        
+        for (Iterator<StompSubscription> iter = subscriptionsByConsumerId.values().iterator(); iter.hasNext();) {
+            StompSubscription sub = iter.next();
+            sub.onStompCommit(activemqTx);
+        }
 
         TransactionInfo tx = new TransactionInfo();
         tx.setConnectionId(connectionId);
@@ -338,6 +343,7 @@ public class ProtocolConverter {
         tx.setType(TransactionInfo.COMMIT_ONE_PHASE);
 
         sendToActiveMQ(tx, createResponseHandler(command));
+        
     }
 
     protected void onStompAbort(StompFrame command) throws ProtocolException {
@@ -352,6 +358,14 @@ public class ProtocolConverter {
         TransactionId activemqTx = transactions.remove(stompTx);
         if (activemqTx == null) {
             throw new ProtocolException("Invalid transaction id: " + stompTx);
+        }
+        for (Iterator<StompSubscription> iter = subscriptionsByConsumerId.values().iterator(); iter.hasNext();) {
+            StompSubscription sub = iter.next();
+            try {
+            	sub.onStompAbort(activemqTx);
+            } catch (Exception e) {
+            	throw new ProtocolException("Transaction abort failed", false, e);
+            }
         }
 
         TransactionInfo tx = new TransactionInfo();
@@ -543,7 +557,6 @@ public class ProtocolConverter {
      * @throws IOException
      */
     public void onActiveMQCommad(Command command) throws IOException, JMSException {
-
         if (command.isResponse()) {
 
             Response response = (Response)command;
