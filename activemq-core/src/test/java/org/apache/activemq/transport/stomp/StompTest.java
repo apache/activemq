@@ -46,7 +46,6 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.activemq.transport.stomp.Stomp.Headers.Subscribe;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -937,24 +936,55 @@ public class StompTest extends CombinationTestSupport {
         sendMessage("message 1");
         sendMessage("message 2");
         sendMessage("message 3");
+        sendMessage("message 4");
+        sendMessage("message 5");
         
-        StompFrame frame = stompConnection.receive();
+        
 
+        StompFrame frame = stompConnection.receive();
+        assertEquals(frame.getBody(), "message 1");
+        
         stompConnection.begin("tx1");
         stompConnection.ack(frame, "tx1");
 
         StompFrame frame1 = stompConnection.receive();
-        
+        assertEquals(frame1.getBody(), "message 2");
+               
         try {
         	StompFrame frame2 = stompConnection.receive(500);
         	if (frame2 != null) {
         		fail("Should not have received the second message");
         	}
         } catch (SocketTimeoutException soe) {}
+        
+        Thread.sleep(100);
+        stompConnection.abort("tx1");
+        
+        stompConnection.begin("tx2");
+        
+        StompFrame frame3 = stompConnection.receive();
+        assertEquals(frame3.getBody(), "message 1");
+        stompConnection.ack(frame3, "tx2");
+        
+        StompFrame frame4 = stompConnection.receive();
+        assertEquals(frame4.getBody(), "message 2");
+        stompConnection.ack(frame4, "tx2");
+        
+        StompFrame frame5 = stompConnection.receive();
+        assertEquals(frame5.getBody(), "message 3");        
+        stompConnection.ack(frame5, "tx2");
+        
+        stompConnection.commit("tx2");
+        
+        stompConnection.begin("tx3");
+        StompFrame frame6 = stompConnection.receive();
+        assertEquals(frame6.getBody(), "message 4");
+        stompConnection.ack(frame6, "tx3");
+        stompConnection.commit("tx3");
+        
         stompDisconnect();
     	
-    }    
-    
+    }       
     protected void assertClients(int expected) throws Exception {
         org.apache.activemq.broker.Connection[] clients = broker.getBroker().getClients();
         int actual = clients.length;
@@ -969,3 +999,5 @@ public class StompTest extends CombinationTestSupport {
         Thread.sleep(2000);
     }
 }
+
+
