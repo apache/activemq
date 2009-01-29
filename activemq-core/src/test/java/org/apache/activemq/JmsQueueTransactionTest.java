@@ -71,10 +71,10 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
 
         ArrayList<Message> messages = new ArrayList<Message>();
         beginTx();
-        Message message = consumer.receive(1000);
+        Message message = consumer.receive(2000);
         assertEquals(outbound[0], message);
 
-        message = consumer.receive(1000);
+        message = consumer.receive(2000);
         assertNotNull(message);
         assertEquals(outbound[1], message);
 
@@ -84,7 +84,7 @@ public class JmsQueueTransactionTest extends JmsTransactionTestSupport {
         // Consume again.. the previous message should
         // get redelivered.
         beginTx();
-        message = consumer.receive(5000);
+        message = consumer.receive(2000);
         assertNotNull("Should have re-received the first message again!", message);
         messages.add(message);
         assertEquals(outbound[0], message);

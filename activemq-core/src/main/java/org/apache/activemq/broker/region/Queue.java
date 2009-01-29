@@ -280,7 +280,7 @@ public class Queue extends BaseDestination implements Task {
         }
     }
 
-    public void removeSubscription(ConnectionContext context, Subscription sub)
+    public void removeSubscription(ConnectionContext context, Subscription sub, long lastDeiveredSequenceId)
             throws Exception {
         destinationStatistics.getConsumers().decrement();
         // synchronize with dispatch method so that no new messages are sent
@@ -316,7 +316,10 @@ public class Queue extends BaseDestination implements Task {
                     QueueMessageReference qmr = (QueueMessageReference)ref;
                     if( qmr.getLockOwner()==sub ) {
                         qmr.unlock();
-                        qmr.incrementRedeliveryCounter();
+                        // only increment redelivery if it was delivered or we have no delivery information
+                        if (lastDeiveredSequenceId == 0 || qmr.getMessageId().getBrokerSequenceId() <= lastDeiveredSequenceId) {
+                            qmr.incrementRedeliveryCounter();
+                        }
                     }
                     list.add(qmr);
                 }

@@ -42,6 +42,7 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.MessagePull;
+import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.management.JMSConsumerStatsImpl;
 import org.apache.activemq.management.StatsCapable;
 import org.apache.activemq.management.StatsImpl;
@@ -102,7 +103,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     // The are the messages that were delivered to the consumer but that have
     // not been acknowledged. It's kept in reverse order since we
-    // Always walk list in reverse order. Only used when session is client ack.
+    // Always walk list in reverse order.
     private final LinkedList<MessageDispatch> deliveredMessages = new LinkedList<MessageDispatch>();
     private int deliveredCounter;
     private int additionalWindowSize;
@@ -126,6 +127,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private boolean clearDispatchList;
 
     private MessageAck pendingAck;
+    private long lastDeliveredSequenceId;
 
     /**
      * Create a MessageConsumer
@@ -608,7 +610,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     void doClose() throws JMSException {
         dispose();
-        this.session.asyncSendPacket(info.createRemoveCommand());
+        RemoveInfo removeCommand = info.createRemoveCommand();
+        removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
+        this.session.asyncSendPacket(removeCommand);
     }
     
     void clearMessagesInProgress() {
@@ -661,16 +665,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     public void dispose() throws JMSException {
         if (!unconsumedMessages.isClosed()) {
             
-//            if ( !deliveredMessages.isEmpty() ) {
-//                // We need to let the broker know how many times that message
-//                // was rolled back.
-//                rollbackCounter++;
-//                MessageDispatch lastMd = deliveredMessages.get(0);
-//            }
-
             // Do we have any acks we need to send out before closing?
             // Ack any delivered messages now.
-            // only processes optimized acknowledgements
             if (!session.isTransacted()) { 
                 deliverAcks();
                 if (session.isDupsOkAcknowledge()) {
@@ -751,6 +747,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     private void beforeMessageIsConsumed(MessageDispatch md) throws JMSException {
         md.setDeliverySequenceId(session.getNextDeliveryId());
+        lastDeliveredSequenceId = md.getMessage().getMessageId().getBrokerSequenceId();
         if (!session.isDupsOkAcknowledge()) {
             synchronized(deliveredMessages) {
                 deliveredMessages.addFirst(md);
@@ -1129,6 +1126,10 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
     public boolean isInUse(ActiveMQTempDestination destination) {
         return info.getDestination().equals(destination);
+    }
+
+    public long getLastDeliveredSequenceId() {
+        return lastDeliveredSequenceId;
     }
 
 }

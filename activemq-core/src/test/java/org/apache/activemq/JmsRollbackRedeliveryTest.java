@@ -30,13 +30,11 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
-import junit.framework.TestCase;
-
 import org.apache.activemq.broker.BrokerService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-public class JmsRollbackRedeliveryTest extends TestCase {
+public class JmsRollbackRedeliveryTest extends AutoFailTestSupport {
     protected static final Log LOG = LogFactory.getLog(JmsRollbackRedeliveryTest.class);
     final int nbMessages = 10;
     final String destinationName = "Destination";
@@ -44,25 +42,39 @@ public class JmsRollbackRedeliveryTest extends TestCase {
     boolean rollback = true;
     
     public void setUp() throws Exception {
+        setAutoFail(true);
+        super.setUp();
         BrokerService broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(false);
         broker.start();
     }
     
-    
+
     public void testRedelivery() throws Exception {
+        doTestRedelivery("vm://localhost", false);
+    }
+
+    public void testRedeliveryWithInterleavedProducer() throws Exception {
+        doTestRedelivery("vm://localhost", true);
+    }
+
+    public void doTestRedelivery(String brokerUrl, boolean interleaveProducer) throws Exception {
 
         final int nbMessages = 10;
         final String destinationName = "Destination";
 
-        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?jms.redeliveryPolicy.maximumRedeliveries=100");
-
+        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(brokerUrl);
+        
         Connection connection = connectionFactory.createConnection();
         connection.start();
 
-        populateDestination(nbMessages, destinationName, connection);
-
+        if (interleaveProducer) {
+            populateDestinationWithInterleavedProducer(nbMessages, destinationName, connection);
+        } else {
+            populateDestination(nbMessages, destinationName, connection);
+        }
+        
         // Consume messages and rollback transactions
         {
             AtomicInteger received = new AtomicInteger();
@@ -87,15 +99,14 @@ public class JmsRollbackRedeliveryTest extends TestCase {
             }
         }
     }
-
-   
+       
     public void testRedeliveryOnSingleConsumer() throws Exception {
 
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost");
         Connection connection = connectionFactory.createConnection();
         connection.start();
 
-        populateDestination(nbMessages, destinationName, connection);
+        populateDestinationWithInterleavedProducer(nbMessages, destinationName, connection);
 
         // Consume messages and rollback transactions
         {
@@ -124,7 +135,7 @@ public class JmsRollbackRedeliveryTest extends TestCase {
     
     public void testRedeliveryOnSingleSession() throws Exception {
 
-        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?jms.redeliveryPolicy.maximumRedeliveries=100");
+        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost"); 
         Connection connection = connectionFactory.createConnection();
         connection.start();
 
@@ -157,7 +168,7 @@ public class JmsRollbackRedeliveryTest extends TestCase {
     
     public void testRedeliveryOnSessionCloseWithNoRollback() throws Exception {
 
-        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?jms.redeliveryPolicy.maximumRedeliveries=100");
+        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost");
         Connection connection = connectionFactory.createConnection();
         connection.start();
 
@@ -196,5 +207,29 @@ public class JmsRollbackRedeliveryTest extends TestCase {
         producer.close();
         session.close();
     }
+
     
+    private void populateDestinationWithInterleavedProducer(final int nbMessages,
+            final String destinationName, Connection connection)
+            throws JMSException {
+        Session session1 = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Destination destination1 = session1.createQueue(destinationName);
+        MessageProducer producer1 = session1.createProducer(destination1);
+        Session session2 = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Destination destination2 = session2.createQueue(destinationName);
+        MessageProducer producer2 = session2.createProducer(destination2);
+        
+        for (int i = 1; i <= nbMessages; i++) {
+            if (i%2 == 0) {
+                producer1.send(session1.createTextMessage("<hello id='" + i + "'/>"));
+            } else {
+                producer2.send(session2.createTextMessage("<hello id='" + i + "'/>"));
+            }
+        }
+        producer1.close();
+        session1.close();
+        producer2.close();
+        session2.close();
+    }
+
 }

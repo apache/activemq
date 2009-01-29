@@ -77,6 +77,7 @@ import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerAck;
 import org.apache.activemq.command.ProducerId;
+import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionId;
@@ -606,9 +607,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         advisoryConsumer = null;
                     }
 
+                    long lastDeliveredSequenceId = 0;
                     for (Iterator<ActiveMQSession> i = this.sessions.iterator(); i.hasNext();) {
                         ActiveMQSession s = i.next();
                         s.dispose();
+                        lastDeliveredSequenceId = Math.max(lastDeliveredSequenceId, s.getLastDeliveredSequenceId());
                     }
                     for (Iterator<ActiveMQConnectionConsumer> i = this.connectionConsumers.iterator(); i.hasNext();) {
                         ActiveMQConnectionConsumer c = i.next();
@@ -627,6 +630,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                         // If we announced ourselfs to the broker.. Try to let
                         // the broker
                         // know that the connection is being shutdown.
+                        RemoveInfo removeCommand = info.createRemoveCommand();
+                        removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
                         doSyncSendPacket(info.createRemoveCommand(), closeTimeout);
                         doAsyncSendPacket(new ShutdownInfo());
                     }

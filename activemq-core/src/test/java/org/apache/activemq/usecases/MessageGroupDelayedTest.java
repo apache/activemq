@@ -31,7 +31,6 @@ import javax.jms.Session;
 import junit.framework.Test;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.JMSConsumerTest;
 import org.apache.activemq.JmsTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;

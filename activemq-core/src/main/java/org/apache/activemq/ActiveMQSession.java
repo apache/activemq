@@ -176,6 +176,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     private DeliveryListener deliveryListener;
     private MessageTransformer transformer;
     private BlobTransferPolicy blobTransferPolicy;
+    private long lastDeliveredSequenceId;
 
     /**
      * Construct the Session
@@ -580,7 +581,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
     private void doClose() throws JMSException {
         dispose();
-        connection.asyncSendPacket(info.createRemoveCommand());
+        RemoveInfo removeCommand = info.createRemoveCommand();
+        removeCommand.setLastDeliveredSequenceId(lastDeliveredSequenceId);
+        connection.asyncSendPacket(removeCommand);
     }
 
     void clearMessagesInProgress() {
@@ -607,6 +610,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                 for (Iterator<ActiveMQMessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
                     ActiveMQMessageConsumer consumer = iter.next();
                     consumer.dispose();
+                    lastDeliveredSequenceId = Math.max(lastDeliveredSequenceId, consumer.getLastDeliveredSequenceId());
                 }
                 consumers.clear();
 
@@ -1935,6 +1939,15 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             }
         }
         return false;
+    }
+    
+    /**
+     * highest sequence id of the last message delivered by this session.
+     * Passed to the broker in the close command, maintained by dispose()
+     * @return lastDeliveredSequenceId
+     */
+    public long getLastDeliveredSequenceId() {
+        return lastDeliveredSequenceId;
     }
     
     protected void sendAck(MessageAck ack) throws JMSException {

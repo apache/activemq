@@ -31,6 +31,7 @@ public class RemoveInfo extends BaseCommand {
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.REMOVE_INFO;
 
     protected DataStructure objectId;
+    protected long lastDeliveredSequenceId;
 
     public RemoveInfo() {
     }
@@ -54,14 +55,25 @@ public class RemoveInfo extends BaseCommand {
         this.objectId = objectId;
     }
 
+    /**
+     * @openwire:property version=5 cache=false
+     */
+    public long getLastDeliveredSequenceId() {
+        return lastDeliveredSequenceId;
+    }
+
+    public void setLastDeliveredSequenceId(long lastDeliveredSequenceId) {
+        this.lastDeliveredSequenceId = lastDeliveredSequenceId;
+    }
+
     public Response visit(CommandVisitor visitor) throws Exception {
         switch (objectId.getDataStructureType()) {
         case ConnectionId.DATA_STRUCTURE_TYPE:
-            return visitor.processRemoveConnection((ConnectionId)objectId);
+            return visitor.processRemoveConnection((ConnectionId)objectId, lastDeliveredSequenceId);
         case SessionId.DATA_STRUCTURE_TYPE:
-            return visitor.processRemoveSession((SessionId)objectId);
+            return visitor.processRemoveSession((SessionId)objectId, lastDeliveredSequenceId);
         case ConsumerId.DATA_STRUCTURE_TYPE:
-            return visitor.processRemoveConsumer((ConsumerId)objectId);
+            return visitor.processRemoveConsumer((ConsumerId)objectId, lastDeliveredSequenceId);
         case ProducerId.DATA_STRUCTURE_TYPE:
             return visitor.processRemoveProducer((ProducerId)objectId);
         default:

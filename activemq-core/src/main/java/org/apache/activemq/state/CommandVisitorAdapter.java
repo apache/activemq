@@ -127,11 +127,11 @@ public class CommandVisitorAdapter implements CommandVisitor {
         return null;
     }
 
-    public Response processRemoveConnection(ConnectionId id) throws Exception {
+    public Response processRemoveConnection(ConnectionId id, long lastDeliveredSequenceId) throws Exception {
         return null;
     }
 
-    public Response processRemoveConsumer(ConsumerId id) throws Exception {
+    public Response processRemoveConsumer(ConsumerId id, long lastDeliveredSequenceId) throws Exception {
         return null;
     }
 
@@ -143,7 +143,7 @@ public class CommandVisitorAdapter implements CommandVisitor {
         return null;
     }
 
-    public Response processRemoveSession(SessionId id) throws Exception {
+    public Response processRemoveSession(SessionId id, long lastDeliveredSequenceId) throws Exception {
         return null;
     }
 
