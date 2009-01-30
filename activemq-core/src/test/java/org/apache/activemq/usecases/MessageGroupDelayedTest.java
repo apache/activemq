@@ -85,6 +85,7 @@ public class MessageGroupDelayedTest extends JmsTestSupport {
       // Setup a destination policy where it takes only 1 message at a time.
       PolicyMap policyMap = new PolicyMap();
       PolicyEntry policy = new PolicyEntry();
+      log.info("testing with consumersBeforeDispatchStarts=" + consumersBeforeDispatchStarts + " and timeBeforeDispatchStarts=" + timeBeforeDispatchStarts);
       policy.setConsumersBeforeDispatchStarts(consumersBeforeDispatchStarts);
       policy.setTimeBeforeDispatchStarts(timeBeforeDispatchStarts);
       policyMap.setDefaultEntry(policy);
@@ -109,7 +110,7 @@ public class MessageGroupDelayedTest extends JmsTestSupport {
   
   public void testDelayedDirectConnectionListener() throws Exception {
 	  
-	  for(int i = 0; i < 10; i++) {
+	for(int i = 0; i < 10; i++) {
       Message msga = session.createTextMessage("hello a");
       msga.setStringProperty("JMSXGroupID", "A");
       producer.send(msga);
@@ -153,8 +154,10 @@ public class MessageGroupDelayedTest extends JmsTestSupport {
     
     for (String worker: messageCount.keySet()) {
     	log.info("worker " + worker + " received " + messageCount.get(worker) + " messages from groups " + messageGroups.get(worker));
-    	assertEquals(10, messageCount.get(worker).intValue());
-    	assertEquals(1, messageGroups.get(worker).size());
+    	assertEquals("worker " + worker + " received " + messageCount.get(worker) + " messages from groups " + messageGroups.get(worker)
+    			, 10, messageCount.get(worker).intValue());
+    	assertEquals("worker " + worker + " received " + messageCount.get(worker) + " messages from groups " + messageGroups.get(worker)
+    			, 1, messageGroups.get(worker).size());
     }
     
   }

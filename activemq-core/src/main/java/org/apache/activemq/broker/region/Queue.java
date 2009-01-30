@@ -233,12 +233,13 @@ public class Queue extends BaseDestination implements Task {
             	// set a flag if this is a first consumer
             	if (consumers.size() == 0) {
             		firstConsumer = true;
+            		if (consumersBeforeDispatchStarts != 0) {
+            			consumersBeforeStartsLatch = new CountDownLatch(consumersBeforeDispatchStarts - 1);
+            		}
             	} else {
-            		firstConsumer = false;
-            	}
-            	
-            	if (consumersBeforeStartsLatch != null) {
-            		consumersBeforeStartsLatch.countDown();
+                	if (consumersBeforeStartsLatch != null) {
+                		consumersBeforeStartsLatch.countDown();
+                	}
             	}
             	
                 addToConsumerList(sub);
@@ -647,7 +648,6 @@ public class Queue extends BaseDestination implements Task {
 
 	public void setConsumersBeforeDispatchStarts(int consumersBeforeDispatchStarts) {
 		this.consumersBeforeDispatchStarts = consumersBeforeDispatchStarts;
-		consumersBeforeStartsLatch = new CountDownLatch(consumersBeforeDispatchStarts);
 	}
 
     // Implementation methods
