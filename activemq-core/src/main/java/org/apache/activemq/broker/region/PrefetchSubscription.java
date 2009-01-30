@@ -230,8 +230,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
 
                                         public void afterRollback() throws Exception {
                                             synchronized(dispatchLock) {
-                                            	// ActiveMQ workaround for AMQ-1730 - Please Ignore next line
-                                                node.incrementRedeliveryCounter();
                                                 node.getRegionDestination().getDestinationStatistics().getInflight().decrement();
                                             }
                                         }

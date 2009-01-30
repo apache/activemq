@@ -630,9 +630,10 @@ public class JMSConsumerTest extends JmsTestSupport {
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
         destination = createDestination(session, ActiveMQDestination.QUEUE_TYPE);
         
-        sendMessages(connection, destination, 1);
+        sendMessages(connection, destination, 2);
         
         MessageConsumer consumer = session.createConsumer(destination);
+        assertNotNull(consumer.receive(1000));
         assertNotNull(consumer.receive(1000));
         
         // install another consumer while message dispatch is unacked/uncommitted
@@ -645,8 +646,12 @@ public class JMSConsumerTest extends JmsTestSupport {
         Message msg = redispatchConsumer.receive(1000);
         assertNotNull(msg);
         assertTrue(msg.getJMSRedelivered());
-        // should have re-delivery of 2, one for re-dispatch, one for rollback which is a little too much!
-        assertEquals(3, msg.getLongProperty("JMSXDeliveryCount"));
+        assertEquals(2, msg.getLongProperty("JMSXDeliveryCount"));
+        
+        msg = redispatchConsumer.receive(1000);
+        assertNotNull(msg);
+        assertTrue(msg.getJMSRedelivered());
+        assertEquals(2, msg.getLongProperty("JMSXDeliveryCount"));
         redispatchSession.commit();
         
         assertNull(redispatchConsumer.receive(500));
@@ -660,9 +665,10 @@ public class JMSConsumerTest extends JmsTestSupport {
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
         destination = createDestination(session, ActiveMQDestination.QUEUE_TYPE);
         
-        sendMessages(connection, destination, 1);
+        sendMessages(connection, destination, 2);
         
         MessageConsumer consumer = session.createConsumer(destination);
+        assertNotNull(consumer.receive(1000));
         assertNotNull(consumer.receive(1000));
         
         // install another consumer while message dispatch is unacked/uncommitted
@@ -675,8 +681,11 @@ public class JMSConsumerTest extends JmsTestSupport {
         Message msg = redispatchConsumer.receive(1000);
         assertNotNull(msg);
         assertTrue(msg.getJMSRedelivered());
-        // should have re-delivery of 2, one for re-dispatch, one for rollback which is a little too much!
-        assertEquals(3, msg.getLongProperty("JMSXDeliveryCount"));
+        assertEquals(2, msg.getLongProperty("JMSXDeliveryCount"));
+        msg = redispatchConsumer.receive(1000);
+        assertNotNull(msg);
+        assertTrue(msg.getJMSRedelivered());
+        assertEquals(2, msg.getLongProperty("JMSXDeliveryCount"));
         redispatchSession.commit();
         
         assertNull(redispatchConsumer.receive(500));

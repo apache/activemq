@@ -38,6 +38,7 @@ public class JmsRollbackRedeliveryTest extends AutoFailTestSupport {
     protected static final Log LOG = LogFactory.getLog(JmsRollbackRedeliveryTest.class);
     final int nbMessages = 10;
     final String destinationName = "Destination";
+    final String brokerUrl = "vm://localhost?create=false";
     boolean consumerClose = true;
     boolean rollback = true;
     
@@ -52,13 +53,21 @@ public class JmsRollbackRedeliveryTest extends AutoFailTestSupport {
     
 
     public void testRedelivery() throws Exception {
-        doTestRedelivery("vm://localhost", false);
+        doTestRedelivery(brokerUrl, false);
     }
 
     public void testRedeliveryWithInterleavedProducer() throws Exception {
-        doTestRedelivery("vm://localhost", true);
+        doTestRedelivery(brokerUrl, true);
     }
 
+    public void testRedeliveryWithPrefetch0() throws Exception {
+        doTestRedelivery(brokerUrl + "?jms.prefetchPolicy.queuePrefetch=0", true);
+    }
+    
+    public void testRedeliveryWithPrefetch1() throws Exception {
+        doTestRedelivery(brokerUrl + "?jms.prefetchPolicy.queuePrefetch=1", true);
+    }
+    
     public void doTestRedelivery(String brokerUrl, boolean interleaveProducer) throws Exception {
 
         final int nbMessages = 10;
@@ -88,9 +97,11 @@ public class JmsRollbackRedeliveryTest extends AutoFailTestSupport {
                     if (msg != null && rolledback.put(msg.getText(), Boolean.TRUE) != null) {
                         LOG.info("Received message " + msg.getText() + " (" + received.getAndIncrement() + ")" + msg.getJMSMessageID());
                         assertTrue(msg.getJMSRedelivered());
+                        assertEquals(2, msg.getLongProperty("JMSXDeliveryCount"));
                         session.commit();
                     } else {
                         LOG.info("Rollback message " + msg.getText() + " id: " +  msg.getJMSMessageID());
+                        assertFalse(msg.getJMSRedelivered());
                         session.rollback();
                     }
                 }
@@ -102,7 +113,8 @@ public class JmsRollbackRedeliveryTest extends AutoFailTestSupport {
        
     public void testRedeliveryOnSingleConsumer() throws Exception {
 
-        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost");
+        ConnectionFactory connectionFactory = 
+            new ActiveMQConnectionFactory(brokerUrl);
         Connection connection = connectionFactory.createConnection();
         connection.start();
 
@@ -135,7 +147,8 @@ public class JmsRollbackRedeliveryTest extends AutoFailTestSupport {
     
     public void testRedeliveryOnSingleSession() throws Exception {
 
-        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost"); 
+        ConnectionFactory connectionFactory = 
+            new ActiveMQConnectionFactory(brokerUrl); 
         Connection connection = connectionFactory.createConnection();
         connection.start();
 
@@ -168,7 +181,8 @@ public class JmsRollbackRedeliveryTest extends AutoFailTestSupport {
     
     public void testRedeliveryOnSessionCloseWithNoRollback() throws Exception {
 
-        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost");
+        ConnectionFactory connectionFactory = 
+            new ActiveMQConnectionFactory(brokerUrl);
         Connection connection = connectionFactory.createConnection();
         connection.start();
 
@@ -191,6 +205,37 @@ public class JmsRollbackRedeliveryTest extends AutoFailTestSupport {
                     }
                 }
                 session.close();
+            }
+        }
+    }
+    
+    public void testRedeliveryPropertyWithNoRollback() throws Exception {
+        ConnectionFactory connectionFactory = 
+            new ActiveMQConnectionFactory(brokerUrl);
+        Connection connection = connectionFactory.createConnection();
+        connection.start();
+
+        populateDestination(nbMessages, destinationName, connection);
+        connection.close();
+        
+        {
+            AtomicInteger received = new AtomicInteger();
+            while (received.get() < nbMessages) {
+                connection = connectionFactory.createConnection();
+                connection.start();
+                Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                Destination destination = session.createQueue(destinationName);
+
+                MessageConsumer consumer = session.createConsumer(destination);            
+                TextMessage msg = (TextMessage) consumer.receive(2000);
+                if (msg != null) {
+                    LOG.info("Received message " + msg.getText() + 
+                            " (" + received.getAndIncrement() + ")" + msg.getJMSMessageID());
+                    assertFalse(msg.getJMSRedelivered());
+                    assertEquals(1, msg.getLongProperty("JMSXDeliveryCount"));
+                }
+                session.close();
+                connection.close();
             }
         }
     }
