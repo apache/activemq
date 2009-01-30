@@ -316,7 +316,6 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                         inAckRange = true;
                     }
                     if (inAckRange) {
-                        node.incrementRedeliveryCounter();
                         if (ack.getLastMessageId().equals(messageId)) {
                             destination = node.getRegionDestination();
                             callDispatchMatched = true;

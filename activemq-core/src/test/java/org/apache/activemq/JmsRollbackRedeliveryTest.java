@@ -70,9 +70,6 @@ public class JmsRollbackRedeliveryTest extends AutoFailTestSupport {
     
     public void doTestRedelivery(String brokerUrl, boolean interleaveProducer) throws Exception {
 
-        final int nbMessages = 10;
-        final String destinationName = "Destination";
-
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(brokerUrl);
         
         Connection connection = connectionFactory.createConnection();
@@ -179,36 +176,66 @@ public class JmsRollbackRedeliveryTest extends AutoFailTestSupport {
         }
     }
     
-    public void testRedeliveryOnSessionCloseWithNoRollback() throws Exception {
+    // AMQ-1593
+    public void testValidateRedeliveryCountOnRollback() throws Exception {
 
-        ConnectionFactory connectionFactory = 
+        final int numMessages = 1;
+       ConnectionFactory connectionFactory = 
             new ActiveMQConnectionFactory(brokerUrl);
         Connection connection = connectionFactory.createConnection();
         connection.start();
 
-        populateDestination(nbMessages, destinationName, connection);
+        populateDestination(numMessages, destinationName, connection);
 
         {
             AtomicInteger received = new AtomicInteger();
-            Map<String, Boolean> rolledback = new ConcurrentHashMap<String, Boolean>();
-            while (received.get() < nbMessages) {
-                Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+            final int maxRetries = new RedeliveryPolicy().getMaximumRedeliveries();
+            while (received.get() < maxRetries) {
+                Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
                 Destination destination = session.createQueue(destinationName);
 
                 MessageConsumer consumer = session.createConsumer(destination);            
                 TextMessage msg = (TextMessage) consumer.receive(1000);
                 if (msg != null) {
-                    if (msg != null && rolledback.put(msg.getText(), Boolean.TRUE) != null) {
-                        LOG.info("Received message " + msg.getText() + " (" + received.getAndIncrement() + ")" + msg.getJMSMessageID());
-                        assertTrue(msg.getJMSRedelivered());
-                        session.commit();
-                    }
+                    LOG.info("Received message " + msg.getText() + " (" + received.getAndIncrement() + ")" + msg.getJMSMessageID());
+                    assertEquals("redelivery property matches deliveries", received.get(), msg.getLongProperty("JMSXDeliveryCount"));
+                    session.rollback();
                 }
                 session.close();
             }
         }
     }
     
+    // AMQ-1593
+    public void testValidateRedeliveryCountOnRollbackWithPrefetch0() throws Exception {
+
+        final int numMessages = 1;
+       ConnectionFactory connectionFactory = 
+            new ActiveMQConnectionFactory(brokerUrl + "?jms.prefetchPolicy.queuePrefetch=0");
+        Connection connection = connectionFactory.createConnection();
+        connection.start();
+
+        populateDestination(numMessages, destinationName, connection);
+
+        {
+            AtomicInteger received = new AtomicInteger();
+            final int maxRetries = new RedeliveryPolicy().getMaximumRedeliveries();
+            while (received.get() < maxRetries) {
+                Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
+                Destination destination = session.createQueue(destinationName);
+
+                MessageConsumer consumer = session.createConsumer(destination);            
+                TextMessage msg = (TextMessage) consumer.receive(1000);
+                if (msg != null) {
+                    LOG.info("Received message " + msg.getText() + " (" + received.getAndIncrement() + ")" + msg.getJMSMessageID());
+                    assertEquals("redelivery property matches deliveries", received.get(), msg.getLongProperty("JMSXDeliveryCount"));
+                    session.rollback();
+                }
+                session.close();
+            }
+        }
+    }
+
     public void testRedeliveryPropertyWithNoRollback() throws Exception {
         ConnectionFactory connectionFactory = 
             new ActiveMQConnectionFactory(brokerUrl);
