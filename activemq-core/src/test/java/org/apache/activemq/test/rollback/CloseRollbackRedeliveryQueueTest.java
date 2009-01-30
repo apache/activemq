@@ -55,7 +55,7 @@ public class CloseRollbackRedeliveryQueueTest extends EmbeddedBrokerTestSupport 
         session.commit();
         assertNotNull(message);
         assertEquals("redelivered message", id, message.getJMSMessageID());
-        assertEquals(3, message.getLongProperty("JMSXDeliveryCount"));
+        assertEquals(2, message.getLongProperty("JMSXDeliveryCount"));
     }
     
     public void testVerifyConsumerAndSessionCloseRedeliveryWithFailoverTransport() throws Throwable {
@@ -75,7 +75,7 @@ public class CloseRollbackRedeliveryQueueTest extends EmbeddedBrokerTestSupport 
         session.commit();
         assertNotNull(message);
         assertEquals("redelivered message", id, message.getJMSMessageID());
-        assertEquals(3, message.getLongProperty("JMSXDeliveryCount"));
+        assertEquals(2, message.getLongProperty("JMSXDeliveryCount"));
     }
 
     public void testVerifyConsumerCloseSessionRollbackRedeliveryWithFailoverTransport() throws Throwable {
@@ -94,7 +94,7 @@ public class CloseRollbackRedeliveryQueueTest extends EmbeddedBrokerTestSupport 
         session.commit();
         assertNotNull(message);
         assertEquals("redelivered message", id, message.getJMSMessageID());
-        assertEquals(3, message.getLongProperty("JMSXDeliveryCount"));
+        assertEquals(2, message.getLongProperty("JMSXDeliveryCount"));
     }
     
     protected void setUp() throws Exception {
