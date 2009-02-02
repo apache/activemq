@@ -100,6 +100,8 @@ public class LinkedNodeList<T extends LinkedNode<T>> {
      * @return
      */
     public T rotate() {
+    	if( head ==null )
+    		return null;
         return head = head.getNextCircular();
     }
 
