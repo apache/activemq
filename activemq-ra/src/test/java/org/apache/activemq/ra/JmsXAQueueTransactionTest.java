@@ -47,15 +47,6 @@ public class JmsXAQueueTransactionTest extends JmsQueueTransactionTest {
     private static long txGenerator;
     private Xid xid;
 
-    
-    // TODO fix for XA
-    public void testReceiveTwoThenCloseConnection() throws Exception {}
-    public void testReceiveRollback() throws Exception {}
-    public void testReceiveTwoThenRollback() throws Exception {}
-    public void testReceiveTwoThenRollbackManyTimes() throws Exception {}
-    public void testReceiveRollbackWithPrefetchOfOne() throws Exception {}
-    public void testChangeMutableObjectInObjectMessageThenRollback() throws Exception {}
-
     @Override
     protected void setSessionTransacted() {
         resourceProvider.setTransacted(false);

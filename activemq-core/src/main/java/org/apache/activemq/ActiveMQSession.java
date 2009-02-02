@@ -1955,7 +1955,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     }
     
     protected void sendAck(MessageAck ack, boolean lazy) throws JMSException {
-        if (lazy || connection.isSendAcksAsync() || isTransacted()) {
+        if (lazy || connection.isSendAcksAsync() || getTransacted()) {
             asyncSendPacket(ack);
         } else {
             syncSendPacket(ack);

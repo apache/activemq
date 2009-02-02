@@ -592,7 +592,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      */
     public void close() throws JMSException {
         if (!unconsumedMessages.isClosed()) {
-            if (session.isTransacted() && session.getTransactionContext().getTransactionId() != null) {
+            if (session.getTransactionContext().isInTransaction()) {
                 session.getTransactionContext().addSynchronization(new Synchronization() {
                     public void afterCommit() throws Exception {
                         doClose();
@@ -667,7 +667,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             
             // Do we have any acks we need to send out before closing?
             // Ack any delivered messages now.
-            if (!session.isTransacted()) { 
+            if (!session.getTransacted()) { 
                 deliverAcks();
                 if (session.isDupsOkAcknowledge()) {
                     acknowledge();
@@ -752,7 +752,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             synchronized(deliveredMessages) {
                 deliveredMessages.addFirst(md);
             }
-            if (session.isTransacted()) {
+            if (session.getTransacted()) {
                 ackLater(md, MessageAck.DELIVERED_ACK_TYPE);
             }
         }
@@ -766,7 +766,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             ackLater(md, MessageAck.DELIVERED_ACK_TYPE);
         } else {
             stats.onMessage();
-            if (session.isTransacted()) {
+            if (session.getTransacted()) {
                 // Do nothing.
             } else if (session.isAutoAcknowledge()) {
                 synchronized (deliveredMessages) {
@@ -830,7 +830,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         // Don't acknowledge now, but we may need to let the broker know the
         // consumer got the message
         // to expand the pre-fetch window
-        if (session.isTransacted()) {
+        if (session.getTransacted()) {
             session.doStartTransaction();
             if (!synchronizationRegistered) {
                 synchronizationRegistered = true;
@@ -892,7 +892,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             if (ack == null)
             	return; // no msgs
             
-            if (session.isTransacted()) {
+            if (session.getTransacted()) {
                 session.doStartTransaction();
                 ack.setTransactionId(session.getTransactionContext().getTransactionId());
             }
@@ -903,7 +903,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             deliveredCounter -= deliveredMessages.size();
             additionalWindowSize = Math.max(0, additionalWindowSize - deliveredMessages.size());
     
-            if (!session.isTransacted()) {
+            if (!session.getTransacted()) {
                 deliveredMessages.clear();
             }
         }
