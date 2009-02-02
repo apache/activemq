@@ -175,6 +175,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             public void onCommand(Object o) {
                 serviceLock.readLock().lock();
                 try {
+                    if (!(o instanceof Command)) {
+                        throw new RuntimeException("Protocol violation - Command corrupted");
+                    }
                     Command command = (Command)o;
                     Response response = service(command);
                     if (response != null) {
