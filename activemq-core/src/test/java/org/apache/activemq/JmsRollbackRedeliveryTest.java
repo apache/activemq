@@ -203,13 +203,14 @@ public class JmsRollbackRedeliveryTest extends AutoFailTestSupport {
                 }
                 session.close();
             }
+            consumeMessage(connection, maxRetries + 1);
         }
     }
     
     // AMQ-1593
     public void testValidateRedeliveryCountOnRollbackWithPrefetch0() throws Exception {
 
-        final int numMessages = 1;
+       final int numMessages = 1;
        ConnectionFactory connectionFactory = 
             new ActiveMQConnectionFactory(brokerUrl + "?jms.prefetchPolicy.queuePrefetch=0");
         Connection connection = connectionFactory.createConnection();
@@ -233,37 +234,55 @@ public class JmsRollbackRedeliveryTest extends AutoFailTestSupport {
                 }
                 session.close();
             }
+            
+            consumeMessage(connection, maxRetries + 1);
         }
     }
 
+
+    private void consumeMessage(Connection connection, final int deliveryCount)
+            throws JMSException {
+        Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
+        Destination destination = session.createQueue(destinationName);
+        MessageConsumer consumer = session.createConsumer(destination);            
+        TextMessage msg = (TextMessage) consumer.receive(1000);
+        assertNotNull(msg);
+        assertEquals("redelivery property matches deliveries", deliveryCount, msg.getLongProperty("JMSXDeliveryCount"));
+        session.commit();
+        session.close();
+    }
+
     public void testRedeliveryPropertyWithNoRollback() throws Exception {
+        final int numMessages = 1;
         ConnectionFactory connectionFactory = 
             new ActiveMQConnectionFactory(brokerUrl);
         Connection connection = connectionFactory.createConnection();
         connection.start();
 
-        populateDestination(nbMessages, destinationName, connection);
+        populateDestination(numMessages, destinationName, connection);
         connection.close();
         
         {
             AtomicInteger received = new AtomicInteger();
-            while (received.get() < nbMessages) {
+            final int maxRetries = new RedeliveryPolicy().getMaximumRedeliveries();
+            while (received.get() < maxRetries) {
                 connection = connectionFactory.createConnection();
                 connection.start();
-                Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
                 Destination destination = session.createQueue(destinationName);
 
                 MessageConsumer consumer = session.createConsumer(destination);            
                 TextMessage msg = (TextMessage) consumer.receive(2000);
                 if (msg != null) {
-                    LOG.info("Received message " + msg.getText() + 
-                            " (" + received.getAndIncrement() + ")" + msg.getJMSMessageID());
-                    assertFalse(msg.getJMSRedelivered());
-                    assertEquals(1, msg.getLongProperty("JMSXDeliveryCount"));
+                    LOG.info("Received message " + msg.getText() + " (" + received.getAndIncrement() + ")" + msg.getJMSMessageID());
+                    assertEquals("redelivery property matches deliveries", received.get(), msg.getLongProperty("JMSXDeliveryCount"));
                 }
                 session.close();
                 connection.close();
             }
+            connection = connectionFactory.createConnection();
+            connection.start();
+            consumeMessage(connection, maxRetries + 1);
         }
     }
     

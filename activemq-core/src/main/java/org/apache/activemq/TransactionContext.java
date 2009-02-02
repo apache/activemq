@@ -90,6 +90,10 @@ public class TransactionContext implements XAResource {
         return transactionId != null && transactionId.isLocalTransaction();
     }
 
+    public boolean isInTransaction() {
+        return transactionId != null;
+    }
+    
     /**
      * @return Returns the localTransactionEventListener.
      */
