@@ -78,7 +78,7 @@ public class SessionPool implements PoolableObjectFactory {
 
     public void destroyObject(Object o) throws Exception {
         PooledSession session = (PooledSession)o;
-        session.getSession().close();
+        session.getInternalSession().close();
     }
 
     public boolean validateObject(Object o) {

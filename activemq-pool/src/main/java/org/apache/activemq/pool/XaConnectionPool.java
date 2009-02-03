@@ -69,7 +69,7 @@ public class XaConnectionPool extends ConnectionPool {
     }
 
     protected XAResource createXaResource(PooledSession session) throws JMSException {
-        return session.getSession().getTransactionContext();
+        return session.getXAResource();
     }
     
     
