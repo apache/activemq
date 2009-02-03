@@ -34,7 +34,7 @@ public class JcaConnectionPool extends XaConnectionPool {
     }
 
     protected XAResource createXaResource(PooledSession session) throws JMSException {
-        XAResource xares = new LocalAndXATransaction(session.getSession().getTransactionContext());
+        XAResource xares = new LocalAndXATransaction(session.getInternalSession().getTransactionContext());
         if (name != null) {
             xares = new WrapperNamedXAResource(xares, name);
         }
