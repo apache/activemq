@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.bugs;
 
+import java.io.File;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.concurrent.CountDownLatch;
@@ -33,6 +34,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.activemq.store.amq.AMQPersistenceAdapterFactory;
+import org.apache.activemq.store.kahadb.KahaDBStore;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -50,7 +52,7 @@ public class VerifySteadyEnqueueRate extends TestCase {
     private Connection producerConnection;
     final boolean useTopic = false;
     
-    AMQPersistenceAdapter persistentAdapter;
+    private boolean useAMQPStore=true;
     protected static final String payload = new String(new byte[24]);
 
     public void setUp() throws Exception {
@@ -118,22 +120,29 @@ public class VerifySteadyEnqueueRate extends TestCase {
         broker.setDeleteAllMessagesOnStartup(true);
         broker.setPersistent(true);
         broker.setUseJmx(true);
-        broker.addConnector("tcp://localhost:0").setName("Default");
-           
-        AMQPersistenceAdapterFactory factory = (AMQPersistenceAdapterFactory) broker.getPersistenceFactory();
-        // ensure there are a bunch of data files but multiple entries in each
-        //factory.setMaxFileLength(1024 * 20);
-        // speed up the test case, checkpoint an cleanup early and often
-        //factory.setCheckpointInterval(500);
-        factory.setCleanupInterval(1000*60*30);
-        factory.setSyncOnWrite(false);
         
-        //int indexBinSize=262144; // good for 6M
-        int indexBinSize=1024;
-        factory.setIndexMaxBinSize(indexBinSize * 2);
-        factory.setIndexBinSize(indexBinSize);
-        factory.setIndexPageSize(192*20);
-        persistentAdapter = (AMQPersistenceAdapter) broker.getPersistenceAdapter();
+        if( useAMQPStore ) {
+            AMQPersistenceAdapterFactory factory = (AMQPersistenceAdapterFactory) broker.getPersistenceFactory();
+            // ensure there are a bunch of data files but multiple entries in each
+            //factory.setMaxFileLength(1024 * 20);
+            // speed up the test case, checkpoint an cleanup early and often
+            //factory.setCheckpointInterval(500);
+            factory.setCleanupInterval(1000*60*30);
+            factory.setSyncOnWrite(false);
+            
+            //int indexBinSize=262144; // good for 6M
+            int indexBinSize=1024;
+            factory.setIndexMaxBinSize(indexBinSize * 2);
+            factory.setIndexBinSize(indexBinSize);
+            factory.setIndexPageSize(192*20);
+        } else {
+            KahaDBStore kaha = new KahaDBStore();
+            kaha.setDirectory(new File("target/activemq-data/kahadb"));
+            kaha.deleteAllMessages();
+            broker.setPersistenceAdapter(kaha);
+        }
+
+        broker.addConnector("tcp://localhost:0").setName("Default");
         broker.start();
         LOG.info("Starting broker..");
     }
