@@ -352,14 +352,14 @@ public class SelectorTest extends TestCase {
 
     protected void assertInvalidSelector(Message message, String text) throws JMSException {
         try {
-            new SelectorParser().parse(text);
+            SelectorParser.parse(text);
             fail("Created a valid selector");
         } catch (InvalidSelectorException e) {
         }
     }
 
     protected void assertSelector(Message message, String text, boolean expected) throws JMSException {
-        BooleanExpression selector = new SelectorParser().parse(text);
+        BooleanExpression selector = SelectorParser.parse(text);
         assertTrue("Created a valid selector", selector != null);
         MessageEvaluationContext context = new MessageEvaluationContext();
         context.setMessageReference((org.apache.activemq.command.Message)message);

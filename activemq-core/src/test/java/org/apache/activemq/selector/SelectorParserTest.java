@@ -68,6 +68,6 @@ public class SelectorParserTest extends TestCase {
     }
 
     protected BooleanExpression parse(String text) throws Exception {
-        return new SelectorParser().parse(text);
+        return SelectorParser.parse(text);
     }
 }

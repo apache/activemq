@@ -66,7 +66,7 @@ public class FilteredDestination {
      */
     public void setSelector(String selector) throws InvalidSelectorException {
         this.selector = selector;
-        setFilter(new SelectorParser().parse(selector));
+        setFilter(SelectorParser.parse(selector));
     }
 
     public BooleanExpression getFilter() {

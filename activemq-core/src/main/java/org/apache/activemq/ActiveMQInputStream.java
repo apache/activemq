@@ -91,7 +91,7 @@ public class ActiveMQInputStream extends InputStream implements ActiveMQDispatch
             selector = "JMSType='org.apache.activemq.Stream'";
         }
 
-        new SelectorParser().parse(selector);
+        SelectorParser.parse(selector);
         this.info.setSelector(selector);
 
         this.info.setPrefetchSize(prefetch);
