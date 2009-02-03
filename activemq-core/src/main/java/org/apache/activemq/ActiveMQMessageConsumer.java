@@ -200,12 +200,12 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         this.info.setBrowser(browser);
         if (selector != null && selector.trim().length() != 0) {
             // Validate the selector
-            new SelectorParser().parse(selector);
+            SelectorParser.parse(selector);
             this.info.setSelector(selector);
             this.selector = selector;
         } else if (info.getSelector() != null) {
             // Validate the selector
-            new SelectorParser().parse(this.info.getSelector());
+            SelectorParser.parse(this.info.getSelector());
             this.selector = this.info.getSelector();
         } else {
             this.selector = null;

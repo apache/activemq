@@ -35,6 +35,7 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import org.apache.activemq.ActiveMQConnectionMetaData;
 import org.apache.activemq.Service;
+import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.advisory.AdvisoryBroker;
 import org.apache.activemq.broker.cluster.ConnectionSplitBroker;
 import org.apache.activemq.broker.ft.MasterConnector;
@@ -530,6 +531,8 @@ public class BrokerService implements Service {
             }
             stopper.stop(getManagementContext());
         }
+        // Clear SelectorParser cache to free memory
+        SelectorParser.clearCache();
         stopped.set(true);
         stoppedLatch.countDown();
         LOG.info("ActiveMQ JMS Message Broker (" + getBrokerName() + ", " + brokerId + ") stopped");

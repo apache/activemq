@@ -141,7 +141,7 @@ public class DestinationView implements DestinationViewMBean {
 
         MessageEvaluationContext ctx = new MessageEvaluationContext();
         ctx.setDestination(destination.getActiveMQDestination());
-        BooleanExpression selectorExpression = selector == null ? null : new SelectorParser().parse(selector);
+        BooleanExpression selectorExpression = selector == null ? null : SelectorParser.parse(selector);
 
         for (int i = 0; i < messages.length; i++) {
             try {
@@ -186,7 +186,7 @@ public class DestinationView implements DestinationViewMBean {
 
         MessageEvaluationContext ctx = new MessageEvaluationContext();
         ctx.setDestination(destination.getActiveMQDestination());
-        BooleanExpression selectorExpression = selector == null ? null : new SelectorParser().parse(selector);
+        BooleanExpression selectorExpression = selector == null ? null : SelectorParser.parse(selector);
 
         for (int i = 0; i < messages.length; i++) {
             try {
@@ -224,7 +224,7 @@ public class DestinationView implements DestinationViewMBean {
 
         MessageEvaluationContext ctx = new MessageEvaluationContext();
         ctx.setDestination(destination.getActiveMQDestination());
-        BooleanExpression selectorExpression = selector == null ? null : new SelectorParser().parse(selector);
+        BooleanExpression selectorExpression = selector == null ? null : SelectorParser.parse(selector);
 
         for (int i = 0; i < messages.length; i++) {
             try {

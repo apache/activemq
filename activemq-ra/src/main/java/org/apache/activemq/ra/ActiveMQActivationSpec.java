@@ -165,7 +165,7 @@ public class ActiveMQActivationSpec implements MessageActivationSpec, Serializab
     public boolean isValidMessageSelector(List<String> errorMessages) {
         try {
             if (!isEmpty(messageSelector)) {
-                new SelectorParser().parse(messageSelector);
+                SelectorParser.parse(messageSelector);
             }
             return true;
         } catch (Throwable e) {

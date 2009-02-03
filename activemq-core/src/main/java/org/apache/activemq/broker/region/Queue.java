@@ -1105,7 +1105,7 @@ public class Queue extends BaseDestination implements Task {
     }
 
     protected MessageReferenceFilter createSelectorFilter(String selector) throws InvalidSelectorException {
-        final BooleanExpression selectorExpression = new SelectorParser().parse(selector);
+        final BooleanExpression selectorExpression = SelectorParser.parse(selector);
 
         return new MessageReferenceFilter() {
             public boolean evaluate(ConnectionContext context, MessageReference r) throws JMSException {

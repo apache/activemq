@@ -60,7 +60,7 @@ public abstract class AbstractSubscription implements Subscription {
     private static BooleanExpression parseSelector(ConsumerInfo info) throws InvalidSelectorException {
         BooleanExpression rc = null;
         if (info.getSelector() != null) {
-            rc = new SelectorParser().parse(info.getSelector());
+            rc = SelectorParser.parse(info.getSelector());
         }
         if (info.isNoLocal()) {
             if (rc == null) {
