@@ -105,6 +105,17 @@ public class LinkedNodeList<T extends LinkedNode<T>> {
         return head = head.getNextCircular();
     }
 
+    /**
+     * Move the head to the tail and returns the new head node.
+     * 
+     * @return
+     */
+    public void rotateTo(T head) {
+    	assert head!=null: "Cannot rotate to a null head";
+    	assert head.list == this : "Cannot rotate to a node not linked to this list";
+        this.head = head;
+    }
+
     public int size() {
         return size;
     }
