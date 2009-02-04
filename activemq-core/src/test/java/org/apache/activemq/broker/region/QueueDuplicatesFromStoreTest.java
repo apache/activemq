@@ -46,6 +46,7 @@ import org.apache.activemq.command.Response;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.store.MessageStore;
+import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.amq.AMQPersistenceAdapter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -70,16 +71,20 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
     final int ackWindow = 50;
     final int ackBatchSize = 50;
     final int fullWindow = 200;
-    final int count = 20000;
+    protected int count = 20000;
 
     public void setUp() throws Exception {
-        brokerService = new BrokerService();
+        brokerService = createBroker();
         brokerService.setUseJmx(false);
         brokerService.deleteAllMessages();
         brokerService.start();        
     }
 
-    public void tearDown() throws Exception {
+    protected BrokerService createBroker() throws Exception {
+        return new BrokerService();
+    }
+
+	public void tearDown() throws Exception {
         brokerService.stop();
     }
 
@@ -92,8 +97,7 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
     }
 
     public void doTestNoDuplicateAfterCacheFullAndAcked(final int auditDepth) throws Exception {
-        final AMQPersistenceAdapter persistenceAdapter = 
-            (AMQPersistenceAdapter) brokerService.getPersistenceAdapter();
+        final PersistenceAdapter persistenceAdapter =  brokerService.getPersistenceAdapter();
         final MessageStore queueMessageStore = 
             persistenceAdapter.createQueueMessageStore(destination);
         final ConnectionContext contextNotInTx = new ConnectionContext();
@@ -127,10 +131,9 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
             Message message = getMessage(i);
             queue.send(producerExchange, message);
         }
-        
-        assertEquals("store count is correct", count, queueMessageStore
-                .getMessageCount());
 
+        assertEquals("store count is correct", count, queueMessageStore.getMessageCount());
+        
         // pull from store in small windows
         Subscription subscription = new Subscription() {
 
@@ -305,7 +308,6 @@ public class QueueDuplicatesFromStoreTest extends TestCase {
                     if (removeIndex % 1000 == 0) {
                         LOG.info("acked: " + removeIndex);
                         persistenceAdapter.checkpoint(true);
-                        persistenceAdapter.cleanup();
                     }
                 }
             }

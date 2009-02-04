@@ -92,4 +92,8 @@ public class ProxyMessageStore implements MessageStore {
         delegate.resetBatching();
 
     }
+
+    public void setBatch(MessageId messageId) {
+        delegate.setBatch(messageId);
+    }
 }
