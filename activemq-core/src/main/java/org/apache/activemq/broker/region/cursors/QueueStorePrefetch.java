@@ -75,15 +75,7 @@ class QueueStorePrefetch extends AbstractStoreCursor {
     }
     
     protected void setBatch(MessageId messageId) {
-        AMQMessageStore amqStore = (AMQMessageStore) store;
-        try {
-            amqStore.flush();
-        } catch (InterruptedIOException e) {
-            LOG.debug("flush on setBatch resulted in exception", e);        
-        }
-        KahaReferenceStore kahaStore = 
-            (KahaReferenceStore) amqStore.getReferenceStore();
-        kahaStore.setBatch(messageId);
+        store.setBatch(messageId);
         batchResetNeeded = false;
     }
 

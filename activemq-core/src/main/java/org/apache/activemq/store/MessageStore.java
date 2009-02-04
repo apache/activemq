@@ -110,4 +110,11 @@ public interface MessageStore extends Service {
     void recoverNextMessages(int maxReturned, MessageRecoveryListener listener) throws Exception;
 
     void dispose(ConnectionContext context);
+
+    /**
+     * allow caching cursors to set the current batch offset when cache is exhausted
+     * @param messageId
+     */
+    void setBatch(MessageId messageId);
+    
 }

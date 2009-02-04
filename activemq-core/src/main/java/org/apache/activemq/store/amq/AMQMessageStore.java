@@ -558,4 +558,14 @@ public class AMQMessageStore extends AbstractMessageStore {
         referenceStore.dispose(context);
         super.dispose(context);
     }
+
+    public void setBatch(MessageId messageId) {
+        try {
+            flush();
+        } catch (InterruptedIOException e) {
+            LOG.debug("flush on setBatch resulted in exception", e);
+        }
+        getReferenceStore().setBatch(messageId);
+    }
+    
 }

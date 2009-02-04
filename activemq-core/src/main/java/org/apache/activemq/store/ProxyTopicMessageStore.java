@@ -134,4 +134,8 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
         delegate.resetBatching();
 
     }
+
+    public void setBatch(MessageId messageId) {
+        delegate.setBatch(messageId);
+    }
 }
