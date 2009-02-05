@@ -720,7 +720,7 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
             s = c.getConnection().prepareStatement(this.statements.getFindNextMessagesStatement());
             s.setMaxRows(maxReturned * 2);
             s.setString(1, destination.getQualifiedName());
-            s.setLong(2, nextSeq - maxReturned);
+            s.setLong(2, nextSeq);
             rs = s.executeQuery();
             int count = 0;
             if (this.statements.isUseExternalMessageReferences()) {
