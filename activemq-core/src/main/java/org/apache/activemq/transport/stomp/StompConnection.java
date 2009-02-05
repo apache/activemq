@@ -107,9 +107,16 @@ public class StompConnection {
 	}
 	
     public void connect(String username, String password) throws Exception {
+        connect(username, password, null);
+    }
+	
+    public void connect(String username, String password, String client) throws Exception {
     	HashMap<String, String> headers = new HashMap();
     	headers.put("login", username);
     	headers.put("passcode", password);
+    	if (client != null) {
+    		headers.put("client-id", client);
+    	}
     	StompFrame frame = new StompFrame("CONNECT", headers);
         sendFrame(frame.toString());
         
