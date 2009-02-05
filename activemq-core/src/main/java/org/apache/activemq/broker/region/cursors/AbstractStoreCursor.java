@@ -166,7 +166,7 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
         size++;
     }
 
-    protected void setBatch(MessageId messageId) {
+    protected void setBatch(MessageId messageId) throws Exception {
     }
 
     public final synchronized void addMessageFirst(MessageReference node) throws Exception {

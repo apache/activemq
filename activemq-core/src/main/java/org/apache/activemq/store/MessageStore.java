@@ -115,6 +115,6 @@ public interface MessageStore extends Service {
      * allow caching cursors to set the current batch offset when cache is exhausted
      * @param messageId
      */
-    void setBatch(MessageId messageId);
+    void setBatch(MessageId messageId) throws Exception;
     
 }

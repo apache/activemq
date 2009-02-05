@@ -245,7 +245,24 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
 
         
         @Override
-        public void setBatch(MessageId messageId) {
+        public void setBatch(MessageId identity) throws IOException {
+            final String key = identity.toString();
+            
+            // Hopefully one day the page file supports concurrent read operations... but for now we must
+            // externally synchronize...
+            Long location;
+            synchronized(indexMutex) {
+                location = pageFile.tx().execute(new Transaction.CallableClosure<Long, IOException>(){
+                    public Long execute(Transaction tx) throws IOException {
+                        StoredDestination sd = getStoredDestination(dest, tx);
+                        return sd.messageIdIndex.get(tx, key);
+                    }
+                });
+            }
+            if( location!=null ) {
+                cursorPos=location;
+            }
+            
         }
 
         public void setMemoryUsage(MemoryUsage memoeyUSage) {

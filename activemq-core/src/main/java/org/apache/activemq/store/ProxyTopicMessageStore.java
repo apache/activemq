@@ -135,7 +135,7 @@ public class ProxyTopicMessageStore implements TopicMessageStore {
 
     }
 
-    public void setBatch(MessageId messageId) {
+    public void setBatch(MessageId messageId) throws Exception {
         delegate.setBatch(messageId);
     }
 }

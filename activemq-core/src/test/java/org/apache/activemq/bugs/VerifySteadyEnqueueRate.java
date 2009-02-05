@@ -104,7 +104,7 @@ public class VerifySteadyEnqueueRate extends TestCase {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
-                System.out.println("max = " + max);
+                System.out.println("Max Violation = " + max + " - Total SLA violations: "+slaViolations.get()+"/"+total.get()+" ("+String.format("%.6f", 100.0*slaViolations.get()/total.get())+"%)");
             }
         };
         ExecutorService executor = Executors.newCachedThreadPool();
