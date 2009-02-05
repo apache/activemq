@@ -260,7 +260,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
                 });
             }
             if( location!=null ) {
-                cursorPos=location;
+                cursorPos=location+1;
             }
             
         }
