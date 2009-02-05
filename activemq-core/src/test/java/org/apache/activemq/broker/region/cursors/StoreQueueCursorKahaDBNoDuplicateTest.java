@@ -30,11 +30,6 @@ import org.apache.activemq.store.kahadb.KahaDBStore;
 public class StoreQueueCursorKahaDBNoDuplicateTest extends StoreQueueCursorNoDuplicateTest {
 
     @Override
-    public void testNoDuplicateAfterCacheFullAndReadPast() throws Exception {
-        // TODO - check out how best to implement setBatch on the store
-    }
-    
-    @Override
     protected BrokerService createBroker() throws Exception {
         BrokerService broker = super.createBroker();
         PersistenceAdapter persistenceAdapter = new KahaDBStore();
