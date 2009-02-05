@@ -150,12 +150,12 @@ public class VerifySteadyEnqueueRate extends TestCase {
         } else {
             KahaDBStore kaha = new KahaDBStore();
             kaha.setDirectory(new File("target/activemq-data/kahadb"));
-            kaha.deleteAllMessages();
-            kaha.setCleanupInterval(1000 * 60 * 60 * 60);
             // The setEnableJournalDiskSyncs(false) setting is a little dangerous right now, as I have not verified 
             // what happens if the index is updated but a journal update is lost.
             // Index is going to be in consistent, but can it be repaired?
             kaha.setEnableJournalDiskSyncs(false);
+            // Using a bigger journal file size makes he take fewer spikes as it is not switching files as often.
+            kaha.getJournal().setMaxFileLength(1024*1024*100);
             kaha.getPageFile().setWriteBatchSize(100);
             kaha.getPageFile().setEnableWriteThread(true);
             broker.setPersistenceAdapter(kaha);

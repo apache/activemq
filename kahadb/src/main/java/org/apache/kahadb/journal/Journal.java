@@ -16,17 +16,12 @@
  */
 package org.apache.kahadb.journal;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,7 +37,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.kahadb.journal.DataFileAppender.WriteCommand;
 import org.apache.kahadb.journal.DataFileAppender.WriteKey;
 import org.apache.kahadb.util.ByteSequence;
-import org.apache.kahadb.util.IOHelper;
 import org.apache.kahadb.util.LinkedNodeList;
 import org.apache.kahadb.util.Scheduler;
 
@@ -299,18 +293,10 @@ public class Journal {
         return result;
     }
 
-    public synchronized void consolidateDataFilesNotIn(Set<Integer> inUse, Integer lastFile) throws IOException {
-        Set<Integer> unUsed = new HashSet<Integer>(fileMap.keySet());
-        unUsed.removeAll(inUse);
-
-        for (Integer key : unUsed) {
-            // Don't remove files that come after the lastFile
-            if (lastFile !=null && key >= lastFile ) {
-                continue;
-            }
+    public synchronized void removeDataFiles(Set<Integer> files) throws IOException {
+        for (Integer key : files) {
             DataFile dataFile = fileMap.get(key);
-            
-            // Can't remove the last file either.
+            // Can't remove the last file.
             if( dataFile == dataFiles.getTail() ) {
                 continue;
             }

@@ -29,7 +29,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.SortedSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -443,7 +445,6 @@ public class MessageDatabase {
                     checkpointUpdate(tx, false);
                 }
             });
-            pageFile.flush();
             closure.execute();
         }
 	}
@@ -774,46 +775,82 @@ public class MessageDatabase {
         pageFile.flush();
 
         if( cleanup ) {
-            // Find empty journal files to remove.
-            final HashSet<Integer> inUseFiles = new HashSet<Integer>();
+        	
+        	final TreeSet<Integer> gcCandidateSet = new TreeSet<Integer>(journal.getFileMap().keySet());
+        	
+        	// Don't GC files under replication
+        	if( journalFilesBeingReplicated!=null ) {
+        		gcCandidateSet.removeAll(journalFilesBeingReplicated);
+        	}
+        	
+        	// Don't GC files after the first in progress tx
+        	Location firstTxLocation = metadata.lastUpdate;
+            if( metadata.firstInProgressTransactionLocation!=null ) {
+                firstTxLocation = metadata.firstInProgressTransactionLocation;
+            }
+            
+            if( firstTxLocation!=null ) {
+            	while( !gcCandidateSet.isEmpty() ) {
+            		Integer last = gcCandidateSet.last();
+            		if( last >= firstTxLocation.getDataFileId() ) {
+            			gcCandidateSet.remove(last);
+            		} else {
+            			break;
+            		}
+            	}
+            }
+
+            // Go through all the destinations to see if any of them can remove GC candidates.
             for (StoredDestination sd : storedDestinations.values()) {
+            	if( gcCandidateSet.isEmpty() ) {
+                	break;
+                }
                 
                 // Use a visitor to cut down the number of pages that we load
                 sd.locationIndex.visit(tx, new BTreeVisitor<Location, Long>() {
                     int last=-1;
                     public boolean isInterestedInKeysBetween(Location first, Location second) {
-                        if( second!=null ) {
-                            if( last+1 == second.getDataFileId() ) {
-                                last++;
-                                inUseFiles.add(last);
-                            }
-                            if( last == second.getDataFileId() ) {
-                                return false;
-                            }
-                        }
-                        return true;
+                    	if( first==null ) {
+                    		SortedSet<Integer> subset = gcCandidateSet.headSet(second.getDataFileId()+1);
+                    		if( !subset.isEmpty() && subset.last() == second.getDataFileId() ) {
+                    			subset.remove(second.getDataFileId());
+                    		}
+							return !subset.isEmpty();
+                    	} else if( second==null ) {
+                    		SortedSet<Integer> subset = gcCandidateSet.tailSet(first.getDataFileId());
+                    		if( !subset.isEmpty() && subset.first() == first.getDataFileId() ) {
+                    			subset.remove(first.getDataFileId());
+                    		}
+							return !subset.isEmpty();
+                    	} else {
+                    		SortedSet<Integer> subset = gcCandidateSet.subSet(first.getDataFileId(), second.getDataFileId()+1);
+                    		if( !subset.isEmpty() && subset.first() == first.getDataFileId() ) {
+                    			subset.remove(first.getDataFileId());
+                    		}
+                    		if( !subset.isEmpty() && subset.last() == second.getDataFileId() ) {
+                    			subset.remove(second.getDataFileId());
+                    		}
+							return !subset.isEmpty();
+                    	}
                     }
     
                     public void visit(List<Location> keys, List<Long> values) {
-                        for (int i = 0; i < keys.size(); i++) {
-                            if( last != keys.get(i).getDataFileId() ) {
-                                inUseFiles.add(keys.get(i).getDataFileId());
-                                last = keys.get(i).getDataFileId();
+                    	for (Location l : keys) {
+                            int fileId = l.getDataFileId();
+							if( last != fileId ) {
+                        		gcCandidateSet.remove(fileId);
+                                last = fileId;
                             }
-                        }
-                        
+						}                        
                     }
     
                 });
             }
-            inUseFiles.addAll(journalFilesBeingReplicated);
-            Location l = metadata.lastUpdate;
-            if( metadata.firstInProgressTransactionLocation!=null ) {
-                l = metadata.firstInProgressTransactionLocation;
+
+            if( !gcCandidateSet.isEmpty() ) {
+	            LOG.debug("Cleanup removing the data files: "+gcCandidateSet);
+	            journal.removeDataFiles(gcCandidateSet);
             }
-            
-            LOG.debug("In use files: "+inUseFiles+", lastUpdate: "+l);
-            journal.consolidateDataFilesNotIn(inUseFiles, l==null?null:l.getDataFileId());
         }
         
         LOG.debug("Checkpoint done.");
