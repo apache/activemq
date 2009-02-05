@@ -104,6 +104,9 @@ public class PageFile {
     private int recoveryPageCount;
 
     private AtomicBoolean loaded = new AtomicBoolean();
+    // The number of pages we are aiming to write every time we 
+    // write to disk.
+    int writeBatchSize = 1000;
 
     // We keep a cache of pages recently used?
     private LRUCache<Long, Page> pageCache;
@@ -824,7 +827,7 @@ public class PageFile {
     }
     
     private boolean canStartWriteBatch() {
-        int capacityUsed = ((writes.size() * 100)/1000);
+		int capacityUsed = ((writes.size() * 100)/writeBatchSize);
         if( enableAsyncWrites ) {
             // The constant 10 here controls how soon write batches start going to disk..
             // would be nice to figure out how to auto tune that value.  Make to small and
@@ -1097,6 +1100,14 @@ public class PageFile {
 
 	public File getFile() {
 		return getMainPageFile();
+	}
+
+	public int getWriteBatchSize() {
+		return writeBatchSize;
+	}
+
+	public void setWriteBatchSize(int writeBatchSize) {
+		this.writeBatchSize = writeBatchSize;
 	}
 
 }

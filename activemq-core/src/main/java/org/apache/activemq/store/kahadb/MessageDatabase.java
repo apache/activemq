@@ -415,6 +415,7 @@ public class MessageDatabase {
 
     protected void checkpointCleanup(final boolean cleanup) {
         try {
+        	long start = System.currentTimeMillis();
             synchronized (indexMutex) {
             	if( !opened.get() ) {
             		return;
@@ -425,6 +426,10 @@ public class MessageDatabase {
                     }
                 });
             }
+        	long end = System.currentTimeMillis();
+        	if( end-start > 100 ) { 
+        		LOG.warn("KahaDB Cleanup took "+(end-start));
+        	}
         } catch (IOException e) {
         	e.printStackTrace();
         }
@@ -457,12 +462,22 @@ public class MessageDatabase {
      * durring a recovery process.
      */
     public Location store(JournalCommand data, boolean sync) throws IOException {
+
+    	
         int size = data.serializedSizeFramed();
         DataByteArrayOutputStream os = new DataByteArrayOutputStream(size + 1);
         os.writeByte(data.type().getNumber());
         data.writeFramed(os);
+
+        long start = System.currentTimeMillis();
         Location location = journal.write(os.toByteSequence(), sync);
+        long start2 = System.currentTimeMillis();
         process(data, location);
+    	long end = System.currentTimeMillis();
+    	if( end-start > 100 ) { 
+    		LOG.warn("KahaDB long enqueue time: Journal Add Took: "+(start2-start)+" ms, Index Update took "+(end-start2)+" ms");
+    	}
+
         metadata.lastUpdate = location;
         return location;
     }
