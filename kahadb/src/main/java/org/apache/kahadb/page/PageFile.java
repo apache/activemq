@@ -444,7 +444,13 @@ public class PageFile {
             }
         }
         try {
+            int size = writes.size();
+            long start = System.currentTimeMillis();
             checkpointLatch.await();        
+            long end = System.currentTimeMillis();
+            if( end-start > 100 ) {
+                LOG.warn("KahaDB PageFile flush: " + size + " queued writes, latch wait took "+(end-start));
+            }
         } catch (InterruptedException e) {
             throw new InterruptedIOException();
         }
