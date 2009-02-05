@@ -175,4 +175,10 @@ public class KahaMessageStore extends AbstractMessageStore {
     public boolean isSupportForCursors() {
         return true;
     }
+
+    @Override
+    public void setBatch(MessageId messageId) {
+        batchEntry = messageContainer.getEntry(messageId);
+    }
+    
 }

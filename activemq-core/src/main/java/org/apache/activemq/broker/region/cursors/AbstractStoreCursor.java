@@ -158,10 +158,10 @@ public abstract class AbstractStoreCursor extends AbstractPendingMessageCursor i
             lastCachedId = node.getMessageId();
         } else {
             if (cacheEnabled) {
+                cacheEnabled=false;
                 // sync with store on disabling the cache
                 setBatch(lastCachedId);
             }
-            cacheEnabled=false;
         }
         size++;
     }

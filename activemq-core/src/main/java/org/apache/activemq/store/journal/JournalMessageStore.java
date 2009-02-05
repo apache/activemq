@@ -411,4 +411,10 @@ public class JournalMessageStore extends AbstractMessageStore {
 
     }
 
+    @Override
+    public void setBatch(MessageId messageId) {
+        peristenceAdapter.checkpoint(true, true);
+        longTermStore.setBatch(messageId);
+    }
+
 }

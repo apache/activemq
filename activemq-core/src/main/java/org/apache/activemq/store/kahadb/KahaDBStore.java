@@ -243,6 +243,11 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             cursorPos=0;
         }
 
+        
+        @Override
+        public void setBatch(MessageId messageId) {
+        }
+
         public void setMemoryUsage(MemoryUsage memoeyUSage) {
         }
         public void start() throws Exception {

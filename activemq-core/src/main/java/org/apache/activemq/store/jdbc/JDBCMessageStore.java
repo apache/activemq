@@ -249,4 +249,9 @@ public class JDBCMessageStore extends AbstractMessageStore {
 
     }
 
+    @Override
+    public void setBatch(MessageId messageId) {
+        lastMessageId.set(messageId.getBrokerSequenceId());
+    }
+
 }

@@ -150,4 +150,10 @@ public class MemoryMessageStore extends AbstractMessageStore {
     public void resetBatching() {
         lastBatchId = null;
     }
+
+    @Override
+    public void setBatch(MessageId messageId) {
+        lastBatchId = messageId;
+    }
+    
 }
