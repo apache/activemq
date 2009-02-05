@@ -412,7 +412,7 @@ public class JournalMessageStore extends AbstractMessageStore {
     }
 
     @Override
-    public void setBatch(MessageId messageId) {
+    public void setBatch(MessageId messageId) throws Exception {
         peristenceAdapter.checkpoint(true, true);
         longTermStore.setBatch(messageId);
     }
