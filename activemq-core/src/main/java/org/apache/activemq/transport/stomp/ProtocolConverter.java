@@ -161,7 +161,7 @@ public class ProtocolConverter {
 	 * 
 	 * @param command
 	 */
-    public void onStompCommad(StompFrame command) throws IOException, JMSException {
+    public void onStompCommand(StompFrame command) throws IOException, JMSException {
         try {
 
             if (command.getClass() == StompFrameError.class) {
@@ -459,6 +459,8 @@ public class ProtocolConverter {
         throw new ProtocolException("No subscription matched.");
     }
 
+    ConnectionInfo connectionInfo = new ConnectionInfo();
+    
     protected void onStompConnect(final StompFrame command) throws ProtocolException {
 
         if (connected.get()) {
@@ -472,7 +474,6 @@ public class ProtocolConverter {
         String passcode = headers.get(Stomp.Headers.Connect.PASSCODE);
         String clientId = headers.get(Stomp.Headers.Connect.CLIENT_ID);
 
-        final ConnectionInfo connectionInfo = new ConnectionInfo();
 
         IntrospectionSupport.setProperties(connectionInfo, headers, "activemq.");
 
@@ -540,6 +541,7 @@ public class ProtocolConverter {
 
     protected void onStompDisconnect(StompFrame command) throws ProtocolException {
         checkConnected();
+        sendToActiveMQ(connectionInfo.createRemoveCommand(), createResponseHandler(command));
         sendToActiveMQ(new ShutdownInfo(), createResponseHandler(command));
         connected.set(false);
     }
@@ -556,7 +558,7 @@ public class ProtocolConverter {
      * @param command
      * @throws IOException
      */
-    public void onActiveMQCommad(Command command) throws IOException, JMSException {
+    public void onActiveMQCommand(Command command) throws IOException, JMSException {
         if (command.isResponse()) {
 
             Response response = (Response)command;

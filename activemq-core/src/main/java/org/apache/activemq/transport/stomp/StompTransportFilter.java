@@ -53,7 +53,7 @@ public class StompTransportFilter extends TransportFilter {
     public void oneway(Object o) throws IOException {
         try {
             final Command command = (Command)o;
-            protocolConverter.onActiveMQCommad(command);
+            protocolConverter.onActiveMQCommand(command);
         } catch (JMSException e) {
             throw IOExceptionSupport.create(e);
         }
@@ -64,7 +64,7 @@ public class StompTransportFilter extends TransportFilter {
             if (trace) {
                 LOG.trace("Received: \n" + command);
             }
-            protocolConverter.onStompCommad((StompFrame)command);
+            protocolConverter.onStompCommand((StompFrame)command);
         } catch (IOException e) {
             onException(e);
         } catch (JMSException e) {
