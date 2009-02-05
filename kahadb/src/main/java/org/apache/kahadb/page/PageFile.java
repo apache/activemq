@@ -813,7 +813,17 @@ public class PageFile {
 
     void write(Collection<Map.Entry<Long, PageWrite>> updates) throws IOException {
         synchronized( writes ) {
-            
+            if( enabledWriteThread  ) {
+                while( writes.size() >= writeBatchSize && !stopWriter.get() ) {
+                    try {
+                        writes.wait();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new InterruptedIOException();
+                    }
+                }
+            }
+
             for (Map.Entry<Long, PageWrite> entry : updates) {
                 Long key = entry.getKey();
                 PageWrite value = entry.getValue();
@@ -889,9 +899,11 @@ public class PageFile {
         try {
             while( !stopWriter.get() ) {
                 // Wait for a notification...
-                synchronized( writes ) {   
+                synchronized( writes ) {  
+                    writes.notifyAll();
+                    
                     // If there is not enough to write, wait for a notification...
-                    while( !canStartWriteBatch() && !stopWriter.get() ) {
+                    while( writes.isEmpty() && checkpointLatch==null && !stopWriter.get() ) {
                         writes.wait(100);
                     }
                     

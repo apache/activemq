@@ -74,7 +74,7 @@ class QueueStorePrefetch extends AbstractStoreCursor {
         this.store.resetBatching();
     }
     
-    protected void setBatch(MessageId messageId) {
+    protected void setBatch(MessageId messageId) throws Exception {
         store.setBatch(messageId);
         batchResetNeeded = false;
     }

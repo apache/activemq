@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.store;
 
+import java.io.IOException;
+
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.broker.ConnectionContext;
@@ -44,6 +46,6 @@ abstract public class AbstractMessageStore implements MessageStore {
     public void setMemoryUsage(MemoryUsage memoryUsage) {
     }
     
-    public void setBatch(MessageId messageId) {
+    public void setBatch(MessageId messageId) throws IOException {
     }
 }

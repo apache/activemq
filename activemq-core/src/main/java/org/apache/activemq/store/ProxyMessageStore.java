@@ -93,7 +93,7 @@ public class ProxyMessageStore implements MessageStore {
 
     }
 
-    public void setBatch(MessageId messageId) {
+    public void setBatch(MessageId messageId) throws Exception {
         delegate.setBatch(messageId);
     }
 }
