@@ -46,6 +46,6 @@ abstract public class AbstractMessageStore implements MessageStore {
     public void setMemoryUsage(MemoryUsage memoryUsage) {
     }
     
-    public void setBatch(MessageId messageId) throws IOException {
+    public void setBatch(MessageId messageId) throws IOException, Exception {
     }
 }
