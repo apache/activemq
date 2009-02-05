@@ -145,6 +145,7 @@ public class VerifySteadyEnqueueRate extends TestCase {
             KahaDBStore kaha = new KahaDBStore();
             kaha.setDirectory(new File("target/activemq-data/kahadb"));
             kaha.deleteAllMessages();
+            kaha.getPageFile().setWriteBatchSize(10);
             broker.setPersistenceAdapter(kaha);
         }
 
