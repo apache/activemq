@@ -1168,6 +1168,7 @@ public class MessageDatabase {
 
     private PageFile createPageFile() {
         PageFile pf = new PageFile(directory, "db");
+        pf.setEnableAsyncWrites(!isSyncWrites());
         return pf;
     }
 
