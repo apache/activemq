@@ -524,7 +524,7 @@ public final class BTreeNode<Key,Value> {
                 }
                 Key key2 = null;
                 if( i!=this.children.length-1 ) {
-                    key1 = keys[i];
+                    key2 = keys[i];
                 }
                 if( visitor.isInterestedInKeysBetween(key1, key2) ) {
                     BTreeNode<Key, Value> child = getChild(tx, i);
