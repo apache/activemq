@@ -140,7 +140,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(message);
             command.setMessage(new Buffer(packet.getData(), packet.getOffset(), packet.getLength()));
 
-            store(command, isSyncWrites() && message.isResponseRequired());
+            store(command, isEnableJournalDiskSyncs() && message.isResponseRequired());
             
         }
         
@@ -149,7 +149,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             command.setDestination(dest);
             command.setMessageId(ack.getLastMessageId().toString());
             command.setTransactionInfo(createTransactionInfo(ack.getTransactionId()) );
-            store(command, isSyncWrites() && ack.isResponseRequired());
+            store(command, isEnableJournalDiskSyncs() && ack.isResponseRequired());
         }
 
         public void removeAllMessages(ConnectionContext context) throws IOException {
@@ -282,14 +282,14 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter {
             command.setRetroactive(retroactive);
             org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(subscriptionInfo);
             command.setSubscriptionInfo(new Buffer(packet.getData(), packet.getOffset(), packet.getLength()));
-            store(command, isSyncWrites() && true);
+            store(command, isEnableJournalDiskSyncs() && true);
         }
 
         public void deleteSubscription(String clientId, String subscriptionName) throws IOException {
             KahaSubscriptionCommand command = new KahaSubscriptionCommand();
             command.setDestination(dest);
             command.setSubscriptionKey(subscriptionKey(clientId, subscriptionName));
-            store(command, isSyncWrites() && true);
+            store(command, isEnableJournalDiskSyncs() && true);
         }
 
         public SubscriptionInfo[] getAllSubscriptions() throws IOException {

@@ -65,6 +65,8 @@ public class VerifySteadyEnqueueRate extends TestCase {
 
     private void doTestEnqueue(final boolean transacted) throws Exception {
         final long min = 100;
+        final AtomicLong total = new AtomicLong(0);
+        final AtomicLong slaViolations = new AtomicLong(0);
         final AtomicLong max = new AtomicLong(0);
         long reportTime = 0;
 
@@ -81,16 +83,20 @@ public class VerifySteadyEnqueueRate extends TestCase {
                         long endT = System.currentTimeMillis();
                         long duration = endT - startT;
 
+                        total.incrementAndGet();
+                        
                         if (duration > max.get()) {
                             max.set(duration);
                         }
 
                         if (duration > min) {
-                            System.err.println(Thread.currentThread().getName()
+                        	slaViolations.incrementAndGet();
+                            System.err.println("SLA violation @ "+Thread.currentThread().getName()
                                     + " "
                                     + DateFormat.getTimeInstance().format(
                                             new Date(startT)) + " at message "
-                                    + i + " send time=" + duration);
+                                    + i + " send time=" + duration
+                                    + " - Total SLA violations: "+slaViolations.get()+"/"+total.get()+" ("+String.format("%.6f", 100.0*slaViolations.get()/total.get())+"%)");
                         }
                     }
 
@@ -145,7 +151,13 @@ public class VerifySteadyEnqueueRate extends TestCase {
             KahaDBStore kaha = new KahaDBStore();
             kaha.setDirectory(new File("target/activemq-data/kahadb"));
             kaha.deleteAllMessages();
-            kaha.getPageFile().setWriteBatchSize(10);
+            kaha.setCleanupInterval(1000 * 60 * 60 * 60);
+            // The setEnableJournalDiskSyncs(false) setting is a little dangerous right now, as I have not verified 
+            // what happens if the index is updated but a journal update is lost.
+            // Index is going to be in consistent, but can it be repaired?
+            kaha.setEnableJournalDiskSyncs(false);
+            kaha.getPageFile().setWriteBatchSize(100);
+            kaha.getPageFile().setEnableWriteThread(true);
             broker.setPersistenceAdapter(kaha);
         }
 

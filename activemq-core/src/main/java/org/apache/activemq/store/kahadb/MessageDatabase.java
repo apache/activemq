@@ -146,9 +146,9 @@ public class MessageDatabase {
     protected boolean deleteAllMessages;
     protected File directory;
     protected Thread checkpointThread;
-    protected boolean syncWrites=true;
-    int checkpointInterval = 5*1000;
-    int cleanupInterval = 30*1000;
+    protected boolean enableJournalDiskSyncs=true;
+    long checkpointInterval = 5*1000;
+    long cleanupInterval = 30*1000;
     
     protected AtomicBoolean started = new AtomicBoolean();
     protected AtomicBoolean opened = new AtomicBoolean();
@@ -1182,9 +1182,7 @@ public class MessageDatabase {
     // /////////////////////////////////////////////////////////////////
 
     private PageFile createPageFile() {
-        PageFile pf = new PageFile(directory, "db");
-        pf.setEnableAsyncWrites(!isSyncWrites());
-        return pf;
+        return new PageFile(directory, "db");
     }
 
     private Journal createJournal() {
@@ -1211,27 +1209,27 @@ public class MessageDatabase {
         this.deleteAllMessages = deleteAllMessages;
     }
 
-    public boolean isSyncWrites() {
-        return syncWrites;
+    public boolean isEnableJournalDiskSyncs() {
+        return enableJournalDiskSyncs;
     }
 
-    public void setSyncWrites(boolean syncWrites) {
-        this.syncWrites = syncWrites;
+    public void setEnableJournalDiskSyncs(boolean syncWrites) {
+        this.enableJournalDiskSyncs = syncWrites;
     }
 
-    public int getCheckpointInterval() {
+    public long getCheckpointInterval() {
         return checkpointInterval;
     }
 
-    public void setCheckpointInterval(int checkpointInterval) {
+    public void setCheckpointInterval(long checkpointInterval) {
         this.checkpointInterval = checkpointInterval;
     }
 
-    public int getCleanupInterval() {
+    public long getCleanupInterval() {
         return cleanupInterval;
     }
 
-    public void setCleanupInterval(int cleanupInterval) {
+    public void setCleanupInterval(long cleanupInterval) {
         this.cleanupInterval = cleanupInterval;
     }
 

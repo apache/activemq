@@ -26,12 +26,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.io.RandomAccessFile;
-import java.nio.channels.FileLock;
-import java.nio.channels.OverlappingFileLockException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -39,7 +36,6 @@ import java.util.Properties;
 import java.util.TreeMap;
 import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.Adler32;
@@ -48,7 +44,6 @@ import java.util.zip.Checksum;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.kahadb.util.DataByteArrayOutputStream;
-import org.apache.kahadb.util.IOExceptionSupport;
 import org.apache.kahadb.util.IOHelper;
 import org.apache.kahadb.util.IntrospectionSupport;
 import org.apache.kahadb.util.LRUCache;
@@ -119,9 +114,9 @@ public class PageFile {
     // page write failures..
     private boolean enableRecoveryFile=true;
     // Will we sync writes to disk. Ensures that data will not be lost after a checkpoint()
-    private boolean enableSyncedWrites=true;
+    private boolean enableDiskSyncs=true;
     // Will writes be done in an async thread?
-    private boolean enableAsyncWrites=false;
+    private boolean enabledWriteThread=false;
 
     // These are used if enableAsyncWrites==true 
     private AtomicBoolean stopWriter = new AtomicBoolean();
@@ -427,7 +422,7 @@ public class PageFile {
      */
     public void flush() throws IOException {
 
-        if( enableAsyncWrites && stopWriter.get() ) {
+        if( enabledWriteThread && stopWriter.get() ) {
             throw new IOException("Page file already stopped: checkpointing is not allowed");
         }
         
@@ -437,7 +432,7 @@ public class PageFile {
             if( writes.isEmpty()) {                
                 return;
             }
-            if( enableAsyncWrites ) {
+            if( enabledWriteThread ) {
                 if( this.checkpointLatch == null ) {
                     this.checkpointLatch = new CountDownLatch(1);
                 }
@@ -591,17 +586,17 @@ public class PageFile {
     /**
      * @return Are page writes synced to disk?
      */
-    public boolean isEnableSyncedWrites() {
-        return enableSyncedWrites;
+    public boolean isEnableDiskSyncs() {
+        return enableDiskSyncs;
     }
 
     /**
      * Allows you enable syncing writes to disk.
      * @param syncWrites
      */
-    public void setEnableSyncedWrites(boolean syncWrites) {
+    public void setEnableDiskSyncs(boolean syncWrites) {
         assertNotLoaded();
-        this.enableSyncedWrites = syncWrites;
+        this.enableDiskSyncs = syncWrites;
     }
     
     /**
@@ -662,13 +657,13 @@ public class PageFile {
         this.pageCacheSize = pageCacheSize;
     }
 
-    public boolean isEnableAsyncWrites() {
-        return enableAsyncWrites;
+    public boolean isEnabledWriteThread() {
+        return enabledWriteThread;
     }
 
-    public void setEnableAsyncWrites(boolean enableAsyncWrites) {
+    public void setEnableWriteThread(boolean enableAsyncWrites) {
         assertNotLoaded();
-        this.enableAsyncWrites = enableAsyncWrites;
+        this.enabledWriteThread = enableAsyncWrites;
     }
 
     public long getDiskSize() throws IOException {
@@ -700,7 +695,16 @@ public class PageFile {
         this.recoveryFileMaxPageCount = recoveryFileMaxPageCount;
     }
 
-    ///////////////////////////////////////////////////////////////////
+	public int getWriteBatchSize() {
+		return writeBatchSize;
+	}
+
+	public void setWriteBatchSize(int writeBatchSize) {
+        assertNotLoaded();
+		this.writeBatchSize = writeBatchSize;
+	}
+
+	///////////////////////////////////////////////////////////////////
     // Package Protected Methods exposed to Transaction
     ///////////////////////////////////////////////////////////////////
 
@@ -817,7 +821,7 @@ public class PageFile {
             
             // Once we start approaching capacity, notify the writer to start writing
             if( canStartWriteBatch() ) {
-                if( enableAsyncWrites  ) {
+                if( enabledWriteThread  ) {
                     writes.notify();
                 } else {
                     writeBatch();
@@ -828,7 +832,7 @@ public class PageFile {
     
     private boolean canStartWriteBatch() {
 		int capacityUsed = ((writes.size() * 100)/writeBatchSize);
-        if( enableAsyncWrites ) {
+        if( enabledWriteThread ) {
             // The constant 10 here controls how soon write batches start going to disk..
             // would be nice to figure out how to auto tune that value.  Make to small and
             // we reduce through put because we are locking the write mutex too often doing writes
@@ -963,7 +967,7 @@ public class PageFile {
                 recoveryFile.write(w.diskBound, 0, pageSize);
             }
             
-            if (enableSyncedWrites) {
+            if (enableDiskSyncs) {
                 // Sync to make sure recovery buffer writes land on disk..
                 recoveryFile.getFD().sync();
             }
@@ -978,7 +982,7 @@ public class PageFile {
         }
         
         // Sync again
-        if( enableSyncedWrites ) {
+        if( enableDiskSyncs ) {
             writeFile.getFD().sync();
         }
         
@@ -1077,7 +1081,7 @@ public class PageFile {
 
     private void startWriter() {
         synchronized( writes ) {
-            if( enableAsyncWrites ) {
+            if( enabledWriteThread ) {
                 stopWriter.set(false);
                 writerThread = new Thread("KahaDB Page Writer") {
                     @Override
@@ -1092,7 +1096,7 @@ public class PageFile {
     }
  
     private void stopWriter() throws InterruptedException {
-        if( enableAsyncWrites ) {
+        if( enabledWriteThread ) {
             stopWriter.set(true);
             writerThread.join();
         }
@@ -1100,14 +1104,6 @@ public class PageFile {
 
 	public File getFile() {
 		return getMainPageFile();
-	}
-
-	public int getWriteBatchSize() {
-		return writeBatchSize;
-	}
-
-	public void setWriteBatchSize(int writeBatchSize) {
-		this.writeBatchSize = writeBatchSize;
 	}
 
 }
