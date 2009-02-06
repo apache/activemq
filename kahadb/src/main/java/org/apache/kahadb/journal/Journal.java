@@ -295,12 +295,14 @@ public class Journal {
 
     public synchronized void removeDataFiles(Set<Integer> files) throws IOException {
         for (Integer key : files) {
+            // Can't remove the data file (or subsequent files) that is currently being written to.
+        	if( key >= lastAppendLocation.get().getDataFileId() ) {
+        		continue;
+        	}
             DataFile dataFile = fileMap.get(key);
-            // Can't remove the last file.
-            if( dataFile == dataFiles.getTail() ) {
-                continue;
+            if( dataFile!=null ) {
+            	forceRemoveDataFile(dataFile);
             }
-            forceRemoveDataFile(dataFile);
         }
     }
 
