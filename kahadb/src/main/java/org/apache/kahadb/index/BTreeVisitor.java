@@ -43,4 +43,96 @@ public interface BTreeVisitor<Key,Value> {
      */
     void visit(List<Key> keys, List<Value> values);
     
+    
+    abstract class GTVisitor<Key extends Comparable<Key>, Value> implements BTreeVisitor<Key, Value>{
+		final private Key value;
+
+		public GTVisitor(Key value) {
+			this.value = value;
+		}
+
+		public boolean isInterestedInKeysBetween(Key first, Key second) {
+        	return second==null || second.compareTo(value)>0;
+		}
+
+		public void visit(List<Key> keys, List<Value> values) {
+			for( int i=0; i < keys.size(); i++) {
+				Key key = keys.get(i);
+				if( key.compareTo(value)>0 ) {
+					matched(key, values.get(i));
+				}
+			}
+		}
+
+		abstract protected void matched(Key key, Value value);
+    }
+    
+    abstract class GTEVisitor<Key extends Comparable<Key>, Value> implements BTreeVisitor<Key, Value>{
+		final private Key value;
+
+		public GTEVisitor(Key value) {
+			this.value = value;
+		}
+
+		public boolean isInterestedInKeysBetween(Key first, Key second) {
+        	return second==null || second.compareTo(value)>=0;
+		}
+
+		public void visit(List<Key> keys, List<Value> values) {
+			for( int i=0; i < keys.size(); i++) {
+				Key key = keys.get(i);
+				if( key.compareTo(value)>=0 ) {
+					matched(key, values.get(i));
+				}
+			}
+		}
+
+		abstract protected void matched(Key key, Value value);
+    }
+    
+    abstract class LTVisitor<Key extends Comparable<Key>, Value> implements BTreeVisitor<Key, Value>{
+		final private Key value;
+
+		public LTVisitor(Key value) {
+			this.value = value;
+		}
+
+		public boolean isInterestedInKeysBetween(Key first, Key second) {
+        	return first==null || first.compareTo(value)<0;
+		}
+
+		public void visit(List<Key> keys, List<Value> values) {
+			for( int i=0; i < keys.size(); i++) {
+				Key key = keys.get(i);
+				if( key.compareTo(value)<0 ) {
+					matched(key, values.get(i));
+				}
+			}
+		}
+
+		abstract protected void matched(Key key, Value value);
+    }
+    
+    abstract class LTEVisitor<Key extends Comparable<Key>, Value> implements BTreeVisitor<Key, Value>{
+		final private Key value;
+
+		public LTEVisitor(Key value) {
+			this.value = value;
+		}
+
+		public boolean isInterestedInKeysBetween(Key first, Key second) {
+        	return first==null || first.compareTo(value)<=0;
+		}
+
+		public void visit(List<Key> keys, List<Value> values) {
+			for( int i=0; i < keys.size(); i++) {
+				Key key = keys.get(i);
+				if( key.compareTo(value)<=0 ) {
+					matched(key, values.get(i));
+				}
+			}
+		}
+
+		abstract protected void matched(Key key, Value value);
+    }
 }
