@@ -69,6 +69,7 @@ public class PageFile {
     
     // 4k Default page size.
     public static final int DEFAULT_PAGE_SIZE = Integer.parseInt(System.getProperty("defaultPageSize", ""+1024*4)); 
+    public static final int DEFAULT_WRITE_BATCH_SIZE = Integer.parseInt(System.getProperty("defaultWriteBatchSize", ""+1000));
     private static final int RECOVERY_FILE_HEADER_SIZE=1024*4;
     private static final int PAGE_FILE_HEADER_SIZE=1024*4;
 
@@ -101,7 +102,7 @@ public class PageFile {
     private AtomicBoolean loaded = new AtomicBoolean();
     // The number of pages we are aiming to write every time we 
     // write to disk.
-    int writeBatchSize = 1000;
+    int writeBatchSize = DEFAULT_WRITE_BATCH_SIZE;
 
     // We keep a cache of pages recently used?
     private LRUCache<Long, Page> pageCache;
