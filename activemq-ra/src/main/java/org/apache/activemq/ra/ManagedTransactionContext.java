@@ -121,6 +121,11 @@ public class ManagedTransactionContext extends TransactionContext {
         }
     }
 
+    @Override
+    public boolean isInTransaction() {
+        return isInXATransaction() || isInLocalTransaction();
+    }
+ 
     public boolean isSameRM(XAResource xaResource) throws XAException {
         if (useSharedTxContext) {
             return sharedContext.isSameRM(xaResource);
