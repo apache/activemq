@@ -71,13 +71,6 @@ public final class Location implements Comparable<Location> {
         this.size = size;
     }
 
-    /**
-     * @return the size of the payload of the record.
-     */
-    public int getPaylodSize() {
-        return size - Journal.ITEM_HEAD_FOOT_SPACE;
-    }
-
     public int getOffset() {
         return offset;
     }

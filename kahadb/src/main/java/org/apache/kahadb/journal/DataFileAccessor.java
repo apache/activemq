@@ -81,18 +81,23 @@ final class DataFileAccessor {
             if (location.getSize() == Location.NOT_SET) {
                 file.seek(location.getOffset());
                 location.setSize(file.readInt());
-                file.seek(location.getOffset() + Journal.ITEM_HEAD_SPACE);
+                location.setType(file.readByte());
             } else {
-                file.seek(location.getOffset() + Journal.ITEM_HEAD_SPACE);
+                file.seek(location.getOffset() + Journal.RECORD_HEAD_SPACE);
             }
 
-            byte[] data = new byte[location.getSize() - Journal.ITEM_HEAD_FOOT_SPACE];
+            byte[] data = new byte[location.getSize() - Journal.RECORD_HEAD_SPACE];
             file.readFully(data);
             return new ByteSequence(data, 0, data.length);
 
         } catch (RuntimeException e) {
             throw new IOException("Invalid location: " + location + ", : " + e);
         }
+    }
+    
+    public void read(long offset, byte data[]) throws IOException {
+       file.seek(offset);
+       file.readFully(data);
     }
 
     public void readLocationDetails(Location location) throws IOException {
@@ -107,42 +112,42 @@ final class DataFileAccessor {
         }
     }
 
-    public boolean readLocationDetailsAndValidate(Location location) {
-        try {
-            WriteCommand asyncWrite = (WriteCommand)inflightWrites.get(new WriteKey(location));
-            if (asyncWrite != null) {
-                location.setSize(asyncWrite.location.getSize());
-                location.setType(asyncWrite.location.getType());
-            } else {
-                file.seek(location.getOffset());
-                location.setSize(file.readInt());
-                location.setType(file.readByte());
-
-                byte data[] = new byte[3];
-                file.seek(location.getOffset() + Journal.ITEM_HEAD_OFFSET_TO_SOR);
-                file.readFully(data);
-                if (data[0] != Journal.ITEM_HEAD_SOR[0]
-                    || data[1] != Journal.ITEM_HEAD_SOR[1]
-                    || data[2] != Journal.ITEM_HEAD_SOR[2]) {
-                    return false;
-                }
-                file.seek(location.getOffset() + location.getSize() - Journal.ITEM_FOOT_SPACE);
-                file.readFully(data);
-                if (data[0] != Journal.ITEM_HEAD_EOR[0]
-                    || data[1] != Journal.ITEM_HEAD_EOR[1]
-                    || data[2] != Journal.ITEM_HEAD_EOR[2]) {
-                    return false;
-                }
-            }
-        } catch (IOException e) {
-            return false;
-        }
-        return true;
-    }
+//    public boolean readLocationDetailsAndValidate(Location location) {
+//        try {
+//            WriteCommand asyncWrite = (WriteCommand)inflightWrites.get(new WriteKey(location));
+//            if (asyncWrite != null) {
+//                location.setSize(asyncWrite.location.getSize());
+//                location.setType(asyncWrite.location.getType());
+//            } else {
+//                file.seek(location.getOffset());
+//                location.setSize(file.readInt());
+//                location.setType(file.readByte());
+//
+//                byte data[] = new byte[3];
+//                file.seek(location.getOffset() + Journal.ITEM_HEAD_OFFSET_TO_SOR);
+//                file.readFully(data);
+//                if (data[0] != Journal.ITEM_HEAD_SOR[0]
+//                    || data[1] != Journal.ITEM_HEAD_SOR[1]
+//                    || data[2] != Journal.ITEM_HEAD_SOR[2]) {
+//                    return false;
+//                }
+//                file.seek(location.getOffset() + location.getSize() - Journal.ITEM_FOOT_SPACE);
+//                file.readFully(data);
+//                if (data[0] != Journal.ITEM_HEAD_EOR[0]
+//                    || data[1] != Journal.ITEM_HEAD_EOR[1]
+//                    || data[2] != Journal.ITEM_HEAD_EOR[2]) {
+//                    return false;
+//                }
+//            }
+//        } catch (IOException e) {
+//            return false;
+//        }
+//        return true;
+//    }
 
     public void updateRecord(Location location, ByteSequence data, boolean sync) throws IOException {
 
-        file.seek(location.getOffset() + Journal.ITEM_HEAD_SPACE);
+        file.seek(location.getOffset() + Journal.RECORD_HEAD_SPACE);
         int size = Math.min(data.getLength(), location.getSize());
         file.write(data.getData(), data.getOffset(), size);
         if (sync) {

@@ -20,8 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-import org.apache.kahadb.util.IOHelper;
-
 /**
  * Allows you to open a data file in read only mode.  Useful when working with 
  * archived data files.

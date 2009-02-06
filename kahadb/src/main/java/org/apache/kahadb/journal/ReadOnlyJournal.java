@@ -23,23 +23,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 /**
  * An AsyncDataManager that works in read only mode against multiple data directories.
  * Useful for reading back archived data files.
  */
 public class ReadOnlyJournal extends Journal {
     
-    private static final Log LOG = LogFactory.getLog(ReadOnlyJournal.class);
     private final ArrayList<File> dirs;
 
     public ReadOnlyJournal(final ArrayList<File> dirs) {
         this.dirs = dirs;
     }
 
-    @SuppressWarnings("unchecked")
     public synchronized void start() throws IOException {
         if (started) {
             return;

@@ -30,7 +30,7 @@ import java.util.Map;
  */
 public class DataFileAccessorPool {
 
-    private final Journal dataManager;
+    private final Journal journal;
     private final Map<Integer, Pool> pools = new HashMap<Integer, Pool>();
     private boolean closed;
     private int maxOpenReadersPerFile = 5;
@@ -50,9 +50,9 @@ public class DataFileAccessorPool {
         public DataFileAccessor openDataFileReader() throws IOException {
             DataFileAccessor rc = null;
             if (pool.isEmpty()) {
-                rc = new DataFileAccessor(dataManager, file);
+                rc = new DataFileAccessor(journal, file);
             } else {
-                rc = (DataFileAccessor)pool.remove(pool.size() - 1);
+                rc = pool.remove(pool.size() - 1);
             }
             used = true;
             openCounter++;
@@ -91,12 +91,12 @@ public class DataFileAccessorPool {
     }
 
     public DataFileAccessorPool(Journal dataManager) {
-        this.dataManager = dataManager;
+        this.journal = dataManager;
     }
 
     synchronized void clearUsedMark() {
-        for (Iterator iter = pools.values().iterator(); iter.hasNext();) {
-            Pool pool = (Pool)iter.next();
+        for (Iterator<Pool> iter = pools.values().iterator(); iter.hasNext();) {
+            Pool pool = iter.next();
             pool.clearUsedMark();
         }
     }
