@@ -151,6 +151,9 @@ public class MessageDatabase {
     protected boolean enableJournalDiskSyncs=true;
     long checkpointInterval = 5*1000;
     long cleanupInterval = 30*1000;
+    int journalMaxFileLength = Journal.DEFAULT_MAX_FILE_LENGTH;
+    boolean enableIndexWriteAsync = false;
+    int setIndexWriteBatchSize = PageFile.DEFAULT_WRITE_BATCH_SIZE; 
     
     protected AtomicBoolean started = new AtomicBoolean();
     protected AtomicBoolean opened = new AtomicBoolean();
@@ -1138,7 +1141,7 @@ public class MessageDatabase {
     // /////////////////////////////////////////////////////////////////
     protected final LinkedHashMap<TransactionId, ArrayList<Operation>> inflightTransactions = new LinkedHashMap<TransactionId, ArrayList<Operation>>();
     protected final LinkedHashMap<TransactionId, ArrayList<Operation>> preparedTransactions = new LinkedHashMap<TransactionId, ArrayList<Operation>>();
-
+ 
     private ArrayList<Operation> getInflightTx(KahaTransactionInfo info, Location location) {
         TransactionId key = key(info);
         ArrayList<Operation> tx = inflightTransactions.get(key);
@@ -1219,13 +1222,16 @@ public class MessageDatabase {
     // /////////////////////////////////////////////////////////////////
 
     private PageFile createPageFile() {
-        return new PageFile(directory, "db");
+        PageFile index = new PageFile(directory, "db");
+        index.setEnableWriteThread(isEnableIndexWriteAsync());
+        index.setWriteBatchSize(getIndexWriteBatchSize());
+        return index;
     }
 
     private Journal createJournal() {
         Journal manager = new Journal();
         manager.setDirectory(directory);
-        manager.setMaxFileLength(1024 * 1024 * 20);
+        manager.setMaxFileLength(getJournalMaxFileLength());
         manager.setUseNio(false);
         return manager;
     }
@@ -1245,7 +1251,23 @@ public class MessageDatabase {
     public void setDeleteAllMessages(boolean deleteAllMessages) {
         this.deleteAllMessages = deleteAllMessages;
     }
+    
+    public void setIndexWriteBatchSize(int setIndexWriteBatchSize) {
+        this.setIndexWriteBatchSize = setIndexWriteBatchSize;
+    }
 
+    public int getIndexWriteBatchSize() {
+        return setIndexWriteBatchSize;
+    }
+    
+    public void setEnableIndexWriteAsync(boolean enableIndexWriteAsync) {
+        this.enableIndexWriteAsync = enableIndexWriteAsync;
+    }
+    
+    boolean isEnableIndexWriteAsync() {
+        return enableIndexWriteAsync;
+    }
+    
     public boolean isEnableJournalDiskSyncs() {
         return enableJournalDiskSyncs;
     }
@@ -1270,6 +1292,14 @@ public class MessageDatabase {
         this.cleanupInterval = cleanupInterval;
     }
 
+    public void setJournalMaxFileLength(int journalMaxFileLength) {
+        this.journalMaxFileLength = journalMaxFileLength;
+    }
+    
+    public int getJournalMaxFileLength() {
+        return journalMaxFileLength;
+    }
+    
     public PageFile getPageFile() {
         if (pageFile == null) {
             pageFile = createPageFile();

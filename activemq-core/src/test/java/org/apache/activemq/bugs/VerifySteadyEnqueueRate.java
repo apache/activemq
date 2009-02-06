@@ -56,7 +56,7 @@ public class VerifySteadyEnqueueRate extends TestCase {
         broker.stop();
     }
 
-    public void testForDataFileNotDeleted() throws Exception {
+    public void testEnqueueRateCanMeetSLA() throws Exception {
         if (true) {
             return;
         }
@@ -68,8 +68,8 @@ public class VerifySteadyEnqueueRate extends TestCase {
         final AtomicLong total = new AtomicLong(0);
         final AtomicLong slaViolations = new AtomicLong(0);
         final AtomicLong max = new AtomicLong(0);
-        long reportTime = 0;
-
+        final int numThreads = 6;
+        
         Runnable runner = new Runnable() {
 
             public void run() {
@@ -108,7 +108,7 @@ public class VerifySteadyEnqueueRate extends TestCase {
             }
         };
         ExecutorService executor = Executors.newCachedThreadPool();
-        int numThreads = 6;
+        
         for (int i = 0; i < numThreads; i++) {
             executor.execute(runner);
         }
@@ -127,7 +127,7 @@ public class VerifySteadyEnqueueRate extends TestCase {
 
     private void startBroker() throws Exception {
         broker = new BrokerService();
-        broker.setDeleteAllMessagesOnStartup(true);
+        //broker.setDeleteAllMessagesOnStartup(true);
         broker.setPersistent(true);
         broker.setUseJmx(true);
 
@@ -155,9 +155,13 @@ public class VerifySteadyEnqueueRate extends TestCase {
             // Index is going to be in consistent, but can it be repaired?
             kaha.setEnableJournalDiskSyncs(false);
             // Using a bigger journal file size makes he take fewer spikes as it is not switching files as often.
-            kaha.getJournal().setMaxFileLength(1024*1024*100);
-            kaha.getPageFile().setWriteBatchSize(100);
-            kaha.getPageFile().setEnableWriteThread(true);
+            kaha.setJournalMaxFileLength(1024*1024*100);
+            
+            // small batch means more frequent and smaller writes
+            kaha.setIndexWriteBatchSize(100);
+            // do the index write in a separate thread
+            kaha.setEnableIndexWriteAsync(true);
+            
             broker.setPersistenceAdapter(kaha);
         }
 
