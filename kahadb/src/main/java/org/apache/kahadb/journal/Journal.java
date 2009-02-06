@@ -19,6 +19,7 @@ package org.apache.kahadb.journal;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,12 +32,15 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.zip.Adler32;
+import java.util.zip.Checksum;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.kahadb.journal.DataFileAppender.WriteCommand;
 import org.apache.kahadb.journal.DataFileAppender.WriteKey;
 import org.apache.kahadb.util.ByteSequence;
+import org.apache.kahadb.util.DataByteArrayInputStream;
 import org.apache.kahadb.util.LinkedNodeList;
 import org.apache.kahadb.util.Scheduler;
 
@@ -47,24 +51,17 @@ import org.apache.kahadb.util.Scheduler;
  */
 public class Journal {
 
-    public static final int CONTROL_RECORD_MAX_LENGTH = 1024;
-    public static final int ITEM_HEAD_RESERVED_SPACE = 21;
-    // ITEM_HEAD_SPACE = length + type+ reserved space + SOR
-    public static final int ITEM_HEAD_SPACE = 4 + 1 + ITEM_HEAD_RESERVED_SPACE + 3;
-    public static final int ITEM_HEAD_OFFSET_TO_SOR = ITEM_HEAD_SPACE - 3;
-    public static final int ITEM_FOOT_SPACE = 3; // EOR
+    private static final int MAX_BATCH_SIZE = 32*1024*1024;
 
-    public static final int ITEM_HEAD_FOOT_SPACE = ITEM_HEAD_SPACE + ITEM_FOOT_SPACE;
-
-    public static final byte[] ITEM_HEAD_SOR = new byte[] {
-        'S', 'O', 'R'
-    }; // 
-    public static final byte[] ITEM_HEAD_EOR = new byte[] {
-        'E', 'O', 'R'
-    }; // 
-
-    public static final byte DATA_ITEM_TYPE = 1;
-    public static final byte REDO_ITEM_TYPE = 2;
+	// ITEM_HEAD_SPACE = length + type+ reserved space + SOR
+    public static final int RECORD_HEAD_SPACE = 4 + 1;
+    
+    public static final byte USER_RECORD_TYPE = 1;
+    public static final byte BATCH_CONTROL_RECORD_TYPE = 2;
+    // Batch Control Item holds a 4 byte size of the batch and a 8 byte checksum of the batch. 
+    public static final byte[] BATCH_CONTROL_RECORD_MAGIC = bytes("WRITE BATCH");
+    public static final int BATCH_CONTROL_RECORD_SIZE = RECORD_HEAD_SPACE+BATCH_CONTROL_RECORD_MAGIC.length+4+8;
+    
     public static final String DEFAULT_DIRECTORY = ".";
     public static final String DEFAULT_ARCHIVE_DIRECTORY = "data-archive";
     public static final String DEFAULT_FILE_PREFIX = "db-";
@@ -82,8 +79,7 @@ public class Journal {
     protected String filePrefix = DEFAULT_FILE_PREFIX;
     protected String fileSuffix = DEFAULT_FILE_SUFFIX;
     protected boolean started;
-    protected boolean useNio = true;
-
+    
     protected int maxFileLength = DEFAULT_MAX_FILE_LENGTH;
     protected int preferedFileLength = DEFAULT_MAX_FILE_LENGTH - PREFERED_DIFF;
 
@@ -99,8 +95,8 @@ public class Journal {
     protected final AtomicLong totalLength = new AtomicLong();
     protected boolean archiveDataLogs;
 	private ReplicationTarget replicationTarget;
+    protected boolean checksum;
 
-    @SuppressWarnings("unchecked")
     public synchronized void start() throws IOException {
         if (started) {
             return;
@@ -111,11 +107,7 @@ public class Journal {
         started = true;
         preferedFileLength = Math.max(PREFERED_DIFF, getMaxFileLength() - PREFERED_DIFF);
 
-        if (useNio) {
-            appender = new NIODataFileAppender(this);
-        } else {
-            appender = new DataFileAppender(this);
-        }
+        appender = new DataFileAppender(this);
 
         File[] files = directory.listFiles(new FilenameFilter() {
             public boolean accept(File dir, String n) {
@@ -148,26 +140,14 @@ public class Journal {
             }
         }
 
-        // Need to check the current Write File to see if there was a partial
-        // write to it.
-        if (!dataFiles.isEmpty()) {
-
-            // See if the lastSyncedLocation is valid..
-            Location l = lastAppendLocation.get();
-            if (l != null && l.getDataFileId() != dataFiles.getTail().getDataFileId()) {
-                l = null;
-            }
-
-            // If we know the last location that was ok.. then we can skip lots
-            // of checking
-            try {
-                l = recoveryCheck(dataFiles.getTail(), l);
-                lastAppendLocation.set(l);
-            } catch (IOException e) {
-                LOG.warn("recovery check failed", e);
-            }
+    	getCurrentWriteFile();
+        try {
+        	Location l = recoveryCheck(dataFiles.getTail());
+            lastAppendLocation.set(l);
+        } catch (IOException e) {
+            LOG.warn("recovery check failed", e);
         }
-
+        
         cleanupTask = new Runnable() {
             public void run() {
                 cleanup();
@@ -178,43 +158,97 @@ public class Journal {
         LOG.trace("Startup took: "+(end-start)+" ms");
     }
 
-    protected Location recoveryCheck(DataFile dataFile, Location location) throws IOException {
-        if (location == null) {
-            location = new Location();
-            location.setDataFileId(dataFile.getDataFileId());
-            location.setOffset(0);
-        }
-        DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
+    private static byte[] bytes(String string) {
+    	try {
+			return string.getBytes("UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Location recoveryCheck(DataFile dataFile) throws IOException {
+    	byte controlRecord[] = new byte[BATCH_CONTROL_RECORD_SIZE];
+    	DataByteArrayInputStream controlIs = new DataByteArrayInputStream(controlRecord);
+    	
+        Location location = new Location();
+        location.setDataFileId(dataFile.getDataFileId());
+        location.setOffset(0);
+
+    	DataFileAccessor reader = accessorPool.openDataFileAccessor(dataFile);
         try {
-            while (reader.readLocationDetailsAndValidate(location)) {
-                location.setOffset(location.getOffset() + location.getSize());
+            while( true ) {
+	        	reader.read(location.getOffset(), controlRecord);
+	        	controlIs.restart();
+	        	
+	        	// Assert that it's  a batch record.
+	        	if( controlIs.readInt() != BATCH_CONTROL_RECORD_SIZE ) {
+	        		break;
+	        	}
+	        	if( controlIs.readByte() != BATCH_CONTROL_RECORD_TYPE ) {
+	        		break;
+	        	}
+	        	for( int i=0; i < BATCH_CONTROL_RECORD_MAGIC.length; i++ ) {
+	        		if( controlIs.readByte() != BATCH_CONTROL_RECORD_MAGIC[i] ) {
+	        			break;
+	        		}
+	        	}
+	        	
+	        	int size = controlIs.readInt();
+	        	if( size > MAX_BATCH_SIZE ) {
+	        		break;
+	        	}
+	        	
+	        	if( isChecksum() ) {
+		        	
+	        		long expectedChecksum = controlIs.readLong();	        	
+		        	
+	        		byte data[] = new byte[size];
+		        	reader.read(location.getOffset()+BATCH_CONTROL_RECORD_SIZE, data);
+		        	
+		        	Checksum checksum = new Adler32();
+	                checksum.update(data, 0, data.length);
+	                
+	                if( expectedChecksum!=checksum.getValue() ) {
+	                	break;
+	                }
+	                
+	        	}
+                
+	        	
+                location.setOffset(location.getOffset()+BATCH_CONTROL_RECORD_SIZE+size);
             }
-        } finally {
+            
+        } catch (IOException e) {
+		} finally {
             accessorPool.closeDataFileAccessor(reader);
         }
+        
         dataFile.setLength(location.getOffset());
         return location;
     }
 
-    synchronized DataFile allocateLocation(Location location) throws IOException {
-        if (dataFiles.isEmpty()|| ((dataFiles.getTail().getLength() + location.getSize()) > maxFileLength)) {
-            int nextNum = !dataFiles.isEmpty() ? dataFiles.getTail().getDataFileId().intValue() + 1 : 1;
-
-            File file = getFile(nextNum);
-            DataFile nextWriteFile = new DataFile(file, nextNum, preferedFileLength);
-            // actually allocate the disk space
-            fileMap.put(nextWriteFile.getDataFileId(), nextWriteFile);
-            fileByFileMap.put(file, nextWriteFile);
-            dataFiles.addLast(nextWriteFile);
+	void addToTotalLength(int size) {
+		totalLength.addAndGet(size);
+	}
+    
+    
+    synchronized DataFile getCurrentWriteFile() throws IOException {
+        if (dataFiles.isEmpty()) {
+            rotateWriteFile();
         }
-        DataFile currentWriteFile = dataFiles.getTail();
-        location.setOffset(currentWriteFile.getLength());
-        location.setDataFileId(currentWriteFile.getDataFileId().intValue());
-        int size = location.getSize();
-        currentWriteFile.incrementLength(size);
-        totalLength.addAndGet(size);
-        return currentWriteFile;
+        return dataFiles.getTail();
     }
+
+    synchronized DataFile rotateWriteFile() {
+		int nextNum = !dataFiles.isEmpty() ? dataFiles.getTail().getDataFileId().intValue() + 1 : 1;
+		File file = getFile(nextNum);
+		DataFile nextWriteFile = new DataFile(file, nextNum, preferedFileLength);
+		// actually allocate the disk space
+		fileMap.put(nextWriteFile.getDataFileId(), nextWriteFile);
+		fileByFileMap.put(file, nextWriteFile);
+		dataFiles.addLast(nextWriteFile);
+		return nextWriteFile;
+	}
 
 	public File getFile(int nextNum) {
 		String fileName = filePrefix + nextNum + fileSuffix;
@@ -285,11 +319,7 @@ public class Journal {
 
         // reopen open file handles...
         accessorPool = new DataFileAccessorPool(this);
-        if (useNio) {
-            appender = new NIODataFileAppender(this);
-        } else {
-            appender = new DataFileAppender(this);
-        }
+        appender = new DataFileAppender(this);
         return result;
     }
 
@@ -411,7 +441,7 @@ public class Journal {
 
             if (cur.getType() == 0) {
                 return null;
-            } else if (cur.getType() > 0) {
+            } else if (cur.getType() == USER_RECORD_TYPE) {
                 // Only return user records.
                 return cur;
             }
@@ -496,10 +526,6 @@ public class Journal {
         return loc;
     }
 
-    public synchronized Location write(ByteSequence data, byte type, boolean sync) throws IOException, IllegalStateException {
-        return appender.storeItem(data, type, sync);
-    }
-
     public void update(Location location, ByteSequence data, boolean sync) throws IOException {
         DataFile dataFile = getDataFile(location);
         DataFileAccessor updater = accessorPool.openDataFileAccessor(dataFile);
@@ -536,14 +562,6 @@ public class Journal {
 
     public void setLastAppendLocation(Location lastSyncedLocation) {
         this.lastAppendLocation.set(lastSyncedLocation);
-    }
-
-    public boolean isUseNio() {
-        return useNio;
-    }
-
-    public void setUseNio(boolean useNio) {
-        this.useNio = useNio;
     }
 
     public File getDirectoryArchive() {
@@ -613,6 +631,14 @@ public class Journal {
     public void setFileSuffix(String fileSuffix) {
         this.fileSuffix = fileSuffix;
     }
+
+	public boolean isChecksum() {
+		return checksum;
+	}
+
+	public void setChecksum(boolean checksumWrites) {
+		this.checksum = checksumWrites;
+	}
 
 
 }

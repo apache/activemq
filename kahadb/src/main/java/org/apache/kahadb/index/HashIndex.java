@@ -29,7 +29,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.kahadb.page.Page;
 import org.apache.kahadb.page.PageFile;
 import org.apache.kahadb.page.Transaction;
-import org.apache.kahadb.page.Transaction.Closure;
 import org.apache.kahadb.util.Marshaller;
 
 /**

@@ -41,7 +41,6 @@ public class JournalTest extends TestCase {
     }
     
     protected void configure(Journal dataManager) {
-        dataManager.setUseNio(false);
     }
 
     @Override

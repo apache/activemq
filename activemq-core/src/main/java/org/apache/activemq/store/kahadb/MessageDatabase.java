@@ -1277,7 +1277,6 @@ public class MessageDatabase {
         Journal manager = new Journal();
         manager.setDirectory(directory);
         manager.setMaxFileLength(getJournalMaxFileLength());
-        manager.setUseNio(false);
         return manager;
     }
 
