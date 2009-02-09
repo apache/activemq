@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.command.CommandTypes;
 import org.apache.activemq.command.DataStructure;
@@ -61,6 +62,8 @@ public final class OpenWireFormat implements WireFormat {
     private DataByteArrayOutputStream bytesOut = new DataByteArrayOutputStream();
     private DataByteArrayInputStream bytesIn = new DataByteArrayInputStream();
     private WireFormatInfo preferedWireFormatInfo;
+    
+    private AtomicBoolean receivingMessage = new AtomicBoolean(false);
 
     public OpenWireFormat() {
         this(DEFAULT_VERSION);
@@ -350,6 +353,7 @@ public final class OpenWireFormat implements WireFormat {
 
     public Object doUnmarshal(DataInput dis) throws IOException {
         byte dataType = dis.readByte();
+        receivingMessage.set(true);
         if (dataType != NULL_TYPE) {
             DataStreamMarshaller dsm = (DataStreamMarshaller)dataMarshallers[dataType & 0xFF];
             if (dsm == null) {
@@ -363,8 +367,10 @@ public final class OpenWireFormat implements WireFormat {
             } else {
                 dsm.looseUnmarshal(this, data, dis);
             }
+            receivingMessage.set(false);
             return data;
         } else {
+            receivingMessage.set(false);
             return null;
         }
     }
@@ -588,6 +594,10 @@ public final class OpenWireFormat implements WireFormat {
 
     public WireFormatInfo getPreferedWireFormatInfo() {
         return preferedWireFormatInfo;
+    }
+    
+    public boolean inReceive() {
+    	return receivingMessage.get();
     }
 
     public void renegotiateWireFormat(WireFormatInfo info) throws IOException {

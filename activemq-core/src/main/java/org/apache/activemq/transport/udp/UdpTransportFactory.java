@@ -91,7 +91,7 @@ public class UdpTransportFactory extends TransportFactory {
             }
         }
 
-        transport = new InactivityMonitor(transport);
+        transport = new InactivityMonitor(transport, format);
 
         if (format instanceof OpenWireFormat) {
             transport = configureClientSideNegotiator(transport, format, udpTransport);
@@ -123,7 +123,7 @@ public class UdpTransportFactory extends TransportFactory {
             transport = TransportLoggerFactory.getInstance().createTransportLogger(transport);
         }
 
-        transport = new InactivityMonitor(transport);
+        transport = new InactivityMonitor(transport, format);
 
         if (!acceptServer && format instanceof OpenWireFormat) {
             transport = configureClientSideNegotiator(transport, format, udpTransport);

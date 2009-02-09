@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.activemq.command.KeepAliveInfo;
 import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.thread.SchedulerTimerTask;
+import org.apache.activemq.wireformat.WireFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -61,6 +62,8 @@ public class InactivityMonitor extends TransportFilter {
     private long readCheckTime;
     private long writeCheckTime;
     private long initialDelayTime;
+    
+    private WireFormat wireFormat;
     
     private final Runnable readChecker = new Runnable() {
         long lastRunTime;
@@ -104,8 +107,9 @@ public class InactivityMonitor extends TransportFilter {
         }
     };
 
-    public InactivityMonitor(Transport next) {
+    public InactivityMonitor(Transport next, WireFormat wireFormat) {
         super(next);
+        this.wireFormat = wireFormat;
     }
 
     public void stop() throws Exception {
@@ -114,7 +118,7 @@ public class InactivityMonitor extends TransportFilter {
     }
 
     final void writeCheck() {
-            if (inSend.get()) {
+        if (inSend.get()) {
             if (LOG.isTraceEnabled()) {
                 LOG.trace("A send is in progress");
             }
@@ -149,7 +153,7 @@ public class InactivityMonitor extends TransportFilter {
     }
 
     final void readCheck() {
-        if (inReceive.get()) {
+        if (inReceive.get() || wireFormat.inReceive()) {
             if (LOG.isTraceEnabled()) {
                 LOG.trace("A receive is in progress");
             }

@@ -108,7 +108,7 @@ public class SslTransportFactory extends TcpTransportFactory {
             }
         }
 
-        transport = new InactivityMonitor(transport);
+        transport = new InactivityMonitor(transport, format);
 
         // Only need the WireFormatNegotiator if using openwire
         if (format instanceof OpenWireFormat) {

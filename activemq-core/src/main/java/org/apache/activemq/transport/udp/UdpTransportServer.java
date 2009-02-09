@@ -132,7 +132,7 @@ public class UdpTransportServer extends TransportServerSupport {
     }
 
     protected Transport configureTransport(Transport transport) {
-        transport = new InactivityMonitor(transport);
+        transport = new InactivityMonitor(transport, serverTransport.getWireFormat());
         getAcceptListener().onAccept(transport);
         return transport;
     }
