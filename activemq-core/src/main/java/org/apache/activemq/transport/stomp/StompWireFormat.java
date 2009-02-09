@@ -202,4 +202,11 @@ public class StompWireFormat implements WireFormat {
         this.version = version;
     }
 
+	public boolean inReceive() {
+		//TODO implement the inactivity monitor
+		return false;
+	}
+    
+    
+
 }

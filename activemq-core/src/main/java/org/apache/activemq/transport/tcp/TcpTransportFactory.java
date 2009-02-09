@@ -97,7 +97,7 @@ public class TcpTransportFactory extends TransportFactory {
         }
 
         if (isUseInactivityMonitor(transport)) {
-            transport = new InactivityMonitor(transport);
+            transport = new InactivityMonitor(transport, format);
         }
 
         // Only need the WireFormatNegotiator if using openwire
