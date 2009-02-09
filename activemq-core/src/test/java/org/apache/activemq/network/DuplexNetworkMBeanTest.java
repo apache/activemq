@@ -57,7 +57,7 @@ public class DuplexNetworkMBeanTest extends TestCase {
     public void testMbeanPresenceOnNetworkBrokerRestart() throws Exception {
         BrokerService broker = createBroker();
         broker.start();
-        assertEquals(1, countMbeans(broker, "Connector", 2000));
+        assertEquals(1, countMbeans(broker, "Connector", 5000));
         assertEquals(0, countMbeans(broker, "Connection"));
         BrokerService networkedBroker = null;
         for (int i=0; i<numRestarts; i++) {       
@@ -115,17 +115,21 @@ public class DuplexNetworkMBeanTest extends TestCase {
         final ObjectName beanName = new ObjectName("org.apache.activemq:BrokerName="
                 + broker.getBrokerName() + ",Type=" + type +",*");
         Set<?> mbeans = null;
-        
+        int count = 0;
         do {
             if (timeout > 0) {
                 Thread.sleep(100);
             }
             MBeanServerConnection mbsc = getMBeanServerConnection();
             if (mbsc != null) {
+                LOG.info("Query name: " + beanName);
                 mbeans = mbsc.queryMBeans(beanName, null);
+                if (mbeans != null) {
+                    count = mbeans.size();
+                }
             }
         } while ((mbeans == null || mbeans.isEmpty()) && expiryTime > System.currentTimeMillis());
-        return mbeans.size();
+        return count;
     }
 
     private MBeanServerConnection getMBeanServerConnection() throws MalformedURLException {
