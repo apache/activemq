@@ -35,6 +35,7 @@ import org.apache.activemq.broker.region.policy.ConstantPendingMessageLimitStrat
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
 
 /**
  * @version $Revision: 1.3 $
@@ -121,11 +122,17 @@ public class AdvisoryTests extends TestCase {
         BytesMessage m = s.createBytesMessage();
         m.writeBytes(new byte[1024]);
         producer.send(m);
+        String id = m.getJMSMessageID();
         Message msg = consumer.receive(1000);
         assertNotNull(msg);
         
         msg = advisoryConsumer.receive(1000);
         assertNotNull(msg);
+        
+        ActiveMQMessage message = (ActiveMQMessage) msg;
+        ActiveMQMessage payload = (ActiveMQMessage) message.getDataStructure();
+        String originalId = payload.getJMSMessageID();
+        assertEquals(originalId, id);
     }
     
     public void testMessageExpiredAdvisory() throws Exception {
