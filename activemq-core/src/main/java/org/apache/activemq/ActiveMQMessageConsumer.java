@@ -16,6 +16,7 @@
  */
 package org.apache.activemq;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -685,9 +686,14 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             if (session.isClientAcknowledge()) {
                 if (!this.info.isBrowser()) {
                     // rollback duplicates that aren't acknowledged
-                    for (MessageDispatch old : deliveredMessages) {
-                        session.connection.rollbackDuplicate(this, old.getMessage());
+                    List<MessageDispatch> tmp = null;
+                    synchronized (this.deliveredMessages) {
+                        tmp = new ArrayList<MessageDispatch>(this.deliveredMessages);
                     }
+                    for (MessageDispatch old : tmp) {
+                        this.session.connection.rollbackDuplicate(this, old.getMessage());
+                    }
+                    tmp.clear();
                 }
             }
             if (!session.isTransacted()) {
