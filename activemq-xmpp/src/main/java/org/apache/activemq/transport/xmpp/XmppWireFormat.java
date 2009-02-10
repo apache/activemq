@@ -216,4 +216,9 @@ public class XmppWireFormat implements WireFormat {
     public void setVersion(int version) {
         this.version = version;
     }
+    
+	public boolean inReceive() {
+		// TODO Implement for inactivity monitor
+		return false;
+	}
 }
