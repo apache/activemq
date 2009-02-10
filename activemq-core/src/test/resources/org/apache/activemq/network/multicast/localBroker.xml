@@ -17,12 +17,12 @@
 -->
 <beans>
 
-  <broker brokerName="localBroker" persistent="false" useShutdownHook="false" xmlns="http://activemq.apache.org/schema/core">
+  <broker brokerName="localBroker" persistent="true" useShutdownHook="false" xmlns="http://activemq.apache.org/schema/core">
     
-    <transportConnectors><transportConnector uri="tcp://localhost:61616" /></transportConnectors>
+    <transportConnectors><transportConnector uri="tcp://localhost:61616" discoveryUri="multicast://224.1.2.6:6123" /></transportConnectors>
 
     <networkConnectors>
-      <multicastNetworkConnector remoteURI="multicast://224.1.2.6:6123">
+      <networkConnector uri="multicast://224.1.2.6:6123">
         <excludedDestinations>
           <queue physicalName="exclude.test.foo" />
           <topic physicalName="exclude.test.bar" />
@@ -31,7 +31,7 @@
           <queue physicalName="include.test.foo" />
           <topic physicalName="include.test.bar" />
         </dynamicallyIncludedDestinations>
-      </multicastNetworkConnector>
+      </networkConnector>
     </networkConnectors>
   </broker>
 </beans>
