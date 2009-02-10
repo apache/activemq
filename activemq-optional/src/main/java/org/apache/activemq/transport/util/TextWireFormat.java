@@ -63,4 +63,9 @@ public abstract class TextWireFormat implements WireFormat {
         return unmarshal(dis);
     }
 
+	public boolean inReceive() {
+		// TODO Implement for inactivity monitor
+		return false;
+	}
+    
 }
