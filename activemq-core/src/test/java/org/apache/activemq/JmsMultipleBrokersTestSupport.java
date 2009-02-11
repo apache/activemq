@@ -189,13 +189,21 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
     }
 
     protected MessageConsumer createConsumer(String brokerName, Destination dest) throws Exception {
-        return createConsumer(brokerName, dest, null);
+        return createConsumer(brokerName, dest, null, null);
     }
 
+    protected MessageConsumer createConsumer(String brokerName, Destination dest, String messageSelector) throws Exception {
+        return createConsumer(brokerName, dest, null, messageSelector);
+    }
+    
     protected MessageConsumer createConsumer(String brokerName, Destination dest, CountDownLatch latch) throws Exception {
+    	return createConsumer(brokerName, dest, latch, null);
+    }
+    
+    protected MessageConsumer createConsumer(String brokerName, Destination dest, CountDownLatch latch, String messageSelector) throws Exception {
         BrokerItem brokerItem = brokers.get(brokerName);
         if (brokerItem != null) {
-            return brokerItem.createConsumer(dest, latch);
+            return brokerItem.createConsumer(dest, latch, messageSelector);
         }
         return null;
     }
@@ -257,6 +265,10 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
 
 
     protected void sendMessages(String brokerName, Destination destination, int count) throws Exception {
+    	sendMessages(brokerName, destination, count, null);
+    }
+    
+    protected void sendMessages(String brokerName, Destination destination, int count, HashMap<String, Object>properties) throws Exception {
         BrokerItem brokerItem = brokers.get(brokerName);
 
         Connection conn = brokerItem.createConnection();
@@ -268,6 +280,11 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
 
         for (int i = 0; i < count; i++) {
             TextMessage msg = createTextMessage(sess, conn.getClientID() + ": Message-" + i);
+            if (properties != null) {
+            	for (String propertyName : properties.keySet()) {
+            		msg.setObjectProperty(propertyName, properties.get(propertyName));
+            	}
+            }
             producer.send(msg);
             onSend(i, msg);
         }
@@ -368,22 +385,26 @@ public class JmsMultipleBrokersTestSupport extends CombinationTestSupport {
         }
 
         public MessageConsumer createConsumer(Destination dest) throws Exception {
-            return createConsumer(dest, null);
+            return createConsumer(dest, null, null);
+        }
+        
+        public MessageConsumer createConsumer(Destination dest, String messageSelector) throws Exception {
+        	return createConsumer(dest, null, messageSelector);
         }
 
-        public MessageConsumer createConsumer(Destination dest, CountDownLatch latch) throws Exception {
+        public MessageConsumer createConsumer(Destination dest, CountDownLatch latch, String messageSelector) throws Exception {
             Connection c = createConnection();
             c.start();
             Session s = c.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            return createConsumerWithSession(dest, s, latch);
+            return createConsumerWithSession(dest, s, latch, messageSelector);
         }
 
         public MessageConsumer createConsumerWithSession(Destination dest, Session sess) throws Exception {
-            return createConsumerWithSession(dest, sess, null);
+            return createConsumerWithSession(dest, sess, null, null);
         }
 
-        public MessageConsumer createConsumerWithSession(Destination dest, Session sess, CountDownLatch latch) throws Exception {
-            MessageConsumer client = sess.createConsumer(dest);
+        public MessageConsumer createConsumerWithSession(Destination dest, Session sess, CountDownLatch latch, String messageSelector) throws Exception {
+            MessageConsumer client = sess.createConsumer(dest, messageSelector);
             MessageIdList messageIdList = new MessageIdList();
             messageIdList.setCountDownLatch(latch);
             messageIdList.setParent(allMessages);
