@@ -115,9 +115,11 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
                 os = new DeflaterOutputStream(os);
             }
             DataOutputStream dataOut = new DataOutputStream(os);
-            MarshallingSupport.writeUTF8(dataOut, text);
+            MarshallingSupport.writeUTF8(dataOut, this.text);
             dataOut.close();
             setContent(bytesOut.toByteSequence());
+            //see https://issues.apache.org/activemq/browse/AMQ-2103
+            this.text=null;
         }
     }
 
