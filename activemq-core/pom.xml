@@ -425,11 +425,7 @@
             <!-- m2 tests failing since move from assembly  -->
             <exclude>**/TwoBrokerMessageNotSentToRemoteWhenNoConsumerTest.*</exclude>
             <exclude>**/TwoBrokerQueueClientsReconnectTest.*</exclude>
-            <exclude>**/ThreeBrokerQueueNetworkUsingTcpTest.*</exclude>
             <exclude>**/QueueConsumerCloseAndReconnectTest.*</exclude>
-            <exclude>**/ThreeBrokerQueueNetworkTest.*</exclude>
-            <exclude>**/ThreeBrokerTopicNetworkTest.*</exclude>
-            <exclude>**/ThreeBrokerTopicNetworkUsingTcpTest.*</exclude>
             <exclude>**/TwoBrokerMulticastQueueTest.*</exclude>
 
             <!-- TODO move to optional module...  -->

@@ -17,6 +17,7 @@
 package org.apache.activemq.usecases;
 
 import java.net.URI;
+import java.util.HashMap;
 
 import javax.jms.Destination;
 import javax.jms.MessageConsumer;
@@ -87,6 +88,88 @@ public class ThreeBrokerQueueNetworkTest extends JmsMultipleBrokersTestSupport {
         // Total received should be 100
         assertEquals(MESSAGE_COUNT, msgsA.getMessageCount() + msgsC.getMessageCount());
     }
+    
+    /**
+     * BrokerA <- BrokerB -> BrokerC
+     */
+    public void testBAandBCbrokerNetworkWithSelectorsSendFirst() throws Exception {
+    	// Setup broker networks
+        bridgeBrokers("BrokerB", "BrokerA");
+        bridgeBrokers("BrokerB", "BrokerC");
+
+        startAllBrokers();
+
+        // Setup destination
+        Destination dest = createDestination("TEST.FOO", false);
+
+        
+        // Send messages for broker A
+        HashMap<String, Object> props = new HashMap<String, Object>();
+        props.put("broker", "BROKER_A");
+        sendMessages("BrokerB", dest, MESSAGE_COUNT, props);
+
+        //Send messages for broker C
+        props.clear();
+        props.put("broker", "BROKER_C");
+        sendMessages("BrokerB", dest, MESSAGE_COUNT, props);
+        
+        // Setup consumers
+        MessageConsumer clientA = createConsumer("BrokerA", dest, "broker = 'BROKER_A'");
+        MessageConsumer clientC = createConsumer("BrokerC", dest, "broker = 'BROKER_C'");
+        Thread.sleep(2000); //et subscriptions get propagated
+        
+        // Let's try to wait for any messages.
+        //Thread.sleep(1000);
+
+        // Get message count
+        MessageIdList msgsA = getConsumerMessages("BrokerA", clientA);
+        MessageIdList msgsC = getConsumerMessages("BrokerC", clientC);
+        
+        // Total received should be 100
+        assertEquals(MESSAGE_COUNT, msgsA.getMessageCount());
+        assertEquals(MESSAGE_COUNT, msgsC.getMessageCount());
+    }
+    
+    /**
+     * BrokerA <- BrokerB -> BrokerC
+     */
+    public void testBAandBCbrokerNetworkWithSelectorsSubscribeFirst() throws Exception {
+    	// Setup broker networks
+        bridgeBrokers("BrokerB", "BrokerA");
+        bridgeBrokers("BrokerB", "BrokerC");
+
+        startAllBrokers();
+
+        // Setup destination
+        Destination dest = createDestination("TEST.FOO", false);
+
+        // Setup consumers
+        MessageConsumer clientA = createConsumer("BrokerA", dest, "broker = 'BROKER_A'");
+        MessageConsumer clientC = createConsumer("BrokerC", dest, "broker = 'BROKER_C'");
+        Thread.sleep(2000); //et subscriptions get propagated
+        
+        
+        // Send messages for broker A
+        HashMap<String, Object> props = new HashMap<String, Object>();
+        props.put("broker", "BROKER_A");
+        sendMessages("BrokerB", dest, MESSAGE_COUNT, props);
+
+        //Send messages for broker C
+        props.clear();
+        props.put("broker", "BROKER_C");
+        sendMessages("BrokerB", dest, MESSAGE_COUNT, props);
+        
+        // Let's try to wait for any messages.
+        Thread.sleep(1000);
+
+        // Get message count
+        MessageIdList msgsA = getConsumerMessages("BrokerA", clientA);
+        MessageIdList msgsC = getConsumerMessages("BrokerC", clientC);
+        
+        // Total received should be 100
+        assertEquals(MESSAGE_COUNT, msgsA.getMessageCount());
+        assertEquals(MESSAGE_COUNT, msgsC.getMessageCount());
+    }    
 
     /**
      * BrokerA -> BrokerB <- BrokerC
