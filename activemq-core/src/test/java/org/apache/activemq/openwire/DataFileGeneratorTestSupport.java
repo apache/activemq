@@ -105,9 +105,8 @@ public abstract class DataFileGeneratorTestSupport extends TestSupport {
         DataInputStream dis = new DataInputStream(in);
         Object actual = openWireformat.unmarshal(dis);
 
-
-        assertBeansEqual("", new HashSet<Object>(), expected, actual);
         LOG.info("Parsed: " + actual);
+        assertBeansEqual("", new HashSet<Object>(), expected, actual);
     }
 
     protected void assertBeansEqual(String message, Set<Object> comparedObjects, Object expected, Object actual) throws Exception {
