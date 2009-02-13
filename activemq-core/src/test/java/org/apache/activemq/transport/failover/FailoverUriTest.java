@@ -16,13 +16,29 @@
  */
 package org.apache.activemq.transport.failover;
 
+import junit.framework.Test;
+
 import org.apache.activemq.transport.tcp.TransportUriTest;
 
 public class FailoverUriTest extends TransportUriTest {
-
-    protected void setUp() throws Exception {
-        super.setUp();
-        prefix = "failover:(";
-        postfix = ")?initialReconnectDelay=1000&maxReconnectDelay=1000";
+	
+    public void initCombosForTestUriOptionsWork() {
+		addCombinationValues("prefix", new Object[] {"failover:("});
+		addCombinationValues("postfix", new Object[] {")?initialReconnectDelay=1000&maxReconnectDelay=1000"});
+				//, "?jms.useAsyncSend=true&jms.copyMessageOnSend=false &wireFormat.tightEncodingEnabled=false"});
+	}
+	
+	public void initCombosForTestBadVersionNumberDoesNotWork() {
+		addCombinationValues("prefix", new Object[] {"failover:("});
+		addCombinationValues("postfix", new Object[] {")?initialReconnectDelay=1000&maxReconnectDelay=1000"});
+	}
+	
+	public void initCombosForTestBadPropertyNameFails() {
+		addCombinationValues("prefix", new Object[] {"failover:("});
+		addCombinationValues("postfix", new Object[] {")?initialReconnectDelay=1000&maxReconnectDelay=1000"});
+	}
+	
+    public static Test suite() {
+    	return suite(FailoverUriTest.class);
     }
 }
