@@ -32,7 +32,7 @@ import org.springframework.jms.core.JmsTemplate;
  * 
  * @version $Revision: 1.1 $
  */
-public abstract class EmbeddedBrokerTestSupport extends TestCase {
+public abstract class EmbeddedBrokerTestSupport extends CombinationTestSupport {
 
     protected BrokerService broker;
     // protected String bindAddress = "tcp://localhost:61616";

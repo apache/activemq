@@ -19,30 +19,47 @@ package org.apache.activemq.transport.tcp;
 import javax.jms.Connection;
 import javax.jms.JMSException;
 
+import junit.framework.Test;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.EmbeddedBrokerTestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision$
  */
 public class TransportUriTest extends EmbeddedBrokerTestSupport {
 
-    protected String prefix = "";
-    protected String postfix = "?tcpNoDelay=true&keepAlive=true";
+	private static final Log LOG = LogFactory.getLog(TransportUriTest.class);
+	
     protected Connection connection;
+    
+    public String prefix;
+    public String postfix;
+    
+    public void initCombosForTestUriOptionsWork() {
+		addCombinationValues("prefix", new Object[] {""});
+		addCombinationValues("postfix", new Object[] {"?tcpNoDelay=true&keepAlive=true"});
+	}
 
     public void testUriOptionsWork() throws Exception {
         String uri = prefix + bindAddress + postfix;
-        // System.out.println("Connecting via: " + uri);
+        LOG.info("Connecting via: " + uri);
 
         connection = new ActiveMQConnectionFactory(uri).createConnection();
         connection.start();
     }
+    
+	public void initCombosForTestBadVersionNumberDoesNotWork() {
+		addCombinationValues("prefix", new Object[] {""});
+		addCombinationValues("postfix", new Object[] {"?tcpNoDelay=true&keepAlive=true"});
+	}
 
     public void testBadVersionNumberDoesNotWork() throws Exception {
         String uri = prefix + bindAddress + postfix + "&minmumWireFormatVersion=65535";
-        // System.out.println("Connecting via: " + uri);
+        LOG.info("Connecting via: " + uri);
 
         try {
             connection = new ActiveMQConnectionFactory(uri).createConnection();
@@ -52,9 +69,14 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
         }
     }
 
+	public void initCombosForTestBadPropertyNameFails() {
+		addCombinationValues("prefix", new Object[] {""});
+		addCombinationValues("postfix", new Object[] {"?tcpNoDelay=true&keepAlive=true"});
+	}
+	
     public void testBadPropertyNameFails() throws Exception {
         String uri = prefix + bindAddress + postfix + "&cheese=abc";
-        // System.out.println("Connecting via: " + uri);
+        LOG.info("Connecting via: " + uri);
 
         try {
             connection = new ActiveMQConnectionFactory(uri).createConnection();
@@ -86,5 +108,9 @@ public class TransportUriTest extends EmbeddedBrokerTestSupport {
         answer.setPersistent(isPersistent());
         answer.addConnector(bindAddress);
         return answer;
+    }
+    
+    public static Test suite() {
+    	return suite(TransportUriTest.class);
     }
 }
