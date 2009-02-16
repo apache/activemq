@@ -136,6 +136,25 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
         answer = (TextMessage)consumer.receiveNoWait();
         assertNull("Should have not received a message!", answer);
     }
+    
+    public void testTwoConsumers() throws Exception {
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        MessageProducer producer = session.createProducer(queue);
+        producer.send(session.createTextMessage("Msg1"));
+        producer.send(session.createTextMessage("Msg2"));
+
+        // now lets receive it
+        MessageConsumer consumer1 = session.createConsumer(queue);
+        MessageConsumer consumer2 = session.createConsumer(queue);
+        TextMessage answer = (TextMessage)consumer1.receiveNoWait();
+        assertEquals("Should have received a message!", answer.getText(), "Msg1");
+        answer = (TextMessage)consumer2.receiveNoWait();
+        assertEquals("Should have received a message!", answer.getText(), "Msg2");
+
+        answer = (TextMessage)consumer2.receiveNoWait();
+        assertNull("Should have not received a message!", answer);
+    }
 
     protected void setUp() throws Exception {
         bindAddress = "tcp://localhost:61616";
