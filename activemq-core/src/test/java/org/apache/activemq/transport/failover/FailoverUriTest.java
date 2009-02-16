@@ -24,8 +24,9 @@ public class FailoverUriTest extends TransportUriTest {
 	
     public void initCombosForTestUriOptionsWork() {
 		addCombinationValues("prefix", new Object[] {"failover:("});
-		addCombinationValues("postfix", new Object[] {")?initialReconnectDelay=1000&maxReconnectDelay=1000"});
-				//, "?jms.useAsyncSend=true&jms.copyMessageOnSend=false &wireFormat.tightEncodingEnabled=false"});
+		addCombinationValues("postfix", new Object[] {")?initialReconnectDelay=1000&maxReconnectDelay=1000"
+				, "?wireFormat.tightEncodingEnabled=false)?jms.useAsyncSend=true&jms.copyMessageOnSend=false"
+				, "?wireFormat.maxInactivityDuration=0&keepAlive=true)?jms.prefetchPolicy.all=500&initialReconnectDelay=10000&useExponentialBackOff=false&maxReconnectAttempts=0&randomize=false"});
 	}
 	
 	public void initCombosForTestBadVersionNumberDoesNotWork() {
