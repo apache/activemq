@@ -37,9 +37,6 @@ public class NoConsumerDeadLetterTest extends DeadLetterTestSupport {
     public void testDurableTopicMessage() throws Exception {
     }
 
-    public void testTransientQueueMessage() throws Exception {
-    }
-
     protected void doTest() throws Exception {
         makeDlqConsumer();
         sendMessages();
@@ -65,7 +62,11 @@ public class NoConsumerDeadLetterTest extends DeadLetterTestSupport {
     }
 
     protected Destination createDlqDestination() {
-        return AdvisorySupport.getNoTopicConsumersAdvisoryTopic((ActiveMQDestination)getDestination());
+    	if (this.topic) {
+    		return AdvisorySupport.getNoTopicConsumersAdvisoryTopic((ActiveMQDestination)getDestination());
+    	} else {
+    		return AdvisorySupport.getNoQueueConsumersAdvisoryTopic((ActiveMQDestination)getDestination());
+    	}
     }
 
 }

@@ -17,12 +17,18 @@
 package org.apache.activemq.broker.region;
 
 import java.io.IOException;
+
+import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.DeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.Message;
 import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.usage.SystemUsage;
@@ -57,6 +63,7 @@ public abstract class BaseDestination implements Destination {
     private boolean advisoryWhenFull;
     private boolean advisoryForDelivery;
     private boolean advisoryForConsumed;
+    private boolean sendAdvisoryIfNoConsumers;
     protected final DestinationStatistics destinationStatistics = new DestinationStatistics();
     protected final BrokerService brokerService;
     protected final Broker regionBroker;
@@ -323,6 +330,14 @@ public abstract class BaseDestination implements Destination {
     public void setAdvisdoryForFastProducers(boolean advisdoryForFastProducers) {
         this.advisdoryForFastProducers = advisdoryForFastProducers;
     }
+    
+    public boolean isSendAdvisoryIfNoConsumers() {
+        return sendAdvisoryIfNoConsumers;
+    }
+
+    public void setSendAdvisoryIfNoConsumers(boolean sendAdvisoryIfNoConsumers) {
+        this.sendAdvisoryIfNoConsumers = sendAdvisoryIfNoConsumers;
+    }
 
     /**
      * @return the dead letter strategy
@@ -419,5 +434,55 @@ public abstract class BaseDestination implements Destination {
         }
         this.destinationStatistics.setParent(null);
         this.memoryUsage.stop();
+    }
+    
+    /**
+     * Provides a hook to allow messages with no consumer to be processed in
+     * some way - such as to send to a dead letter queue or something..
+     */
+    protected void onMessageWithNoConsumers(ConnectionContext context, Message message) throws Exception { 	
+    	if (!message.isPersistent()) {
+            if (isSendAdvisoryIfNoConsumers()) {
+                // allow messages with no consumers to be dispatched to a dead
+                // letter queue
+                if (destination.isQueue() || !AdvisorySupport.isAdvisoryTopic(destination)) {
+
+                    // The original destination and transaction id do not get
+                    // filled when the message is first sent,
+                    // it is only populated if the message is routed to another
+                    // destination like the DLQ
+                    if (message.getOriginalDestination() != null) {
+                        message.setOriginalDestination(message.getDestination());
+                    }
+                    if (message.getOriginalTransactionId() != null) {
+                        message.setOriginalTransactionId(message.getTransactionId());
+                    }
+                    
+                    ActiveMQTopic advisoryTopic;
+                    if (destination.isQueue()) {
+                    	advisoryTopic = AdvisorySupport.getNoQueueConsumersAdvisoryTopic(destination);
+                    } else {
+                    	advisoryTopic = AdvisorySupport.getNoTopicConsumersAdvisoryTopic(destination);
+                    }
+                    message.setDestination(advisoryTopic);
+                    message.setTransactionId(null);
+
+                    // Disable flow control for this since since we don't want
+                    // to block.
+                    boolean originalFlowControl = context.isProducerFlowControl();
+                    try {
+                        context.setProducerFlowControl(false);
+                        ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
+                        producerExchange.setMutable(false);
+                        producerExchange.setConnectionContext(context);
+                        producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
+                        context.getBroker().send(producerExchange, message);
+                    } finally {
+                        context.setProducerFlowControl(originalFlowControl);
+                    }
+
+                }
+            }
+        }
     }
 }
