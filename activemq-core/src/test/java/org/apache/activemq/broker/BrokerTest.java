@@ -1114,6 +1114,9 @@ public class BrokerTest extends BrokerTestSupport {
             connection1.send(createAck(consumerInfo1, m1, 1, MessageAck.STANDARD_ACK_TYPE));
         }
 
+        // give the async ack a chance to perculate and validate all are currently consumed
+        assertNull(connection1.getDispatchQueue().poll(MAX_NULL_WAIT, TimeUnit.MILLISECONDS));
+ 
         // Close the consumer.
         connection1.request(closeConsumerInfo(consumerInfo1));
 
