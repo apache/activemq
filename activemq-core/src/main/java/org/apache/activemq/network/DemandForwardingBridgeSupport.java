@@ -533,7 +533,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             
             // in a cyclic network there can be multiple bridges per broker that can propagate
             // a network subscription so there is a need to synchronise on a shared entity
-            synchronized(brokerService) {
+            synchronized(brokerService.getVmConnectorURI()) {
                 if (isDuplicateNetworkSubscription(info)) {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug(configuration.getBrokerName() + " Ignoring sub from " + remoteBrokerName + ", destination " + info.getDestination() 
