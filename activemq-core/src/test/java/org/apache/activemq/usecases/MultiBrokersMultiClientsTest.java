@@ -16,9 +16,11 @@
  */
 package org.apache.activemq.usecases;
 
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -27,17 +29,22 @@ import javax.jms.MessageConsumer;
 
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.util.MessageIdList;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @version $Revision: 1.1.1.1 $
  */
-public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport {
-    public static final int BROKER_COUNT = 2; // number of brokers to network
-    public static final int CONSUMER_COUNT = 3; // consumers per broker
+public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport implements UncaughtExceptionHandler {
+    public static final int BROKER_COUNT = 6; // number of brokers to network
+    public static final int CONSUMER_COUNT = 25; // consumers per broker
     public static final int PRODUCER_COUNT = 3; // producers per broker
     public static final int MESSAGE_COUNT = 20; // messages per producer
 
+    private static final Log LOG = LogFactory.getLog(MultiBrokersMultiClientsTest.class);
+
     protected Map consumerMap;
+    Map<Thread, Throwable> unhandeledExceptions = new HashMap<Thread, Throwable>();
 
     public void testTopicAllConnected() throws Exception {
         bridgeAllBrokers();
@@ -78,6 +85,15 @@ public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport 
             }
         }
 
+        assertNoUnhandeledExceptions();
+    }
+
+    private void assertNoUnhandeledExceptions() {
+        for( Entry<Thread, Throwable> e: unhandeledExceptions.entrySet()) {
+            LOG.error("Thread:" + e.getKey() + " Had unexpected: " + e.getValue());
+        }
+        assertTrue("There are no unhandelled exceptions, see: log for detail on: " + unhandeledExceptions,
+                unhandeledExceptions.isEmpty());
     }
 
     public void testQueueAllConnected() throws Exception {
@@ -121,17 +137,28 @@ public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport 
             }
         }
         assertEquals(BROKER_COUNT * PRODUCER_COUNT * MESSAGE_COUNT, totalMsg);
+        
+        assertNoUnhandeledExceptions();
     }
 
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();
 
+        unhandeledExceptions.clear();
+        Thread.setDefaultUncaughtExceptionHandler(this);
+        
         // Setup n brokers
         for (int i = 1; i <= BROKER_COUNT; i++) {
             createBroker(new URI("broker:()/Broker" + i + "?persistent=false&useJmx=false"));
         }
 
         consumerMap = new HashMap();
+    }
+
+    public void uncaughtException(Thread t, Throwable e) {
+        synchronized(unhandeledExceptions) {
+            unhandeledExceptions.put(t,e);
+        }
     }
 }

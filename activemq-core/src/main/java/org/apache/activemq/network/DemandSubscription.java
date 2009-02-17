@@ -37,8 +37,6 @@ public class DemandSubscription {
     DemandSubscription(ConsumerInfo info) {
         remoteInfo = info;
         localInfo = info.copy();
-        localInfo.setSelector(info.getSelector());
-        localInfo.setBrokerPath(info.getBrokerPath());
         localInfo.setNetworkSubscription(true);
         remoteSubsIds.add(info.getConsumerId());    
      }
@@ -49,10 +47,7 @@ public class DemandSubscription {
      * @param id
      * @return true if added
      */
-    public boolean add(ConsumerId id) {   
-        if (localInfo != null) {
-            localInfo.addNetworkConsumerId(id);
-        }
+    public boolean add(ConsumerId id) {
         return remoteSubsIds.add(id);
     }
 
@@ -63,9 +58,6 @@ public class DemandSubscription {
      * @return true if removed
      */
     public boolean remove(ConsumerId id) {
-        if (localInfo != null) {
-            localInfo.removeNetworkConsumerId(id);
-        }
         return remoteSubsIds.remove(id);
     }
 
