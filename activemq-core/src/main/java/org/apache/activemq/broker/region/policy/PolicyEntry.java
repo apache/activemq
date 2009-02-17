@@ -110,7 +110,6 @@ public class PolicyEntry extends DestinationMapEntry {
         if (subscriptionRecoveryPolicy != null) {
             topic.setSubscriptionRecoveryPolicy(subscriptionRecoveryPolicy.copy());
         }
-        topic.setSendAdvisoryIfNoConsumers(sendAdvisoryIfNoConsumers);
         if (memoryLimit > 0) {
             topic.getMemoryUsage().setLimit(memoryLimit);
         }
@@ -132,6 +131,7 @@ public class PolicyEntry extends DestinationMapEntry {
         destination.setAdvisoryForSlowConsumers(isAdvisoryForSlowConsumers());
         destination.setAdvisdoryForFastProducers(isAdvisdoryForFastProducers());
         destination.setAdvisoryWhenFull(isAdvisoryWhenFull());
+        destination.setSendAdvisoryIfNoConsumers(sendAdvisoryIfNoConsumers);
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, TopicSubscription subscription) {
